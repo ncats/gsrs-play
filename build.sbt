@@ -1,6 +1,6 @@
-name := "crud"
+name := "crosstalk"
 
-version := "1.0-SNAPSHOT"
+version := "0.0.1-SNAPSHOT"
 
 libraryDependencies ++= Seq(
   javaJdbc,
