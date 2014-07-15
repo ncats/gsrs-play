@@ -1,0 +1,85 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           controllers.test.Application.index()
+POST    /load                       controllers.test.Application.load()
+POST    /:id                  controllers.test.Application.deleteGrant(id:Long)
+POST    /                       controllers.test.Application.newGrant()
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+#
+# special variables are denoted by @'s and should be specified
+# before other resources
+#
+##################################
+# Grant resources
+##################################
+GET     /grants/@count       controllers.granite.GrantFactory.count()
+GET     /grants/:id  controllers.granite.GrantFactory.get(id: Long, select:String ?= null)
+GET     /grants/:id/@edits      controllers.granite.GrantFactory.edits(id:Long)
+GET     /grants(:id)  controllers.granite.GrantFactory.get(id: Long, select:String ?= null)
+GET     /grants(:id)/  controllers.granite.GrantFactory.get(id: Long, select: String ?= null)
+GET     /grants(:id)/@edits      controllers.granite.GrantFactory.edits(id:Long)
+GET     /grants/:id/  controllers.granite.GrantFactory.get(id: Long, select: String ?= null)
+GET     /grants/:id/*field  controllers.granite.GrantFactory.field(id: Long, field:String)
+GET     /grants(:id)/*field  controllers.granite.GrantFactory.field(id: Long, field:String)
+GET     /grants  controllers.granite.GrantFactory.page(top: Int ?=10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
+POST    /grants  controllers.granite.GrantFactory.create()
+PUT     /grants/:id/*field       controllers.granite.GrantFactory.update(id:Long, field: String)
+PUT     /grants(:id)/*field       controllers.granite.GrantFactory.update(id:Long, field: String)
+
+##################################
+# Investigator resources
+##################################
+GET     /investigators/:id  controllers.granite.InvestigatorFactory.get(id: Long, select: String ?= null)
+GET     /investigators(:id)  controllers.granite.InvestigatorFactory.get(id: Long, select: String ?= null)
+GET     /investigators/:id/  controllers.granite.InvestigatorFactory.get(id: Long, select: String ?= null)
+GET     /investigators/:id/*field  controllers.granite.InvestigatorFactory.field(id: Long, field:String)
+GET     /investigators(:id)/*field  controllers.granite.InvestigatorFactory.field(id: Long, field:String)
+GET     /investigators  controllers.granite.InvestigatorFactory.page(top: Int ?=10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
+POST    /investigators  controllers.granite.InvestigatorFactory.create()
+PUT     /investigators/:id/*field       controllers.granite.InvestigatorFactory.update(id:Long, field: String)
+PUT     /investigators(:id)/*field       controllers.granite.InvestigatorFactory.update(id:Long, field: String)
+
+##################################
+# Organization resources
+##################################
+GET     /organizations/:id      controllers.granite.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations(:id)      controllers.granite.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations/:id/      controllers.granite.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations/:id/*field  controllers.granite.OrganizationFactory.field(id: Long, field:String)
+GET     /organizations(:id)/*field  controllers.granite.OrganizationFactory.field(id: Long, field:String)
+GET     /organizations  controllers.granite.OrganizationFactory.page(top: Int ?= 10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
+POST    /organizations  controllers.granite.OrganizationFactory.create()
+PUT     /organizations/:id/*field       controllers.granite.OrganizationFactory.update(id: Long, field: String)
+PUT     /organizations(:id)/*field       controllers.granite.OrganizationFactory.update(id: Long, field: String)
+
+##################################
+# Publication resources
+##################################
+GET     /publications/:id      controllers.core.PublicationFactory.get(id: Long, select: String ?= null)
+GET     /publications(:id)      controllers.core.PublicationFactory.get(id: Long, select: String ?= null)
+GET     /publications/:id/      controllers.core.PublicationFactory.get(id: Long, select: String ?= null)
+GET     /publications/:id/*field  controllers.core.PublicationFactory.field(id: Long, field:String)
+GET     /publications(:id)/*field  controllers.core.PublicationFactory.field(id: Long, field:String)
+GET     /publications  controllers.core.PublicationFactory.page(top: Int ?= 10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
+POST    /publications  controllers.core.PublicationFactory.create()
+PUT     /publications/:id/*field       controllers.core.PublicationFactory.update(id: Long, field: String)
+PUT     /publications(:id)/*field       controllers.core.PublicationFactory.update(id: Long, field: String)
+
+##################################
+# Keyword resources
+##################################
+GET     /keywords/:id      controllers.core.KeywordFactory.get(id: Long, select: String ?= null)
+GET     /keywords(:id)      controllers.core.KeywordFactory.get(id: Long, select: String ?= null)
+GET     /keywords/:id/      controllers.core.KeywordFactory.get(id: Long, select: String ?= null)
+GET     /keywords/:id/*field  controllers.core.KeywordFactory.field(id: Long, field:String)
+GET     /keywords(:id)/*field  controllers.core.KeywordFactory.field(id: Long, field:String)
+GET     /keywords  controllers.core.KeywordFactory.page(top: Int ?= 10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
+POST    /keywords  controllers.core.KeywordFactory.create()
+PUT     /keywords/:id/*field       controllers.core.KeywordFactory.update(id: Long, field: String)
+PUT     /keywords(:id)/*field       controllers.core.KeywordFactory.update(id: Long, field: String)

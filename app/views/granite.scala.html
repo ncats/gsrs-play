@@ -1,0 +1,32 @@
+@(grants: List[models.granite.Grant], grantForm: Form[models.granite.Grant])
+
+@import helper._
+
+@main("Granite") {
+    <h1>@grants.size() grant(s)</h1>
+<!--
+    <ul>
+      @for(grant <- grants) {
+        <li>@grant.projectTitle [@grant.id]
+          @form(test.routes.Application.deleteGrant(grant.id)) {
+            <input type="submit" value="Delete">
+          }
+        </li>
+      }
+    </ul>
+-->
+    <h2>Add new grant</h2>
+    @form(test.routes.Application.newGrant()) {
+      @inputText(grantForm("projectTitle"))
+      @inputText(grantForm("publicHealthRelevance"))
+      <input type="submit" value="Create">
+    }
+
+
+    <h2>Upload file</h2>
+    @form( action = test.routes.Application.load, 
+    'enctype -> "multipart/form-data") {
+       <input type="file" name="File">
+       <p><input type="submit">
+    }
+}

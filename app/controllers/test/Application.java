@@ -1,0 +1,118 @@
+package controllers.test;
+
+import java.io.*;
+import java.security.*;
+import java.util.*;
+
+import play.*;
+import play.data.*;
+import play.mvc.*;
+import views.html.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import models.granite.Grant;
+import controllers.granite.GrantXmlParser;
+import controllers.granite.GrantFactory;
+import controllers.granite.GrantListener;
+
+public class Application extends Controller {
+
+    static Form<Grant> grantForm = Form.form(Grant.class);
+
+    public static Result index() {
+        //return ok(index.render("Your new application is ready."));
+        //return ok ("Hello world");
+        //return redirect (routes.Application.grants());
+        return grantsHtml ();
+    }
+
+    public static Result grants (int top, int skip) {
+        ObjectMapper mapper = new ObjectMapper ();
+        return ok (mapper.valueToTree(GrantFactory.page(top, skip)));
+    }
+
+    public static Result grantsHtml () {
+        Http.Request req = request ();
+        Map<String, String[]> q = req.queryString();
+        for (Map.Entry<String, String[]> e : q.entrySet()) {
+            for (String v : e.getValue()) {
+                Logger.debug("\""+e.getKey()+"\": "+v);
+            }
+        }
+        return ok (views.html.granite.render(GrantFactory.all(), grantForm));
+    }
+
+    public static Result newGrant () {
+        Form<Grant> filled = grantForm.bindFromRequest();
+        if (filled.hasErrors()) {
+            return badRequest (views.html.granite.render
+                               (GrantFactory.all(), filled));
+        }
+        else {
+            Grant g = filled.get();
+            g.save();
+
+            return redirect (routes.Application.index());
+        }
+    }
+
+    public static Result deleteGrant (Long id) {
+        GrantFactory.delete(id);
+        return redirect (routes.Application.index());
+    }
+
+    @BodyParser.Of(value = BodyParser.MultipartFormData.class, 
+                   maxLength = 100 * 1024 * 1024)
+    public static Result load () {
+        if (request().body().isMaxSizeExceeded()) {
+            return badRequest ("File too large!");
+        }
+
+        Http.MultipartFormData body = request().body().asMultipartFormData();
+        Http.MultipartFormData.FilePart part = body.getFile("File");
+        if (part != null) {
+            try {
+                String name = part.getFilename();
+                String content = part.getContentType();
+                File file = part.getFile();
+                
+                MessageDigest md = MessageDigest.getInstance("SHA1");
+                DigestInputStream dis = new DigestInputStream
+                    (new FileInputStream (file), md);
+                /*
+                byte[] buf = new byte[1024];
+                long size = 0;
+                for (int nb; (nb = dis.read(buf, 0, buf.length)) > 0; ) {
+                    size += nb;
+                }
+                dis.close();
+                */
+                GrantXmlParser parser = new GrantXmlParser ();
+                parser.addGrantListener(new GrantListener () {
+                        public void newGrant (Grant g) {
+                            Logger.info("yeah.. new grant "+g.applicationId);
+                            g.save();
+                        }
+                    });
+                parser.parse(dis);
+
+                Logger.info("file="+name+"; content="+content);
+                
+                StringBuilder sb = new StringBuilder ();
+                byte[] sha = md.digest(); 
+                for (int i = 0; i < sha.length; ++i) {
+                    sb.append(String.format("%1$02x", sha[i] & 0xff));
+                }
+                
+                //return ok (sb.toString());
+                return redirect (routes.Application.index());
+            }
+            catch (Exception ex) {
+                return internalServerError (ex.getMessage());
+            }
+        }
+        return noContent ();
+    }
+}
