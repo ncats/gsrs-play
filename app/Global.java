@@ -34,7 +34,7 @@ public class Global extends GlobalSettings {
     private Analyzer idxAnalyzer;
 
     protected void init (Application app) throws Exception {
-        String h = app.configuration().getString("granite.home");
+        String h = app.configuration().getString("crosstalk.home");
         if (h != null) {
             home = new File (h);
             if (!home.exists())
@@ -43,7 +43,7 @@ public class Global extends GlobalSettings {
 
         if (!home.exists())
             throw new IllegalArgumentException
-                ("granite.home \""+h+"\" is not accessible!");
+                ("crosstalk.home \""+h+"\" is not accessible!");
 
         Logger.info("## home: \""+home.getCanonicalPath()+"\"");
         idxDir = new NIOFSDirectory (home, NoLockFactory.getNoLockFactory());
