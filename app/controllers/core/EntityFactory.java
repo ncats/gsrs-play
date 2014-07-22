@@ -147,6 +147,15 @@ public class EntityFactory extends Controller {
         return ok (obj);
     }
 
+    protected static <T> T getEntity (Long id, Model.Finder<Long, T> finder) {
+        return finder.byId(id);
+    }
+    
+    protected static <T> List<T> filter (String filter, 
+                                         Model.Finder<Long, T> finder) {
+        return finder.where(filter).findList();
+    }
+
     protected static <T> Result get (Long id, Model.Finder<Long, T> finder) {
         return get (id, null, finder);
     }

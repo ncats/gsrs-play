@@ -6,6 +6,7 @@ import java.util.Date;
 import javax.persistence.*;
 
 @Entity
+@Table(name="ct_etag")
 public class ETag extends Model {
     @Id
     @Column(length=16)

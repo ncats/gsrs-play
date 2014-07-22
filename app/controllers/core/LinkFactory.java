@@ -1,4 +1,4 @@
-package controllers.granite;
+package controllers.core;
 
 import java.io.*;
 import java.security.*;
@@ -11,19 +11,13 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.avaje.ebean.*;
+import models.core.Link;
 
-import models.granite.Investigator;
-import controllers.core.EntityFactory;
+public class LinkFactory extends EntityFactory {
+    public static final Model.Finder<Long, Link> finder = 
+        new Model.Finder(Long.class, Link.class);
 
-public class InvestigatorFactory extends EntityFactory {
-    public static Model.Finder<Long, Investigator> finder = 
-        new Model.Finder (Long.class, Investigator.class);
-
-    public static List<Investigator> all () { return all (finder); }
+    public static List<Link> all () { return all (finder); }
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, 
                                String select, String filter) {
@@ -39,7 +33,7 @@ public class InvestigatorFactory extends EntityFactory {
     }
 
     public static Result create () {
-        return create (Investigator.class, finder);
+        return create (Link.class, finder);
     }
 
     public static Result delete (Long id) {
@@ -47,6 +41,6 @@ public class InvestigatorFactory extends EntityFactory {
     }
 
     public static Result update (Long id, String field) {
-        return update (id, field, Investigator.class, finder);
+        return update (id, field, Link.class, finder);
     }
 }

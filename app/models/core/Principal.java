@@ -6,6 +6,7 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
+@Table(name="ct_principal")
 public class Principal extends Model {
     @Id
     public Long id;

@@ -9,52 +9,8 @@ import models.core.Publication;
 import models.core.Keyword;
 
 @Entity
+@Table(name="ct_granite_grant")
 public class Grant extends Model {
-
-    public enum IC {
-        CC ("Clinical Center", "CC"),
-        CSR ("Center for Scientific Review", "RG"),
-        CIT ("Center for Information Technology", "CIT"),
-        FIC ("John E. Fogarty International Center", "TW"),
-        NCATS ("National Center for Advancing Translational Sciences (NCATS)", "TR"),
-        NCCAM ("National Center for Complementary and Alternative Medicine", "AT"),
-        NCI ("National Cancer Institute", "CA"),
-        NCRR ("National Center for Research Resources", "RR"),
-        NEI ("National Eye Institute", "EY"),
-        NHGRI ("National Human Genome Research Institute", "HG"),
-        NHLBI ("National Heart, Lung, and Blood Institute", "HL"),
-        NIA ("National Institute on Aging", "AG"),
-        NIAAA ("National Institute on Alcohol Abuse and Alcoholism", "AA"),
-        NIAID ("National Institute of Allergy and Infectious Diseases", "AI"),
-        NIAMS ("National Institute of Arthritis and Musculoskeletal and Skin Diseases", "AR"),
-        NIBIB ("National Institute of Biomedical Imaging and Bioengineering", "EB"),
-        NICHD ("Eunice Kennedy Shriver National Institute of Child Health and Human Development", "HD"),
-        NIDA ("National Institute on Drug Abuse", "DA"),
-        NIDCD ("National Institute on Deafness and Other Communication Disorders", "DC"),
-        NIDCR ("National Institute of Dental and Craniofacial Research", "DE"),
-        NIDDK ("National Institute of Diabetes and Digestive and Kidney Diseases", "DK"),
-        NIEHS ("National Institute of Environmental Health Sciences", "ES"),
-        NIGMS ("National Institute of General Medical Sciences", "GM"),
-        NIMH ("National Institute of Mental Health", "MH"),
-        NIMHD ("National Institute on Minority Health and Health Disparities", "MD"),
-        NINDS ("National Institute of Neurological Disorders and Stroke", "NS"),
-        NINR ("National Institute of Nursing Research", "NR"),
-        NLM ("National Library of Medicine", "LM"),
-        OD ("Office of the Director", "OD"),
-
-        UNK ("Not available", "NA");
-            
-        final String fullname;
-        final String code;
-
-        IC (String fullname, String code) {
-            this.fullname = fullname;
-            this.code = code;
-        }
-
-        public String fullname () { return fullname; }
-        public String code () { return code; }
-    }
 
     @Id
     public Long id; // internal id
@@ -211,7 +167,7 @@ public class Grant extends Model {
      * organization to direct the research project. 
      */
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="grant_investigator")
+    @JoinTable(name="ct_granite_grant_investigator")
     public List<Investigator> investigators = new ArrayList<Investigator>();
 
     /**
@@ -252,7 +208,9 @@ public class Grant extends Model {
      * title, abstract, and specific aims using an automated text mining 
      * tool.
      */
-    @OneToMany(cascade=CascadeType.ALL)
+    @ManyToMany(cascade=CascadeType.ALL)
+    @Basic(fetch=FetchType.LAZY)
+    @JoinTable(name="ct_granite_grant_keyword")
     public List<Keyword> projectTerms = new ArrayList<Keyword>();
 
     /**
@@ -266,7 +224,7 @@ public class Grant extends Model {
      * articulates a project's potential to improve public health. 
      */
     @Lob
-    @Basic(fetch=FetchType.LAZY)
+    @Basic(fetch=FetchType.EAGER)
     public String publicHealthRelevance;
 
     /**
@@ -330,7 +288,8 @@ public class Grant extends Model {
      * An abstract of the research being performed in the project. 
      * For grants, the abstract is supplied to NIH by the grantee.
      */
-    @Column(length=4000)
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String projectAbstract;
 
     /**

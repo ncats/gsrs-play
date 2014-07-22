@@ -4,6 +4,7 @@ import play.db.ebean.*;
 import javax.persistence.*;
 
 @Entity
+@Table(name="ct_processing_status")
 public class ProcessingStatus extends Model {
     public enum Status {
         COMPLETE, RUNNING, FAILED

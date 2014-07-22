@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.JsonNodeDeserializer;
 
 @Entity
+@Table(name="ct_edit")
 public class Edit extends Model {
     @Id
     public Long id;

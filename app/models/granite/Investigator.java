@@ -7,6 +7,7 @@ import javax.persistence.*;
 
 
 @Entity
+@Table(name="ct_granite_investigator")
 public class Investigator extends Model {
     public enum Role {
         PI, Contact
@@ -15,11 +16,9 @@ public class Investigator extends Model {
     @Id
     public Long id; // internal id
     public String name;
-
-    @Column(unique=true)
     public Long piId; // PI id
     
-    @OneToOne(cascade=CascadeType.ALL)
+    @ManyToOne(cascade=CascadeType.ALL)
     public Organization organization;
 
     public Role role;

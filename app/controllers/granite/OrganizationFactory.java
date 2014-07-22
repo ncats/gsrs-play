@@ -19,6 +19,9 @@ public class OrganizationFactory extends EntityFactory {
         new Model.Finder(Long.class, Organization.class);
 
     public static List<Organization> all () { return all (finder); }
+    public static Organization getEntity (Long id) {
+        return getEntity (id, finder);
+    }
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, 
                                String select, String filter) {

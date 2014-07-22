@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import models.granite.Grant;
 import controllers.granite.GrantXmlParser;
+import controllers.granite.GrantAbstractXmlParser;
+import controllers.granite.GrantPubXmlParser;
 import controllers.granite.GrantFactory;
 import controllers.granite.GrantListener;
 
@@ -65,7 +67,7 @@ public class Application extends Controller {
 
     @BodyParser.Of(value = BodyParser.MultipartFormData.class, 
                    maxLength = 100 * 1024 * 1024)
-    public static Result load () {
+    public static Result loadMeta () {
         if (request().body().isMaxSizeExceeded()) {
             return badRequest ("File too large!");
         }
@@ -89,10 +91,14 @@ public class Application extends Controller {
                 }
                 dis.close();
                 */
-                GrantXmlParser parser = new GrantXmlParser ();
+                final GrantXmlParser parser = new GrantXmlParser ();
                 parser.addGrantListener(new GrantListener () {
                         public void newGrant (Grant g) {
-                            Logger.info("yeah.. new grant "+g.applicationId);
+                            //Logger.info("yeah.. new grant "+g.applicationId);
+                            int count = parser.getCount();
+                            if (count % 100 == 0) {
+                                Logger.debug(count+" grants loaded!");
+                            }
                             g.save();
                         }
                     });
@@ -115,4 +121,73 @@ public class Application extends Controller {
         }
         return noContent ();
     }
+
+    @BodyParser.Of(value = BodyParser.MultipartFormData.class, 
+                   maxLength = 100 * 1024 * 1024)
+    public static Result loadAbs () {
+        if (request().body().isMaxSizeExceeded()) {
+            return badRequest ("File too large!");
+        }
+
+        Http.MultipartFormData body = request().body().asMultipartFormData();
+        Http.MultipartFormData.FilePart part = body.getFile("File");
+        if (part != null) {
+            try {
+                String name = part.getFilename();
+                String content = part.getContentType();
+                File file = part.getFile();
+                
+                MessageDigest md = MessageDigest.getInstance("SHA1");
+                DigestInputStream dis = new DigestInputStream
+                    (new FileInputStream (file), md);
+                GrantAbstractXmlParser parser = new GrantAbstractXmlParser ();
+                parser.parse(dis);
+
+                Logger.info("file="+name
+                            +"; content="+content
+                            +"; count="+parser.getCount());
+
+                return redirect (routes.Application.index());
+            }
+            catch (Exception ex) {
+                return internalServerError (ex.getMessage());
+            }
+        }
+        return noContent ();
+    }
+
+    @BodyParser.Of(value = BodyParser.MultipartFormData.class, 
+                   maxLength = 100 * 1024 * 1024)
+    public static Result loadPub () {
+        if (request().body().isMaxSizeExceeded()) {
+            return badRequest ("File too large!");
+        }
+
+        Http.MultipartFormData body = request().body().asMultipartFormData();
+        Http.MultipartFormData.FilePart part = body.getFile("File");
+        if (part != null) {
+            try {
+                String name = part.getFilename();
+                String content = part.getContentType();
+                File file = part.getFile();
+                
+                MessageDigest md = MessageDigest.getInstance("SHA1");
+                DigestInputStream dis = new DigestInputStream
+                    (new FileInputStream (file), md);
+                GrantPubXmlParser parser = new GrantPubXmlParser ();
+                parser.parse(dis);
+
+                Logger.info("file="+name
+                            +"; content="+content
+                            +"; count="+parser.getCount());
+
+                return redirect (routes.Application.index());
+            }
+            catch (Exception ex) {
+                return internalServerError (ex.getMessage());
+            }
+        }
+        return noContent ();
+    }
+
 }

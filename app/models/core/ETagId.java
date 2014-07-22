@@ -8,6 +8,7 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
+@Table(name="ct_etag_id")
 public class ETagId extends Model {
     @ManyToOne
     public ETag etag;

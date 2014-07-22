@@ -14,7 +14,7 @@ import play.mvc.*;
 import models.core.Publication;
 
 public class PublicationFactory extends EntityFactory {
-    static final Model.Finder<Long, Publication> finder = 
+    public static final Model.Finder<Long, Publication> finder = 
         new Model.Finder(Long.class, Publication.class);
 
     public static List<Publication> all () { return all (finder); }

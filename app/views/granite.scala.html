@@ -23,10 +23,25 @@
     }
 
 
-    <h2>Upload file</h2>
-    @form( action = test.routes.Application.load, 
+    <h2>Load Grant metadata</h2>
+    @form( action = test.routes.Application.loadMeta, 
     'enctype -> "multipart/form-data") {
        <input type="file" name="File">
        <p><input type="submit">
     }
+
+    <h2>Load Grant abstract</h2>
+    @form( action = test.routes.Application.loadAbs, 
+    'enctype -> "multipart/form-data") {
+       <input type="file" name="File">
+       <p><input type="submit">
+    }
+
+    <h2>Load Grant publication</h2>
+    @form( action = test.routes.Application.loadPub, 
+    'enctype -> "multipart/form-data") {
+       <input type="file" name="File">
+       <p><input type="submit">
+    }
+
 }

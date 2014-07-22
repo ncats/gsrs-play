@@ -4,6 +4,7 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
+@Table(name="ct_keyword")
 public class Keyword extends Model {
     @Id
     public Long id;

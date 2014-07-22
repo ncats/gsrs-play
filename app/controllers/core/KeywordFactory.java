@@ -14,7 +14,7 @@ import play.mvc.*;
 import models.core.Keyword;
 
 public class KeywordFactory extends EntityFactory {
-    static final Model.Finder<Long, Keyword> finder = 
+    public static final Model.Finder<Long, Keyword> finder = 
         new Model.Finder(Long.class, Keyword.class);
 
     public static List<Keyword> all () { return all (finder); }

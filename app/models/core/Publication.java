@@ -5,6 +5,7 @@ import play.db.ebean.*;
 import javax.persistence.*;
 
 @Entity
+@Table(name="ct_publication")
 public class Publication extends Model {
     @Id
     public Long id; // internal id
@@ -14,30 +15,27 @@ public class Publication extends Model {
 
     @Column(length=1024)
     public String title; // publication title
-    public Integer year;
     public String pages;
     public String doi;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="publication_keyword")
+    @JoinTable(name="ct_publication_keyword")
     public List<Keyword> keywords = new ArrayList<Keyword>();
 
-    @Column(length=4000)
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ct_publication_mesh")
+    public List<Mesh> mesh = new ArrayList<Mesh>();
+
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String abstractText;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="publication_author")
+    @JoinTable(name="ct_publication_author")
     public List<Author> authors = new ArrayList<Author>();
 
-
-    /**
-     * journal information
-     */
-    public String journal;
-    public Integer volume;
-    public Integer issue;
-    @Column(length=10)
-    public String issn;
+    @ManyToOne(cascade=CascadeType.ALL)
+    public Journal journal;
 
     public Publication () {}
 }

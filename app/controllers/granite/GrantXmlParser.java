@@ -12,16 +12,20 @@ import org.xml.sax.helpers.*;
 import org.xml.sax.*;
 
 import play.Logger;
+import com.avaje.ebean.Expr;
 import models.granite.*;
 import models.core.Keyword;
 
 public class GrantXmlParser extends DefaultHandler {
+    
     List<GrantListener> listeners = new ArrayList<GrantListener>();
     StringBuilder content = new StringBuilder ();
     Grant grant;
     int count;
     LinkedList<String> path = new LinkedList<String>();
     DateFormat df = new SimpleDateFormat ("MM/dd/yyyy");
+    Organization org;
+    LinkedList<Investigator> pis = new LinkedList<Investigator>();
 
     public GrantXmlParser () {
     }
@@ -35,6 +39,8 @@ public class GrantXmlParser extends DefaultHandler {
         SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
         parser.parse(is, this);
     }
+
+    public int getCount () { return count; }
     
     public void addGrantListener (GrantListener l) {
         listeners.add(l);
@@ -58,6 +64,10 @@ public class GrantXmlParser extends DefaultHandler {
                               String qName, Attributes attrs) {
         if (qName.equals("row")) { 
             grant = new Grant ();
+            org = new Organization ();
+        }
+        else if (qName.equals("PI")) {
+            pis.push(new Investigator ());
         }
         content.setLength(0);
         path.push(qName);
@@ -77,6 +87,44 @@ public class GrantXmlParser extends DefaultHandler {
         if (value.length() == 0)
             ;
         else if (qName.equals("row")) {
+            List<Organization> orgs = OrganizationFactory
+                .finder.where(Expr.and
+                              (Expr.eq("duns", org.duns),
+                               Expr.eq("department", org.department)))
+                .findList();
+
+            if (!orgs.isEmpty()) {
+                org = orgs.iterator().next();
+            }
+
+            //Logger.debug("Organization "+org.name+" ("+org.duns+")");
+            Set<Long> unique = new HashSet<Long>();
+            for (Investigator inv : pis) {
+                if (!unique.contains(inv.piId)) {
+                    if (org.id != null) {
+                        List<Investigator> invs = InvestigatorFactory.finder
+                            .where(Expr.and
+                                   (Expr.eq("organization.id", org.id),
+                                    Expr.eq("name", inv.name)))
+                            .findList();
+                        if (invs.isEmpty()) {
+                            inv.organization = org;
+                            //inv.save();
+                        }
+                        else {
+                            inv = invs.iterator().next();
+                        }
+                    }
+                    else
+                        inv.organization = org;
+                 
+                    unique.add(inv.piId);
+                    grant.investigators.add(inv);
+                }
+            }
+            pis.clear();
+            org = null;
+
             //Logger.info(count+": grant parsed "+grant.applicationId);
             for (GrantListener l : listeners)
                 l.newGrant(grant);
@@ -187,6 +235,61 @@ public class GrantXmlParser extends DefaultHandler {
         else if (qName.equals("TERM")) {
             if (parent != null && parent.equals("PROJECT_TERMSX")) {
                 grant.projectTerms.add(new Keyword (value));
+            }
+        }
+        else if (qName.equals("ORG_CITY")) {
+            org.city = value;
+        }
+        else if (qName.equals("ORG_COUNTRY")) {
+            org.country = value;
+        }
+        else if (qName.equals("ORG_DISTRICT")) {
+            org.district = value;
+        }
+        else if (qName.equals("ORG_DUNS")) {
+            org.duns = value;
+        }
+        else if (qName.equals("ORG_DEPT")) {
+            org.department = value;
+        }
+        else if (qName.equals("ORG_FIPS")) {
+            org.fips = value;
+        }
+        else if (qName.equals("ORG_STATE")) {
+            org.state = value;
+        }
+        else if (qName.equals("ORG_ZIPCODE")) {
+            if (value.length() == 9) {
+                value = value.substring(0, 5)+"-"+value.substring(5);
+            }
+            org.zipcode = value;
+        }
+        else if (qName.equals("ORG_NAME")) {
+            org.name = value;
+        }
+        else if (qName.equals("PI_NAME")) {
+            int pos = value.indexOf("(contact");
+            Investigator inv = pis.peek();
+            if (pos > 0) {
+                inv.name = value.substring(0, pos).trim();
+                inv.role = Investigator.Role.Contact;
+            }
+            else {
+                inv.name = value;
+                inv.role = Investigator.Role.PI;
+            }
+        }
+        else if (qName.equals("PI_ID")) {
+            try {
+                int pos = value.indexOf(' ');
+                if (pos > 0) {
+                    value = value.substring(0, pos);
+                }
+                pis.peek().piId = Long.parseLong(value);
+            }
+            catch (NumberFormatException ex) {
+                Logger.error("Grant "+grant.applicationId
+                             +": bogus PI_ID \""+value+"\"");
             }
         }
     }

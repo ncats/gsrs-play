@@ -6,6 +6,7 @@ import javax.persistence.*;
 
 
 @Entity
+@Table(name="ct_granite_organization")
 public class Organization extends Model {
     @Id
     public Long id; // internal id
@@ -78,6 +79,12 @@ public class Organization extends Model {
      */
     @Column(length=3)
     public String fips;
+
+    /**
+     * Longitude & Latitude
+     */
+    public Double longitude;
+    public Double latitude;
 
     public Organization () {
     }

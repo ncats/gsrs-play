@@ -4,14 +4,14 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
+@Table(name="ct_author")
 public class Author extends Model {
     @Id
     public Long id; // internal id
 
-    public String fullname;
     public String lastname;
-    public String firstname;
-
+    public String forename;
+    public String initials;
     public String affiliation;
 
     public Author () {}

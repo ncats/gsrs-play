@@ -15,10 +15,13 @@ import models.granite.Grant;
 import controllers.core.EntityFactory;
 
 public class GrantFactory extends EntityFactory {
-    static final Model.Finder<Long, Grant> finder = 
+    static final public Model.Finder<Long, Grant> finder = 
         new Model.Finder(Long.class, Grant.class);
 
     public static List<Grant> all () { return all (finder); }
+    public static Grant getEntity (Long id) {
+        return getEntity (id, finder);
+    }
     public static Result count () {
         return count (finder);
     }

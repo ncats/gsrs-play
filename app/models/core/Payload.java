@@ -5,6 +5,7 @@ import javax.persistence.*;
 
 
 @Entity
+@Table(name="ct_payload")
 public class Payload extends Model {
     @Id
     public Long id;

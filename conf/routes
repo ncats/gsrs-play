@@ -4,7 +4,9 @@
 
 # Home page
 GET     /                           controllers.test.Application.index()
-POST    /load                       controllers.test.Application.load()
+POST    /loadmeta                       controllers.test.Application.loadMeta()
+POST    /loadabs                       controllers.test.Application.loadAbs()
+POST    /loadpub                       controllers.test.Application.loadPub()
 POST    /:id                  controllers.test.Application.deleteGrant(id:Long)
 POST    /                       controllers.test.Application.newGrant()
 
