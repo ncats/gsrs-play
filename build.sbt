@@ -2,6 +2,10 @@ name := "crosstalk"
 
 version := "0.0.1-SNAPSHOT"
 
+lazy val root = (project in file(".")).enablePlugins(PlayJava)
+
+scalaVersion := "2.11.1"
+
 libraryDependencies ++= Seq(
   javaJdbc,
   javaEbean,
@@ -21,4 +25,3 @@ libraryDependencies ++= Seq(
 //  ,"com.fasterxml.jackson.core" % "jackson-databind" % "2.4.1"
 )     
 
-play.Project.playJavaSettings
