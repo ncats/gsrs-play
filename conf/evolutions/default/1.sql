@@ -156,8 +156,9 @@ create table ct_payload (
   id                        bigint not null,
   name                      varchar(1024),
   sha1                      varchar(40),
-  mime_type                 varchar(128),
+  mime                      varchar(128),
   size                      bigint,
+  created                   timestamp,
   constraint pk_ct_payload primary key (id))
 ;
 
@@ -185,6 +186,14 @@ create table ct_processing_status (
   constraint pk_ct_processing_status primary key (id))
 ;
 
+create table ct_property (
+  id                        bigint not null,
+  payload_id                bigint not null,
+  name                      varchar(255),
+  type                      varchar(255),
+  constraint pk_ct_property primary key (id))
+;
+
 create table ct_publication (
   id                        bigint not null,
   grant_id                  bigint not null,
@@ -196,6 +205,45 @@ create table ct_publication (
   abstract_text             clob,
   journal_id                bigint,
   constraint pk_ct_publication primary key (id))
+;
+
+create table ct_stitch (
+  id                        bigint not null,
+  name                      varchar(255),
+  impl                      varchar(1024),
+  description               clob,
+  constraint pk_ct_stitch primary key (id))
+;
+
+create table ct_vint (
+  id                        bigint not null,
+  label                     varchar(255) not null,
+  property_id               bigint,
+  value                     bigint,
+  constraint pk_ct_vint primary key (id))
+;
+
+create table ct_vnum (
+  id                        bigint not null,
+  label                     varchar(255) not null,
+  property_id               bigint,
+  value                     double,
+  constraint pk_ct_vnum primary key (id))
+;
+
+create table ct_vstr (
+  id                        bigint not null,
+  label                     varchar(255) not null,
+  property_id               bigint,
+  value                     varchar(1024),
+  constraint pk_ct_vstr primary key (id))
+;
+
+create table ct_value (
+  id                        bigint not null,
+  label                     varchar(255) not null,
+  property_id               bigint,
+  constraint pk_ct_value primary key (id))
 ;
 
 
@@ -228,6 +276,12 @@ create table ct_publication_author (
   ct_author_id                   bigint not null,
   constraint pk_ct_publication_author primary key (ct_publication_id, ct_author_id))
 ;
+
+create table ct_stitch_property (
+  ct_stitch_id                   bigint not null,
+  ct_property_id                 bigint not null,
+  constraint pk_ct_stitch_property primary key (ct_stitch_id, ct_property_id))
+;
 create sequence ct_author_seq;
 
 create sequence ct_etag_seq;
@@ -258,7 +312,19 @@ create sequence ct_principal_seq;
 
 create sequence ct_processing_status_seq;
 
+create sequence ct_property_seq;
+
 create sequence ct_publication_seq;
+
+create sequence ct_stitch_seq;
+
+create sequence ct_vint_seq;
+
+create sequence ct_vnum_seq;
+
+create sequence ct_vstr_seq;
+
+create sequence ct_value_seq;
 
 alter table ct_etag_id add constraint fk_ct_etag_id_etag_1 foreign key (etag_etag) references ct_etag (etag) on delete restrict on update restrict;
 create index ix_ct_etag_id_etag_1 on ct_etag_id (etag_etag);
@@ -272,10 +338,20 @@ alter table ct_permission add constraint fk_ct_permission_ct_principal_5 foreign
 create index ix_ct_permission_ct_principal_5 on ct_permission (principal_id);
 alter table ct_processing_status add constraint fk_ct_processing_status_payloa_6 foreign key (payload_id) references ct_payload (id) on delete restrict on update restrict;
 create index ix_ct_processing_status_payloa_6 on ct_processing_status (payload_id);
-alter table ct_publication add constraint fk_ct_publication_ct_granite_g_7 foreign key (grant_id) references ct_granite_grant (id) on delete restrict on update restrict;
-create index ix_ct_publication_ct_granite_g_7 on ct_publication (grant_id);
-alter table ct_publication add constraint fk_ct_publication_journal_8 foreign key (journal_id) references ct_journal (id) on delete restrict on update restrict;
-create index ix_ct_publication_journal_8 on ct_publication (journal_id);
+alter table ct_property add constraint fk_ct_property_ct_payload_7 foreign key (payload_id) references ct_payload (id) on delete restrict on update restrict;
+create index ix_ct_property_ct_payload_7 on ct_property (payload_id);
+alter table ct_publication add constraint fk_ct_publication_ct_granite_g_8 foreign key (grant_id) references ct_granite_grant (id) on delete restrict on update restrict;
+create index ix_ct_publication_ct_granite_g_8 on ct_publication (grant_id);
+alter table ct_publication add constraint fk_ct_publication_journal_9 foreign key (journal_id) references ct_journal (id) on delete restrict on update restrict;
+create index ix_ct_publication_journal_9 on ct_publication (journal_id);
+alter table ct_vint add constraint fk_ct_vint_property_10 foreign key (property_id) references ct_property (id) on delete restrict on update restrict;
+create index ix_ct_vint_property_10 on ct_vint (property_id);
+alter table ct_vnum add constraint fk_ct_vnum_property_11 foreign key (property_id) references ct_property (id) on delete restrict on update restrict;
+create index ix_ct_vnum_property_11 on ct_vnum (property_id);
+alter table ct_vstr add constraint fk_ct_vstr_property_12 foreign key (property_id) references ct_property (id) on delete restrict on update restrict;
+create index ix_ct_vstr_property_12 on ct_vstr (property_id);
+alter table ct_value add constraint fk_ct_value_property_13 foreign key (property_id) references ct_property (id) on delete restrict on update restrict;
+create index ix_ct_value_property_13 on ct_value (property_id);
 
 
 
@@ -298,6 +374,10 @@ alter table ct_publication_mesh add constraint fk_ct_publication_mesh_ct_mes_02 
 alter table ct_publication_author add constraint fk_ct_publication_author_ct_p_01 foreign key (ct_publication_id) references ct_publication (id) on delete restrict on update restrict;
 
 alter table ct_publication_author add constraint fk_ct_publication_author_ct_a_02 foreign key (ct_author_id) references ct_author (id) on delete restrict on update restrict;
+
+alter table ct_stitch_property add constraint fk_ct_stitch_property_ct_stit_01 foreign key (ct_stitch_id) references ct_stitch (id) on delete restrict on update restrict;
+
+alter table ct_stitch_property add constraint fk_ct_stitch_property_ct_prop_02 foreign key (ct_property_id) references ct_property (id) on delete restrict on update restrict;
 
 # --- !Downs
 
@@ -339,6 +419,8 @@ drop table if exists ct_principal;
 
 drop table if exists ct_processing_status;
 
+drop table if exists ct_property;
+
 drop table if exists ct_publication;
 
 drop table if exists ct_publication_keyword;
@@ -346,6 +428,18 @@ drop table if exists ct_publication_keyword;
 drop table if exists ct_publication_mesh;
 
 drop table if exists ct_publication_author;
+
+drop table if exists ct_stitch;
+
+drop table if exists ct_stitch_property;
+
+drop table if exists ct_vint;
+
+drop table if exists ct_vnum;
+
+drop table if exists ct_vstr;
+
+drop table if exists ct_value;
 
 SET REFERENTIAL_INTEGRITY TRUE;
 
@@ -379,5 +473,17 @@ drop sequence if exists ct_principal_seq;
 
 drop sequence if exists ct_processing_status_seq;
 
+drop sequence if exists ct_property_seq;
+
 drop sequence if exists ct_publication_seq;
+
+drop sequence if exists ct_stitch_seq;
+
+drop sequence if exists ct_vint_seq;
+
+drop sequence if exists ct_vnum_seq;
+
+drop sequence if exists ct_vstr_seq;
+
+drop sequence if exists ct_value_seq;
 

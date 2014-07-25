@@ -1,6 +1,10 @@
 package models.core;
 
-import play.db.ebean.*;
+import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
+
+import play.db.ebean.Model;
 import javax.persistence.*;
 
 
@@ -12,14 +16,15 @@ public class Payload extends Model {
 
     @Column(length=1024)
     public String name;
-
     @Column(length=40)
     public String sha1;
-
     @Column(length=128)
-    public String mimeType;
-
+    public String mime; // mime type
     public Long size;
+    public Date created;
+
+    @OneToMany(cascade=CascadeType.ALL)
+    public List<Property> properties = new ArrayList<Property>();
 
     public Payload () {}
 }
