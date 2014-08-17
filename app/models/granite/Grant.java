@@ -209,7 +209,7 @@ public class Grant extends Model {
      * tool.
      */
     @ManyToMany(cascade=CascadeType.ALL)
-    @Basic(fetch=FetchType.LAZY)
+    @Basic(fetch=FetchType.EAGER)
     @JoinTable(name="ct_granite_grant_keyword")
     public List<Keyword> projectTerms = new ArrayList<Keyword>();
 

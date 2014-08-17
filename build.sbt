@@ -16,6 +16,7 @@ libraryDependencies ++= Seq(
   ,"org.apache.lucene" % "lucene-highlighter" % "4.9.0"
   ,"org.apache.lucene" % "lucene-suggest" % "4.9.0"
   ,"org.apache.lucene" % "lucene-facet" % "4.9.0"
+  ,"org.apache.lucene" % "lucene-queryparser" % "4.9.0"
   ,"org.webjars" %% "webjars-play" % "2.3.0"
   ,"org.webjars" % "bootstrap" % "3.2.0"
   ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"
