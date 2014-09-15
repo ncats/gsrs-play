@@ -23,14 +23,14 @@ import com.avaje.ebean.*;
 import com.avaje.ebean.event.BeanPersistListener;
 
 import models.core.ETag;
-import models.core.ETagId;
+import models.core.ETagRef;
 import models.core.Edit;
 import models.core.Principal;
 
 import utils.Global;
 
 public class SearchFactory extends Controller {
-    public static Result search (int top, int skip, String q) {
+    public static Result search (String q, int top, int skip) {
         Global g = Global.getInstance();
         try {
             List results = g.getTextIndexer().search(q, top, skip);

@@ -8,16 +8,31 @@ POST    /loadmeta                       controllers.test.Application.loadMeta()
 POST    /loadabs                       controllers.test.Application.loadAbs()
 POST    /loadpub                       controllers.test.Application.loadPub()
 POST    /:id                  controllers.test.Application.deleteGrant(id:Long)
+DELETE    /:id                  controllers.test.Application.deleteGrant(id:Long)
 POST    /                       controllers.test.Application.newGrant()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
 
-GET     /search         controllers.core.SearchFactory.search(top: Int ?= 10, skip: Int ?= 0, q)
+GET     /search         controllers.core.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0)
 #
 # special variables are denoted by @'s and should be specified
 # before other resources
 #
+
+GET     /admin/principal/:id    controllers.core.AdminFactory.getUser(id:Long)
+DELETE  /admin/principal/:id    controllers.core.AdminFactory.deleteUser(id:Long)
+GET     /admin/role/:id         controllers.core.AdminFactory.getRole(id:Long)
+DELETE  /admin/role/:id         controllers.core.AdminFactory.deleteRole(id:Long)
+GET     /admin/resource/:id         controllers.core.AdminFactory.getResource(id:Long)
+DELETE  /admin/resource/:id         controllers.core.AdminFactory.deleteResource(id:Long)
+GET     /admin/:resource    controllers.core.AdminFactory.get(resource: String)
+POST    /admin/principal        controllers.core.AdminFactory.createUser()
+POST    /admin/test1    controllers.core.AdminFactory.createTest1()
+
+GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       controllers.core.RouteFactory.get(ns: String, resource: String, pkey: String ?= null)
+
+
 ##################################
 # Grant resources
 ##################################
@@ -51,15 +66,15 @@ PUT     /investigators(:id)/*field       controllers.granite.InvestigatorFactory
 ##################################
 # Organization resources
 ##################################
-GET     /organizations/:id      controllers.granite.OrganizationFactory.get(id: Long, select: String ?= null)
-GET     /organizations(:id)      controllers.granite.OrganizationFactory.get(id: Long, select: String ?= null)
-GET     /organizations/:id/      controllers.granite.OrganizationFactory.get(id: Long, select: String ?= null)
-GET     /organizations/:id/*field  controllers.granite.OrganizationFactory.field(id: Long, field:String)
-GET     /organizations(:id)/*field  controllers.granite.OrganizationFactory.field(id: Long, field:String)
-GET     /organizations  controllers.granite.OrganizationFactory.page(top: Int ?= 10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
-POST    /organizations  controllers.granite.OrganizationFactory.create()
-PUT     /organizations/:id/*field       controllers.granite.OrganizationFactory.update(id: Long, field: String)
-PUT     /organizations(:id)/*field       controllers.granite.OrganizationFactory.update(id: Long, field: String)
+GET     /organizations/:id      controllers.core.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations(:id)      controllers.core.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations/:id/      controllers.core.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations/:id/*field  controllers.core.OrganizationFactory.field(id: Long, field:String)
+GET     /organizations(:id)/*field  controllers.core.OrganizationFactory.field(id: Long, field:String)
+GET     /organizations  controllers.core.OrganizationFactory.page(top: Int ?= 10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
+POST    /organizations  controllers.core.OrganizationFactory.create()
+PUT     /organizations/:id/*field       controllers.core.OrganizationFactory.update(id: Long, field: String)
+PUT     /organizations(:id)/*field       controllers.core.OrganizationFactory.update(id: Long, field: String)
 
 ##################################
 # Publication resources

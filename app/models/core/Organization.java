@@ -1,4 +1,4 @@
-package models.granite;
+package models.core;
 
 import java.util.*;
 import play.db.ebean.Model;
@@ -6,7 +6,7 @@ import javax.persistence.*;
 
 
 @Entity
-@Table(name="ct_granite_organization")
+@Table(name="ct_organization")
 public class Organization extends Model {
     @Id
     public Long id; // internal id

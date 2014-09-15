@@ -1,4 +1,4 @@
-package controllers.granite;
+package controllers.core;
 
 import java.io.*;
 import java.security.*;
@@ -11,11 +11,11 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
-import models.granite.Organization;
+import models.core.Organization;
 import controllers.core.EntityFactory;
 
 public class OrganizationFactory extends EntityFactory {
-    static final Model.Finder<Long, Organization> finder = 
+    static public final Model.Finder<Long, Organization> finder = 
         new Model.Finder(Long.class, Organization.class);
 
     public static List<Organization> all () { return all (finder); }

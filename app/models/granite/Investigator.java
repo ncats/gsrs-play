@@ -4,7 +4,7 @@ import java.util.*;
 import play.Logger;
 import play.db.ebean.Model;
 import javax.persistence.*;
-
+import models.core.Organization;
 
 @Entity
 @Table(name="ct_granite_investigator")

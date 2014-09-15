@@ -48,6 +48,7 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
+import static org.apache.lucene.document.Field.Store.*;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -61,13 +62,10 @@ public class TextIndexer {
     private IndexWriter indexWriter;
     private Analyzer indexAnalyzer;
 
+    static final int DEBUG = 0;
+
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
-
-    static org.apache.lucene.document.Field.Store NO = 
-        org.apache.lucene.document.Field.Store.NO;
-    static org.apache.lucene.document.Field.Store YES = 
-        org.apache.lucene.document.Field.Store.YES;
 
     public static TextIndexer getInstance (File dir) throws IOException {
         if (indexers.containsKey(dir)) 
@@ -113,29 +111,37 @@ public class TextIndexer {
             Logger.debug("## Query: "+query);
 
             long start = System.currentTimeMillis();
-            TopDocs hits = searcher.search(query, skip+top);
 
+            TopDocs hits = searcher.search(query, skip+top);
             int size = Math.max(0, Math.min(skip+top, hits.totalHits));
             for (int i = skip; i < size; ++i) {
                 Document doc = searcher.doc(hits.scoreDocs[i].doc);
                 IndexableField kind = doc.getField("kind");
-                IndexableField id = doc.getField("_id");
-
-                if (kind != null && id != null) {
-                    Number n = id.numericValue();
-                    try {
-                        Model.Finder finder = new Model.Finder
-                            (n != null ? Long.class : String.class,
-                             Class.forName(kind.stringValue()));
-                        results.add(finder.byId
-                                    (n != null 
-                                     ? n.longValue() : id.stringValue()));
-
-                        Logger.debug(kind.stringValue()+":"+id.stringValue());
+                if (kind != null) {
+                    String field = kind.stringValue()+"._id";
+                    IndexableField id = doc.getField(field);
+                    if (id != null) {
+                        Number n = id.numericValue();
+                        try {
+                            Model.Finder finder = new Model.Finder
+                                (n != null ? Long.class : String.class,
+                                 Class.forName(kind.stringValue()));
+                            results.add(finder.byId
+                                        (n != null 
+                                         ? n.longValue() : id.stringValue()));
+                            
+                            Logger.debug("++ matched doc "
+                                         +field+"="+id.stringValue());
+                        }
+                        catch (ClassNotFoundException ex) {
+                            Logger.trace("Can't locate class "
+                                         +kind.stringValue()
+                                         +" in classpath!", ex);
+                        }
                     }
-                    catch (ClassNotFoundException ex) {
-                        Logger.error("Can't locate class "+kind.stringValue()
-                                     +" in classpath!", ex);
+                    else {
+                        Logger.error("Index corrupted; document "
+                                     +"doesn't have field "+field);
                     }
                 }
             }
@@ -157,36 +163,70 @@ public class TextIndexer {
      * recursively index any object annotated with Entity
      */
     public void add (Object entity) throws IOException {
-        if (entity.getClass().isAnnotationPresent(Entity.class)) {
+        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+            return;
+        }
+        if (DEBUG > 0)
             Logger.debug(">>> Indexing "+entity+"...");
+        
+        List<IndexableField> fields = new ArrayList<IndexableField>();
+        fields.add(new StringField
+                   ("kind", entity.getClass().getName(), YES));
+        instrument (entity, fields);
+        
+        List<IndexableField> text = new ArrayList<IndexableField>();
+        for (IndexableField f : fields) {
+            text.add(new TextField ("text", f.stringValue(), NO));
 
-            List<IndexableField> fields = new ArrayList<IndexableField>();
-            fields.add(new StringField
-                       ("kind", entity.getClass().getName(), YES));
-            instrument (entity, fields);
-
-            List<IndexableField> text = new ArrayList<IndexableField>();
-            for (IndexableField f : fields) {
-                text.add(new TextField ("text", f.stringValue(), NO));
-
+            if (DEBUG > 1)
                 Logger.debug(".."+f.name()+":"
                              +f.stringValue()+" ["+f.getClass().getName()+"]");
-            }
-            fields.addAll(text);
-
-            // now index
-            indexWriter.addDocument(fields);
-            Logger.debug("<<< "+entity);
         }
+        fields.addAll(text);
+        
+        // now index
+        indexWriter.addDocument(fields);
+
+        if (DEBUG > 0)
+            Logger.debug("<<< "+entity);
     }
 
-    public void remove (Object id, Class kind) throws Exception {
+    public void update (Object entity) throws IOException {
+        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+            return;
+        }
+
+        if (DEBUG > 0)
+            Logger.debug(">>> Updating "+entity+"...");
+
+        try {
+            for (Field f : entity.getClass().getDeclaredFields()) {
+                if (f.getAnnotation(Id.class) != null) {
+                    Object id = f.get(entity);
+                    if (id != null) {
+                        String field = entity.getClass().getName()+".id";
+                        indexWriter.deleteDocuments
+                            (new Term (field, id.toString()));
+
+                        Logger.debug("++ Updating "+field+"="+id);
+
+                        // now reindex .. there isn't an IndexWriter.update 
+                        // that takes a Query
+                        add (entity);
+                    }
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.trace("Unable to update index for "+entity, ex);
+        }
+
+        if (DEBUG > 0)
+            Logger.debug("<<< "+entity);
+    }
+
+    public void remove (Object id, Class kind) throws IOException {
         BooleanQuery query = new BooleanQuery ();
-        query.add(new TermQuery (new Term ("id", id.toString())), 
-                  BooleanClause.Occur.MUST);
-        query.add(new TermQuery (new Term ("kind", kind.getName())),
-                  BooleanClause.Occur.MUST);
-        indexWriter.deleteDocuments(query);
     }
 
     public void remove (Object entity) throws Exception {
@@ -195,9 +235,13 @@ public class TextIndexer {
             Field[] fields = cls.getDeclaredFields();
             for (Field f : fields) {
                 if (f.getAnnotation(Id.class) != null) {
-                    Object value = f.get(entity);
-                    if (value != null) {
-                        remove (value, f.getType());
+                    Object id = f.get(entity);
+                    if (id != null) {
+                        String field = entity.getClass().getName()+".id";
+                        
+                        Logger.debug("Deleting document "+field+"...");
+                        indexWriter.deleteDocuments
+                            (new Term (field+".id", id.toString()));
                     }
                     else {
                         Logger.warn("Id field "+f.getName()+" is null");
@@ -206,7 +250,8 @@ public class TextIndexer {
             }
         }
         else {
-            throw new IllegalArgumentException ("Object is not of type Entity");
+            throw new IllegalArgumentException
+                ("Object is not of type Entity");
         }
     }
 
@@ -220,7 +265,8 @@ public class TextIndexer {
         }
         catch (ParseException ex) {
             Logger.warn("Can't parse query expression: "+text, ex);
-            throw new IllegalArgumentException ("Can't parse query: "+text, ex);
+            throw new IllegalArgumentException
+                ("Can't parse query: "+text, ex);
         }
     }
 
@@ -239,13 +285,15 @@ public class TextIndexer {
                     if (f.getAnnotation(Id.class) != null) {
                         //Logger.debug("+ Id: "+value);
                         if (value != null) {
-                            // the hidden _id field store the field's value
+                            // the hidden _id field stores the field's value
                             // in its native type whereas the display field id
                             // is used for indexing purposes and as such is
                             // represented as a string
-                            ixFields.add(getField ("_id", value, YES));
+                            String kind = entity.getClass().getName();
+                            ixFields.add(getField (kind+"._id", value, YES));
                             ixFields.add
-                                (new StringField ("id", value.toString(), NO));
+                                (new StringField (kind+".id", 
+                                                  value.toString(), NO));
                         }
                         else {
                             //Logger.warn("Id field "+f+" is null");

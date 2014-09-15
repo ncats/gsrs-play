@@ -6,6 +6,15 @@ import java.util.*;
 import play.GlobalSettings;
 import play.Application;
 import play.Logger;
+import play.db.DB;
+import play.mvc.Http;
+
+import com.avaje.ebean.config.ServerConfig;
+import com.avaje.ebean.EbeanServer;
+import com.avaje.ebean.EbeanServerFactory;
+import com.avaje.ebean.Ebean;
+
+import javax.sql.DataSource;
 
 import search.TextIndexer;
 
@@ -18,6 +27,7 @@ public class Global extends GlobalSettings {
 
     private File home = new File (".");
     private TextIndexer textIndexer;
+    private EbeanServer archiveEbeanServer;
 
     protected void init (Application app) throws Exception {
         String h = app.configuration().getString("crosstalk.home");
@@ -33,6 +43,18 @@ public class Global extends GlobalSettings {
 
         Logger.info("## home: \""+home.getCanonicalPath()+"\"");
         textIndexer = TextIndexer.getInstance(home);
+
+        /*
+        ServerConfig config = new ServerConfig ();
+        config.setName("archive");
+        config.setDataSource(DB.getDataSource("archive"));
+        config.addPackage("models.*");
+        config.setDdlGenerate(true);
+        config.setDdlRun(true);
+
+        archiveEbeanServer = EbeanServerFactory.create(config);
+        Logger.info("## EbeanServer['archive'] = "+archiveEbeanServer);
+        */
     }
 
     @Override
@@ -60,5 +82,12 @@ public class Global extends GlobalSettings {
         textIndexer.shutdown();
     }
 
+    @Override
+    public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
+        Logger.debug("route: path="+req.path()+" method="+req.method());
+        return super.onRouteRequest(req);
+    }
+
     public TextIndexer getTextIndexer () { return textIndexer; }
+    public EbeanServer getArchiveEbean () { return archiveEbeanServer; }
 }

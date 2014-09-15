@@ -13,6 +13,9 @@ public class Author extends Model {
     public String forename;
     public String initials;
     public String affiliation;
+    public String orcid; // http://orcid.org/
+    public String email;
+    public String url;
 
     public Author () {}
 }

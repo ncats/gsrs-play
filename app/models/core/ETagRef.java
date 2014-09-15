@@ -8,15 +8,19 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ct_etag_id")
-public class ETagId extends Model {
-    @ManyToOne
-    public ETag etag;
+@Table(name="ct_etag_ref")
+public class ETagRef extends Model {
+    @Id
     public Long id;
 
-    public ETagId () {}
-    public ETagId (ETag etag, Long id) { 
+    @ManyToOne
+    public ETag etag;
+
+    public Long refId;
+
+    public ETagRef () {}
+    public ETagRef (ETag etag, Long refId) { 
         this.etag = etag; 
-        this.id = id;
+        this.refId = refId;
     }
 }

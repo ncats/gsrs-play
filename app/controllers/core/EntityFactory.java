@@ -26,7 +26,7 @@ import com.avaje.ebean.*;
 import com.avaje.ebean.event.BeanPersistListener;
 
 import models.core.ETag;
-import models.core.ETagId;
+import models.core.ETagRef;
 import models.core.Edit;
 import models.core.Principal;
 
@@ -126,8 +126,8 @@ public class EntityFactory extends Controller {
                                 etag.save();
                                 
                                 for (Object id : ids) {
-                                    ETagId eid = new ETagId (etag, (Long)id);
-                                    eid.save();
+                                    ETagRef ref = new ETagRef (etag, (Long)id);
+                                    ref.save();
                                 }
                                 Logger.debug(Thread.currentThread().getName()
                                              +": "+filter+" => "+ids.size());
@@ -379,7 +379,7 @@ public class EntityFactory extends Controller {
 
                 List<Object[]> changes = new ArrayList<Object[]>();
                 for (int i = 0; i < paths.length; ++i) {
-                    Logger.debug("paths["+i+"]:"+paths[i]);
+                    Logger.debug("paths["+i+"/"+paths.length+"]:"+paths[i]);
 
                     String pname = paths[i]; // field name
                     Integer pindex = null; // field index if field is a list
@@ -396,10 +396,22 @@ public class EntityFactory extends Controller {
 
                         Field f = inst.getClass().getField(pname);
                         String fname = f.getName();
+                        String bname = getBeanName (fname);
                         Class<?> ftype = f.getType();
 
-                        // this always return null!
-                        Object val = f.get(inst);
+                        //Object val = f.get(inst); // this always return null?
+                        Object val = null;
+                        try {
+                            Method m = inst.getClass()
+                                .getMethod("get"+bname);
+                            val = m.invoke(inst);
+                        }
+                        catch (NoSuchMethodException ex) {
+                            Logger.error("Can't find bean getter for "
+                                         +"field \""+fname+"\" in class "
+                                         +inst.getClass(), ex);
+                        }
+                        String oldVal = mapper.writeValueAsString(val);
 
                         if (i+1 < paths.length) {
                             if (val == null) {
@@ -417,6 +429,8 @@ public class EntityFactory extends Controller {
                                     val = getJsonValue (val, value, f, pindex);
                                 }
                                 catch (Exception ex) {
+                                    Logger.trace("Can't retrieve value", ex);
+
                                     return internalServerError
                                         (ex.getMessage());
                                 }
@@ -438,13 +452,8 @@ public class EntityFactory extends Controller {
                          * for update
                          */
                         try {
-                            String prop = Character.toUpperCase(fname.charAt(0))
-                                +fname.substring(1);
-                            Method get = inst.getClass().getMethod("get"+prop);
-                            Object oldVal = get.invoke(inst);
-
                             Method set = inst.getClass().getMethod
-                                ("set"+prop, ftype);
+                                ("set"+bname, ftype);
                             set.invoke(inst, val);
                             changes.add(new Object[]{
                                             uri.toString(), 
@@ -472,7 +481,7 @@ public class EntityFactory extends Controller {
                     Edit e = new Edit (type, id);
                     e.path = (String)c[0];
                     e.principal = principal;
-                    e.oldValue = mapper.writeValueAsString(c[1]);
+                    e.oldValue = (String)c[1];
                     e.newValue = mapper.writeValueAsString(c[2]);
                     e.save();
                 }
@@ -494,11 +503,12 @@ public class EntityFactory extends Controller {
         JsonNode node = value.get("id");
         Class<?> ftype = field.getType();
 
+        Logger.debug("node: "+node+" "+ftype.getName()+"; val="+val);
         ObjectMapper mapper = new ObjectMapper ();
         if (node != null && !node.isNull()) {
             long id = node.asLong();
 
-            Model.Finder finder = new Model.Finder (Long.class, ftype);
+            Model.Finder finder = new Model.Finder(Long.class, ftype);
             val = finder.byId(id);
         }
         else if (value.isArray()) {
@@ -540,22 +550,7 @@ public class EntityFactory extends Controller {
                         ("Invalid list index: "+index);
 
                 Collection vals = (Collection)val;
-                
-                Class cls;
-                Type type = field.getGenericType();
-                if (type instanceof ParameterizedType) {
-                    Type[] types = ((ParameterizedType)type)
-                        .getActualTypeArguments();
-
-                    if (types.length != 1) {
-                        throw new IllegalStateException
-                            ("Nested generic types not supported!");
-                    }
-                    cls = (Class)types[0];
-                }
-                else {
-                    cls = (Class)type;
-                }
+                Class cls = getComponentType (field.getGenericType());
 
                 /* for now we only handle append or replace... no
                  * insert in a specific position 
@@ -597,10 +592,114 @@ public class EntityFactory extends Controller {
                              +field.getName()+" is of type "+ftype);
             }
         }
+        else if (ftype.isArray()) {
+            Class<?> c = ftype.getComponentType();
+
+            if (index == null 
+                || index < 0 
+                || index >= Array.getLength(val)) {
+                if (val == null) {
+                    val = Array.newInstance(c, 1);
+                    index = 0;
+                }
+                else {
+                    index = Array.getLength(val);
+                    Object newval = Array.newInstance(c, index+1);
+                    // copy array
+                    for (int i = 0; i < index; ++i)
+                        Array.set(newval, i, Array.get(val, i));
+                    val = newval;
+                }
+            }
+            else {
+                int len = Array.getLength(val);
+                Object newval = Array.newInstance(c, len);
+                // copy array
+                for (int i = 0; i < len; ++i)
+                    Array.set(newval, i, Array.get(val, i));
+                val = newval;
+            }
+            Array.set(val, index, mapper.treeToValue(value, c));
+        }
+        else if (Collection.class.isAssignableFrom(ftype)) {
+            Class<?> c = getComponentType (field.getGenericType());
+            if (index == null || index < 0 
+                || index >= ((Collection)val).size()) {
+                if (val == null) {
+                    val = new ArrayList ();
+                }
+                else {
+                    ArrayList newval = new ArrayList ();
+                    newval.addAll((Collection)val);
+                    val = newval;
+                }
+                ((Collection)val).add(mapper.treeToValue(value, c));
+            }
+            else {
+                ArrayList newval = new ArrayList ();
+                newval.addAll((Collection)val);
+                Object el = newval.get(index);
+                // now update this object
+                if (el != null) {
+                    updateBean (el, value);
+                    Logger.debug("Updating "+el+" with "+value);
+                }
+                val = newval;
+            }
+        }
         else {
             val = mapper.treeToValue(value, ftype);
         }
 
         return val;
     } // getJsonValue ()
+
+    static Class<?> getComponentType (Type type) {
+        Class cls;
+        if (type instanceof ParameterizedType) {
+            Type[] types = ((ParameterizedType)type)
+                .getActualTypeArguments();
+            
+            if (types.length != 1) {
+                throw new IllegalStateException
+                    ("Nested generic types not supported!");
+            }
+            cls = (Class)types[0];
+        }
+        else {
+            cls = (Class)type;
+        }
+        return cls;
+    }
+
+    static String getBeanName (String field) {
+        return Character.toUpperCase(field.charAt(0))+field.substring(1);
+    }
+
+    static void updateBean (Object bean, JsonNode value) {
+        ObjectMapper mapper = new ObjectMapper ();
+        Iterator<Map.Entry<String, JsonNode>> it = value.fields();
+        while (it.hasNext()) {
+            Map.Entry<String, JsonNode> jf = it.next();
+            String set = "set"+getBeanName (jf.getKey());
+            Class<?> type = null;
+            try {
+                Field bf = bean.getClass().getField(jf.getKey());
+                type = bf.getType();
+                Method m = bean.getClass().getMethod(set, type);
+                m.invoke(bean, mapper.treeToValue(jf.getValue(), type));
+            }
+            catch (NoSuchFieldException ex) {
+                Logger.debug("Ignore field '"+jf.getKey()+"'");
+            }
+            catch (NoSuchMethodException ex) {
+                Logger.error("No such method '"
+                             +set+"("+type+")' for class "
+                             +bean.getClass());
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't update bean '"+set+"'", ex);
+            }
+        }
+    }
 }

@@ -1,24 +1,40 @@
 package models.core;
 
-import java.util.List;
-import java.util.ArrayList;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
 @Table(name="ct_principal")
 public class Principal extends Model {
+
     @Id
     public Long id;
 
-    @Column(unique=true)
     public String name;
+    public String email;
+    public boolean admin = false;
 
-    @OneToMany(cascade=CascadeType.ALL)
-    public List<Permission> permissions = new ArrayList<Permission>();
+    @Column(length=1024)
+    public String uri; // can be email or any unique uri
+
+    @Column(length=256,unique=true)
+    public String pkey; // private key
 
     public Principal () {}
-    public Principal (String name) {
-        this.name = name;
+    public Principal (boolean admin) {
+        this.admin = admin;
     }
+    public Principal (String email) {
+        this.email = email;
+    }
+    public Principal (boolean admin, String email) {
+        this.admin = admin;
+        this.email = email;
+    }
+    public Principal (String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
+
+    public boolean isAdmin () { return admin; }
 }

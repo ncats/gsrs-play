@@ -66,7 +66,7 @@ public class Application extends Controller {
     }
 
     @BodyParser.Of(value = BodyParser.MultipartFormData.class, 
-                   maxLength = 100 * 1024 * 1024)
+                   maxLength = 1000000 * 1024 * 1024)
     public static Result loadMeta () {
         if (request().body().isMaxSizeExceeded()) {
             return badRequest ("File too large!");

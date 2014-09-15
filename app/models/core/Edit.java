@@ -17,7 +17,7 @@ public class Edit extends Model {
     public Long refid;
     public Date timestamp = new Date ();
 
-    @OneToOne
+    @ManyToOne
     public Principal principal;
 
     @Column(length=1024)
@@ -25,10 +25,10 @@ public class Edit extends Model {
 
     @Lob
     @JsonDeserialize(using=JsonNodeDeserializer.class,as=JsonNode.class)
-    public String oldValue; // old value as Json
+    public String oldValue; // value as Json
     @Lob
     @JsonDeserialize(using=JsonNodeDeserializer.class,as=JsonNode.class)
-    public String newValue; // new value as Json
+    public String newValue; // value as Json
     
     public Edit () {}
     public Edit (Class<?> type, Long refid) {

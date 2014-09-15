@@ -15,6 +15,8 @@ import play.Logger;
 import com.avaje.ebean.Expr;
 import models.granite.*;
 import models.core.Keyword;
+import models.core.Organization;
+import controllers.core.OrganizationFactory;
 
 public class GrantXmlParser extends DefaultHandler {
     
