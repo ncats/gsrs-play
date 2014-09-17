@@ -4,6 +4,8 @@ version := "0.0.1-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
+lazy val admin = (project in file("modules/admin")).enablePlugins(PlayJava)
+
 scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(

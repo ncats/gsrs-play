@@ -3,101 +3,103 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.test.Application.index()
-POST    /loadmeta                       controllers.test.Application.loadMeta()
-POST    /loadabs                       controllers.test.Application.loadAbs()
-POST    /loadpub                       controllers.test.Application.loadPub()
-POST    /:id                  controllers.test.Application.deleteGrant(id:Long)
-DELETE    /:id                  controllers.test.Application.deleteGrant(id:Long)
-POST    /                       controllers.test.Application.newGrant()
+GET     /       crosstalk.ncats.controllers.Granite.index()
+POST    /loadmeta       crosstalk.ncats.controllers.Granite.loadMeta()
+POST    /loadabs        crosstalk.ncats.controllers.Granite.loadAbs()
+POST    /loadpub        crosstalk.ncats.controllers.Granite.loadPub()
+POST    /:id    crosstalk.ncats.controllers.Granite.deleteGrant(id:Long)
+DELETE    /:id  crosstalk.ncats.controllers.Granite.deleteGrant(id:Long)
+POST    /       crosstalk.ncats.controllers.Granite.newGrant()
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /assets/*file   controllers.Assets.at(path="/public", file)
 
-GET     /search         controllers.core.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0)
+GET     /search         crosstalk.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0)
 #
 # special variables are denoted by @'s and should be specified
 # before other resources
 #
 
-GET     /admin/principal/:id    controllers.core.AdminFactory.getUser(id:Long)
-DELETE  /admin/principal/:id    controllers.core.AdminFactory.deleteUser(id:Long)
-GET     /admin/role/:id         controllers.core.AdminFactory.getRole(id:Long)
-DELETE  /admin/role/:id         controllers.core.AdminFactory.deleteRole(id:Long)
-GET     /admin/resource/:id         controllers.core.AdminFactory.getResource(id:Long)
-DELETE  /admin/resource/:id         controllers.core.AdminFactory.deleteResource(id:Long)
-GET     /admin/:resource    controllers.core.AdminFactory.get(resource: String)
-POST    /admin/principal        controllers.core.AdminFactory.createUser()
-POST    /admin/test1    controllers.core.AdminFactory.createTest1()
+GET     /admin/principal/:id    crosstalk.core.controllers.AdminFactory.getUser(id:Long)
+DELETE  /admin/principal/:id    crosstalk.core.controllers.AdminFactory.deleteUser(id:Long)
+GET     /admin/role/:id         crosstalk.core.controllers.AdminFactory.getRole(id:Long)
+DELETE  /admin/role/:id         crosstalk.core.controllers.AdminFactory.deleteRole(id:Long)
+GET     /admin/resource/:id         crosstalk.core.controllers.AdminFactory.getResource(id:Long)
+DELETE  /admin/resource/:id         crosstalk.core.controllers.AdminFactory.deleteResource(id:Long)
+GET     /admin/:resource    crosstalk.core.controllers.AdminFactory.get(resource: String)
+POST    /admin/principal        crosstalk.core.controllers.AdminFactory.createUser()
+POST    /admin/test1    crosstalk.core.controllers.AdminFactory.createTest1()
 
-GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       controllers.core.RouteFactory.get(ns: String, resource: String, pkey: String ?= null)
+GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       crosstalk.core.controllers.RouteFactory.get(ns: String, resource: String, pkey: String ?= null)
 
 
 ##################################
 # Grant resources
 ##################################
-GET     /grants/@count       controllers.granite.GrantFactory.count()
-GET     /grants/:id  controllers.granite.GrantFactory.get(id: Long, select:String ?= null)
-GET     /grants/:id/@edits      controllers.granite.GrantFactory.edits(id:Long)
-GET     /grants(:id)  controllers.granite.GrantFactory.get(id: Long, select:String ?= null)
-GET     /grants(:id)/  controllers.granite.GrantFactory.get(id: Long, select: String ?= null)
-GET     /grants(:id)/@edits      controllers.granite.GrantFactory.edits(id:Long)
-GET     /grants/:id/  controllers.granite.GrantFactory.get(id: Long, select: String ?= null)
-GET     /grants/:id/*field  controllers.granite.GrantFactory.field(id: Long, field:String)
-GET     /grants(:id)/*field  controllers.granite.GrantFactory.field(id: Long, field:String)
-GET     /grants  controllers.granite.GrantFactory.page(top: Int ?=10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
-POST    /grants  controllers.granite.GrantFactory.create()
-PUT     /grants/:id/*field       controllers.granite.GrantFactory.update(id:Long, field: String)
-PUT     /grants(:id)/*field       controllers.granite.GrantFactory.update(id:Long, field: String)
+GET     /grants/@count       crosstalk.ncats.controllers.GrantFactory.count()
+GET     /grants/:id  crosstalk.ncats.controllers.GrantFactory.get(id: Long, expand:String ?= null)
+GET     /grants/:id/@edits      crosstalk.ncats.controllers.GrantFactory.edits(id:Long)
+GET     /grants(:id)  crosstalk.ncats.controllers.GrantFactory.get(id: Long, expand:String ?= null)
+GET     /grants(:id)/  crosstalk.ncats.controllers.GrantFactory.get(id: Long, expand: String ?= null)
+GET     /grants(:id)/@edits      crosstalk.ncats.controllers.GrantFactory.edits(id:Long)
+GET     /grants/:id/  crosstalk.ncats.controllers.GrantFactory.get(id: Long, expand: String ?= null)
+GET     /grants/:id/*field  crosstalk.ncats.controllers.GrantFactory.field(id: Long, field:String)
+GET     /grants(:id)/*field  crosstalk.ncats.controllers.GrantFactory.field(id: Long, field:String)
+GET     /grants  crosstalk.ncats.controllers.GrantFactory.page(top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+POST    /grants  crosstalk.ncats.controllers.GrantFactory.create()
+PUT     /grants/:id/*field       crosstalk.ncats.controllers.GrantFactory.update(id:Long, field: String)
+PUT     /grants(:id)/*field       crosstalk.ncats.controllers.GrantFactory.update(id:Long, field: String)
 
 ##################################
 # Investigator resources
 ##################################
-GET     /investigators/:id  controllers.granite.InvestigatorFactory.get(id: Long, select: String ?= null)
-GET     /investigators(:id)  controllers.granite.InvestigatorFactory.get(id: Long, select: String ?= null)
-GET     /investigators/:id/  controllers.granite.InvestigatorFactory.get(id: Long, select: String ?= null)
-GET     /investigators/:id/*field  controllers.granite.InvestigatorFactory.field(id: Long, field:String)
-GET     /investigators(:id)/*field  controllers.granite.InvestigatorFactory.field(id: Long, field:String)
-GET     /investigators  controllers.granite.InvestigatorFactory.page(top: Int ?=10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
-POST    /investigators  controllers.granite.InvestigatorFactory.create()
-PUT     /investigators/:id/*field       controllers.granite.InvestigatorFactory.update(id:Long, field: String)
-PUT     /investigators(:id)/*field       controllers.granite.InvestigatorFactory.update(id:Long, field: String)
+GET     /investigators/:id  crosstalk.core.controllers.InvestigatorFactory.get(id: Long, expand: String ?= null)
+GET     /investigators(:id)  crosstalk.core.controllers.InvestigatorFactory.get(id: Long, expand: String ?= null)
+GET     /investigators/:id/  crosstalk.core.controllers.InvestigatorFactory.get(id: Long, select: String ?= null)
+GET     /investigators/:id/*field  crosstalk.core.controllers.InvestigatorFactory.field(id: Long, field:String)
+GET     /investigators(:id)/*field  crosstalk.core.controllers.InvestigatorFactory.field(id: Long, field:String)
+GET     /investigators  crosstalk.core.controllers.InvestigatorFactory.page(top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+POST    /investigators  crosstalk.core.controllers.InvestigatorFactory.create()
+PUT     /investigators/:id/*field       crosstalk.core.controllers.InvestigatorFactory.update(id:Long, field: String)
+PUT     /investigators(:id)/*field       crosstalk.core.controllers.InvestigatorFactory.update(id:Long, field: String)
 
 ##################################
 # Organization resources
 ##################################
-GET     /organizations/:id      controllers.core.OrganizationFactory.get(id: Long, select: String ?= null)
-GET     /organizations(:id)      controllers.core.OrganizationFactory.get(id: Long, select: String ?= null)
-GET     /organizations/:id/      controllers.core.OrganizationFactory.get(id: Long, select: String ?= null)
-GET     /organizations/:id/*field  controllers.core.OrganizationFactory.field(id: Long, field:String)
-GET     /organizations(:id)/*field  controllers.core.OrganizationFactory.field(id: Long, field:String)
-GET     /organizations  controllers.core.OrganizationFactory.page(top: Int ?= 10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
-POST    /organizations  controllers.core.OrganizationFactory.create()
-PUT     /organizations/:id/*field       controllers.core.OrganizationFactory.update(id: Long, field: String)
-PUT     /organizations(:id)/*field       controllers.core.OrganizationFactory.update(id: Long, field: String)
+GET     /organizations/:id      crosstalk.core.controllers.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations(:id)      crosstalk.core.controllers.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations/:id/      crosstalk.core.controllers.OrganizationFactory.get(id: Long, select: String ?= null)
+GET     /organizations/:id/*field  crosstalk.core.controllers.OrganizationFactory.field(id: Long, field:String)
+GET     /organizations(:id)/*field  crosstalk.core.controllers.OrganizationFactory.field(id: Long, field:String)
+GET     /organizations  crosstalk.core.controllers.OrganizationFactory.page(top: Int ?= 10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+POST    /organizations  crosstalk.core.controllers.OrganizationFactory.create()
+PUT     /organizations/:id/*field       crosstalk.core.controllers.OrganizationFactory.update(id: Long, field: String)
+PUT     /organizations(:id)/*field       crosstalk.core.controllers.OrganizationFactory.update(id: Long, field: String)
 
 ##################################
 # Publication resources
 ##################################
-GET     /publications/:id      controllers.core.PublicationFactory.get(id: Long, select: String ?= null)
-GET     /publications(:id)      controllers.core.PublicationFactory.get(id: Long, select: String ?= null)
-GET     /publications/:id/      controllers.core.PublicationFactory.get(id: Long, select: String ?= null)
-GET     /publications/:id/*field  controllers.core.PublicationFactory.field(id: Long, field:String)
-GET     /publications(:id)/*field  controllers.core.PublicationFactory.field(id: Long, field:String)
-GET     /publications  controllers.core.PublicationFactory.page(top: Int ?= 10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
-POST    /publications  controllers.core.PublicationFactory.create()
-PUT     /publications/:id/*field       controllers.core.PublicationFactory.update(id: Long, field: String)
-PUT     /publications(:id)/*field       controllers.core.PublicationFactory.update(id: Long, field: String)
+GET     /publications/:id      crosstalk.core.controllers.PublicationFactory.get(id: Long, select: String ?= null)
+GET     /publications(:id)      crosstalk.core.controllers.PublicationFactory.get(id: Long, select: String ?= null)
+GET     /publications/:id/      crosstalk.core.controllers.PublicationFactory.get(id: Long, select: String ?= null)
+GET     /publications/:id/*field  crosstalk.core.controllers.PublicationFactory.field(id: Long, field:String)
+GET     /publications(:id)/*field  crosstalk.core.controllers.PublicationFactory.field(id: Long, field:String)
+GET     /publications  crosstalk.core.controllers.PublicationFactory.page(top: Int ?= 10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+POST    /publications  crosstalk.core.controllers.PublicationFactory.create()
+PUT     /publications/:id/*field       crosstalk.core.controllers.PublicationFactory.update(id: Long, field: String)
+PUT     /publications(:id)/*field       crosstalk.core.controllers.PublicationFactory.update(id: Long, field: String)
 
 ##################################
 # Keyword resources
 ##################################
-GET     /keywords/:id      controllers.core.KeywordFactory.get(id: Long, select: String ?= null)
-GET     /keywords(:id)      controllers.core.KeywordFactory.get(id: Long, select: String ?= null)
-GET     /keywords/:id/      controllers.core.KeywordFactory.get(id: Long, select: String ?= null)
-GET     /keywords/:id/*field  controllers.core.KeywordFactory.field(id: Long, field:String)
-GET     /keywords(:id)/*field  controllers.core.KeywordFactory.field(id: Long, field:String)
-GET     /keywords  controllers.core.KeywordFactory.page(top: Int ?= 10, skip: Int ?= 0, select: String ?= null, filter: String ?= null)
-POST    /keywords  controllers.core.KeywordFactory.create()
-PUT     /keywords/:id/*field       controllers.core.KeywordFactory.update(id: Long, field: String)
-PUT     /keywords(:id)/*field       controllers.core.KeywordFactory.update(id: Long, field: String)
+GET     /keywords/:id      crosstalk.core.controllers.KeywordFactory.get(id: Long, select: String ?= null)
+GET     /keywords(:id)      crosstalk.core.controllers.KeywordFactory.get(id: Long, select: String ?= null)
+GET     /keywords/:id/      crosstalk.core.controllers.KeywordFactory.get(id: Long, select: String ?= null)
+GET     /keywords(:id)/@edits      crosstalk.core.controllers.KeywordFactory.edits(id:Long)
+GET     /keywords/:id/@edits      crosstalk.core.controllers.KeywordFactory.edits(id:Long)
+GET     /keywords/:id/*field  crosstalk.core.controllers.KeywordFactory.field(id: Long, field:String)
+GET     /keywords(:id)/*field  crosstalk.core.controllers.KeywordFactory.field(id: Long, field:String)
+GET     /keywords  crosstalk.core.controllers.KeywordFactory.page(top: Int ?= 10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+POST    /keywords  crosstalk.core.controllers.KeywordFactory.create()
+PUT     /keywords/:id/*field       crosstalk.core.controllers.KeywordFactory.update(id: Long, field: String)
+PUT     /keywords(:id)/*field       crosstalk.core.controllers.KeywordFactory.update(id: Long, field: String)
