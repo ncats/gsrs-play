@@ -16,7 +16,6 @@ import com.avaje.ebean.Expr;
 import crosstalk.ncats.models.*;
 import crosstalk.core.models.Keyword;
 import crosstalk.core.models.Organization;
-import crosstalk.core.models.Property;
 import crosstalk.core.models.Investigator;
 import crosstalk.core.controllers.OrganizationFactory;
 import crosstalk.core.controllers.InvestigatorFactory;
@@ -31,7 +30,6 @@ public class GrantXmlParser extends DefaultHandler {
     DateFormat df = new SimpleDateFormat ("MM/dd/yyyy");
     Organization org;
     LinkedList<Investigator> pis = new LinkedList<Investigator>();
-    Property PROP = new Property ("granite.Keyword", String.class.getName());
 
     public GrantXmlParser () {
     }

@@ -296,7 +296,8 @@ public class Grant extends Model {
     /**
      *  Publications as PubMed identifiers
      */
-    @OneToMany(cascade=CascadeType.ALL)
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ct_ncats_grant_publication")
     public List<Publication> publications = new ArrayList<Publication>();
 
 

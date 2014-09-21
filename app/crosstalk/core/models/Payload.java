@@ -24,8 +24,8 @@ public class Payload extends Model {
     public Date created;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ct_core_payload_property")
-    public List<Property> properties = new ArrayList<Property>();
+    @JoinTable(name="ct_core_payload_attribute")
+    public List<Attribute> attrs = new ArrayList<Attribute>();
 
     public Payload () {}
 }

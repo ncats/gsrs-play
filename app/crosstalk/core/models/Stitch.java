@@ -22,8 +22,8 @@ public class Stitch extends Model {
     public String description; // stitching algorithm description
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ct_core_stitch_property")
-    public List<Property> properties = new ArrayList<Property>();
+    @JoinTable(name="ct_core_stitch_attribute")
+    public List<Attribute> attrs = new ArrayList<Attribute>();
 
     public Stitch () {}
     public Stitch (String name) { this.name = name; }

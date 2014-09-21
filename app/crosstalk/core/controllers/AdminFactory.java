@@ -152,19 +152,19 @@ public class AdminFactory extends Controller {
 
     public static Result createTest1 () {
         Principal user1 = new Principal ("jdoe@army.mil");
-        user1.name = "Joe Doe";
+        user1.username = "Joe Doe";
         user1.pkey = pkey ();
 
         Principal user2 = new Principal ("jdoe@navy.mil");
-        user2.name = "Jane Doe";
+        user2.username = "Jane Doe";
         user2.pkey = pkey ();
         
         Principal user3 = new Principal ("jdoe@marine.mil");
-        user3.name = "Jimmy Doe";
+        user3.username = "Jimmy Doe";
         user3.pkey = pkey ();
 
         Principal user4 = new Principal (true, "jdean@nsa.mil");
-        user4.name = "Jimmy Dean";
+        user4.username = "Jimmy Dean";
         user4.pkey = pkey ();
 
         Principal user5 = new Principal ();
@@ -231,7 +231,7 @@ public class AdminFactory extends Controller {
         res1.roles.add(role2);
         res1.save();
 
-        Resource res2 = Resource.newProtected("ftmeade");
+        Resource res2 = Resource.newInternal("ftmeade");
         res2.acls.add(acl5);
         res2.acls.add(acl7);
         res2.acls.add(acl1);

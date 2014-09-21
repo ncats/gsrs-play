@@ -7,8 +7,7 @@ import javax.persistence.*;
 public class VInt extends Value {
     public Long value;
     public VInt () {}
-    public VInt (Property property, Long value) {
-        super (property);
+    public VInt (Long value) {
         this.value = value;
     }
 }

@@ -111,6 +111,8 @@ public class TextIndexer {
             Logger.debug("## Query: "+query);
 
             long start = System.currentTimeMillis();
+            Map<String, Model.Finder> finders = 
+                new HashMap<String, Model.Finder>();
 
             TopDocs hits = searcher.search(query, skip+top);
             int size = Math.max(0, Math.min(skip+top, hits.totalHits));
@@ -123,15 +125,23 @@ public class TextIndexer {
                     if (id != null) {
                         Number n = id.numericValue();
                         try {
-                            Model.Finder finder = new Model.Finder
-                                (n != null ? Long.class : String.class,
-                                 Class.forName(kind.stringValue()));
+                            Model.Finder finder = 
+                                finders.get(kind.stringValue());
+                            if (finder == null) {
+                                Class c = n != null 
+                                    ? Long.class : String.class;
+                                finder = new Model.Finder
+                                    (c, Class.forName(kind.stringValue()));
+                                finders.put(kind.stringValue(), finder);
+                            }
                             results.add(finder.byId
                                         (n != null 
                                          ? n.longValue() : id.stringValue()));
-                            
-                            Logger.debug("++ matched doc "
-                                         +field+"="+id.stringValue());
+
+                            if (DEBUG > 0) {
+                                Logger.debug("++ matched doc "
+                                             +field+"="+id.stringValue());
+                            }
                         }
                         catch (ClassNotFoundException ex) {
                             Logger.trace("Can't locate class "

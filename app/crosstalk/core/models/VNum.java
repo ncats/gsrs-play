@@ -7,8 +7,7 @@ import javax.persistence.*;
 public class VNum extends Value {
     public Double value;
     public VNum () {}
-    public VNum (Property property, Double value) {
-        super (property);
+    public VNum (Double value) {
         this.value = value;
     }
 }

@@ -20,8 +20,8 @@ public class PayloadFactory extends EntityFactory {
     public static List<Payload> all () { return all (finder); }
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String expand,
-                               String select, String filter) {
-        return page (top, skip, expand, select, filter, finder);
+                               String filter) {
+        return page (top, skip, expand, filter, finder);
     }
 
     public static Result get (Long id, String select) {

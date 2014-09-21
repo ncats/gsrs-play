@@ -5,8 +5,8 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonView;
 
 @Entity
-@Table(name="ct_core_property")
-public class Property extends Model {
+@Table(name="ct_core_attribute")
+public class Attribute extends Model {
     @Id
     public Long id;
 
@@ -17,8 +17,8 @@ public class Property extends Model {
     public Resource resource;
     public String label; // label used for stitching
 
-    public Property () {}
-    public Property (String name, String type) {
+    public Attribute () {}
+    public Attribute (String name, String type) {
         this.name = name;
         this.type = type;
     }

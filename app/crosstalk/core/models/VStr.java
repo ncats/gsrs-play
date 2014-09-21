@@ -8,8 +8,7 @@ public class VStr extends Value {
     @Column(length=1024)
     public String value;
     public VStr () {}
-    public VStr (Property property, String value) {
-        super (property);
+    public VStr (String value) {
         this.value = value;
     }
 }

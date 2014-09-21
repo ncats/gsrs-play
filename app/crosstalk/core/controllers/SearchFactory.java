@@ -30,7 +30,7 @@ import crosstalk.core.models.Principal;
 import crosstalk.utils.Global;
 
 public class SearchFactory extends Controller {
-    public static Result search (String q, int top, int skip) {
+    public static Result search (String q, int top, int skip, String expand) {
         Global g = Global.getInstance();
         try {
             List results = g.getTextIndexer().search(q, top, skip);

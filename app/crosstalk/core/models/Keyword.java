@@ -16,8 +16,4 @@ public class Keyword extends Value {
     public Keyword (String term) {
         this.term = term;
     }
-    public Keyword (Property property, String term) {
-        super (property);
-        this.term = term;
-    }
 }

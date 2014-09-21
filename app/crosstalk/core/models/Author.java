@@ -5,7 +5,7 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ct_core_author")
-public class Author extends Model {
+public class Author extends Principal {
     @Id
     public Long id; // internal id
 
@@ -15,7 +15,6 @@ public class Author extends Model {
     public String affiliation;
     @Column(length=20)
     public String orcid; // http://orcid.org/
-    public String email;
     @Column(length=1024)
     public String url;
 

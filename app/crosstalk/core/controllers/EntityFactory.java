@@ -83,9 +83,19 @@ public class EntityFactory extends Controller {
         //if (select != null) finder.select(select);
         Logger.debug(request().uri()+": top="+top+" skip="+skip
                      +" expand="+expand+" filter="+filter);
+        Query<T> query = finder.query();
+        if (expand != null) {
+            StringBuilder path = new StringBuilder ();
+            for (String p : expand.split("\\.")) {
+                if (path.length() > 0)
+                    path.append('.');
+                path.append(p);
+                Logger.debug("  -> fetch "+path);
+                query = query.fetch(path.toString());
+            }
+        }
 
-        List<T> results = finder
-            .fetch(expand)
+        List<T> results = query
             .where(filter)
             .orderBy("id asc")
             .setFirstRow(skip)
@@ -205,19 +215,26 @@ public class EntityFactory extends Controller {
 
     protected static <T> Result field (Long id, String field, 
                                        Model.Finder<Long, T> finder) {
+        /*
         Query<T> query = finder.query();
+        int depth = 0;
         if (field != null) {
             StringBuilder path = new StringBuilder ();
             for (String p : field.split("[\\(0-9\\)\\/]+")) {
                 if (path.length() > 0) path.append('.');
                 path.append(p);
+                ++depth;
             }
-            Logger.debug(request().uri()+": field="+field+" => path="+path);
-            query = query.fetch(path.toString());
+            if (depth > 1) {
+                Logger.debug
+                    (request().uri()+": field="+field+" => path="+path);
+                query = query.fetch(path.toString());
+            }
         }
+        */
 
-        T inst = //finder.byId(id);
-            query.setId(id).findUnique();
+        T inst = finder.byId(id);
+            //query.setId(id).findUnique();
         if (inst == null) {
             return notFound ("Bad request: "+request().uri());
         }

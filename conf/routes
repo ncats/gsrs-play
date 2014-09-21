@@ -14,7 +14,7 @@ POST    /       crosstalk.ncats.controllers.Granite.newGrant()
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file   controllers.Assets.at(path="/public", file)
 
-GET     /search         crosstalk.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0)
+GET     /search         crosstalk.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0, expand: String ?= null)
 #
 # special variables are denoted by @'s and should be specified
 # before other resources
@@ -30,8 +30,13 @@ GET     /admin/:resource    crosstalk.core.controllers.AdminFactory.get(resource
 POST    /admin/principal        crosstalk.core.controllers.AdminFactory.createUser()
 POST    /admin/test1    crosstalk.core.controllers.AdminFactory.createTest1()
 
-GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       crosstalk.core.controllers.RouteFactory.get(ns: String, resource: String, pkey: String ?= null)
+GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       crosstalk.core.controllers.RouteFactory.get(ns: String, resource: String)
 
+
+#### Project resources
+GET     /projects/@form crosstalk.ncats.controllers.ProjectFactory.index()
+GET     /projects  crosstalk.ncats.controllers.ProjectFactory.page(top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+POST    /projects/@form crosstalk.ncats.controllers.ProjectFactory.newProject()
 
 ##################################
 # Grant resources

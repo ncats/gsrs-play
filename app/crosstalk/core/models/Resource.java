@@ -10,7 +10,7 @@ import javax.persistence.*;
 public class Resource extends Model {
     public enum Modifier {
         Public, // anyone can access this resource
-            Protected, // only authenticated users have access
+            Internal, // only authenticated users have access
             Private // only specific users have access
             }
 
@@ -48,11 +48,11 @@ public class Resource extends Model {
     public static Resource newPublic (String name) {
         return new Resource (name, Modifier.Public);
     }
-    public static Resource newProtected () {
-        return new Resource (Modifier.Protected);
+    public static Resource newInternal () {
+        return new Resource (Modifier.Internal);
     }
-    public static Resource newProtected (String name) {
-        return new Resource (name, Modifier.Protected);
+    public static Resource newInternal (String name) {
+        return new Resource (name, Modifier.Internal);
     }
     public static Resource newPrivate () {
         return new Resource (Modifier.Private);

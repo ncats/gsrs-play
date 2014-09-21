@@ -37,5 +37,9 @@ public class Publication extends Model {
     @ManyToOne(cascade=CascadeType.ALL)
     public Journal journal;
 
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ct_core_publication_figure")
+    public List<Figure> figures = new ArrayList<Figure>();
+
     public Publication () {}
 }

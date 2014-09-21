@@ -34,7 +34,7 @@ public class RouteFactory extends Controller {
     public static void register (String resource) {
     }
 
-    public static Result get (String ns, String resource, String pkey) {
+    public static Result get (String ns, String resource) {
         Resource res = resFinder
             .where(Expr.eq("name", ns))
             .findUnique();
@@ -44,11 +44,6 @@ public class RouteFactory extends Controller {
         
         // now see if this request has proper permission
         if (res.isPublic()) { // ok
-        }
-        else if (pkey != null) { 
-            // check to see if this pkey has access; a pkey is associated
-            // with a principal which can be 
-            
         }
         else {
             return forbidden ("You don't have permission to access resource!");

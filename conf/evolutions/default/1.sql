@@ -6,19 +6,33 @@
 create table ct_core_acl (
   id                        bigint not null,
   perm                      integer,
-  constraint ck_ct_core_acl_perm check (perm in (0,1,2,3,4,5)),
+  constraint ck_ct_core_acl_perm check (perm in (0,1,2,3,4,5,6)),
   constraint pk_ct_core_acl primary key (id))
+;
+
+create table ct_core_attribute (
+  id                        bigint not null,
+  name                      varchar(255),
+  type                      varchar(255),
+  resource_id               bigint,
+  label                     varchar(255),
+  constraint pk_ct_core_attribute primary key (id))
 ;
 
 create table ct_core_author (
   id                        bigint not null,
+  username                  varchar(255),
+  email                     varchar(255),
+  admin                     boolean,
+  uri                       varchar(1024),
+  pkey                      varchar(256),
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
   affiliation               varchar(255),
   orcid                     varchar(20),
-  email                     varchar(255),
   url                       varchar(1024),
+  constraint uq_ct_core_author_pkey unique (pkey),
   constraint pk_ct_core_author primary key (id))
 ;
 
@@ -66,6 +80,54 @@ create table ct_core_edit (
   old_value                 clob,
   new_value                 clob,
   constraint pk_ct_core_edit primary key (id))
+;
+
+create table ct_ncats_employee (
+  id                        bigint not null,
+  username                  varchar(255),
+  email                     varchar(255),
+  admin                     boolean,
+  uri                       varchar(1024),
+  pkey                      varchar(256),
+  lastname                  varchar(255),
+  forename                  varchar(255),
+  initials                  varchar(255),
+  affiliation               varchar(255),
+  orcid                     varchar(20),
+  url                       varchar(1024),
+  ncats_employee            boolean,
+  ic                        varchar(255),
+  dn                        varchar(1024),
+  uid                       bigint,
+  biography                 clob,
+  title                     varchar(255),
+  is_lead                   boolean,
+  role                      integer,
+  constraint ck_ct_ncats_employee_role check (role in (0,1,2)),
+  constraint uq_ct_ncats_employee_pkey unique (pkey),
+  constraint pk_ct_ncats_employee primary key (id))
+;
+
+create table ct_core_event (
+  id                        bigint not null,
+  title                     varchar(255),
+  description               clob,
+  url                       varchar(1024),
+  start                     timestamp,
+  end                       timestamp,
+  is_duration               boolean,
+  constraint pk_ct_core_event primary key (id))
+;
+
+create table ct_core_figure (
+  id                        bigint not null,
+  caption                   varchar(255),
+  mime_type                 varchar(255),
+  url                       varchar(1024),
+  data                      blob,
+  size                      integer,
+  sha1                      varchar(140),
+  constraint pk_ct_core_figure primary key (id))
 ;
 
 create table ct_ncats_funding (
@@ -142,7 +204,6 @@ create table ct_core_journal (
 
 create table ct_core_keyword (
   id                        bigint not null,
-  property_id               bigint,
   curation_id               bigint,
   term                      varchar(255),
   constraint pk_ct_core_keyword primary key (id))
@@ -163,11 +224,33 @@ create table ct_core_link (
 
 create table ct_core_mesh (
   id                        bigint not null,
-  property_id               bigint,
   curation_id               bigint,
   term                      varchar(255),
   major_topic               boolean,
   constraint pk_ct_core_mesh primary key (id))
+;
+
+create table ct_ncats_author (
+  id                        bigint not null,
+  username                  varchar(255),
+  email                     varchar(255),
+  admin                     boolean,
+  uri                       varchar(1024),
+  pkey                      varchar(256),
+  lastname                  varchar(255),
+  forename                  varchar(255),
+  initials                  varchar(255),
+  affiliation               varchar(255),
+  orcid                     varchar(20),
+  url                       varchar(1024),
+  ncats_employee            boolean,
+  ic                        varchar(255),
+  dn                        varchar(1024),
+  uid                       bigint,
+  biography                 clob,
+  title                     varchar(255),
+  constraint uq_ct_ncats_author_pkey unique (pkey),
+  constraint pk_ct_ncats_author primary key (id))
 ;
 
 create table ct_core_organization (
@@ -198,7 +281,7 @@ create table ct_core_payload (
 
 create table ct_core_principal (
   id                        bigint not null,
-  name                      varchar(255),
+  username                  varchar(255),
   email                     varchar(255),
   admin                     boolean,
   uri                       varchar(1024),
@@ -216,18 +299,17 @@ create table ct_core_processingstatus (
   constraint pk_ct_core_processingstatus primary key (id))
 ;
 
-create table ct_core_property (
+create table ct_ncats_project (
   id                        bigint not null,
-  name                      varchar(255),
-  type                      varchar(255),
-  resource_id               bigint,
-  label                     varchar(255),
-  constraint pk_ct_core_property primary key (id))
+  title                     varchar(255),
+  description               clob,
+  team                      varchar(255),
+  acl_id                    bigint,
+  constraint pk_ct_ncats_project primary key (id))
 ;
 
 create table ct_core_publication (
   id                        bigint not null,
-  grant_id                  bigint not null,
   pmid                      bigint,
   pmcid                     bigint,
   title                     varchar(1024),
@@ -265,7 +347,6 @@ create table ct_core_stitch (
 
 create table ct_core_vint (
   id                        bigint not null,
-  property_id               bigint,
   curation_id               bigint,
   value                     bigint,
   constraint pk_ct_core_vint primary key (id))
@@ -273,7 +354,6 @@ create table ct_core_vint (
 
 create table ct_core_vnum (
   id                        bigint not null,
-  property_id               bigint,
   curation_id               bigint,
   value                     double,
   constraint pk_ct_core_vnum primary key (id))
@@ -281,7 +361,6 @@ create table ct_core_vnum (
 
 create table ct_core_vstr (
   id                        bigint not null,
-  property_id               bigint,
   curation_id               bigint,
   value                     varchar(1024),
   constraint pk_ct_core_vstr primary key (id))
@@ -289,7 +368,6 @@ create table ct_core_vstr (
 
 create table ct_core_value (
   id                        bigint not null,
-  property_id               bigint,
   curation_id               bigint,
   constraint pk_ct_core_value primary key (id))
 ;
@@ -307,6 +385,12 @@ create table ct_core_acl_group (
   constraint pk_ct_core_acl_group primary key (ct_core_acl_id, ct_core_group_id))
 ;
 
+create table ct_core_event_figure (
+  ct_core_event_id               bigint not null,
+  ct_core_figure_id              bigint not null,
+  constraint pk_ct_core_event_figure primary key (ct_core_event_id, ct_core_figure_id))
+;
+
 create table ct_ncats_grant_investigator (
   ct_ncats_grant_id              bigint not null,
   ct_core_investigator_id        bigint not null,
@@ -319,16 +403,58 @@ create table ct_ncats_grant_keyword (
   constraint pk_ct_ncats_grant_keyword primary key (ct_ncats_grant_id, ct_core_keyword_id))
 ;
 
+create table ct_ncats_grant_publication (
+  ct_ncats_grant_id              bigint not null,
+  ct_core_publication_id         bigint not null,
+  constraint pk_ct_ncats_grant_publication primary key (ct_ncats_grant_id, ct_core_publication_id))
+;
+
 create table ct_core_group_principal (
   ct_core_group_id               bigint not null,
   ct_core_principal_id           bigint not null,
   constraint pk_ct_core_group_principal primary key (ct_core_group_id, ct_core_principal_id))
 ;
 
-create table ct_core_payload_property (
+create table ct_core_value_attribute (
+  ct_core_keyword_id             bigint not null,
+  ct_core_attribute_id           bigint not null,
+  constraint pk_ct_core_value_attribute primary key (ct_core_keyword_id, ct_core_attribute_id))
+;
+
+create table ct_core_payload_attribute (
   ct_core_payload_id             bigint not null,
-  ct_core_property_id            bigint not null,
-  constraint pk_ct_core_payload_property primary key (ct_core_payload_id, ct_core_property_id))
+  ct_core_attribute_id           bigint not null,
+  constraint pk_ct_core_payload_attribute primary key (ct_core_payload_id, ct_core_attribute_id))
+;
+
+create table ct_ncats_project_annotation (
+  ct_ncats_project_id            bigint not null,
+  ct_core_value_id               bigint not null,
+  constraint pk_ct_ncats_project_annotation primary key (ct_ncats_project_id, ct_core_value_id))
+;
+
+create table ct_ncats_project_member (
+  ct_ncats_project_id            bigint not null,
+  ct_ncats_employee_id           bigint not null,
+  constraint pk_ct_ncats_project_member primary key (ct_ncats_project_id, ct_ncats_employee_id))
+;
+
+create table ct_ncats_project_collaborator (
+  ct_ncats_project_id            bigint not null,
+  ct_core_author_id              bigint not null,
+  constraint pk_ct_ncats_project_collaborator primary key (ct_ncats_project_id, ct_core_author_id))
+;
+
+create table ct_ncats_project_figure (
+  ct_ncats_project_id            bigint not null,
+  ct_core_figure_id              bigint not null,
+  constraint pk_ct_ncats_project_figure primary key (ct_ncats_project_id, ct_core_figure_id))
+;
+
+create table ct_ncats_project_milestone (
+  ct_ncats_project_id            bigint not null,
+  ct_core_event_id               bigint not null,
+  constraint pk_ct_ncats_project_milestone primary key (ct_ncats_project_id, ct_core_event_id))
 ;
 
 create table ct_core_publication_keyword (
@@ -349,6 +475,12 @@ create table ct_core_publication_author (
   constraint pk_ct_core_publication_author primary key (ct_core_publication_id, ct_core_author_id))
 ;
 
+create table ct_core_publication_figure (
+  ct_core_publication_id         bigint not null,
+  ct_core_figure_id              bigint not null,
+  constraint pk_ct_core_publication_figure primary key (ct_core_publication_id, ct_core_figure_id))
+;
+
 create table ct_core_resource_role (
   ct_core_resource_id            bigint not null,
   ct_core_role_id                bigint not null,
@@ -361,12 +493,14 @@ create table ct_core_resource_acl (
   constraint pk_ct_core_resource_acl primary key (ct_core_resource_id, ct_core_acl_id))
 ;
 
-create table ct_core_stitch_property (
+create table ct_core_stitch_attribute (
   ct_core_stitch_id              bigint not null,
-  ct_core_property_id            bigint not null,
-  constraint pk_ct_core_stitch_property primary key (ct_core_stitch_id, ct_core_property_id))
+  ct_core_attribute_id           bigint not null,
+  constraint pk_ct_core_stitch_attribute primary key (ct_core_stitch_id, ct_core_attribute_id))
 ;
 create sequence ct_core_acl_seq;
+
+create sequence ct_core_attribute_seq;
 
 create sequence ct_core_author_seq;
 
@@ -377,6 +511,12 @@ create sequence ct_core_etag_seq;
 create sequence ct_core_etagref_seq;
 
 create sequence ct_core_edit_seq;
+
+create sequence ct_ncats_employee_seq;
+
+create sequence ct_core_event_seq;
+
+create sequence ct_core_figure_seq;
 
 create sequence ct_ncats_funding_seq;
 
@@ -394,6 +534,8 @@ create sequence ct_core_link_seq;
 
 create sequence ct_core_mesh_seq;
 
+create sequence ct_ncats_author_seq;
+
 create sequence ct_core_organization_seq;
 
 create sequence ct_core_payload_seq;
@@ -402,7 +544,7 @@ create sequence ct_core_principal_seq;
 
 create sequence ct_core_processingstatus_seq;
 
-create sequence ct_core_property_seq;
+create sequence ct_ncats_project_seq;
 
 create sequence ct_core_publication_seq;
 
@@ -420,50 +562,38 @@ create sequence ct_core_vstr_seq;
 
 create sequence ct_core_value_seq;
 
-alter table ct_core_curation add constraint fk_ct_core_curation_curator_1 foreign key (curator_id) references ct_core_principal (id) on delete restrict on update restrict;
-create index ix_ct_core_curation_curator_1 on ct_core_curation (curator_id);
-alter table ct_core_etagref add constraint fk_ct_core_etagref_etag_2 foreign key (etag_id) references ct_core_etag (id) on delete restrict on update restrict;
-create index ix_ct_core_etagref_etag_2 on ct_core_etagref (etag_id);
-alter table ct_core_edit add constraint fk_ct_core_edit_principal_3 foreign key (principal_id) references ct_core_principal (id) on delete restrict on update restrict;
-create index ix_ct_core_edit_principal_3 on ct_core_edit (principal_id);
-alter table ct_ncats_funding add constraint fk_ct_ncats_funding_ct_ncats_g_4 foreign key (grant_id) references ct_ncats_grant (id) on delete restrict on update restrict;
-create index ix_ct_ncats_funding_ct_ncats_g_4 on ct_ncats_funding (grant_id);
-alter table ct_core_investigator add constraint fk_ct_core_investigator_organi_5 foreign key (organization_id) references ct_core_organization (id) on delete restrict on update restrict;
-create index ix_ct_core_investigator_organi_5 on ct_core_investigator (organization_id);
-alter table ct_core_keyword add constraint fk_ct_core_keyword_property_6 foreign key (property_id) references ct_core_property (id) on delete restrict on update restrict;
-create index ix_ct_core_keyword_property_6 on ct_core_keyword (property_id);
+alter table ct_core_attribute add constraint fk_ct_core_attribute_resource_1 foreign key (resource_id) references ct_core_resource (id) on delete restrict on update restrict;
+create index ix_ct_core_attribute_resource_1 on ct_core_attribute (resource_id);
+alter table ct_core_curation add constraint fk_ct_core_curation_curator_2 foreign key (curator_id) references ct_core_principal (id) on delete restrict on update restrict;
+create index ix_ct_core_curation_curator_2 on ct_core_curation (curator_id);
+alter table ct_core_etagref add constraint fk_ct_core_etagref_etag_3 foreign key (etag_id) references ct_core_etag (id) on delete restrict on update restrict;
+create index ix_ct_core_etagref_etag_3 on ct_core_etagref (etag_id);
+alter table ct_core_edit add constraint fk_ct_core_edit_principal_4 foreign key (principal_id) references ct_core_principal (id) on delete restrict on update restrict;
+create index ix_ct_core_edit_principal_4 on ct_core_edit (principal_id);
+alter table ct_ncats_funding add constraint fk_ct_ncats_funding_ct_ncats_g_5 foreign key (grant_id) references ct_ncats_grant (id) on delete restrict on update restrict;
+create index ix_ct_ncats_funding_ct_ncats_g_5 on ct_ncats_funding (grant_id);
+alter table ct_core_investigator add constraint fk_ct_core_investigator_organi_6 foreign key (organization_id) references ct_core_organization (id) on delete restrict on update restrict;
+create index ix_ct_core_investigator_organi_6 on ct_core_investigator (organization_id);
 alter table ct_core_keyword add constraint fk_ct_core_keyword_curation_7 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
 create index ix_ct_core_keyword_curation_7 on ct_core_keyword (curation_id);
-alter table ct_core_mesh add constraint fk_ct_core_mesh_property_8 foreign key (property_id) references ct_core_property (id) on delete restrict on update restrict;
-create index ix_ct_core_mesh_property_8 on ct_core_mesh (property_id);
-alter table ct_core_mesh add constraint fk_ct_core_mesh_curation_9 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_mesh_curation_9 on ct_core_mesh (curation_id);
-alter table ct_core_processingstatus add constraint fk_ct_core_processingstatus_p_10 foreign key (payload_id) references ct_core_payload (id) on delete restrict on update restrict;
-create index ix_ct_core_processingstatus_p_10 on ct_core_processingstatus (payload_id);
-alter table ct_core_property add constraint fk_ct_core_property_resource_11 foreign key (resource_id) references ct_core_resource (id) on delete restrict on update restrict;
-create index ix_ct_core_property_resource_11 on ct_core_property (resource_id);
-alter table ct_core_publication add constraint fk_ct_core_publication_ct_nca_12 foreign key (grant_id) references ct_ncats_grant (id) on delete restrict on update restrict;
-create index ix_ct_core_publication_ct_nca_12 on ct_core_publication (grant_id);
-alter table ct_core_publication add constraint fk_ct_core_publication_journa_13 foreign key (journal_id) references ct_core_journal (id) on delete restrict on update restrict;
-create index ix_ct_core_publication_journa_13 on ct_core_publication (journal_id);
-alter table ct_core_role add constraint fk_ct_core_role_principal_14 foreign key (principal_id) references ct_core_principal (id) on delete restrict on update restrict;
-create index ix_ct_core_role_principal_14 on ct_core_role (principal_id);
-alter table ct_core_vint add constraint fk_ct_core_vint_property_15 foreign key (property_id) references ct_core_property (id) on delete restrict on update restrict;
-create index ix_ct_core_vint_property_15 on ct_core_vint (property_id);
-alter table ct_core_vint add constraint fk_ct_core_vint_curation_16 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_vint_curation_16 on ct_core_vint (curation_id);
-alter table ct_core_vnum add constraint fk_ct_core_vnum_property_17 foreign key (property_id) references ct_core_property (id) on delete restrict on update restrict;
-create index ix_ct_core_vnum_property_17 on ct_core_vnum (property_id);
-alter table ct_core_vnum add constraint fk_ct_core_vnum_curation_18 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_vnum_curation_18 on ct_core_vnum (curation_id);
-alter table ct_core_vstr add constraint fk_ct_core_vstr_property_19 foreign key (property_id) references ct_core_property (id) on delete restrict on update restrict;
-create index ix_ct_core_vstr_property_19 on ct_core_vstr (property_id);
-alter table ct_core_vstr add constraint fk_ct_core_vstr_curation_20 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_vstr_curation_20 on ct_core_vstr (curation_id);
-alter table ct_core_value add constraint fk_ct_core_value_property_21 foreign key (property_id) references ct_core_property (id) on delete restrict on update restrict;
-create index ix_ct_core_value_property_21 on ct_core_value (property_id);
-alter table ct_core_value add constraint fk_ct_core_value_curation_22 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_value_curation_22 on ct_core_value (curation_id);
+alter table ct_core_mesh add constraint fk_ct_core_mesh_curation_8 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_mesh_curation_8 on ct_core_mesh (curation_id);
+alter table ct_core_processingstatus add constraint fk_ct_core_processingstatus_pa_9 foreign key (payload_id) references ct_core_payload (id) on delete restrict on update restrict;
+create index ix_ct_core_processingstatus_pa_9 on ct_core_processingstatus (payload_id);
+alter table ct_ncats_project add constraint fk_ct_ncats_project_acl_10 foreign key (acl_id) references ct_core_acl (id) on delete restrict on update restrict;
+create index ix_ct_ncats_project_acl_10 on ct_ncats_project (acl_id);
+alter table ct_core_publication add constraint fk_ct_core_publication_journa_11 foreign key (journal_id) references ct_core_journal (id) on delete restrict on update restrict;
+create index ix_ct_core_publication_journa_11 on ct_core_publication (journal_id);
+alter table ct_core_role add constraint fk_ct_core_role_principal_12 foreign key (principal_id) references ct_core_principal (id) on delete restrict on update restrict;
+create index ix_ct_core_role_principal_12 on ct_core_role (principal_id);
+alter table ct_core_vint add constraint fk_ct_core_vint_curation_13 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_vint_curation_13 on ct_core_vint (curation_id);
+alter table ct_core_vnum add constraint fk_ct_core_vnum_curation_14 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_vnum_curation_14 on ct_core_vnum (curation_id);
+alter table ct_core_vstr add constraint fk_ct_core_vstr_curation_15 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_vstr_curation_15 on ct_core_vstr (curation_id);
+alter table ct_core_value add constraint fk_ct_core_value_curation_16 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_value_curation_16 on ct_core_value (curation_id);
 
 
 
@@ -475,6 +605,10 @@ alter table ct_core_acl_group add constraint fk_ct_core_acl_group_ct_core__01 fo
 
 alter table ct_core_acl_group add constraint fk_ct_core_acl_group_ct_core__02 foreign key (ct_core_group_id) references ct_core_group (id) on delete restrict on update restrict;
 
+alter table ct_core_event_figure add constraint fk_ct_core_event_figure_ct_co_01 foreign key (ct_core_event_id) references ct_core_event (id) on delete restrict on update restrict;
+
+alter table ct_core_event_figure add constraint fk_ct_core_event_figure_ct_co_02 foreign key (ct_core_figure_id) references ct_core_figure (id) on delete restrict on update restrict;
+
 alter table ct_ncats_grant_investigator add constraint fk_ct_ncats_grant_investigato_01 foreign key (ct_ncats_grant_id) references ct_ncats_grant (id) on delete restrict on update restrict;
 
 alter table ct_ncats_grant_investigator add constraint fk_ct_ncats_grant_investigato_02 foreign key (ct_core_investigator_id) references ct_core_investigator (id) on delete restrict on update restrict;
@@ -483,13 +617,41 @@ alter table ct_ncats_grant_keyword add constraint fk_ct_ncats_grant_keyword_ct__
 
 alter table ct_ncats_grant_keyword add constraint fk_ct_ncats_grant_keyword_ct__02 foreign key (ct_core_keyword_id) references ct_core_keyword (id) on delete restrict on update restrict;
 
+alter table ct_ncats_grant_publication add constraint fk_ct_ncats_grant_publication_01 foreign key (ct_ncats_grant_id) references ct_ncats_grant (id) on delete restrict on update restrict;
+
+alter table ct_ncats_grant_publication add constraint fk_ct_ncats_grant_publication_02 foreign key (ct_core_publication_id) references ct_core_publication (id) on delete restrict on update restrict;
+
 alter table ct_core_group_principal add constraint fk_ct_core_group_principal_ct_01 foreign key (ct_core_group_id) references ct_core_group (id) on delete restrict on update restrict;
 
 alter table ct_core_group_principal add constraint fk_ct_core_group_principal_ct_02 foreign key (ct_core_principal_id) references ct_core_principal (id) on delete restrict on update restrict;
 
-alter table ct_core_payload_property add constraint fk_ct_core_payload_property_c_01 foreign key (ct_core_payload_id) references ct_core_payload (id) on delete restrict on update restrict;
+alter table ct_core_value_attribute add constraint fk_ct_core_value_attribute_ct_01 foreign key (ct_core_keyword_id) references ct_core_keyword (id) on delete restrict on update restrict;
 
-alter table ct_core_payload_property add constraint fk_ct_core_payload_property_c_02 foreign key (ct_core_property_id) references ct_core_property (id) on delete restrict on update restrict;
+alter table ct_core_value_attribute add constraint fk_ct_core_value_attribute_ct_02 foreign key (ct_core_attribute_id) references ct_core_attribute (id) on delete restrict on update restrict;
+
+alter table ct_core_payload_attribute add constraint fk_ct_core_payload_attribute__01 foreign key (ct_core_payload_id) references ct_core_payload (id) on delete restrict on update restrict;
+
+alter table ct_core_payload_attribute add constraint fk_ct_core_payload_attribute__02 foreign key (ct_core_attribute_id) references ct_core_attribute (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_annotation add constraint fk_ct_ncats_project_annotatio_01 foreign key (ct_ncats_project_id) references ct_ncats_project (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_annotation add constraint fk_ct_ncats_project_annotatio_02 foreign key (ct_core_value_id) references ct_core_value (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_member add constraint fk_ct_ncats_project_member_ct_01 foreign key (ct_ncats_project_id) references ct_ncats_project (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_member add constraint fk_ct_ncats_project_member_ct_02 foreign key (ct_ncats_employee_id) references ct_ncats_employee (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_collaborator add constraint fk_ct_ncats_project_collabora_01 foreign key (ct_ncats_project_id) references ct_ncats_project (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_collaborator add constraint fk_ct_ncats_project_collabora_02 foreign key (ct_core_author_id) references ct_core_author (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_figure add constraint fk_ct_ncats_project_figure_ct_01 foreign key (ct_ncats_project_id) references ct_ncats_project (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_figure add constraint fk_ct_ncats_project_figure_ct_02 foreign key (ct_core_figure_id) references ct_core_figure (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_milestone add constraint fk_ct_ncats_project_milestone_01 foreign key (ct_ncats_project_id) references ct_ncats_project (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_milestone add constraint fk_ct_ncats_project_milestone_02 foreign key (ct_core_event_id) references ct_core_event (id) on delete restrict on update restrict;
 
 alter table ct_core_publication_keyword add constraint fk_ct_core_publication_keywor_01 foreign key (ct_core_publication_id) references ct_core_publication (id) on delete restrict on update restrict;
 
@@ -503,6 +665,10 @@ alter table ct_core_publication_author add constraint fk_ct_core_publication_aut
 
 alter table ct_core_publication_author add constraint fk_ct_core_publication_author_02 foreign key (ct_core_author_id) references ct_core_author (id) on delete restrict on update restrict;
 
+alter table ct_core_publication_figure add constraint fk_ct_core_publication_figure_01 foreign key (ct_core_publication_id) references ct_core_publication (id) on delete restrict on update restrict;
+
+alter table ct_core_publication_figure add constraint fk_ct_core_publication_figure_02 foreign key (ct_core_figure_id) references ct_core_figure (id) on delete restrict on update restrict;
+
 alter table ct_core_resource_role add constraint fk_ct_core_resource_role_ct_c_01 foreign key (ct_core_resource_id) references ct_core_resource (id) on delete restrict on update restrict;
 
 alter table ct_core_resource_role add constraint fk_ct_core_resource_role_ct_c_02 foreign key (ct_core_role_id) references ct_core_role (id) on delete restrict on update restrict;
@@ -511,9 +677,9 @@ alter table ct_core_resource_acl add constraint fk_ct_core_resource_acl_ct_co_01
 
 alter table ct_core_resource_acl add constraint fk_ct_core_resource_acl_ct_co_02 foreign key (ct_core_acl_id) references ct_core_acl (id) on delete restrict on update restrict;
 
-alter table ct_core_stitch_property add constraint fk_ct_core_stitch_property_ct_01 foreign key (ct_core_stitch_id) references ct_core_stitch (id) on delete restrict on update restrict;
+alter table ct_core_stitch_attribute add constraint fk_ct_core_stitch_attribute_c_01 foreign key (ct_core_stitch_id) references ct_core_stitch (id) on delete restrict on update restrict;
 
-alter table ct_core_stitch_property add constraint fk_ct_core_stitch_property_ct_02 foreign key (ct_core_property_id) references ct_core_property (id) on delete restrict on update restrict;
+alter table ct_core_stitch_attribute add constraint fk_ct_core_stitch_attribute_c_02 foreign key (ct_core_attribute_id) references ct_core_attribute (id) on delete restrict on update restrict;
 
 # --- !Downs
 
@@ -525,6 +691,8 @@ drop table if exists ct_core_acl_principal;
 
 drop table if exists ct_core_acl_group;
 
+drop table if exists ct_core_attribute;
+
 drop table if exists ct_core_author;
 
 drop table if exists ct_core_curation;
@@ -535,6 +703,14 @@ drop table if exists ct_core_etagref;
 
 drop table if exists ct_core_edit;
 
+drop table if exists ct_ncats_employee;
+
+drop table if exists ct_core_event;
+
+drop table if exists ct_core_event_figure;
+
+drop table if exists ct_core_figure;
+
 drop table if exists ct_ncats_funding;
 
 drop table if exists ct_ncats_grant;
@@ -542,6 +718,8 @@ drop table if exists ct_ncats_grant;
 drop table if exists ct_ncats_grant_investigator;
 
 drop table if exists ct_ncats_grant_keyword;
+
+drop table if exists ct_ncats_grant_publication;
 
 drop table if exists ct_core_group;
 
@@ -553,21 +731,35 @@ drop table if exists ct_core_journal;
 
 drop table if exists ct_core_keyword;
 
+drop table if exists ct_core_value_attribute;
+
 drop table if exists ct_core_link;
 
 drop table if exists ct_core_mesh;
+
+drop table if exists ct_ncats_author;
 
 drop table if exists ct_core_organization;
 
 drop table if exists ct_core_payload;
 
-drop table if exists ct_core_payload_property;
+drop table if exists ct_core_payload_attribute;
 
 drop table if exists ct_core_principal;
 
 drop table if exists ct_core_processingstatus;
 
-drop table if exists ct_core_property;
+drop table if exists ct_ncats_project;
+
+drop table if exists ct_ncats_project_annotation;
+
+drop table if exists ct_ncats_project_member;
+
+drop table if exists ct_ncats_project_collaborator;
+
+drop table if exists ct_ncats_project_figure;
+
+drop table if exists ct_ncats_project_milestone;
 
 drop table if exists ct_core_publication;
 
@@ -576,6 +768,8 @@ drop table if exists ct_core_publication_keyword;
 drop table if exists ct_core_publication_mesh;
 
 drop table if exists ct_core_publication_author;
+
+drop table if exists ct_core_publication_figure;
 
 drop table if exists ct_core_resource;
 
@@ -587,7 +781,7 @@ drop table if exists ct_core_role;
 
 drop table if exists ct_core_stitch;
 
-drop table if exists ct_core_stitch_property;
+drop table if exists ct_core_stitch_attribute;
 
 drop table if exists ct_core_vint;
 
@@ -601,6 +795,8 @@ SET REFERENTIAL_INTEGRITY TRUE;
 
 drop sequence if exists ct_core_acl_seq;
 
+drop sequence if exists ct_core_attribute_seq;
+
 drop sequence if exists ct_core_author_seq;
 
 drop sequence if exists ct_core_curation_seq;
@@ -610,6 +806,12 @@ drop sequence if exists ct_core_etag_seq;
 drop sequence if exists ct_core_etagref_seq;
 
 drop sequence if exists ct_core_edit_seq;
+
+drop sequence if exists ct_ncats_employee_seq;
+
+drop sequence if exists ct_core_event_seq;
+
+drop sequence if exists ct_core_figure_seq;
 
 drop sequence if exists ct_ncats_funding_seq;
 
@@ -627,6 +829,8 @@ drop sequence if exists ct_core_link_seq;
 
 drop sequence if exists ct_core_mesh_seq;
 
+drop sequence if exists ct_ncats_author_seq;
+
 drop sequence if exists ct_core_organization_seq;
 
 drop sequence if exists ct_core_payload_seq;
@@ -635,7 +839,7 @@ drop sequence if exists ct_core_principal_seq;
 
 drop sequence if exists ct_core_processingstatus_seq;
 
-drop sequence if exists ct_core_property_seq;
+drop sequence if exists ct_ncats_project_seq;
 
 drop sequence if exists ct_core_publication_seq;
 

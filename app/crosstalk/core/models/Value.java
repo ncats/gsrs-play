@@ -2,6 +2,8 @@ package crosstalk.core.models;
 
 import play.db.ebean.Model;
 import javax.persistence.*;
+import java.util.List;
+import java.util.ArrayList;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -11,14 +13,12 @@ public class Value extends Model {
     @Id
     public Long id;
 
-    @ManyToOne(cascade=CascadeType.ALL)
-    public Property property;
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ct_core_value_attribute")
+    public List<Attribute> attrs = new ArrayList<Attribute>();
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Curation curation;
 
     public Value () {}
-    public Value (Property property) {
-        this.property = property;
-    }
 }

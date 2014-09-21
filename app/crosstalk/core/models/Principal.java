@@ -6,11 +6,10 @@ import javax.persistence.*;
 @Entity
 @Table(name="ct_core_principal")
 public class Principal extends Model {
-
     @Id
     public Long id;
 
-    public String name;
+    public String username;
     public String email;
     public boolean admin = false;
 
@@ -31,8 +30,8 @@ public class Principal extends Model {
         this.admin = admin;
         this.email = email;
     }
-    public Principal (String name, String email) {
-        this.name = name;
+    public Principal (String username, String email) {
+        this.username = username;
         this.email = email;
     }
 

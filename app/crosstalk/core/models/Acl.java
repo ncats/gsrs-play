@@ -15,7 +15,8 @@ public class Acl extends Model {
             Write, // write-only
             ReadWrite, // read+write
             Execute, // execute
-            Admin
+            Admin,
+            Owner
             }
         
     @Id
