@@ -19,6 +19,9 @@ public class Principal extends Model {
     @Column(length=256,unique=true)
     public String pkey; // private key
 
+    @ManyToOne(cascade=CascadeType.ALL)
+    public Figure selfie;
+
     public Principal () {}
     public Principal (boolean admin) {
         this.admin = admin;

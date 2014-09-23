@@ -26,6 +26,7 @@ create table ct_core_author (
   admin                     boolean,
   uri                       varchar(1024),
   pkey                      varchar(256),
+  selfie_id                 bigint,
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
@@ -89,6 +90,7 @@ create table ct_ncats_employee (
   admin                     boolean,
   uri                       varchar(1024),
   pkey                      varchar(256),
+  selfie_id                 bigint,
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
@@ -110,7 +112,7 @@ create table ct_ncats_employee (
 
 create table ct_core_event (
   id                        bigint not null,
-  title                     varchar(255),
+  title                     varchar(1024),
   description               clob,
   url                       varchar(1024),
   start                     timestamp,
@@ -237,6 +239,7 @@ create table ct_ncats_author (
   admin                     boolean,
   uri                       varchar(1024),
   pkey                      varchar(256),
+  selfie_id                 bigint,
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
@@ -286,6 +289,7 @@ create table ct_core_principal (
   admin                     boolean,
   uri                       varchar(1024),
   pkey                      varchar(256),
+  selfie_id                 bigint,
   constraint uq_ct_core_principal_pkey unique (pkey),
   constraint pk_ct_core_principal primary key (id))
 ;
@@ -301,10 +305,13 @@ create table ct_core_processingstatus (
 
 create table ct_ncats_project (
   id                        bigint not null,
-  title                     varchar(255),
-  description               clob,
+  title                     varchar(1024),
+  objective                 clob,
+  scope                     clob,
+  opportunities             clob,
   team                      varchar(255),
   acl_id                    bigint,
+  curation_id               bigint,
   constraint pk_ct_ncats_project primary key (id))
 ;
 
@@ -564,36 +571,46 @@ create sequence ct_core_value_seq;
 
 alter table ct_core_attribute add constraint fk_ct_core_attribute_resource_1 foreign key (resource_id) references ct_core_resource (id) on delete restrict on update restrict;
 create index ix_ct_core_attribute_resource_1 on ct_core_attribute (resource_id);
-alter table ct_core_curation add constraint fk_ct_core_curation_curator_2 foreign key (curator_id) references ct_core_principal (id) on delete restrict on update restrict;
-create index ix_ct_core_curation_curator_2 on ct_core_curation (curator_id);
-alter table ct_core_etagref add constraint fk_ct_core_etagref_etag_3 foreign key (etag_id) references ct_core_etag (id) on delete restrict on update restrict;
-create index ix_ct_core_etagref_etag_3 on ct_core_etagref (etag_id);
-alter table ct_core_edit add constraint fk_ct_core_edit_principal_4 foreign key (principal_id) references ct_core_principal (id) on delete restrict on update restrict;
-create index ix_ct_core_edit_principal_4 on ct_core_edit (principal_id);
-alter table ct_ncats_funding add constraint fk_ct_ncats_funding_ct_ncats_g_5 foreign key (grant_id) references ct_ncats_grant (id) on delete restrict on update restrict;
-create index ix_ct_ncats_funding_ct_ncats_g_5 on ct_ncats_funding (grant_id);
-alter table ct_core_investigator add constraint fk_ct_core_investigator_organi_6 foreign key (organization_id) references ct_core_organization (id) on delete restrict on update restrict;
-create index ix_ct_core_investigator_organi_6 on ct_core_investigator (organization_id);
-alter table ct_core_keyword add constraint fk_ct_core_keyword_curation_7 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_keyword_curation_7 on ct_core_keyword (curation_id);
-alter table ct_core_mesh add constraint fk_ct_core_mesh_curation_8 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_mesh_curation_8 on ct_core_mesh (curation_id);
-alter table ct_core_processingstatus add constraint fk_ct_core_processingstatus_pa_9 foreign key (payload_id) references ct_core_payload (id) on delete restrict on update restrict;
-create index ix_ct_core_processingstatus_pa_9 on ct_core_processingstatus (payload_id);
-alter table ct_ncats_project add constraint fk_ct_ncats_project_acl_10 foreign key (acl_id) references ct_core_acl (id) on delete restrict on update restrict;
-create index ix_ct_ncats_project_acl_10 on ct_ncats_project (acl_id);
-alter table ct_core_publication add constraint fk_ct_core_publication_journa_11 foreign key (journal_id) references ct_core_journal (id) on delete restrict on update restrict;
-create index ix_ct_core_publication_journa_11 on ct_core_publication (journal_id);
-alter table ct_core_role add constraint fk_ct_core_role_principal_12 foreign key (principal_id) references ct_core_principal (id) on delete restrict on update restrict;
-create index ix_ct_core_role_principal_12 on ct_core_role (principal_id);
-alter table ct_core_vint add constraint fk_ct_core_vint_curation_13 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_vint_curation_13 on ct_core_vint (curation_id);
-alter table ct_core_vnum add constraint fk_ct_core_vnum_curation_14 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_vnum_curation_14 on ct_core_vnum (curation_id);
-alter table ct_core_vstr add constraint fk_ct_core_vstr_curation_15 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_vstr_curation_15 on ct_core_vstr (curation_id);
-alter table ct_core_value add constraint fk_ct_core_value_curation_16 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
-create index ix_ct_core_value_curation_16 on ct_core_value (curation_id);
+alter table ct_core_author add constraint fk_ct_core_author_selfie_2 foreign key (selfie_id) references ct_core_figure (id) on delete restrict on update restrict;
+create index ix_ct_core_author_selfie_2 on ct_core_author (selfie_id);
+alter table ct_core_curation add constraint fk_ct_core_curation_curator_3 foreign key (curator_id) references ct_core_principal (id) on delete restrict on update restrict;
+create index ix_ct_core_curation_curator_3 on ct_core_curation (curator_id);
+alter table ct_core_etagref add constraint fk_ct_core_etagref_etag_4 foreign key (etag_id) references ct_core_etag (id) on delete restrict on update restrict;
+create index ix_ct_core_etagref_etag_4 on ct_core_etagref (etag_id);
+alter table ct_core_edit add constraint fk_ct_core_edit_principal_5 foreign key (principal_id) references ct_core_principal (id) on delete restrict on update restrict;
+create index ix_ct_core_edit_principal_5 on ct_core_edit (principal_id);
+alter table ct_ncats_employee add constraint fk_ct_ncats_employee_selfie_6 foreign key (selfie_id) references ct_core_figure (id) on delete restrict on update restrict;
+create index ix_ct_ncats_employee_selfie_6 on ct_ncats_employee (selfie_id);
+alter table ct_ncats_funding add constraint fk_ct_ncats_funding_ct_ncats_g_7 foreign key (grant_id) references ct_ncats_grant (id) on delete restrict on update restrict;
+create index ix_ct_ncats_funding_ct_ncats_g_7 on ct_ncats_funding (grant_id);
+alter table ct_core_investigator add constraint fk_ct_core_investigator_organi_8 foreign key (organization_id) references ct_core_organization (id) on delete restrict on update restrict;
+create index ix_ct_core_investigator_organi_8 on ct_core_investigator (organization_id);
+alter table ct_core_keyword add constraint fk_ct_core_keyword_curation_9 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_keyword_curation_9 on ct_core_keyword (curation_id);
+alter table ct_core_mesh add constraint fk_ct_core_mesh_curation_10 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_mesh_curation_10 on ct_core_mesh (curation_id);
+alter table ct_ncats_author add constraint fk_ct_ncats_author_selfie_11 foreign key (selfie_id) references ct_core_figure (id) on delete restrict on update restrict;
+create index ix_ct_ncats_author_selfie_11 on ct_ncats_author (selfie_id);
+alter table ct_core_principal add constraint fk_ct_core_principal_selfie_12 foreign key (selfie_id) references ct_core_figure (id) on delete restrict on update restrict;
+create index ix_ct_core_principal_selfie_12 on ct_core_principal (selfie_id);
+alter table ct_core_processingstatus add constraint fk_ct_core_processingstatus_p_13 foreign key (payload_id) references ct_core_payload (id) on delete restrict on update restrict;
+create index ix_ct_core_processingstatus_p_13 on ct_core_processingstatus (payload_id);
+alter table ct_ncats_project add constraint fk_ct_ncats_project_acl_14 foreign key (acl_id) references ct_core_acl (id) on delete restrict on update restrict;
+create index ix_ct_ncats_project_acl_14 on ct_ncats_project (acl_id);
+alter table ct_ncats_project add constraint fk_ct_ncats_project_curation_15 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_ncats_project_curation_15 on ct_ncats_project (curation_id);
+alter table ct_core_publication add constraint fk_ct_core_publication_journa_16 foreign key (journal_id) references ct_core_journal (id) on delete restrict on update restrict;
+create index ix_ct_core_publication_journa_16 on ct_core_publication (journal_id);
+alter table ct_core_role add constraint fk_ct_core_role_principal_17 foreign key (principal_id) references ct_core_principal (id) on delete restrict on update restrict;
+create index ix_ct_core_role_principal_17 on ct_core_role (principal_id);
+alter table ct_core_vint add constraint fk_ct_core_vint_curation_18 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_vint_curation_18 on ct_core_vint (curation_id);
+alter table ct_core_vnum add constraint fk_ct_core_vnum_curation_19 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_vnum_curation_19 on ct_core_vnum (curation_id);
+alter table ct_core_vstr add constraint fk_ct_core_vstr_curation_20 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_vstr_curation_20 on ct_core_vstr (curation_id);
+alter table ct_core_value add constraint fk_ct_core_value_curation_21 foreign key (curation_id) references ct_core_curation (id) on delete restrict on update restrict;
+create index ix_ct_core_value_curation_21 on ct_core_value (curation_id);
 
 
 

@@ -138,7 +138,7 @@ public class TextIndexer {
                                         (n != null 
                                          ? n.longValue() : id.stringValue()));
 
-                            if (DEBUG > 0) {
+                            /*if (DEBUG > 0)*/ {
                                 Logger.debug("++ matched doc "
                                              +field+"="+id.stringValue());
                             }

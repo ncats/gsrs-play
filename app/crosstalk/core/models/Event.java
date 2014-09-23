@@ -13,6 +13,7 @@ public class Event extends Model {
     @Id
     public Long id;
 
+    @Column(length=1024)
     public String title;
     @Lob
     public String description;

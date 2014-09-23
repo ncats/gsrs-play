@@ -11,20 +11,30 @@ import crosstalk.core.models.Figure;
 import crosstalk.core.models.Acl;
 import crosstalk.core.models.Value;
 import crosstalk.core.models.Event;
+import crosstalk.core.models.Curation;
 
 @Entity
 @Table(name="ct_ncats_project")
 public class Project extends Model {
     @Id
     public Long id;
+
+    @Column(length=1024)
     public String title;
     @Lob
-    public String description;
+    public String objective;
+    @Lob
+    public String scope;
+    @Lob
+    public String opportunities; // collaboration opportunities
     public String team;
 
     // access control
     @ManyToOne(cascade=CascadeType.ALL)
     public Acl acl;
+
+    @ManyToOne(cascade=CascadeType.ALL)
+    public Curation curation;
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ct_ncats_project_annotation")

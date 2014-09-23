@@ -18,6 +18,8 @@ import com.avaje.ebean.Ebean;
 import javax.sql.DataSource;
 
 import crosstalk.core.search.TextIndexer;
+import crosstalk.core.controllers.*;
+import crosstalk.ncats.controllers.*;
 
 public class Global extends GlobalSettings {
 
@@ -28,7 +30,6 @@ public class Global extends GlobalSettings {
 
     private File home = new File (".");
     private TextIndexer textIndexer;
-    private EbeanServer archiveEbeanServer;
 
     protected void init (Application app) throws Exception {
         String h = app.configuration().getString("crosstalk.home");
@@ -65,12 +66,22 @@ public class Global extends GlobalSettings {
                 init (app);
             }
             catch (Exception ex) {
-                ex.printStackTrace();
+                Logger.trace("Can't initialize app!", ex);
             }
 
             Logger.info("Global instance "+this);
             instance = this;
         }
+        
+        /**
+         * default/global entities factory
+         */
+        RouteFactory.register("keywords", KeywordFactory.class);
+        RouteFactory.register("publications", PublicationFactory.class);
+        RouteFactory.register("organizations", OrganizationFactory.class);
+        RouteFactory.register("investigators", InvestigatorFactory.class);
+        RouteFactory.register("grants", GrantFactory.class);
+        RouteFactory.register("projects", ProjectFactory.class);
 
         /*
         Logger.info("## starting app: secret=\""
@@ -84,12 +95,13 @@ public class Global extends GlobalSettings {
         textIndexer.shutdown();
     }
 
+    /*
     @Override
     public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
         Logger.debug("route: path="+req.path()+" method="+req.method());
         return super.onRouteRequest(req);
     }
+    */
 
     public TextIndexer getTextIndexer () { return textIndexer; }
-    public EbeanServer getArchiveEbean () { return archiveEbeanServer; }
 }

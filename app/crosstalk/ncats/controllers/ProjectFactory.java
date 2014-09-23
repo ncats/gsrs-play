@@ -3,8 +3,6 @@ package crosstalk.ncats.controllers;
 import java.io.*;
 import java.security.*;
 import java.util.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import play.*;
 import play.db.ebean.*;
@@ -59,7 +57,8 @@ public class ProjectFactory extends EntityFactory {
 
     static public Form<Project> form = Form.form(Project.class);
     public static Result index () {
-        return ok (crosstalk.ncats.views.html.project.render(form));
+        //return ok (crosstalk.ncats.views.html.project.render(form));
+        return ok (crosstalk.ncats.views.html.index.render("NCATS Projects"));
     }
 
     public static Result newProject () {

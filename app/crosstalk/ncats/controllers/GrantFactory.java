@@ -18,6 +18,8 @@ public class GrantFactory extends EntityFactory {
     static final public Model.Finder<Long, Grant> finder = 
         new Model.Finder(Long.class, Grant.class);
 
+    static final public Class getType () { return Grant.class; }
+
     public static List<Grant> all () { return all (finder); }
     public static Grant getEntity (Long id) {
         return getEntity (id, finder);

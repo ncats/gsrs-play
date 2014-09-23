@@ -4,6 +4,7 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 import crosstalk.core.models.Author;
+import crosstalk.core.models.Figure;
 
 @Entity
 @Table(name="ct_ncats_author")
