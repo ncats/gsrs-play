@@ -464,6 +464,12 @@ create table ct_ncats_project_milestone (
   constraint pk_ct_ncats_project_milestone primary key (ct_ncats_project_id, ct_core_event_id))
 ;
 
+create table ct_ncats_project_publication (
+  ct_ncats_project_id            bigint not null,
+  ct_core_publication_id         bigint not null,
+  constraint pk_ct_ncats_project_publication primary key (ct_ncats_project_id, ct_core_publication_id))
+;
+
 create table ct_core_publication_keyword (
   ct_core_publication_id         bigint not null,
   ct_core_keyword_id             bigint not null,
@@ -670,6 +676,10 @@ alter table ct_ncats_project_milestone add constraint fk_ct_ncats_project_milest
 
 alter table ct_ncats_project_milestone add constraint fk_ct_ncats_project_milestone_02 foreign key (ct_core_event_id) references ct_core_event (id) on delete restrict on update restrict;
 
+alter table ct_ncats_project_publication add constraint fk_ct_ncats_project_publicati_01 foreign key (ct_ncats_project_id) references ct_ncats_project (id) on delete restrict on update restrict;
+
+alter table ct_ncats_project_publication add constraint fk_ct_ncats_project_publicati_02 foreign key (ct_core_publication_id) references ct_core_publication (id) on delete restrict on update restrict;
+
 alter table ct_core_publication_keyword add constraint fk_ct_core_publication_keywor_01 foreign key (ct_core_publication_id) references ct_core_publication (id) on delete restrict on update restrict;
 
 alter table ct_core_publication_keyword add constraint fk_ct_core_publication_keywor_02 foreign key (ct_core_keyword_id) references ct_core_keyword (id) on delete restrict on update restrict;
@@ -777,6 +787,8 @@ drop table if exists ct_ncats_project_collaborator;
 drop table if exists ct_ncats_project_figure;
 
 drop table if exists ct_ncats_project_milestone;
+
+drop table if exists ct_ncats_project_publication;
 
 drop table if exists ct_core_publication;
 

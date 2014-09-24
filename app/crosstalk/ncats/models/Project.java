@@ -12,6 +12,7 @@ import crosstalk.core.models.Acl;
 import crosstalk.core.models.Value;
 import crosstalk.core.models.Event;
 import crosstalk.core.models.Curation;
+import crosstalk.core.models.Publication;
 
 @Entity
 @Table(name="ct_ncats_project")
@@ -55,6 +56,10 @@ public class Project extends Model {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ct_ncats_project_milestone")
     public List<Event> milestones = new ArrayList<Event>();
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ct_ncats_project_publication")
+    public List<Publication> publications = new ArrayList<Publication>();
     
     public Project () {}
     public Project (String title) {

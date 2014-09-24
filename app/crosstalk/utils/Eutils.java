@@ -64,7 +64,17 @@ public class Eutils {
             // abstract
             nodes = article.getElementsByTagName("AbstractText");
             if (nodes.getLength() > 0) {
-                pub.abstractText = nodes.item(0).getTextContent();
+                StringBuilder text = new StringBuilder ();
+                for (int i = 0; i < nodes.getLength(); ++i) {
+                    if (text.length() > 0) text.append("\n");
+                    Element elm = (Element)nodes.item(i);
+                    String label = elm.getAttribute("Label");
+                    if (label != null && label.length() > 0) {
+                        text.append(label+": ");
+                    }
+                    text.append(elm.getTextContent());
+                }
+                pub.abstractText = text.toString();
             }
             
             // authors

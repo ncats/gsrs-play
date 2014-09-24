@@ -113,8 +113,8 @@ public class EntityFactory extends Controller {
         if (filter == null)
             etag.total = finder.findRowCount();
         else {
-            Model.Finder<String, ETag> eFinder = 
-                new Model.Finder(String.class, ETag.class);
+            Model.Finder<Long, ETag> eFinder = 
+                new Model.Finder(Long.class, ETag.class);
             List<ETag> etags = eFinder
                 .where().eq("sha1", etag.sha1)
                 .orderBy("modified desc").setMaxRows(1).findList();
