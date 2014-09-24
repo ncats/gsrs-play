@@ -14,11 +14,14 @@ import org.xml.sax.*;
 import play.Logger;
 import com.avaje.ebean.Expr;
 import crosstalk.ncats.models.Grant;
+import crosstalk.utils.Global;
+
 
 public class GrantAbstractXmlParser extends DefaultHandler {
     StringBuilder content = new StringBuilder ();
     Grant grant;
     int count;
+    Global g = Global.getInstance();
 
     public GrantAbstractXmlParser () {
     }
@@ -64,13 +67,6 @@ public class GrantAbstractXmlParser extends DefaultHandler {
         if (value.length() == 0)
             ;
         else if (qName.equals("row")) {
-            if (grant != null) {
-                grant.update();
-                if (++count % 100 == 0) {
-                    Logger.debug(count+": grant "
-                                 +grant.applicationId+" updated!");
-                }
-            }
         }
         else if (qName.equals("APPLICATION_ID")) {
             try {
@@ -87,8 +83,14 @@ public class GrantAbstractXmlParser extends DefaultHandler {
             }
         }
         else if (qName.equals("ABSTRACT_TEXT")) {
-            if (grant != null)
+            if (grant != null) {
                 grant.projectAbstract = value;
+                grant.update();
+                if (++count % 100 == 0) {
+                    Logger.debug(count+": grant "+grant.id+"/"
+                                 +grant.applicationId+" updated!");
+                }
+            }
         }
     }
 }

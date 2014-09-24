@@ -30,7 +30,7 @@ create table ct_core_author (
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
-  affiliation               varchar(255),
+  affiliation               varchar(1024),
   orcid                     varchar(20),
   url                       varchar(1024),
   constraint uq_ct_core_author_pkey unique (pkey),
@@ -51,7 +51,7 @@ create table ct_core_etag (
   etag                      varchar(16),
   uri                       varchar(4000),
   method                    varchar(10),
-  hash                      varchar(40),
+  sha1                      varchar(40),
   total                     integer,
   count                     integer,
   skip                      integer,
@@ -94,7 +94,7 @@ create table ct_ncats_employee (
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
-  affiliation               varchar(255),
+  affiliation               varchar(1024),
   orcid                     varchar(20),
   url                       varchar(1024),
   ncats_employee            boolean,
@@ -195,11 +195,11 @@ create table ct_core_investigator (
 create table ct_core_journal (
   id                        bigint not null,
   issn                      varchar(10),
-  volume                    integer,
+  volume                    varchar(255),
   issue                     integer,
   year                      integer,
-  month                     integer,
-  title                     varchar(255),
+  month                     varchar(10),
+  title                     varchar(256),
   iso_abbr                  varchar(255),
   constraint pk_ct_core_journal primary key (id))
 ;
@@ -243,7 +243,7 @@ create table ct_ncats_author (
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
-  affiliation               varchar(255),
+  affiliation               varchar(1024),
   orcid                     varchar(20),
   url                       varchar(1024),
   ncats_employee            boolean,
@@ -318,7 +318,7 @@ create table ct_ncats_project (
 create table ct_core_publication (
   id                        bigint not null,
   pmid                      bigint,
-  pmcid                     bigint,
+  pmcid                     varchar(255),
   title                     varchar(1024),
   pages                     varchar(255),
   doi                       varchar(255),
@@ -423,9 +423,9 @@ create table ct_core_group_principal (
 ;
 
 create table ct_core_value_attribute (
-  ct_core_keyword_id             bigint not null,
+  ct_core_value_id               bigint not null,
   ct_core_attribute_id           bigint not null,
-  constraint pk_ct_core_value_attribute primary key (ct_core_keyword_id, ct_core_attribute_id))
+  constraint pk_ct_core_value_attribute primary key (ct_core_value_id, ct_core_attribute_id))
 ;
 
 create table ct_core_payload_attribute (
@@ -642,7 +642,7 @@ alter table ct_core_group_principal add constraint fk_ct_core_group_principal_ct
 
 alter table ct_core_group_principal add constraint fk_ct_core_group_principal_ct_02 foreign key (ct_core_principal_id) references ct_core_principal (id) on delete restrict on update restrict;
 
-alter table ct_core_value_attribute add constraint fk_ct_core_value_attribute_ct_01 foreign key (ct_core_keyword_id) references ct_core_keyword (id) on delete restrict on update restrict;
+alter table ct_core_value_attribute add constraint fk_ct_core_value_attribute_ct_01 foreign key (ct_core_value_id) references ct_core_keyword (id) on delete restrict on update restrict;
 
 alter table ct_core_value_attribute add constraint fk_ct_core_value_attribute_ct_02 foreign key (ct_core_attribute_id) references ct_core_attribute (id) on delete restrict on update restrict;
 

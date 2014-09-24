@@ -11,7 +11,7 @@ public class Publication extends Model {
     public Long id; // internal id
 
     public Long pmid; // pubmed id
-    public Long pmcid; // pubmed central id
+    public String pmcid; // pubmed central id
 
     @Column(length=1024)
     public String title; // publication title

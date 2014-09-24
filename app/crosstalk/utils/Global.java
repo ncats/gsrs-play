@@ -30,6 +30,7 @@ public class Global extends GlobalSettings {
 
     private File home = new File (".");
     private TextIndexer textIndexer;
+    private int debug;
 
     protected void init (Application app) throws Exception {
         String h = app.configuration().getString("crosstalk.home");
@@ -38,6 +39,11 @@ public class Global extends GlobalSettings {
             if (!home.exists())
                 home.mkdirs();
         }
+
+        Integer level = app.configuration().getInt("crosstalk.debug");
+        if (level != null)
+            this.debug = level;
+        Logger.info("## crosstalk.debug="+debug); 
 
         if (!home.exists())
             throw new IllegalArgumentException
@@ -104,4 +110,7 @@ public class Global extends GlobalSettings {
     */
 
     public TextIndexer getTextIndexer () { return textIndexer; }
+    public boolean debug (int level) { 
+        return debug >= level; 
+    }
 }

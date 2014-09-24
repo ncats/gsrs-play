@@ -20,7 +20,7 @@ public class ETag extends Model {
     @Column(length=10)
     public String method;
     @Column(length=40)
-    public String hash; // SHA1
+    public String sha1; // SHA1
 
     public Integer total;
     public Integer count;
@@ -35,17 +35,17 @@ public class ETag extends Model {
     public String filter;
 
     public ETag () {
-        this (nextId ());
+        this (nextETag ());
     }
     public ETag (String etag) { this.etag = etag; }
 
 
     static final SecureRandom rand = new SecureRandom ();    
-    public static String nextId () {
-        return nextId (8);
+    public static String nextETag () {
+        return nextETag (8);
     }
 
-    public static String nextId (int size) {
+    public static String nextETag (int size) {
         byte[] buf = new byte[size];
         rand.nextBytes(buf);
 

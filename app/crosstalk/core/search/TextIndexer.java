@@ -55,14 +55,13 @@ import javax.persistence.Id;
 import play.Logger;
 import play.db.ebean.Model;
 
+import crosstalk.utils.Global;
 
 public class TextIndexer {
     private File dir;
     private Directory indexDir;
     private IndexWriter indexWriter;
     private Analyzer indexAnalyzer;
-
-    static final int DEBUG = 0;
 
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
@@ -89,6 +88,13 @@ public class TextIndexer {
         indexWriter = new IndexWriter (indexDir, conf);
 
         this.dir = dir;
+    }
+
+    static boolean DEBUG (int level) {
+        Global g = Global.getInstance();
+        if (g != null)
+            return g.debug(level);
+        return false;
     }
 
     Analyzer createIndexAnalyzer () {
@@ -138,7 +144,7 @@ public class TextIndexer {
                                         (n != null 
                                          ? n.longValue() : id.stringValue()));
 
-                            /*if (DEBUG > 0)*/ {
+                            if (DEBUG (1)) {
                                 Logger.debug("++ matched doc "
                                              +field+"="+id.stringValue());
                             }
@@ -157,8 +163,9 @@ public class TextIndexer {
             }
 
             Logger.debug("## Query finishes in "
-                         +String.format("%1$.3fs", 
-                                        (System.currentTimeMillis()-start)*1e-3)
+                         +String.format
+                         ("%1$.3fs", 
+                          (System.currentTimeMillis()-start)*1e-3)
                          +"..."+hits.totalHits+" hit(s) found; returning "
                          +results.size()+"!");
         }
@@ -176,7 +183,7 @@ public class TextIndexer {
         if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return;
         }
-        if (DEBUG > 0)
+        if (DEBUG (2))
             Logger.debug(">>> Indexing "+entity+"...");
         
         List<IndexableField> fields = new ArrayList<IndexableField>();
@@ -188,7 +195,7 @@ public class TextIndexer {
         for (IndexableField f : fields) {
             text.add(new TextField ("text", f.stringValue(), NO));
 
-            if (DEBUG > 1)
+            if (DEBUG (2))
                 Logger.debug(".."+f.name()+":"
                              +f.stringValue()+" ["+f.getClass().getName()+"]");
         }
@@ -197,7 +204,7 @@ public class TextIndexer {
         // now index
         indexWriter.addDocument(fields);
 
-        if (DEBUG > 0)
+        if (DEBUG (2))
             Logger.debug("<<< "+entity);
     }
 
@@ -206,7 +213,7 @@ public class TextIndexer {
             return;
         }
 
-        if (DEBUG > 0)
+        if (DEBUG (2))
             Logger.debug(">>> Updating "+entity+"...");
 
         try {
@@ -218,7 +225,8 @@ public class TextIndexer {
                         indexWriter.deleteDocuments
                             (new Term (field, id.toString()));
 
-                        Logger.debug("++ Updating "+field+"="+id);
+                        if (DEBUG (2))
+                            Logger.debug("++ Updating "+field+"="+id);
 
                         // now reindex .. there isn't an IndexWriter.update 
                         // that takes a Query
@@ -231,12 +239,8 @@ public class TextIndexer {
             Logger.trace("Unable to update index for "+entity, ex);
         }
 
-        if (DEBUG > 0)
+        if (DEBUG (2))
             Logger.debug("<<< "+entity);
-    }
-
-    public void remove (Object id, Class kind) throws IOException {
-        BooleanQuery query = new BooleanQuery ();
     }
 
     public void remove (Object entity) throws Exception {

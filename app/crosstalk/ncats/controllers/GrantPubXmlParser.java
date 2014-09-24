@@ -13,10 +13,11 @@ import org.xml.sax.*;
 
 import play.Logger;
 import com.avaje.ebean.Expr;
+
 import crosstalk.ncats.models.Grant;
 import crosstalk.core.models.Publication;
 import crosstalk.core.controllers.PublicationFactory;
-
+import crosstalk.utils.Eutils;
 
 public class GrantPubXmlParser extends DefaultHandler {
     StringBuilder content = new StringBuilder ();
@@ -79,17 +80,22 @@ public class GrantPubXmlParser extends DefaultHandler {
                     if (!pubs.isEmpty())
                         pub = pubs.iterator().next();
                     else {
-                        pub = new Publication ();
-                        pub.pmid = pmid;
+                        Logger.debug("Fetching "+pmid+"... for "+proj);
+                        pub = Eutils.fetchPublication(pmid);
                     }
 
-                    for (Grant g : grants) {
-                        g.publications.add(pub);
-                        g.update();
+                    if (pub != null) {
+                        for (Grant g : grants) {
+                            g.publications.add(pub);
+                            g.update();
+                        }
+                        
+                        if (++count % 100 == 0) {
+                            Logger.debug(count+": "+proj+" "+pmid);
+                        }
                     }
-
-                    if (++count % 100 == 0) {
-                        Logger.debug(count+": "+proj+" "+pmid);
+                    else {
+                        Logger.warn("Can't retrieve publication "+pmid);
                     }
                 }
             }

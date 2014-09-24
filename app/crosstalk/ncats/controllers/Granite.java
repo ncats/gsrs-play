@@ -165,6 +165,7 @@ public class Granite extends Controller {
 
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart part = body.getFile("File");
+        Logger.debug("Loading publications...");
         if (part != null) {
             try {
                 String name = part.getFilename();
@@ -184,6 +185,7 @@ public class Granite extends Controller {
                 return redirect (crosstalk.ncats.controllers.routes.Granite.index());
             }
             catch (Exception ex) {
+                Logger.trace("Can't load publications", ex);
                 return internalServerError (ex.getMessage());
             }
         }

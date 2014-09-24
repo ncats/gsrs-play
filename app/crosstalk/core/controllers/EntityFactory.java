@@ -44,7 +44,7 @@ public class EntityFactory extends Controller {
     static final Model.Finder<Long, Principal> principalFinder = 
         new Model.Finder(Long.class, Principal.class);
 
-    protected static String hashRequest (String param) {
+    protected static String sha1Request (String param) {
         String path = request().method()+"/"+request().path()
             +(param != null ? ("/"+param) : "");
         try {
@@ -108,7 +108,7 @@ public class EntityFactory extends Controller {
         etag.filter = filter;
         etag.count = results.size();
         etag.uri = request().uri();
-        etag.hash = hashRequest (filter);
+        etag.sha1 = sha1Request (filter);
         etag.method = request().method();
         if (filter == null)
             etag.total = finder.findRowCount();
@@ -116,12 +116,12 @@ public class EntityFactory extends Controller {
             Model.Finder<String, ETag> eFinder = 
                 new Model.Finder(String.class, ETag.class);
             List<ETag> etags = eFinder
-                .where().eq("hash", etag.hash)
+                .where().eq("sha1", etag.sha1)
                 .orderBy("modified desc").setMaxRows(1).findList();
 
             if (!etags.isEmpty()) {
                 ETag e = etags.iterator().next();
-                Logger.debug(">> cached "+etag.hash+" from ETag "+e.etag);
+                Logger.debug(">> cached "+etag.sha1+" from ETag "+e.etag);
                 etag.total = e.total;
             }
             else {

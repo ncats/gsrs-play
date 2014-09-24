@@ -12,9 +12,13 @@ public class Author extends Principal {
     public String lastname;
     public String forename;
     public String initials;
+
+    @Column(length=1024)
     public String affiliation;
+
     @Column(length=20)
     public String orcid; // http://orcid.org/
+
     @Column(length=1024)
     public String url;
 

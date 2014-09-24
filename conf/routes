@@ -15,7 +15,7 @@ POST    /       crosstalk.ncats.controllers.Granite.newGrant()
 GET     /assets/*file   controllers.Assets.at(path="/public", file)
 GET     /webjars/*file          controllers.WebJarAssets.at(file)
 
-GET     /search         crosstalk.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0, expand: String ?= null)
+GET     /api/search         crosstalk.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0, expand: String ?= null)
 #
 # special variables are denoted by @'s and should be specified
 # before other resources
@@ -39,22 +39,24 @@ GET     /projects/@migration    crosstalk.ncats.controllers.ProjectMigration.ind
 POST    /projects/@migration    crosstalk.ncats.controllers.ProjectMigration.migrate()
 GET     /projects/@form crosstalk.ncats.controllers.ProjectFactory.index()
 POST    /projects/@form crosstalk.ncats.controllers.ProjectFactory.newProject()
-GET     /projects/@count       crosstalk.ncats.controllers.ProjectFactory.count()
 
 
-###########
+##################################
+# API for entity routing
+##################################
+GET     /api/$context<[a-z0-9_]+>/@count       crosstalk.core.controllers.RouteFactory.count(context: String)
+GET     /api/$context<[a-z0-9_]+>/:id  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
+GET     /api/$context<[a-z0-9_]+>/:id/@edits      crosstalk.core.controllers.RouteFactory.edits(context: String, id:Long)
+GET     /api/$context<[a-z0-9_]+>(:id)     crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /api/$context<[a-z0-9_]+>(:id)/  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /api/$context<[a-z0-9_]+>(:id)/@edits      crosstalk.core.controllers.RouteFactory.edits(context: String, id: Long)
+GET     /api/$context<[a-z0-9_]+>/:id/  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /api/$context<[a-z0-9_]+>/:id/*field  crosstalk.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
+GET     /api/$context<[a-z0-9_]+>(:id)/*field  crosstalk.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
+GET     /api/$context<[a-z0-9_]+>  crosstalk.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+GET     /api/$context<[a-z0-9_]+>/  crosstalk.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+POST    /api/$context<[a-z0-9_]+>  crosstalk.core.controllers.RouteFactory.create(context: String)
+PUT     /api/$context<[a-z0-9_]+>/:id/*field       crosstalk.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
+PUT     /api/$context<[a-z0-9_]+>(:id)/*field       crosstalk.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
+
 #GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       crosstalk.core.controllers.RouteFactory.get(ns: String, resource: String)
-GET     /$context<[a-z0-9_]+>/@count       crosstalk.core.controllers.RouteFactory.count(context: String)
-GET     /$context<[a-z0-9_]+>/:id  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
-GET     /$context<[a-z0-9_]+>/:id/@edits      crosstalk.core.controllers.RouteFactory.edits(context: String, id:Long)
-GET     /$context<[a-z0-9_]+>(:id)     crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>(:id)/  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>(:id)/@edits      crosstalk.core.controllers.RouteFactory.edits(context: String, id: Long)
-GET     /$context<[a-z0-9_]+>/:id/  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>/:id/*field  crosstalk.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
-GET     /$context<[a-z0-9_]+>(:id)/*field  crosstalk.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
-GET     /$context<[a-z0-9_]+>  crosstalk.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
-GET     /$context<[a-z0-9_]+>/  crosstalk.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
-POST    /$context<[a-z0-9_]+>  crosstalk.core.controllers.RouteFactory.create(context: String)
-PUT     /$context<[a-z0-9_]+>/:id/*field       crosstalk.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
-PUT     /$context<[a-z0-9_]+>(:id)/*field       crosstalk.core.controllers.RouteFactory.update(context: String, id:Long, field: String)

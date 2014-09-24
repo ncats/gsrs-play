@@ -14,7 +14,8 @@ public class Value extends Model {
     public Long id;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ct_core_value_attribute")
+    @JoinTable(name="ct_core_value_attribute",
+               joinColumns=@JoinColumn(name="ct_core_value_id"))
     public List<Attribute> attrs = new ArrayList<Attribute>();
 
     @ManyToOne(cascade=CascadeType.ALL)

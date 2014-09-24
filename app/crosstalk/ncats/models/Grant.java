@@ -15,7 +15,6 @@ public class Grant extends Model {
 
     @Id
     public Long id; // internal id
-    public Long getId () { return id; }
 
     /**
      * Description from http://exporter.nih.gov/about.aspx

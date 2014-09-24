@@ -59,14 +59,16 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
     @Override
     public void postUpdate (BeanPersistRequest<?> request) {
-        /*
-        ObjectMapper mapper = new ObjectMapper ();
-        Logger.debug(">> Old: "+mapper.valueToTree(request.getOldValues())
-                     +"\n>> New: "+mapper.valueToTree(request.getBean()));
-        */
+        Global g = Global.getInstance();
         Object bean = request.getBean();
+
+        if (g.debug(2)) {
+            ObjectMapper mapper = new ObjectMapper ();
+            Logger.debug(">> Old: "+mapper.valueToTree(request.getOldValues())
+                         +"\n>> New: "+mapper.valueToTree(bean));
+        }
+
         try {
-            Global g = Global.getInstance();
             g.getTextIndexer().update(bean);
         }
         catch (java.io.IOException ex) {
