@@ -65,6 +65,34 @@ public class Granite extends Controller {
         return redirect (crosstalk.ncats.controllers.routes.Granite.index());
     }
 
+    public static Result filter () {
+        if (!request().method().equalsIgnoreCase("POST")) {
+            return badRequest ("Only POST is accepted!");
+        }
+
+        String content = request().getHeader("Content-Type");
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
+            return badRequest ("Mime type \""+content+"\" not supported!");
+        }
+
+        try {
+            JsonNode json = request().body().asJson();
+
+            JsonNode top = json.get("top");
+            JsonNode skip = json.get("skip");
+            JsonNode query = json.get("query");
+            List<Grant> results = GrantFactory.filter
+                (query, top != null && !top.isNull() ? top.asInt() : 0, 
+                 skip != null && !skip.isNull() ? skip.asInt() : 10);
+            ObjectMapper mapper = new ObjectMapper ();
+            return ok (mapper.valueToTree(results));
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
+    }
+
     @BodyParser.Of(value = BodyParser.MultipartFormData.class, 
                    maxLength = 1000000 * 1024 * 1024)
     public static Result loadMeta () {
@@ -75,9 +103,10 @@ public class Granite extends Controller {
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart part = body.getFile("File");
         if (part != null) {
+            String name = part.getFilename();
+            String content = part.getContentType();
+                
             try {
-                String name = part.getFilename();
-                String content = part.getContentType();
                 File file = part.getFile();
                 
                 MessageDigest md = MessageDigest.getInstance("SHA1");
@@ -113,9 +142,11 @@ public class Granite extends Controller {
                 }
                 
                 //return ok (sb.toString());
-                return redirect (crosstalk.ncats.controllers.routes.Granite.index());
+                return redirect
+                    (crosstalk.ncats.controllers.routes.Granite.index());
             }
             catch (Exception ex) {
+                Logger.trace("Can't load file \""+name+"\"; "+content, ex);
                 return internalServerError (ex.getMessage());
             }
         }

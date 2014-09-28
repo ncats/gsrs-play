@@ -12,13 +12,17 @@ public class Journal extends Model {
 
     @Column(length=10)
     public String issn;
+
     public String volume;
     public Integer issue;
     public Integer year;
     @Column(length=10)
     public String month;
+
     @Column(length=256)
+    @Indexable(facet=true, name="Journal")
     public String title;
+
     public String isoAbbr; // iso abbreviation
 
     public Journal () {}

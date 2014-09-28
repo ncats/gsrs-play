@@ -1,15 +1,14 @@
 package crosstalk.ncats.controllers;
 
 import java.io.*;
-import java.security.*;
 import java.util.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import crosstalk.ncats.models.Grant;
 import crosstalk.core.controllers.EntityFactory;
@@ -24,15 +23,22 @@ public class GrantFactory extends EntityFactory {
     public static Grant getEntity (Long id) {
         return getEntity (id, finder);
     }
+
     public static Result count () {
         return count (finder);
     }
+
     public static Result page (int top, int skip) {
         return GrantFactory.page (top, skip, null, null);
     }
+
     public static Result page (int top, int skip, 
                                String expand, String filter) {
         return page (top, skip, expand, filter, finder);
+    }
+
+    public static List<Grant> filter (JsonNode json, int top, int skip) {
+        return filter (json, top, skip, finder);
     }
 
     public static Result edits (Long id) {

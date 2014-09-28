@@ -43,6 +43,12 @@ public class RouteFactory extends Controller {
         }
     }
 
+    public static Result listResources () {
+        Set<String> resources = new TreeSet<String>(registry.keySet());
+        ObjectMapper mapper = new ObjectMapper ();
+        return ok (mapper.valueToTree(resources));
+    }
+
     public static Result get (String ns, String resource) {
         Resource res = resFinder
             .where(Expr.eq("name", ns))
@@ -77,6 +83,7 @@ public class RouteFactory extends Controller {
         return null;
     }
 
+    
     public static Result count (String context) {
         try {
             Method m = getMethod (context, "count");

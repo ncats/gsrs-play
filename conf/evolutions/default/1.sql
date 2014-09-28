@@ -227,8 +227,8 @@ create table ct_core_link (
 create table ct_core_mesh (
   id                        bigint not null,
   curation_id               bigint,
-  term                      varchar(255),
   major_topic               boolean,
+  term                      varchar(1024),
   constraint pk_ct_core_mesh primary key (id))
 ;
 

@@ -18,6 +18,7 @@ public class Organization extends Model {
      * Bradstreet Information Services. 
      */
     @Column(length=10)
+    @Indexable(facet=true, name="DUNS")
     public String duns;
 
     /**
@@ -25,6 +26,7 @@ public class Organization extends Model {
      * business, or government agency receiving funding for the grant, 
      * contract, cooperative agreement, or intramural project.  
      */
+    @Indexable(facet=true, name="Institution")
     public String name;
 
     /**
@@ -32,6 +34,7 @@ public class Organization extends Model {
      * for a project, using a standardized categorization of departments.
      * Names are available only for medical school departments.
      */
+    @Indexable(facet=true, name="Department")
     public String department;
 
     /**
@@ -40,6 +43,7 @@ public class Organization extends Model {
      * research performance site.  For all NIH intramural projects, 
      * Bethesda, MD is used. 
      */
+    @Indexable(facet=true, name="City")
     public String city;
 
     /**
@@ -48,6 +52,7 @@ public class Organization extends Model {
      * research performance site. 
      */
     @Column(length=20)
+    @Indexable(facet=true, name="State")
     public String state;
 
     /**
@@ -70,6 +75,7 @@ public class Organization extends Model {
      * or contractor is located.  Note that this may be different from the
      * research performance site. 
      */
+    @Indexable(facet=true, name="Country")
     public String country;
 
 
@@ -78,6 +84,7 @@ public class Organization extends Model {
      * defined in the Federal Information Processing Standard. 
      */
     @Column(length=3)
+    @Indexable(facet=true, name="CountryCode")
     public String fips;
 
     /**

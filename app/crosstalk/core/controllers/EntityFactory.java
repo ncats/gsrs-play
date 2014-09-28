@@ -168,6 +168,70 @@ public class EntityFactory extends Controller {
         return finder.where(filter).findList();
     }
 
+    /**
+     * filter by example
+     */
+    protected static <T> List<T> filter (T instance, 
+                                         Model.Finder<Long, T> finder) {
+        if (instance == null)
+            throw new IllegalArgumentException ("Instance is null");
+
+        Map<String, Object> cons = new HashMap<String, Object>();
+        for (Field f : instance.getClass().getFields()) {
+            try {
+                Object value = f.get(instance);
+                Class type = f.getType();
+                if (value != null && type.isPrimitive()) {
+                    cons.put(f.getName(), value);
+                }
+            }
+            catch (Exception ex) {
+                Logger.trace("Unable to retrieve field "+f.getName(), ex);
+            }
+        }
+
+        List results = new ArrayList ();
+        if (cons.isEmpty()) {
+            Logger.warn("Can't filter by example because "+instance.getClass()
+                        +" doesn't contain any primitive field!");
+        }
+        else {
+            results = finder.where().allEq(cons).findList();
+        }
+        return results;
+    }
+
+    protected static <T> List<T> filter (JsonNode json, int top, int skip,
+                                         Model.Finder<Long, T> finder) {
+        if (json == null)
+            throw new IllegalArgumentException ("Json is null");
+
+        Map<String, Object> cons = new HashMap<String, Object>();
+        for (Iterator<String> it = json.fieldNames(); it.hasNext(); ) {
+            String field = it.next();
+            JsonNode n = json.get(field);
+            if (n != null && n.isValueNode() && !n.isNull()) {
+                if (n.isNumber()) cons.put(field, n.numberValue());
+                else if (n.isTextual()) cons.put(field, n.textValue());
+            }
+        }
+
+        List results = new ArrayList ();
+        if (cons.isEmpty()) {
+            Logger.warn("Can't filter by example because JSON"
+                        +" doesn't contain any primitive field!");
+        }
+        else {
+            results = finder.where()
+                .allEq(cons)
+                .orderBy("id asc")
+                .setFirstRow(skip)
+                .setMaxRows(top)
+                .findList();
+        }
+        return results;
+    }
+
     protected static <T> Result get (Long id, Model.Finder<Long, T> finder) {
         return get (id, null, finder);
     }
@@ -209,7 +273,7 @@ public class EntityFactory extends Controller {
         }
         catch (Exception ex) {
             return internalServerError
-                (request().uri()+": can't get get count");
+                (request().uri()+": can't get count");
         }
     }
 
@@ -315,8 +379,8 @@ public class EntityFactory extends Controller {
         }
 
         String content = request().getHeader("Content-Type");
-        if (content == null || (!content.equalsIgnoreCase("application/json")
-                                && !content.equalsIgnoreCase("text/json"))) {
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
 
@@ -364,8 +428,8 @@ public class EntityFactory extends Controller {
         }
 
         String content = request().getHeader("Content-Type");
-        if (content == null || (!content.equalsIgnoreCase("application/json")
-                                && !content.equalsIgnoreCase("text/json"))) {
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
 

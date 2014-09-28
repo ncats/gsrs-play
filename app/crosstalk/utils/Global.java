@@ -88,6 +88,7 @@ public class Global extends GlobalSettings {
         RouteFactory.register("investigators", InvestigatorFactory.class);
         RouteFactory.register("grants", GrantFactory.class);
         RouteFactory.register("projects", ProjectFactory.class);
+        RouteFactory.register("mesh", MeshFactory.class);
 
         /*
         Logger.info("## starting app: secret=\""
@@ -98,7 +99,8 @@ public class Global extends GlobalSettings {
     @Override
     public void onStop (Application app) {
         Logger.info("## stopping");
-        textIndexer.shutdown();
+        if (textIndexer != null)
+            textIndexer.shutdown();
     }
 
     /*

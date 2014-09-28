@@ -48,7 +48,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             g.getTextIndexer().add(bean);
         }
         catch (java.io.IOException ex) {
-            Logger.warn("Can't index bean "+bean, ex);
+            Logger.trace("Can't index bean "+bean, ex);
         }
     }
 

@@ -6,10 +6,8 @@ import javax.persistence.*;
 @Entity
 @Table(name="ct_core_keyword")
 public class Keyword extends Value {
-    @Id
-    public Long id;
-
     @Column(length=255)
+    @Indexable(facet=true, name="Keyword")
     public String term;
 
     public Keyword () {}

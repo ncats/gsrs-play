@@ -9,22 +9,17 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import crosstalk.core.models.Publication;
+import crosstalk.core.models.Mesh;
 
-public class PublicationFactory extends EntityFactory {
-    public static final Model.Finder<Long, Publication> finder = 
-        new Model.Finder(Long.class, Publication.class);
+public class MeshFactory extends EntityFactory {
+    public static final Model.Finder<Long, Mesh> finder = 
+        new Model.Finder(Long.class, Mesh.class);
 
-    public static List<Publication> all () { return all (finder); }
+    public static List<Mesh> all () { return all (finder); }
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String expand,
                                String filter) {
         return page (top, skip, expand, filter, finder);
-    }
-
-    public static List<Publication> filter (JsonNode json, int top, int skip) {
-        return filter (json, top, skip, finder);
     }
 
     public static Result get (Long id, String select) {
@@ -35,8 +30,12 @@ public class PublicationFactory extends EntityFactory {
         return field (id, path, finder);
     }
 
+    public static Result edits (Long id) {
+        return edits (id, Mesh.class);
+    }
+
     public static Result create () {
-        return create (Publication.class, finder);
+        return create (Mesh.class, finder);
     }
 
     public static Result delete (Long id) {
@@ -44,6 +43,6 @@ public class PublicationFactory extends EntityFactory {
     }
 
     public static Result update (Long id, String field) {
-        return update (id, field, Publication.class, finder);
+        return update (id, field, Mesh.class, finder);
     }
 }

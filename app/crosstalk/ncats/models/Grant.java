@@ -8,6 +8,7 @@ import javax.persistence.*;
 import crosstalk.core.models.Publication;
 import crosstalk.core.models.Keyword;
 import crosstalk.core.models.Investigator;
+import crosstalk.core.models.Indexable;
 
 @Entity
 @Table(name="ct_ncats_grant")
@@ -37,6 +38,7 @@ public class Grant extends Model {
      * with the letter Z). 
      */
     // http://grants.nih.gov/grants/funding/ac_search_results.htm
+    @Indexable(facet=true, name="GrantActivity")
     public String activity; 
 
     /**
@@ -142,6 +144,7 @@ public class Grant extends Model {
     /**
      * Full name of the administering agency, Institute, or Center.
      */
+    @Indexable(facet=true, name="GrantAdminIC")
     public String icName;
 
     /**
@@ -149,6 +152,7 @@ public class Grant extends Model {
      * who has applied for or receives NIH funding. The official name as 
      * used by NIH is Major Component Combining Name. 
      */
+    @Indexable(facet=true, name="GrantInstitutionSchool")
     public String edInstType;
 
     /**
@@ -160,6 +164,7 @@ public class Grant extends Model {
      * and Disease Categorization System for more information on the 
      * categorization process.
      */
+    @Indexable(facet=true, name="GrantSpendingCategory")
     public String nihSpendingCats;
 
     /**
@@ -238,6 +243,7 @@ public class Grant extends Model {
      * matter experts that reviewed the research grant application for
      * scientific and technical merit. 
      */
+    @Indexable(facet=true, name="GrantStudySectionCode")
     public String studySection;
 
     /**
@@ -246,6 +252,7 @@ public class Grant extends Model {
      * Applications reviewed by panels other than regular standing study
      * sections are designated by "Special Emphasis Panel."
      */
+    @Indexable(facet=true, name="GrantStudySection")
     public String studySectionName;
 
     /**
@@ -254,10 +261,12 @@ public class Grant extends Model {
      * original application and/or the letter "S" and serial number 
      * indicating a supplement to the project.
      */
+    @Indexable(facet=true, name="GrantSuffix")
     public String suffix;
 
     /**
      */
+    @Indexable(facet=true, name="GrantFundingMechism")
     public String fundingMechanism;
 
     /**

@@ -23,4 +23,7 @@ public class Author extends Principal {
     public String url;
 
     public Author () {}
+
+    @Indexable(facet=true, name="Author")
+    public String getName () { return lastname+", "+forename; }
 }

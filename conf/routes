@@ -7,11 +7,19 @@ GET     /       crosstalk.ncats.controllers.Granite.index()
 POST    /loadmeta       crosstalk.ncats.controllers.Granite.loadMeta()
 POST    /loadabs        crosstalk.ncats.controllers.Granite.loadAbs()
 POST    /loadpub        crosstalk.ncats.controllers.Granite.loadPub()
-POST    /:id    crosstalk.ncats.controllers.Granite.deleteGrant(id:Long)
 DELETE    /:id  crosstalk.ncats.controllers.Granite.deleteGrant(id:Long)
 POST    /       crosstalk.ncats.controllers.Granite.newGrant()
+POST    /filter       crosstalk.ncats.controllers.Granite.filter()
 
-# Map static resources from the /public folder to the /assets URL path
+##
+## Docs
+##
+GET     /api-docs       controllers.ApiHelpController.getResources()
+GET     /api-docs/api       controllers.ApiHelpController.getResource(path="/api")
+
+##
+## Map static resources from the /public folder to the /assets URL path
+##
 GET     /assets/*file   controllers.Assets.at(path="/public", file)
 GET     /webjars/*file          controllers.WebJarAssets.at(file)
 
@@ -21,6 +29,9 @@ GET     /api/search         crosstalk.core.controllers.SearchFactory.search(q, t
 # before other resources
 #
 
+##
+## ADMIN (not done)
+##
 GET     /admin/principal/:id    crosstalk.core.controllers.AdminFactory.getUser(id:Long)
 DELETE  /admin/principal/:id    crosstalk.core.controllers.AdminFactory.deleteUser(id:Long)
 GET     /admin/role/:id         crosstalk.core.controllers.AdminFactory.getRole(id:Long)
@@ -44,6 +55,8 @@ POST    /projects/@form crosstalk.ncats.controllers.ProjectFactory.newProject()
 ##################################
 # API for entity routing
 ##################################
+#GET     /api    crosstalk.core.controllers.RouteFactory.listResources()
+#GET     /api/    crosstalk.core.controllers.RouteFactory.listResources()
 GET     /api/$context<[a-z0-9_]+>/@count       crosstalk.core.controllers.RouteFactory.count(context: String)
 GET     /api/$context<[a-z0-9_]+>/:id  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
 GET     /api/$context<[a-z0-9_]+>/:id/@edits      crosstalk.core.controllers.RouteFactory.edits(context: String, id:Long)

@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.lang.reflect.*;
+import java.lang.annotation.Annotation;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.StringField;
@@ -12,7 +13,13 @@ import org.apache.lucene.document.IntField;
 import org.apache.lucene.document.FloatField;
 import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.IntDocValuesField;
+import org.apache.lucene.document.NumericDocValuesField;
+import org.apache.lucene.document.FloatDocValuesField;
+import org.apache.lucene.document.DoubleDocValuesField;
+
 
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexableField;
@@ -48,6 +55,13 @@ import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
+
+import org.apache.lucene.facet.*;
+import org.apache.lucene.facet.range.*;
+import org.apache.lucene.facet.taxonomy.*;
+import org.apache.lucene.facet.taxonomy.directory.*;
+import org.apache.lucene.facet.sortedset.*;
+
 import static org.apache.lucene.document.Field.Store.*;
 
 import javax.persistence.Entity;
@@ -56,12 +70,24 @@ import play.Logger;
 import play.db.ebean.Model;
 
 import crosstalk.utils.Global;
+import crosstalk.core.models.Indexable;
 
+/**
+ * Singleton class that responsible for all entity indexing
+ */
 public class TextIndexer {
+    @Indexable
+    static final class DefaultIndexable {}
+    static final Indexable defaultIndexable = 
+        (Indexable)DefaultIndexable.class.getAnnotation(Indexable.class);
+
     private File dir;
     private Directory indexDir;
+    private Directory taxonDir;
     private IndexWriter indexWriter;
     private Analyzer indexAnalyzer;
+    private DirectoryTaxonomyWriter taxonWriter;
+    private FacetsConfig facetsConfig = new FacetsConfig ();
 
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
@@ -81,11 +107,26 @@ public class TextIndexer {
     }
 
     protected TextIndexer (File dir) throws IOException {
-        indexDir = new NIOFSDirectory (dir, NoLockFactory.getNoLockFactory());
+        if (!dir.isDirectory())
+            throw new IllegalArgumentException ("Not a directory: "+dir);
+
+        File index = new File (dir, "index");
+        if (!index.exists())
+            index.mkdirs();
+        indexDir = new NIOFSDirectory 
+            (index, NoLockFactory.getNoLockFactory());
+
+        File taxon = new File (dir, "facet");
+        if (!taxon.exists())
+            taxon.mkdirs();
+        taxonDir = new NIOFSDirectory
+            (taxon, NoLockFactory.getNoLockFactory());
+
         indexAnalyzer = createIndexAnalyzer ();
         IndexWriterConfig conf = new IndexWriterConfig 
             (Version.LUCENE_4_9, indexAnalyzer);
         indexWriter = new IndexWriter (indexDir, conf);
+        taxonWriter = new DirectoryTaxonomyWriter (taxonDir);
 
         this.dir = dir;
     }
@@ -120,7 +161,24 @@ public class TextIndexer {
             Map<String, Model.Finder> finders = 
                 new HashMap<String, Model.Finder>();
 
-            TopDocs hits = searcher.search(query, skip+top);
+            FacetsCollector fc = new FacetsCollector ();
+            TopDocs hits = FacetsCollector.search
+                (searcher, query, skip+top, fc);
+
+            TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter);
+            Facets facets = new FastTaxonomyFacetCounts
+                (taxon, facetsConfig, fc);
+
+            List<FacetResult> facetResults = facets.getAllDims(10);
+            Logger.info("## "+facetResults.size()+" facet dimension(s)");
+            for (FacetResult result : facetResults) {
+                Logger.info(" + ["+result.dim+"]");
+                for (int i = 0; i < result.labelValues.length; ++i) {
+                    LabelAndValue lv = result.labelValues[i];
+                    Logger.info("     \""+lv.label+"\": "+lv.value);
+                }
+            }
+
             int size = Math.max(0, Math.min(skip+top, hits.totalHits));
             for (int i = skip; i < size; ++i) {
                 Document doc = searcher.doc(hits.scoreDocs[i].doc);
@@ -180,29 +238,51 @@ public class TextIndexer {
      * recursively index any object annotated with Entity
      */
     public void add (Object entity) throws IOException {
-        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+        if (entity == null 
+            || !entity.getClass().isAnnotationPresent(Entity.class)) {
             return;
         }
+
+        Indexable indexable = 
+            (Indexable)entity.getClass().getAnnotation(Indexable.class);
+
+        if (indexable != null && !indexable.indexed()) {
+            if (DEBUG (2)) {
+                Logger.debug(">>> Not indexable "+entity);
+            }
+
+            return;
+        }
+
         if (DEBUG (2))
             Logger.debug(">>> Indexing "+entity+"...");
         
         List<IndexableField> fields = new ArrayList<IndexableField>();
         fields.add(new StringField
                    ("kind", entity.getClass().getName(), YES));
-        instrument (entity, fields);
-        
-        List<IndexableField> text = new ArrayList<IndexableField>();
-        for (IndexableField f : fields) {
-            text.add(new TextField ("text", f.stringValue(), NO));
 
-            if (DEBUG (2))
-                Logger.debug(".."+f.name()+":"
-                             +f.stringValue()+" ["+f.getClass().getName()+"]");
+        instrument (new LinkedList<String>(), entity, fields);
+
+        Document doc = new Document ();
+        for (IndexableField f : fields) {
+            String text = f.stringValue();
+            if (text != null) {
+                if (DEBUG (2))
+                    Logger.debug(".."+f.name()+":"
+                                 +text+" ["+f.getClass().getName()+"]");
+                
+                doc.add(new TextField ("text", text, NO));
+            }
+            doc.add(f);
         }
-        fields.addAll(text);
         
         // now index
-        indexWriter.addDocument(fields);
+        //indexWriter.addDocument(fields);
+        doc = facetsConfig.build(taxonWriter, doc);
+        if (DEBUG (2))
+            Logger.debug("++ adding document "+doc);
+
+        indexWriter.addDocument(doc);
 
         if (DEBUG (2))
             Logger.debug("<<< "+entity);
@@ -284,17 +364,29 @@ public class TextIndexer {
         }
     }
 
-    protected void instrument (Object entity, List<IndexableField> ixFields) {
+    protected void instrument (LinkedList<String> path,
+                               Object entity, 
+                               List<IndexableField> ixFields) {
         try {
-            Field[] fields = entity.getClass().getDeclaredFields();
+            Field[] fields = entity.getClass().getFields();
             for (Field f : fields) {
+                path.push(f.getName());
+
                 try {
                     Class type = f.getType();
                     Object value = f.get(entity);
-                    /*
-                    Logger.debug("__ "+f.getName()+": type="+type+" entity="
-                                 +value.getClass().getAnnotation(Entity.class));
-                    */
+
+                    Indexable indexable = 
+                        (Indexable)f.getAnnotation(Indexable.class);
+                    if (indexable == null) {
+                        indexable = defaultIndexable;
+                    }
+
+                    if (DEBUG (2)) {
+                        Logger.debug
+                            ("++ "+toPath (path)+": type="+type
+                             +" value="+value);
+                    }
 
                     if (f.getAnnotation(Id.class) != null) {
                         //Logger.debug("+ Id: "+value);
@@ -304,48 +396,89 @@ public class TextIndexer {
                             // is used for indexing purposes and as such is
                             // represented as a string
                             String kind = entity.getClass().getName();
-                            ixFields.add(getField (kind+"._id", value, YES));
+                            if (value instanceof Long) {
+                                ixFields.add(new LongField 
+                                             (kind+"._id", 
+                                              (Long)value, YES));
+                            }
+                            else {
+                                ixFields.add(new StringField 
+                                             (kind+"._id", 
+                                              value.toString(), YES));
+                            }
                             ixFields.add
                                 (new StringField (kind+".id", 
                                                   value.toString(), NO));
                         }
                         else {
-                            //Logger.warn("Id field "+f+" is null");
+                            if (DEBUG (2))
+                                Logger.warn("Id field "+f+" is null");
                         }
                     }
-                    else if (value == null) {
+                    else if (value == null || !indexable.indexed()) {
                         // do nothing
                     }
                     else if (type.isPrimitive()) {
-                        ixFields.add(getField (f.getName(), value));
+                        indexField (ixFields, indexable, path, value);
                     }
                     else if (type.isArray()) {
                         int len = Array.getLength(value);
                         // recursively evaluate each element in the array
-                        for (int i = 0; i < len; ++i)
-                            instrument (Array.get(value, i), ixFields); 
+                        for (int i = 0; i < len; ++i) {
+                            path.push(String.valueOf(i));
+                            instrument (path, Array.get(value, i), ixFields); 
+                            path.pop();
+                        }
                     }
                     else if (Collection.class.isAssignableFrom(type)) {
                         Iterator it = ((Collection)value).iterator();
-                        while (it.hasNext())
-                            instrument (it.next(), ixFields);
+                        for (int i = 0; it.hasNext(); ++i) {
+                            path.push(String.valueOf(i));
+                            instrument (path, it.next(), ixFields);
+                            path.pop();
+                        }
                     }
                     // why isn't this the same as using type?
                     else if (value.getClass()
                              .isAnnotationPresent(Entity.class)) {
                         // composite type; recurse
-                        instrument (value, ixFields);
+                        instrument (path, value, ixFields);
                     }
                     else { // treat as string
-                        ixFields.add(getField (f.getName(), value));
+                        indexField (ixFields, indexable, path, value);
                     }
                 }
                 catch (Exception ex) {
-                    /*
-                    Logger.warn(entity.getClass()
-                                +": Field "+f+" is not indexable due to "
-                                +ex.getMessage());
-                    */
+                    if (DEBUG (3)) {
+                        Logger.warn(entity.getClass()
+                                    +": Field "+f+" is not indexable due to "
+                                    +ex.getMessage());
+                    }
+                }
+                path.pop();
+            }
+
+            Method[] methods = entity.getClass().getMethods();
+            for (Method m: methods) {
+                Indexable indexable = 
+                    (Indexable)m.getAnnotation(Indexable.class);
+                if (indexable != null && indexable.indexed()) {
+                    // we only index no arguments methods
+                    Class[] args = m.getParameterTypes();
+                    if (args.length == 0) {
+                        Object value = m.invoke(entity);
+                        if (value != null) {
+                            String name = m.getName();
+                            if (name.startsWith("get"))
+                                name = name.substring(3);
+                            indexField (ixFields, indexable, 
+                                        Arrays.asList(name), value);
+                        }
+                    }
+                    else {
+                        Logger.warn("Indexable is annotated for non-zero "
+                                    +"arguments method \""+m.getName()+"\""); 
+                    }
                 }
             }
         }
@@ -354,31 +487,59 @@ public class TextIndexer {
         }
     }
 
-    IndexableField getField (String name, Object value) {
-        return getField (name, value, NO);
+    void indexField (List<IndexableField> fields, 
+                     Collection<String> path, Object value) {
+        indexField (fields, null, path, value, NO);
     }
 
-    IndexableField getField (String name, Object value, 
-                             org.apache.lucene.document.Field.Store store) {
-        org.apache.lucene.document.Field f = null;
+    void indexField (List<IndexableField> fields, Indexable indexable, 
+                     Collection<String> path, Object value) {
+        indexField (fields, indexable, path, value, NO);
+    }
+
+    void indexField (List<IndexableField> fields, Indexable indexable, 
+                     Collection<String> path, Object value, 
+                     org.apache.lucene.document.Field.Store store) {
+        String name = path.iterator().next();
+        String full = toPath (path);
+
         if (value instanceof Long) {
-            f = new LongField (name, (Long)value, store);
+            fields.add(new NumericDocValuesField (full, (Long)value));
+            fields.add(new LongField (name, (Long)value, store));
         }
         else if (value instanceof Integer) {
-            f = new IntField (name, (Integer)value, store);
+            fields.add(new IntDocValuesField (full, (Integer)value));
+            fields.add(new IntField (name, (Integer)value, store));
         }
         else if (value instanceof Float) {
-            f = new FloatField (name, (Float)value, store);
+            fields.add(new FloatDocValuesField (full, (Float)value));
+            fields.add(new FloatField (name, (Float)value, store));
         }
         else if (value instanceof Double) {
-            f = new DoubleField (name, (Double)value, store);
+            fields.add(new DoubleDocValuesField (full, (Double)value));
+            fields.add(new DoubleField (name, (Double)value, store));
         }
         else {
-            f = new TextField (name, value.toString(), store);
-        }
+            String text = value.toString();
+            if (indexable.facet() || indexable.taxonomy()) {
+                String dim = indexable.name();
+                if (dim.equals(""))
+                    dim = toPath (path, true);
+                facetsConfig.setMultiValued(dim, true);
+                
+                if (indexable.taxonomy()) {
+                    facetsConfig.setHierarchical(dim, true);
+                    fields.add
+                        (new FacetField
+                         (dim, text.split(indexable.pathsep())));
+                }
+                else {
+                    fields.add(new FacetField (dim, text));
+                }
+            }
 
-        //setFieldType (f.fieldType());
-        return f;
+            fields.add(new TextField (name, text, store));
+        }
     }
 
     static void setFieldType (FieldType ftype) {
@@ -389,10 +550,42 @@ public class TextIndexer {
             (IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
     }
 
+    static String toPath (Collection<String> path) {
+        return toPath (path, false);
+    }
+
+    static String toPath (Collection<String> path, boolean noindex) {
+        StringBuilder sb = new StringBuilder ();
+        for (Iterator<String> it = path.iterator(); it.hasNext(); ) {
+            String p = it.next();
+
+            boolean append = true;
+            if (noindex) {
+                try {
+                    Integer.parseInt(p);
+                    append = false;
+                }
+                catch (NumberFormatException ex) {
+                }
+            }
+
+            if (append) {
+                sb.append(p);
+                if (it.hasNext())
+                    sb.append('.');
+            }
+        }
+        return sb.toString();
+    }
+
     public void shutdown () {
         try {
             if (indexWriter != null)
                 indexWriter.close();
+            if (taxonWriter != null)
+                taxonWriter.close();
+            indexDir.close();
+            taxonDir.close();
         }
         catch (IOException ex) {
             //ex.printStackTrace();
