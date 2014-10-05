@@ -61,7 +61,8 @@ public class SearchFactory extends Controller {
 
     public static Result suggest (String dim, String q, int max) {
         try {
-            List results = getIndexer().suggest(dim, q, max);
+            List<TextIndexer.LookupResult> results = 
+                getIndexer().suggest(dim, q, max);
             ObjectMapper mapper = new ObjectMapper ();
             return ok (mapper.valueToTree(results));
         }

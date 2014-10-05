@@ -99,12 +99,27 @@ public class TextIndexer {
     static final String FACETS_CONFIG_FILE = "facet_conf.json";
     static final String SUGGEST_CONFIG_FILE = "suggest_conf.json";
 
+    public static class SearchResult {
+        
+    }
+
+    public static class LookupResult {
+        CharSequence key, highlight;
+        LookupResult (CharSequence key, CharSequence highlight) {
+            this.key = key;
+            this.highlight = highlight;
+        }
+
+        public CharSequence getKey () { return key; }
+        public CharSequence getHighlight () { return highlight; }
+    }
+
     class SuggestLookup {
         String name;
         File dir;
         AtomicInteger dirty = new AtomicInteger ();
         AnalyzingInfixSuggester lookup;
-        long lastSaved = 0;
+        long lastRefresh;
 
         SuggestLookup (File dir) throws IOException {
             boolean isNew = false;
@@ -143,7 +158,8 @@ public class TextIndexer {
         }
 
         void add (String text) throws IOException {
-            lookup.update(new BytesRef (text), null, 0, null);
+            BytesRef ref = new BytesRef (text);
+            lookup.update(ref, null, 0, ref);
             incr ();
         }
 
@@ -154,11 +170,11 @@ public class TextIndexer {
         synchronized void refresh () throws IOException {
             long start = System.currentTimeMillis();
             lookup.refresh();
+            lastRefresh = System.currentTimeMillis();
             Logger.debug(lookup.getClass().getName()
                          +" refreshs "+lookup.getCount()+" entries in "
                          +String.format("%1$.2fs", 
-                                        1e-3*(System.currentTimeMillis()
-                                              - start)));
+                                        1e-3*(lastRefresh - start)));
             dirty.set(0);
         }
 
@@ -180,17 +196,20 @@ public class TextIndexer {
             return count;
         }
 
-        List suggest (CharSequence key, int max) throws IOException {
+        List<LookupResult> suggest (CharSequence key, int max)
+            throws IOException {
             if (dirty.get() > 0)
                 refresh ();
 
             List<Lookup.LookupResult> results = lookup.lookup
                 (key, null, false, max);
-            List values = new ArrayList ();
-            for (Lookup.LookupResult r : results)
-                values.add(r.key);
 
-            return values;
+            List<LookupResult> m = new ArrayList<LookupResult>();
+            for (Lookup.LookupResult r : results) {
+                m.add(new LookupResult (r.payload.utf8ToString(), r.key));
+            }
+
+            return m;
         }
     }
 
@@ -291,11 +310,13 @@ public class TextIndexer {
             (new StandardAnalyzer (LUCENE_VERSION), fields);
     }
 
-    public List suggest (String dim, CharSequence key, int max) 
+    public List<LookupResult> suggest (String dim, CharSequence key, int max) 
         throws IOException {
         SuggestLookup lookup = lookups.get(dim);
-        if (lookup == null)
+        if (lookup == null) {
+            Logger.debug("Unknown suggest dimension \""+dim+"\"");
             return new ArrayList ();
+        }
         
         return lookup.suggest(key, max);
     }
@@ -728,7 +749,6 @@ public class TextIndexer {
             }
 
             if (indexable.suggest()) {
-                //fields.add(new TextField (dim, text, YES));
                 try {
                     SuggestLookup lookup = lookups.get(dim);
                     if (lookup == null) {
@@ -736,7 +756,7 @@ public class TextIndexer {
                     }
                     lookup.add(text);
                 }
-                catch (IOException ex) { // 
+                catch (Exception ex) { // 
                     Logger.debug("Can't create Lookup!", ex);
                 }
             }
