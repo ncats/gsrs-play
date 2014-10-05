@@ -16,6 +16,7 @@ import com.avaje.ebean.EbeanServerFactory;
 import com.avaje.ebean.Ebean;
 
 import javax.sql.DataSource;
+import java.sql.DatabaseMetaData;
 
 import crosstalk.core.search.TextIndexer;
 import crosstalk.core.controllers.*;
@@ -51,6 +52,10 @@ public class Global extends GlobalSettings {
 
         Logger.info("## home: \""+home.getCanonicalPath()+"\"");
         textIndexer = TextIndexer.getInstance(home);
+        
+        DatabaseMetaData meta = DB.getConnection().getMetaData();
+        Logger.info("## Database vendor: "+meta.getDatabaseProductName()
+                    +" "+meta.getDatabaseProductVersion());
 
         /*
         ServerConfig config = new ServerConfig ();

@@ -50,6 +50,7 @@ create table ct_core_etag (
   id                        bigint not null,
   etag                      varchar(16),
   uri                       varchar(4000),
+  path                      varchar(255),
   method                    varchar(10),
   sha1                      varchar(40),
   total                     integer,
@@ -59,7 +60,7 @@ create table ct_core_etag (
   status                    integer,
   timestamp                 timestamp,
   modified                  timestamp,
-  filter                    varchar(1024),
+  query                     varchar(2048),
   constraint pk_ct_core_etag primary key (id))
 ;
 

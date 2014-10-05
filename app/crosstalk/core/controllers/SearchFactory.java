@@ -22,12 +22,16 @@ import crosstalk.core.models.Edit;
 import crosstalk.core.models.Principal;
 
 import crosstalk.utils.Global;
+import crosstalk.core.search.TextIndexer;
 
 public class SearchFactory extends Controller {
+    static TextIndexer getIndexer () {
+        return Global.getInstance().getTextIndexer();
+    }
+
     public static Result search (String q, int top, int skip, String expand) {
-        Global g = Global.getInstance();
         try {
-            List results = g.getTextIndexer().search(q, top, skip);
+            List results = getIndexer().search(q, top, skip);
 
             ObjectMapper mapper = new ObjectMapper ();
             ArrayNode nodes = mapper.createArrayNode();
@@ -52,6 +56,17 @@ public class SearchFactory extends Controller {
         }
         catch (IOException ex) {
             return badRequest (ex.getMessage());
+        }
+    }
+
+    public static Result suggest (String dim, String q, int max) {
+        try {
+            List results = getIndexer().suggest(dim, q, max);
+            ObjectMapper mapper = new ObjectMapper ();
+            return ok (mapper.valueToTree(results));
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
         }
     }
 }

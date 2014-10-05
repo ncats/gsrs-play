@@ -7,7 +7,7 @@ import javax.persistence.*;
 @Table(name="ct_core_keyword")
 public class Keyword extends Value {
     @Column(length=255)
-    @Indexable(facet=true, name="Keyword")
+    @Indexable(facet=true, suggest=true, name="Keyword")
     public String term;
 
     public Keyword () {}

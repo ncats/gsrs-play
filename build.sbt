@@ -12,13 +12,13 @@ libraryDependencies ++= Seq(
   javaJdbc,
   javaEbean,
   cache,
-  "org.apache.lucene" % "lucene-core" % "4.9.0"
-  ,"org.apache.lucene" % "lucene-analyzers-common" % "4.9.0"
-  ,"org.apache.lucene" % "lucene-misc" % "4.9.0"
-  ,"org.apache.lucene" % "lucene-highlighter" % "4.9.0"
-  ,"org.apache.lucene" % "lucene-suggest" % "4.9.0"
-  ,"org.apache.lucene" % "lucene-facet" % "4.9.0"
-  ,"org.apache.lucene" % "lucene-queryparser" % "4.9.0"
+  "org.apache.lucene" % "lucene-core" % "4.10.0"
+  ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"
+  ,"org.apache.lucene" % "lucene-misc" % "4.10.0"
+  ,"org.apache.lucene" % "lucene-highlighter" % "4.10.0"
+  ,"org.apache.lucene" % "lucene-suggest" % "4.10.0"
+  ,"org.apache.lucene" % "lucene-facet" % "4.10.0"
+  ,"org.apache.lucene" % "lucene-queryparser" % "4.10.0"
   ,"org.webjars" %% "webjars-play" % "2.3.0"
   ,"org.webjars" % "bootstrap" % "3.2.0"
   ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"

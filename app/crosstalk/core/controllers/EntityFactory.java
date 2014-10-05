@@ -44,19 +44,34 @@ public class EntityFactory extends Controller {
     static final Model.Finder<Long, Principal> principalFinder = 
         new Model.Finder(Long.class, Principal.class);
 
-    protected static String sha1Request (String param) {
-        String path = request().method()+"/"+request().path()
-            +(param != null ? ("/"+param) : "");
+    protected static String sha1Request (Http.Request req, String... params) {
+        String path = req.method()+"/"+req.path();
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            byte[] d = md.digest(path.getBytes("utf8"));
+            md.update(path.getBytes("utf8"));
+
+            Set<String> uparams = new TreeSet<String>();
+            for (String p : params) {
+                uparams.add(p);
+            }
+
+            for (String p : uparams) {
+                String value = req.getQueryString(p);
+                if (value != null) {
+                    md.update(p.getBytes("utf8"));
+                    md.update(value.getBytes("utf8"));
+                }
+            }
+
+            byte[] d = md.digest();
             StringBuilder sb = new StringBuilder ();
             for (int i = 0; i < d.length; ++i)
                 sb.append(String.format("%1$02x", d[i]& 0xff));
+
             return sb.toString();
         }
         catch (Exception ex) {
-            Logger.trace("Can't generate hash for request: "+param, ex);
+            Logger.trace("Can't generate hash for request: "+req.uri(), ex);
         }
         return null;
     }
@@ -105,10 +120,13 @@ public class EntityFactory extends Controller {
         final ETag etag = new ETag ();
         etag.top = top;
         etag.skip = skip;
-        etag.filter = filter;
+        etag.query = canonicalizeQuery (request ());
         etag.count = results.size();
         etag.uri = request().uri();
-        etag.sha1 = sha1Request (filter);
+        etag.path = request().path();
+        // only include query parameters that fundamentally alters the
+        // number of results
+        etag.sha1 = sha1Request (request(), "filter");
         etag.method = request().method();
         if (filter == null)
             etag.total = finder.findRowCount();
@@ -144,7 +162,8 @@ public class EntityFactory extends Controller {
                                              +": "+filter+" => "+ids.size());
                             }
                             catch (Exception ex) {
-                                ex.printStackTrace();
+                                Logger.trace(Thread.currentThread().getName()
+                                             +": ETag "+etag.id, ex);
                             }
                         }
                     });
@@ -157,6 +176,23 @@ public class EntityFactory extends Controller {
         obj.put("content", mapper.valueToTree(results));
 
         return ok (obj);
+    }
+
+    static String canonicalizeQuery (Http.Request req) {
+        Map<String, String[]> queries = req.queryString();
+        Set<String> keys = new TreeSet<String>(queries.keySet());
+        StringBuilder q = new StringBuilder ();
+        for (String key : keys) {
+            if (q.length() > 0)
+                q.append('&');
+
+            String[] values = queries.get(key);
+            Arrays.sort(values);
+            if (values != null && values.length > 0) {
+                q.append(key+"="+values[0]);
+            }
+        }
+        return q.toString();
     }
 
     protected static <T> T getEntity (Long id, Model.Finder<Long, T> finder) {

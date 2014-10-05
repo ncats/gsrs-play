@@ -17,6 +17,7 @@ public class ETag extends Model {
 
     @Column(length=4000)
     public String uri;
+    public String path;
     @Column(length=10)
     public String method;
     @Column(length=40)
@@ -31,8 +32,8 @@ public class ETag extends Model {
     public final Date timestamp = new Date ();
     public Date modified = new Date ();
 
-    @Column(length=1024)
-    public String filter;
+    @Column(length=2048)
+    public String query;
 
     public ETag () {
         this (nextETag ());

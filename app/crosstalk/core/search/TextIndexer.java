@@ -3,6 +3,7 @@ package crosstalk.core.search;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.lang.reflect.*;
 import java.lang.annotation.Annotation;
 
@@ -19,7 +20,7 @@ import org.apache.lucene.document.IntDocValuesField;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.FloatDocValuesField;
 import org.apache.lucene.document.DoubleDocValuesField;
-
+import static org.apache.lucene.document.Field.Store.*;
 
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexableField;
@@ -35,6 +36,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
 import org.apache.lucene.util.Version;
+import org.apache.lucene.util.BytesRef;
 
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.Analyzer;
@@ -62,7 +64,16 @@ import org.apache.lucene.facet.taxonomy.*;
 import org.apache.lucene.facet.taxonomy.directory.*;
 import org.apache.lucene.facet.sortedset.*;
 
-import static org.apache.lucene.document.Field.Store.*;
+import org.apache.lucene.search.suggest.DocumentDictionary;
+import org.apache.lucene.search.suggest.Lookup;
+import org.apache.lucene.search.suggest.analyzing.AnalyzingSuggester;
+import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -81,28 +92,132 @@ public class TextIndexer {
     static final Indexable defaultIndexable = 
         (Indexable)DefaultIndexable.class.getAnnotation(Indexable.class);
 
-    private File dir;
+    /**
+     * Make sure to properly update the code when upgrading version
+     */
+    static final Version LUCENE_VERSION = Version.LATEST;
+    static final String FACETS_CONFIG_FILE = "facet_conf.json";
+    static final String SUGGEST_CONFIG_FILE = "suggest_conf.json";
+
+    class SuggestLookup {
+        String name;
+        File dir;
+        AtomicInteger dirty = new AtomicInteger ();
+        AnalyzingInfixSuggester lookup;
+        long lastSaved = 0;
+
+        SuggestLookup (File dir) throws IOException {
+            boolean isNew = false;
+            if (!dir.exists()) {
+                dir.mkdirs();
+                isNew = true;
+            }
+            else if (!dir.isDirectory()) 
+                throw new IllegalArgumentException ("Not a directory: "+dir);
+
+            lookup = new AnalyzingInfixSuggester 
+                (LUCENE_VERSION, new NIOFSDirectory 
+                 (dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
+
+            if (isNew) {
+                Logger.debug("Initializing lookup "+dir.getName());
+                build ();
+            }
+            else {
+                Logger.debug(lookup.getCount()
+                             +" entries loaded for "+dir.getName());
+            }
+
+            this.dir = dir;
+            this.name = dir.getName();
+        }
+
+        SuggestLookup (String name) throws IOException {
+            this (new File (suggestDir, name));
+        }
+
+        void add (BytesRef text, Set<BytesRef> contexts, 
+                  long weight, BytesRef payload) throws IOException { 
+            lookup.update(text, contexts, weight, payload);
+            incr ();
+        }
+
+        void add (String text) throws IOException {
+            lookup.update(new BytesRef (text), null, 0, null);
+            incr ();
+        }
+
+        void incr ()  {
+            dirty.incrementAndGet();
+        }
+
+        synchronized void refresh () throws IOException {
+            long start = System.currentTimeMillis();
+            lookup.refresh();
+            Logger.debug(lookup.getClass().getName()
+                         +" refreshs "+lookup.getCount()+" entries in "
+                         +String.format("%1$.2fs", 
+                                        1e-3*(System.currentTimeMillis()
+                                              - start)));
+            dirty.set(0);
+        }
+
+        void close () throws IOException {
+            lookup.close();
+        }
+
+        long build () throws IOException {
+            IndexReader reader = DirectoryReader.open(indexWriter, true);
+            // now weight field
+            long start = System.currentTimeMillis();
+            lookup.build(new DocumentDictionary (reader, name, null));
+            long count = lookup.getCount();
+            Logger.debug(lookup.getClass().getName()
+                         +" builds "+count+" entries in "
+                         +String.format("%1$.2fs", 
+                                        1e-3*(System.currentTimeMillis()
+                                              - start)));
+            return count;
+        }
+
+        List suggest (CharSequence key, int max) throws IOException {
+            if (dirty.get() > 0)
+                refresh ();
+
+            List<Lookup.LookupResult> results = lookup.lookup
+                (key, null, false, max);
+            List values = new ArrayList ();
+            for (Lookup.LookupResult r : results)
+                values.add(r.key);
+
+            return values;
+        }
+    }
+
+    private File baseDir;
+    private File suggestDir;
     private Directory indexDir;
     private Directory taxonDir;
     private IndexWriter indexWriter;
     private Analyzer indexAnalyzer;
     private DirectoryTaxonomyWriter taxonWriter;
-    private FacetsConfig facetsConfig = new FacetsConfig ();
+    private FacetsConfig facetsConfig;
+    private ConcurrentMap<String, SuggestLookup> lookups;
 
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
 
-    public static TextIndexer getInstance (File dir) throws IOException {
-        if (indexers.containsKey(dir)) 
-            return indexers.get(dir);
+    public static TextIndexer getInstance (File baseDir) throws IOException {
+        if (indexers.containsKey(baseDir)) 
+            return indexers.get(baseDir);
 
         try {
-            TextIndexer indexer = new TextIndexer (dir);
-            TextIndexer old = indexers.putIfAbsent(dir, indexer);
+            TextIndexer indexer = new TextIndexer (baseDir);
+            TextIndexer old = indexers.putIfAbsent(baseDir, indexer);
             return old == null ? indexer : old;
         }
         catch (IOException ex) {
-            return indexers.get(dir);
+            return indexers.get(baseDir);
         }
     }
 
@@ -124,11 +239,41 @@ public class TextIndexer {
 
         indexAnalyzer = createIndexAnalyzer ();
         IndexWriterConfig conf = new IndexWriterConfig 
-            (Version.LUCENE_4_9, indexAnalyzer);
+            (LUCENE_VERSION, indexAnalyzer);
         indexWriter = new IndexWriter (indexDir, conf);
         taxonWriter = new DirectoryTaxonomyWriter (taxonDir);
 
-        this.dir = dir;
+        facetsConfig = loadFacetsConfig (new File (dir, FACETS_CONFIG_FILE));
+        if (facetsConfig == null) {
+            int size = taxonWriter.getSize();
+            if (size > 0) {
+                Logger.warn("There are "+size+" dimensions in "
+                            +"taxonomy but no facet\nconfiguration found; "
+                            +"facet searching might not work properly!");
+            }
+            facetsConfig = new FacetsConfig ();
+        }
+
+        suggestDir = new File (dir, "suggest");
+        if (!suggestDir.exists())
+            suggestDir.mkdirs();
+
+        // load saved lookups
+        lookups = new ConcurrentHashMap<String, SuggestLookup>();
+        for (File f : suggestDir.listFiles()) {
+            if (f.isDirectory()) {
+                try {
+                    lookups.put(f.getName(), new SuggestLookup (f));
+                }
+                catch (IOException ex) {
+                    Logger.error("Unable to load lookup from "+f, ex);
+                }
+            }
+        }
+        Logger.info("## "+suggestDir+": "
+                    +lookups.size()+" lookups loaded!");
+
+        this.baseDir = dir;
     }
 
     static boolean DEBUG (int level) {
@@ -143,7 +288,16 @@ public class TextIndexer {
         fields.put("id", new KeywordAnalyzer ());
         fields.put("kind", new KeywordAnalyzer ());
 	return 	new PerFieldAnalyzerWrapper 
-            (new StandardAnalyzer (Version.LUCENE_4_9), fields);
+            (new StandardAnalyzer (LUCENE_VERSION), fields);
+    }
+
+    public List suggest (String dim, CharSequence key, int max) 
+        throws IOException {
+        SuggestLookup lookup = lookups.get(dim);
+        if (lookup == null)
+            return new ArrayList ();
+        
+        return lookup.suggest(key, max);
     }
 
     public List search (String text, int top, int skip) throws IOException {
@@ -153,7 +307,7 @@ public class TextIndexer {
         List results = new ArrayList ();
         try {
             QueryParser parser = new QueryParser 
-                (Version.LUCENE_4_9, "text", indexAnalyzer);
+                (LUCENE_VERSION, "text", indexAnalyzer);
             Query query = parser.parse(text);
             Logger.debug("## Query: "+query);
 
@@ -172,6 +326,39 @@ public class TextIndexer {
             List<FacetResult> facetResults = facets.getAllDims(10);
             Logger.info("## "+facetResults.size()+" facet dimension(s)");
             for (FacetResult result : facetResults) {
+                Logger.info(" + ["+result.dim+"]");
+                for (int i = 0; i < result.labelValues.length; ++i) {
+                    LabelAndValue lv = result.labelValues[i];
+                    Logger.info("     \""+lv.label+"\": "+lv.value);
+                }
+            }
+            Logger.debug("++ Drilling down on \"MeSH\"...");
+            DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
+            ddq.add("MeSH", "Mice");
+            FacetsCollector fc2 = new FacetsCollector ();
+            TopDocs docs = FacetsCollector.search
+                (searcher, ddq, skip+top, fc2);
+            Logger.debug("Drilled down results in "+docs.totalHits+" hit(s)...");
+            Facets facets2 = new FastTaxonomyFacetCounts
+                (taxon, facetsConfig, fc2);
+
+            List<FacetResult> facetResults2 = facets2.getAllDims(10);
+            Logger.info("## "+facetResults2.size()+" facet dimension(s)");
+            for (FacetResult result : facetResults2) {
+                Logger.info(" + ["+result.dim+"]");
+                for (int i = 0; i < result.labelValues.length; ++i) {
+                    LabelAndValue lv = result.labelValues[i];
+                    Logger.info("     \""+lv.label+"\": "+lv.value);
+                }
+            }
+
+            DrillSideways sideway = new DrillSideways 
+                (searcher, facetsConfig, taxon);
+            DrillSideways.DrillSidewaysResult swResult = 
+                sideway.search(ddq, skip+top);
+            Logger.info("## Drilled sideway "+swResult.facets.getAllDims(10).size()
+                        +" facets and "+swResult.hits.totalHits+" hits");
+            for (FacetResult result : swResult.facets.getAllDims(10)) {
                 Logger.info(" + ["+result.dim+"]");
                 for (int i = 0; i < result.labelValues.length; ++i) {
                     LabelAndValue lv = result.labelValues[i];
@@ -352,7 +539,7 @@ public class TextIndexer {
     public void remove (String text) throws Exception {
         try {
             QueryParser parser = new QueryParser 
-                (Version.LUCENE_4_9, "text", indexAnalyzer);
+                (LUCENE_VERSION, "text", indexAnalyzer);
             Query query = parser.parse(text);
             Logger.debug("## removing documents: "+query);
             indexWriter.deleteDocuments(query);
@@ -521,11 +708,13 @@ public class TextIndexer {
         }
         else {
             String text = value.toString();
+            String dim = indexable.name();
+            if (dim.equals(""))
+                dim = toPath (path, true);
+
             if (indexable.facet() || indexable.taxonomy()) {
-                String dim = indexable.name();
-                if (dim.equals(""))
-                    dim = toPath (path, true);
                 facetsConfig.setMultiValued(dim, true);
+                facetsConfig.setRequireDimCount(dim, true);
                 
                 if (indexable.taxonomy()) {
                     facetsConfig.setHierarchical(dim, true);
@@ -535,6 +724,20 @@ public class TextIndexer {
                 }
                 else {
                     fields.add(new FacetField (dim, text));
+                }
+            }
+
+            if (indexable.suggest()) {
+                //fields.add(new TextField (dim, text, YES));
+                try {
+                    SuggestLookup lookup = lookups.get(dim);
+                    if (lookup == null) {
+                        lookups.put(dim, lookup = new SuggestLookup (dim));
+                    }
+                    lookup.add(text);
+                }
+                catch (IOException ex) { // 
+                    Logger.debug("Can't create Lookup!", ex);
                 }
             }
 
@@ -578,19 +781,111 @@ public class TextIndexer {
         return sb.toString();
     }
 
+    static FacetsConfig getFacetsConfig (JsonNode node) {
+        if (!node.isContainerNode())
+            throw new IllegalArgumentException
+                ("Not a valid json node for FacetsConfig!");
+
+        String text = node.get("version").asText();
+        Version ver = Version.parseLeniently(text);
+        if (!ver.equals(LUCENE_VERSION)) {
+            Logger.warn("Facets configuration version ("+ver+") doesn't "
+                        +"match index version ("+LUCENE_VERSION+")");
+        }
+
+        FacetsConfig config = null;
+        ArrayNode array = (ArrayNode)node.get("dims");
+        if (array != null) {
+            config = new FacetsConfig ();
+            for (int i = 0; i < array.size(); ++i) {
+                ObjectNode n = (ObjectNode)array.get(i);
+                String dim = n.get("dim").asText();
+                config.setHierarchical
+                    (dim, n.get("hierarchical").asBoolean());
+                config.setIndexFieldName
+                    (dim, n.get("indexFieldName").asText());
+                config.setMultiValued(dim, n.get("multiValued").asBoolean());
+                config.setRequireDimCount
+                    (dim, n.get("requireDimCount").asBoolean());
+            }
+        }
+
+        return config;
+    }
+
+    static JsonNode setFacetsConfig (FacetsConfig config) {
+        ObjectMapper mapper = new ObjectMapper ();
+        ObjectNode node = mapper.createObjectNode();
+        node.put("created", new java.util.Date().getTime());
+        node.put("version", LUCENE_VERSION.toString());
+        node.put("warning", "AUTOMATICALLY GENERATED FILE; DO NOT EDIT");
+        Map<String, FacetsConfig.DimConfig> dims = config.getDimConfigs();
+        node.put("size", dims.size());
+        ArrayNode array = node.putArray("dims");
+        for (Map.Entry<String, FacetsConfig.DimConfig> me : dims.entrySet()) {
+            FacetsConfig.DimConfig c = me.getValue();
+            ObjectNode n = mapper.createObjectNode();
+            n.put("dim", me.getKey());
+            n.put("hierarchical", c.hierarchical);
+            n.put("indexFieldName", c.indexFieldName);
+            n.put("multiValued", c.multiValued);
+            n.put("requireDimCount", c.requireDimCount);
+            array.add(n);
+        }
+        return node;
+    }
+
+    static void saveFacetsConfig (File file, FacetsConfig facetsConfig) {
+        JsonNode node = setFacetsConfig (facetsConfig);
+        ObjectMapper mapper = new ObjectMapper ();
+        try {
+            FileOutputStream out = new FileOutputStream (file);
+            mapper.writerWithDefaultPrettyPrinter().writeValue(out, node);
+            out.close();
+        }
+        catch (IOException ex) {
+            Logger.trace("Can't persist facets config!", ex);
+        }
+    }
+
+    static FacetsConfig loadFacetsConfig (File file) {
+        FacetsConfig config = null;
+        if (file.exists()) {
+            ObjectMapper mapper = new ObjectMapper ();
+            try {
+                JsonNode conf = mapper.readTree(new FileInputStream (file));
+                config = getFacetsConfig (conf);
+                Logger.info("## FacetsConfig loaded with "
+                            +config.getDimConfigs().size()
+                            +" dimensions!");
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't read file "+file, ex);
+            }
+        }
+        return config;
+    }
+
     public void shutdown () {
         try {
+            for (SuggestLookup look : lookups.values()) {
+                look.close();
+            }
+
             if (indexWriter != null)
                 indexWriter.close();
             if (taxonWriter != null)
                 taxonWriter.close();
             indexDir.close();
             taxonDir.close();
+
+            saveFacetsConfig (new File (baseDir, FACETS_CONFIG_FILE), 
+                              facetsConfig);
         }
         catch (IOException ex) {
             //ex.printStackTrace();
-            Logger.error("Closing index", ex);
+            Logger.trace("Closing index", ex);
         }
-        indexers.remove(dir);
+        indexers.remove(baseDir);
     }
 }

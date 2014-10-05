@@ -7,7 +7,7 @@ import javax.persistence.*;
 public class Mesh extends Value {
     public boolean majorTopic;
 
-    @Indexable(taxonomy=true, name="MeSH")
+    @Indexable(taxonomy=true, suggest=true, name="MeSH")
     @Column(length=1024)
     public String term;
 
