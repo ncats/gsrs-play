@@ -23,8 +23,11 @@ GET     /api-docs/api       controllers.ApiHelpController.getResource(path="/api
 GET     /assets/*file   controllers.Assets.at(path="/public", file)
 GET     /webjars/*file          controllers.WebJarAssets.at(file)
 
-GET     /api/search         crosstalk.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0, expand: String ?= null)
-GET     /api/suggest/:dim       crosstalk.core.controllers.SearchFactory.suggest(dim: String, q: String, max: Int ?= 10)
+GET     /api/search         crosstalk.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0)
+GET     /api/suggest/@fields       crosstalk.core.controllers.SearchFactory.suggestFields
+GET     /api/suggest/:field       crosstalk.core.controllers.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
+GET     /api/suggest       crosstalk.core.controllers.SearchFactory.suggest(q: String, max: Int ?= 10)
+
 
 #
 # special variables are denoted by @'s and should be specified

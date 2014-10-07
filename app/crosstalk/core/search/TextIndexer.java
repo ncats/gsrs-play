@@ -99,13 +99,57 @@ public class TextIndexer {
     static final String FACETS_CONFIG_FILE = "facet_conf.json";
     static final String SUGGEST_CONFIG_FILE = "suggest_conf.json";
 
-    public static class SearchResult {
-        
+    public static class FV {
+        String label;
+        Integer count;
+
+        FV (String label, Integer count) {
+            this.label = label;
+            this.count = count;
+        }
+        public String getLabel () { return label; }
+        public Integer getCount () { return count; }
     }
 
-    public static class LookupResult {
+    public static class Facet implements Comparator<FV> {
+        String name;
+        List<FV> values = new ArrayList<FV>();
+
+        Facet (String name) { this.name = name; }
+        public String getName () { return name; }
+        public List<FV> getValues () {
+            Collections.sort(values, this);
+            return values; 
+        }
+
+        public int compare (FV v1, FV v2) {
+            int d = v2.count - v1.count;
+            if (d == 0)
+                d = v1.label.compareTo(v2.label);
+            return d;
+        }
+    }
+
+    public static class SearchResult  {
+        String query;
+        Set<String> drilldown = new TreeSet<String>();
+        List<Facet> facets = new ArrayList<Facet>();
+        List matches = new ArrayList ();
+        
+        SearchResult (String query, List<String> drilldown) {
+            this.query = query;
+            this.drilldown.addAll(drilldown);
+        }
+
+        public String getQuery () { return query; }
+        public Collection<String> getDrilldown () { return drilldown; }
+        public List<Facet> getFacets () { return facets; }
+        public List getMatches () { return matches; }
+    }
+
+    public static class SuggestResult {
         CharSequence key, highlight;
-        LookupResult (CharSequence key, CharSequence highlight) {
+        SuggestResult (CharSequence key, CharSequence highlight) {
             this.key = key;
             this.highlight = highlight;
         }
@@ -196,7 +240,7 @@ public class TextIndexer {
             return count;
         }
 
-        List<LookupResult> suggest (CharSequence key, int max)
+        List<SuggestResult> suggest (CharSequence key, int max)
             throws IOException {
             if (dirty.get() > 0)
                 refresh ();
@@ -204,9 +248,9 @@ public class TextIndexer {
             List<Lookup.LookupResult> results = lookup.lookup
                 (key, null, false, max);
 
-            List<LookupResult> m = new ArrayList<LookupResult>();
+            List<SuggestResult> m = new ArrayList<SuggestResult>();
             for (Lookup.LookupResult r : results) {
-                m.add(new LookupResult (r.payload.utf8ToString(), r.key));
+                m.add(new SuggestResult (r.payload.utf8ToString(), r.key));
             }
 
             return m;
@@ -310,25 +354,29 @@ public class TextIndexer {
             (new StandardAnalyzer (LUCENE_VERSION), fields);
     }
 
-    public List<LookupResult> suggest (String dim, CharSequence key, int max) 
-        throws IOException {
-        SuggestLookup lookup = lookups.get(dim);
+    public List<SuggestResult> suggest 
+        (String field, CharSequence key, int max) throws IOException {
+        SuggestLookup lookup = lookups.get(field);
         if (lookup == null) {
-            Logger.debug("Unknown suggest dimension \""+dim+"\"");
+            Logger.debug("Unknown suggest field \""+field+"\"");
             return new ArrayList ();
         }
         
         return lookup.suggest(key, max);
     }
 
-    public List search (String text, int top, int skip) throws IOException {
+    public Collection<String> getSuggestFields () {
+        return Collections.unmodifiableCollection(lookups.keySet());
+    }
+
+    public SearchResult search (String text, int top, 
+                                int skip, List<String> dd) throws IOException {
         IndexSearcher searcher = new IndexSearcher
             (DirectoryReader.open(indexWriter, true));
 
-        List results = new ArrayList ();
+        SearchResult searchResult = new SearchResult (text, dd);
         try {
-            QueryParser parser = new QueryParser 
-                (LUCENE_VERSION, "text", indexAnalyzer);
+            QueryParser parser = new QueryParser ("text", indexAnalyzer);
             Query query = parser.parse(text);
             Logger.debug("## Query: "+query);
 
@@ -347,11 +395,14 @@ public class TextIndexer {
             List<FacetResult> facetResults = facets.getAllDims(10);
             Logger.info("## "+facetResults.size()+" facet dimension(s)");
             for (FacetResult result : facetResults) {
+                Facet f = new Facet (result.dim);
                 Logger.info(" + ["+result.dim+"]");
                 for (int i = 0; i < result.labelValues.length; ++i) {
                     LabelAndValue lv = result.labelValues[i];
                     Logger.info("     \""+lv.label+"\": "+lv.value);
+                    f.values.add(new FV (lv.label, lv.value.intValue()));
                 }
+                searchResult.facets.add(f);
             }
             Logger.debug("++ Drilling down on \"MeSH\"...");
             DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
@@ -380,10 +431,12 @@ public class TextIndexer {
             Logger.info("## Drilled sideway "+swResult.facets.getAllDims(10).size()
                         +" facets and "+swResult.hits.totalHits+" hits");
             for (FacetResult result : swResult.facets.getAllDims(10)) {
-                Logger.info(" + ["+result.dim+"]");
-                for (int i = 0; i < result.labelValues.length; ++i) {
-                    LabelAndValue lv = result.labelValues[i];
-                    Logger.info("     \""+lv.label+"\": "+lv.value);
+                if (result != null) {
+                    Logger.info(" + ["+result.dim+"]");
+                    for (int i = 0; i < result.labelValues.length; ++i) {
+                        LabelAndValue lv = result.labelValues[i];
+                        Logger.info("     \""+lv.label+"\": "+lv.value);
+                    }
                 }
             }
 
@@ -406,9 +459,10 @@ public class TextIndexer {
                                     (c, Class.forName(kind.stringValue()));
                                 finders.put(kind.stringValue(), finder);
                             }
-                            results.add(finder.byId
-                                        (n != null 
-                                         ? n.longValue() : id.stringValue()));
+                            searchResult.matches.add
+                                (finder.byId
+                                 (n != null 
+                                  ? n.longValue() : id.stringValue()));
 
                             if (DEBUG (1)) {
                                 Logger.debug("++ matched doc "
@@ -433,13 +487,13 @@ public class TextIndexer {
                          ("%1$.3fs", 
                           (System.currentTimeMillis()-start)*1e-3)
                          +"..."+hits.totalHits+" hit(s) found; returning "
-                         +results.size()+"!");
+                         +searchResult.matches.size()+"!");
         }
         catch (ParseException ex) {
             Logger.warn("Can't parse query expression: "+text, ex);
         }
 
-        return results;
+        return searchResult;
     }
 
     /**
@@ -749,6 +803,9 @@ public class TextIndexer {
             }
 
             if (indexable.suggest()) {
+                // also index the corresponding text field with the 
+                //   dimension name
+                fields.add(new TextField (dim, text, NO));
                 try {
                     SuggestLookup lookup = lookups.get(dim);
                     if (lookup == null) {

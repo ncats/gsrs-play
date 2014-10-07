@@ -22,6 +22,7 @@ import crosstalk.core.models.Edit;
 import crosstalk.core.models.Principal;
 
 import crosstalk.utils.Global;
+import crosstalk.utils.Util;
 import crosstalk.core.search.TextIndexer;
 
 public class SearchFactory extends Controller {
@@ -29,13 +30,31 @@ public class SearchFactory extends Controller {
         return Global.getInstance().getTextIndexer();
     }
 
-    public static Result search (String q, int top, int skip, String expand) {
+    public static Result search (String q, int top, int skip) {
         try {
-            List results = getIndexer().search(q, top, skip);
+            Map<String, String[]> query = request().queryString();
+
+            List<String> drilldown = new ArrayList<String>();
+            for (Map.Entry<String, String[]> me : query.entrySet()) {
+                if ("facet".equalsIgnoreCase(me.getKey())) {
+                    for (String s : me.getValue())
+                        drilldown.add(s);
+                }
+
+                if (Global.DEBUG(1)) {
+                    StringBuilder sb = new StringBuilder ();
+                    for (String s : me.getValue())
+                        sb.append("\n"+s);
+                    Logger.debug(me.getKey()+sb);
+                }
+            }
+
+            TextIndexer.SearchResult result = 
+                getIndexer().search(q, top, skip, drilldown);
 
             ObjectMapper mapper = new ObjectMapper ();
             ArrayNode nodes = mapper.createArrayNode();
-            for (Object obj : results) {
+            for (Object obj : result.getMatches()) {
                 if (obj != null) {
                     try {
                         ObjectNode node = (ObjectNode)mapper.valueToTree(obj);
@@ -51,23 +70,59 @@ public class SearchFactory extends Controller {
             /*
              * TODO: setup etag right here!
              */
+            ETag etag = new ETag ();
+            etag.top = top;
+            etag.skip = skip;
+            etag.count = nodes.size();
+            etag.uri = request().uri();
+            etag.path = request().path();
+            etag.sha1 = Util.sha1Request(request(), "q", "dd");
+            etag.query = q;
+            etag.method = request().method();
+            etag.save();
 
-            return ok (nodes);
+            ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
+            obj.put("drilldown", mapper.valueToTree(result.getDrilldown()));
+            obj.put("facets", mapper.valueToTree(result.getFacets()));
+            obj.put("content", nodes);
+
+            return ok (obj);
         }
         catch (IOException ex) {
             return badRequest (ex.getMessage());
         }
     }
 
-    public static Result suggest (String dim, String q, int max) {
+    public static Result suggest (String q, int max) {
+        return suggestField (null, q, max);
+    }
+
+    public static Result suggestField (String field, String q, int max) {
         try {
-            List<TextIndexer.LookupResult> results = 
-                getIndexer().suggest(dim, q, max);
             ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(results));
+            if (field != null) {
+                List<TextIndexer.SuggestResult> results = 
+                    getIndexer().suggest(field, q, max);
+                return ok (mapper.valueToTree(results));
+            }
+
+            ObjectNode node = mapper.createObjectNode();
+            for (String f : getIndexer().getSuggestFields()) {
+                List<TextIndexer.SuggestResult> results = 
+                    getIndexer().suggest(f, q, max);
+                if (!results.isEmpty())
+                    node.put(f, mapper.valueToTree(results));
+            }
+
+            return ok (node);
         }
         catch (Exception ex) {
             return internalServerError (ex.getMessage());
         }
+    }
+
+    public static Result suggestFields () {
+        ObjectMapper mapper = new ObjectMapper ();
+        return ok (mapper.valueToTree(getIndexer().getSuggestFields()));
     }
 }

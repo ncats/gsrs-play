@@ -120,4 +120,8 @@ public class Global extends GlobalSettings {
     public boolean debug (int level) { 
         return debug >= level; 
     }
+
+    public static boolean DEBUG (int level) {
+        return getInstance().debug(level);
+    }
 }
