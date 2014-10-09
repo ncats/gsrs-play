@@ -370,11 +370,12 @@ public class TextIndexer {
     }
 
     public SearchResult search (String text, int top, 
-                                int skip, List<String> dd) throws IOException {
+                                int skip, List<String> drills) 
+        throws IOException {
         IndexSearcher searcher = new IndexSearcher
             (DirectoryReader.open(indexWriter, true));
 
-        SearchResult searchResult = new SearchResult (text, dd);
+        SearchResult searchResult = new SearchResult (text, drills);
         try {
             QueryParser parser = new QueryParser ("text", indexAnalyzer);
             Query query = parser.parse(text);
@@ -385,59 +386,82 @@ public class TextIndexer {
                 new HashMap<String, Model.Finder>();
 
             FacetsCollector fc = new FacetsCollector ();
-            TopDocs hits = FacetsCollector.search
-                (searcher, query, skip+top, fc);
-
             TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter);
-            Facets facets = new FastTaxonomyFacetCounts
-                (taxon, facetsConfig, fc);
+            TopDocs hits = null;
 
-            List<FacetResult> facetResults = facets.getAllDims(10);
-            Logger.info("## "+facetResults.size()+" facet dimension(s)");
-            for (FacetResult result : facetResults) {
-                Facet f = new Facet (result.dim);
-                Logger.info(" + ["+result.dim+"]");
-                for (int i = 0; i < result.labelValues.length; ++i) {
-                    LabelAndValue lv = result.labelValues[i];
-                    Logger.info("     \""+lv.label+"\": "+lv.value);
-                    f.values.add(new FV (lv.label, lv.value.intValue()));
-                }
-                searchResult.facets.add(f);
-            }
-            Logger.debug("++ Drilling down on \"MeSH\"...");
-            DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
-            ddq.add("MeSH", "Mice");
-            FacetsCollector fc2 = new FacetsCollector ();
-            TopDocs docs = FacetsCollector.search
-                (searcher, ddq, skip+top, fc2);
-            Logger.debug("Drilled down results in "+docs.totalHits+" hit(s)...");
-            Facets facets2 = new FastTaxonomyFacetCounts
-                (taxon, facetsConfig, fc2);
-
-            List<FacetResult> facetResults2 = facets2.getAllDims(10);
-            Logger.info("## "+facetResults2.size()+" facet dimension(s)");
-            for (FacetResult result : facetResults2) {
-                Logger.info(" + ["+result.dim+"]");
-                for (int i = 0; i < result.labelValues.length; ++i) {
-                    LabelAndValue lv = result.labelValues[i];
-                    Logger.info("     \""+lv.label+"\": "+lv.value);
+            if (drills.isEmpty()) {
+                hits = FacetsCollector.search
+                    (searcher, query, skip+top, fc);
+                
+                Facets facets = new FastTaxonomyFacetCounts
+                    (taxon, facetsConfig, fc);
+                
+                List<FacetResult> facetResults = facets.getAllDims(10);
+                Logger.info("## "+facetResults.size()+" facet dimension(s)");
+                for (FacetResult result : facetResults) {
+                    Facet f = new Facet (result.dim);
+                    Logger.info(" + ["+result.dim+"]");
+                    for (int i = 0; i < result.labelValues.length; ++i) {
+                        LabelAndValue lv = result.labelValues[i];
+                        Logger.info("     \""+lv.label+"\": "+lv.value);
+                        f.values.add(new FV (lv.label, lv.value.intValue()));
+                    }
+                    searchResult.facets.add(f);
                 }
             }
+            else {
+                DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
+                // the first term is the drilldown dimension
+                for (String dd : drills) {
+                    String[] d = dd.split("/");
+                    for (int i = 1; i < d.length; ++i) {
+                        Logger.debug("Drilling down \""+d[0]+"/"+d[i]+"\"...");
+                        ddq.add(d[0], d[i]);
+                    }
+                }
 
-            DrillSideways sideway = new DrillSideways 
-                (searcher, facetsConfig, taxon);
-            DrillSideways.DrillSidewaysResult swResult = 
-                sideway.search(ddq, skip+top);
-            Logger.info("## Drilled sideway "+swResult.facets.getAllDims(10).size()
-                        +" facets and "+swResult.hits.totalHits+" hits");
-            for (FacetResult result : swResult.facets.getAllDims(10)) {
-                if (result != null) {
+                /*
+                FacetsCollector fc2 = new FacetsCollector ();
+                TopDocs docs = FacetsCollector.search
+                    (searcher, ddq, skip+top, fc2);
+                Logger.debug("Drilled down results in "
+                             +docs.totalHits+" hit(s)...");
+                Facets facets2 = new FastTaxonomyFacetCounts
+                    (taxon, facetsConfig, fc2);
+                
+                List<FacetResult> facetResults2 = facets2.getAllDims(10);
+                Logger.info("## "+facetResults2.size()+" facet dimension(s)");
+                for (FacetResult result : facetResults2) {
                     Logger.info(" + ["+result.dim+"]");
                     for (int i = 0; i < result.labelValues.length; ++i) {
                         LabelAndValue lv = result.labelValues[i];
                         Logger.info("     \""+lv.label+"\": "+lv.value);
                     }
                 }
+                */
+                
+                DrillSideways sideway = new DrillSideways 
+                    (searcher, facetsConfig, taxon);
+                DrillSideways.DrillSidewaysResult swResult = 
+                sideway.search(ddq, skip+top);
+
+                Logger.info("## Drilled sideway "
+                            +swResult.facets.getAllDims(10).size()
+                            +" facets and "+swResult.hits.totalHits+" hits");
+                for (FacetResult result : swResult.facets.getAllDims(10)) {
+                    if (result != null) {
+                        Logger.info(" + ["+result.dim+"]");
+                        Facet f = new Facet (result.dim);
+                        for (int i = 0; i < result.labelValues.length; ++i) {
+                            LabelAndValue lv = result.labelValues[i];
+                            Logger.info("     \""+lv.label+"\": "+lv.value);
+                            f.values.add(new FV (lv.label, 
+                                                 lv.value.intValue()));
+                        }
+                        searchResult.facets.add(f);
+                    }
+                }
+                hits = swResult.hits;
             }
 
             int size = Math.max(0, Math.min(skip+top, hits.totalHits));

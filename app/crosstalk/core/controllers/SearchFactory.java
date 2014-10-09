@@ -76,7 +76,7 @@ public class SearchFactory extends Controller {
             etag.count = nodes.size();
             etag.uri = request().uri();
             etag.path = request().path();
-            etag.sha1 = Util.sha1Request(request(), "q", "dd");
+            etag.sha1 = Util.sha1Request(request(), "q", "facet");
             etag.query = q;
             etag.method = request().method();
             etag.save();

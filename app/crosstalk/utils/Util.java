@@ -18,11 +18,16 @@ public class Util {
                 uparams.add(p);
             }
 
-            for (String p : uparams) {
-                String value = req.getQueryString(p);
-                if (value != null) {
-                    md.update(p.getBytes("utf8"));
-                    md.update(value.getBytes("utf8"));
+            Set<String> sorted = new TreeSet (req.queryString().keySet());
+            for (String key : sorted) {
+                if (uparams.contains(key)) {
+                    String[] values = req.queryString().get(key);
+                    if (values != null) {
+                        Arrays.sort(values);
+                        md.update(key.getBytes("utf8"));
+                        for (String v : values)
+                            md.update(v.getBytes("utf8"));
+                    }
                 }
             }
 
