@@ -56,6 +56,8 @@ POST    /projects/@migration    crosstalk.ncats.controllers.ProjectMigration.mig
 GET     /projects/@form crosstalk.ncats.controllers.ProjectFactory.index()
 POST    /projects/@form crosstalk.ncats.controllers.ProjectFactory.newProject()
 
+GET     /employees/@ldap crosstalk.ncats.controllers.EmployeeFactory.ldap()
+POST     /employees/@ldap crosstalk.ncats.controllers.EmployeeFactory.list()
 
 ##################################
 # API for entity routing

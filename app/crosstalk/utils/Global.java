@@ -94,6 +94,7 @@ public class Global extends GlobalSettings {
         RouteFactory.register("grants", GrantFactory.class);
         RouteFactory.register("projects", ProjectFactory.class);
         RouteFactory.register("mesh", MeshFactory.class);
+        RouteFactory.register("employees", EmployeeFactory.class);
 
         /*
         Logger.info("## starting app: secret=\""

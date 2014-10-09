@@ -5,16 +5,20 @@ import javax.persistence.*;
 
 import crosstalk.core.models.Author;
 import crosstalk.core.models.Figure;
+import crosstalk.core.models.Indexable;
 
 @Entity
 @Table(name="ct_ncats_author")
 public class NIHAuthor extends Author {
+    @Indexable(facet=true, name="NCATS Employee")
     public boolean ncatsEmployee;
-    public String ic; // institute/center
 
     @Column(length=1024)
     public String dn; // distinguished name
     public Long uid; // unique id
+
+    @Column(length=15)
+    public String phone;
 
     @Lob
     public String biography;

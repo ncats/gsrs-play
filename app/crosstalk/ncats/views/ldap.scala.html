@@ -1,0 +1,34 @@
+@(message: String)
+
+@main(message) {
+      <div class="site-wrapper">
+        <div class="site-wrapper-inner">
+          <div class="cover-container">
+            <div class="inner cover">
+              <h1 class="cover-heading">NCATS LDAP</h1>
+              <form class="form-horizontal" role="form" method="POST" action="@crosstalk.ncats.controllers.routes.EmployeeFactory.list()">
+              <div class="form-group">
+                <label for="username" class="col-sm-2 control-label">Username</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" name="username" 
+                    id="username" placeholder="Enter username">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="password" class="col-sm-2 control-label">Password</label>
+                <div class="col-sm-10">
+                  <input type="password" class="form-control" name="password" 
+                    id="password">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="submit" class="btn btn-default">Submit</button>
+                </div>
+              </div>
+            </form>
+            </div>
+          </div>
+        </div>
+      </div>
+}

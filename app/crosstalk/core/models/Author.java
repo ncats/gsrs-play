@@ -14,6 +14,7 @@ public class Author extends Principal {
     public String initials;
 
     @Column(length=1024)
+    @Indexable(facet=true,name="Affiliation")
     public String affiliation;
 
     @Column(length=20)
@@ -24,6 +25,6 @@ public class Author extends Principal {
 
     public Author () {}
 
-    @Indexable(facet=true, name="Author")
+    @Indexable(facet=true, suggest=true, name="Author")
     public String getName () { return lastname+", "+forename; }
 }
