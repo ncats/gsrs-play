@@ -3,13 +3,15 @@
 # ~~~~
 
 # Home page
-GET     /       crosstalk.ncats.controllers.Granite.index()
-POST    /loadmeta       crosstalk.ncats.controllers.Granite.loadMeta()
-POST    /loadabs        crosstalk.ncats.controllers.Granite.loadAbs()
-POST    /loadpub        crosstalk.ncats.controllers.Granite.loadPub()
-DELETE    /:id  crosstalk.ncats.controllers.Granite.deleteGrant(id:Long)
-POST    /       crosstalk.ncats.controllers.Granite.newGrant()
-POST    /filter       crosstalk.ncats.controllers.Granite.filter()
+GET     /granite       ix.ncats.controllers.Granite.index()
+POST    /granite/loadmeta       ix.ncats.controllers.Granite.loadMeta()
+POST    /granite/loadabs        ix.ncats.controllers.Granite.loadAbs()
+POST    /granite/loadpub        ix.ncats.controllers.Granite.loadPub()
+DELETE    /granite/:id  ix.ncats.controllers.Granite.deleteGrant(id:Long)
+POST    /granite       ix.ncats.controllers.Granite.newGrant()
+POST    /granite/filter       ix.ncats.controllers.Granite.filter()
+
+GET     /clinical/eligibility/test1     ix.ncats.controllers.clinical.EligibilityFactory.test1()
 
 ##
 ## Docs
@@ -23,10 +25,10 @@ GET     /api-docs/api       controllers.ApiHelpController.getResource(path="/api
 GET     /assets/*file   controllers.Assets.at(path="/public", file)
 GET     /webjars/*file          controllers.WebJarAssets.at(file)
 
-GET     /api/search         crosstalk.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0)
-GET     /api/suggest/@fields       crosstalk.core.controllers.SearchFactory.suggestFields
-GET     /api/suggest/:field       crosstalk.core.controllers.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
-GET     /api/suggest       crosstalk.core.controllers.SearchFactory.suggest(q: String, max: Int ?= 10)
+GET     /api/search         ix.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
+GET     /api/suggest/@fields       ix.core.controllers.SearchFactory.suggestFields
+GET     /api/suggest/:field       ix.core.controllers.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
+GET     /api/suggest       ix.core.controllers.SearchFactory.suggest(q: String, max: Int ?= 10)
 
 
 #
@@ -37,46 +39,47 @@ GET     /api/suggest       crosstalk.core.controllers.SearchFactory.suggest(q: S
 ##
 ## ADMIN (not done)
 ##
-GET     /admin/principal/:id    crosstalk.core.controllers.AdminFactory.getUser(id:Long)
-DELETE  /admin/principal/:id    crosstalk.core.controllers.AdminFactory.deleteUser(id:Long)
-GET     /admin/role/:id         crosstalk.core.controllers.AdminFactory.getRole(id:Long)
-DELETE  /admin/role/:id         crosstalk.core.controllers.AdminFactory.deleteRole(id:Long)
-GET     /admin/resource/:id         crosstalk.core.controllers.AdminFactory.getResource(id:Long)
-DELETE  /admin/resource/:id         crosstalk.core.controllers.AdminFactory.deleteResource(id:Long)
-GET     /admin/:resource    crosstalk.core.controllers.AdminFactory.get(resource: String)
-POST    /admin/principal        crosstalk.core.controllers.AdminFactory.createUser()
-POST    /admin/test1    crosstalk.core.controllers.AdminFactory.createTest1()
+GET     /admin/principal/:id    ix.core.controllers.AdminFactory.getUser(id:Long)
+DELETE  /admin/principal/:id    ix.core.controllers.AdminFactory.deleteUser(id:Long)
+GET     /admin/role/:id         ix.core.controllers.AdminFactory.getRole(id:Long)
+DELETE  /admin/role/:id         ix.core.controllers.AdminFactory.deleteRole(id:Long)
+GET     /admin/resource/:id         ix.core.controllers.AdminFactory.getResource(id:Long)
+DELETE  /admin/resource/:id         ix.core.controllers.AdminFactory.deleteResource(id:Long)
+GET     /admin/:resource    ix.core.controllers.AdminFactory.get(resource: String)
+POST    /admin/principal        ix.core.controllers.AdminFactory.createUser()
+POST    /admin/test1    ix.core.controllers.AdminFactory.createTest1()
 
 
 ##################################
 # Project forms
 ##################################
-GET     /projects/@migration    crosstalk.ncats.controllers.ProjectMigration.index()
-POST    /projects/@migration    crosstalk.ncats.controllers.ProjectMigration.migrate()
-GET     /projects/@form crosstalk.ncats.controllers.ProjectFactory.index()
-POST    /projects/@form crosstalk.ncats.controllers.ProjectFactory.newProject()
+GET     /projects/@migration    ix.ncats.controllers.Migration.index()
+POST    /projects/@migration    ix.ncats.controllers.Migration.migrate()
+GET     /projects/@form ix.ncats.controllers.ProjectFactory.index()
+POST    /projects/@form ix.ncats.controllers.ProjectFactory.newProject()
 
-GET     /employees/@ldap crosstalk.ncats.controllers.EmployeeFactory.ldap()
-POST     /employees/@ldap crosstalk.ncats.controllers.EmployeeFactory.list()
+GET     /employees/@ldap ix.ncats.controllers.EmployeeFactory.ldap()
+POST     /employees/@ldap ix.ncats.controllers.EmployeeFactory.list()
+
 
 ##################################
 # API for entity routing
 ##################################
-#GET     /api    crosstalk.core.controllers.RouteFactory.listResources()
-#GET     /api/    crosstalk.core.controllers.RouteFactory.listResources()
-GET     /api/$context<[a-z0-9_]+>/@count       crosstalk.core.controllers.RouteFactory.count(context: String)
-GET     /api/$context<[a-z0-9_]+>/:id  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
-GET     /api/$context<[a-z0-9_]+>/:id/@edits      crosstalk.core.controllers.RouteFactory.edits(context: String, id:Long)
-GET     /api/$context<[a-z0-9_]+>(:id)     crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /api/$context<[a-z0-9_]+>(:id)/  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /api/$context<[a-z0-9_]+>(:id)/@edits      crosstalk.core.controllers.RouteFactory.edits(context: String, id: Long)
-GET     /api/$context<[a-z0-9_]+>/:id/  crosstalk.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /api/$context<[a-z0-9_]+>/:id/*field  crosstalk.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
-GET     /api/$context<[a-z0-9_]+>(:id)/*field  crosstalk.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
-GET     /api/$context<[a-z0-9_]+>  crosstalk.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
-GET     /api/$context<[a-z0-9_]+>/  crosstalk.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
-POST    /api/$context<[a-z0-9_]+>  crosstalk.core.controllers.RouteFactory.create(context: String)
-PUT     /api/$context<[a-z0-9_]+>/:id/*field       crosstalk.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
-PUT     /api/$context<[a-z0-9_]+>(:id)/*field       crosstalk.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
+#GET     /api    ix.core.controllers.RouteFactory.listResources()
+#GET     /api/    ix.core.controllers.RouteFactory.listResources()
+GET     /api/$context<[a-z0-9_]+>/@count       ix.core.controllers.RouteFactory.count(context: String)
+GET     /api/$context<[a-z0-9_]+>/:id  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
+GET     /api/$context<[a-z0-9_]+>/:id/@edits      ix.core.controllers.RouteFactory.edits(context: String, id:Long)
+GET     /api/$context<[a-z0-9_]+>(:id)     ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /api/$context<[a-z0-9_]+>(:id)/  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /api/$context<[a-z0-9_]+>(:id)/@edits      ix.core.controllers.RouteFactory.edits(context: String, id: Long)
+GET     /api/$context<[a-z0-9_]+>/:id/  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /api/$context<[a-z0-9_]+>/:id/*field  ix.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
+GET     /api/$context<[a-z0-9_]+>(:id)/*field  ix.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
+GET     /api/$context<[a-z0-9_]+>  ix.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+GET     /api/$context<[a-z0-9_]+>/  ix.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, expand: String ?= null, filter: String ?= null)
+POST    /api/$context<[a-z0-9_]+>  ix.core.controllers.RouteFactory.create(context: String)
+PUT     /api/$context<[a-z0-9_]+>/:id/*field       ix.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
+PUT     /api/$context<[a-z0-9_]+>(:id)/*field       ix.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
 
-#GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       crosstalk.core.controllers.RouteFactory.get(ns: String, resource: String)
+#GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       ix.core.controllers.RouteFactory.get(ns: String, resource: String)

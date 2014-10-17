@@ -1,0 +1,16 @@
+@(grants: List[ix.ncats.models.Grant])
+
+@import helper._
+
+@main("Granite grants") {
+    <h1>@grants.size() grant(s)</h1>
+    <ul>
+      @for(grant <- grants) {
+        <li>@grant.projectTitle [@grant.id]
+          @form(ix.ncats.controllers.routes.Granite.deleteGrant(grant.id)) {
+            <input type="submit" value="Delete">
+          }
+        </li>
+      }
+    </ul>
+}
