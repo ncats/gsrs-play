@@ -10,7 +10,7 @@ public class PubAuthor extends Model {
     public Long id;
 
     public int position;
-
+    public boolean isLast;
     // corresponding author?
     public Boolean correspondence;
 
@@ -19,7 +19,11 @@ public class PubAuthor extends Model {
 
     public PubAuthor () {}
     public PubAuthor (int position, Author author) {
+        this (position, false, author);
+    }
+    public PubAuthor (int position, boolean isLast, Author author) {
         this.position = position;
+        this.isLast = isLast;
         this.author = author;
     }
 }

@@ -347,6 +347,7 @@ create table ix_ncats_project (
 create table ix_core_pubauthor (
   id                        bigint not null,
   position                  integer,
+  is_last                   boolean,
   correspondence            boolean,
   author_id                 bigint,
   constraint pk_ix_core_pubauthor primary key (id))

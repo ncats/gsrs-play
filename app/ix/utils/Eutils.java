@@ -95,7 +95,8 @@ public class Eutils {
                 for (int i = 0; i < nodes.getLength(); ++i) {
                     Node n = nodes.item(i);
                     Author author = getAuthor (n);
-                    pub.authors.add(new PubAuthor (i, author));
+                    pub.authors.add(new PubAuthor 
+                                    (i, i+1 == nodes.getLength(), author));
                 }
             }
                         
