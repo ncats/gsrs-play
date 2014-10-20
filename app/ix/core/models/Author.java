@@ -4,11 +4,8 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ix_core_author")
+@DiscriminatorValue("AUT")
 public class Author extends Principal {
-    @Id
-    public Long id; // internal id
-
     public String lastname;
     public String forename;
     public String initials;
@@ -24,6 +21,10 @@ public class Author extends Principal {
     public String url;
 
     public Author () {}
+    public Author (String lastname, String firstname) {
+        this.lastname = lastname;
+        this.forename = forename;
+    }
 
     @Indexable(facet=true, suggest=true, name="Author")
     public String getName () { return lastname+", "+forename; }

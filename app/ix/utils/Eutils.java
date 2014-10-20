@@ -1,35 +1,47 @@
 package ix.utils;
 
 import java.net.URL;
+import java.net.URLConnection;
 import java.io.InputStreamReader;
+import java.io.ByteArrayOutputStream;
+import java.io.BufferedInputStream;
+import java.io.StringReader;
+import java.io.IOException;
 import java.util.*;
 import javax.xml.parsers.*;
+
 import org.xml.sax.InputSource;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
+import org.w3c.dom.Document;
 
 import play.GlobalSettings;
 import play.Application;
 import play.Logger;
+import play.libs.ws.*;
+import play.libs.F;
 
 import ix.core.models.Publication;
 import ix.core.models.Journal;
 import ix.core.models.Author;
+import ix.core.models.PubAuthor;
 import ix.core.models.Keyword;
 import ix.core.models.Mesh;
 
 public class Eutils {
-    static String EUTILS_URL = 
-        "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&rettype=xml&id=";
+    static String EUTILS_BASE = 
+        "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
+    static String EUTILS_URL = EUTILS_BASE + "?db=pubmed&rettype=xml&id=";
 
     public static Publication fetchPublication (Long pmid) {
-        String uri = EUTILS_URL+pmid;
+        String url = EUTILS_URL+pmid;
+
         Publication pub = null;
         try {
-            URL url = new URL (uri);
-
-            org.w3c.dom.Document dom = getDOM (url);
+            //org.w3c.dom.Document dom = getDOM (url);
+            org.w3c.dom.Document dom = getDOM (pmid);
+            Logger.info("Parsing "+url+"...");
             if (dom == null) {
                 Logger.debug("No publication found for "+pmid);
                 return null;
@@ -40,8 +52,6 @@ public class Eutils {
                 Logger.warn("PMID "+pmid+" has no Article element!");
                 return null;
             }
-
-            //Logger.info("Parsing "+url+"...");
 
             pub = new Publication ();
             Element article = (Element)nodes.item(0);
@@ -85,7 +95,7 @@ public class Eutils {
                 for (int i = 0; i < nodes.getLength(); ++i) {
                     Node n = nodes.item(i);
                     Author author = getAuthor (n);
-                    pub.authors.add(author);
+                    pub.authors.add(new PubAuthor (i, author));
                 }
             }
                         
@@ -166,7 +176,7 @@ public class Eutils {
             //Logger.info("pub "+pub+"...");
         }
         catch (Exception ex) {
-            Logger.trace("Fetch failed: "+uri, ex);
+            Logger.trace("Fetch failed: "+url, ex);
         }
 
         return pub;
@@ -261,32 +271,72 @@ public class Eutils {
         return journal;
     }
 
-    static org.w3c.dom.Document getDOM (URL url) throws Exception {
+    static Document getDOM (Long pmid) {
+        WSRequestHolder ws = WS.url(EUTILS_BASE)
+            .setTimeout(5000)
+            .setFollowRedirects(true)
+            .setQueryParameter("db", "pubmed")
+            .setQueryParameter("rettype", "xml")
+            .setQueryParameter("id", pmid.toString());
+
+        F.Promise<WSResponse> promise = ws.get();
+        try {
+            WSResponse response = promise.get(5000);
+            return response.asXml();
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't get response for "+pmid, ex);
+        }
+        return null;
+    }
+
+    static Document getDOM (String url) {
         /*
          * We first read the xml into a utf-8 byte buffer, then use the
          * StringReader to properly convert utf-8 to Java's unicode.
          * If we try to parse the xml directly, for whatever reason it
          * doesn't properly parse the encoded utf-8 stream!
          */
-        /*
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream ();
+        try {
+            URLConnection con = new URL (url).openConnection();
+            con.setConnectTimeout(5000);
+            con.setReadTimeout(5000);
+            con.setUseCaches(true);
+         
+            Logger.debug("ContentType: "+con.getContentType());
+            Logger.debug("ContentEncoding: "+con.getContentEncoding());
+            Logger.debug("Expiration: "+con.getExpiration());
+            Logger.debug("LastModified: "+con.getLastModified());
+            Logger.debug("Date: "+con.getDate());
 
-        byte[] buf = new byte[1024];
-        BufferedInputStream bis = new BufferedInputStream (url.openStream());
-        for (int nb; (nb = bis.read(buf, 0, buf.length)) > 0; ) {
-            buffer.write(buf, 0, nb);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream ();
+            byte[] buf = new byte[1024];
+            BufferedInputStream bis = 
+                new BufferedInputStream (con.getInputStream());
+            for (int nb; (nb = bis.read(buf, 0, buf.length)) > 0; ) {
+                buffer.write(buf, 0, nb);
+            }
+            bis.close();
+            
+            Logger.debug("## url="+url+": size="+buffer.toString().length());
+            
+            DocumentBuilder db = DocumentBuilderFactory
+                .newInstance().newDocumentBuilder();
+            
+            return db.parse
+                (new InputSource (new StringReader (buffer.toString())));
         }
-        bis.close();
-        */
-        //logger.info("## url="+url+": "+buffer.toString());
+        catch (IOException ex) {
+            Logger.trace("Failed to open connection to "+url, ex);
+        }
+        catch (Exception ex) {
+            Logger.trace("XML parsing exception "+url, ex);
+        }
 
-        DocumentBuilder db = DocumentBuilderFactory
-            .newInstance().newDocumentBuilder();
-        /*
-        return db.parse
-            (new InputSource (new StringReader (buffer.toString())));
-        */
+        return null;
+            /*
         return db.parse(new InputSource
                         (new InputStreamReader (url.openStream())));
+        */
     }
 }

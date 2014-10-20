@@ -5,6 +5,8 @@ import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_principal")
+@Inheritance
+@DiscriminatorValue("PRI")
 public class Principal extends Model {
     @Id
     public Long id;

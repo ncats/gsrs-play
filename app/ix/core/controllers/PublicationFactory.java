@@ -46,4 +46,8 @@ public class PublicationFactory extends EntityFactory {
     public static Result update (Long id, String field) {
         return update (id, field, Publication.class, finder);
     }
+
+    public static Publication byPMID (long pmid) {
+        return finder.where().eq("pmid", pmid).findUnique();
+    }
 }

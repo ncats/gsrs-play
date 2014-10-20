@@ -98,6 +98,7 @@ public class TextIndexer {
     static final Version LUCENE_VERSION = Version.LATEST;
     static final String FACETS_CONFIG_FILE = "facet_conf.json";
     static final String SUGGEST_CONFIG_FILE = "suggest_conf.json";
+    static final String DIM_CLASS = "ix.Class";
 
     public static class FV {
         String label;
@@ -317,6 +318,8 @@ public class TextIndexer {
                             +"facet searching might not work properly!");
             }
             facetsConfig = new FacetsConfig ();
+            facetsConfig.setMultiValued(DIM_CLASS, true);
+            facetsConfig.setRequireDimCount(DIM_CLASS, true);
         }
 
         suggestDir = new File (dir, "suggest");
@@ -684,6 +687,9 @@ public class TextIndexer {
                                Object entity, 
                                List<IndexableField> ixFields) {
         try {
+            ixFields.add(new FacetField
+                         (DIM_CLASS, entity.getClass().getName()));
+
             Field[] fields = entity.getClass().getFields();
             for (Field f : fields) {
                 path.push(f.getName());

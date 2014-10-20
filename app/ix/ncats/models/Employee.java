@@ -5,7 +5,7 @@ import javax.persistence.*;
 import ix.core.models.Indexable;
 
 @Entity
-@Table(name="ix_ncats_employee")
+@DiscriminatorValue("EMP")
 public class Employee extends NIHAuthor {
     public enum Role {
         Biology,
@@ -33,7 +33,10 @@ public class Employee extends NIHAuthor {
     public Employee () {
         ncatsEmployee = true;
     }
-
+    public Employee (String lastname, String forename) {
+        super (lastname, forename);
+        ncatsEmployee = true;
+    }
     public Employee (Role role) {
         this.role = role;
         ncatsEmployee = true;

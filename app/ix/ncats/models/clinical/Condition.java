@@ -12,6 +12,8 @@ import ix.core.models.Keyword;
 @Entity
 @Table(name="ix_ncats_clinical_condition")
 public class Condition extends Model {
+    static private final String JOIN = "_ix_ncats_cca46885";
+
     @Id
     public Long id;
 
@@ -28,26 +30,26 @@ public class Condition extends Model {
      */
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ncats_clinical_condition_synonym",
+    @JoinTable(name=JOIN+"_1",
                joinColumns=@JoinColumn
                (name="ix_ncats_clinical_condition_synonym_id",
-                referencedColumnName="id")
+               referencedColumnName="id")
     )
     public List<Keyword> synonyms = new ArrayList<Keyword>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ncats_clinical_condition_keyword",
+    @JoinTable(name=JOIN+"_2",
                joinColumns=@JoinColumn
                (name="ix_ncats_clinical_condition_keyword_id",
-                referencedColumnName="id")
+               referencedColumnName="id")
     )
     public List<Keyword> keywords = new ArrayList<Keyword>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ncats_clinical_condition_wikipedia",
+    @JoinTable(name=JOIN+"_3",
                joinColumns=@JoinColumn
                (name="ix_ncats_clinical_condition_wikipedia_id",
-                referencedColumnName="id")
+               referencedColumnName="id")
     )
     public List<Keyword> wikipedia = new ArrayList<Keyword>();
 

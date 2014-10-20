@@ -12,13 +12,17 @@ import play.mvc.*;
 import com.avaje.ebean.*;
 
 import ix.utils.Global;
+import ix.utils.Eutils;
+
 import ix.core.search.TextIndexer;
 import ix.core.models.Event;
 import ix.core.models.Publication;
 import ix.core.models.Author;
+import ix.core.models.PubAuthor;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
 
+import ix.core.controllers.PublicationFactory;
 
 public class Migration extends Controller {
     static final Model.Finder<Long, Project> projFinder = 
@@ -59,14 +63,13 @@ public class Migration extends Controller {
 
             //int projects = migrateProjects (con);
             //Logger.debug("Migrating projects..."+projects);
-
             int count = EmployeeFactory.createIfEmpty
                 (ldapUsername, ldapPassword);
             Logger.debug(count+ " employees retrieved!");
 
             int pubs = migratePublications (con);
 
-            return ok ("data migrated");
+            return ok (pubs+" publications migrated");
         }
         catch (SQLException ex) {
             return internalServerError (ex.getMessage());
@@ -109,11 +112,9 @@ public class Migration extends Controller {
         return count;
     }
 
-    public static int migratePublications (Connection con) throws SQLException {
+    public static int migratePubAuthors (Connection con) throws SQLException {
         Statement stm = con.createStatement();
         try {
-            int count = 0;
-
             // migrate authors
             ResultSet rset = stm.executeQuery
                 ("select * from pub_author where first_name is not null");
@@ -161,12 +162,93 @@ public class Migration extends Controller {
             }
             rset.close();
             Logger.debug("++ "+authors+" non-NCATS authors added!");
-            
-            return count;
+
+            return authors;
         }
         finally {
             stm.close();
         }
+    }
+
+    public static int migratePublications (Connection con) throws SQLException {
+        Statement stm = con.createStatement();
+        try {
+            // now migrate publications
+            ResultSet rset = stm.executeQuery
+                ("select * from publication "
+                 //+"where rownum <= 10"
+                );
+            int publications = 0;
+            while (rset.next()) {
+                long pmid = rset.getLong("pmid");
+                if (rset.wasNull()) {
+                }
+                else {
+                    Publication pub = PublicationFactory.byPMID(pmid);
+                    if (pub == null) {
+                        pub = Eutils.fetchPublication(pmid);
+                        if (pub != null) {
+                            for (PubAuthor p : pub.authors) {
+                                p.author = instrument (p.author);
+                            }
+
+                            pub.save();
+                            Logger.debug("+ New publication added "+pub.id
+                                         +": "+pub.title);
+                            ++publications;
+                        }
+                        else {
+                            Logger.warn("Can't locate PMID "+pmid);
+                        }
+                    }
+                    else {
+                        Logger.debug("Publication "
+                                     +pmid+" is already downloaded!");
+                    }
+                }
+            }
+            rset.close();
+            Logger.debug(publications+" new publications added!");
+            
+            return publications;
+        }
+        finally {
+            stm.close();
+        }
+    }
+    
+    static Author instrument (Author a) {
+        List<Employee> employees = emplFinder
+            .where(Expr.and(Expr.eq("lastname", a.lastname),
+                            Expr.eq("forename", a.forename)))
+            .findList();
+
+        Author author = a;
+        if (employees.isEmpty()) {
+            try {
+                // try text searching
+                TextIndexer.SearchResult results = 
+                    Global.getInstance().getTextIndexer().search
+                    ("lastname:"+a.lastname+" AND forename:"+a.forename, 10);
+                if (!results.isEmpty()) {
+                    for (Iterator it = results.getMatches().iterator();
+                         it.hasNext(); ) {
+                        Object obj = it.next();
+                        if (obj instanceof Author) {
+                            author =(Author)obj;
+                        }
+                    }
+                }
+            }
+            catch (IOException ex) {
+                Logger.trace("Text search failed", ex);
+            }
+        }
+        else {
+            author = employees.iterator().next();
+        }
+
+        return author;
     }
 
     public static Result index () {

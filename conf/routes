@@ -13,6 +13,11 @@ POST    /granite/filter       ix.ncats.controllers.Granite.filter()
 
 GET     /clinical/eligibility/test1     ix.ncats.controllers.clinical.EligibilityFactory.test1()
 
+GET     /eutils/test    ix.ncats.controllers.test.EutilsTest.index()
+POST    /eutils/test    ix.ncats.controllers.test.EutilsTest.fetch()
+
+GET     /test/publication ix.ncats.controllers.TestFactory.publication()
+
 ##
 ## Docs
 ##

@@ -8,7 +8,7 @@ import ix.core.models.Figure;
 import ix.core.models.Indexable;
 
 @Entity
-@Table(name="ix_ncats_author")
+@DiscriminatorValue("NIH")
 public class NIHAuthor extends Author {
     @Indexable(facet=true, name="NCATS Employee")
     public boolean ncatsEmployee;
@@ -25,4 +25,7 @@ public class NIHAuthor extends Author {
     public String title;
 
     public NIHAuthor () {}
+    public NIHAuthor (String lastname, String forename) {
+        super (lastname, forename);
+    }
 }

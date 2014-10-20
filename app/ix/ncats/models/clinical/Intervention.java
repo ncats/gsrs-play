@@ -12,6 +12,7 @@ import ix.core.models.Keyword;
 @Entity
 @Table(name="ix_ncats_clinical_intervention")
 public class Intervention extends Model {
+    static private final String JOIN = "_ix_ncats_4a162ae3";
     public enum Type {
         Drug,
             Device,
@@ -33,18 +34,18 @@ public class Intervention extends Model {
     public String description;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ncats_clinical_intervention_synonym")
+    @JoinTable(name=JOIN+"_1")
     public List<Keyword> synonyms = new ArrayList<Keyword>();
 
     @Indexable(facet=true,name="Clinical Intervention Type")
     public Type type;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ncats_clinical_intervention_arm")
+    @JoinTable(name=JOIN+"_2")
     public List<Arm> arms = new ArrayList<Arm>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ncats_clinical_intervention_cohort")
+    @JoinTable(name=JOIN+"_3")
     public List<Cohort> cohorts = new ArrayList<Cohort>();
 
     public Intervention () {}

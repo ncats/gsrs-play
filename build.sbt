@@ -9,6 +9,7 @@ lazy val admin = (project in file("modules/admin")).enablePlugins(PlayJava)
 scalaVersion := "2.11.1"
 
 libraryDependencies ++= Seq(
+  javaWs,
   javaJdbc,
   javaEbean,
   cache,

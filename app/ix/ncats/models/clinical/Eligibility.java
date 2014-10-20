@@ -12,6 +12,7 @@ import ix.core.models.Keyword;
 @Entity
 @Table(name="ix_ncats_clinical_eligibility")
 public class Eligibility extends Model {
+    static private final String JOIN = "_ix_ncats_840372f9";
     @Id
     public Long id;
 
@@ -22,18 +23,18 @@ public class Eligibility extends Model {
     public boolean healthyVolunteers;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ncats_clinical_eligibility_inclusion",
+    @JoinTable(name=JOIN+"_1",
                joinColumns=@JoinColumn
                (name="ix_ncats_clinical_eligibility_inclusion_id",
-                referencedColumnName="id")
+               referencedColumnName="id")
     )
     public List<Keyword> inclusions = new ArrayList<Keyword>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ncats_clinical_eligibility_exclusion",
+    @JoinTable(name=JOIN+"_2",
                joinColumns=@JoinColumn
                (name="ix_ncats_clinical_eligibility_exclusion_id",
-                referencedColumnName="id")
+               referencedColumnName="id")
     )
     public List<Keyword> exclusions = new ArrayList<Keyword>();
 

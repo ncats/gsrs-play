@@ -10,7 +10,9 @@ public class Publication extends Model {
     @Id
     public Long id; // internal id
 
+    @Column(unique=true)
     public Long pmid; // pubmed id
+    @Column(unique=true)
     public String pmcid; // pubmed central id
 
     @Column(length=1024)
@@ -32,7 +34,9 @@ public class Publication extends Model {
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_core_publication_author")
-    public List<Author> authors = new ArrayList<Author>();
+    public List<PubAuthor> authors = new ArrayList<PubAuthor>();
+    //public List<Author> authors = new ArrayList<Author>();
+        
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Journal journal;
@@ -42,4 +46,7 @@ public class Publication extends Model {
     public List<Figure> figures = new ArrayList<Figure>();
 
     public Publication () {}
+    public Publication (String title) {
+        this.title = title;
+    }
 }

@@ -24,6 +24,7 @@ public class Journal extends Model {
     public String title;
 
     public String isoAbbr; // iso abbreviation
+    public Double factor; // impact factor
 
     public Journal () {}
     public Journal (String issn) {
