@@ -2,6 +2,7 @@ package ix.core.models;
 
 import play.db.ebean.Model;
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name="ix_core_figure")
@@ -14,6 +15,7 @@ public class Figure extends Model {
     @Column(length=1024)
     public String url;
     @Lob
+    @JsonIgnore
     public byte[] data;
     public int size;
     @Column(length=140)

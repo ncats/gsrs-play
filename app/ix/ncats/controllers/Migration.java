@@ -10,6 +10,7 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 import com.avaje.ebean.*;
+import org.apache.commons.codec.binary.Base64;
 
 import ix.utils.Global;
 import ix.utils.Eutils;
@@ -18,6 +19,7 @@ import ix.core.search.TextIndexer;
 import ix.core.models.Event;
 import ix.core.models.Publication;
 import ix.core.models.Author;
+import ix.core.models.Figure;
 import ix.core.models.PubAuthor;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
@@ -172,6 +174,8 @@ public class Migration extends Controller {
 
     public static int migratePublications (Connection con) throws SQLException {
         Statement stm = con.createStatement();
+        PreparedStatement pstm = con.prepareStatement
+            ("select * from pub_image where db_pub_id = ? order by img_order");
         try {
             // now migrate publications
             ResultSet rset = stm.executeQuery
@@ -190,6 +194,19 @@ public class Migration extends Controller {
                         if (pub != null) {
                             for (PubAuthor p : pub.authors) {
                                 p.author = instrument (p.author);
+                            }
+
+                            // get image (if any)
+                            try {
+                                long id = rset.getLong("db_pub_id");
+                                List<Figure> figs = createFigures (pstm, id);
+                                for (Figure f : figs) {
+                                    pub.figures.add(f);
+                                }
+                            }
+                            catch (Exception ex) {
+                                Logger.trace
+                                    ("Can't retrieve images for pmid="+pmid, ex);
                             }
 
                             pub.save();
@@ -214,7 +231,53 @@ public class Migration extends Controller {
         }
         finally {
             stm.close();
+            pstm.close();
         }
+    }
+
+    static List<Figure> createFigures (PreparedStatement pstm, long id) 
+        throws Exception {
+        List<Figure> figs = new ArrayList<Figure>();
+
+        MessageDigest md = MessageDigest.getInstance("sha1");
+
+        pstm.setLong(1, id);
+        ResultSet rs = pstm.executeQuery();
+        while (rs.next()) {
+            Figure fig = new Figure ();
+            String data = rs.getString("img_base64");
+            if (data != null) {
+                int pos = data.indexOf(":image");
+                if (pos > 0) {
+                    int end = data.indexOf(";");
+                    fig.mimeType = data.substring(pos+1, end+1);
+                    Base64 b64 = new Base64 ();
+                    pos = data.indexOf("base64,");
+                    if (pos > 0) {
+                        byte[] d = data.substring(pos+7).getBytes("utf8");
+                        fig.data = b64.decode(d);
+                        fig.size = fig.data.length;
+
+                        byte[] digest = md.digest(d);
+                        StringBuilder sb = new StringBuilder ();
+                        for (int i = 0; i < digest.length; ++i)
+                            sb.append(String.format("%1$02x", digest[i]&0xff));
+                        fig.sha1 = sb.toString();
+                    }
+                    else {
+                        Logger.warn("Bogus image encoding");
+                    }
+                }
+                else {
+                    Logger.warn
+                        ("Invalid image data encoding for db_pub_id="+id);
+                }
+            }
+            figs.add(fig);
+        }
+        rs.close();
+
+        return figs;
     }
     
     static Author instrument (Author a) {

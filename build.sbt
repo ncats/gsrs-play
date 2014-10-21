@@ -13,7 +13,8 @@ libraryDependencies ++= Seq(
   javaJdbc,
   javaEbean,
   cache,
-  "org.apache.lucene" % "lucene-core" % "4.10.0"
+  "commons-codec" % "commons-codec" % "1.3"
+  ,"org.apache.lucene" % "lucene-core" % "4.10.0"
   ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"
   ,"org.apache.lucene" % "lucene-misc" % "4.10.0"
   ,"org.apache.lucene" % "lucene-highlighter" % "4.10.0"

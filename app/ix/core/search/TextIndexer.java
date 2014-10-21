@@ -69,6 +69,7 @@ import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingSuggester;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -692,8 +693,10 @@ public class TextIndexer {
 
             Field[] fields = entity.getClass().getFields();
             for (Field f : fields) {
-                path.push(f.getName());
+                if (null != f.getAnnotation(JsonIgnore.class))
+                    continue;
 
+                path.push(f.getName());
                 try {
                     Class type = f.getType();
                     Object value = f.get(entity);
