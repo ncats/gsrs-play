@@ -1,6 +1,5 @@
 package ix.core.models;
 
-import java.util.*;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
@@ -14,8 +13,11 @@ public class Journal extends Model {
     public String issn;
 
     public String volume;
-    public Integer issue;
+    public String issue;
+
+    @Indexable(facet=true,name="Published")
     public Integer year;
+
     @Column(length=10)
     public String month;
 

@@ -219,7 +219,7 @@ create table ix_core_journal (
   id                        bigint not null,
   issn                      varchar(10),
   volume                    varchar(255),
-  issue                     integer,
+  issue                     varchar(255),
   year                      integer,
   month                     varchar(10),
   title                     varchar(256),

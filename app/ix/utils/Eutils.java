@@ -64,6 +64,7 @@ public class Eutils {
             if (jelm != null) {
                 pub.journal = getJournal (jelm);
             }
+            //Logger.debug("Journal: "+pub.journal);
             
             // title
             nodes = article.getElementsByTagName("ArticleTitle");
@@ -227,8 +228,8 @@ public class Eutils {
             journal.volume = nodes.item(0).getTextContent();
 
         nodes = node.getElementsByTagName("Issue");
-        if (nodes.getLength() > 0)
-            journal.issue = Integer.parseInt(nodes.item(0).getTextContent());
+        if (nodes.getLength() > 0) 
+            journal.issue = nodes.item(0).getTextContent();
 
         nodes = node.getElementsByTagName("Year");
         if (nodes.getLength() > 0)

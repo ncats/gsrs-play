@@ -26,6 +26,7 @@ public class EutilsTest extends Controller {
         DynamicForm requestData = Form.form().bindFromRequest();
         String arg = requestData.get("pmid");
         Logger.debug("## pmid="+arg);
+        ObjectMapper mapper = new ObjectMapper ();
 
         List<Publication> pubs = new ArrayList<Publication>();
         for (String p : arg.split("[,\\s;]+")) {
@@ -36,6 +37,7 @@ public class EutilsTest extends Controller {
                     Logger.debug("fetching "+pmid);
                     pub = Eutils.fetchPublication(pmid);
                     if (pub != null) {
+                        Logger.debug(mapper.writeValueAsString(pub));
                         pubs.add(pub);
                         pub.save();
                         Logger.debug("Publication "+pub.id+"saved!");
@@ -49,12 +51,12 @@ public class EutilsTest extends Controller {
                     pubs.add(pub);
                 }
             }
-            catch (NumberFormatException ex) {
+            catch (Exception ex) {
+                Logger.trace("Can't process pmid "+p, ex);
             }
         }
         Logger.debug(pubs.size()+" publication(s) fetched!");
 
-        ObjectMapper mapper = new ObjectMapper ();
         return ok (mapper.valueToTree(pubs));
     }
 }

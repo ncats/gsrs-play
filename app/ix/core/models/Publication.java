@@ -35,8 +35,6 @@ public class Publication extends Model {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_core_publication_author")
     public List<PubAuthor> authors = new ArrayList<PubAuthor>();
-    //public List<Author> authors = new ArrayList<Author>();
-        
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Journal journal;
