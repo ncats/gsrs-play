@@ -3,11 +3,11 @@ package ix.core.models;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ix_core_vint")
+@DiscriminatorValue("INT")
 public class VInt extends Value {
-    public Long value;
+    public Long vint;
     public VInt () {}
     public VInt (Long value) {
-        this.value = value;
+        vint = value;
     }
 }

@@ -3,11 +3,11 @@ package ix.core.models;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ix_core_vnum")
+@DiscriminatorValue("NUM")
 public class VNum extends Value {
-    public Double value;
+    public Double vnum;
     public VNum () {}
     public VNum (Double value) {
-        this.value = value;
+        vnum = value;
     }
 }

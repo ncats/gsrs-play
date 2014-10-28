@@ -10,6 +10,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 @Entity
 @Table(name="ix_core_value")
+@Inheritance
+@DiscriminatorValue("VAL")
 public class Value extends Model {
     @Id
     public Long id;

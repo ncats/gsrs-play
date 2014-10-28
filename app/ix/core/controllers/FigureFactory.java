@@ -29,11 +29,16 @@ public class FigureFactory extends EntityFactory {
 
     public static Result get (Long id, String select) {
         String format = request().getQueryString("format");
-        if (format != null && format.equalsIgnoreCase("image")) {
-            Figure fig = finder.byId(id);
-            if (fig != null) {
-                response().setContentType(fig.mimeType);
-                return ok (fig.data);
+        if (format != null) {
+            if (format.equalsIgnoreCase("image")) {
+                Figure fig = finder.byId(id);
+                if (fig != null) {
+                    response().setContentType(fig.mimeType);
+                    return ok (fig.data);
+                }
+            }
+            else {
+                return badRequest ("Unknown format \""+format+"\"!");
             }
         }
         return get (id, select, finder);

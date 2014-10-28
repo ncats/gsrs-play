@@ -21,6 +21,7 @@ import ix.core.models.Publication;
 import ix.core.models.Author;
 import ix.core.models.Figure;
 import ix.core.models.PubAuthor;
+import ix.core.models.Keyword;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
 
@@ -63,8 +64,9 @@ public class Migration extends Controller {
             con = DriverManager.getConnection
                 (jdbcUrl, jdbcUsername, jdbcPassword);
 
-            //int projects = migrateProjects (con);
-            //Logger.debug("Migrating projects..."+projects);
+            int projects = migrateProjects (con);
+            Logger.debug("Migrating projects..."+projects);
+
             int count = EmployeeFactory.createIfEmpty
                 (ldapUsername, ldapPassword);
             Logger.debug(count+ " employees retrieved!");
@@ -86,22 +88,40 @@ public class Migration extends Controller {
 
     public static int migrateProjects (Connection con) throws SQLException {
         Statement stm = con.createStatement();
+        PreparedStatement pstm = con.prepareStatement
+            ("select * from project_tag where proj_id = ? order by proj_id");
+
         int count = 0;
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from project_summary");
             while (rset.next()) {
-                Project proj = new Project ();
-                proj.title = rset.getString("title");
-                proj.objective = rset.getString("objective");
-                proj.scope = rset.getString("scope");
-                Event ev = new Event ();
-                ev.title = rset.getString("status");
-                proj.milestones.add(ev);
-                proj.save();
+                String title = rset.getString("title");
+                List<Project> projs = projFinder
+                    .where().eq("title", title).findList();
+                if (projs.isEmpty()) {
+                    Project proj = new Project ();
+                    proj.title = title;
+                    proj.objective = rset.getString("objective");
+                    proj.scope = rset.getString("scope");
+                    Event ev = new Event ();
+                    ev.title = rset.getString("status");
+                    proj.milestones.add(ev);
+
+                    pstm.setLong(1, rset.getLong("proj_id"));
+                    ResultSet rs = pstm.executeQuery();
+                    while (rs.next()) {
+                        String source = rs.getString("source");
+                        String tag = rs.getString("tag_key");
+                        String value = rs.getString("value");
+                        proj.annotations.add(new Keyword (value));
+                    }
+                    rs.close();
+                    proj.save();
                 
-                Logger.debug("Project "+proj.id+": "+proj.title);
-                ++count;
+                    Logger.debug("New project "+proj.id+": "+proj.title);
+                    ++count;
+                }
             }
             rset.close();
         }

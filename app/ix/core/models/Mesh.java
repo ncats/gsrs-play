@@ -3,19 +3,19 @@ package ix.core.models;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ix_core_mesh")
+@DiscriminatorValue("MeSH")
 public class Mesh extends Value {
     public boolean majorTopic;
 
     @Indexable(taxonomy=true, suggest=true, name="MeSH")
     @Column(length=1024)
-    public String term;
+    public String heading;
 
     public Mesh () {}
     public Mesh (boolean majorTopic) {
         this.majorTopic = majorTopic;
     }
-    public Mesh (String term) {
-        this.term = term;
+    public Mesh (String heading) {
+        this.heading = heading;
     }
 }

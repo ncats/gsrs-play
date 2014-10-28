@@ -3,12 +3,12 @@ package ix.core.models;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ix_core_vstr")
+@DiscriminatorValue("STR")
 public class VStr extends Value {
     @Column(length=1024)
-    public String value;
+    public String vstr;
     public VStr () {}
     public VStr (String value) {
-        this.value = value;
+        vstr = value;
     }
 }

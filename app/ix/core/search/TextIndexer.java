@@ -693,19 +693,20 @@ public class TextIndexer {
 
             Field[] fields = entity.getClass().getFields();
             for (Field f : fields) {
-                if (null != f.getAnnotation(JsonIgnore.class))
+                Indexable indexable = 
+                    (Indexable)f.getAnnotation(Indexable.class);
+                if (indexable == null) {
+                    indexable = defaultIndexable;
+                }
+
+                if (!indexable.indexed() 
+                    || null != f.getAnnotation(JsonIgnore.class))
                     continue;
 
                 path.push(f.getName());
                 try {
                     Class type = f.getType();
                     Object value = f.get(entity);
-
-                    Indexable indexable = 
-                        (Indexable)f.getAnnotation(Indexable.class);
-                    if (indexable == null) {
-                        indexable = defaultIndexable;
-                    }
 
                     if (DEBUG (2)) {
                         Logger.debug
