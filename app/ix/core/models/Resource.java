@@ -19,6 +19,9 @@ public class Resource extends Model {
 
     @Column(unique=true)
     public String name;
+    @Column(length=1024)
+    public String url;
+
     public Modifier modifier = Modifier.Private;
 
     @ManyToMany(cascade=CascadeType.ALL)

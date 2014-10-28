@@ -22,9 +22,8 @@ create table ix_ncats_clinical_arm (
 create table ix_core_attribute (
   id                        bigint not null,
   name                      varchar(255),
-  type                      varchar(255),
+  value                     varchar(1024),
   resource_id               bigint,
-  label                     varchar(255),
   constraint pk_ix_core_attribute primary key (id))
 ;
 
@@ -355,6 +354,7 @@ create table ix_core_publication (
 create table ix_core_resource (
   id                        bigint not null,
   name                      varchar(255),
+  url                       varchar(1024),
   modifier                  integer,
   constraint ck_ix_core_resource_modifier check (modifier in (0,1,2)),
   constraint uq_ix_core_resource_name unique (name),

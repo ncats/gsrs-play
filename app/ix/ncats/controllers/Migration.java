@@ -22,6 +22,8 @@ import ix.core.models.Author;
 import ix.core.models.Figure;
 import ix.core.models.PubAuthor;
 import ix.core.models.Keyword;
+import ix.core.models.Resource;
+import ix.core.models.Attribute;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
 
@@ -34,6 +36,8 @@ public class Migration extends Controller {
         new Model.Finder(Long.class, Publication.class);
     static final Model.Finder<Long, Employee> emplFinder =
         new Model.Finder(Long.class, Employee.class);
+    static final Model.Finder<Long, Resource> resFinder = 
+        new Model.Finder(Long.class, Resource.class);
 
     static {
         try {
@@ -90,6 +94,17 @@ public class Migration extends Controller {
         Statement stm = con.createStatement();
         PreparedStatement pstm = con.prepareStatement
             ("select * from project_tag where proj_id = ? order by proj_id");
+        PreparedStatement pstm2 = con.prepareStatement
+            ("select * from project_image where proj_id =? order by img_order");
+
+        Resource doResource = resFinder
+            .where().eq("name", "Disease Ontology").findUnique();
+        if (doResource == null) {
+            doResource = Resource.newPublic("Disease Ontology");
+            doResource.url = "http://www.disease-ontology.org";
+            doResource.save();
+            Logger.debug("Added Resource "+doResource.id+": "+doResource.name);
+        }
 
         int count = 0;
         try {
@@ -108,15 +123,41 @@ public class Migration extends Controller {
                     ev.title = rset.getString("status");
                     proj.milestones.add(ev);
 
-                    pstm.setLong(1, rset.getLong("proj_id"));
+                    long pid = rset.getLong("proj_id");
+                    pstm.setLong(1, pid);
                     ResultSet rs = pstm.executeQuery();
                     while (rs.next()) {
                         String source = rs.getString("source");
                         String tag = rs.getString("tag_key");
                         String value = rs.getString("value");
-                        proj.annotations.add(new Keyword (value));
+
+                        Keyword key = new Keyword (value);
+                        Attribute attr = new Attribute ("DOID", tag);
+                        attr.resource = doResource;
+                        //attr.save();
+                        key.attrs.add(attr);
+
+                        attr = new Attribute 
+                            ("href", 
+                             "http://www.disease-ontology.org/api/metadata/"
+                             +tag);
+                        attr.resource = doResource;
+                        //attr.save();
+                        key.attrs.add(attr);
+
+                        proj.annotations.add(key);
                     }
                     rs.close();
+
+                    try {
+                        List<Figure> figs = createFigures (pstm2, pid);
+                        for (Figure f : figs)
+                            proj.figures.add(f);
+                    }
+                    catch (Exception ex) {
+                        Logger.trace
+                            ("Can't retrieve images for project="+pid, ex);
+                    }
                     proj.save();
                 
                     Logger.debug("New project "+proj.id+": "+proj.title);
@@ -255,49 +296,52 @@ public class Migration extends Controller {
         }
     }
 
-    static List<Figure> createFigures (PreparedStatement pstm, long id) 
+    static List<Figure> createFigures (PreparedStatement pstm, long id)
         throws Exception {
         List<Figure> figs = new ArrayList<Figure>();
-
-        MessageDigest md = MessageDigest.getInstance("sha1");
-
         pstm.setLong(1, id);
         ResultSet rs = pstm.executeQuery();
         while (rs.next()) {
-            Figure fig = new Figure ();
-            String data = rs.getString("img_base64");
-            if (data != null) {
-                int pos = data.indexOf(":image");
-                if (pos > 0) {
-                    int end = data.indexOf(";");
-                    fig.mimeType = data.substring(pos+1, end+1);
-                    Base64 b64 = new Base64 ();
-                    pos = data.indexOf("base64,");
-                    if (pos > 0) {
-                        byte[] d = data.substring(pos+7).getBytes("utf8");
-                        fig.data = b64.decode(d);
-                        fig.size = fig.data.length;
-
-                        byte[] digest = md.digest(d);
-                        StringBuilder sb = new StringBuilder ();
-                        for (int i = 0; i < digest.length; ++i)
-                            sb.append(String.format("%1$02x", digest[i]&0xff));
-                        fig.sha1 = sb.toString();
-                    }
-                    else {
-                        Logger.warn("Bogus image encoding");
-                    }
-                }
-                else {
-                    Logger.warn
-                        ("Invalid image data encoding for db_pub_id="+id);
-                }
-            }
-            figs.add(fig);
+            Figure fig = parseFigure (rs);
+            if (fig != null)
+                figs.add(fig);
         }
         rs.close();
-
         return figs;
+    }
+
+    static Figure parseFigure (ResultSet rs) throws Exception {
+        Figure fig = null;
+        String data = rs.getString("img_base64");
+        if (data != null) {
+            fig = new Figure ();
+            int pos = data.indexOf(":image");
+            if (pos > 0) {
+                int end = data.indexOf(";");
+                fig.mimeType = data.substring(pos+1, end);
+                Base64 b64 = new Base64 ();
+                pos = data.indexOf("base64,");
+                if (pos > 0) {
+                    byte[] d = data.substring(pos+7).getBytes("utf8");
+                    fig.data = b64.decode(d);
+                    fig.size = fig.data.length;
+                    
+                    MessageDigest md = MessageDigest.getInstance("sha1");
+                    byte[] digest = md.digest(d);
+                    StringBuilder sb = new StringBuilder ();
+                    for (int i = 0; i < digest.length; ++i)
+                        sb.append(String.format("%1$02x", digest[i]&0xff));
+                    fig.sha1 = sb.toString();
+                }
+                else {
+                    Logger.warn("Bogus image encoding");
+                }
+            }
+            else {
+                Logger.warn("Invalid image data encoding for");
+            }
+        }
+        return fig;
     }
     
     static Author instrument (Author a) {

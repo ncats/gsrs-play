@@ -11,15 +11,15 @@ public class Attribute extends Model {
     public Long id;
 
     public String name;
-    public String type;
+    @Column(length=1024)
+    public String value;
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Resource resource;
-    public String label; // label used for stitching
 
     public Attribute () {}
-    public Attribute (String name, String type) {
+    public Attribute (String name, String value) {
         this.name = name;
-        this.type = type;
+        this.value = value;
     }
 }

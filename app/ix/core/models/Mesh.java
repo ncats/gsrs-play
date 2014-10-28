@@ -3,7 +3,7 @@ package ix.core.models;
 import javax.persistence.*;
 
 @Entity
-@DiscriminatorValue("MeSH")
+@DiscriminatorValue("MSH")
 public class Mesh extends Value {
     public boolean majorTopic;
 

@@ -17,12 +17,11 @@ public class Value extends Model {
     public Long id;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_core_value_attribute",
-               joinColumns=@JoinColumn(name="ix_core_value_id"))
+    @JoinTable(name="ix_core_value_attribute")
     public List<Attribute> attrs = new ArrayList<Attribute>();
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Curation curation;
-
+    
     public Value () {}
 }
