@@ -117,6 +117,14 @@ create table ix_ncats_clinical_eligibility (
   constraint pk_ix_ncats_clinical_eligibility primary key (id))
 ;
 
+create table ix_idg_entity (
+  dtype                     varchar(10) not null,
+  id                        bigint not null,
+  name                      varchar(1024),
+  description               clob,
+  constraint pk_ix_idg_entity primary key (id))
+;
+
 create table ix_core_event (
   id                        bigint not null,
   title                     varchar(1024),
@@ -227,19 +235,6 @@ create table ix_core_journal (
   constraint pk_ix_core_journal primary key (id))
 ;
 
-create table ix_core_link (
-  id                        bigint not null,
-  name                      varchar(255),
-  dir                       integer,
-  uri                       varchar(1024),
-  source                    varchar(255),
-  source_id                 bigint,
-  target                    varchar(255),
-  target_id                 bigint,
-  constraint ck_ix_core_link_dir check (dir in (0,1,2,3)),
-  constraint pk_ix_core_link primary key (id))
-;
-
 create table ix_core_organization (
   id                        bigint not null,
   duns                      varchar(10),
@@ -275,6 +270,14 @@ create table ix_core_payload (
   size                      bigint,
   created                   timestamp,
   constraint pk_ix_core_payload primary key (id))
+;
+
+create table ix_core_predicate (
+  dtype                     varchar(10) not null,
+  id                        bigint not null,
+  name                      varchar(255) not null,
+  object_id                 bigint,
+  constraint pk_ix_core_predicate primary key (id))
 ;
 
 create table ix_core_principal (
@@ -390,6 +393,13 @@ create table ix_core_value (
   constraint pk_ix_core_value primary key (id))
 ;
 
+create table ix_core_xref (
+  id                        bigint not null,
+  type                      varchar(512) not null,
+  ref_id                    bigint,
+  constraint pk_ix_core_xref primary key (id))
+;
+
 
 create table ix_core_acl_principal (
   ix_core_acl_id                 bigint not null,
@@ -469,6 +479,30 @@ create table _ix_ncats_840372f9_2 (
   constraint pk__ix_ncats_840372f9_2 primary key (ix_ncats_clinical_eligibility_exclusion_id, ix_core_value_id))
 ;
 
+create table ix_idg_target_synonym (
+  ix_idg_entity_id               bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_target_synonym primary key (ix_idg_entity_id, ix_core_value_id))
+;
+
+create table ix_idg_target_annotation (
+  ix_idg_entity_id               bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_target_annotation primary key (ix_idg_entity_id, ix_core_value_id))
+;
+
+create table ix_idg_target_publication (
+  ix_idg_entity_id               bigint not null,
+  ix_core_publication_id         bigint not null,
+  constraint pk_ix_idg_target_publication primary key (ix_idg_entity_id, ix_core_publication_id))
+;
+
+create table ix_idg_target_predicate (
+  ix_idg_entity_id               bigint not null,
+  ix_core_predicate_id           bigint not null,
+  constraint pk_ix_idg_target_predicate primary key (ix_idg_entity_id, ix_core_predicate_id))
+;
+
 create table ix_core_event_figure (
   ix_core_event_id               bigint not null,
   ix_core_figure_id              bigint not null,
@@ -527,6 +561,12 @@ create table ix_core_payload_attribute (
   ix_core_payload_id             bigint not null,
   ix_core_attribute_id           bigint not null,
   constraint pk_ix_core_payload_attribute primary key (ix_core_payload_id, ix_core_attribute_id))
+;
+
+create table ix_core_predicate_annotation (
+  ix_core_predicate_id           bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_core_predicate_annotation primary key (ix_core_predicate_id, ix_core_value_id))
 ;
 
 create table ix_ncats_project_annotation (
@@ -634,6 +674,8 @@ create sequence ix_core_edit_seq;
 
 create sequence ix_ncats_clinical_eligibility_seq;
 
+create sequence ix_idg_entity_seq;
+
 create sequence ix_core_event_seq;
 
 create sequence ix_core_figure_seq;
@@ -652,13 +694,13 @@ create sequence ix_core_investigator_seq;
 
 create sequence ix_core_journal_seq;
 
-create sequence ix_core_link_seq;
-
 create sequence ix_core_organization_seq;
 
 create sequence ix_ncats_clinical_outcome_seq;
 
 create sequence ix_core_payload_seq;
+
+create sequence ix_core_predicate_seq;
 
 create sequence ix_core_principal_seq;
 
@@ -678,6 +720,8 @@ create sequence ix_core_stitch_seq;
 
 create sequence ix_core_value_seq;
 
+create sequence ix_core_xref_seq;
+
 alter table ix_core_attribute add constraint fk_ix_core_attribute_resource_1 foreign key (resource_id) references ix_core_resource (id) on delete restrict on update restrict;
 create index ix_ix_core_attribute_resource_1 on ix_core_attribute (resource_id);
 alter table ix_ncats_clinical_trial add constraint fk_ix_ncats_clinical_trial_eli_2 foreign key (eligibility_id) references ix_ncats_clinical_eligibility (id) on delete restrict on update restrict;
@@ -692,22 +736,24 @@ alter table ix_ncats_funding add constraint fk_ix_ncats_funding_ix_ncats_g_6 for
 create index ix_ix_ncats_funding_ix_ncats_g_6 on ix_ncats_funding (grant_id);
 alter table ix_core_investigator add constraint fk_ix_core_investigator_organi_7 foreign key (organization_id) references ix_core_organization (id) on delete restrict on update restrict;
 create index ix_ix_core_investigator_organi_7 on ix_core_investigator (organization_id);
-alter table ix_core_principal add constraint fk_ix_core_principal_selfie_8 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
-create index ix_ix_core_principal_selfie_8 on ix_core_principal (selfie_id);
-alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_pa_9 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
-create index ix_ix_core_processingstatus_pa_9 on ix_core_processingstatus (payload_id);
-alter table ix_ncats_project add constraint fk_ix_ncats_project_acl_10 foreign key (acl_id) references ix_core_acl (id) on delete restrict on update restrict;
-create index ix_ix_ncats_project_acl_10 on ix_ncats_project (acl_id);
-alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_11 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
-create index ix_ix_ncats_project_curation_11 on ix_ncats_project (curation_id);
-alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_12 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_pubauthor_author_12 on ix_core_pubauthor (author_id);
-alter table ix_core_publication add constraint fk_ix_core_publication_journa_13 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
-create index ix_ix_core_publication_journa_13 on ix_core_publication (journal_id);
-alter table ix_core_role add constraint fk_ix_core_role_principal_14 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_role_principal_14 on ix_core_role (principal_id);
-alter table ix_core_value add constraint fk_ix_core_value_curation_15 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
-create index ix_ix_core_value_curation_15 on ix_core_value (curation_id);
+alter table ix_core_predicate add constraint fk_ix_core_predicate_object_8 foreign key (object_id) references ix_core_xref (id) on delete restrict on update restrict;
+create index ix_ix_core_predicate_object_8 on ix_core_predicate (object_id);
+alter table ix_core_principal add constraint fk_ix_core_principal_selfie_9 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
+create index ix_ix_core_principal_selfie_9 on ix_core_principal (selfie_id);
+alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_p_10 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
+create index ix_ix_core_processingstatus_p_10 on ix_core_processingstatus (payload_id);
+alter table ix_ncats_project add constraint fk_ix_ncats_project_acl_11 foreign key (acl_id) references ix_core_acl (id) on delete restrict on update restrict;
+create index ix_ix_ncats_project_acl_11 on ix_ncats_project (acl_id);
+alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_12 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_ncats_project_curation_12 on ix_ncats_project (curation_id);
+alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_13 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_pubauthor_author_13 on ix_core_pubauthor (author_id);
+alter table ix_core_publication add constraint fk_ix_core_publication_journa_14 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
+create index ix_ix_core_publication_journa_14 on ix_core_publication (journal_id);
+alter table ix_core_role add constraint fk_ix_core_role_principal_15 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_role_principal_15 on ix_core_role (principal_id);
+alter table ix_core_value add constraint fk_ix_core_value_curation_16 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_core_value_curation_16 on ix_core_value (curation_id);
 
 
 
@@ -763,6 +809,22 @@ alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_nc_01
 
 alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
+alter table ix_idg_target_synonym add constraint fk_ix_idg_target_synonym_ix_i_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_synonym add constraint fk_ix_idg_target_synonym_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_annotation add constraint fk_ix_idg_target_annotation_i_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_annotation add constraint fk_ix_idg_target_annotation_i_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_publication add constraint fk_ix_idg_target_publication__01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_publication add constraint fk_ix_idg_target_publication__02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_predicate add constraint fk_ix_idg_target_predicate_ix_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_predicate add constraint fk_ix_idg_target_predicate_ix_02 foreign key (ix_core_predicate_id) references ix_core_predicate (id) on delete restrict on update restrict;
+
 alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
 
 alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_02 foreign key (ix_core_figure_id) references ix_core_figure (id) on delete restrict on update restrict;
@@ -802,6 +864,10 @@ alter table _ix_ncats_4a162ae3_3 add constraint fk__ix_ncats_4a162ae3_3_ix_nc_02
 alter table ix_core_payload_attribute add constraint fk_ix_core_payload_attribute__01 foreign key (ix_core_payload_id) references ix_core_payload (id) on delete restrict on update restrict;
 
 alter table ix_core_payload_attribute add constraint fk_ix_core_payload_attribute__02 foreign key (ix_core_attribute_id) references ix_core_attribute (id) on delete restrict on update restrict;
+
+alter table ix_core_predicate_annotation add constraint fk_ix_core_predicate_annotati_01 foreign key (ix_core_predicate_id) references ix_core_predicate (id) on delete restrict on update restrict;
+
+alter table ix_core_predicate_annotation add constraint fk_ix_core_predicate_annotati_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
 alter table ix_ncats_project_annotation add constraint fk_ix_ncats_project_annotatio_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
 
@@ -911,6 +977,16 @@ drop table if exists _ix_ncats_840372f9_1;
 
 drop table if exists _ix_ncats_840372f9_2;
 
+drop table if exists ix_idg_entity;
+
+drop table if exists ix_idg_target_synonym;
+
+drop table if exists ix_idg_target_annotation;
+
+drop table if exists ix_idg_target_publication;
+
+drop table if exists ix_idg_target_predicate;
+
 drop table if exists ix_core_event;
 
 drop table if exists ix_core_event_figure;
@@ -947,8 +1023,6 @@ drop table if exists ix_core_investigator;
 
 drop table if exists ix_core_journal;
 
-drop table if exists ix_core_link;
-
 drop table if exists ix_core_organization;
 
 drop table if exists ix_ncats_clinical_outcome;
@@ -956,6 +1030,10 @@ drop table if exists ix_ncats_clinical_outcome;
 drop table if exists ix_core_payload;
 
 drop table if exists ix_core_payload_attribute;
+
+drop table if exists ix_core_predicate;
+
+drop table if exists ix_core_predicate_annotation;
 
 drop table if exists ix_core_principal;
 
@@ -1003,6 +1081,8 @@ drop table if exists ix_core_value;
 
 drop table if exists ix_core_value_attribute;
 
+drop table if exists ix_core_xref;
+
 SET REFERENTIAL_INTEGRITY TRUE;
 
 drop sequence if exists ix_core_acl_seq;
@@ -1027,6 +1107,8 @@ drop sequence if exists ix_core_edit_seq;
 
 drop sequence if exists ix_ncats_clinical_eligibility_seq;
 
+drop sequence if exists ix_idg_entity_seq;
+
 drop sequence if exists ix_core_event_seq;
 
 drop sequence if exists ix_core_figure_seq;
@@ -1045,13 +1127,13 @@ drop sequence if exists ix_core_investigator_seq;
 
 drop sequence if exists ix_core_journal_seq;
 
-drop sequence if exists ix_core_link_seq;
-
 drop sequence if exists ix_core_organization_seq;
 
 drop sequence if exists ix_ncats_clinical_outcome_seq;
 
 drop sequence if exists ix_core_payload_seq;
+
+drop sequence if exists ix_core_predicate_seq;
 
 drop sequence if exists ix_core_principal_seq;
 
@@ -1070,4 +1152,6 @@ drop sequence if exists ix_core_role_seq;
 drop sequence if exists ix_core_stitch_seq;
 
 drop sequence if exists ix_core_value_seq;
+
+drop sequence if exists ix_core_xref_seq;
 

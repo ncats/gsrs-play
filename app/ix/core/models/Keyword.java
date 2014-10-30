@@ -14,4 +14,7 @@ public class Keyword extends Value {
     public Keyword (String term) {
         this.term = term;
     }
+
+    @Override
+    public String getValue () { return term; }
 }

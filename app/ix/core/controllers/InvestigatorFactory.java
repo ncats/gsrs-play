@@ -16,9 +16,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.avaje.ebean.*;
 
+import ix.core.NamedResource;
 import ix.core.models.Investigator;
 import ix.core.controllers.EntityFactory;
 
+
+@NamedResource(name="investigators", type=Investigator.class)
 public class InvestigatorFactory extends EntityFactory {
     public static Model.Finder<Long, Investigator> finder = 
         new Model.Finder (Long.class, Investigator.class);

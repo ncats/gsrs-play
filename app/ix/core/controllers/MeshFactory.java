@@ -9,8 +9,10 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
+import ix.core.NamedResource;
 import ix.core.models.Mesh;
 
+@NamedResource(name="mesh", type=Mesh.class)
 public class MeshFactory extends EntityFactory {
     public static final Model.Finder<Long, Mesh> finder = 
         new Model.Finder(Long.class, Mesh.class);

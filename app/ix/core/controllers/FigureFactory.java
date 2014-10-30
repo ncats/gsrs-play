@@ -9,9 +9,11 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
+import ix.core.NamedResource;
 import ix.core.models.Figure;
 import com.fasterxml.jackson.databind.JsonNode;
 
+@NamedResource(name="figures",type=Figure.class)
 public class FigureFactory extends EntityFactory {
     public static final Model.Finder<Long, Figure> finder = 
         new Model.Finder(Long.class, Figure.class);

@@ -6,6 +6,7 @@ import javax.persistence.*;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 
 @Entity
@@ -24,4 +25,10 @@ public class Value extends Model {
     public Curation curation;
     
     public Value () {}
+
+    @JsonIgnore
+    public Object getValue () {
+        throw new UnsupportedOperationException
+            ("getValue is not defined for class "+getClass().getName());
+    }
 }

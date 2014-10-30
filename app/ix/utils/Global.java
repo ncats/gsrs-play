@@ -19,8 +19,11 @@ import javax.sql.DataSource;
 import java.sql.DatabaseMetaData;
 
 import ix.core.search.TextIndexer;
-import ix.core.controllers.*;
-import ix.ncats.controllers.*;
+import ix.core.NamedResource;
+import ix.core.controllers.RouteFactory;
+
+import org.reflections.Reflections;
+
 
 public class Global extends GlobalSettings {
     public static final String PROPS_HOME = "inxight.home";
@@ -34,6 +37,12 @@ public class Global extends GlobalSettings {
     private File home = new File (".");
     private TextIndexer textIndexer;
     private int debug;
+
+    // lookup of class name to resource
+    private Map<String, String> names = new TreeMap<String, String>();
+    private Set<Class<?>> resources;
+    private String context;
+
 
     protected void init (Application app) throws Exception {
         String h = app.configuration().getString(PROPS_HOME);
@@ -58,6 +67,13 @@ public class Global extends GlobalSettings {
         DatabaseMetaData meta = DB.getConnection().getMetaData();
         Logger.info("## Database vendor: "+meta.getDatabaseProductName()
                     +" "+meta.getDatabaseProductVersion());
+
+        context = app.configuration().getString("application.context");
+        if (context == null) {
+            context = "";
+        }
+        Logger.info("## Application context: "
+                    +(context.equals("") ? "/": context));
 
         /*
         ServerConfig config = new ServerConfig ();
@@ -89,15 +105,18 @@ public class Global extends GlobalSettings {
         /**
          * default/global entities factory
          */
-        RouteFactory.register("keywords", KeywordFactory.class);
-        RouteFactory.register("publications", PublicationFactory.class);
-        RouteFactory.register("organizations", OrganizationFactory.class);
-        RouteFactory.register("investigators", InvestigatorFactory.class);
-        RouteFactory.register("grants", GrantFactory.class);
-        RouteFactory.register("projects", ProjectFactory.class);
-        RouteFactory.register("mesh", MeshFactory.class);
-        RouteFactory.register("employees", EmployeeFactory.class);
-        RouteFactory.register("figures", FigureFactory.class);
+        Reflections reflections = new Reflections ("ix");
+        resources = reflections.getTypesAnnotatedWith(NamedResource.class);
+
+        Logger.info(resources.size()+" named resources...");
+        for (Class c : resources) {
+            NamedResource res = 
+                (NamedResource)c.getAnnotation(NamedResource.class);
+            Logger.info("+ "+c.getName()+"\n  => "+context+"/"+res.name()
+                        +"["+res.type().getName()+"]");
+            names.put(res.type().getName(), res.name());
+            RouteFactory.register(res.name(), c);
+        }
 
         /*
         Logger.info("## starting app: secret=\""
@@ -127,5 +146,9 @@ public class Global extends GlobalSettings {
 
     public static boolean DEBUG (int level) {
         return getInstance().debug(level);
+    }
+
+    public static String getResource (String type) {
+        return getInstance().context+"/"+getInstance().names.get(type);
     }
 }

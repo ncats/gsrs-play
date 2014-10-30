@@ -12,7 +12,9 @@ import play.data.*;
 import play.mvc.*;
 
 import ix.core.models.Organization;
+import ix.core.NamedResource;
 
+@NamedResource(name="organizations", type=Organization.class)
 public class OrganizationFactory extends EntityFactory {
     static public final Model.Finder<Long, Organization> finder = 
         new Model.Finder(Long.class, Organization.class);

@@ -10,4 +10,6 @@ public class VInt extends Value {
     public VInt (Long value) {
         vint = value;
     }
+    @Override
+    public Long getValue () { return vint; }
 }

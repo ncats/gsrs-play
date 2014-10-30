@@ -11,8 +11,10 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
+import ix.core.NamedResource;
 import ix.core.models.Keyword;
 
+@NamedResource(name="keywords",type=Keyword.class)
 public class KeywordFactory extends EntityFactory {
     public static final Model.Finder<Long, Keyword> finder = 
         new Model.Finder(Long.class, Keyword.class);

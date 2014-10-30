@@ -10,4 +10,6 @@ public class VNum extends Value {
     public VNum (Double value) {
         vnum = value;
     }
+    @Override
+    public Double getValue () { return vnum; }
 }

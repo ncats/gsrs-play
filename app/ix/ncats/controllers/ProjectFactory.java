@@ -9,9 +9,11 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
+import ix.core.NamedResource;
 import ix.ncats.models.Project;
 import ix.core.controllers.EntityFactory;
 
+@NamedResource(name="projects",type=Project.class)
 public class ProjectFactory extends EntityFactory {
     static final public Model.Finder<Long, Project> finder = 
         new Model.Finder(Long.class, Project.class);

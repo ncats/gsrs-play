@@ -7,11 +7,13 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
+import ix.core.NamedResource;
 import ix.ncats.models.Employee;
 import ix.core.controllers.EntityFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@NamedResource(name="employees", type=Employee.class)
 public class EmployeeFactory extends EntityFactory {
     static final public Model.Finder<Long, Employee> finder = 
         new Model.Finder(Long.class, Employee.class);

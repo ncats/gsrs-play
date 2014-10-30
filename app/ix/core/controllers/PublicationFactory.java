@@ -11,7 +11,9 @@ import play.mvc.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.models.Publication;
+import ix.core.NamedResource;
 
+@NamedResource(name="publications", type=Publication.class)
 public class PublicationFactory extends EntityFactory {
     public static final Model.Finder<Long, Publication> finder = 
         new Model.Finder(Long.class, Publication.class);

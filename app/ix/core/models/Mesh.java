@@ -18,4 +18,7 @@ public class Mesh extends Value {
     public Mesh (String heading) {
         this.heading = heading;
     }
+
+    @Override
+    public String getValue () { return heading; }
 }

@@ -11,4 +11,7 @@ public class VStr extends Value {
     public VStr (String value) {
         vstr = value;
     }
+
+    @Override
+    public String getValue () { return vstr; }
 }
