@@ -2,6 +2,7 @@ package ix.utils;
 
 import java.io.*;
 import java.util.*;
+import java.lang.reflect.Method;
 
 import play.GlobalSettings;
 import play.Application;
@@ -17,6 +18,7 @@ import com.avaje.ebean.Ebean;
 
 import javax.sql.DataSource;
 import java.sql.DatabaseMetaData;
+import javax.persistence.Entity;
 
 import ix.core.search.TextIndexer;
 import ix.core.NamedResource;
@@ -42,7 +44,7 @@ public class Global extends GlobalSettings {
     private Map<String, String> names = new TreeMap<String, String>();
     private Set<Class<?>> resources;
     private String context;
-
+    private String api;
 
     protected void init (Application app) throws Exception {
         String h = app.configuration().getString(PROPS_HOME);
@@ -72,8 +74,19 @@ public class Global extends GlobalSettings {
         if (context == null) {
             context = "";
         }
-        Logger.info("## Application context: "
-                    +(context.equals("") ? "/": context));
+        else {
+            int pos = context.length();
+            while (--pos > 0 && context.charAt(pos) == '/')
+                ;
+            context = context.substring(0, pos+1);
+        }
+        Logger.info("## Application context: "+context);
+
+        api = app.configuration().getString("application.api");
+        if (api == null) {
+            api = "/api";
+        }
+        Logger.info("## Application api context: {context}"+api);
 
         /*
         ServerConfig config = new ServerConfig ();
@@ -150,5 +163,39 @@ public class Global extends GlobalSettings {
 
     public static String getResource (String type) {
         return getInstance().context+"/"+getInstance().names.get(type);
+    }
+
+    public static String getRef (Object instance) {
+        Global g = getInstance ();
+        Class cls = instance.getClass();
+        if (null == cls.getAnnotation(Entity.class))
+            throw new IllegalArgumentException ("Instance is not an Entity");
+
+        String name = g.names.get(cls.getName());
+        if (name == null)
+            throw new IllegalArgumentException
+                ("Class "+cls.getName()+" isn't a NamedResource!");
+
+        try {
+            Method m = cls.getMethod("getId");
+            if (m == null)
+                throw new IllegalArgumentException
+                    ("Entity type does not have getId method!");
+            Object id = m.invoke(instance);
+            return g.context+g.api+"/"+name+"("+id+")";
+        }
+        catch (Exception ex) {
+            Logger.trace("Unable to invoke getId", ex);
+            throw new IllegalArgumentException (ex);
+        }
+    }
+
+    public static String getRef (String type, long id) {
+        Global g = getInstance ();
+        String name = g.names.get(type);
+        if (name == null)
+            throw new IllegalArgumentException
+                ("Class "+type+" isn't a NamedResource!");
+        return g.context+g.api+"/"+name+"("+id+")";
     }
 }

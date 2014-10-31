@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 public class Value extends Model {
     @Id
     public Long id;
+    public String label;
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_core_value_attribute")
@@ -25,6 +26,9 @@ public class Value extends Model {
     public Curation curation;
     
     public Value () {}
+    public Value (String label) {
+        this.label = label;
+    }
 
     @JsonIgnore
     public Object getValue () {

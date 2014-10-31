@@ -24,6 +24,7 @@ import ix.core.models.PubAuthor;
 import ix.core.models.Keyword;
 import ix.core.models.Resource;
 import ix.core.models.Attribute;
+import ix.core.models.Thumbnail;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
 
@@ -267,7 +268,8 @@ public class Migration extends Controller {
                             }
                             catch (Exception ex) {
                                 Logger.trace
-                                    ("Can't retrieve images for pmid="+pmid, ex);
+                                    ("Can't retrieve images for pmid="+pmid, 
+                                     ex);
                             }
 
                             pub.save();
@@ -301,20 +303,32 @@ public class Migration extends Controller {
         List<Figure> figs = new ArrayList<Figure>();
         pstm.setLong(1, id);
         ResultSet rs = pstm.executeQuery();
-        while (rs.next()) {
+        if (rs.next()) {
             Figure fig = parseFigure (rs);
-            if (fig != null)
+            if (fig != null) {
                 figs.add(fig);
+                if (rs.next()) { // thumbnail
+                    Thumbnail thumb = new Thumbnail ();
+                    parseFigure (thumb, rs);
+                    thumb.parent = fig;
+                    figs.add(thumb);
+                }
+            }
         }
         rs.close();
         return figs;
     }
 
     static Figure parseFigure (ResultSet rs) throws Exception {
-        Figure fig = null;
+        return parseFigure (null, rs);
+    }
+
+    static Figure parseFigure (Figure fig, ResultSet rs) throws Exception {
         String data = rs.getString("img_base64");
         if (data != null) {
-            fig = new Figure ();
+            if (fig == null) 
+                fig = new Figure ();
+
             int pos = data.indexOf(":image");
             if (pos > 0) {
                 int end = data.indexOf(";");

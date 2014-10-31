@@ -18,10 +18,11 @@ public class XRef extends Model {
     @Column(length=512,nullable=false)
     public String type;
 
+    @JsonIgnore
     @Column(length=512)
     @Transient
     public String table;
-    public Long refId;
+    public Long xrefId;
 
     @JsonIgnore
     @Transient
@@ -29,8 +30,11 @@ public class XRef extends Model {
 
     public XRef () {}
     public XRef (String type, Long id) {
+        if (id == null)
+            throw new IllegalArgumentException
+                ("Can't create XRef with no id");
         this.type = type;
-        refId = id;
+        xrefId = id;
     }
 
     public XRef (Object instance) {
@@ -49,8 +53,8 @@ public class XRef extends Model {
                 throw new IllegalArgumentException
                     ("Entity's getId must return a Long!");
             type = cls.getName();
-            refId = (Long)m.invoke(instance);
-            if (refId == null)
+            xrefId = (Long)m.invoke(instance);
+            if (xrefId == null)
                 throw new IllegalArgumentException
                     ("Can't create XRef for Entity with no Id defined!");
 
@@ -75,20 +79,16 @@ public class XRef extends Model {
             try {
                 Model.Finder finder = new Model.Finder
                     (Long.class, Class.forName(type));
-                instance = finder.byId(refId);
+                instance = finder.byId(xrefId);
             }
             catch (Exception ex) {
-                Logger.trace("Can't retrieve XRef "+type+":"+refId, ex);
+                Logger.trace("Can't retrieve XRef "+type+":"+xrefId, ex);
             }
         }
         return instance;
     }
 
-    public String getHref () {
-        String resource = Global.getResource(type);
-        if (resource != null) {
-            return resource+"("+refId+")";
-        }
-        return null;
+    public String getXRef () {
+        return Global.getRef(type, xrefId);
     }
 }

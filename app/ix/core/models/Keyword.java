@@ -2,6 +2,7 @@ package ix.core.models;
 
 import play.db.ebean.Model;
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @DiscriminatorValue("KEY")
@@ -11,7 +12,9 @@ public class Keyword extends Value {
     public String term;
 
     public Keyword () {}
-    public Keyword (String term) {
+    public Keyword (String term, Attribute... attrs) {
+        for (Attribute a : attrs) 
+            this.attrs.add(a);
         this.term = term;
     }
 

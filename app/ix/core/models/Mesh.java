@@ -1,6 +1,7 @@
 package ix.core.models;
 
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @DiscriminatorValue("MSH")

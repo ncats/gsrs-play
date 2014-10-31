@@ -55,6 +55,9 @@ POST    /admin/principal        ix.core.controllers.AdminFactory.createUser()
 POST    /admin/test1    ix.core.controllers.AdminFactory.createTest1()
 
 
+GET     /tcrd   ix.idg.controllers.TcrdLoader.index()
+POST    /tcrd   ix.idg.controllers.TcrdLoader.load()
+
 ##################################
 # Project forms
 ##################################

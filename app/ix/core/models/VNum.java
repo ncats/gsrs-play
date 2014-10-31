@@ -1,15 +1,19 @@
 package ix.core.models;
 
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @DiscriminatorValue("NUM")
 public class VNum extends Value {
-    public Double vnum;
+    public Double numval;
+
     public VNum () {}
-    public VNum (Double value) {
-        vnum = value;
+    public VNum (String label, Double value) {
+        super (label);
+        numval = value;
     }
+
     @Override
-    public Double getValue () { return vnum; }
+    public Double getValue () { return numval; }
 }

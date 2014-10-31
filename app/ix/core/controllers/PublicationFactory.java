@@ -8,10 +8,15 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+import com.avaje.ebean.Expr;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.models.Publication;
+import ix.core.models.Author;
+import ix.core.models.PubAuthor;
 import ix.core.NamedResource;
+import ix.utils.Eutils;
+
 
 @NamedResource(name="publications", type=Publication.class)
 public class PublicationFactory extends EntityFactory {
@@ -51,5 +56,35 @@ public class PublicationFactory extends EntityFactory {
 
     public static Publication byPMID (long pmid) {
         return finder.where().eq("pmid", pmid).findUnique();
+    }
+
+    public static Publication fetchIfAbsent (long pmid) {
+        Publication pub = byPMID (pmid);
+        if (pub == null) {
+            pub = Eutils.fetchPublication(pmid);
+            if (pub != null) {
+                for (PubAuthor p : pub.authors) {
+                    p.author = instrument (p.author);
+                }
+                pub.save();
+            }
+        }
+        return pub;
+    }
+
+    static final Model.Finder<Long, Author> authorDb = 
+        new Model.Finder(Long.class, Author.class);
+    static Author instrument (Author a) {
+        List<Author> authors = authorDb
+            .where(Expr.and(Expr.eq("lastname", a.lastname),
+                            Expr.eq("forename", a.forename)))
+            .findList();
+
+        Author author = a;
+        if (!authors.isEmpty()) {
+            author = authors.iterator().next();
+        }
+
+        return author;
     }
 }

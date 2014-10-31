@@ -122,6 +122,8 @@ create table ix_idg_entity (
   id                        bigint not null,
   name                      varchar(1024),
   description               clob,
+  family                    varchar(128),
+  idg_class                 varchar(10),
   constraint pk_ix_idg_entity primary key (id))
 ;
 
@@ -137,6 +139,7 @@ create table ix_core_event (
 ;
 
 create table ix_core_figure (
+  dtype                     varchar(10) not null,
   id                        bigint not null,
   caption                   varchar(255),
   mime_type                 varchar(255),
@@ -144,6 +147,7 @@ create table ix_core_figure (
   data                      blob,
   size                      integer,
   sha1                      varchar(140),
+  parent_id                 bigint,
   constraint pk_ix_core_figure primary key (id))
 ;
 
@@ -383,11 +387,12 @@ create table ix_core_stitch (
 create table ix_core_value (
   dtype                     varchar(10) not null,
   id                        bigint not null,
+  label                     varchar(255),
   curation_id               bigint,
-  vnum                      double,
+  numval                    double,
   term                      varchar(255),
-  vstr                      varchar(1024),
-  vint                      bigint,
+  strval                    varchar(1024),
+  intval                    bigint,
   major_topic               boolean,
   heading                   varchar(1024),
   constraint pk_ix_core_value primary key (id))
@@ -396,7 +401,7 @@ create table ix_core_value (
 create table ix_core_xref (
   id                        bigint not null,
   type                      varchar(512) not null,
-  ref_id                    bigint,
+  xref_id                   bigint,
   constraint pk_ix_core_xref primary key (id))
 ;
 
@@ -479,28 +484,34 @@ create table _ix_ncats_840372f9_2 (
   constraint pk__ix_ncats_840372f9_2 primary key (ix_ncats_clinical_eligibility_exclusion_id, ix_core_value_id))
 ;
 
-create table ix_idg_target_synonym (
+create table ix_idg_entity_synonym (
   ix_idg_entity_id               bigint not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_idg_target_synonym primary key (ix_idg_entity_id, ix_core_value_id))
+  constraint pk_ix_idg_entity_synonym primary key (ix_idg_entity_id, ix_core_value_id))
 ;
 
-create table ix_idg_target_annotation (
+create table ix_idg_entity_property (
   ix_idg_entity_id               bigint not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_idg_target_annotation primary key (ix_idg_entity_id, ix_core_value_id))
+  constraint pk_ix_idg_entity_property primary key (ix_idg_entity_id, ix_core_value_id))
 ;
 
-create table ix_idg_target_publication (
+create table ix_idg_entity_annotation (
+  ix_idg_entity_id               bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_entity_annotation primary key (ix_idg_entity_id, ix_core_value_id))
+;
+
+create table ix_idg_entity_publication (
   ix_idg_entity_id               bigint not null,
   ix_core_publication_id         bigint not null,
-  constraint pk_ix_idg_target_publication primary key (ix_idg_entity_id, ix_core_publication_id))
+  constraint pk_ix_idg_entity_publication primary key (ix_idg_entity_id, ix_core_publication_id))
 ;
 
-create table ix_idg_target_predicate (
+create table ix_idg_entity_predicate (
   ix_idg_entity_id               bigint not null,
   ix_core_predicate_id           bigint not null,
-  constraint pk_ix_idg_target_predicate primary key (ix_idg_entity_id, ix_core_predicate_id))
+  constraint pk_ix_idg_entity_predicate primary key (ix_idg_entity_id, ix_core_predicate_id))
 ;
 
 create table ix_core_event_figure (
@@ -732,28 +743,30 @@ alter table ix_core_etagref add constraint fk_ix_core_etagref_etag_4 foreign key
 create index ix_ix_core_etagref_etag_4 on ix_core_etagref (etag_id);
 alter table ix_core_edit add constraint fk_ix_core_edit_principal_5 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
 create index ix_ix_core_edit_principal_5 on ix_core_edit (principal_id);
-alter table ix_ncats_funding add constraint fk_ix_ncats_funding_ix_ncats_g_6 foreign key (grant_id) references ix_ncats_grant (id) on delete restrict on update restrict;
-create index ix_ix_ncats_funding_ix_ncats_g_6 on ix_ncats_funding (grant_id);
-alter table ix_core_investigator add constraint fk_ix_core_investigator_organi_7 foreign key (organization_id) references ix_core_organization (id) on delete restrict on update restrict;
-create index ix_ix_core_investigator_organi_7 on ix_core_investigator (organization_id);
-alter table ix_core_predicate add constraint fk_ix_core_predicate_object_8 foreign key (object_id) references ix_core_xref (id) on delete restrict on update restrict;
-create index ix_ix_core_predicate_object_8 on ix_core_predicate (object_id);
-alter table ix_core_principal add constraint fk_ix_core_principal_selfie_9 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
-create index ix_ix_core_principal_selfie_9 on ix_core_principal (selfie_id);
-alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_p_10 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
-create index ix_ix_core_processingstatus_p_10 on ix_core_processingstatus (payload_id);
-alter table ix_ncats_project add constraint fk_ix_ncats_project_acl_11 foreign key (acl_id) references ix_core_acl (id) on delete restrict on update restrict;
-create index ix_ix_ncats_project_acl_11 on ix_ncats_project (acl_id);
-alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_12 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
-create index ix_ix_ncats_project_curation_12 on ix_ncats_project (curation_id);
-alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_13 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_pubauthor_author_13 on ix_core_pubauthor (author_id);
-alter table ix_core_publication add constraint fk_ix_core_publication_journa_14 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
-create index ix_ix_core_publication_journa_14 on ix_core_publication (journal_id);
-alter table ix_core_role add constraint fk_ix_core_role_principal_15 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_role_principal_15 on ix_core_role (principal_id);
-alter table ix_core_value add constraint fk_ix_core_value_curation_16 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
-create index ix_ix_core_value_curation_16 on ix_core_value (curation_id);
+alter table ix_core_figure add constraint fk_ix_core_figure_parent_6 foreign key (parent_id) references ix_core_figure (id) on delete restrict on update restrict;
+create index ix_ix_core_figure_parent_6 on ix_core_figure (parent_id);
+alter table ix_ncats_funding add constraint fk_ix_ncats_funding_ix_ncats_g_7 foreign key (grant_id) references ix_ncats_grant (id) on delete restrict on update restrict;
+create index ix_ix_ncats_funding_ix_ncats_g_7 on ix_ncats_funding (grant_id);
+alter table ix_core_investigator add constraint fk_ix_core_investigator_organi_8 foreign key (organization_id) references ix_core_organization (id) on delete restrict on update restrict;
+create index ix_ix_core_investigator_organi_8 on ix_core_investigator (organization_id);
+alter table ix_core_predicate add constraint fk_ix_core_predicate_object_9 foreign key (object_id) references ix_core_xref (id) on delete restrict on update restrict;
+create index ix_ix_core_predicate_object_9 on ix_core_predicate (object_id);
+alter table ix_core_principal add constraint fk_ix_core_principal_selfie_10 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
+create index ix_ix_core_principal_selfie_10 on ix_core_principal (selfie_id);
+alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_p_11 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
+create index ix_ix_core_processingstatus_p_11 on ix_core_processingstatus (payload_id);
+alter table ix_ncats_project add constraint fk_ix_ncats_project_acl_12 foreign key (acl_id) references ix_core_acl (id) on delete restrict on update restrict;
+create index ix_ix_ncats_project_acl_12 on ix_ncats_project (acl_id);
+alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_13 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_ncats_project_curation_13 on ix_ncats_project (curation_id);
+alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_14 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_pubauthor_author_14 on ix_core_pubauthor (author_id);
+alter table ix_core_publication add constraint fk_ix_core_publication_journa_15 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
+create index ix_ix_core_publication_journa_15 on ix_core_publication (journal_id);
+alter table ix_core_role add constraint fk_ix_core_role_principal_16 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_role_principal_16 on ix_core_role (principal_id);
+alter table ix_core_value add constraint fk_ix_core_value_curation_17 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_core_value_curation_17 on ix_core_value (curation_id);
 
 
 
@@ -809,21 +822,25 @@ alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_nc_01
 
 alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_idg_target_synonym add constraint fk_ix_idg_target_synonym_ix_i_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+alter table ix_idg_entity_synonym add constraint fk_ix_idg_entity_synonym_ix_i_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
 
-alter table ix_idg_target_synonym add constraint fk_ix_idg_target_synonym_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+alter table ix_idg_entity_synonym add constraint fk_ix_idg_entity_synonym_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_idg_target_annotation add constraint fk_ix_idg_target_annotation_i_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+alter table ix_idg_entity_property add constraint fk_ix_idg_entity_property_ix__01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
 
-alter table ix_idg_target_annotation add constraint fk_ix_idg_target_annotation_i_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+alter table ix_idg_entity_property add constraint fk_ix_idg_entity_property_ix__02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_idg_target_publication add constraint fk_ix_idg_target_publication__01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+alter table ix_idg_entity_annotation add constraint fk_ix_idg_entity_annotation_i_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
 
-alter table ix_idg_target_publication add constraint fk_ix_idg_target_publication__02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
+alter table ix_idg_entity_annotation add constraint fk_ix_idg_entity_annotation_i_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_idg_target_predicate add constraint fk_ix_idg_target_predicate_ix_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+alter table ix_idg_entity_publication add constraint fk_ix_idg_entity_publication__01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
 
-alter table ix_idg_target_predicate add constraint fk_ix_idg_target_predicate_ix_02 foreign key (ix_core_predicate_id) references ix_core_predicate (id) on delete restrict on update restrict;
+alter table ix_idg_entity_publication add constraint fk_ix_idg_entity_publication__02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
+
+alter table ix_idg_entity_predicate add constraint fk_ix_idg_entity_predicate_ix_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+
+alter table ix_idg_entity_predicate add constraint fk_ix_idg_entity_predicate_ix_02 foreign key (ix_core_predicate_id) references ix_core_predicate (id) on delete restrict on update restrict;
 
 alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
 
@@ -979,13 +996,15 @@ drop table if exists _ix_ncats_840372f9_2;
 
 drop table if exists ix_idg_entity;
 
-drop table if exists ix_idg_target_synonym;
+drop table if exists ix_idg_entity_synonym;
 
-drop table if exists ix_idg_target_annotation;
+drop table if exists ix_idg_entity_property;
 
-drop table if exists ix_idg_target_publication;
+drop table if exists ix_idg_entity_annotation;
 
-drop table if exists ix_idg_target_predicate;
+drop table if exists ix_idg_entity_publication;
+
+drop table if exists ix_idg_entity_predicate;
 
 drop table if exists ix_core_event;
 

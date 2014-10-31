@@ -21,26 +21,30 @@ public class Entity extends Model {
     public Long id;
 
     @Column(length=1024)
-    @Indexable(facet=true,suggest=true)
+    @Indexable(facet=true,suggest=true,name="Entity")
     public String name;
 
     @Lob
     public String description;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_target_synonym")
+    @JoinTable(name="ix_idg_entity_synonym")
     public List<Keyword> synonyms = new ArrayList<Keyword>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_target_annotation")
+    @JoinTable(name="ix_idg_entity_property")
+    public List<Value> properties = new ArrayList<Value>();
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_idg_entity_annotation")
     public List<Value> annotations = new ArrayList<Value>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_target_publication")
-    public List<Publication> references = new ArrayList<Publication>();
+    @JoinTable(name="ix_idg_entity_publication")
+    public List<Publication> publications = new ArrayList<Publication>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_target_predicate")
+    @JoinTable(name="ix_idg_entity_predicate")
     public List<Predicate> predicates = new ArrayList<Predicate>();
 
     public Entity () {}

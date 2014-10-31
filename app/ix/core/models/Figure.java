@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name="ix_core_figure")
+@Inheritance
+@DiscriminatorValue("FIG")
 public class Figure extends Model {
     @Id
     public Long id; // internal id

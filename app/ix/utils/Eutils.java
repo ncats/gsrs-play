@@ -41,7 +41,7 @@ public class Eutils {
         try {
             //org.w3c.dom.Document dom = getDOM (url);
             org.w3c.dom.Document dom = getDOM (pmid);
-            Logger.info("Parsing "+url+"...");
+            Logger.debug("Parsing "+url+"...");
             if (dom == null) {
                 Logger.debug("No publication found for "+pmid);
                 return null;

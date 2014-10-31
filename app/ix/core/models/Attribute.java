@@ -22,4 +22,9 @@ public class Attribute extends Model {
         this.name = name;
         this.value = value;
     }
+    public Attribute (Resource resource, String name, String value) {
+        this.resource = resource;
+        this.name = name;
+        this.value = value;
+    }
 }
