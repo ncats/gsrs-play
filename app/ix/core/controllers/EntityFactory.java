@@ -18,6 +18,7 @@ import play.data.*;
 import play.mvc.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -52,11 +53,12 @@ public class EntityFactory extends Controller {
 
 
     static class EntityMapper extends ObjectMapper {
-        public EntityMapper (boolean expand) {
+        public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
-            _serializationConfig = getSerializationConfig()
-                .withView(expand ? BeanViews.Full.class 
-                          : BeanViews.Compact.class);
+            _serializationConfig = getSerializationConfig();
+            for (Class v : views) {
+                _serializationConfig = _serializationConfig.withView(v);
+            }
         }
     }
 
@@ -141,7 +143,7 @@ public class EntityFactory extends Controller {
         }
         etag.save();
 
-        ObjectMapper mapper = new ObjectMapper ();
+        ObjectMapper mapper = getEntityMapper ();
         ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
         obj.put("content", mapper.valueToTree(results));
 
@@ -163,6 +165,33 @@ public class EntityFactory extends Controller {
             }
         }
         return q.toString();
+    }
+
+    static EntityMapper getEntityMapper () {
+        List<Class> views = new ArrayList<Class>();
+
+        Map<String, String[]> params = request().queryString();
+        String[] args = params.get("view");
+        if (args != null) {
+            Class[] classes = BeanViews.class.getClasses();
+            for (String a : args) {
+                int matches = 0;
+                for (Class c : classes) {
+                    if (a.equalsIgnoreCase(c.getSimpleName())) {
+                        views.add(c);
+                        ++matches;
+                    }
+                }
+
+                if (matches == 0)
+                    Logger.warn("Unsupported view: "+a);
+            }
+        }
+        else {
+            views.add(BeanViews.Compact.class);
+        }
+
+        return new EntityMapper (views.toArray(new Class[0]));
     }
 
     protected static <T> T getEntity (Long id, Model.Finder<Long, T> finder) {
@@ -244,7 +273,7 @@ public class EntityFactory extends Controller {
 
     protected static <T> Result get (Long id, String expand, 
                                      Model.Finder<Long, T> finder) {
-        ObjectMapper mapper = new ObjectMapper ();
+        ObjectMapper mapper = getEntityMapper ();
         if (expand != null && !"".equals(expand)) {
             Query<T> query = finder.query();
             Logger.debug(request().uri()+": expand="+expand);
@@ -376,7 +405,7 @@ public class EntityFactory extends Controller {
             return isRaw ? noContent () : ok ("null");
         }
         
-        ObjectMapper mapper = new ObjectMapper ();
+        ObjectMapper mapper = getEntityMapper ();
         JsonNode node = mapper.valueToTree(obj);
         return isRaw && !node.isContainerNode() 
             ? ok (node.asText()) : ok (node);
@@ -413,7 +442,7 @@ public class EntityFactory extends Controller {
                                         Model.Finder<Long, T> finder) {
         T inst = finder.ref(id);
         if (inst != null) {
-            ObjectMapper mapper = new ObjectMapper ();
+            ObjectMapper mapper = getEntityMapper ();
             return ok (mapper.valueToTree(inst));
         }
         return notFound (request().uri()+" not found");
@@ -426,7 +455,7 @@ public class EntityFactory extends Controller {
             .orderBy("id desc").findList();
         if (edits.isEmpty())
             return notFound (request().uri()+": No edit history found!");
-        ObjectMapper mapper = new ObjectMapper ();
+        ObjectMapper mapper = getEntityMapper ();
 
         return ok (mapper.valueToTree(edits));
     }
@@ -470,7 +499,7 @@ public class EntityFactory extends Controller {
 
         Logger.debug("Updating "+obj.getClass()+": id="+id+" field="+field);
         try {
-            ObjectMapper mapper = new ObjectMapper ();
+            ObjectMapper mapper = getEntityMapper ();
             JsonNode value = request().body().asJson();
 
             String[] paths = field.split("/");
@@ -621,7 +650,7 @@ public class EntityFactory extends Controller {
         Class<?> ftype = field.getType();
 
         Logger.debug("node: "+node+" "+ftype.getName()+"; val="+val);
-        ObjectMapper mapper = new ObjectMapper ();
+        ObjectMapper mapper = getEntityMapper ();
         if (node != null && !node.isNull()) {
             long id = node.asLong();
 

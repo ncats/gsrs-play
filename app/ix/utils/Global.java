@@ -10,6 +10,7 @@ import play.Logger;
 import play.db.DB;
 import play.libs.Json;
 import play.mvc.Http;
+import play.mvc.Controller;
 
 import com.avaje.ebean.config.ServerConfig;
 import com.avaje.ebean.EbeanServer;
@@ -31,9 +32,9 @@ public class Global extends GlobalSettings {
     public static final String PROPS_HOME = "inxight.home";
     public static final String PROPS_DEBUG = "inxight.debug";
 
-    static Global instance;
+    static Global _instance;
     public static Global getInstance () {
-        return instance;
+        return _instance;
     }
 
     private File home = new File (".");
@@ -45,6 +46,8 @@ public class Global extends GlobalSettings {
     private Set<Class<?>> resources;
     private String context;
     private String api;
+    private String host;
+
 
     protected void init (Application app) throws Exception {
         String h = app.configuration().getString(PROPS_HOME);
@@ -70,6 +73,18 @@ public class Global extends GlobalSettings {
         Logger.info("## Database vendor: "+meta.getDatabaseProductName()
                     +" "+meta.getDatabaseProductVersion());
 
+        host = app.configuration().getString("application.host");
+        if (host == null || host.length() == 0) {
+            host = null;
+        }
+        else {
+            int pos = host.length();
+            while (--pos > 0 && host.charAt(pos) == '/')
+                ;
+            host = host.substring(0, pos+1);
+        }
+        Logger.info("## Application host: "+host);
+
         context = app.configuration().getString("application.context");
         if (context == null) {
             context = "";
@@ -83,10 +98,12 @@ public class Global extends GlobalSettings {
         Logger.info("## Application context: "+context);
 
         api = app.configuration().getString("application.api");
-        if (api == null) {
+        if (api == null)
             api = "/api";
-        }
-        Logger.info("## Application api context: {context}"+api);
+        else if (api.charAt(0) != '/')
+            api = "/"+api;
+        Logger.info("## Application api context: "
+                    +((host != null ? host : "") + context+api));
 
         /*
         ServerConfig config = new ServerConfig ();
@@ -103,7 +120,7 @@ public class Global extends GlobalSettings {
 
     @Override
     public void onStart (Application app) {
-        if (instance == null) {
+        if (_instance == null) {
             try {
                 init (app);
             }
@@ -112,7 +129,7 @@ public class Global extends GlobalSettings {
             }
 
             Logger.info("Global instance "+this);
-            instance = this;
+            _instance = this;
         }
         
         /**
@@ -166,28 +183,46 @@ public class Global extends GlobalSettings {
     }
 
     public static String getRef (Object instance) {
+        if (instance == null)
+            return null;
+
         Global g = getInstance ();
         Class cls = instance.getClass();
-        if (null == cls.getAnnotation(Entity.class))
+        if (null == cls.getAnnotation(Entity.class)) {
+            Logger.error(instance+" isn't an Entity!");
             throw new IllegalArgumentException ("Instance is not an Entity");
+        }
 
         String name = g.names.get(cls.getName());
-        if (name == null)
+        if (name == null) {
+            Logger.error("Class "+cls.getName()+" isn't a NamedResource!");
             throw new IllegalArgumentException
                 ("Class "+cls.getName()+" isn't a NamedResource!");
+        }
 
         try {
             Method m = cls.getMethod("getId");
-            if (m == null)
+            if (m == null) {
+                Logger.error("Entity doesn't have getId: "+instance);
                 throw new IllegalArgumentException
                     ("Entity type does not have getId method!");
+            }
             Object id = m.invoke(instance);
-            return g.context+g.api+"/"+name+"("+id+")";
+            return getApiBase()+"/"+name+"("+id+")";
         }
         catch (Exception ex) {
             Logger.trace("Unable to invoke getId", ex);
             throw new IllegalArgumentException (ex);
         }
+    }
+
+    public static String getApiBase () {
+        Http.Request req = Controller.request();
+        String h = _instance.host;
+        if (h == null) {
+            h = (req.secure()? "https":"http") + "://"+req.host();
+        }
+        return h+_instance.context+_instance.api;
     }
 
     public static String getRef (String type, long id) {

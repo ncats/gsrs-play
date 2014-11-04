@@ -25,7 +25,7 @@ import ix.utils.Global;
 import ix.utils.Util;
 import ix.core.search.TextIndexer;
 
-public class SearchFactory extends Controller {
+public class SearchFactory extends EntityFactory {
     static TextIndexer getIndexer () {
         return Global.getInstance().getTextIndexer();
     }
@@ -52,13 +52,13 @@ public class SearchFactory extends Controller {
             TextIndexer.SearchResult result = 
                 getIndexer().search(q, top, skip, fdim, drilldown);
 
-            ObjectMapper mapper = new ObjectMapper ();
+            ObjectMapper mapper = getEntityMapper ();
             ArrayNode nodes = mapper.createArrayNode();
             for (Object obj : result.getMatches()) {
                 if (obj != null) {
                     try {
                         ObjectNode node = (ObjectNode)mapper.valueToTree(obj);
-                        node.put("_kind", obj.getClass().getName());
+                        node.put("kind", obj.getClass().getName());
                         nodes.add(node);
                     }
                     catch (Exception ex) {
@@ -74,6 +74,7 @@ public class SearchFactory extends Controller {
             etag.top = top;
             etag.skip = skip;
             etag.count = nodes.size();
+            etag.total = result.count();
             etag.uri = request().uri();
             etag.path = request().path();
             etag.sha1 = Util.sha1Request(request(), "q", "facet");

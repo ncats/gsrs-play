@@ -137,6 +137,7 @@ public class TextIndexer {
         Set<String> drilldown = new TreeSet<String>();
         List<Facet> facets = new ArrayList<Facet>();
         List matches = new ArrayList ();
+        int count;
         
         SearchResult (String query, List<String> drilldown) {
             this.query = query;
@@ -149,6 +150,7 @@ public class TextIndexer {
         public List getMatches () { return matches; }
         public int size () { return matches.size(); }
         public boolean isEmpty () { return matches.isEmpty(); }
+        public int count () { return count; }
     }
 
     public static class SuggestResult {
@@ -498,6 +500,7 @@ public class TextIndexer {
                 hits = swResult.hits;
             }
 
+            searchResult.count = hits.totalHits;
             int size = Math.max(0, Math.min(skip+top, hits.totalHits));
             for (int i = skip; i < size; ++i) {
                 Document doc = searcher.doc(hits.scoreDocs[i].doc);
