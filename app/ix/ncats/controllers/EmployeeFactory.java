@@ -18,6 +18,10 @@ public class EmployeeFactory extends EntityFactory {
     static final public Model.Finder<Long, Employee> finder = 
         new Model.Finder(Long.class, Employee.class);
 
+    public interface Callback {
+        public boolean ok (Employee e);
+    }
+
     public static List<Employee> all () { return all (finder); }
     public static Employee getEmployee (Long id) {
         return getEntity (id, finder);
@@ -68,6 +72,11 @@ public class EmployeeFactory extends EntityFactory {
     }
 
     public static int createIfEmpty (String username, String password) {
+        return createIfEmpty (username, password, null);
+    }
+
+    public static int createIfEmpty (String username, 
+                                     String password, Callback callback) {
         Integer count = getRowCount ();
         if (count == null || count == 0) {
             try {            
@@ -75,7 +84,12 @@ public class EmployeeFactory extends EntityFactory {
                     new NIHLdapConnector (username, password);
                 List<Employee> employees = ldap.list();
                 for (Employee e : employees) {
-                    e.save();
+                    if (callback == null 
+                        || (callback != null && callback.ok(e))) {
+                        Logger.info("lastname=\""+e.lastname
+                                    +"\" forename=\""+e.forename+"\"");
+                        e.save();
+                    }
                 }
                 count = employees.size();
             }

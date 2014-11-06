@@ -4,6 +4,7 @@ import java.io.*;
 import java.security.*;
 import java.util.*;
 import java.sql.*;
+import java.net.*;
 
 import play.*;
 import play.db.ebean.*;
@@ -27,6 +28,7 @@ import ix.core.models.Attribute;
 import ix.core.models.Thumbnail;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
+import ix.ncats.models.Program;
 
 import ix.core.controllers.PublicationFactory;
 
@@ -39,6 +41,8 @@ public class Migration extends Controller {
         new Model.Finder(Long.class, Employee.class);
     static final Model.Finder<Long, Resource> resFinder = 
         new Model.Finder(Long.class, Resource.class);
+    static final Model.Finder<Long, Program> progFinder = 
+        new Model.Finder(Long.class, Program.class);
 
     static {
         try {
@@ -73,7 +77,12 @@ public class Migration extends Controller {
             Logger.debug("Migrating projects..."+projects);
 
             int count = EmployeeFactory.createIfEmpty
-                (ldapUsername, ldapPassword);
+                (ldapUsername, ldapPassword, new EmployeeFactory.Callback() {
+                        public boolean ok (Employee e) {
+                            updateProfile (e);
+                            return true;
+                        }
+                    });
             Logger.debug(count+ " employees retrieved!");
 
             int pubs = migratePublications (con);
@@ -120,9 +129,28 @@ public class Migration extends Controller {
                     proj.title = title;
                     proj.objective = rset.getString("objective");
                     proj.scope = rset.getString("scope");
+                    proj.isPublic = "Y".equalsIgnoreCase
+                        (rset.getString("is_public"));
+
                     Event ev = new Event ();
                     ev.title = rset.getString("status");
                     proj.milestones.add(ev);
+
+                    String progs = rset.getString("programs");
+                    if (progs != null) {
+                        for (String p : progs.split(",")) {
+                            Program prog = progFinder.where()
+                                .eq("name", p.trim()).findUnique();
+                            if (prog == null) {
+                                prog = new Program (p.trim());
+                                prog.save();
+                                Logger.debug
+                                    ("New program \""+p+"\" ("
+                                     +prog.id+") added!");
+                            }
+                            proj.programs.add(prog);
+                        }
+                    }
 
                     long pid = rset.getLong("proj_id");
                     pstm.setLong(1, pid);
@@ -133,6 +161,7 @@ public class Migration extends Controller {
                         String value = rs.getString("value");
 
                         Keyword key = new Keyword (value);
+                        /*
                         Attribute attr = new Attribute ("DOID", tag);
                         attr.resource = doResource;
                         //attr.save();
@@ -144,9 +173,12 @@ public class Migration extends Controller {
                              +tag);
                         attr.resource = doResource;
                         //attr.save();
-                        key.attrs.add(attr);
+                                                key.attrs.add(attr);
 
                         proj.annotations.add(key);
+                        */
+                        if (!"disease".equalsIgnoreCase(value))
+                            proj.keywords.add(key);
                     }
                     rs.close();
 
@@ -222,6 +254,9 @@ public class Migration extends Controller {
                     catch (IOException ex) {
                         Logger.trace("Text search failed", ex);
                     }
+                }
+                else {
+                    updateProfile (employees.iterator().next());
                 }
             }
             rset.close();
@@ -395,5 +430,87 @@ public class Migration extends Controller {
     public static Result index () {
         return ok (ix.ncats.views.html.migration.render
                    ("Project/Publication Migration"));
+    }
+
+    public static void updateProfile (Employee empl) {
+        if (empl.lastname.equalsIgnoreCase("Carrillo-Carrasco")) {
+            empl.suffix = "M.D.";
+            empl.url = "http://www.ncats.nih.gov/about/org/profiles/carrillo-carrasco.html";
+            empl.biography = 
+"Nuria Carrillo-Carrasco leads the clinical team for the Therapeutics for Rare and Neglected Diseases (TRND) program. The group conducts natural history studies and early-phase clinical trials needed to advance promising therapies for rare diseases, develops biomarkers, and identifies appropriate endpoints for clinical trials. Before she joined TRND, Carrillo-Carrasco studied clinical and translational aspects of inborn errors of metabolism and gene therapy.\n"+
+"Carrillo-Carrasco's research focuses on therapeutic development for rare genetic diseases, including GNE myopathy, creatine transporter defect and other inborn errors of metabolism. She is a faculty member for the Medical Biochemical Genetics fellowship program at NIH. Carrillo-Carrasco earned her M.D. from the National Autonomous University of Mexico and completed her pediatrics residency at Georgetown University Hospital. She is board certified in pediatrics, medical genetics and biochemical genetics.";
+            empl.title = 
+"Leader, Clinical Group, Therapeutics for Rare and Neglected Diseases\n"+
+"Division of Pre-Clinical Innovation\n"+
+"National Center for Advancing Translational Sciences\n"+
+"National Institutes of Health";
+            empl.research = 
+"Carrillo-Carrasco is interested in addressing the challenges of developing therapeutics for rare diseases by improving drug development tools and the design of natural history studies and clinical trials for these diseases. Currently, she is the principal investigator of two studies of GNE myopathy: a natural history study and a clinical trial of ManNAc as a potential therapy for the disease. GNE myopathy is an extremely rare disorder that occurs in just one of every 1 million people and causes devastating progressive muscle weakness. No treatment exists for the disorder, which is caused by mutations in the GNE gene that lead to a defect in the sialic acid biosynthetic pathway. As part of the natural history study, Carrillo-Carrasco has characterized more than 40 patients on clinical, functional and molecular grounds and is evaluating appropriate outcome measures to be used in clinical trials, developing better diagnostic tools and discovering biomarkers for the disease.";
+        }
+        else if (empl.lastname.equalsIgnoreCase("Gee")) {
+            empl.url = "http://www.ncats.nih.gov/about/org/profiles/gee.html";
+            empl.suffix = "M.S.";
+            empl.title =
+"Research Scientist, Biology\n"+
+"Division of Pre-Clinical Innovation\n"+
+"National Center for Advancing Translational Sciences\n"+
+"National Institutes of Health";
+            empl.biography =
+"Amanda Wagner Gee joined NCATS in 2014. She works on assay development for cell-based high-content and high-throughput screening. Prior to joining NCATS, Gee worked in the laboratory of Lee Rubin, Ph.D., at the Harvard Stem Cell Institute, using directed differentiation, primary tissue isolation and image-based high content screening to study neural and muscular disease. She received her M.S. in cell biology at Duke University, where she studied BMP4 signaling and sensory neuron patterning in peripheral nervous system development in the laboratory of Fan Wang, Ph.D.";
+            empl.research = 
+"Gee has a particular interest in adult stem cells and degenerative diseases. She has studied the neural and muscular degeneration in spinal muscular atrophy, a childhood-onset disease. She also has researched muscle degeneration and weakness in sarcopenia, a phenomenon associated with aging. For that project, she designed and executed an image-based screen on primary adult muscle stem cells, the lead compound from which is currently under evaluation in animals as a potential treatment. Her experience also includes research on amyotrophic lateral sclerosis and Huntington's disease.\n"+
+"Gee has worked with adult and embryonic stem cells, and she appreciates their potential as well as their occasional quirks. At NCATS, she is collaborating on projects using induced pluripotent stem cell-derived patient cells, primary cells, biosensors for vesicle and receptor trafficking, and image-based screening techniques. Gee has been impressed by the diversity of expertise under one roof at NCATS, and she is excited by the opportunity to learn about and work on so many different topics.";
+        }
+        else if (empl.lastname.equalsIgnoreCase("gerhold")) {
+            empl.selfie = createFigure
+                ("http://www.ncats.nih.gov/about/org/profiles/images/GerholdD.jpg");
+            empl.suffix = "Ph.D.";
+            empl.url = "http://www.ncats.nih.gov/about/org/profiles/gerhold.html";
+            empl.title = 
+"Leader, Genomic Toxicology\n"+
+"Division of Pre-Clinical Innovation\n"+
+"National Center for Advancing Translational Sciences\n"+
+"National Institutes of Health";
+            empl.biography =
+"David Gerhold is a staff genomic toxicologist at NCATS. He is developing in vitro methods to identify toxic compounds by introducing differentiating stem cell models and the gene expression technologies RNAseq and RASL-Seq. These new technologies support efforts to reach several goals:\n"+
+"Identify potentially toxic chemicals in the environment through the Toxicology in the 21st Century consortium;\n"+
+"Identify biomarkers of genetic susceptibility to tobacco; and\n"+
+"Facilitate drug development through the Therapeutics for Rare and Neglected Diseases program.\n"+
+"Previously, Gerhold pioneered gene expression microarray technology at Merck Research Laboratories, applying this expertise to identify kidney injury biomarkers. He subsequently co-led the Kidney Biomarker Working Group within the Predictive Safety Testing Consortium, collaborating across the pharmaceutical industry to qualify seven biomarkers with the Food and Drug Administration and publishing the findings in 2010. Gerhold also worked as a liaison with clinical nephrologists initiating translational studies to improve nephrology standard of care.";
+            empl.research = 
+"Gerhold's unifying vision is to develop a high-throughput, robust gene expression platform and core facility. NCATS researchers will use the RASL-Seq platform to gather thorough dose- and time-response data, as well as extensive reference data sets, to unlock the meaning behind these data. Such a platform can help show the toxic mechanisms of drugs and environmental contaminants alike.\n"+
+"Gerhold uses RASL-Seq to determine the toxic mechanisms by which environmental contaminants affect neurons, liver hepatocytes and other cell types. These studies demand adoption and production of improved cellular models for toxic responses and for diseases, such as models derived from immortalized cells and induced-pluripotent stem cells (iPSC). Gerhold also uses iPSC technology to generate \"disease-in-a-dish\" models. For example, both RASL-Seq and RNAseq help researchers understand the effects of tobacco components on vascular endothelial cells. By producing these cells using iPSC from smokers with and without vascular disease, Gerhold can determine whether some patients are genetically susceptible or resistant to the disease.";
+        }
+    }
+
+    static Figure createFigure (String url) {
+        Figure fig = null;
+        try {
+            URL u = new URL (url);
+            URLConnection con = u.openConnection();
+            fig = new Figure ();
+            fig.mimeType = con.getContentType();
+            fig.size = con.getContentLength();
+
+            InputStream is = con.getInputStream();
+            byte[] buf = new byte[1024];
+            MessageDigest md = MessageDigest.getInstance("sha1");
+            ByteArrayOutputStream bos = new ByteArrayOutputStream (fig.size);
+            for (int nb; (nb = is.read(buf, 0, buf.length)) > 0; ) {
+                bos.write(buf, 0, nb);
+                md.update(buf, 0, nb);
+            }
+            fig.data = bos.toByteArray();
+            StringBuilder sb = new StringBuilder ();
+            byte[] digest = md.digest();
+            for (int i = 0; i < digest.length; ++i)
+                sb.append(String.format("%1$02x", digest[i]&0xff));
+            fig.sha1 = sb.toString();
+            Logger.debug("data="+fig.data.length+" sha1="+fig.sha1);
+        }
+        catch (Throwable ex) {
+            Logger.trace("Can't fetch figure from "+url, ex);
+        }
+        return fig;
     }
 }

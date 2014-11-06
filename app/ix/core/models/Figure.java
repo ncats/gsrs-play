@@ -2,7 +2,11 @@ package ix.core.models;
 
 import play.db.ebean.Model;
 import javax.persistence.*;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_figure")
@@ -26,5 +30,9 @@ public class Figure extends Model {
     public Figure () {}
     public Figure (String caption) {
         this.caption = caption;
+    }
+
+    public String getUrl () {
+        return url != null ? url : (Global.getRef(this) + "?format=image");
     }
 }

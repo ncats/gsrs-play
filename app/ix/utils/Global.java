@@ -193,7 +193,16 @@ public class Global extends GlobalSettings {
             throw new IllegalArgumentException ("Instance is not an Entity");
         }
 
+
         String name = g.names.get(cls.getName());
+        if (name == null) {
+            // climb up the inheritance ladder to find the first matches
+            for (Class c = cls.getSuperclass(); 
+                 name == null; c = c.getSuperclass()) {
+                name = g.names.get(c.getName());
+            }
+        }
+
         if (name == null) {
             Logger.error("Class "+cls.getName()+" isn't a NamedResource!");
             throw new IllegalArgumentException

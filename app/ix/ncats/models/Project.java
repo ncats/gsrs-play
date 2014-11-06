@@ -29,17 +29,24 @@ public class Project extends Model {
     @Lob
     public String opportunities; // collaboration opportunities
     public String team;
-
-    // access control
-    @ManyToOne(cascade=CascadeType.ALL)
-    public Acl acl;
+    public boolean isPublic = true;
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Curation curation;
 
     @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ncats_project_program")
+    public List<Program> programs = new ArrayList<Program>();
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ncats_project_keyword")
+    public List<Keyword> keywords = new ArrayList<Keyword>();
+
+    /*
+    @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ncats_project_annotation")
     public List<Value> annotations = new ArrayList<Value>();
+    */
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ncats_project_member")

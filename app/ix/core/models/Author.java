@@ -10,6 +10,9 @@ public class Author extends Principal {
     public String forename;
     public String initials;
 
+    @Column(length=20)
+    public String suffix; // Ph.D, M.D., etc.
+
     @Column(length=1024)
     @Indexable(facet=true,name="Affiliation")
     public String affiliation;

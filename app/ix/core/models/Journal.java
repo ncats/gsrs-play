@@ -15,7 +15,7 @@ public class Journal extends Model {
     public String volume;
     public String issue;
 
-    @Indexable(facet=true,name="Published")
+    @Indexable(facet=true,name="Year")
     public Integer year;
 
     @Column(length=10)

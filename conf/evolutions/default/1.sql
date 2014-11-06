@@ -296,6 +296,7 @@ create table ix_core_principal (
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
+  suffix                    varchar(20),
   affiliation               varchar(1024),
   orcid                     varchar(20),
   url                       varchar(1024),
@@ -305,6 +306,7 @@ create table ix_core_principal (
   phone                     varchar(15),
   biography                 clob,
   title                     varchar(255),
+  research                  clob,
   is_lead                   boolean,
   dept                      integer,
   role                      integer,
@@ -323,6 +325,13 @@ create table ix_core_processingstatus (
   constraint pk_ix_core_processingstatus primary key (id))
 ;
 
+create table ix_ncats_program (
+  id                        bigint not null,
+  name                      varchar(64),
+  fullname                  varchar(255),
+  constraint pk_ix_ncats_program primary key (id))
+;
+
 create table ix_ncats_project (
   id                        bigint not null,
   title                     varchar(1024),
@@ -330,7 +339,7 @@ create table ix_ncats_project (
   scope                     clob,
   opportunities             clob,
   team                      varchar(255),
-  acl_id                    bigint,
+  is_public                 boolean,
   curation_id               bigint,
   constraint pk_ix_ncats_project primary key (id))
 ;
@@ -580,10 +589,16 @@ create table ix_core_predicate_annotation (
   constraint pk_ix_core_predicate_annotation primary key (ix_core_predicate_id, ix_core_value_id))
 ;
 
-create table ix_ncats_project_annotation (
+create table ix_ncats_project_program (
+  ix_ncats_project_id            bigint not null,
+  ix_ncats_program_id            bigint not null,
+  constraint pk_ix_ncats_project_program primary key (ix_ncats_project_id, ix_ncats_program_id))
+;
+
+create table ix_ncats_project_keyword (
   ix_ncats_project_id            bigint not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_ncats_project_annotation primary key (ix_ncats_project_id, ix_core_value_id))
+  constraint pk_ix_ncats_project_keyword primary key (ix_ncats_project_id, ix_core_value_id))
 ;
 
 create table ix_ncats_project_member (
@@ -717,6 +732,8 @@ create sequence ix_core_principal_seq;
 
 create sequence ix_core_processingstatus_seq;
 
+create sequence ix_ncats_program_seq;
+
 create sequence ix_ncats_project_seq;
 
 create sequence ix_core_pubauthor_seq;
@@ -755,18 +772,16 @@ alter table ix_core_principal add constraint fk_ix_core_principal_selfie_10 fore
 create index ix_ix_core_principal_selfie_10 on ix_core_principal (selfie_id);
 alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_p_11 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
 create index ix_ix_core_processingstatus_p_11 on ix_core_processingstatus (payload_id);
-alter table ix_ncats_project add constraint fk_ix_ncats_project_acl_12 foreign key (acl_id) references ix_core_acl (id) on delete restrict on update restrict;
-create index ix_ix_ncats_project_acl_12 on ix_ncats_project (acl_id);
-alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_13 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
-create index ix_ix_ncats_project_curation_13 on ix_ncats_project (curation_id);
-alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_14 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_pubauthor_author_14 on ix_core_pubauthor (author_id);
-alter table ix_core_publication add constraint fk_ix_core_publication_journa_15 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
-create index ix_ix_core_publication_journa_15 on ix_core_publication (journal_id);
-alter table ix_core_role add constraint fk_ix_core_role_principal_16 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_role_principal_16 on ix_core_role (principal_id);
-alter table ix_core_value add constraint fk_ix_core_value_curation_17 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
-create index ix_ix_core_value_curation_17 on ix_core_value (curation_id);
+alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_12 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_ncats_project_curation_12 on ix_ncats_project (curation_id);
+alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_13 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_pubauthor_author_13 on ix_core_pubauthor (author_id);
+alter table ix_core_publication add constraint fk_ix_core_publication_journa_14 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
+create index ix_ix_core_publication_journa_14 on ix_core_publication (journal_id);
+alter table ix_core_role add constraint fk_ix_core_role_principal_15 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_role_principal_15 on ix_core_role (principal_id);
+alter table ix_core_value add constraint fk_ix_core_value_curation_16 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_core_value_curation_16 on ix_core_value (curation_id);
 
 
 
@@ -886,9 +901,13 @@ alter table ix_core_predicate_annotation add constraint fk_ix_core_predicate_ann
 
 alter table ix_core_predicate_annotation add constraint fk_ix_core_predicate_annotati_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_ncats_project_annotation add constraint fk_ix_ncats_project_annotatio_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+alter table ix_ncats_project_program add constraint fk_ix_ncats_project_program_i_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
 
-alter table ix_ncats_project_annotation add constraint fk_ix_ncats_project_annotatio_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+alter table ix_ncats_project_program add constraint fk_ix_ncats_project_program_i_02 foreign key (ix_ncats_program_id) references ix_ncats_program (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_keyword add constraint fk_ix_ncats_project_keyword_i_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_keyword add constraint fk_ix_ncats_project_keyword_i_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
 alter table ix_ncats_project_member add constraint fk_ix_ncats_project_member_ix_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
 
@@ -1058,9 +1077,13 @@ drop table if exists ix_core_principal;
 
 drop table if exists ix_core_processingstatus;
 
+drop table if exists ix_ncats_program;
+
 drop table if exists ix_ncats_project;
 
-drop table if exists ix_ncats_project_annotation;
+drop table if exists ix_ncats_project_program;
+
+drop table if exists ix_ncats_project_keyword;
 
 drop table if exists ix_ncats_project_member;
 
@@ -1157,6 +1180,8 @@ drop sequence if exists ix_core_predicate_seq;
 drop sequence if exists ix_core_principal_seq;
 
 drop sequence if exists ix_core_processingstatus_seq;
+
+drop sequence if exists ix_ncats_program_seq;
 
 drop sequence if exists ix_ncats_project_seq;
 

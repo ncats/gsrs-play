@@ -24,6 +24,9 @@ public class NIHAuthor extends Author {
     public String biography;
     public String title;
 
+    @Lob
+    public String research;
+
     public NIHAuthor () {}
     public NIHAuthor (String lastname, String forename) {
         super (lastname, forename);

@@ -831,24 +831,30 @@ public class TextIndexer {
                      org.apache.lucene.document.Field.Store store) {
         String name = path.iterator().next();
         String full = toPath (path);
+        boolean asText = true;
 
         if (value instanceof Long) {
             fields.add(new NumericDocValuesField (full, (Long)value));
             fields.add(new LongField (name, (Long)value, store));
+            asText = indexable.facet();
         }
         else if (value instanceof Integer) {
             fields.add(new IntDocValuesField (full, (Integer)value));
             fields.add(new IntField (name, (Integer)value, store));
+            asText = indexable.facet();
         }
         else if (value instanceof Float) {
             fields.add(new FloatDocValuesField (full, (Float)value));
             fields.add(new FloatField (name, (Float)value, store));
+            asText = false;
         }
         else if (value instanceof Double) {
             fields.add(new DoubleDocValuesField (full, (Double)value));
             fields.add(new DoubleField (name, (Double)value, store));
+            asText = false;
         }
-        else {
+
+        if (asText) {
             String text = value.toString();
             String dim = indexable.name();
             if (dim.equals(""))
