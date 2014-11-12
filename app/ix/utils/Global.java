@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import play.GlobalSettings;
 import play.Application;
 import play.Logger;
+import play.db.ebean.EbeanPlugin;
 import play.db.DB;
 import play.libs.Json;
 import play.mvc.Http;
@@ -16,12 +17,14 @@ import com.avaje.ebean.config.ServerConfig;
 import com.avaje.ebean.EbeanServer;
 import com.avaje.ebean.EbeanServerFactory;
 import com.avaje.ebean.Ebean;
+import com.avaje.ebean.SqlQuery;
+import com.avaje.ebean.SqlRow;
 
 import javax.sql.DataSource;
 import java.sql.DatabaseMetaData;
 import javax.persistence.Entity;
 
-import ix.core.search.TextIndexer;
+import ix.core.plugins.IxContext;
 import ix.core.NamedResource;
 import ix.core.controllers.RouteFactory;
 
@@ -29,81 +32,22 @@ import org.reflections.Reflections;
 
 
 public class Global extends GlobalSettings {
-    public static final String PROPS_HOME = "inxight.home";
-    public static final String PROPS_DEBUG = "inxight.debug";
-
     static Global _instance;
     public static Global getInstance () {
         return _instance;
     }
 
-    private File home = new File (".");
-    private TextIndexer textIndexer;
-    private int debug;
-
     // lookup of class name to resource
     private Map<String, String> names = new TreeMap<String, String>();
     private Set<Class<?>> resources;
-    private String context;
-    private String api;
-    private String host;
-
+    private IxContext ctx;
 
     protected void init (Application app) throws Exception {
-        String h = app.configuration().getString(PROPS_HOME);
-        if (h != null) {
-            home = new File (h);
-            if (!home.exists())
-                home.mkdirs();
+        ctx = app.plugin(IxContext.class);
+        if (ctx == null) {
+            throw new IllegalStateException
+                ("Plugin "+IxContext.class.getName()+" is not loaded!");
         }
-
-        if (!home.exists())
-            throw new IllegalArgumentException
-                (PROPS_HOME+" \""+h+"\" is not accessible!");
-        Logger.info("## "+PROPS_HOME+": \""+home.getCanonicalPath()+"\"");
-
-        Integer level = app.configuration().getInt(PROPS_DEBUG);
-        if (level != null)
-            this.debug = level;
-        Logger.info("## "+PROPS_DEBUG+": "+debug); 
-
-        textIndexer = TextIndexer.getInstance(home);
-        
-        DatabaseMetaData meta = DB.getConnection().getMetaData();
-        Logger.info("## Database vendor: "+meta.getDatabaseProductName()
-                    +" "+meta.getDatabaseProductVersion());
-
-        host = app.configuration().getString("application.host");
-        if (host == null || host.length() == 0) {
-            host = null;
-        }
-        else {
-            int pos = host.length();
-            while (--pos > 0 && host.charAt(pos) == '/')
-                ;
-            host = host.substring(0, pos+1);
-        }
-        Logger.info("## Application host: "+host);
-
-        context = app.configuration().getString("application.context");
-        if (context == null) {
-            context = "";
-        }
-        else {
-            int pos = context.length();
-            while (--pos > 0 && context.charAt(pos) == '/')
-                ;
-            context = context.substring(0, pos+1);
-        }
-        Logger.info("## Application context: "+context);
-
-        api = app.configuration().getString("application.api");
-        if (api == null)
-            api = "/api";
-        else if (api.charAt(0) != '/')
-            api = "/"+api;
-        Logger.info("## Application api context: "
-                    +((host != null ? host : "") + context+api));
 
         /*
         ServerConfig config = new ServerConfig ();
@@ -120,16 +64,13 @@ public class Global extends GlobalSettings {
 
     @Override
     public void onStart (Application app) {
-        if (_instance == null) {
-            try {
-                init (app);
-            }
-            catch (Exception ex) {
-                Logger.trace("Can't initialize app!", ex);
-            }
-
+        try {
+            init (app);
             Logger.info("Global instance "+this);
             _instance = this;
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't initialize app!", ex);
         }
         
         /**
@@ -142,11 +83,23 @@ public class Global extends GlobalSettings {
         for (Class c : resources) {
             NamedResource res = 
                 (NamedResource)c.getAnnotation(NamedResource.class);
-            Logger.info("+ "+c.getName()+"\n  => "+context+"/"+res.name()
+            Logger.info("+ "+c.getName()+"\n  => "
+                        +ctx.context()+"/"+ctx.api()+"/"+res.name()
                         +"["+res.type().getName()+"]");
             names.put(res.type().getName(), res.name());
             RouteFactory.register(res.name(), c);
         }
+
+        /*
+        EbeanPlugin eb = new EbeanPlugin (app);
+        EbeanServer server = Ebean.getServer(eb.defaultServer());
+        SqlQuery query = 
+            server.createSqlQuery("select distinct term from ix_core_value");
+        List<SqlRow> rows = query.findList();
+        for (SqlRow r : rows) {
+            Logger.info(r.getString("term"));
+        }
+        */
 
         /*
         Logger.info("## starting app: secret=\""
@@ -157,8 +110,6 @@ public class Global extends GlobalSettings {
     @Override
     public void onStop (Application app) {
         Logger.info("## stopping");
-        if (textIndexer != null)
-            textIndexer.shutdown();
     }
 
     /*
@@ -169,9 +120,14 @@ public class Global extends GlobalSettings {
     }
     */
 
-    public TextIndexer getTextIndexer () { return textIndexer; }
     public boolean debug (int level) { 
-        return debug >= level; 
+        return ctx.debug(level); 
+    }
+
+    public IxContext context () { return ctx; }
+
+    public static IxContext getContext () {
+        return getInstance().context();
     }
 
     public static boolean DEBUG (int level) {
@@ -179,7 +135,7 @@ public class Global extends GlobalSettings {
     }
 
     public static String getResource (String type) {
-        return getInstance().context+"/"+getInstance().names.get(type);
+        return getInstance().ctx.context()+"/"+getInstance().names.get(type);
     }
 
     public static String getRef (Object instance) {
@@ -227,11 +183,11 @@ public class Global extends GlobalSettings {
 
     public static String getApiBase () {
         Http.Request req = Controller.request();
-        String h = _instance.host;
+        String h = _instance.ctx.host();
         if (h == null) {
             h = (req.secure()? "https":"http") + "://"+req.host();
         }
-        return h+_instance.context+_instance.api;
+        return h+_instance.ctx.context()+_instance.ctx.api();
     }
 
     public static String getRef (String type, long id) {
@@ -240,6 +196,6 @@ public class Global extends GlobalSettings {
         if (name == null)
             throw new IllegalArgumentException
                 ("Class "+type+" isn't a NamedResource!");
-        return g.context+g.api+"/"+name+"("+id+")";
+        return g.ctx.context()+g.ctx.api()+"/"+name+"("+id+")";
     }
 }

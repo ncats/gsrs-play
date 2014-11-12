@@ -12,6 +12,9 @@ public class Keyword extends Value {
     public String term;
 
     public Keyword () {}
+    public Keyword (String term) {
+        this.term = term;
+    }
     public Keyword (String term, Attribute... attrs) {
         for (Attribute a : attrs) 
             this.attrs.add(a);

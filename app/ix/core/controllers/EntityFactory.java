@@ -62,12 +62,11 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static <T> Result page (int top, int skip, 
-                                      final String expand,
-                                      final String filter,
-                                      final Model.Finder<Long, T> finder) {
+    protected static <T> List<T> filter (int top, int skip, 
+                                         String expand,
+                                         String filter, 
+                                         Model.Finder<Long, T> finder) {
 
-        //if (select != null) finder.select(select);
         Logger.debug(request().uri()+": top="+top+" skip="+skip
                      +" expand="+expand+" filter="+filter);
         Query<T> query = finder.query();
@@ -89,6 +88,17 @@ public class EntityFactory extends Controller {
             .setMaxRows(top)
             .findList();
 
+        return results;
+    }
+
+    protected static <T> Result page (int top, int skip, 
+                                      final String expand,
+                                      final String filter,
+                                      final Model.Finder<Long, T> finder) {
+
+        //if (select != null) finder.select(select);
+        List<T> results = filter (top, skip, expand, filter, finder);
+
         final ETag etag = new ETag ();
         etag.top = top;
         etag.skip = skip;
@@ -100,6 +110,8 @@ public class EntityFactory extends Controller {
         // number of results
         etag.sha1 = Util.sha1Request(request(), "filter");
         etag.method = request().method();
+        etag.filter = filter;
+
         if (filter == null)
             etag.total = finder.findRowCount();
         else {
@@ -265,6 +277,13 @@ public class EntityFactory extends Controller {
                 .findList();
         }
         return results;
+    }
+
+    protected static <T> Result rss (int top, int skip, final String filter,
+                                     final Model.Finder<Long, T> finder) {
+        response().setContentType("application/rss+xml");
+        List<T> results = filter (top, skip, null, filter, finder);
+        return ok("FIX ME!");
     }
 
     protected static <T> Result get (Long id, Model.Finder<Long, T> finder) {

@@ -3,6 +3,10 @@ package ix.core.models;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import ix.utils.Global;
+
 @Entity
 @Table(name="ix_core_pubauthor")
 public class PubAuthor extends Model {

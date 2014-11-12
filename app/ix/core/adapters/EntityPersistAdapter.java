@@ -1,6 +1,7 @@
 package ix.core.adapters;
 
 import play.Logger;
+import play.Play;
 import java.util.Date;
 import java.lang.reflect.*;
 import com.avaje.ebean.event.*;
@@ -9,7 +10,7 @@ import javax.persistence.Entity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.models.*;
-import ix.utils.Global;
+import ix.core.plugins.*;
 
 public class EntityPersistAdapter extends BeanPersistAdapter {
 
@@ -41,15 +42,22 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
     @Override
     public void postInsert (BeanPersistRequest<?> request) {
-        Global g = Global.getInstance();
         Object bean = request.getBean();
         //Logger.debug("## indexing bean "+bean+"; global="+g);
         try {
-            g.getTextIndexer().add(bean);
+            TextIndexerPlugin plugin  = 
+                Play.application().plugin(TextIndexerPlugin.class);
+            if (plugin != null)
+                plugin.getIndexer().add(bean);
         }
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
         }
+    }
+
+    boolean debug (int level) {
+        IxContext ctx = Play.application().plugin(IxContext.class);
+        return ctx.debug(level);
     }
 
     @Override
@@ -59,17 +67,18 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
     @Override
     public void postUpdate (BeanPersistRequest<?> request) {
-        Global g = Global.getInstance();
         Object bean = request.getBean();
-
-        if (g.debug(2)) {
+        if (debug (2)) {
             ObjectMapper mapper = new ObjectMapper ();
             Logger.debug(">> Old: "+mapper.valueToTree(request.getOldValues())
                          +"\n>> New: "+mapper.valueToTree(bean));
         }
 
         try {
-            g.getTextIndexer().update(bean);
+            TextIndexerPlugin plugin  = 
+                Play.application().plugin(TextIndexerPlugin.class);
+            if (plugin != null)
+                plugin.getIndexer().update(bean);
         }
         catch (java.io.IOException ex) {
             Logger.warn("Can't update bean index "+bean, ex);

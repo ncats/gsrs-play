@@ -6,13 +6,16 @@ import java.security.SecureRandom;
 import java.util.Date;
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name="ix_core_etag")
 public class ETag extends Model {
     @Id
+    @JsonIgnore
     public Long id;
 
-    @Column(length=16)
+    @Column(length=16,unique=true)
     public final String etag;
 
     @Column(length=4000)
@@ -34,6 +37,8 @@ public class ETag extends Model {
 
     @Column(length=2048)
     public String query;
+    @Column(length=4000)
+    public String filter;
 
     public ETag () {
         this (nextETag ());

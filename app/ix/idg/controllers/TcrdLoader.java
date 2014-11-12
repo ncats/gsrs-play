@@ -61,7 +61,7 @@ public class TcrdLoader extends Controller {
             ResultSet rset = stm.executeQuery
                 ("select * from t2tc a, target b, protein c\n"+
                  "where a.target_id = b.id\n"+
-                 "and a.protein_id = c.id ");
+                 "and a.protein_id = c.id limit 10");
             Attribute source = new Attribute ("source", "TCRD");
             source.resource = resource;
 

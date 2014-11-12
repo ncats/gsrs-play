@@ -15,6 +15,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import ix.utils.Global;
 import ix.utils.Eutils;
+import ix.core.plugins.TextIndexerPlugin;
 
 import ix.core.search.TextIndexer;
 import ix.core.models.Event;
@@ -51,6 +52,12 @@ public class Migration extends Controller {
         catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    static TextIndexer getIndexer () {
+        TextIndexerPlugin plugin = 
+            Play.application().plugin(TextIndexerPlugin.class);
+        return plugin.getIndexer();
     }
 
     public static Result migrate () {
@@ -236,8 +243,7 @@ public class Migration extends Controller {
                 if (employees.isEmpty()) {
                     try {
                         // try text searching
-                        TextIndexer.SearchResult results = 
-                            Global.getInstance().getTextIndexer().search
+                        TextIndexer.SearchResult results = getIndexer().search
                             ("lastname:"+last+" AND forename:"+first, 10);
                         if (results.isEmpty()) {
                             // not ncats
@@ -403,8 +409,7 @@ public class Migration extends Controller {
         if (employees.isEmpty()) {
             try {
                 // try text searching
-                TextIndexer.SearchResult results = 
-                    Global.getInstance().getTextIndexer().search
+                TextIndexer.SearchResult results = getIndexer().search
                     ("lastname:"+a.lastname+" AND forename:"+a.forename, 10);
                 if (!results.isEmpty()) {
                     for (Iterator it = results.getMatches().iterator();
@@ -428,6 +433,17 @@ public class Migration extends Controller {
     }
 
     public static Result index () {
+        /*
+        EbeanServer server = Ebean.getServer
+            (Play.application().plugin(EbeanPlugin.class).defaultServer());
+        SqlQuery query = 
+            server.createSqlQuery("select distinct term from ix_core_value");
+        List<SqlRow> rows = query.findList();
+        for (SqlRow r : rows) {
+            Logger.info(r.getString("term"));
+        }
+        */
+        
         return ok (ix.ncats.views.html.migration.render
                    ("Project/Publication Migration"));
     }

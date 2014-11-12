@@ -33,8 +33,8 @@ public class Attribute extends Model {
     }
 
     @JsonView(BeanViews.Compact.class)
-    @JsonProperty("resource_xref")
-    public String getResourceRef () {
+    @JsonProperty("resourceRef")
+    public String resourceRef () {
         return Global.getRef(resource);
     }
 }

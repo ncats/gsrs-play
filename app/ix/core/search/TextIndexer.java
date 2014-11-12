@@ -3,6 +3,7 @@ package ix.core.search;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.lang.reflect.*;
 import java.lang.annotation.Annotation;
@@ -51,6 +52,8 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.RegexpQuery;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.Sort;
 
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -99,6 +102,7 @@ public class TextIndexer {
     static final Version LUCENE_VERSION = Version.LATEST;
     static final String FACETS_CONFIG_FILE = "facet_conf.json";
     static final String SUGGEST_CONFIG_FILE = "suggest_conf.json";
+    static final String SORTER_CONFIG_FILE = "sorter_conf.json";
     static final String DIM_CLASS = "ix.Class";
 
     public static class FV {
@@ -135,17 +139,22 @@ public class TextIndexer {
     public static class SearchResult  {
         String query;
         Set<String> drilldown = new TreeSet<String>();
+        List<String> order = new ArrayList<String>();
         List<Facet> facets = new ArrayList<Facet>();
         List matches = new ArrayList ();
         int count;
         
-        SearchResult (String query, List<String> drilldown) {
+        SearchResult (String query, 
+                      List<String> drilldown, 
+                      List<String> order) {
             this.query = query;
             this.drilldown.addAll(drilldown);
+            this.order.addAll(order);
         }
 
         public String getQuery () { return query; }
         public Collection<String> getDrilldown () { return drilldown; }
+        public List<String> getOrder () { return order; }
         public List<Facet> getFacets () { return facets; }
         public List getMatches () { return matches; }
         public int size () { return matches.size(); }
@@ -272,6 +281,7 @@ public class TextIndexer {
     private DirectoryTaxonomyWriter taxonWriter;
     private FacetsConfig facetsConfig;
     private ConcurrentMap<String, SuggestLookup> lookups;
+    private ConcurrentMap<String, SortField.Type> sorters;
 
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
@@ -344,6 +354,9 @@ public class TextIndexer {
         Logger.info("## "+suggestDir+": "
                     +lookups.size()+" lookups loaded!");
 
+        sorters = loadSorters (new File (dir, SORTER_CONFIG_FILE));
+        Logger.info("## "+sorters.size()+" sort fields defined!");
+
         this.baseDir = dir;
     }
 
@@ -378,183 +391,225 @@ public class TextIndexer {
     }
 
     public SearchResult search (String text, int size) throws IOException {
-        return search (text, size, 0, new ArrayList<String>());
+        return search (text, size, 0, 
+                       new ArrayList<String>(), new ArrayList<String>());
     }
 
     public SearchResult search (String text, int top, int skip, 
-                                List<String> drills) throws IOException {
-        return search (text, top, skip, 10, drills);
-    }
-
-    public SearchResult search (String text, int top, int skip, 
-                                int fdim, List<String> drills) 
+                                List<String> drills, List<String> order) 
         throws IOException {
-        IndexSearcher searcher = new IndexSearcher
-            (DirectoryReader.open(indexWriter, true));
+        return search (text, top, skip, 10, drills, order);
+    }
 
-        SearchResult searchResult = new SearchResult (text, drills);
+    public SearchResult search (String text, int top, int skip, 
+                                int fdim, List<String> drills, 
+                                List<String> order) 
+        throws IOException {
+        SearchResult searchResult = new SearchResult (text, drills, order);
         try {
             QueryParser parser = new QueryParser ("text", indexAnalyzer);
-            Query query = parser.parse(text);
-            Logger.debug("## Query: "+query);
-
-            long start = System.currentTimeMillis();
-            Map<String, Model.Finder> finders = 
-                new HashMap<String, Model.Finder>();
-
-            FacetsCollector fc = new FacetsCollector ();
-            TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter);
-            TopDocs hits = null;
-
-            if (drills.isEmpty()) {
-                hits = FacetsCollector.search
-                    (searcher, query, skip+top, fc);
-                
-                Facets facets = new FastTaxonomyFacetCounts
-                    (taxon, facetsConfig, fc);
-                
-                List<FacetResult> facetResults = facets.getAllDims(fdim);
-                if (DEBUG (1)) {
-                    Logger.info("## "+facetResults.size()
-                                +" facet dimension(s)");
-                }
-
-                for (FacetResult result : facetResults) {
-                    Facet f = new Facet (result.dim);
-                    if (DEBUG (1)) {
-                        Logger.info(" + ["+result.dim+"]");
-                    }
-                    for (int i = 0; i < result.labelValues.length; ++i) {
-                        LabelAndValue lv = result.labelValues[i];
-                        if (DEBUG (1)) {
-                            Logger.info("     \""+lv.label+"\": "+lv.value);
-                        }
-                        f.values.add(new FV (lv.label, lv.value.intValue()));
-                    }
-                    searchResult.facets.add(f);
-                }
-            }
-            else {
-                DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
-                // the first term is the drilldown dimension
-                for (String dd : drills) {
-                    String[] d = dd.split("/");
-                    for (int i = 1; i < d.length; ++i) {
-                        if (DEBUG (1)) {
-                            Logger.debug("Drilling down \""
-                                         +d[0]+"/"+d[i]+"\"...");
-                        }
-                        ddq.add(d[0], d[i]);
-                    }
-                }
-
-                /*
-                FacetsCollector fc2 = new FacetsCollector ();
-                TopDocs docs = FacetsCollector.search
-                    (searcher, ddq, skip+top, fc2);
-                Logger.debug("Drilled down results in "
-                             +docs.totalHits+" hit(s)...");
-                Facets facets2 = new FastTaxonomyFacetCounts
-                    (taxon, facetsConfig, fc2);
-                
-                List<FacetResult> facetResults2 = facets2.getAllDims(10);
-                Logger.info("## "+facetResults2.size()+" facet dimension(s)");
-                for (FacetResult result : facetResults2) {
-                    Logger.info(" + ["+result.dim+"]");
-                    for (int i = 0; i < result.labelValues.length; ++i) {
-                        LabelAndValue lv = result.labelValues[i];
-                        Logger.info("     \""+lv.label+"\": "+lv.value);
-                    }
-                }
-                */
-                
-                DrillSideways sideway = new DrillSideways 
-                    (searcher, facetsConfig, taxon);
-                DrillSideways.DrillSidewaysResult swResult = 
-                sideway.search(ddq, skip+top);
-
-                if (DEBUG (1)) {
-                    Logger.info("## Drilled sideway "
-                                +swResult.facets.getAllDims(fdim).size()
-                                +" facets and "+swResult.hits.totalHits
-                                +" hits");
-                }
-
-                for (FacetResult result : swResult.facets.getAllDims(fdim)) {
-                    if (result != null) {
-                        if (DEBUG (1)) {
-                            Logger.info(" + ["+result.dim+"]");
-                        }
-                        Facet f = new Facet (result.dim);
-                        for (int i = 0; i < result.labelValues.length; ++i) {
-                            LabelAndValue lv = result.labelValues[i];
-                            if (DEBUG (1)) {
-                                Logger.info("     \""+lv.label+"\": "+lv.value);
-                            }
-                            f.values.add(new FV (lv.label, 
-                                                 lv.value.intValue()));
-                        }
-                        searchResult.facets.add(f);
-                    }
-                }
-                hits = swResult.hits;
-            }
-
-            searchResult.count = hits.totalHits;
-            int size = Math.max(0, Math.min(skip+top, hits.totalHits));
-            for (int i = skip; i < size; ++i) {
-                Document doc = searcher.doc(hits.scoreDocs[i].doc);
-                IndexableField kind = doc.getField("kind");
-                if (kind != null) {
-                    String field = kind.stringValue()+"._id";
-                    IndexableField id = doc.getField(field);
-                    if (id != null) {
-                        Number n = id.numericValue();
-                        try {
-                            Model.Finder finder = 
-                                finders.get(kind.stringValue());
-                            if (finder == null) {
-                                Class c = n != null 
-                                    ? Long.class : String.class;
-                                finder = new Model.Finder
-                                    (c, Class.forName(kind.stringValue()));
-                                finders.put(kind.stringValue(), finder);
-                            }
-                            searchResult.matches.add
-                                (finder.byId
-                                 (n != null 
-                                  ? n.longValue() : id.stringValue()));
-
-                            if (DEBUG (1)) {
-                                Logger.debug("++ matched doc "
-                                             +field+"="+id.stringValue());
-                            }
-                        }
-                        catch (ClassNotFoundException ex) {
-                            Logger.trace("Can't locate class "
-                                         +kind.stringValue()
-                                         +" in classpath!", ex);
-                        }
-                    }
-                    else {
-                        Logger.error("Index corrupted; document "
-                                     +"doesn't have field "+field);
-                    }
-                }
-            }
-
-            Logger.debug("## Query finishes in "
-                         +String.format
-                         ("%1$.3fs", 
-                          (System.currentTimeMillis()-start)*1e-3)
-                         +"..."+hits.totalHits+" hit(s) found; returning "
-                         +searchResult.matches.size()+"!");
+            search (searchResult, parser.parse(text), top, skip, fdim);
         }
         catch (ParseException ex) {
             Logger.warn("Can't parse query expression: "+text, ex);
         }
 
         return searchResult;
+    }
+
+    protected void search (SearchResult searchResult, 
+                           Query query, int top, int skip, 
+                           int fdim) throws IOException {
+        Logger.debug("## Query: "+query);
+        IndexSearcher searcher = new IndexSearcher
+            (DirectoryReader.open(indexWriter, true));
+        
+        long start = System.currentTimeMillis();
+        Map<String, Model.Finder> finders = 
+            new HashMap<String, Model.Finder>();
+            
+        FacetsCollector fc = new FacetsCollector ();
+        TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter);
+        TopDocs hits = null;
+
+        List<String> order = searchResult.getOrder();
+        Collection<String> drills = searchResult.getDrilldown();
+        if (drills.isEmpty()) {
+            if (order.isEmpty()) {
+                hits = FacetsCollector.search
+                    (searcher, query, skip+top, fc);
+            }
+            else {
+                List<SortField> fields = new ArrayList<SortField>();
+                for (String f : order) {
+                    boolean rev = false;
+                    if (f.charAt(0) == '^') {
+                        // sort in reverse
+                        f = f.substring(1);
+                    }
+                    else if (f.charAt(0) == '$') {
+                        f = f.substring(1);
+                        rev = true;
+                    }
+
+                    SortField.Type type = sorters.get(f);
+                    if (type != null) {
+                        SortField sf = new SortField (f, type, rev);
+                        Logger.debug("Sort field (rev="+rev+"): "+sf);
+                        fields.add(sf);
+                    }
+                    else {
+                        Logger.warn("Unknown sort field: \""+f+"\"");
+                    }
+                }
+
+                hits = fields.isEmpty() ? 
+                    FacetsCollector.search(searcher, query, skip+top, fc) : 
+                    FacetsCollector.search
+                    (searcher, query, null, skip+top,
+                     new Sort (fields.toArray(new SortField[0])), fc);
+            }
+                
+            Facets facets = new FastTaxonomyFacetCounts
+                (taxon, facetsConfig, fc);
+                
+            List<FacetResult> facetResults = facets.getAllDims(fdim);
+            if (DEBUG (1)) {
+                Logger.info("## "+facetResults.size()
+                            +" facet dimension(s)");
+            }
+
+            for (FacetResult result : facetResults) {
+                Facet f = new Facet (result.dim);
+                if (DEBUG (1)) {
+                    Logger.info(" + ["+result.dim+"]");
+                }
+                for (int i = 0; i < result.labelValues.length; ++i) {
+                    LabelAndValue lv = result.labelValues[i];
+                    if (DEBUG (1)) {
+                        Logger.info("     \""+lv.label+"\": "+lv.value);
+                    }
+                    f.values.add(new FV (lv.label, lv.value.intValue()));
+                }
+                searchResult.facets.add(f);
+            }
+        }
+        else {
+            DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
+            // the first term is the drilldown dimension
+            for (String dd : drills) {
+                String[] d = dd.split("/");
+                for (int i = 1; i < d.length; ++i) {
+                    if (DEBUG (1)) {
+                        Logger.debug("Drilling down \""
+                                     +d[0]+"/"+d[i]+"\"...");
+                    }
+                    ddq.add(d[0], d[i]);
+                }
+            }
+
+            /*
+              FacetsCollector fc2 = new FacetsCollector ();
+              TopDocs docs = FacetsCollector.search
+              (searcher, ddq, skip+top, fc2);
+              Logger.debug("Drilled down results in "
+              +docs.totalHits+" hit(s)...");
+              Facets facets2 = new FastTaxonomyFacetCounts
+              (taxon, facetsConfig, fc2);
+                
+              List<FacetResult> facetResults2 = facets2.getAllDims(10);
+              Logger.info("## "+facetResults2.size()+" facet dimension(s)");
+              for (FacetResult result : facetResults2) {
+              Logger.info(" + ["+result.dim+"]");
+              for (int i = 0; i < result.labelValues.length; ++i) {
+              LabelAndValue lv = result.labelValues[i];
+              Logger.info("     \""+lv.label+"\": "+lv.value);
+              }
+              }
+            */
+                
+            DrillSideways sideway = new DrillSideways 
+                (searcher, facetsConfig, taxon);
+            DrillSideways.DrillSidewaysResult swResult = 
+                sideway.search(ddq, skip+top);
+
+            if (DEBUG (1)) {
+                Logger.info("## Drilled sideway "
+                            +swResult.facets.getAllDims(fdim).size()
+                            +" facets and "+swResult.hits.totalHits
+                            +" hits");
+            }
+
+            for (FacetResult result : swResult.facets.getAllDims(fdim)) {
+                if (result != null) {
+                    if (DEBUG (1)) {
+                        Logger.info(" + ["+result.dim+"]");
+                    }
+                    Facet f = new Facet (result.dim);
+                    for (int i = 0; i < result.labelValues.length; ++i) {
+                        LabelAndValue lv = result.labelValues[i];
+                        if (DEBUG (1)) {
+                            Logger.info
+                                ("     \""+lv.label+"\": "+lv.value);
+                        }
+                        f.values.add(new FV (lv.label, 
+                                             lv.value.intValue()));
+                    }
+                    searchResult.facets.add(f);
+                }
+            }
+            hits = swResult.hits;
+        }
+
+        searchResult.count = hits.totalHits;
+        int size = Math.max(0, Math.min(skip+top, hits.totalHits));
+        for (int i = skip; i < size; ++i) {
+            Document doc = searcher.doc(hits.scoreDocs[i].doc);
+            IndexableField kind = doc.getField("kind");
+            if (kind != null) {
+                String field = kind.stringValue()+"._id";
+                IndexableField id = doc.getField(field);
+                if (id != null) {
+                    Number n = id.numericValue();
+                    try {
+                        Model.Finder finder = 
+                            finders.get(kind.stringValue());
+                        if (finder == null) {
+                            Class c = n != null 
+                                ? Long.class : String.class;
+                            finder = new Model.Finder
+                                (c, Class.forName(kind.stringValue()));
+                            finders.put(kind.stringValue(), finder);
+                        }
+                        searchResult.matches.add
+                            (finder.byId
+                             (n != null 
+                              ? n.longValue() : id.stringValue()));
+
+                        if (DEBUG (1)) {
+                            Logger.debug("++ matched doc "
+                                         +field+"="+id.stringValue());
+                        }
+                    }
+                    catch (ClassNotFoundException ex) {
+                        Logger.trace("Can't locate class "
+                                     +kind.stringValue()
+                                     +" in classpath!", ex);
+                    }
+                }
+                else {
+                    Logger.error("Index corrupted; document "
+                                 +"doesn't have field "+field);
+                }
+            }
+        }
+
+        Logger.debug("## Query finishes in "
+                     +String.format
+                     ("%1$.3fs", 
+                      (System.currentTimeMillis()-start)*1e-3)
+                     +"..."+hits.totalHits+" hit(s) found; returning "
+                     +searchResult.matches.size()+"!");
     }
 
     /**
@@ -604,9 +659,9 @@ public class TextIndexer {
         doc = facetsConfig.build(taxonWriter, doc);
         if (DEBUG (2))
             Logger.debug("++ adding document "+doc);
-
+        
         indexWriter.addDocument(doc);
-
+        
         if (DEBUG (2))
             Logger.debug("<<< "+entity);
     }
@@ -834,30 +889,46 @@ public class TextIndexer {
         boolean asText = true;
 
         if (value instanceof Long) {
-            fields.add(new NumericDocValuesField (full, (Long)value));
-            fields.add(new LongField (name, (Long)value, store));
+            //fields.add(new NumericDocValuesField (full, (Long)value));
+            fields.add(new LongField (full, (Long)value, NO));
             asText = indexable.facet();
+            if (!asText && !name.equals(full)) 
+                fields.add(new LongField (name, (Long)value, store));
+            if (indexable.sortable())
+                sorters.put(full, SortField.Type.LONG);
         }
         else if (value instanceof Integer) {
-            fields.add(new IntDocValuesField (full, (Integer)value));
-            fields.add(new IntField (name, (Integer)value, store));
+            //fields.add(new IntDocValuesField (full, (Integer)value));
+            fields.add(new IntField (full, (Integer)value, NO));
             asText = indexable.facet();
+            if (!asText && !name.equals(full))
+                fields.add(new IntField (name, (Integer)value, store));
+            if (indexable.sortable())
+                sorters.put(full, SortField.Type.INT);
         }
         else if (value instanceof Float) {
-            fields.add(new FloatDocValuesField (full, (Float)value));
+            //fields.add(new FloatDocValuesField (full, (Float)value));
             fields.add(new FloatField (name, (Float)value, store));
+            if (!full.equals(name))
+                fields.add(new FloatField (full, (Float)value, NO));
+            if (indexable.sortable())
+                sorters.put(full, SortField.Type.FLOAT);
             asText = false;
         }
         else if (value instanceof Double) {
-            fields.add(new DoubleDocValuesField (full, (Double)value));
+            //fields.add(new DoubleDocValuesField (full, (Double)value));
             fields.add(new DoubleField (name, (Double)value, store));
+            if (!full.equals(name))
+                fields.add(new DoubleField (full, (Double)value, NO));
+            if (indexable.sortable())
+                sorters.put(full, SortField.Type.DOUBLE);
             asText = false;
         }
 
         if (asText) {
             String text = value.toString();
             String dim = indexable.name();
-            if (dim.equals(""))
+            if ("".equals(dim))
                 dim = toPath (path, true);
 
             if (indexable.facet() || indexable.taxonomy()) {
@@ -891,6 +962,13 @@ public class TextIndexer {
                 }
             }
 
+            if (!(value instanceof Number)) {
+                if (!name.equals(full))
+                    fields.add(new TextField (full, text, NO));
+            }
+
+            if (indexable.sortable())
+                sorters.put(name, SortField.Type.STRING);
             fields.add(new TextField (name, text, store));
         }
     }
@@ -904,12 +982,15 @@ public class TextIndexer {
     }
 
     static String toPath (Collection<String> path) {
-        return toPath (path, false);
+        return toPath (path, true/*false*/);
     }
 
     static String toPath (Collection<String> path, boolean noindex) {
         StringBuilder sb = new StringBuilder ();
-        for (Iterator<String> it = path.iterator(); it.hasNext(); ) {
+        List<String> rev = new ArrayList<String>(path);
+        Collections.reverse(rev);
+
+        for (Iterator<String> it = rev.iterator(); it.hasNext(); ) {
             String p = it.next();
 
             boolean append = true;
@@ -925,7 +1006,7 @@ public class TextIndexer {
             if (append) {
                 sb.append(p);
                 if (it.hasNext())
-                    sb.append('.');
+                    sb.append('_');
             }
         }
         return sb.toString();
@@ -1016,6 +1097,55 @@ public class TextIndexer {
         return config;
     }
 
+    static ConcurrentMap<String, SortField.Type> loadSorters (File file) {
+        ConcurrentMap<String, SortField.Type> sorters = 
+            new ConcurrentHashMap<String, SortField.Type>();
+        if (file.exists()) {
+            ObjectMapper mapper = new ObjectMapper ();
+            try {
+                JsonNode conf = mapper.readTree(new FileInputStream (file));
+                ArrayNode array = (ArrayNode)conf.get("sorters");
+                if (array != null) {
+                    for (int i = 0; i < array.size(); ++i) {
+                        ObjectNode node = (ObjectNode)array.get(i);
+                        String field = node.get("field").asText();
+                        String type = node.get("type").asText();
+                        sorters.put(field, SortField.Type.valueOf
+                                    (SortField.Type.class, type));
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't read file "+file, ex);
+            }
+        }
+        return sorters;
+    }
+
+    static void saveSorters (File file, Map<String, SortField.Type> sorters) {
+        ObjectMapper mapper = new ObjectMapper ();
+
+        ObjectNode conf = mapper.createObjectNode();
+        conf.put("created", new java.util.Date().getTime());
+        ArrayNode node = mapper.createArrayNode();
+        for (Map.Entry<String, SortField.Type> me : sorters.entrySet()) {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("field", me.getKey());
+            obj.put("type", me.getValue().toString());
+            node.add(obj);
+        }
+        conf.put("sorters", node);
+
+        try {
+            FileOutputStream fos = new FileOutputStream (file);
+            mapper.writerWithDefaultPrettyPrinter().writeValue(fos, conf);
+            fos.close();
+        }
+        catch (IOException ex) {
+            Logger.trace("Can't persist sorter config!", ex);
+        }
+    }
+
     public void shutdown () {
         try {
             for (SuggestLookup look : lookups.values()) {
@@ -1031,6 +1161,7 @@ public class TextIndexer {
 
             saveFacetsConfig (new File (baseDir, FACETS_CONFIG_FILE), 
                               facetsConfig);
+            saveSorters (new File (baseDir, SORTER_CONFIG_FILE), sorters);
         }
         catch (IOException ex) {
             //ex.printStackTrace();

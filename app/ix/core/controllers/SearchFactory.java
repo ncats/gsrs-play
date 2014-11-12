@@ -23,11 +23,17 @@ import ix.core.models.Principal;
 
 import ix.utils.Global;
 import ix.utils.Util;
+import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
 
 public class SearchFactory extends EntityFactory {
+    static final Model.Finder<Long, ETag> etagDb = 
+        new Model.Finder(Long.class, ETag.class);
+
     static TextIndexer getIndexer () {
-        return Global.getInstance().getTextIndexer();
+        TextIndexerPlugin plugin = 
+            Play.application().plugin(TextIndexerPlugin.class);
+        return plugin != null ? plugin.getIndexer() : null;
     }
 
     public static Result search (String q, int top, int skip, int fdim) {
@@ -35,10 +41,20 @@ public class SearchFactory extends EntityFactory {
             Map<String, String[]> query = request().queryString();
 
             List<String> drilldown = new ArrayList<String>();
+            List<String> order = new ArrayList<String>();
+            StringBuilder filter = new StringBuilder ();
             for (Map.Entry<String, String[]> me : query.entrySet()) {
                 if ("facet".equalsIgnoreCase(me.getKey())) {
-                    for (String s : me.getValue())
+                    for (String s : me.getValue()){
                         drilldown.add(s);
+                        if (filter.length() > 0)
+                            filter.append("&");
+                        filter.append("facet="+s);
+                    }
+                }
+                else if ("order".equalsIgnoreCase(me.getKey())) {
+                    for (String s : me.getValue())
+                        order.add(s);
                 }
 
                 if (Global.DEBUG(1)) {
@@ -49,8 +65,35 @@ public class SearchFactory extends EntityFactory {
                 }
             }
 
+            if (q.startsWith("etag:") || q.startsWith("ETag:")) {
+                String id = q.substring(5, 21);
+                try {
+                    ETag etag = etagDb.where().eq("etag", id).findUnique();
+                    if (etag.query != null) {
+                        if (etag.filter != null) {
+                            String[] facets = etag.filter.split("&");
+                            for (int i = facets.length; --i >= 0; ) {
+                                if (facets[i].length() > 0) {
+                                    filter.insert(0, facets[i]+"&");
+                                    drilldown.add
+                                        (0, facets[i].replaceAll
+                                         ("facet=", ""));
+                                }
+                            }
+                        }
+                        q = etag.query; // rewrite the query
+                    }
+                    else {
+                        Logger.warn("ETag "+id+" is not a search!");
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.trace("Can't find ETag "+id, ex);
+                }
+            }
+
             TextIndexer.SearchResult result = 
-                getIndexer().search(q, top, skip, fdim, drilldown);
+                getIndexer().search(q, top, skip, fdim, drilldown, order);
 
             ObjectMapper mapper = getEntityMapper ();
             ArrayNode nodes = mapper.createArrayNode();
@@ -80,6 +123,7 @@ public class SearchFactory extends EntityFactory {
             etag.sha1 = Util.sha1Request(request(), "q", "facet");
             etag.query = q;
             etag.method = request().method();
+            etag.filter = filter.toString();
             etag.save();
 
             ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);

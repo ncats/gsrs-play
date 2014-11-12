@@ -11,6 +11,7 @@ public class Publication extends Model {
     public Long id; // internal id
 
     @Column(unique=true)
+    @Indexable(sortable=true)
     public Long pmid; // pubmed id
     @Column(unique=true)
     public String pmcid; // pubmed central id

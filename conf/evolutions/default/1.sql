@@ -85,6 +85,8 @@ create table ix_core_etag (
   timestamp                 timestamp,
   modified                  timestamp,
   query                     varchar(2048),
+  filter                    varchar(4000),
+  constraint uq_ix_core_etag_etag unique (etag),
   constraint pk_ix_core_etag primary key (id))
 ;
 
