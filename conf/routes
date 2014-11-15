@@ -30,11 +30,13 @@ GET     /api-docs/api       controllers.ApiHelpController.getResource(path="/api
 GET     /assets/*file   controllers.Assets.at(path="/public", file)
 GET     /webjars/*file          controllers.WebJarAssets.at(file)
 
-GET     /api/search         ix.core.controllers.SearchFactory.search(q, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
+GET     /api/search         ix.core.controllers.SearchFactory.search(q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
 GET     /api/suggest/@fields       ix.core.controllers.SearchFactory.suggestFields
 GET     /api/suggest/:field       ix.core.controllers.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
 GET     /api/suggest       ix.core.controllers.SearchFactory.suggest(q: String, max: Int ?= 10)
 
+GET     /ctloader       ix.ncats.controllers.clinical.ClinicalTrialFactory.index()
+POST    /ctloader       ix.ncats.controllers.clinical.ClinicalTrialFactory.loadUri()
 
 #
 # special variables are denoted by @'s and should be specified
@@ -76,6 +78,7 @@ POST     /employees/@ldap ix.ncats.controllers.EmployeeFactory.list()
 #GET     /api    ix.core.controllers.RouteFactory.listResources()
 #GET     /api/    ix.core.controllers.RouteFactory.listResources()
 GET     /api/$context<[a-z0-9_]+>/@count       ix.core.controllers.RouteFactory.count(context: String)
+GET     /api/$context<[a-z0-9_]+>/search        ix.core.controllers.RouteFactory.search(context: String, q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
 GET     /api/$context<[a-z0-9_]+>/:id  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
 GET     /api/$context<[a-z0-9_]+>/:id/@edits      ix.core.controllers.RouteFactory.edits(context: String, id:Long)
 GET     /api/$context<[a-z0-9_]+>(:id)     ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)

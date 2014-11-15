@@ -54,6 +54,9 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.RegexpQuery;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.FieldCacheTermsFilter;
 
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -398,28 +401,44 @@ public class TextIndexer {
     public SearchResult search (String text, int top, int skip, 
                                 List<String> drills, List<String> order) 
         throws IOException {
-        return search (text, top, skip, 10, drills, order);
+        return search (null, text, top, skip, 10, drills, order);
     }
 
-    public SearchResult search (String text, int top, int skip, 
-                                int fdim, List<String> drills, 
-                                List<String> order) 
+    public SearchResult search (Class filter, String text, 
+                                int top, int skip, int fdim, 
+                                List<String> drills, List<String> order) 
         throws IOException {
         SearchResult searchResult = new SearchResult (text, drills, order);
-        try {
-            QueryParser parser = new QueryParser ("text", indexAnalyzer);
-            search (searchResult, parser.parse(text), top, skip, fdim);
+
+        Query query = null;
+        if (text == null) {
+            query = new MatchAllDocsQuery ();
         }
-        catch (ParseException ex) {
-            Logger.warn("Can't parse query expression: "+text, ex);
+        else {
+            try {
+                QueryParser parser = new QueryParser
+                    ("text", indexAnalyzer);
+                query = parser.parse(text);
+            }
+            catch (ParseException ex) {
+                Logger.warn("Can't parse query expression: "+text, ex);
+            }
         }
 
+        if (query != null) {
+            Filter f = null;
+            if (filter != null) {
+                f = new FieldCacheTermsFilter ("kind", filter.getName());
+            }
+            search (searchResult, query, f, top, skip, fdim);
+        }
+        
         return searchResult;
     }
 
     protected void search (SearchResult searchResult, 
-                           Query query, int top, int skip, 
-                           int fdim) throws IOException {
+                           Query query, Filter filter, 
+                           int top, int skip, int fdim) throws IOException {
         Logger.debug("## Query: "+query);
         IndexSearcher searcher = new IndexSearcher
             (DirectoryReader.open(indexWriter, true));
@@ -437,7 +456,7 @@ public class TextIndexer {
         if (drills.isEmpty()) {
             if (order.isEmpty()) {
                 hits = FacetsCollector.search
-                    (searcher, query, skip+top, fc);
+                    (searcher, query, filter, skip+top, fc);
             }
             else {
                 List<SortField> fields = new ArrayList<SortField>();
@@ -464,10 +483,11 @@ public class TextIndexer {
                 }
 
                 hits = fields.isEmpty() ? 
-                    FacetsCollector.search(searcher, query, skip+top, fc) : 
                     FacetsCollector.search
-                    (searcher, query, null, skip+top,
-                     new Sort (fields.toArray(new SortField[0])), fc);
+                          (searcher, query, filter, skip+top, fc) : 
+                    FacetsCollector.search
+                       (searcher, query, filter, skip+top,
+                        new Sort (fields.toArray(new SortField[0])), fc);
             }
                 
             Facets facets = new FastTaxonomyFacetCounts
@@ -922,6 +942,15 @@ public class TextIndexer {
                 fields.add(new DoubleField (full, (Double)value, NO));
             if (indexable.sortable())
                 sorters.put(full, SortField.Type.DOUBLE);
+            asText = false;
+        }
+        else if (value instanceof java.util.Date) {
+            long date = ((Date)value).getTime();
+            fields.add(new LongField (name, date, store));
+            if (!full.equals(name))
+                fields.add(new LongField (full, date, NO));
+            if (indexable.sortable())
+                sorters.put(full, SortField.Type.LONG);
             asText = false;
         }
 

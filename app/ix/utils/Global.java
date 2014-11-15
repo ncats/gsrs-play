@@ -84,7 +84,7 @@ public class Global extends GlobalSettings {
             NamedResource res = 
                 (NamedResource)c.getAnnotation(NamedResource.class);
             Logger.info("+ "+c.getName()+"\n  => "
-                        +ctx.context()+"/"+ctx.api()+"/"+res.name()
+                        +ctx.context()+ctx.api()+"/"+res.name()
                         +"["+res.type().getName()+"]");
             names.put(res.type().getName(), res.name());
             RouteFactory.register(res.name(), c);

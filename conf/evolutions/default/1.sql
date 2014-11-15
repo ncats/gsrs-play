@@ -14,8 +14,7 @@ create table ix_ncats_clinical_arm (
   id                        bigint not null,
   label                     varchar(255),
   description               clob,
-  type                      integer,
-  constraint ck_ix_ncats_clinical_arm_type check (type in (0,1,2,3,4,5,6)),
+  type                      varchar(255),
   constraint pk_ix_ncats_clinical_arm primary key (id))
 ;
 
@@ -30,19 +29,23 @@ create table ix_core_attribute (
 create table ix_ncats_clinical_trial (
   id                        bigint not null,
   nct_id                    varchar(15),
+  url                       varchar(255),
   title                     varchar(1024),
   official_title            varchar(2048),
   summary                   clob,
   description               clob,
+  sponsor                   varchar(160),
+  study_type                varchar(255),
+  start_date                timestamp,
+  completion_date           timestamp,
   first_received_date       timestamp,
   last_changed_date         timestamp,
   verification_date         timestamp,
+  first_received_results_date timestamp,
   has_results               boolean,
-  status                    integer,
-  phase                     integer,
+  status                    varchar(255),
+  phase                     varchar(255),
   eligibility_id            bigint,
-  constraint ck_ix_ncats_clinical_trial_status check (status in (0,1,2,3,4,5,6)),
-  constraint ck_ix_ncats_clinical_trial_phase check (phase in (0,1,2,3,4,5,6,7,8,9)),
   constraint uq_ix_ncats_clinical_trial_nct_i unique (nct_id),
   constraint pk_ix_ncats_clinical_trial primary key (id))
 ;
@@ -56,8 +59,9 @@ create table ix_ncats_clinical_cohort (
 
 create table ix_ncats_clinical_condition (
   id                        bigint not null,
-  name                      varchar(255),
+  name                      varchar(1024),
   is_rare_disease           boolean,
+  constraint uq_ix_ncats_clinical_condition_n unique (name),
   constraint pk_ix_ncats_clinical_condition primary key (id))
 ;
 
@@ -465,6 +469,12 @@ create table ix_ncats_clincial_trial_location (
   constraint pk_ix_ncats_clincial_trial_location primary key (ix_ncats_clinical_trial_id, ix_core_organization_id))
 ;
 
+create table ix_ncats_clincial_trial_publication (
+  ix_ncats_clinical_trial_id     bigint not null,
+  ix_core_publication_id         bigint not null,
+  constraint pk_ix_ncats_clincial_trial_publication primary key (ix_ncats_clinical_trial_id, ix_core_publication_id))
+;
+
 create table _ix_ncats_cca46885_1 (
   ix_ncats_clinical_condition_synonym_id bigint not null,
   ix_core_value_id               bigint not null,
@@ -819,6 +829,10 @@ alter table ix_ncats_clincial_trial_location add constraint fk_ix_ncats_clincial
 
 alter table ix_ncats_clincial_trial_location add constraint fk_ix_ncats_clincial_trial_lo_02 foreign key (ix_core_organization_id) references ix_core_organization (id) on delete restrict on update restrict;
 
+alter table ix_ncats_clincial_trial_publication add constraint fk_ix_ncats_clincial_trial_pu_01 foreign key (ix_ncats_clinical_trial_id) references ix_ncats_clinical_trial (id) on delete restrict on update restrict;
+
+alter table ix_ncats_clincial_trial_publication add constraint fk_ix_ncats_clincial_trial_pu_02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
+
 alter table _ix_ncats_cca46885_1 add constraint fk__ix_ncats_cca46885_1_ix_nc_01 foreign key (ix_ncats_clinical_condition_synonym_id) references ix_ncats_clinical_condition (id) on delete restrict on update restrict;
 
 alter table _ix_ncats_cca46885_1 add constraint fk__ix_ncats_cca46885_1_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
@@ -990,6 +1004,8 @@ drop table if exists ix_ncats_clinical_trial_condition;
 drop table if exists ix_ncats_clinical_trial_outcome;
 
 drop table if exists ix_ncats_clincial_trial_location;
+
+drop table if exists ix_ncats_clincial_trial_publication;
 
 drop table if exists ix_ncats_clinical_cohort;
 

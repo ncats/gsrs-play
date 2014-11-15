@@ -22,6 +22,8 @@ import com.avaje.ebean.*;
 import com.avaje.ebean.event.BeanPersistListener;
 
 import ix.core.models.*;
+import ix.core.NamedResource;
+
 
 public class RouteFactory extends Controller {
     static final public Model.Finder<Long, Resource> resFinder = 
@@ -95,6 +97,17 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.debug("Unknown context: "+context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+
+    public static Result search (String context, String q, 
+                                 int top, int skip, int fdim) {
+        Class factory = registry.get(context);
+        if (factory != null) {
+            NamedResource res = 
+                (NamedResource)factory.getAnnotation(NamedResource.class);
+            return SearchFactory.search(res.type(), q, top, skip, fdim);
+        }
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 

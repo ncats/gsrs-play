@@ -16,6 +16,11 @@ public enum ClinicalPhase {
         Phase_4;
 
     public static ClinicalPhase fromName (String name) {
-        return valueOf (ClinicalPhase.class, name.replaceAll("\\s", "_"));
+        try {
+            return valueOf (ClinicalPhase.class, name.replaceAll("\\s", "_"));
+        }
+        catch (Exception ex) {
+            return Unknown;
+        }
     }
 }

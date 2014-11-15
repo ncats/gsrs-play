@@ -17,9 +17,15 @@ public class Eligibility extends Model {
     public Long id;
 
     @Column(length=32)
+    @Indexable(facet=true, name="Eligibility Gender")
     public String gender;
+
+    @Indexable(facet=true, name="Eligibility Min Age")
     public String minAge;
+
+    @Indexable(facet=true, name="Eligibility Max Age")
     public String maxAge;
+
     public boolean healthyVolunteers;
 
     @ManyToMany(cascade=CascadeType.ALL)

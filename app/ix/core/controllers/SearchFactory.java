@@ -37,6 +37,11 @@ public class SearchFactory extends EntityFactory {
     }
 
     public static Result search (String q, int top, int skip, int fdim) {
+        return search (null, q, top, skip, fdim);
+    }
+
+    public static Result search (Class clazz, String q, 
+                                 int top, int skip, int fdim) {
         try {
             Map<String, String[]> query = request().queryString();
 
@@ -65,7 +70,9 @@ public class SearchFactory extends EntityFactory {
                 }
             }
 
-            if (q.startsWith("etag:") || q.startsWith("ETag:")) {
+            if (q == null) {
+            }
+            else if (q.startsWith("etag:") || q.startsWith("ETag:")) {
                 String id = q.substring(5, 21);
                 try {
                     ETag etag = etagDb.where().eq("etag", id).findUnique();
@@ -93,7 +100,8 @@ public class SearchFactory extends EntityFactory {
             }
 
             TextIndexer.SearchResult result = 
-                getIndexer().search(q, top, skip, fdim, drilldown, order);
+                getIndexer().search(clazz, q, top, skip, 
+                                    fdim, drilldown, order);
 
             ObjectMapper mapper = getEntityMapper ();
             ArrayNode nodes = mapper.createArrayNode();

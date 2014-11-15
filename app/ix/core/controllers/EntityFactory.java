@@ -63,8 +63,7 @@ public class EntityFactory extends Controller {
     }
 
     protected static <T> List<T> filter (int top, int skip, 
-                                         String expand,
-                                         String filter, 
+                                         String expand, String filter, 
                                          Model.Finder<Long, T> finder) {
 
         Logger.debug(request().uri()+": top="+top+" skip="+skip

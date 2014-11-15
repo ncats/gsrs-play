@@ -30,6 +30,15 @@ public class PublicationFactory extends EntityFactory {
         return page (top, skip, expand, filter, finder);
     }
 
+    public static List<Publication> filter (int top, int skip) {
+        return filter (top, skip, null, null);
+    }
+
+    public static List<Publication> filter (int top, int skip, 
+                                            String expand, String filter) {
+        return filter (top, skip, expand, filter, finder);
+    }
+
     public static List<Publication> filter (JsonNode json, int top, int skip) {
         return filter (json, top, skip, finder);
     }

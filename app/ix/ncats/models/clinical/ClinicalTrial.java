@@ -10,6 +10,7 @@ import javax.persistence.*;
 import ix.core.models.Indexable;
 import ix.core.models.Organization;
 import ix.core.models.Keyword;
+import ix.core.models.Publication;
 
 /**
  * based on definition from clinicaltrials.gov
@@ -22,6 +23,7 @@ public class ClinicalTrial extends Model {
 
     @Column(length=15,unique=true)
     public String nctId;
+    public String url;
 
     @Column(length=1024)
     public String title;
@@ -32,17 +34,34 @@ public class ClinicalTrial extends Model {
     @Lob
     public String description;
 
+    @Indexable(facet=true,name="Clinical Sponsor")
+    @Column(length=160)
+    public String sponsor;
+
+    @Indexable(facet=true,name="Study Type")    
+    public String studyType;
+
+    @Indexable(sortable=true)
+    public Date startDate;
+    @Indexable(sortable=true)
+    public Date completionDate;
+    @Indexable(sortable=true)
     public Date firstReceivedDate;
+    @Indexable(sortable=true)
     public Date lastChangedDate;
+    @Indexable(sortable=true)
     public Date verificationDate;
+    @Indexable(sortable=true)
+    public Date firstReceivedResultsDate;
 
     @Indexable(facet=true,name="Clinical Results")
     public boolean hasResults;
 
     @Indexable(facet=true,name="Clinical Status")
-    public ClinicalStatus status;
+    public String status;
+
     @Indexable(facet=true,name="Clinical Phase")
-    public ClinicalPhase phase;
+    public String phase;
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ncats_clinical_trial_keyword")
@@ -70,6 +89,10 @@ public class ClinicalTrial extends Model {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ncats_clincial_trial_location")
     public List<Organization> locations = new ArrayList<Organization>();
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ncats_clincial_trial_publication")
+    public List<Publication> publications = new ArrayList<Publication>();
 
     public ClinicalTrial () {}
 }

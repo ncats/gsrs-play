@@ -11,12 +11,26 @@ public class Arm extends Model {
     public enum Type {
         Unknown,
         Experimental,
-            Active_Comparator,
-            Placebo_Comparator,
-            Sham_Comparator,
-            No_Intervention,
-            Other
-            }
+            ActiveComparator,
+            PlaceboComparator,
+            ShamComparator,
+            NoIntervention,
+            Other;
+
+        public static Type forName (String name) {
+            if ("Experimental".equalsIgnoreCase(name))
+                return Experimental;
+            if ("Active Comparator".equalsIgnoreCase(name))
+                return ActiveComparator;
+            if ("Placebo Comparator".equalsIgnoreCase(name))
+                return PlaceboComparator;
+            if ("Sham Comparator".equalsIgnoreCase(name))
+                return ShamComparator;
+            if ("No intervention".equalsIgnoreCase(name))
+                return NoIntervention;
+            return Other;
+        }
+    }
 
     @Id
     public Long id;
@@ -24,8 +38,8 @@ public class Arm extends Model {
     public String label;
     @Lob
     public String description;
-    public Type type = Type.Unknown;
+    public String type;
 
     public Arm () {}
-    public Arm (Type type) { this.type = type; }
+    public Arm (String type) { this.type = type; }
 }

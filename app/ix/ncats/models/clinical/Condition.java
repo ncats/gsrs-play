@@ -18,6 +18,7 @@ public class Condition extends Model {
     public Long id;
 
     @Indexable(suggest=true,facet=true,name="Clinical Condition")
+    @Column(unique=true,length=1024)
     public String name;
 
     @Indexable(facet=true, name="Clinical Rare Disease")

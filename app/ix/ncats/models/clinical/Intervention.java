@@ -22,8 +22,8 @@ public class Intervention extends Model {
             Behavioral,
             Genetic,
             Dietary,
-            Other
-            }
+            Other;
+    }
 
     @Id
     public Long id;
