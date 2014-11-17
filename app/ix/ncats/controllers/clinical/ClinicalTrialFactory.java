@@ -88,7 +88,7 @@ public class ClinicalTrialFactory extends EntityFactory {
         return ok (mapper.valueToTree(ct));
     }
 
-    public static Result loadClinicalTrials () {
+    public static Result loader () {
         DynamicForm requestData = Form.form().bindFromRequest();
         String uri = requestData.get("url");
         String key = requestData.get("api-key");
@@ -106,6 +106,7 @@ public class ClinicalTrialFactory extends EntityFactory {
             Logger.debug("file="+name+" content="+content);
         }
         else {
+            long total = 0l, last = System.currentTimeMillis();
             try {
                 URL url = new URL (uri);
                 file = File.createTempFile("inx", ".zip");
@@ -113,8 +114,6 @@ public class ClinicalTrialFactory extends EntityFactory {
                 FileOutputStream fos = new FileOutputStream (file);
                 InputStream is = url.openStream();
                 byte[] buf = new byte[1024];
-                long total = 0l;
-                long last = System.currentTimeMillis();
                 for (int nb; (nb = is.read(buf, 0, buf.length)) > 0; ) {
                     fos.write(buf, 0, nb);
                     total += nb;
@@ -122,7 +121,7 @@ public class ClinicalTrialFactory extends EntityFactory {
                     long now = System.currentTimeMillis();
                     if (now - last >= 10000) {
                         Logger.debug(String.format
-                                     ("%1$.2f Mb", total/(1024.0*1024.0))
+                                     ("%1$10.2f Mb", total/(1024.0*1024.0))
                                      +" "+new java.util.Date());
                         last = now;
                     }

@@ -36,7 +36,7 @@ GET     /api/suggest/:field       ix.core.controllers.SearchFactory.suggestField
 GET     /api/suggest       ix.core.controllers.SearchFactory.suggest(q: String, max: Int ?= 10)
 
 GET     /ctloader       ix.ncats.controllers.clinical.ClinicalTrialFactory.index()
-POST    /ctloader       ix.ncats.controllers.clinical.ClinicalTrialFactory.loadClinicalTrials
+POST    /ctloader       ix.ncats.controllers.clinical.ClinicalTrialFactory.loader()
 
 #
 # special variables are denoted by @'s and should be specified
