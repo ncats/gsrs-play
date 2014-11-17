@@ -50,7 +50,7 @@ public class Organization extends Model {
      * or contractor is located.  Note that this may be different from the
      * research performance site. 
      */
-    @Column(length=20)
+    @Column(length=128)
     @Indexable(facet=true, name="State")
     public String state;
 
@@ -59,7 +59,7 @@ public class Organization extends Model {
      * organization or contractor is located.  Note that this may be
      * different from the research performance site.
      */
-    @Column(length=15)
+    @Column(length=64)
     public String zipcode;
 
     /**

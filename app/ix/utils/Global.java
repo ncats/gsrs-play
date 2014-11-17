@@ -3,6 +3,7 @@ package ix.utils;
 import java.io.*;
 import java.util.*;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 
 import play.GlobalSettings;
 import play.Application;
@@ -166,6 +167,7 @@ public class Global extends GlobalSettings {
         }
 
         try {
+            /*
             Method m = cls.getMethod("getId");
             if (m == null) {
                 Logger.error("Entity doesn't have getId: "+instance);
@@ -173,6 +175,14 @@ public class Global extends GlobalSettings {
                     ("Entity type does not have getId method!");
             }
             Object id = m.invoke(instance);
+            */
+            Field f = cls.getField("id");
+            if (f == null) {
+                Logger.trace("Entity doesn't have id field: "+instance);
+                throw new IllegalArgumentException
+                    ("Entity type does not have id field!");
+            }
+            Object id = f.get(instance);
             return getApiBase()+"/"+name+"("+id+")";
         }
         catch (Exception ex) {

@@ -141,23 +141,15 @@ public class TextIndexer {
 
     public static class SearchResult  {
         String query;
-        Set<String> drilldown = new TreeSet<String>();
-        List<String> order = new ArrayList<String>();
         List<Facet> facets = new ArrayList<Facet>();
         List matches = new ArrayList ();
         int count;
         
-        SearchResult (String query, 
-                      List<String> drilldown, 
-                      List<String> order) {
+        SearchResult (String query) {
             this.query = query;
-            this.drilldown.addAll(drilldown);
-            this.order.addAll(order);
         }
 
         public String getQuery () { return query; }
-        public Collection<String> getDrilldown () { return drilldown; }
-        public List<String> getOrder () { return order; }
         public List<Facet> getFacets () { return facets; }
         public List getMatches () { return matches; }
         public int size () { return matches.size(); }
@@ -394,21 +386,12 @@ public class TextIndexer {
     }
 
     public SearchResult search (String text, int size) throws IOException {
-        return search (text, size, 0, 
-                       new ArrayList<String>(), new ArrayList<String>());
+        return search (new SearchOptions (null, size, 0, 10), text);
     }
 
-    public SearchResult search (String text, int top, int skip, 
-                                List<String> drills, List<String> order) 
-        throws IOException {
-        return search (null, text, top, skip, 10, drills, order);
-    }
-
-    public SearchResult search (Class filter, String text, 
-                                int top, int skip, int fdim, 
-                                List<String> drills, List<String> order) 
-        throws IOException {
-        SearchResult searchResult = new SearchResult (text, drills, order);
+    public SearchResult search 
+        (SearchOptions options, String text) throws IOException {
+        SearchResult searchResult = new SearchResult (text);
 
         Query query = null;
         if (text == null) {
@@ -427,19 +410,19 @@ public class TextIndexer {
 
         if (query != null) {
             Filter f = null;
-            if (filter != null) {
-                f = new FieldCacheTermsFilter ("kind", filter.getName());
+            if (options.kind != null) {
+                f = new FieldCacheTermsFilter ("kind", options.kind.getName());
             }
-            search (searchResult, query, f, top, skip, fdim);
+            search (searchResult, options, query, f);
         }
         
         return searchResult;
     }
 
     protected void search (SearchResult searchResult, 
-                           Query query, Filter filter, 
-                           int top, int skip, int fdim) throws IOException {
-        Logger.debug("## Query: "+query);
+                           SearchOptions options,
+                           Query query, Filter filter) throws IOException {
+        Logger.debug("## Query: "+query+" Filter: "+filter);
         IndexSearcher searcher = new IndexSearcher
             (DirectoryReader.open(indexWriter, true));
         
@@ -451,49 +434,47 @@ public class TextIndexer {
         TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter);
         TopDocs hits = null;
 
-        List<String> order = searchResult.getOrder();
-        Collection<String> drills = searchResult.getDrilldown();
-        if (drills.isEmpty()) {
-            if (order.isEmpty()) {
-                hits = FacetsCollector.search
-                    (searcher, query, filter, skip+top, fc);
-            }
-            else {
-                List<SortField> fields = new ArrayList<SortField>();
-                for (String f : order) {
-                    boolean rev = false;
-                    if (f.charAt(0) == '^') {
-                        // sort in reverse
-                        f = f.substring(1);
-                    }
-                    else if (f.charAt(0) == '$') {
-                        f = f.substring(1);
-                        rev = true;
-                    }
-
-                    SortField.Type type = sorters.get(f);
-                    if (type != null) {
-                        SortField sf = new SortField (f, type, rev);
-                        Logger.debug("Sort field (rev="+rev+"): "+sf);
-                        fields.add(sf);
-                    }
-                    else {
-                        Logger.warn("Unknown sort field: \""+f+"\"");
-                    }
+        Sort sorter = null;
+        if (!options.order.isEmpty()) {
+            List<SortField> fields = new ArrayList<SortField>();
+            for (String f : options.order) {
+                boolean rev = false;
+                if (f.charAt(0) == '^') {
+                    // sort in reverse
+                    f = f.substring(1);
                 }
-
-                hits = fields.isEmpty() ? 
-                    FacetsCollector.search
-                          (searcher, query, filter, skip+top, fc) : 
-                    FacetsCollector.search
-                       (searcher, query, filter, skip+top,
-                        new Sort (fields.toArray(new SortField[0])), fc);
+                else if (f.charAt(0) == '$') {
+                    f = f.substring(1);
+                    rev = true;
+                }
+                
+                SortField.Type type = sorters.get(f);
+                if (type != null) {
+                    SortField sf = new SortField (f, type, rev);
+                    Logger.debug("Sort field (rev="+rev+"): "+sf);
+                    fields.add(sf);
+                }
+                else {
+                    Logger.warn("Unknown sort field: \""+f+"\"");
+                }
             }
+
+            if (!fields.isEmpty())
+                sorter = new Sort (fields.toArray(new SortField[0]));
+        }
+
+        List<String> drills = options.drilldown;
+        if (drills.isEmpty()) {
+            hits = sorter != null 
+                ? (FacetsCollector.search
+                   (searcher, query, filter, options.max(), sorter, fc))
+                : (FacetsCollector.search
+                   (searcher, query, filter, options.max(), fc));
                 
             Facets facets = new FastTaxonomyFacetCounts
                 (taxon, facetsConfig, fc);
                 
-            List<FacetResult> facetResults = facets.getAllDims(fdim);
+            List<FacetResult> facetResults = facets.getAllDims(options.fdim);
             if (DEBUG (1)) {
                 Logger.info("## "+facetResults.size()
                             +" facet dimension(s)");
@@ -517,7 +498,7 @@ public class TextIndexer {
         else {
             DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
             // the first term is the drilldown dimension
-            for (String dd : drills) {
+            for (String dd : options.drilldown) {
                 String[] d = dd.split("/");
                 for (int i = 1; i < d.length; ++i) {
                     if (DEBUG (1)) {
@@ -551,16 +532,18 @@ public class TextIndexer {
             DrillSideways sideway = new DrillSideways 
                 (searcher, facetsConfig, taxon);
             DrillSideways.DrillSidewaysResult swResult = 
-                sideway.search(ddq, skip+top);
+                sideway.search(ddq, filter, null, 
+                               options.max(), sorter, false, false);
 
             if (DEBUG (1)) {
                 Logger.info("## Drilled sideway "
-                            +swResult.facets.getAllDims(fdim).size()
+                            +swResult.facets.getAllDims(options.fdim).size()
                             +" facets and "+swResult.hits.totalHits
                             +" hits");
             }
 
-            for (FacetResult result : swResult.facets.getAllDims(fdim)) {
+            for (FacetResult result 
+                     : swResult.facets.getAllDims(options.fdim)) {
                 if (result != null) {
                     if (DEBUG (1)) {
                         Logger.info(" + ["+result.dim+"]");
@@ -582,8 +565,8 @@ public class TextIndexer {
         }
 
         searchResult.count = hits.totalHits;
-        int size = Math.max(0, Math.min(skip+top, hits.totalHits));
-        for (int i = skip; i < size; ++i) {
+        int size = Math.max(0, Math.min(options.max(), hits.totalHits));
+        for (int i = options.skip; i < size; ++i) {
             Document doc = searcher.doc(hits.scoreDocs[i].doc);
             IndexableField kind = doc.getField("kind");
             if (kind != null) {
@@ -601,10 +584,32 @@ public class TextIndexer {
                                 (c, Class.forName(kind.stringValue()));
                             finders.put(kind.stringValue(), finder);
                         }
-                        searchResult.matches.add
-                            (finder.byId
-                             (n != null 
-                              ? n.longValue() : id.stringValue()));
+
+                        if (options.expand.isEmpty()) {
+                            Object v = 
+                                (finder.byId
+                                 (n != null 
+                                  ? n.longValue() : id.stringValue()));
+                            if (v != null)
+                                searchResult.matches.add(v);
+                            else
+                                Logger.warn
+                                    (kind.stringValue()+":"+id
+                                     +" not available in persistence store!");
+                        }
+                        else {
+                            com.avaje.ebean.Query ebean = finder.setId
+                                (n != null ? n.longValue() : id.stringValue());
+                            for (String path : options.expand)
+                                ebean = ebean.fetch(path);
+                            Object v = ebean.findUnique();
+                            if (v != null)
+                                searchResult.matches.add(v);
+                            else
+                                Logger.warn
+                                    (kind.stringValue()+":"+id
+                                     +" not available in persistence store!");
+                        }
 
                         if (DEBUG (1)) {
                             Logger.debug("++ matched doc "

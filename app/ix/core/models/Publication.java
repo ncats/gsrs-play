@@ -4,6 +4,10 @@ import java.util.*;
 import play.db.ebean.*;
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import ix.utils.Global;
+
 @Entity
 @Table(name="ix_core_publication")
 public class Publication extends Model {
@@ -37,6 +41,7 @@ public class Publication extends Model {
     @JoinTable(name="ix_core_publication_author")
     public List<PubAuthor> authors = new ArrayList<PubAuthor>();
 
+    //@JsonView(BeanViews.Full.class)
     @ManyToOne(cascade=CascadeType.ALL)
     public Journal journal;
 
@@ -48,4 +53,12 @@ public class Publication extends Model {
     public Publication (String title) {
         this.title = title;
     }
+
+    /*
+    @JsonView(BeanViews.Compact.class)
+    @JsonProperty("journalRef")
+    public String journalRef () {
+        return Global.getRef(journal);
+    }
+    */
 }

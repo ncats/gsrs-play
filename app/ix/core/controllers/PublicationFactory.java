@@ -8,9 +8,12 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+import com.avaje.ebean.Query;
 import com.avaje.ebean.Expr;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ix.core.models.Publication;
 import ix.core.models.Author;
 import ix.core.models.PubAuthor;
@@ -43,8 +46,26 @@ public class PublicationFactory extends EntityFactory {
         return filter (json, top, skip, finder);
     }
 
-    public static Result get (Long id, String select) {
-        return get (id, select, finder);
+    public static Result get (Long id, String expand) {
+        String type = request().getQueryString("type");
+        if (type != null) {
+            if ("pmid".equalsIgnoreCase(type)) {
+                Query<Publication> q = finder.query();
+                if (expand != null) {
+                    q = q.fetch(expand);
+                }
+                Publication pub = q.where().eq("pmid", id).findUnique();
+                if (pub != null) {
+                    ObjectMapper mapper = getEntityMapper ();
+                    return ok (mapper.valueToTree(pub));
+                }
+
+                return notFound ("Not found: "+request().uri());
+            }
+
+            return badRequest ("Unknown type: "+type);
+        }
+        return get (id, expand, finder);
     }
 
     public static Result field (Long id, String path) {

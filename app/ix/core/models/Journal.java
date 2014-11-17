@@ -21,7 +21,7 @@ public class Journal extends Model {
     @Column(length=10)
     public String month;
 
-    @Column(length=256)
+    @Column(length=1024)
     @Indexable(facet=true, name="Journal")
     public String title;
 

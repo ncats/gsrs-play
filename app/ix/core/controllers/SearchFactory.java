@@ -25,6 +25,7 @@ import ix.utils.Global;
 import ix.utils.Util;
 import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
+import ix.core.search.SearchOptions;
 
 public class SearchFactory extends EntityFactory {
     static final Model.Finder<Long, ETag> etagDb = 
@@ -40,18 +41,17 @@ public class SearchFactory extends EntityFactory {
         return search (null, q, top, skip, fdim);
     }
 
-    public static Result search (Class clazz, String q, 
+    public static Result search (Class kind, String q, 
                                  int top, int skip, int fdim) {
         try {
             Map<String, String[]> query = request().queryString();
 
-            List<String> drilldown = new ArrayList<String>();
-            List<String> order = new ArrayList<String>();
+            SearchOptions options = new SearchOptions (kind, top, skip, fdim);
             StringBuilder filter = new StringBuilder ();
             for (Map.Entry<String, String[]> me : query.entrySet()) {
                 if ("facet".equalsIgnoreCase(me.getKey())) {
                     for (String s : me.getValue()){
-                        drilldown.add(s);
+                        options.drilldown.add(s);
                         if (filter.length() > 0)
                             filter.append("&");
                         filter.append("facet="+s);
@@ -59,7 +59,11 @@ public class SearchFactory extends EntityFactory {
                 }
                 else if ("order".equalsIgnoreCase(me.getKey())) {
                     for (String s : me.getValue())
-                        order.add(s);
+                        options.order.add(s);
+                }
+                else if ("expand".equalsIgnoreCase(me.getKey())) {
+                    for (String s : me.getValue())
+                        options.expand.add(s);
                 }
 
                 if (Global.DEBUG(1)) {
@@ -82,7 +86,7 @@ public class SearchFactory extends EntityFactory {
                             for (int i = facets.length; --i >= 0; ) {
                                 if (facets[i].length() > 0) {
                                     filter.insert(0, facets[i]+"&");
-                                    drilldown.add
+                                    options.drilldown.add
                                         (0, facets[i].replaceAll
                                          ("facet=", ""));
                                 }
@@ -99,9 +103,7 @@ public class SearchFactory extends EntityFactory {
                 }
             }
 
-            TextIndexer.SearchResult result = 
-                getIndexer().search(clazz, q, top, skip, 
-                                    fdim, drilldown, order);
+            TextIndexer.SearchResult result = getIndexer().search(options, q);
 
             ObjectMapper mapper = getEntityMapper ();
             ArrayNode nodes = mapper.createArrayNode();
@@ -135,7 +137,7 @@ public class SearchFactory extends EntityFactory {
             etag.save();
 
             ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
-            obj.put("drilldown", mapper.valueToTree(result.getDrilldown()));
+            obj.put("drilldown", mapper.valueToTree(options.drilldown));
             obj.put("facets", mapper.valueToTree(result.getFacets()));
             obj.put("content", nodes);
 

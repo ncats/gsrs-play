@@ -38,7 +38,7 @@ public class Intervention extends Model {
     public List<Keyword> synonyms = new ArrayList<Keyword>();
 
     @Indexable(facet=true,name="Clinical Intervention Type")
-    public Type type;
+    public String type;
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name=JOIN+"_2")

@@ -27,19 +27,23 @@ public class ClinicalTrial extends Model {
 
     @Column(length=1024)
     public String title;
-    @Column(length=2048)
+
+    @Basic(fetch=FetchType.EAGER)
+    @Lob
     public String officialTitle;
+
     @Lob
     public String summary;
     @Lob
     public String description;
 
     @Indexable(facet=true,name="Clinical Sponsor")
-    @Column(length=160)
+    @Column(length=1024)
     public String sponsor;
 
     @Indexable(facet=true,name="Study Type")    
     public String studyType;
+    public String studyDesign;
 
     @Indexable(sortable=true)
     public Date startDate;

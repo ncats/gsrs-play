@@ -16,6 +16,7 @@ import ix.core.NamedResource;
 import ix.core.models.Keyword;
 import ix.ncats.models.clinical.*;
 import ix.core.controllers.EntityFactory;
+import ix.utils.Global;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -90,34 +91,58 @@ public class ClinicalTrialFactory extends EntityFactory {
     public static Result loadUri () {
         DynamicForm requestData = Form.form().bindFromRequest();
         String uri = requestData.get("url");
+        String key = requestData.get("api-key");
 
-        Logger.debug("Downloading data from "+uri);
         int count = 0, newcnt = 0;
-        try {
-            URL url = new URL (uri);
-            File temp = File.createTempFile("inx", ".zip");
-            Logger.debug("Downloading "+uri+" to temp "+temp);
+        Logger.debug("url=\""+uri+"\" key=\""+key+"\"");
+        Http.MultipartFormData body = request().body().asMultipartFormData();
+        Http.MultipartFormData.FilePart part = body.getFile("load-file");
 
-            FileOutputStream fos = new FileOutputStream (temp);
-            InputStream is = url.openStream();
-            byte[] buf = new byte[1024];
-            for (int nb; (nb = is.read(buf, 0, buf.length)) > 0; ) {
-                fos.write(buf, 0, nb);
+        File file = null;
+        if (part != null) {
+            String name = part.getFilename();
+            String content = part.getContentType();
+            file = part.getFile();
+            Logger.debug("file="+name+" content="+content);
+        }
+        else {
+            try {
+                URL url = new URL (uri);
+                file = File.createTempFile("inx", ".zip");
+                Logger.debug("Downloading "+uri+" to temp "+file);
+                FileOutputStream fos = new FileOutputStream (file);
+                InputStream is = url.openStream();
+                byte[] buf = new byte[1024];
+                for (int nb; (nb = is.read(buf, 0, buf.length)) > 0; ) {
+                    fos.write(buf, 0, nb);
+                }
+                fos.close();
             }
-            fos.close();
-            
+            catch (IOException ex) {
+                return badRequest ("Unable to process url: "+uri);
+            }
+        }
+
+        try {
             CtXmlParser parser = new CtXmlParser ();
-            ZipFile zf = new ZipFile (temp);
+            parser.setApiKey(key);
+            
+            ZipFile zf = new ZipFile (file);
             for (Enumeration<?> en = zf.entries(); 
                  en.hasMoreElements();) {
                 ZipEntry ze = (ZipEntry)en.nextElement();
-                Logger.debug("processing "+ze.getName());
+
+                if (Global.DEBUG(1))
+                    Logger.debug("Processing "+ze.getName());
                 try {
                     parser.parse(zf.getInputStream(ze));
                     ClinicalTrial newct = parser.getCt();
                     ClinicalTrial ct = finder.where().eq
                         ("nctId", newct.nctId).findUnique();
                     if (ct == null) {
+                        Logger.debug("Creating new instance "
+                                     +newct.nctId+" "+newcnt);
+
                         newct.save();
                         ct = newct;
                         ++newcnt;
@@ -134,10 +159,11 @@ public class ClinicalTrialFactory extends EntityFactory {
 
             return ok (count+" total trials, of which "+newcnt+" are new!");
         }
-        catch (Exception ex) {
-            Logger.trace("Can't get response for "+uri, ex);
+        catch (Throwable t) {
+            Logger.trace("Can't process file "+file, t);
         }
-        return badRequest ("Can't valid response for "+uri);
+
+        return internalServerError ("Can't process request");
     }
 
     public static Result index () {

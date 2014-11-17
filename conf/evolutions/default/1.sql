@@ -31,11 +31,12 @@ create table ix_ncats_clinical_trial (
   nct_id                    varchar(15),
   url                       varchar(255),
   title                     varchar(1024),
-  official_title            varchar(2048),
+  official_title            clob,
   summary                   clob,
   description               clob,
-  sponsor                   varchar(160),
+  sponsor                   varchar(1024),
   study_type                varchar(255),
+  study_design              varchar(255),
   start_date                timestamp,
   completion_date           timestamp,
   first_received_date       timestamp,
@@ -120,6 +121,7 @@ create table ix_ncats_clinical_eligibility (
   min_age                   varchar(255),
   max_age                   varchar(255),
   healthy_volunteers        boolean,
+  criteria                  clob,
   constraint pk_ix_ncats_clinical_eligibility primary key (id))
 ;
 
@@ -217,8 +219,7 @@ create table ix_ncats_clinical_intervention (
   id                        bigint not null,
   name                      varchar(255),
   description               clob,
-  type                      integer,
-  constraint ck_ix_ncats_clinical_intervention_type check (type in (0,1,2,3,4,5,6,7,8)),
+  type                      varchar(255),
   constraint pk_ix_ncats_clinical_interventio primary key (id))
 ;
 
@@ -239,7 +240,7 @@ create table ix_core_journal (
   issue                     varchar(255),
   year                      integer,
   month                     varchar(10),
-  title                     varchar(256),
+  title                     varchar(1024),
   iso_abbr                  varchar(255),
   factor                    double,
   constraint pk_ix_core_journal primary key (id))
@@ -251,8 +252,8 @@ create table ix_core_organization (
   name                      varchar(255),
   department                varchar(255),
   city                      varchar(255),
-  state                     varchar(20),
-  zipcode                   varchar(15),
+  state                     varchar(128),
+  zipcode                   varchar(64),
   district                  varchar(255),
   country                   varchar(255),
   fips                      varchar(3),

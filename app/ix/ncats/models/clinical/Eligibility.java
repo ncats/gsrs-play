@@ -44,5 +44,8 @@ public class Eligibility extends Model {
     )
     public List<Keyword> exclusions = new ArrayList<Keyword>();
 
+    @Lob
+    public String criteria;
+
     public Eligibility () {}
 }
