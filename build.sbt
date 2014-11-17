@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
   ,"org.webjars" % "bootstrap" % "3.2.0"
   ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"
   ,"mysql" % "mysql-connector-java" % "5.1.31"
-  ,"com.wordnik" %% "swagger-play2" % "1.3.10" exclude("org.reflections", "reflections")
+//  ,"com.wordnik" %% "swagger-play2" % "1.3.10" exclude("org.reflections", "reflections")
   ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
 //  ,"com.fasterxml.jackson.core" % "jackson-core" % "2.4.1"
 //  ,"com.fasterxml.jackson.core" % "jackson-annotations" % "2.4.1"

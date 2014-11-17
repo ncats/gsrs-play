@@ -7,6 +7,8 @@ import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.lang.reflect.*;
 import java.lang.annotation.Annotation;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.StringField;
@@ -107,6 +109,8 @@ public class TextIndexer {
     static final String SUGGEST_CONFIG_FILE = "suggest_conf.json";
     static final String SORTER_CONFIG_FILE = "sorter_conf.json";
     static final String DIM_CLASS = "ix.Class";
+
+    static final DateFormat YEAR_DATE_FORMAT = new SimpleDateFormat ("yyyy");
 
     public static class FV {
         String label;
@@ -956,7 +960,10 @@ public class TextIndexer {
                 fields.add(new LongField (full, date, NO));
             if (indexable.sortable())
                 sorters.put(full, SortField.Type.LONG);
-            asText = false;
+            asText = indexable.facet();
+            if (asText) {
+                value = YEAR_DATE_FORMAT.format(date);
+            }
         }
 
         if (asText) {
