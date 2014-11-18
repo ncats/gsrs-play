@@ -1008,7 +1008,7 @@ public class TextIndexer {
                     fields.add(new TextField (full, text, NO));
             }
 
-            if (indexable.sortable())
+            if (indexable.sortable() && !sorters.containsKey(name))
                 sorters.put(name, SortField.Type.STRING);
             fields.add(new TextField (name, text, store));
         }

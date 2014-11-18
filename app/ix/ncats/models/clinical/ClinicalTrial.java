@@ -45,17 +45,17 @@ public class ClinicalTrial extends Model {
     public String studyType;
     public String studyDesign;
 
-    @Indexable(sortable=true,facet=true,name="Clinical Start")
+    @Indexable(sortable=true,facet=true,name="Clinical Start Date")
     public Date startDate;
-    @Indexable(sortable=true,facet=true,name="Clinical Completion")
+    @Indexable(sortable=true,facet=true,name="Clinical Completion Date")
     public Date completionDate;
     @Indexable(sortable=true)
     public Date firstReceivedDate;
-    @Indexable(sortable=true,facet=true,name="Clinical Last Changed")
+    @Indexable(sortable=true,facet=true,name="Clinical Last Changed Date")
     public Date lastChangedDate;
     @Indexable(sortable=true)
     public Date verificationDate;
-    @Indexable(sortable=true,facet=true,name="Clinical Results Received")
+    @Indexable(sortable=true,facet=true,name="Clinical Results Received Date")
     public Date firstReceivedResultsDate;
 
     @Indexable(facet=true,name="Clinical Results")

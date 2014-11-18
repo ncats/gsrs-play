@@ -262,14 +262,10 @@ public class CtXmlParser extends DefaultHandler {
             ct.studyDesign = value;
         }
         else if (qName.equals("intervention_type")) {
-            Intervention inv = ct.interventions.get
-                (ct.interventions.size()-1);
-            inv.type = value;
+            interv.type = value;
         }
         else if (qName.equals("intervention_name")) {
-            Intervention inv = ct.interventions.get
-                (ct.interventions.size()-1);
-            inv.name = value;
+            interv.name = value;
         }
         else if (qName.equals("description")) {
             if (parent.equals("intervention")) {
@@ -299,12 +295,8 @@ public class CtXmlParser extends DefaultHandler {
             arm.type = value;
         }
         else if (qName.equals("condition")) {
-            Condition cond = condDb.where().eq("name", value).findUnique();
-            if (cond == null) {
-                cond = new Condition (value);
-                cond.isRareDisease = rareDiseases.contains(value);
-                cond.save();
-            }
+            Condition cond = new Condition (value);
+            cond.isRareDisease = rareDiseases.contains(value);
             ct.conditions.add(cond);
         }
         else if (qName.equals("keyword") || qName.equals("mesh_term")) {
