@@ -86,11 +86,13 @@ public class GrantXmlParser extends DefaultHandler {
     public void endElement (String uri, String localName, String qName) {
         path.pop();
         String parent = path.peek();
-
         String value = content.toString().trim();
+
+        //Logger.debug(qName+": "+value);
         if (value.length() == 0)
             ;
         else if (qName.equals("row")) {
+            //Logger.debug("parsing "+grant.applicationId);
             List<Organization> orgs = OrganizationFactory
                 .finder.where(Expr.and
                               (Expr.eq("duns", org.duns),
@@ -190,7 +192,7 @@ public class GrantXmlParser extends DefaultHandler {
         else if (qName.equals("PHR")) {
             int pos = value.indexOf("PUBLIC HEALTH RELEVANCE:");
             if (pos >= 0)
-                value = value.substring(pos+25);
+                value = value.substring(pos+24);
             grant.publicHealthRelevance = value.trim();
         }
         else if (qName.equals("SERIAL_NUMBER")) {

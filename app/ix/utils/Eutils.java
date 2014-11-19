@@ -96,8 +96,9 @@ public class Eutils {
                 for (int i = 0; i < nodes.getLength(); ++i) {
                     Node n = nodes.item(i);
                     Author author = getAuthor (n);
-                    pub.authors.add(new PubAuthor 
-                                    (i, i+1 == nodes.getLength(), author));
+                    if (author != null)
+                        pub.authors.add(new PubAuthor 
+                                        (i, i+1 == nodes.getLength(), author));
                 }
             }
                         
@@ -185,6 +186,7 @@ public class Eutils {
     }
 
     static Author getAuthor (Node node) {
+        
         NodeList nodes = ((org.w3c.dom.Element)node)
             .getElementsByTagName("LastName");
 
@@ -192,6 +194,19 @@ public class Eutils {
         if (nodes.getLength() > 0) {
             org.w3c.dom.Element elm = (org.w3c.dom.Element)nodes.item(0);
             author.lastname = elm.getTextContent();
+        }
+        else {
+            nodes = ((org.w3c.dom.Element)node)
+                .getElementsByTagName("CollectiveName");
+            if (nodes.getLength() > 0) {
+                org.w3c.dom.Element elm = (org.w3c.dom.Element)nodes.item(0);
+                author.lastname = elm.getTextContent();
+            }
+            else {
+                author = null;
+            }
+
+            return author;
         }
 
         nodes = ((org.w3c.dom.Element)node)

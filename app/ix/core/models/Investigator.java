@@ -14,7 +14,11 @@ public class Investigator extends Model {
 
     @Id
     public Long id; // internal id
+
+    // can be contact..
+    @Indexable(facet=true, name="Investigator")
     public String name;
+
     public Long piId; // PI id
     
     @ManyToOne(cascade=CascadeType.ALL)

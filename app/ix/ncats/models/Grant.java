@@ -24,6 +24,7 @@ public class Grant extends Model {
     /**
      * A unique identifier of the project record in the ExPORTER database. 
      */
+    @Column(unique=true)
     public Long applicationId;
 
     /**
@@ -77,16 +78,19 @@ public class Grant extends Model {
      * which defines the period of support and the terms and conditions 
      * of award. 
      */
+    @Indexable(sortable=true)
     public Date awardNoticeDate;
 
     /**
      * The date when a project's funding for a particular fiscal year begins. 
      */
+    @Indexable(sortable=true)
     public Date budgetStart;
 
     /**
      * The date when a project's funding for a particular fiscal year ends.
      */
+    @Indexable(sortable=true)
     public Date budgetEnd;
 
     /**
@@ -139,6 +143,7 @@ public class Grant extends Model {
      * The fiscal year appropriation from which project funds were 
      * obligated.
      */
+    @Indexable(sortable=true)
     public Integer fiscalYear;
 
     /**
@@ -185,6 +190,7 @@ public class Grant extends Model {
      * The start date of a project.  For subprojects of a multi-project 
      * grant, this is the start date of the parent award. 
      */
+    @Indexable(sortable=true)
     public Date projectStart;
 
     /**
@@ -194,6 +200,7 @@ public class Grant extends Model {
      * Upon competitive renewal of a grant, the project end date is 
      * extended by the length of the renewal award. 
      */
+    @Indexable(sortable=true)
     public Date projectEnd;
 
     /**
@@ -283,6 +290,7 @@ public class Grant extends Model {
      * subproject records; the total cost of each subproject is found
      * in Total_Cost_Sub_Project (FY 2000 and later fiscal years only). 
      */
+    @Indexable(sortable=true)
     public Integer totalCost;
 
     /**

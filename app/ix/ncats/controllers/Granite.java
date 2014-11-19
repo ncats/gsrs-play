@@ -3,6 +3,7 @@ package ix.ncats.controllers;
 import java.io.*;
 import java.security.*;
 import java.util.*;
+import java.util.zip.*;
 
 import play.*;
 import play.data.*;
@@ -93,6 +94,38 @@ public class Granite extends Controller {
         }
     }
 
+    static void loadGrants (File file) throws Exception {
+        MessageDigest md = MessageDigest.getInstance("SHA1");
+        DigestInputStream dis = new DigestInputStream
+            (new FileInputStream (file), md);
+        /*
+                byte[] buf = new byte[1024];
+                long size = 0;
+                for (int nb; (nb = dis.read(buf, 0, buf.length)) > 0; ) {
+                    size += nb;
+                }
+                dis.close();
+                */
+        final GrantXmlParser parser = new GrantXmlParser ();
+        parser.addGrantListener(new GrantListener () {
+                public void newGrant (Grant g) {
+                    //Logger.info("yeah.. new grant "+g.applicationId);
+                    int count = parser.getCount();
+                    if (count % 100 == 0) {
+                        Logger.debug(count+" grants loaded!");
+                    }
+                    g.save();
+                }
+            });
+        parser.parse(dis);
+
+        StringBuilder sb = new StringBuilder ();
+        byte[] sha = md.digest(); 
+        for (int i = 0; i < sha.length; ++i) {
+            sb.append(String.format("%1$02x", sha[i] & 0xff));
+        }
+    }
+
     @BodyParser.Of(value = BodyParser.MultipartFormData.class, 
                    maxLength = 1000000 * 1024 * 1024)
     public static Result loadMeta () {
@@ -108,37 +141,31 @@ public class Granite extends Controller {
                 
             try {
                 File file = part.getFile();
-                
-                MessageDigest md = MessageDigest.getInstance("SHA1");
-                DigestInputStream dis = new DigestInputStream
-                    (new FileInputStream (file), md);
-                /*
-                byte[] buf = new byte[1024];
-                long size = 0;
-                for (int nb; (nb = dis.read(buf, 0, buf.length)) > 0; ) {
-                    size += nb;
-                }
-                dis.close();
-                */
-                final GrantXmlParser parser = new GrantXmlParser ();
-                parser.addGrantListener(new GrantListener () {
-                        public void newGrant (Grant g) {
-                            //Logger.info("yeah.. new grant "+g.applicationId);
-                            int count = parser.getCount();
-                            if (count % 100 == 0) {
-                                Logger.debug(count+" grants loaded!");
-                            }
-                            g.save();
-                        }
-                    });
-                parser.parse(dis);
+                Logger.debug("file="+name+" content="+content);
 
-                Logger.info("file="+name+"; content="+content);
-                
-                StringBuilder sb = new StringBuilder ();
-                byte[] sha = md.digest(); 
-                for (int i = 0; i < sha.length; ++i) {
-                    sb.append(String.format("%1$02x", sha[i] & 0xff));
+                if ("application/zip".equalsIgnoreCase(content)) {
+                    byte[] buf = new byte[1024];
+
+                    ZipFile zf = new ZipFile (file);
+                    for (Enumeration en = zf.entries(); 
+                         en.hasMoreElements(); ) {
+                        ZipEntry ze = (ZipEntry)en.nextElement();
+                        InputStream is = zf.getInputStream(ze);
+
+                        File temp = File.createTempFile("inx", "xml");
+                        FileOutputStream fos = new FileOutputStream (temp);
+                        for (int nb; (nb = is.read(buf, 0, buf.length)) > 0;) {
+                            fos.write(buf, 0, nb);
+                        }
+                        fos.close();
+                        Logger.debug("processing "+ze.getName()+"...");
+                        loadGrants (temp);
+                        temp.delete();
+                    }
+                    zf.close();
+                }
+                else {
+                    loadGrants (file);
                 }
                 
                 //return ok (sb.toString());

@@ -18,7 +18,7 @@ public class Principal extends Model {
     @Column(length=1024)
     public String uri; // can be email or any unique uri
 
-    @Column(length=256,unique=true)
+    @Column(length=255,unique=true)
     public String pkey; // private key
 
     @ManyToOne(cascade=CascadeType.ALL)

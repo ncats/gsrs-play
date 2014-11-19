@@ -30,5 +30,14 @@ public class Author extends Principal {
     }
 
     @Indexable(facet=true, suggest=true, name="Author")
-    public String getName () { return lastname+", "+forename; }
+    public String getName () { 
+        if (lastname != null && forename != null)
+            return lastname+", "+forename; 
+        else if (lastname != null)
+            return lastname;
+        else if (forename != null)
+            return forename;
+
+        return null;
+    }
 }
