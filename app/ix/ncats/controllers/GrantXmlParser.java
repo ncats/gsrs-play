@@ -19,6 +19,7 @@ import ix.core.models.Organization;
 import ix.core.models.Investigator;
 import ix.core.controllers.OrganizationFactory;
 import ix.core.controllers.InvestigatorFactory;
+import ix.utils.Global;
 
 public class GrantXmlParser extends DefaultHandler {
     
@@ -58,9 +59,8 @@ public class GrantXmlParser extends DefaultHandler {
      */
     @Override
     public void characters (char[] ch, int start, int length) {
-        for (int i = start, j = 0; j < length; ++j, ++i) {
+        for (int i = start, j = start+length; i < j; ++i)
             content.append(ch[i]);
-        }
     }
 
     @Override
@@ -88,11 +88,18 @@ public class GrantXmlParser extends DefaultHandler {
         String parent = path.peek();
         String value = content.toString().trim();
 
-        //Logger.debug(qName+": "+value);
+        if (Global.DEBUG(2)) {
+            Logger.debug(getClass().getName()+": "+qName+": "+value);
+        }
+
         if (value.length() == 0)
             ;
         else if (qName.equals("row")) {
-            //Logger.debug("parsing "+grant.applicationId);
+            if (Global.DEBUG(2)) {
+                Logger.debug(getClass().getName()
+                             +": parsing "+grant.applicationId+" "+count);
+            }
+
             List<Organization> orgs = OrganizationFactory
                 .finder.where(Expr.and
                               (Expr.eq("duns", org.duns),
@@ -136,8 +143,9 @@ public class GrantXmlParser extends DefaultHandler {
                 l.newGrant(grant);
             ++count;
         }
-        else if (qName.equals("APPLICATION_ID"))
+        else if (qName.equals("APPLICATION_ID")) {
             grant.applicationId = Long.parseLong(value);
+        }
         else if (qName.equals("ACTIVITY"))
             grant.activity = value;
         else if (qName.equals("ADMINISTERING_IC"))

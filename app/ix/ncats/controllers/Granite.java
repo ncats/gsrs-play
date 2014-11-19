@@ -144,7 +144,7 @@ public class Granite extends Controller {
                 Logger.debug("file="+name+" content="+content);
 
                 if ("application/zip".equalsIgnoreCase(content)) {
-                    byte[] buf = new byte[1024];
+                    byte[] buf = new byte[4096];
 
                     ZipFile zf = new ZipFile (file);
                     for (Enumeration en = zf.entries(); 
@@ -153,9 +153,23 @@ public class Granite extends Controller {
                         InputStream is = zf.getInputStream(ze);
 
                         File temp = File.createTempFile("inx", "xml");
+                        Logger.debug("writing to temp "+temp+"...");
                         FileOutputStream fos = new FileOutputStream (temp);
                         for (int nb; (nb = is.read(buf, 0, buf.length)) > 0;) {
-                            fos.write(buf, 0, nb);
+                            int i = 0, j = 0;
+                            for (; i < nb; ++j) {
+                                while (j < nb 
+                                       && (buf[j] >= 0x20 
+                                           || buf[j] == 0x09 
+                                           || buf[j] == 0x0a
+                                           || buf[j] == 0x0d)) 
+                                    ++j;
+                                int d = j - i;
+                                if (d > 0) {
+                                    fos.write(buf, i, d);
+                                }
+                                i += d+1;
+                            }
                         }
                         fos.close();
                         Logger.debug("processing "+ze.getName()+"...");

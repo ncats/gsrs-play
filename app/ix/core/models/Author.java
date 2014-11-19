@@ -13,8 +13,9 @@ public class Author extends Principal {
     @Column(length=20)
     public String suffix; // Ph.D, M.D., etc.
 
-    @Column(length=1024)
+    @Basic(fetch=FetchType.EAGER)
     @Indexable(facet=true,name="Affiliation")
+    @Lob
     public String affiliation;
 
     @Column(length=20)

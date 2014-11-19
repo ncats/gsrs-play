@@ -93,12 +93,14 @@ public class Eutils {
             if (nodes.getLength() > 0) {
                 nodes = ((Element)nodes.item(0))
                     .getElementsByTagName("Author");
-                for (int i = 0; i < nodes.getLength(); ++i) {
+
+                for (int i = 0, j = 0; i < nodes.getLength(); ++i) {
                     Node n = nodes.item(i);
                     Author author = getAuthor (n);
                     if (author != null)
-                        pub.authors.add(new PubAuthor 
-                                        (i, i+1 == nodes.getLength(), author));
+                        pub.authors.add
+                            (new PubAuthor 
+                             (j++, i+1 == nodes.getLength(), author));
                 }
             }
                         
