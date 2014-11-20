@@ -786,9 +786,9 @@ public class TextIndexer {
                     indexable = defaultIndexable;
                 }
 
-                if (!indexable.indexed() 
-                    || null != f.getAnnotation(JsonIgnore.class))
+                if (!indexable.indexed()) {
                     continue;
+                }
 
                 path.push(f.getName());
                 try {
@@ -919,21 +919,35 @@ public class TextIndexer {
 
         if (value instanceof Long) {
             //fields.add(new NumericDocValuesField (full, (Long)value));
-            fields.add(new LongField (full, (Long)value, NO));
+            Long lval = (Long)value;
+            fields.add(new LongField (full, lval, NO));
             asText = indexable.facet();
             if (!asText && !name.equals(full)) 
-                fields.add(new LongField (name, (Long)value, store));
+                fields.add(new LongField (name, lval, store));
             if (indexable.sortable())
                 sorters.put(full, SortField.Type.LONG);
+
+            FacetField ff = getRangeFacet 
+                ("".equals(indexable.name()) ? name : indexable.name(),
+                 indexable.ranges(), lval);
+            if (ff != null)
+                fields.add(ff);
         }
         else if (value instanceof Integer) {
             //fields.add(new IntDocValuesField (full, (Integer)value));
-            fields.add(new IntField (full, (Integer)value, NO));
+            Integer ival = (Integer)value;
+            fields.add(new IntField (full, ival, NO));
             asText = indexable.facet();
             if (!asText && !name.equals(full))
-                fields.add(new IntField (name, (Integer)value, store));
+                fields.add(new IntField (name, ival, store));
             if (indexable.sortable())
                 sorters.put(full, SortField.Type.INT);
+
+            FacetField ff = getRangeFacet 
+                ("".equals(indexable.name()) ? name : indexable.name(),
+                 indexable.ranges(), ival);
+            if (ff != null)
+                fields.add(ff);
         }
         else if (value instanceof Float) {
             //fields.add(new FloatDocValuesField (full, (Float)value));
@@ -1012,6 +1026,27 @@ public class TextIndexer {
                 sorters.put(name, SortField.Type.STRING);
             fields.add(new TextField (name, text, store));
         }
+    }
+
+    static FacetField getRangeFacet (String name, long[] ranges, long value) {
+        if (ranges.length == 0) 
+            return null;
+
+        if (value < ranges[0]) {
+            return new FacetField (name, "<"+ranges[0]);
+        }
+
+        int i = 1;
+        for (; i < ranges.length; ++i) {
+            if (value < ranges[i])
+                break;
+        }
+
+        if (i == ranges.length) {
+            return new FacetField (name, ">"+ranges[i-1]);
+        }
+
+        return new FacetField (name, ranges[i-1]+":"+ranges[i]);
     }
 
     static void setFieldType (FieldType ftype) {

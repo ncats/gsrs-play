@@ -8,6 +8,7 @@ import javax.persistence.*;
 
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name="ix_ncats_clinical_condition")
@@ -20,8 +21,6 @@ public class Condition extends Model {
     @Indexable(suggest=true,facet=true,name="Clinical Condition")
     @Column(length=1024)
     public String name;
-
-    @Indexable(facet=true, name="Clinical Rare Disease")
     public boolean isRareDisease;
 
     /**
@@ -56,4 +55,10 @@ public class Condition extends Model {
 
     public Condition () {}
     public Condition (String name) { this.name = name; }
+
+    @Indexable(facet=true, name="Clinical Rare Disease")
+    @JsonIgnore
+    public String getRareDisease () {
+        return isRareDisease ? name : null;
+    }
 }

@@ -20,9 +20,12 @@ public class Figure extends Model {
     public String mimeType;
     @Column(length=1024)
     public String url;
+
     @Lob
     @JsonIgnore
+    @Indexable(indexed=false)
     public byte[] data;
+
     public int size;
     @Column(length=140)
     public String sha1;

@@ -10,6 +10,9 @@ import ix.core.models.Keyword;
 import ix.core.models.Investigator;
 import ix.core.models.Indexable;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name="ix_ncats_grant")
 public class Grant extends Model {
@@ -190,7 +193,7 @@ public class Grant extends Model {
      * The start date of a project.  For subprojects of a multi-project 
      * grant, this is the start date of the parent award. 
      */
-    @Indexable(sortable=true)
+    @Indexable(sortable=true, facet=true, name="Grant Start Date")
     public Date projectStart;
 
     /**
@@ -200,7 +203,7 @@ public class Grant extends Model {
      * Upon competitive renewal of a grant, the project end date is 
      * extended by the length of the renewal award. 
      */
-    @Indexable(sortable=true)
+    @Indexable(sortable=true, facet=true, name="Grant End Date")
     public Date projectEnd;
 
     /**
@@ -290,7 +293,9 @@ public class Grant extends Model {
      * subproject records; the total cost of each subproject is found
      * in Total_Cost_Sub_Project (FY 2000 and later fiscal years only). 
      */
-    @Indexable(sortable=true)
+    @Indexable(sortable=true,
+               ranges={10000, 100000, 500000, 1000000}, 
+               name="Grant Total Cost")
     public Integer totalCost;
 
     /**
@@ -318,5 +323,22 @@ public class Grant extends Model {
 
 
     public Grant () {
+    }
+
+    @Indexable(facet=true, name="Grant Application Type")
+    @JsonIgnore
+    public String getApplicationTypeAsString () {
+        if (applicationType != null) {
+            switch (applicationType) {
+            case 1: return "New application";
+            case 2: return "Competing continuation";
+            case 3: return "Application for additional (supplemental) support";
+            case 4: return "R37 or Fast Track SBIR/STTR award";
+            case 5: return "Non-competing continuation";
+            case 6: return "Change of grantee institution";
+            case 7: return "Change of NIH awarding Institute or Division";
+            }
+        }
+        return null;
     }
 }

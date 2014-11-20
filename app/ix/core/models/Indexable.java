@@ -14,4 +14,5 @@ public @interface Indexable {
     String pathsep () default "/"; // path separator for
     // if empty, use the instance variable name
     String name () default "";
+    long[] ranges () default {};
 }

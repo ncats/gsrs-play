@@ -13,6 +13,8 @@ import ix.core.models.*;
 import ix.core.plugins.*;
 
 public class EntityPersistAdapter extends BeanPersistAdapter {
+    TextIndexerPlugin plugin = 
+        Play.application().plugin(TextIndexerPlugin.class);
 
     public EntityPersistAdapter () {
     }
@@ -20,7 +22,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public boolean isRegisterFor (Class<?> cls) {
         return cls.isAnnotationPresent(Entity.class);
     }
-
     
     @Override
     public boolean preInsert (BeanPersistRequest<?> request) {
@@ -45,8 +46,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         Object bean = request.getBean();
         //Logger.debug("## indexing bean "+bean+"; global="+g);
         try {
-            TextIndexerPlugin plugin  = 
-                Play.application().plugin(TextIndexerPlugin.class);
             if (plugin != null)
                 plugin.getIndexer().add(bean);
         }
@@ -75,8 +74,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
 
         try {
-            TextIndexerPlugin plugin  = 
-                Play.application().plugin(TextIndexerPlugin.class);
             if (plugin != null)
                 plugin.getIndexer().update(bean);
         }

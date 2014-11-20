@@ -410,7 +410,7 @@ public class CtXmlParser extends DefaultHandler {
                 eli.healthyVolunteers = "yes".equalsIgnoreCase(value);
         }
 
-        if (Global.DEBUG(1))
+        if (Global.DEBUG(2))
             Logger.debug(">> "+qName+": "+value);
     }
 
