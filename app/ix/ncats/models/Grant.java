@@ -294,7 +294,7 @@ public class Grant extends Model {
      * in Total_Cost_Sub_Project (FY 2000 and later fiscal years only). 
      */
     @Indexable(sortable=true,
-               ranges={10000, 100000, 500000, 1000000}, 
+               ranges={10000, 100000, 250000, 500000, 1000000, 5000000}, 
                name="Grant Total Cost")
     public Integer totalCost;
 
@@ -338,6 +338,19 @@ public class Grant extends Model {
             case 6: return "Change of grantee institution";
             case 7: return "Change of NIH awarding Institute or Division";
             }
+        }
+        return null;
+    }
+
+    @Indexable(facet=true, name="Grant Duration")
+    @JsonIgnore
+    public Integer getGrantDuration () {
+        if (projectEnd != null && projectStart != null) {
+            Calendar start = Calendar.getInstance();
+            Calendar end = Calendar.getInstance();
+            start.setTime(projectStart);
+            end.setTime(projectEnd);
+            return end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
         }
         return null;
     }

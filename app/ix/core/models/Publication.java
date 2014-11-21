@@ -20,8 +20,10 @@ public class Publication extends Model {
     @Column(unique=true)
     public String pmcid; // pubmed central id
 
-    @Column(length=1024)
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String title; // publication title
+
     public String pages;
     public String doi;
 

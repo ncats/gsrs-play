@@ -3,6 +3,7 @@ package ix.ncats.models.clinical;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import play.db.ebean.Model;
 import javax.persistence.*;
@@ -11,6 +12,9 @@ import ix.core.models.Indexable;
 import ix.core.models.Organization;
 import ix.core.models.Keyword;
 import ix.core.models.Publication;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * based on definition from clinicaltrials.gov
@@ -23,9 +27,11 @@ public class ClinicalTrial extends Model {
 
     @Column(length=15,unique=true)
     public String nctId;
+    @Column(length=1024)
     public String url;
 
-    @Column(length=1024)
+    @Basic(fetch=FetchType.EAGER)
+    @Lob
     public String title;
 
     @Basic(fetch=FetchType.EAGER)
@@ -99,4 +105,18 @@ public class ClinicalTrial extends Model {
     public List<Publication> publications = new ArrayList<Publication>();
 
     public ClinicalTrial () {}
+
+    @JsonIgnore
+    @Indexable(facet=true, name="Clinical Trial Duration")
+    public Integer getTrialDuration () {
+        Integer duration = null;
+        if (startDate != null && completionDate != null) {
+            Calendar start = Calendar.getInstance();
+            start.setTime(startDate);
+            Calendar end = Calendar.getInstance();
+            end.setTime(completionDate);
+            duration = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
+        }
+        return duration;
+    }
 }
