@@ -108,13 +108,22 @@ public class Granite extends Controller {
                 */
         final GrantXmlParser parser = new GrantXmlParser ();
         parser.addGrantListener(new GrantListener () {
-                public void newGrant (Grant g) {
+                int saved = 0;
+                public void newGrant (Grant newg) {
                     //Logger.info("yeah.. new grant "+g.applicationId);
+                    Grant g = GrantFactory.finder
+                        .where().eq("applicationId", newg.applicationId)
+                        .findUnique();
+                    if (g == null) {
+                        newg.save();
+                        ++saved;
+                    }
+
                     int count = parser.getCount();
                     if (count % 100 == 0) {
-                        Logger.debug(count+" grants loaded!");
+                        Logger.debug(count+" grants parsed; "
+                                     +saved+" are saved!");
                     }
-                    g.save();
                 }
             });
         parser.parse(dis);
