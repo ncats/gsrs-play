@@ -203,6 +203,8 @@ public class Eutils {
             if (nodes.getLength() > 0) {
                 org.w3c.dom.Element elm = (org.w3c.dom.Element)nodes.item(0);
                 author.lastname = elm.getTextContent();
+                if (author.lastname.length() > 255)
+                    author = null;
             }
             else {
                 author = null;
