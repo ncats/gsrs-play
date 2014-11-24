@@ -1,47 +1,42 @@
-@(grants: List[ix.ncats.models.Grant], grantForm: Form[ix.ncats.models.Grant])
+@(total: Int, grantForm: Form[ix.ncats.models.Grant])
 
 @import helper._
 
-@main("Granite") {
-    <h1>@grants.size() grant(s)</h1>
-<!--
-    <ul>
-      @for(grant <- grants) {
-        <li>@grant.projectTitle [@grant.id]
-          @form(ix.ncats.controllers.routes.Granite.deleteGrant(grant.id)) {
-            <input type="submit" value="Delete">
-          }
-        </li>
-      }
-    </ul>
--->
-    <h2>Add new grant</h2>
-    @form(ix.ncats.controllers.routes.Granite.newGrant()) {
-      @inputText(grantForm("projectTitle"))
-      @inputText(grantForm("publicHealthRelevance"))
-      <input type="submit" value="Create">
-    }
+@ix.core.views.html.main("Granite") {
+      <div class="site-wrapper">
+        <div class="site-wrapper-inner">
+          <div class="cover-container">
+            <div class="inner cover">
+              <h1 class="cover-heading">@total grant(s) loaded!</h1>
+              <h2>Add new grant</h2>
+              @form(ix.ncats.controllers.routes.Granite.newGrant()) {
+                  @inputText(grantForm("projectTitle"))
+                  @inputText(grantForm("publicHealthRelevance"))
+                  <input type="submit" value="Create">
+              }
 
+              <h2>Load Grant metadata</h2>
+              @form(action = ix.ncats.controllers.routes.Granite.loadMeta, 
+                    'enctype -> "multipart/form-data") {
+                  <input type="file" name="File">
+                  <p><input type="submit">
+              }
 
-    <h2>Load Grant metadata</h2>
-    @form( action = ix.ncats.controllers.routes.Granite.loadMeta, 
-    'enctype -> "multipart/form-data") {
-       <input type="file" name="File">
-       <p><input type="submit">
-    }
-
-    <h2>Load Grant abstract</h2>
-    @form( action = ix.ncats.controllers.routes.Granite.loadAbs, 
-    'enctype -> "multipart/form-data") {
-       <input type="file" name="File">
-       <p><input type="submit">
-    }
-
-    <h2>Load Grant publication</h2>
-    @form( action = ix.ncats.controllers.routes.Granite.loadPub, 
-    'enctype -> "multipart/form-data") {
-       <input type="file" name="File">
-       <p><input type="submit">
-    }
-
+              <h2>Load Grant abstract</h2>
+              @form(action = ix.ncats.controllers.routes.Granite.loadAbs, 
+                    'enctype -> "multipart/form-data") {
+                  <input type="file" name="File">
+                  <p><input type="submit">
+              }
+              
+              <h2>Load Grant publication</h2>
+              @form(action = ix.ncats.controllers.routes.Granite.loadPub, 
+                    'enctype -> "multipart/form-data") {
+                  <input type="file" name="File">
+                  <p><input type="submit">
+              }
+            </div>
+          </div>
+        </div>
+      </div>
 }

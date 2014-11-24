@@ -19,9 +19,25 @@ public class GrantFactory extends EntityFactory {
     static final public Model.Finder<Long, Grant> finder = 
         new Model.Finder(Long.class, Grant.class);
 
-    static final public Class getType () { return Grant.class; }
+    //static final public Class getType () { return Grant.class; }
 
+    public static Integer getRowCount () { 
+        try {
+            return getRowCount (finder); 
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't get row count", ex);
+        }
+        return null;
+    }
     public static List<Grant> all () { return all (finder); }
+    public static List<Grant> filter (int top, int skip) {
+        return filter (top, skip, null, null, finder);
+    }
+    public static List<Grant> filter (int top, int skip, 
+                                      String expand, String filter) {
+        return filter (top, skip, expand, filter, finder);
+    }
     public static Grant getEntity (Long id) {
         return getEntity (id, finder);
     }

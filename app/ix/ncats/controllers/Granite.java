@@ -44,14 +44,15 @@ public class Granite extends Controller {
                 Logger.debug("\""+e.getKey()+"\": "+v);
             }
         }
-        return ok (ix.ncats.views.html.granite.render(GrantFactory.all(), grantForm));
+        return ok (ix.ncats.views.html.granite.render
+                   (GrantFactory.getRowCount(), grantForm));
     }
 
     public static Result newGrant () {
         Form<Grant> filled = grantForm.bindFromRequest();
         if (filled.hasErrors()) {
             return badRequest (ix.ncats.views.html.granite.render
-                               (GrantFactory.all(), filled));
+                               (GrantFactory.getRowCount(), filled));
         }
         else {
             Grant g = filled.get();
