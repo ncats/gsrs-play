@@ -275,10 +275,16 @@ public class Migration extends Controller {
         }
     }
 
-    public static int migratePublications (Connection con) throws SQLException {
+    public static int migratePublications (Connection con) 
+        throws SQLException {
         Statement stm = con.createStatement();
         PreparedStatement pstm = con.prepareStatement
             ("select * from pub_image where db_pub_id = ? order by img_order");
+        PreparedStatement pstm2 = con.prepareStatement
+            ("select * from pub_tag where db_pub_id = ?");
+        PreparedStatement pstm3 = con.prepareStatement
+            ("select * from pub_program where db_pub_id = ?");
+
         try {
             // now migrate publications
             ResultSet rset = stm.executeQuery
@@ -306,6 +312,12 @@ public class Migration extends Controller {
                                 for (Figure f : figs) {
                                     pub.figures.add(f);
                                 }
+
+                                for (Keyword k : fetchCategories (pstm2, id))
+                                    pub.keywords.add(k);
+                                
+                                for (Keyword k : fetchPrograms (pstm3, id))
+                                    pub.keywords.add(k);
                             }
                             catch (Exception ex) {
                                 Logger.trace
@@ -337,6 +349,40 @@ public class Migration extends Controller {
             stm.close();
             pstm.close();
         }
+    }
+
+    static List<Keyword> fetchCategories (PreparedStatement pstm, long id)
+        throws Exception {
+        pstm.setLong(1, id);
+        ResultSet rset = pstm.executeQuery();
+        List<Keyword> keywords = new ArrayList<Keyword>();
+        while (rset.next()) {
+            String tag = rset.getString("tag_key");
+            if ("category".equalsIgnoreCase(tag)) {
+                Keyword kw = new Keyword ();
+                kw.label = tag;
+                kw.term = rset.getString("value");
+                keywords.add(kw);
+            }
+        }
+        rset.close();
+        return keywords;
+    }
+
+    static List<Keyword> fetchPrograms (PreparedStatement pstm, long id)
+        throws Exception {
+        pstm.setLong(1, id);
+        ResultSet rset = pstm.executeQuery();
+        List<Keyword> keywords = new ArrayList<Keyword>();
+        while (rset.next()) {
+            String program = rset.getString("program");
+            Keyword kw = new Keyword ();
+            kw.label = "Program";
+            kw.term = program;
+            keywords.add(kw);
+        }
+        rset.close();
+        return keywords;
     }
 
     static List<Figure> createFigures (PreparedStatement pstm, long id)

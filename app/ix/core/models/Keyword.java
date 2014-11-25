@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @DiscriminatorValue("KEY")
+@DynamicFacet(label="label", value="term")
 public class Keyword extends Value {
     @Column(length=255)
     @Indexable(facet=true, suggest=true, name="Keyword")

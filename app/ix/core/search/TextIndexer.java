@@ -91,6 +91,7 @@ import play.db.ebean.Model;
 
 import ix.utils.Global;
 import ix.core.models.Indexable;
+import ix.core.models.DynamicFacet;
 
 /**
  * Singleton class that responsible for all entity indexing
@@ -775,10 +776,15 @@ public class TextIndexer {
                                Object entity, 
                                List<IndexableField> ixFields) {
         try {
-            ixFields.add(new FacetField
-                         (DIM_CLASS, entity.getClass().getName()));
+            Class cls = entity.getClass();
+            ixFields.add(new FacetField (DIM_CLASS, cls.getName()));
 
-            Field[] fields = entity.getClass().getFields();
+            DynamicFacet dyna = 
+                (DynamicFacet)cls.getAnnotation(DynamicFacet.class);
+            String facetLabel = null;
+            String facetValue = null;
+
+            Field[] fields = cls.getFields();
             for (Field f : fields) {
                 Indexable indexable = 
                     (Indexable)f.getAnnotation(Indexable.class);
@@ -831,6 +837,14 @@ public class TextIndexer {
                     else if (value == null || !indexable.indexed()) {
                         // do nothing
                     }
+                    else if (dyna != null 
+                             && f.getName().equals(dyna.label())) {
+                        facetLabel = value.toString();
+                    }
+                    else if (dyna != null
+                             && f.getName().equals(dyna.value())) {
+                        facetValue = value.toString();
+                    }
                     else if (type.isPrimitive()) {
                         indexField (ixFields, indexable, path, value);
                     }
@@ -859,6 +873,14 @@ public class TextIndexer {
                     }
                     else { // treat as string
                         indexField (ixFields, indexable, path, value);
+                    }
+
+                    // dynamic facet if available
+                    if (facetLabel != null && facetValue != null) {
+                        facetsConfig.setMultiValued(facetLabel, true);
+                        facetsConfig.setRequireDimCount(facetLabel, true);
+                        ixFields.add(new FacetField
+                                     (facetLabel, facetValue));
                     }
                 }
                 catch (Exception ex) {
