@@ -1,0 +1,11 @@
+# 
+# Granite
+#
+GET     /index       ix.ncats.controllers.granite.Granite.index
+POST    /loadmeta       ix.ncats.controllers.granite.Granite.loadMeta
+POST    /loadabs        ix.ncats.controllers.granite.Granite.loadAbs
+POST    /loadpub        ix.ncats.controllers.granite.Granite.loadPub
+POST    /:id  ix.ncats.controllers.granite.Granite.deleteGrant(id:Long)
+POST    /create       ix.ncats.controllers.granite.Granite.newGrant
+POST    /filter       ix.ncats.controllers.granite.Granite.filter
+GET     /delete ix.ncats.controllers.granite.Granite.delete

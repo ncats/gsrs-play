@@ -1,0 +1,6 @@
+#
+# clinical trials
+#
+GET     /index       ix.ncats.controllers.clinical.ClinicalTrialFactory.index
+POST    /loader       ix.ncats.controllers.clinical.ClinicalTrialFactory.loader
+GET     /eligibility/test1     ix.ncats.controllers.clinical.EligibilityFactory.test1()

@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.ncats.controllers.granite;
 
 import java.io.*;
 import java.util.*;
@@ -21,9 +21,9 @@ public class GrantFactory extends EntityFactory {
 
     //static final public Class getType () { return Grant.class; }
 
-    public static Integer getRowCount () { 
+    public static Integer getCount () { 
         try {
-            return getRowCount (finder); 
+            return getCount (finder); 
         }
         catch (Exception ex) {
             Logger.trace("Can't get row count", ex);

@@ -1,0 +1,17 @@
+#
+# assets
+#
+GET     /assets/*file   controllers.Assets.at(path="/public", file)
+GET     /webjars/*file          controllers.WebJarAssets.at(file)
+
+#
+# Eutils test
+#
+GET     /eutils/test    ix.ncats.controllers.test.EutilsTest.index()
+POST    /eutils/test    ix.ncats.controllers.test.EutilsTest.fetch()
+
+#
+# TCRD 
+#
+GET     /tcrd   ix.idg.controllers.TcrdLoader.index()
+POST    /tcrd   ix.idg.controllers.TcrdLoader.load()

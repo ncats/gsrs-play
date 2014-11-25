@@ -33,7 +33,7 @@ public class ETag extends Model {
 
     public Integer status;
     public final Date timestamp = new Date ();
-    public Date modified = new Date ();
+    public Date modified;
 
     @Column(length=2048)
     public String query;
@@ -60,5 +60,12 @@ public class ETag extends Model {
             id.append(String.format("%1$02x", buf[i]&0xff));
 
         return id.toString();
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void modified () {
+        //play.Logger.debug("Updating etag "+etag);
+        this.modified = new Date ();
     }
 }

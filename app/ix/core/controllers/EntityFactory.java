@@ -321,7 +321,7 @@ public class EntityFactory extends Controller {
 
     protected static <T> Result count (Model.Finder<Long, T> finder) {
         try {
-            return ok (String.valueOf(getRowCount (finder)));
+            return ok (String.valueOf(getCount (finder)));
         }
         catch (Exception ex) {
             return internalServerError
@@ -329,7 +329,7 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static <T> Integer getRowCount (Model.Finder<Long, T> finder) 
+    protected static <T> Integer getCount (Model.Finder<Long, T> finder) 
         throws InterruptedException, ExecutionException {
         FutureRowCount<T> count = finder.findFutureRowCount();
         return count.get();
@@ -456,17 +456,20 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static <T> Result delete (Long id, 
-                                        Model.Finder<Long, T> finder) {
+    protected static <T extends Model> 
+                                Result delete (Long id, 
+                                               Model.Finder<Long, T> finder) {
         T inst = finder.ref(id);
         if (inst != null) {
             ObjectMapper mapper = getEntityMapper ();
-            return ok (mapper.valueToTree(inst));
+            JsonNode node = mapper.valueToTree(inst);
+            inst.delete();
+            return ok (node);
         }
         return notFound (request().uri()+" not found");
     }
 
-    protected static <T> Result edits (Long id, Class<T> cls) {
+    protected static <T extends Model> Result edits (Long id, Class<T> cls) {
         List<Edit> edits = editFinder.where
             (Expr.and(Expr.eq("refid", id),
                       Expr.eq("type", cls.getName())))

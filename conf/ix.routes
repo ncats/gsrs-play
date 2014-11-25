@@ -1,0 +1,6 @@
+->      /api       ix.core.api.Routes
+->      /admin  ix.core.admin.Routes
+->      /granite        ix.ncats.granite.Routes
+->      /reach  ix.ncats.reach.Routes
+->      /clinical       ix.ncats.clinical.Routes
+->      /       ix.ncats.apps.Routes

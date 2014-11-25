@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.ncats.controllers.granite;
 
 import java.io.*;
 import java.security.*;
@@ -14,11 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.ncats.models.Grant;
-import ix.ncats.controllers.GrantXmlParser;
-import ix.ncats.controllers.GrantAbstractXmlParser;
-import ix.ncats.controllers.GrantPubXmlParser;
-import ix.ncats.controllers.GrantFactory;
-import ix.ncats.controllers.GrantListener;
 
 public class Granite extends Controller {
 
@@ -45,26 +40,32 @@ public class Granite extends Controller {
             }
         }
         return ok (ix.ncats.views.html.granite.render
-                   (GrantFactory.getRowCount(), grantForm));
+                   (GrantFactory.getCount(), grantForm));
     }
 
     public static Result newGrant () {
         Form<Grant> filled = grantForm.bindFromRequest();
         if (filled.hasErrors()) {
             return badRequest (ix.ncats.views.html.granite.render
-                               (GrantFactory.getRowCount(), filled));
+                               (GrantFactory.getCount(), filled));
         }
         else {
             Grant g = filled.get();
             g.save();
 
-            return redirect (ix.ncats.controllers.routes.Granite.index());
+            return redirect (routes.Granite.index());
         }
     }
 
     public static Result deleteGrant (Long id) {
+        Logger.debug("Deleting grant "+id+"...");
         GrantFactory.delete(id);
-        return redirect (ix.ncats.controllers.routes.Granite.index());
+        return redirect (routes.Granite.delete());
+    }
+
+    public static Result delete () {
+        return ok (ix.ncats.views.html.granite2.render
+                   (GrantFactory.getCount(), GrantFactory.filter(10, 0)));
     }
 
     public static Result filter () {
@@ -193,8 +194,7 @@ public class Granite extends Controller {
                 }
                 
                 //return ok (sb.toString());
-                return redirect
-                    (ix.ncats.controllers.routes.Granite.index());
+                return redirect (routes.Granite.index());
             }
             catch (Exception ex) {
                 Logger.trace("Can't load file \""+name+"\"; "+content, ex);
@@ -229,7 +229,7 @@ public class Granite extends Controller {
                             +"; content="+content
                             +"; count="+parser.getCount());
 
-                return redirect (ix.ncats.controllers.routes.Granite.index());
+                return redirect (routes.Granite.index());
             }
             catch (Exception ex) {
                 return internalServerError (ex.getMessage());
@@ -264,7 +264,7 @@ public class Granite extends Controller {
                             +"; content="+content
                             +"; count="+parser.getCount());
 
-                return redirect (ix.ncats.controllers.routes.Granite.index());
+                return redirect (routes.Granite.index());
             }
             catch (Exception ex) {
                 Logger.trace("Can't load publications", ex);

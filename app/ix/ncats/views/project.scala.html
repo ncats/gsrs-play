@@ -2,12 +2,42 @@
 
 @import helper._
 
-@main("Project") {
-    <h2>Add new Project</h2>
-    @form(ix.ncats.controllers.routes.ProjectFactory.newProject()) {
-      @inputText(projectForm("title"))
-      @inputText(projectForm("description"))
-      @inputText(projectForm("team"))
-      <input type="submit" value="Create">
-    }
+@ix.core.views.html.main("Project") {
+      <div class="site-wrapper">
+        <div class="site-wrapper-inner">
+          <div class="cover-container">
+            <div class="inner cover">
+              <h1 class="cover-heading">Add a new Project</h1>
+              @form(action = ix.ncats.controllers.reach.routes.ProjectForm.newProject,
+                    'class -> "form-horizontal", 'role -> "form") {
+              <div class="form-group">
+                <label for="title" class="col-sm-2 control-label">Title</label>
+                <div class="col-sm-10">
+                  @inputText(projectForm("title"), 'class -> "form-control")
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="description" class="col-sm-2 control-label">Description</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" name="description" 
+                    id="description" placeholder="Enter project description">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="team" class="col-sm-2 control-label">Team</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" name="team" 
+                    id="team">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="submit" class="btn btn-default">Create</button>
+                </div>
+              </div>
+            }
+            </div>
+          </div>
+        </div>
+      </div>
 }

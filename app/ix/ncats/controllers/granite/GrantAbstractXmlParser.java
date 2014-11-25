@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.ncats.controllers.granite;
 
 import java.io.*;
 import java.util.*;

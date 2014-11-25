@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.ncats.controllers.reach;
 
 import java.util.*;
 
@@ -29,9 +29,9 @@ public class EmployeeFactory extends EntityFactory {
     public static Result count () {
         return count (finder);
     }
-    public static Integer getRowCount () {
+    public static Integer getCount () {
         try {
-            return getRowCount (finder);
+            return getCount (finder);
         }
         catch (Exception ex) {
             Logger.trace("Can't get row count", ex);
@@ -77,7 +77,7 @@ public class EmployeeFactory extends EntityFactory {
 
     public static int createIfEmpty (String username, 
                                      String password, Callback callback) {
-        Integer count = getRowCount ();
+        Integer count = getCount ();
         if (count == null || count == 0) {
             try {            
                 NIHLdapConnector ldap = 

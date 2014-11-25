@@ -9,28 +9,28 @@
             <div class="inner cover">
               <h1 class="cover-heading">@total grant(s) loaded!</h1>
               <h2>Add new grant</h2>
-              @form(ix.ncats.controllers.routes.Granite.newGrant()) {
+              @form(ix.ncats.controllers.granite.routes.Granite.newGrant) {
                   @inputText(grantForm("projectTitle"))
                   @inputText(grantForm("publicHealthRelevance"))
                   <input type="submit" value="Create">
               }
 
               <h2>Load Grant metadata</h2>
-              @form(action = ix.ncats.controllers.routes.Granite.loadMeta, 
+              @form(ix.ncats.controllers.granite.routes.Granite.loadMeta, 
                     'enctype -> "multipart/form-data") {
                   <input type="file" name="File">
                   <p><input type="submit">
               }
 
               <h2>Load Grant abstract</h2>
-              @form(action = ix.ncats.controllers.routes.Granite.loadAbs, 
+              @form(ix.ncats.controllers.granite.routes.Granite.loadAbs, 
                     'enctype -> "multipart/form-data") {
                   <input type="file" name="File">
                   <p><input type="submit">
               }
               
               <h2>Load Grant publication</h2>
-              @form(action = ix.ncats.controllers.routes.Granite.loadPub, 
+              @form(ix.ncats.controllers.granite.routes.Granite.loadPub, 
                     'enctype -> "multipart/form-data") {
                   <input type="file" name="File">
                   <p><input type="submit">

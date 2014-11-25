@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.ncats.controllers.reach;
 
 import java.io.*;
 import java.security.*;
@@ -55,25 +55,5 @@ public class ProjectFactory extends EntityFactory {
 
     public static Result update (Long id, String field) {
         return update (id, field, Project.class, finder);
-    }
-
-    static public Form<Project> form = Form.form(Project.class);
-    public static Result index () {
-        //return ok (ix.ncats.views.html.project.render(form));
-        return ok (ix.ncats.views.html.index.render("NCATS Projects"));
-    }
-
-    public static Result newProject () {
-        Form<Project> filled = form.bindFromRequest();
-        if (filled.hasErrors()) {
-            return badRequest (ix.ncats.views.html.project.render
-                               (filled));
-        }
-        Project project = filled.get();
-        project.save();
-        Logger.debug("Project "+project.id+": "+project.title+" created!"); 
-        
-        return redirect 
-            (ix.ncats.controllers.routes.ProjectFactory.index());
     }
 }
