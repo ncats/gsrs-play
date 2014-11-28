@@ -468,7 +468,7 @@ public class TextIndexer {
                 sorter = new Sort (fields.toArray(new SortField[0]));
         }
 
-        List<String> drills = options.drilldown;
+        List<String> drills = options.facets;
         if (drills.isEmpty()) {
             hits = sorter != null 
                 ? (FacetsCollector.search
@@ -503,7 +503,7 @@ public class TextIndexer {
         else {
             DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
             // the first term is the drilldown dimension
-            for (String dd : options.drilldown) {
+            for (String dd : options.facets) {
                 String[] d = dd.split("/");
                 for (int i = 1; i < d.length; ++i) {
                     if (DEBUG (1)) {
@@ -514,41 +514,38 @@ public class TextIndexer {
                 }
             }
 
-            /*
-              FacetsCollector fc2 = new FacetsCollector ();
-              TopDocs docs = FacetsCollector.search
-              (searcher, ddq, skip+top, fc2);
-              Logger.debug("Drilled down results in "
-              +docs.totalHits+" hit(s)...");
-              Facets facets2 = new FastTaxonomyFacetCounts
-              (taxon, facetsConfig, fc2);
-                
-              List<FacetResult> facetResults2 = facets2.getAllDims(10);
-              Logger.info("## "+facetResults2.size()+" facet dimension(s)");
-              for (FacetResult result : facetResults2) {
-              Logger.info(" + ["+result.dim+"]");
-              for (int i = 0; i < result.labelValues.length; ++i) {
-              LabelAndValue lv = result.labelValues[i];
-              Logger.info("     \""+lv.label+"\": "+lv.value);
-              }
-              }
-            */
-                
-            DrillSideways sideway = new DrillSideways 
-                (searcher, facetsConfig, taxon);
-            DrillSideways.DrillSidewaysResult swResult = 
-                sideway.search(ddq, filter, null, 
-                               options.max(), sorter, false, false);
+            List<FacetResult> facetResults;
+            if (options.sideway) {
+                DrillSideways sideway = new DrillSideways 
+                    (searcher, facetsConfig, taxon);
+                DrillSideways.DrillSidewaysResult swResult = 
+                    sideway.search(ddq, filter, null, 
+                                   options.max(), sorter, false, false);
+
+                facetResults = swResult.facets.getAllDims(options.fdim);
+                hits = swResult.hits;
+            }
+            else { // drilldown
+                hits = sorter != null 
+                    ? (FacetsCollector.search
+                       (searcher, ddq, filter, options.max(), sorter, fc))
+                    : (FacetsCollector.search
+                       (searcher, ddq, filter, options.max(), fc));
+
+                Facets facets = new FastTaxonomyFacetCounts
+                    (taxon, facetsConfig, fc);
+                facetResults = facets.getAllDims(options.fdim);
+            }
 
             if (DEBUG (1)) {
-                Logger.info("## Drilled sideway "
-                            +swResult.facets.getAllDims(options.fdim).size()
-                            +" facets and "+swResult.hits.totalHits
+                Logger.info("## Drilled "
+                            +(options.sideway ? "sideway" : "down")
+                            +" "+facetResults.size()
+                            +" facets and "+hits.totalHits
                             +" hits");
             }
 
-            for (FacetResult result 
-                     : swResult.facets.getAllDims(options.fdim)) {
+            for (FacetResult result : facetResults) {
                 if (result != null) {
                     if (DEBUG (1)) {
                         Logger.info(" + ["+result.dim+"]");
@@ -566,7 +563,6 @@ public class TextIndexer {
                     searchResult.facets.add(f);
                 }
             }
-            hits = swResult.hits;
         }
 
         searchResult.count = hits.totalHits;

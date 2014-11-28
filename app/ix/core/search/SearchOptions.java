@@ -9,8 +9,13 @@ public class SearchOptions {
     public int top;
     public int skip;
     public int fdim; // facet dimension
+    // whether drilldown (false) or sideway (true)
+    public boolean sideway = true;
 
-    public List<String> drilldown = new ArrayList<String>();
+    /**
+     * Facet is of the form: DIMENSION/VALUE...
+     */
+    public List<String> facets = new ArrayList<String>();
     public List<String> order = new ArrayList<String>();
     public List<String> expand = new ArrayList<String>();
 

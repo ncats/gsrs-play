@@ -51,7 +51,7 @@ public class SearchFactory extends EntityFactory {
             for (Map.Entry<String, String[]> me : query.entrySet()) {
                 if ("facet".equalsIgnoreCase(me.getKey())) {
                     for (String s : me.getValue()){
-                        options.drilldown.add(s);
+                        options.facets.add(s);
                         if (filter.length() > 0)
                             filter.append("&");
                         filter.append("facet="+s);
@@ -64,6 +64,10 @@ public class SearchFactory extends EntityFactory {
                 else if ("expand".equalsIgnoreCase(me.getKey())) {
                     for (String s : me.getValue())
                         options.expand.add(s);
+                }
+                else if ("drill".equalsIgnoreCase(me.getKey())) {
+                    for (String s : me.getValue())
+                        options.sideway = "sideway".equalsIgnoreCase(s);
                 }
 
                 if (Global.DEBUG(1)) {
@@ -86,7 +90,7 @@ public class SearchFactory extends EntityFactory {
                             for (int i = facets.length; --i >= 0; ) {
                                 if (facets[i].length() > 0) {
                                     filter.insert(0, facets[i]+"&");
-                                    options.drilldown.add
+                                    options.facets.add
                                         (0, facets[i].replaceAll
                                          ("facet=", ""));
                                 }
@@ -137,7 +141,8 @@ public class SearchFactory extends EntityFactory {
             etag.save();
 
             ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
-            obj.put("drilldown", mapper.valueToTree(options.drilldown));
+            obj.put(options.sideway ? "sideway" : "drilldown",
+                    mapper.valueToTree(options.facets));
             obj.put("facets", mapper.valueToTree(result.getFacets()));
             obj.put("content", nodes);
 

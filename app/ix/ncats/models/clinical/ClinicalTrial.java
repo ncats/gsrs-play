@@ -119,4 +119,34 @@ public class ClinicalTrial extends Model {
         }
         return duration;
     }
+
+    @JsonIgnore
+    @Indexable(facet=true, name="Clinical Intervention Count")
+    public Integer getInterventionCount () {
+        return interventions.size();
+    }
+    
+    @JsonIgnore
+    @Indexable(facet=true, name="Clinical Condition Count")
+    public Integer getConditionCount () {
+        return conditions.size();
+    }
+
+    @JsonIgnore
+    @Indexable(facet=true, name="Clinical Publication Count")
+    public Integer getPublicationCount () {
+        return publications.size();
+    }
+
+    @JsonIgnore
+    @Indexable(facet=true, name="Clinical Location Count")
+    public Integer getLocationCount () {
+        return locations.size();
+    }
+
+    @JsonIgnore
+    @Indexable(facet=true, name="Clinical Outcome Count")
+    public Integer getOutcomeCount () {
+        return outcomes.size();
+    }
 }
