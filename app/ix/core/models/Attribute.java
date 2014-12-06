@@ -19,22 +19,22 @@ public class Attribute extends Model {
 
     @ManyToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
-    public Resource resource;
+    public Namespace namespace;
 
     public Attribute () {}
     public Attribute (String name, String value) {
         this.name = name;
         this.value = value;
     }
-    public Attribute (Resource resource, String name, String value) {
-        this.resource = resource;
+    public Attribute (Namespace namespace, String name, String value) {
+        this.namespace = namespace;
         this.name = name;
         this.value = value;
     }
 
     @JsonView(BeanViews.Compact.class)
-    @JsonProperty("resourceRef")
-    public String resourceRef () {
-        return Global.getRef(resource);
+    @JsonProperty("namespaceRef")
+    public String namespaceRef () {
+        return Global.getRef(namespace);
     }
 }

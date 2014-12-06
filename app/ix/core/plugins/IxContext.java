@@ -10,8 +10,9 @@ import play.Application;
 import play.db.DB;
 
 public class IxContext extends Plugin {
-    public static final String PROPS_HOME = "inxight.home";
-    public static final String PROPS_DEBUG = "inxight.debug";
+    public static final String PROPS_NS = "ix";
+    public static final String PROPS_HOME = PROPS_NS+".home";
+    public static final String PROPS_DEBUG = PROPS_NS+".debug";
 
     private final Application app;
     private File home = new File (".");

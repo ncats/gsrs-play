@@ -30,10 +30,12 @@ import ix.core.search.SearchOptions;
 public class SearchFactory extends EntityFactory {
     static final Model.Finder<Long, ETag> etagDb = 
         new Model.Finder(Long.class, ETag.class);
+    static TextIndexerPlugin plugin;
 
-    static TextIndexer getIndexer () {
-        TextIndexerPlugin plugin = 
-            Play.application().plugin(TextIndexerPlugin.class);
+    static synchronized TextIndexer getIndexer () {
+        if (plugin == null) {
+            plugin = Play.application().plugin(TextIndexerPlugin.class);
+        }
         return plugin != null ? plugin.getIndexer() : null;
     }
 
@@ -43,6 +45,12 @@ public class SearchFactory extends EntityFactory {
 
     public static Result search (Class kind, String q, 
                                  int top, int skip, int fdim) {
+        if (Global.DEBUG(1)) {
+            Logger.debug("SearchFactory.search: kind="
+                         +(kind != null ? kind.getName():"")+" q="
+                         +q+" top="+top+" skip="+skip+" fdim="+fdim);
+        }
+
         try {
             Map<String, String[]> query = request().queryString();
 
@@ -115,7 +123,8 @@ public class SearchFactory extends EntityFactory {
                 if (obj != null) {
                     try {
                         ObjectNode node = (ObjectNode)mapper.valueToTree(obj);
-                        node.put("kind", obj.getClass().getName());
+                        if (kind == null)
+                            node.put("kind", obj.getClass().getName());
                         nodes.add(node);
                     }
                     catch (Exception ex) {

@@ -8,14 +8,14 @@ import play.data.*;
 import play.mvc.*;
 
 import ix.core.NamedResource;
-import ix.core.models.Resource;
+import ix.core.models.Namespace;
 
-@NamedResource(name="resources",type=Resource.class)
-public class ResourceFactory extends EntityFactory {
-    public static final Model.Finder<Long, Resource> finder = 
-        new Model.Finder(Long.class, Resource.class);
+@NamedResource(name="namespaces",type=Namespace.class)
+public class NamespaceFactory extends EntityFactory {
+    public static final Model.Finder<Long, Namespace> finder = 
+        new Model.Finder(Long.class, Namespace.class);
 
-    public static List<Resource> all () { return all (finder); }
+    public static List<Namespace> all () { return all (finder); }
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String expand,
                                String filter) {
@@ -31,11 +31,11 @@ public class ResourceFactory extends EntityFactory {
     }
 
     public static Result edits (Long id) {
-        return edits (id, Resource.class);
+        return edits (id, Namespace.class);
     }
 
     public static Result create () {
-        return create (Resource.class, finder);
+        return create (Namespace.class, finder);
     }
 
     public static Result delete (Long id) {
@@ -43,6 +43,6 @@ public class ResourceFactory extends EntityFactory {
     }
 
     public static Result update (Long id, String field) {
-        return update (id, field, Resource.class, finder);
+        return update (id, field, Namespace.class, finder);
     }
 }

@@ -14,10 +14,152 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.ncats.models.Grant;
+import ix.core.models.Predicate;
+import ix.core.models.XRef;
+import ix.core.models.VInt;
+import ix.core.models.VNum;
+import ix.core.models.VStr;
+import ix.core.models.Value;
+import ix.core.models.VRange;
+import ix.core.models.VBin;
+import ix.core.models.VIntArray;
 
 public class Granite extends Controller {
 
     static Form<Grant> grantForm = Form.form(Grant.class);
+
+    static class DefaultGrantListener implements GrantListener {
+        List<Grant> subjects = new ArrayList<Grant>();
+        String[] predicates = new String[]{
+            "ParentOf",
+            "ChildOf",
+            "MemberOf",
+            "IsA",
+            "RelatedTo",
+            "NeighborOf",
+            "InstanceOf",
+            "InhibitorOf",
+            "MetaboliteOf"
+        };
+        Random rand = new Random ();
+        int saved;
+        GrantXmlParser parser;
+
+        DefaultGrantListener (GrantXmlParser parser) {
+            this.parser = parser;
+        }
+
+        public void newGrant (Grant newg) {
+            //Logger.info("yeah.. new grant "+g.applicationId);
+            Grant g = GrantFactory.finder
+                .where().eq("applicationId", newg.applicationId)
+                .findUnique();
+            if (g == null) {
+                newg.save();
+                randomPredicates (newg);
+                ++saved;
+            }
+
+            int count = parser.getCount();
+            if (count % 100 == 0) {
+                Logger.debug(count+" grants parsed; "+saved+" are saved!");
+            }
+        }
+
+        void randomPredicates (Grant g) {
+            if (rand.nextDouble() < .5) {                
+                if (!subjects.isEmpty()) {
+                    XRef subject = new XRef (g);
+                    subject.save();
+
+                    // randomly create predicates
+                    int np = rand.nextInt(predicates.length);
+                    Set<String> preds = new HashSet<String>();
+                    for (int i = 0; i < np; ++i) {
+                        preds.add
+                            (predicates[rand.nextInt
+                                        (predicates.length)]);
+                    }
+                    Logger.debug(g.id +": generating "
+                                 +preds.size()+" predicates...");
+                    
+                    for (String pred : preds) {
+                        Predicate p = new Predicate (pred);
+                        p.subject = subject;
+                        addProperties (p.properties);
+                        
+                        int op = rand.nextInt(subjects.size());
+                        BitSet bs = new BitSet (subjects.size());
+                        for (int j = 0; j < op; ++j)
+                            bs.set(rand.nextInt(subjects.size()));
+                        
+                        if (!bs.isEmpty()) {
+                            for (int j = bs.nextSetBit(0); j>=0;
+                                 j = bs.nextSetBit(j+1)) {
+                                XRef ref = createXRef (subjects.get(j));
+                                p.objects.add(ref);
+                            }
+                            p.save();
+                            Logger.debug("..."+p.id+" " +p.predicate+" "
+                                         +bs.cardinality() +" objects");
+                        }
+                    }
+                }
+
+                subjects.add(g);
+            }
+        }
+
+        char[] alpha = { 'a','b','c','d','e','f','g','h','i','j','k','l','m',
+                         'n','p','q','r','s','t','u','v','w','x','y','z'};
+        String randStr () {
+            int len = rand.nextInt(20);
+            StringBuilder sb = new StringBuilder ();
+            for (int i = 0; i < len; ++i) {
+                sb.append(alpha[rand.nextInt(alpha.length)]);
+            }
+            return sb.toString();
+        }
+
+        XRef createXRef (Object obj) {
+            XRef ref = new XRef (obj);
+            addProperties (ref.properties);
+            return ref;
+        }
+
+        void addProperties (List<Value> props) {
+            if (rand.nextDouble() < .5)
+                props.add(new VInt ("VInt", (long)rand.nextInt()));
+            if (rand.nextInt(2) == 0)
+                props.add(new VStr ("VStr", randStr ()));
+            if (rand.nextInt(2) == 1)
+                props.add(new VNum ("VNum", rand.nextDouble()));
+            if (rand.nextInt(2) == 0) {
+                int lval = rand.nextInt(1000);
+                int rval = lval + rand.nextInt(Math.max(1, 1000-lval));
+                VRange range = new VRange ("VRange", 
+                                           (double)lval, (double)rval);
+                range.average = (double)(lval+rand.nextInt
+                                         (Math.max(1, rval-lval)));
+                props.add(range);
+            }
+            if (rand.nextInt(2) == 1) {
+                byte[] b = new byte[rand.nextInt(1024)];
+                rand.nextBytes(b);
+                VBin bin = new VBin ("VBin", b);
+                props.add(bin);
+            }
+            if (rand.nextInt(2) == 1) {
+                /*
+                int[] ia = new int[rand.nextInt(1024)];
+                for (int i = 0; i < ia.length; ++i)
+                    ia[i] = rand.nextInt();
+                */
+                int[] ia = new int[]{1,2,3,4,5,6,7,9,9,8,7,6,5,4,3,2,1,0};
+                props.add(new VIntArray ("VIntArray", ia));
+            }
+        }
+    }
 
     public static Result index() {
         //return ok(index.render("Your new application is ready."));
@@ -108,26 +250,9 @@ public class Granite extends Controller {
                 }
                 dis.close();
                 */
-        final GrantXmlParser parser = new GrantXmlParser ();
-        parser.addGrantListener(new GrantListener () {
-                int saved = 0;
-                public void newGrant (Grant newg) {
-                    //Logger.info("yeah.. new grant "+g.applicationId);
-                    Grant g = GrantFactory.finder
-                        .where().eq("applicationId", newg.applicationId)
-                        .findUnique();
-                    if (g == null) {
-                        newg.save();
-                        ++saved;
-                    }
 
-                    int count = parser.getCount();
-                    if (count % 100 == 0) {
-                        Logger.debug(count+" grants parsed; "
-                                     +saved+" are saved!");
-                    }
-                }
-            });
+        final GrantXmlParser parser = new GrantXmlParser ();
+        parser.addGrantListener(new DefaultGrantListener (parser));
         parser.parse(dis);
 
         StringBuilder sb = new StringBuilder ();
@@ -136,6 +261,7 @@ public class Granite extends Controller {
             sb.append(String.format("%1$02x", sha[i] & 0xff));
         }
     }
+
 
     @BodyParser.Of(value = BodyParser.MultipartFormData.class, 
                    maxLength = 1000000 * 1024 * 1024)

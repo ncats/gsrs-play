@@ -24,7 +24,7 @@ import ix.core.models.Author;
 import ix.core.models.Figure;
 import ix.core.models.PubAuthor;
 import ix.core.models.Keyword;
-import ix.core.models.Resource;
+import ix.core.models.Namespace;
 import ix.core.models.Attribute;
 import ix.core.models.Thumbnail;
 import ix.ncats.models.Project;
@@ -40,8 +40,8 @@ public class Migration extends Controller {
         new Model.Finder(Long.class, Publication.class);
     static final Model.Finder<Long, Employee> emplFinder =
         new Model.Finder(Long.class, Employee.class);
-    static final Model.Finder<Long, Resource> resFinder = 
-        new Model.Finder(Long.class, Resource.class);
+    static final Model.Finder<Long, Namespace> resFinder = 
+        new Model.Finder(Long.class, Namespace.class);
     static final Model.Finder<Long, Program> progFinder = 
         new Model.Finder(Long.class, Program.class);
 
@@ -114,10 +114,10 @@ public class Migration extends Controller {
         PreparedStatement pstm2 = con.prepareStatement
             ("select * from project_image where proj_id =? order by img_order");
 
-        Resource doResource = resFinder
+        Namespace doResource = resFinder
             .where().eq("name", "Disease Ontology").findUnique();
         if (doResource == null) {
-            doResource = Resource.newPublic("Disease Ontology");
+            doResource = Namespace.newPublic("Disease Ontology");
             doResource.url = "http://www.disease-ontology.org";
             doResource.save();
             Logger.debug("Added Resource "+doResource.id+": "+doResource.name);

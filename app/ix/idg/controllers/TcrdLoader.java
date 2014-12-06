@@ -55,15 +55,13 @@ public class TcrdLoader extends Controller {
             ("select * from target2disease where target_id = ?");
         int count = 0;
 
-        Resource resource = Resource.newPublic("IDG");
+        Namespace resource = Namespace.newPublic("IDG");
         resource.url = "https://pharos.nih.gov";
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from t2tc a, target b, protein c\n"+
                  "where a.target_id = b.id\n"+
                  "and a.protein_id = c.id limit 10");
-            Attribute source = new Attribute ("source", "TCRD");
-            source.resource = resource;
 
             UniprotParser uni = new UniprotParser ();
             while (rset.next()) {

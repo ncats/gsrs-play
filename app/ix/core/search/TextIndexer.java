@@ -103,6 +103,11 @@ public class TextIndexer {
         (Indexable)DefaultIndexable.class.getAnnotation(Indexable.class);
 
     /**
+     * well known fields
+     */
+    public static final String FIELD_KIND = "__kind";
+
+    /**
      * Make sure to properly update the code when upgrading version
      */
     static final Version LUCENE_VERSION = Version.LATEST;
@@ -370,7 +375,7 @@ public class TextIndexer {
     Analyzer createIndexAnalyzer () {
         Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
         fields.put("id", new KeywordAnalyzer ());
-        fields.put("kind", new KeywordAnalyzer ());
+        fields.put(FIELD_KIND, new KeywordAnalyzer ());
 	return 	new PerFieldAnalyzerWrapper 
             (new StandardAnalyzer (LUCENE_VERSION), fields);
     }
@@ -416,7 +421,8 @@ public class TextIndexer {
         if (query != null) {
             Filter f = null;
             if (options.kind != null) {
-                f = new FieldCacheTermsFilter ("kind", options.kind.getName());
+                f = new FieldCacheTermsFilter 
+                    (FIELD_KIND, options.kind.getName());
             }
             search (searchResult, options, query, f);
         }
@@ -569,7 +575,7 @@ public class TextIndexer {
         int size = Math.max(0, Math.min(options.max(), hits.totalHits));
         for (int i = options.skip; i < size; ++i) {
             Document doc = searcher.doc(hits.scoreDocs[i].doc);
-            IndexableField kind = doc.getField("kind");
+            IndexableField kind = doc.getField(FIELD_KIND);
             if (kind != null) {
                 String field = kind.stringValue()+"._id";
                 IndexableField id = doc.getField(field);
@@ -663,7 +669,7 @@ public class TextIndexer {
         
         List<IndexableField> fields = new ArrayList<IndexableField>();
         fields.add(new StringField
-                   ("kind", entity.getClass().getName(), YES));
+                   (FIELD_KIND, entity.getClass().getName(), YES));
 
         instrument (new LinkedList<String>(), entity, fields);
 
@@ -789,6 +795,7 @@ public class TextIndexer {
                 }
 
                 if (!indexable.indexed()) {
+                    //Logger.debug("** skipping field "+f.getName()+"["+cls.getName()+"]");
                     continue;
                 }
 
@@ -830,7 +837,7 @@ public class TextIndexer {
                                 Logger.warn("Id field "+f+" is null");
                         }
                     }
-                    else if (value == null || !indexable.indexed()) {
+                    else if (value == null) {
                         // do nothing
                     }
                     else if (dyna != null 
@@ -948,8 +955,11 @@ public class TextIndexer {
             FacetField ff = getRangeFacet 
                 ("".equals(indexable.name()) ? name : indexable.name(),
                  indexable.ranges(), lval);
-            if (ff != null)
+            if (ff != null) {
+                facetsConfig.setMultiValued(ff.name(), true);
+                facetsConfig.setRequireDimCount(ff.name(), true);
                 fields.add(ff);
+            }
         }
         else if (value instanceof Integer) {
             //fields.add(new IntDocValuesField (full, (Integer)value));
@@ -964,8 +974,11 @@ public class TextIndexer {
             FacetField ff = getRangeFacet 
                 ("".equals(indexable.name()) ? name : indexable.name(),
                  indexable.ranges(), ival);
-            if (ff != null)
+            if (ff != null) {
+                facetsConfig.setMultiValued(ff.name(), true);
+                facetsConfig.setRequireDimCount(ff.name(), true);
                 fields.add(ff);
+            }
         }
         else if (value instanceof Float) {
             //fields.add(new FloatDocValuesField (full, (Float)value));

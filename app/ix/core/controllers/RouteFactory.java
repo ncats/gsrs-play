@@ -26,8 +26,8 @@ import ix.core.NamedResource;
 
 
 public class RouteFactory extends Controller {
-    static final public Model.Finder<Long, Resource> resFinder = 
-        new Model.Finder(Long.class, Resource.class);
+    static final public Model.Finder<Long, Namespace> resFinder = 
+        new Model.Finder(Long.class, Namespace.class);
     static final public Model.Finder<Long, Acl> aclFinder = 
         new Model.Finder(Long.class, Acl.class);
     static final public Model.Finder<Long, Principal> palFinder =
@@ -52,7 +52,7 @@ public class RouteFactory extends Controller {
     }
 
     public static Result get (String ns, String resource) {
-        Resource res = resFinder
+        Namespace res = resFinder
             .where(Expr.eq("name", ns))
             .findUnique();
         if (res == null) {

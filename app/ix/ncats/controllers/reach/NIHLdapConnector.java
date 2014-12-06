@@ -68,6 +68,13 @@ public class NIHLdapConnector {
                 e.dn = getAttr (attrs, "distinguishedName");
                 e.uid = Long.parseLong(id);
                 e.phone = getAttr (attrs, "telephoneNumber");
+                String suffix = getAttr (attrs, "personalTitle");
+                if (suffix != null) {
+                    if (suffix.startsWith("Dr")) {
+                        // can't figure out whether it's MD, DDS, DSc, or PhD
+                        e.suffix = "Ph.D."; 
+                    }
+                }
                 employees.add(e);
             }
         }

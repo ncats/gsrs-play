@@ -13,12 +13,8 @@ public class VStr extends Value {
     public VStr (String label) {
         super (label);
     }
-    public VStr (String label, String value, Attribute... attrs) {
+    public VStr (String label, String value) {
         super (label);
-
-        for (Attribute a : attrs) {
-            this.attrs.add(a);
-        }
         strval = value;
     }
 

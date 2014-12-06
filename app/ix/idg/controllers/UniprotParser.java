@@ -23,19 +23,16 @@ import ix.utils.Global;
 public class UniprotParser extends DefaultHandler {
     StringBuilder content = new StringBuilder ();
     Target target;
-    Resource resource;
+    Namespace namespace;
     LinkedList<String> path = new LinkedList<String>();
-    Attribute source;
     int npubs;
 
     public UniprotParser () {
-        resource = Resource.newPublic("UniProt");
-        resource.url = "http://www.uniprot.org";
+        namespace = Namespace.newPublic("UniProt");
+        namespace.url = "http://www.uniprot.org";
     }
 
     public void parse (String uri) throws Exception {
-        source = new Attribute ("source", uri);
-        source.resource = resource;
         URI u = new URI (uri);
         parse (u.toURL().openStream());
     }
@@ -82,19 +79,21 @@ public class UniprotParser extends DefaultHandler {
     @Override
     public void endElement (String uri, String localName, String qName) {
         String value = content.toString().trim();
-
-        Attribute p = new Attribute (resource, "path", getPath());
         path.pop();
 
         if (qName.equals("accession") 
             || qName.equals("shortName")) {
-            target.synonyms.add(new Keyword (value, source, p));
+            Keyword kw = new Keyword (value);
+            kw.namespace = namespace;
+            target.synonyms.add(kw);
         }
         else if (qName.equals("fullName")) {
             if ("recommendedName".equals(path.peek())) 
                 target.name = value;
             else {
-                target.synonyms.add(new Keyword (value, source, p));
+                Keyword kw = new Keyword (value);
+                kw.namespace = namespace;
+                target.synonyms.add(kw);
             }
         }
         else if (qName.equals("name")) {

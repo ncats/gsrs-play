@@ -25,8 +25,8 @@ import ix.core.models.*;
 import ix.utils.Global;
 
 public class AdminFactory extends Controller {
-    static final public Model.Finder<Long, Resource> resFinder = 
-        new Model.Finder(Long.class, Resource.class);
+    static final public Model.Finder<Long, Namespace> resFinder = 
+        new Model.Finder(Long.class, Namespace.class);
     static final public Model.Finder<Long, Acl> aclFinder = 
         new Model.Finder(Long.class, Acl.class);
     static final public Model.Finder<Long, Principal> palFinder =
@@ -108,8 +108,8 @@ public class AdminFactory extends Controller {
         return notFound ("Unknown role: "+id);
     }
 
-    public static Result getResource (Long id) {
-        Resource res = resFinder.byId(id);
+    public static Result getNamespace (Long id) {
+        Namespace res = resFinder.byId(id);
         if (res != null) {
             ObjectMapper mapper = new ObjectMapper ();
             return ok (mapper.valueToTree(res));
@@ -117,8 +117,8 @@ public class AdminFactory extends Controller {
         return notFound ("Unknown resource: "+id);
     }
 
-    public static Result deleteResource (Long id) {
-        Resource res = resFinder.byId(id);
+    public static Result deleteNamespace (Long id) {
+        Namespace res = resFinder.byId(id);
         if (res != null) {
             try {
                 //res.save("archive");
@@ -224,21 +224,21 @@ public class AdminFactory extends Controller {
         Role role4 = Role.newAdmin();
         role4.principal = user4;
 
-        Resource res1 = Resource.newPublic("whitehouse");
+        Namespace res1 = Namespace.newPublic("whitehouse");
         res1.acls.add(acl8);
         res1.acls.add(acl3);
         res1.roles.add(role1);
         res1.roles.add(role2);
         res1.save();
 
-        Resource res2 = Resource.newInternal("ftmeade");
+        Namespace res2 = Namespace.newInternal("ftmeade");
         res2.acls.add(acl5);
         res2.acls.add(acl7);
         res2.acls.add(acl1);
         res2.roles.add(role3);
         res2.save();
 
-        Resource res3 = Resource.newPrivate("google");
+        Namespace res3 = Namespace.newPrivate("google");
         res3.acls.add(acl6);
         res3.roles.add(role4);
         res3.roles.add(role2);
@@ -248,7 +248,7 @@ public class AdminFactory extends Controller {
     }
 
     public static Result get (String name) {
-        Resource resource = resFinder
+        Namespace resource = resFinder
             .where().eq("name", name)
             .findUnique();
         if (resource != null) {

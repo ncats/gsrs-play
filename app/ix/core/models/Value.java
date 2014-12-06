@@ -16,11 +16,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 public class Value extends Model {
     @Id
     public Long id;
-    public String label;
 
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_core_value_attribute")
-    public List<Attribute> attrs = new ArrayList<Attribute>();
+    @OneToOne
+    public Namespace namespace;
+    public String label;
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Curation curation;

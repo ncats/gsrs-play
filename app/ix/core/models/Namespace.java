@@ -6,8 +6,8 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ix_core_resource")
-public class Resource extends Model {
+@Table(name="ix_core_namespace")
+public class Namespace extends Model {
     public enum Modifier {
         Public, // anyone can access this resource
             Internal, // only authenticated users have access
@@ -18,25 +18,27 @@ public class Resource extends Model {
     public Long id;
 
     @Column(unique=true)
+    @Indexable(facet=true,name="Namespace")
     public String name;
+
     @Column(length=1024)
     public String url;
 
     public Modifier modifier = Modifier.Private;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_core_resource_role")
+    @JoinTable(name="ix_core_namespace_role")
     public List<Role> roles = new ArrayList<Role>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_core_resource_acl")
+    @JoinTable(name="ix_core_namespace_acl")
     public List<Acl> acls = new ArrayList<Acl>();
 
-    public Resource () {}
-    public Resource (Modifier modifier) {
+    public Namespace () {}
+    public Namespace (Modifier modifier) {
         this.modifier = modifier;
     }
-    public Resource (String name, Modifier modifier) {
+    public Namespace (String name, Modifier modifier) {
         this.name = name;
         this.modifier = modifier;
     }
@@ -45,22 +47,22 @@ public class Resource extends Model {
         return modifier == Modifier.Public; 
     }
 
-    public static Resource newPublic () {
-        return new Resource (Modifier.Public);
+    public static Namespace newPublic () {
+        return new Namespace (Modifier.Public);
     }
-    public static Resource newPublic (String name) {
-        return new Resource (name, Modifier.Public);
+    public static Namespace newPublic (String name) {
+        return new Namespace (name, Modifier.Public);
     }
-    public static Resource newInternal () {
-        return new Resource (Modifier.Internal);
+    public static Namespace newInternal () {
+        return new Namespace (Modifier.Internal);
     }
-    public static Resource newInternal (String name) {
-        return new Resource (name, Modifier.Internal);
+    public static Namespace newInternal (String name) {
+        return new Namespace (name, Modifier.Internal);
     }
-    public static Resource newPrivate () {
-        return new Resource (Modifier.Private);
+    public static Namespace newPrivate () {
+        return new Namespace (Modifier.Private);
     }
-    public static Resource newPrivate (String name) {
-        return new Resource (name, Modifier.Private);
+    public static Namespace newPrivate (String name) {
+        return new Namespace (name, Modifier.Private);
     }
 }

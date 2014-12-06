@@ -131,12 +131,25 @@ public class Global extends GlobalSettings {
         return getInstance().context();
     }
 
-    public static boolean DEBUG (int level) {
-        return getInstance().debug(level);
+    /**
+     * Return the registered NamedResource given a class name
+     */
+    public static String getResource (Class<?> cls) {
+        Global g = getInstance ();
+        String name = g.names.get(cls);
+        if (name == null) {
+            // climb up the inheritance ladder to find the first matches
+            for (Class c = cls.getSuperclass(); 
+                 name == null; c = c.getSuperclass()) {
+                name = g.names.get(c.getName());
+            }
+        }
+
+        return name;
     }
 
-    public static String getResource (String type) {
-        return getInstance().ctx.context()+"/"+getInstance().names.get(type);
+    public static boolean DEBUG (int level) {
+        return getInstance().debug(level);
     }
 
     public static String getRef (Object instance) {
@@ -150,16 +163,7 @@ public class Global extends GlobalSettings {
             throw new IllegalArgumentException ("Instance is not an Entity");
         }
 
-
-        String name = g.names.get(cls.getName());
-        if (name == null) {
-            // climb up the inheritance ladder to find the first matches
-            for (Class c = cls.getSuperclass(); 
-                 name == null; c = c.getSuperclass()) {
-                name = g.names.get(c.getName());
-            }
-        }
-
+        String name = getResource (cls);
         if (name == null) {
             Logger.error("Class "+cls.getName()+" isn't a NamedResource!");
             throw new IllegalArgumentException
@@ -183,7 +187,7 @@ public class Global extends GlobalSettings {
                     ("Entity type does not have id field!");
             }
             Object id = f.get(instance);
-            return getApiBase()+"/"+name+"("+id+")";
+            return getNamespace()+"/"+name+"("+id+")";
         }
         catch (Exception ex) {
             Logger.trace("Unable to invoke getId", ex);
@@ -191,7 +195,7 @@ public class Global extends GlobalSettings {
         }
     }
 
-    public static String getApiBase () {
+    public static String getNamespace () {
         Http.Request req = Controller.request();
         String h = _instance.ctx.host();
         if (h == null) {
@@ -206,6 +210,6 @@ public class Global extends GlobalSettings {
         if (name == null)
             throw new IllegalArgumentException
                 ("Class "+type+" isn't a NamedResource!");
-        return g.ctx.context()+g.ctx.api()+"/"+name+"("+id+")";
+        return getNamespace()+"/"+name+"("+id+")";
     }
 }

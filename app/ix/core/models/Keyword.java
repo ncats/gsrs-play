@@ -16,11 +16,6 @@ public class Keyword extends Value {
     public Keyword (String term) {
         this.term = term;
     }
-    public Keyword (String term, Attribute... attrs) {
-        for (Attribute a : attrs) 
-            this.attrs.add(a);
-        this.term = term;
-    }
 
     @Override
     public String getValue () { return term; }
