@@ -32,7 +32,7 @@ public class ETag extends Model {
     public Integer top;
 
     public Integer status;
-    public final Date timestamp = new Date ();
+    public final Date created = new Date ();
     public Date modified;
 
     @Column(length=2048)
@@ -65,7 +65,6 @@ public class ETag extends Model {
     @PrePersist
     @PreUpdate
     public void modified () {
-        //play.Logger.debug("Updating etag "+etag);
         this.modified = new Date ();
     }
 }

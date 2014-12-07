@@ -150,12 +150,10 @@ public class Granite extends Controller {
                 props.add(bin);
             }
             if (rand.nextInt(2) == 1) {
-                /*
                 int[] ia = new int[rand.nextInt(1024)];
                 for (int i = 0; i < ia.length; ++i)
                     ia[i] = rand.nextInt();
-                */
-                int[] ia = new int[]{1,2,3,4,5,6,7,9,9,8,7,6,5,4,3,2,1,0};
+                //int[] ia = new int[]{1,2,3,4,5,6,7,9,9,8,7,6,5,4,3,2,1,0};
                 props.add(new VIntArray ("VIntArray", ia));
             }
         }

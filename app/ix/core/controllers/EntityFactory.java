@@ -10,8 +10,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
-import play.libs.Json;
+import javax.persistence.Entity;
 
+import play.libs.Json;
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
@@ -24,6 +25,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.avaje.ebean.*;
 import com.avaje.ebean.event.BeanPersistListener;
 
@@ -384,7 +387,10 @@ public class EntityFactory extends Controller {
             
             try {
                 uri.append("/"+paths[i]);
-                
+
+                /**
+                 * TODO: check for JsonProperty annotation!
+                 */                
                 Field f = obj.getClass().getField(pname);
                 String fname = f.getName();
                 Class<?> ftype = f.getType();
@@ -407,6 +413,60 @@ public class EntityFactory extends Controller {
                     }
                 }
                 obj = val;
+            }
+            catch (NoSuchFieldException ex) {
+                // now try method..
+                String method = "get"+pname;
+                /*
+                Logger.debug("Can't lookup field \""+pname
+                             +"\"; trying method \""+method+"\"...");
+                */
+                Object old = obj;
+                /**
+                 * TODO: check for JsonProperty annotation!
+                 */
+                for (Method m : obj.getClass().getMethods()) {
+                    if (m.getName().equalsIgnoreCase(method)) {
+                        try {
+                            Object val = m.invoke(obj);
+                            if (val != null && pindex != null) {
+                                Class<?> ftype = val.getClass();
+                                if (ftype.isArray()) {
+                                    if (pindex >= Array.getLength(val)) {
+                                        return badRequest
+                                            (uri+": array index out of bound "
+                                             +pindex);
+                                    }
+                                    val = Array.get(val, pindex);
+                                }
+                                else if (Collection.class
+                                         .isAssignableFrom(ftype)) {
+                                    if (pindex >= ((Collection)val).size()
+                                        || pindex < 0)
+                                        return badRequest
+                                            (uri+": list index out bound "
+                                             +pindex);
+                                    Iterator it = ((Collection)val).iterator();
+                                    for (int k = 0; it.hasNext() 
+                                             && k < pindex; ++k)
+                                        ;
+                                    val = it.next();
+                                }
+                            }
+                            obj = val;
+                            break; // don't 
+                        }
+                        catch (Exception e) {
+                        }
+                    }
+                }
+
+                if (old == obj) {
+                    Logger.error
+                        (uri.toString()
+                         +": No method or field matching requested path");
+                    return notFound ("Invalid field path: "+uri);
+                }
             }
             catch (Exception ex) {
                 Logger.error(uri.toString(), ex);
@@ -469,16 +529,19 @@ public class EntityFactory extends Controller {
         return notFound (request().uri()+" not found");
     }
 
-    protected static <T extends Model> Result edits (Long id, Class<T> cls) {
-        List<Edit> edits = editFinder.where
-            (Expr.and(Expr.eq("refid", id),
-                      Expr.eq("type", cls.getName())))
-            .orderBy("id desc").findList();
-        if (edits.isEmpty())
-            return notFound (request().uri()+": No edit history found!");
-        ObjectMapper mapper = getEntityMapper ();
+    protected static Result edits (Long id, Class<?>... cls) {
+        for (Class<?> c : cls) {
+            List<Edit> edits = editFinder.where
+                (Expr.and(Expr.eq("refid", id),
+                          Expr.eq("kind", c.getName())))
+                .orderBy("modified desc").findList();
+            if (!edits.isEmpty()) {
+                ObjectMapper mapper = getEntityMapper ();
+                return ok (mapper.valueToTree(edits));
+            }
+        }
 
-        return ok (mapper.valueToTree(edits));
+        return notFound (request().uri()+": No edit history found!");
     }
 
     protected static <T extends Model> Result update 
@@ -496,7 +559,7 @@ public class EntityFactory extends Controller {
 
         T obj = finder.ref(id);
         if (obj == null)
-            return notFound ("Not a valid investigator id="+id);
+            return notFound ("Not a valid entity id="+id);
 
         Principal principal = null;
         if (request().username() != null) {
@@ -566,74 +629,139 @@ public class EntityFactory extends Controller {
                         String bname = getBeanName (fname);
                         Class<?> ftype = f.getType();
 
-                        //Object val = f.get(inst); // this always return null?
-                        Object val = null;
-                        try {
-                            Method m = inst.getClass()
-                                .getMethod("get"+bname);
-                            val = m.invoke(inst);
-                        }
-                        catch (NoSuchMethodException ex) {
-                            Logger.error("Can't find bean getter for "
-                                         +"field \""+fname+"\" in class "
-                                         +inst.getClass(), ex);
-                        }
-                        String oldVal = mapper.writeValueAsString(val);
-
-                        if (i+1 < paths.length) {
+                        Object val = f.get(inst);
+                        if (pindex != null) {
                             if (val == null) {
-                                // create new instance
-                                Logger.debug
-                                    (uri+": new instance "+f.getType());
-                                val = f.getType().newInstance();
+                                return internalServerError 
+                                    ("Property \""+fname+"\" is null!");
                             }
+
+                            if (ftype.isArray()) {
+                                if (pindex >= Array.getLength(val) 
+                                    || pindex < 0) {
+                                    return badRequest
+                                        (uri+": array index out of bound "
+                                         +pindex);
+                                }
+
+                                val = Array.get(val, pindex);
+                            }
+                            else if (Collection
+                                     .class.isAssignableFrom(ftype)) {
+                                if (pindex >= ((Collection)val).size()
+                                    || pindex < 0)
+                                    return badRequest
+                                        (uri+": list index out bound "
+                                         +pindex);
+                                Iterator it = ((Collection)val).iterator();
+                                for (int k = 0; it.hasNext() 
+                                         && k < pindex; ++k)
+                                    ;
+                                val = it.next();
+                            }
+                            else {
+                                return badRequest 
+                                    ("Property \""
+                                     +fname+"\" is not an array or list");
+                            }
+                            Logger.debug(fname+"["+pindex+"] = "+val);
                         }
                         else {
-                            // check to see if it references an existing 
-                            // entity
-                            if (value != null && !value.isNull()) {
-                                try {
-                                    val = getJsonValue (val, value, f, pindex);
-                                }
-                                catch (Exception ex) {
-                                    Logger.trace("Can't retrieve value", ex);
-
-                                    return internalServerError
-                                        (ex.getMessage());
+                            /*
+                              try {
+                              Method m = inst.getClass()
+                              .getMethod("get"+bname);
+                              val = m.invoke(inst);
+                              }
+                              catch (NoSuchMethodException ex) {
+                              Logger.warn("Can't find bean getter for "
+                              +"field \""+fname+"\" in class "
+                              +inst.getClass());
+                              val = f.get(inst);
+                              }
+                            */
+                            String oldVal = mapper.writeValueAsString(val);
+                            
+                            if (i+1 < paths.length) {
+                                if (val == null) {
+                                    // create new instance
+                                    Logger.debug
+                                        (uri+": new instance "+f.getType());
+                                    val = f.getType().newInstance();
                                 }
                             }
                             else {
-                                val = null;
+                                // check to see if it references an existing 
+                                // entity
+                                if (value != null && !value.isNull()) {
+                                    try {
+                                        val = getJsonValue 
+                                            (val, value, f, pindex);
+                                    }
+                                    catch (Exception ex) {
+                                        Logger.trace
+                                            ("Can't retrieve value", ex);
+                                        
+                                        return internalServerError
+                                            (ex.getMessage());
+                                    }
+                                }
+                                else {
+                                    val = null;
+                                }
+                                
+                                Logger.debug("Updating "+f.getDeclaringClass()
+                                             +"."+f.getName()+" = new:"
+                                             + (val != null ? 
+                                                (val.getClass()+" "+val)
+                                                : "null")
+                                             +" old:"+oldVal);
                             }
-
-                            Logger.debug("Updating "+f.getDeclaringClass()
-                                         +"."+f.getName()+" = new:"
-                                         + (val != null ? 
-                                            (val.getClass()+" "+val)
-                                            : "null"));
+                            
+                            /*
+                             * We can't use f.set(inst, val) here since it
+                             * doesn't generate proper notifications to ebean
+                             * for update
+                             */
+                            try {
+                                Method set = inst.getClass().getMethod
+                                    ("set"+bname, ftype);
+                                set.invoke(inst, val);
+                                changes.add(new Object[]{
+                                                uri.toString(), 
+                                                oldVal,
+                                                val});
+                            }
+                            catch (Exception ex) {
+                                Logger.error
+                                    ("Can't find bean setter for field \""
+                                     +fname+"\" in class "
+                                     +inst.getClass(),
+                                     ex);
+                                
+                                return internalServerError
+                                    ("Unable to map path "+uri+"!");
+                            }
                         }
 
-                        /*
-                         * We can't use f.set(inst, val) here since it
-                         * doesn't generate proper notifications to ebean
-                         * for update
-                         */
-                        try {
-                            Method set = inst.getClass().getMethod
-                                ("set"+bname, ftype);
-                            set.invoke(inst, val);
-                            changes.add(new Object[]{
-                                            uri.toString(), 
-                                            oldVal,
-                                            val});
-                        }
-                        catch (NoSuchMethodException ex) {
-                            Logger.error("Can't find bean setter for field \""
-                                         +fname+"\" in class "+inst.getClass(),
-                                         ex);
-
-                            return internalServerError
-                                ("Unable to map path "+uri+"!");
+                        if (val != null) {
+                            ftype = val.getClass();
+                            if (null != ftype.getAnnotation(Entity.class)) {
+                                try {
+                                    f = ftype.getField("id");
+                                    /**
+                                     * Record edit history on the lowest 
+                                     * Entity class
+                                     */
+                                    type = (Class<T>)ftype;
+                                    id = (Long)f.get(val);
+                                }
+                                catch (NoSuchFieldException ex) {
+                                    Logger.warn
+                                        (ftype.getName()
+                                         +": Entity doesn't have field id");
+                                }
+                            }
                         }
                         inst = val;
                     }
@@ -651,6 +779,7 @@ public class EntityFactory extends Controller {
                     e.oldValue = (String)c[1];
                     e.newValue = mapper.writeValueAsString(c[2]);
                     e.save();
+                    //Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
                 }
 
                 return ok (mapper.valueToTree(obj));

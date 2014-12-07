@@ -14,6 +14,9 @@ public class VInt extends Value {
         intval = value;
     }
 
+    public Long getIntval () { return intval; }
+    public void setIntval (Long value) { intval = value; }
+
     @Override
     public Long getValue () { return intval; }
 }

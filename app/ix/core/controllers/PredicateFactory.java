@@ -58,6 +58,10 @@ public class PredicateFactory extends EntityFactory {
         return field (id, path, finder);
     }
 
+    public static Result edits (Long id) {
+        return edits (id, Predicate.class);
+    }
+
     public static Result create () {
         return create (Predicate.class, finder);
     }
