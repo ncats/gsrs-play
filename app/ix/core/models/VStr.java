@@ -18,6 +18,9 @@ public class VStr extends Value {
         strval = value;
     }
 
+    public String getStrval () { return strval; }
+    public void setStrval (String strval) { this.strval = strval; }
+
     @Override
     public String getValue () { return strval; }
 }

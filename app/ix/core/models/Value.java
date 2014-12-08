@@ -16,13 +16,11 @@ import com.fasterxml.jackson.annotation.JsonView;
 public class Value extends Model {
     @Id
     public Long id;
+    public boolean deprecated;
 
     @OneToOne
     public Namespace namespace;
     public String label;
-
-    @ManyToOne(cascade=CascadeType.ALL)
-    public Curation curation;
     
     public Value () {}
     public Value (String label) {

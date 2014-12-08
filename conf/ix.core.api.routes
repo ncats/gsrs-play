@@ -1,5 +1,10 @@
+##
+## Testing..
+##
+->      /test       ix.core.test.Routes
+
 ##################################
-# API for entity routing
+## API for entity routing
 ##################################
 GET     /search         ix.core.controllers.SearchFactory.search(q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
 GET     /suggest/@fields       ix.core.controllers.SearchFactory.suggestFields

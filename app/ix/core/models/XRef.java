@@ -3,6 +3,7 @@ package ix.core.models;
 import java.util.List;
 import java.util.ArrayList;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import javax.persistence.*;
 
 import play.Logger;
@@ -13,20 +14,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
-@Table(name="ix_core_xref"
-       //,uniqueConstraints=@UniqueConstraint(columnNames={"kind", "id"})
-)
+@Table(name="ix_core_xref")
 public class XRef extends Model {
     @JsonIgnore
     @Id
-    @Column(name="iid")
-    public Long _id; // XRef id
+    public Long id;
 
     /**
      * not id of the XRef instance but id of the instance for which this
      * XRef is pointing to
      */
-    public Long id; 
+    public Long refid; 
 
     @Column(length=512,nullable=false)
     public String kind;
@@ -56,7 +54,7 @@ public class XRef extends Model {
             throw new IllegalArgumentException
                 ("Namespace parameter can't be null");
         this.kind = kind;
-        this.id = id;
+        this.refid = id;
     }
 
     public XRef (Object instance) {
@@ -65,6 +63,7 @@ public class XRef extends Model {
             throw new IllegalArgumentException
                 ("Can't create XRef for non-Entity instance");
         try {
+            /*
             Method m = cls.getMethod("getId");
             if (m == null)
                 throw new IllegalArgumentException
@@ -74,13 +73,23 @@ public class XRef extends Model {
             if (!Long.class.isAssignableFrom(c))
                 throw new IllegalArgumentException
                     ("Entity's getId must return a Long!");
+            */
+
+            for (Field f : cls.getFields()) {
+                if (null != f.getAnnotation(Id.class)) {
+                    Object id = f.get(instance);
+                    if (id != null && id instanceof Long) {
+                        this.refid = (Long)id;
+                    }
+                    break;
+                }
+            }
 
             kind = cls.getName();
-            id = (Long)m.invoke(instance);
-            if (id == null)
+            if (refid == null)
                 throw new IllegalArgumentException
-                    ("Can't create XRef for Entity with no Id defined!");
-
+                    (cls.getName()+": Can't create XRef for Entity "
+                     +"with no Id defined!");
         }
         catch (Exception ex) {
             throw new IllegalArgumentException (ex);
@@ -102,16 +111,16 @@ public class XRef extends Model {
             try {
                 Model.Finder finder = new Model.Finder
                     (Long.class, Class.forName(kind));
-                _instance = finder.byId(id);
+                _instance = finder.byId(refid);
             }
             catch (Exception ex) {
-                Logger.trace("Can't retrieve XRef "+kind+":"+id, ex);
+                Logger.trace("Can't retrieve XRef "+kind+":"+refid, ex);
             }
         }
         return _instance;
     }
 
     public String getHRef () {
-        return Global.getRef(kind, id);
+        return Global.getRef(kind, refid);
     }
 }

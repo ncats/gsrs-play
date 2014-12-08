@@ -136,13 +136,13 @@ public class Global extends GlobalSettings {
      */
     public static String getResource (Class<?> cls) {
         Global g = getInstance ();
-        String name = g.names.get(cls);
-        if (name == null) {
-            // climb up the inheritance ladder to find the first matches
-            for (Class c = cls.getSuperclass(); 
-                 name == null; c = c.getSuperclass()) {
-                name = g.names.get(c.getName());
-            }
+        String name = g.names.get(cls.getName());
+
+        // climb up the inheritance ladder to find the first matches
+        for (Class c = cls.getSuperclass(); 
+             name == null; c = c.getSuperclass()) {
+            name = g.names.get(c.getName());
+            //Logger.debug(c.getName() +" => "+name);
         }
 
         return name;
@@ -206,10 +206,15 @@ public class Global extends GlobalSettings {
 
     public static String getRef (String type, long id) {
         Global g = getInstance ();
-        String name = g.names.get(type);
-        if (name == null)
-            throw new IllegalArgumentException
-                ("Class "+type+" isn't a NamedResource!");
-        return getNamespace()+"/"+name+"("+id+")";
+        try {
+            String name = g.getResource(Class.forName(type));
+            if (name == null)
+                throw new IllegalArgumentException
+                    ("Class "+type+" isn't a NamedResource!");
+            return getNamespace()+"/"+name+"("+id+")";
+        }
+        catch (Exception ex) {
+            throw new IllegalArgumentException (ex);
+        }
     }
 }

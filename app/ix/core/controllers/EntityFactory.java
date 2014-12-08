@@ -35,6 +35,7 @@ import ix.core.models.ETagRef;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
 import ix.core.models.BeanViews;
+import ix.core.models.Curation;
 import ix.utils.Util;
 
 public class EntityFactory extends Controller {
@@ -561,12 +562,12 @@ public class EntityFactory extends Controller {
         if (obj == null)
             return notFound ("Not a valid entity id="+id);
 
-        Principal principal = null;
+        Curation curation = null;
         if (request().username() != null) {
-            principal = principalFinder
+            Principal principal = principalFinder
                 .where().eq("name", request().username())
                 .findUnique();
-            
+            curation = new Curation (principal);
             // create new user if doesn't exist
             /*
             if (principal == null) {
@@ -775,7 +776,8 @@ public class EntityFactory extends Controller {
                 for (Object[] c : changes) {
                     Edit e = new Edit (type, id);
                     e.path = (String)c[0];
-                    e.principal = principal;
+                    if (curation != null)
+                        e.curations.add(curation);
                     e.oldValue = (String)c[1];
                     e.newValue = mapper.writeValueAsString(c[2]);
                     e.save();

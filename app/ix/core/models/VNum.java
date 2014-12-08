@@ -14,6 +14,9 @@ public class VNum extends Value {
         numval = value;
     }
 
+    public Double getNumval () { return numval; }
+    public void setNumval (Double numval) { this.numval = numval; }
+
     @Override
     public Double getValue () { return numval; }
 }
