@@ -7,9 +7,7 @@ import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ix_core_predicate"
-       //,uniqueConstraints=@UniqueConstraint(columnNames={"namespace_id", "predicate", "subject_iid"})
-)
+@Table(name="ix_core_predicate")
 @Inheritance
 @DiscriminatorValue("PRE")
 public class Predicate extends Model {

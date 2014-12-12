@@ -118,7 +118,7 @@ public class Migration extends Controller {
             .where().eq("name", "Disease Ontology").findUnique();
         if (doResource == null) {
             doResource = Namespace.newPublic("Disease Ontology");
-            doResource.url = "http://www.disease-ontology.org";
+            doResource.location = "http://www.disease-ontology.org";
             doResource.save();
             Logger.debug("Added Resource "+doResource.id+": "+doResource.name);
         }

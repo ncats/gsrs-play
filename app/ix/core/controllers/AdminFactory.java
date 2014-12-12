@@ -224,26 +224,6 @@ public class AdminFactory extends Controller {
         Role role4 = Role.newAdmin();
         role4.principal = user4;
 
-        Namespace res1 = Namespace.newPublic("whitehouse");
-        res1.acls.add(acl8);
-        res1.acls.add(acl3);
-        res1.roles.add(role1);
-        res1.roles.add(role2);
-        res1.save();
-
-        Namespace res2 = Namespace.newInternal("ftmeade");
-        res2.acls.add(acl5);
-        res2.acls.add(acl7);
-        res2.acls.add(acl1);
-        res2.roles.add(role3);
-        res2.save();
-
-        Namespace res3 = Namespace.newPrivate("google");
-        res3.acls.add(acl6);
-        res3.roles.add(role4);
-        res3.roles.add(role2);
-        res3.save();
-
         return ok("Test1 data created!");
     }
 

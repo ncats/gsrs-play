@@ -16,9 +16,10 @@ import com.fasterxml.jackson.databind.deser.std.JsonNodeDeserializer;
 public class Edit extends Model {
     @JsonIgnore
     @Id
-    public Long id;
+    @Column(name="iid")
+    public Long _id; // internal id
 
-    public Long refid;
+    public Long id; // edited entity
     public String kind;
 
     public final Date created = new Date ();
@@ -48,7 +49,7 @@ public class Edit extends Model {
     public Edit () {}
     public Edit (Class<?> type, Long refid) {
         this.kind = type.getName();
-        this.refid = refid;
+        this.id = refid;
     }
 
     @PrePersist

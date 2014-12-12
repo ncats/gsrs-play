@@ -50,6 +50,80 @@ public class EntityFactory extends Controller {
     static final Model.Finder<Long, Principal> principalFinder = 
         new Model.Finder(Long.class, Principal.class);
 
+    protected static class FetchOptions {
+	public int top;
+	public int skip;
+	public String filter;
+	public List<String> expand = new ArrayList<String>();
+	public List<String> order = new ArrayList<String>();
+	public List<String> select = new ArrayList<String>();
+
+	// only in the context of a request
+			
+	public FetchOptions () {
+	    for (Map.Entry<String, String[]> me
+		     : request().queryString().entrySet()) {
+		String param = me.getKey();
+		if ("order".equalsIgnoreCase(param)) {
+                    for (String s : me.getValue())
+                        order.add(s);
+                }
+                else if ("expand".equalsIgnoreCase(param)) {
+                    for (String s : me.getValue())
+                        expand.add(s);
+                }
+		else if ("select".equalsIgnoreCase(param)) {
+		    for (String s : me.getValue())
+			select.add(s);
+		}
+		else if ("top".equalsIgnoreCase(param)) {
+		    String n = me.getValue()[0];
+		    try {
+			top = Integer.parseInt(n);
+		    }
+		    catch (NumberFormatException ex) {
+			Logger.trace("Bogus top value: "+n, ex);
+		    }
+		}
+		else if ("skip".equalsIgnoreCase(param)) {
+		    String n = me.getValue()[0];
+		    try {
+			skip = Integer.parseInt(n);
+		    }
+		    catch (NumberFormatException ex) {
+			Logger.trace("Bogus skip value:"+n, ex);
+		    }
+		}
+		else if ("filter".equalsIgnoreCase(param)) {
+		    filter = me.getValue()[0];
+		}
+	    }
+	}
+	
+	public FetchOptions (int top, int skip, String filter) {
+	    for (Map.Entry<String, String[]> me
+		     : request().queryString().entrySet()) {
+		String param = me.getKey();
+		if ("order".equalsIgnoreCase(param)) {
+                    for (String s : me.getValue())
+                        order.add(s);
+                }
+                else if ("expand".equalsIgnoreCase(me.getKey())) {
+                    for (String s : me.getValue())
+                        expand.add(s);
+                }
+	    }
+	    this.top = top;
+	    this.skip = skip;
+	    this.filter = filter;
+	}
+
+	public String toString () {
+	    return "FetchOptions{top="+top+",skip="+skip
+		+",expand="+expand.size()
+		+",filter="+filter+",order="+order.size()+"}";
+	}
+    }
 
     protected static <T> List<T> all (Model.Finder<Long, T> finder) {
         return finder.all();
@@ -66,45 +140,56 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static <T> List<T> filter (int top, int skip, 
-                                         String expand, String filter, 
+    protected static <T> List<T> filter (FetchOptions options,
                                          Model.Finder<Long, T> finder) {
 
-        Logger.debug(request().uri()+": top="+top+" skip="+skip
-                     +" expand="+expand+" filter="+filter);
+        Logger.debug(request().uri()+": "+options);
         Query<T> query = finder.query();
-        if (expand != null) {
-            StringBuilder path = new StringBuilder ();
-            for (String p : expand.split("\\.")) {
-                if (path.length() > 0)
-                    path.append('.');
-                path.append(p);
-                Logger.debug("  -> fetch "+path);
-                query = query.fetch(path.toString());
-            }
+	
+	for (String path : options.expand) {
+	    Logger.debug("  -> fetch "+path);
+	    query = query.fetch(path);
         }
+	query = query.where(options.filter);
+
+	if (!options.order.isEmpty()) {
+	    for (String order : options.order) {
+		Logger.debug("  -> order "+order);
+		char ch = order.charAt(0);
+		if (ch == '$') { // desc
+		    query = query.order(order.substring(1)+" desc");
+		}
+		else {
+		    if (ch == '^') {
+			order = order.substring(1);
+		    }
+		// default to asc
+		    query = query.order(order+" asc");
+		}
+	    }
+	}
+	else {
+	    query = query.orderBy("id asc");
+	}
 
         List<T> results = query
-            .where(filter)
-            .orderBy("id asc")
-            .setFirstRow(skip)
-            .setMaxRows(top)
+            .setFirstRow(options.skip)
+            .setMaxRows(options.top)
             .findList();
 
         return results;
     }
 
-    protected static <T> Result page (int top, int skip, 
-                                      final String expand,
-                                      final String filter,
+    protected static <T> Result page (int top, int skip, String filter,
                                       final Model.Finder<Long, T> finder) {
 
         //if (select != null) finder.select(select);
-        List<T> results = filter (top, skip, expand, filter, finder);
+	final FetchOptions options = new FetchOptions (top, skip, filter);
+        List<T> results = filter (options, finder);
 
         final ETag etag = new ETag ();
-        etag.top = top;
-        etag.skip = skip;
+        etag.top = options.top;
+        etag.skip = options.skip;
         etag.query = canonicalizeQuery (request ());
         etag.count = results.size();
         etag.uri = request().uri();
@@ -113,9 +198,9 @@ public class EntityFactory extends Controller {
         // number of results
         etag.sha1 = Util.sha1Request(request(), "filter");
         etag.method = request().method();
-        etag.filter = filter;
+        etag.filter = options.filter;
 
-        if (filter == null)
+        if (options.filter == null)
             etag.total = finder.findRowCount();
         else {
             Model.Finder<Long, ETag> eFinder = 
@@ -135,7 +220,7 @@ public class EntityFactory extends Controller {
                 threadPool.submit(new Runnable () {
                         public void run () {
                             FutureIds<T> future = 
-                                finder.where(filter).findFutureIds();
+                                finder.where(options.filter).findFutureIds();
                             try {
                                 List<Object> ids = future.get();
                                 etag.total = ids.size();
@@ -146,7 +231,8 @@ public class EntityFactory extends Controller {
                                     ref.save();
                                 }
                                 Logger.debug(Thread.currentThread().getName()
-                                             +": "+filter+" => "+ids.size());
+                                             +": "+options.filter+" => "
+					     +ids.size());
                             }
                             catch (Exception ex) {
                                 Logger.trace(Thread.currentThread().getName()
@@ -285,7 +371,7 @@ public class EntityFactory extends Controller {
     protected static <T> Result rss (int top, int skip, final String filter,
                                      final Model.Finder<Long, T> finder) {
         response().setContentType("application/rss+xml");
-        List<T> results = filter (top, skip, null, filter, finder);
+        List<T> results = filter (new FetchOptions (top, skip, filter), finder);
         return ok("FIX ME!");
     }
 

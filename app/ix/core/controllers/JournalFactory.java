@@ -18,18 +18,16 @@ public class JournalFactory extends EntityFactory {
 
     public static List<Journal> all () { return all (finder); }
     public static Result count () { return count (finder); }
-    public static Result page (int top, int skip, String expand,
-                               String filter) {
-        return page (top, skip, expand, filter, finder);
+    public static Result page (int top, int skip, String filter) {
+        return page (top, skip, filter, finder);
     }
 
     public static List<Journal> filter (int top, int skip) {
-        return filter (top, skip, null, null);
+        return filter (top, skip, null);
     }
 
-    public static List<Journal> filter (int top, int skip, 
-                                            String expand, String filter) {
-        return filter (top, skip, expand, filter, finder);
+    public static List<Journal> filter (int top, int skip, String filter) {
+        return filter (new FetchOptions (top, skip, filter), finder);
     }
 
     public static List<Journal> filter (JsonNode json, int top, int skip) {

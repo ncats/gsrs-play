@@ -29,7 +29,7 @@ public class UniprotParser extends DefaultHandler {
 
     public UniprotParser () {
         namespace = Namespace.newPublic("UniProt");
-        namespace.url = "http://www.uniprot.org";
+        namespace.location = "http://www.uniprot.org";
     }
 
     public void parse (String uri) throws Exception {

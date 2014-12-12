@@ -55,8 +55,8 @@ public class TcrdLoader extends Controller {
             ("select * from target2disease where target_id = ?");
         int count = 0;
 
-        Namespace resource = Namespace.newPublic("IDG");
-        resource.url = "https://pharos.nih.gov";
+        Namespace resource = Namespace.newPublic("IDGv2");
+        resource.location = "https://pharos.nih.gov";
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from t2tc a, target b, protein c\n"+

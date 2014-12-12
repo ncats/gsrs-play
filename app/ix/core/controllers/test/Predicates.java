@@ -51,32 +51,31 @@ public class Predicates extends Controller {
         Logger.debug("Generating random properties..."+values.size());
 
         int np = rand.nextInt(size);
+        BitSet bs = new BitSet (values.size());
         for (int i = 0; i < np; ++i) {
             Predicate p = new Predicate 
                 (predicates[rand.nextInt(predicates.length)]);
             int k = rand.nextInt(values.size());
-            Value v = values.get(k);
-            p.subject = new XRef (v);
-
-            BitSet bs = new BitSet (values.size());
             bs.set(k);
+
             int op = rand.nextInt(10);
             for (int j = 0; j < op; ++j) {
                 int m = rand.nextInt(values.size());
                 if (!bs.get(m)) {
-                    v = values.get(m);
-                    XRef x = new XRef (v);
+                    XRef x = new XRef (values.get(m));
                     p.objects.add(x);
                     bs.set(m);
                 }
             }
 
             if (!p.objects.isEmpty()) {
+                p.subject = new XRef (values.get(k));
                 p.subject.save();
-                for (XRef x : p.objects)
-                    x.save();
+
+                randomProperties (p.properties);
                 p.save();
 
+                /*
                 try {
                     ObjectWriter writer = new ObjectMapper().writer
                         (new DefaultPrettyPrinter ());
@@ -85,15 +84,20 @@ public class Predicates extends Controller {
                 catch (Exception ex) {
                     Logger.trace("Can't generate json", ex);
                 }
+                */
+                /*
                 Logger.debug("Predicate "+p.id+" "+p.predicate
-                             +" subject={"+p.subject.id+","+p.subject.refid
+                             +" subject={"+p.subject._id+","+p.subject.id
                              +","+p.subject.kind+","+p.subject._instance+"}"
                              +" objects="
                              +p.objects.size());
+                */
             }
+
+            bs.clear();
         }
         return redirect (ix.core.controllers.routes
-                         .RouteFactory.page("predicates", 10, 0, null, null));
+                         .RouteFactory.page("predicates", 10, 0, null));
     }
 
     static char[] alpha = { 

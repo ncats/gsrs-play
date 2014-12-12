@@ -17,9 +17,8 @@ public class NamespaceFactory extends EntityFactory {
 
     public static List<Namespace> all () { return all (finder); }
     public static Result count () { return count (finder); }
-    public static Result page (int top, int skip, String expand,
-                               String filter) {
-        return page (top, skip, expand, filter, finder);
+    public static Result page (int top, int skip, String filter) {
+        return page (top, skip, filter, finder);
     }
 
     public static Result get (Long id, String select) {

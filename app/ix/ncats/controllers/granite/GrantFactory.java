@@ -32,11 +32,10 @@ public class GrantFactory extends EntityFactory {
     }
     public static List<Grant> all () { return all (finder); }
     public static List<Grant> filter (int top, int skip) {
-        return filter (top, skip, null, null, finder);
+        return filter (new FetchOptions (top, skip, null), finder);
     }
-    public static List<Grant> filter (int top, int skip, 
-                                      String expand, String filter) {
-        return filter (top, skip, expand, filter, finder);
+    public static List<Grant> filter (int top, int skip, String filter) {
+        return filter (new FetchOptions (top, skip, filter), finder);
     }
     public static Grant getEntity (Long id) {
         return getEntity (id, finder);
@@ -47,12 +46,11 @@ public class GrantFactory extends EntityFactory {
     }
 
     public static Result page (int top, int skip) {
-        return GrantFactory.page (top, skip, null, null);
+        return GrantFactory.page (top, skip, null);
     }
 
-    public static Result page (int top, int skip, 
-                               String expand, String filter) {
-        return page (top, skip, expand, filter, finder);
+    public static Result page (int top, int skip, String filter) {
+        return page (top, skip, filter, finder);
     }
 
     public static List<Grant> filter (JsonNode json, int top, int skip) {

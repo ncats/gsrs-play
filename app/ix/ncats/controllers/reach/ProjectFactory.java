@@ -28,9 +28,8 @@ public class ProjectFactory extends EntityFactory {
     public static Result page (int top, int skip) {
         return ProjectFactory.page (top, skip, null, null);
     }
-    public static Result page (int top, int skip, 
-                               String expand, String filter) {
-        return page (top, skip, expand, filter, finder);
+    public static Result page (int top, int skip, String filter) {
+        return page (top, skip, filter, finder);
     }
 
     public static Result edits (Long id) {

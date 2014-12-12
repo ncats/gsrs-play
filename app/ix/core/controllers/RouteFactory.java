@@ -153,14 +153,13 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
-    public static Result page (String context, int top, int skip, 
-                               String expand, String filter) {
+    public static Result page (String context, int top,
+			       int skip, String filter) {
         try {
             Method m = getMethod (context, "page", 
-                                  int.class, int.class, 
-                                  String.class, String.class);
+                                  int.class, int.class, String.class);
             if (m != null)
-                return (Result)m.invoke(null, top, skip, expand, filter);
+                return (Result)m.invoke(null, top, skip, filter);
         }
         catch (Exception ex) {
             Logger.trace("["+context+"]", ex);

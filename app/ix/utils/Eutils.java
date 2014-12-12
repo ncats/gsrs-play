@@ -232,6 +232,15 @@ public class Eutils {
             author.affiliation = ((Element)nodes.item(0)).getTextContent();
         }
 
+	nodes = ((Element)node).getElementsByTagName("Identifier");
+	for (int i = 0; i < nodes.getLength(); ++i) {
+	    Element idElm = (Element)nodes.item(i);
+	    String source = idElm.getAttribute("Source");
+	    if ("ORCID".equalsIgnoreCase(source)) {
+		author.orcid = idElm.getTextContent();
+	    }
+	}
+
         return author;
     }
 

@@ -25,11 +25,10 @@ public class EligibilityFactory extends EntityFactory {
         return count (finder);
     }
     public static Result page (int top, int skip) {
-        return EligibilityFactory.page(top, skip, null, null);
+        return EligibilityFactory.page(top, skip, null);
     }
-    public static Result page (int top, int skip, 
-                               String expand, String filter) {
-        return page (top, skip, expand, filter, finder);
+    public static Result page (int top, int skip, String filter) {
+        return page (top, skip, filter, finder);
     }
 
     public static Result edits (Long id) {

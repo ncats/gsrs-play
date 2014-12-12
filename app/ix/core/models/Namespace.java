@@ -2,6 +2,7 @@ package ix.core.models;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Date;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
@@ -22,17 +23,11 @@ public class Namespace extends Model {
     public String name;
 
     @Column(length=1024)
-    public String url;
+    public String location; // url, path, etc.
 
+    public final Date created = new Date ();
+    public Date modified;
     public Modifier modifier = Modifier.Private;
-
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_core_namespace_role")
-    public List<Role> roles = new ArrayList<Role>();
-
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_core_namespace_acl")
-    public List<Acl> acls = new ArrayList<Acl>();
 
     public Namespace () {}
     public Namespace (Modifier modifier) {
@@ -45,6 +40,12 @@ public class Namespace extends Model {
 
     public boolean isPublic () { 
         return modifier == Modifier.Public; 
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void modified () {
+        this.modified = new Date ();
     }
 
     public static Namespace newPublic () {

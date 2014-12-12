@@ -17,8 +17,6 @@ public class Author extends Principal {
     @Indexable(facet=true,name="Affiliation")
     @Lob
     public String affiliation;
-
-    @Column(length=20)
     public String orcid; // http://orcid.org/
 
     @Column(length=1024)
