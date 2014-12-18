@@ -66,6 +66,11 @@ public class PublicationFactory extends EntityFactory {
         return get (id, expand, finder);
     }
 
+    public static Result relatedByPMID (long pmid) {
+	ObjectMapper mapper = getEntityMapper ();
+	return ok (mapper.valueToTree(getRelated (pmid)));
+    }
+
     public static Result field (Long id, String path) {
         return field (id, path, finder);
     }
@@ -84,6 +89,17 @@ public class PublicationFactory extends EntityFactory {
 
     public static Publication byPMID (long pmid) {
         return finder.where().eq("pmid", pmid).findUnique();
+    }
+
+    public static List<Publication> getRelated (long pmid) {
+	List<Long> pmids = Eutils.fetchRelated(pmid);
+	List<Publication> pubs = new ArrayList<Publication>();
+	for (Long id : pmids) {
+	    Publication pub = fetchIfAbsent (id);
+	    if (pub != null)
+		pubs.add(pub);
+	}
+	return pubs;
     }
 
     public static Publication fetchIfAbsent (long pmid) {

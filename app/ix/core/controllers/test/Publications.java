@@ -1,4 +1,4 @@
-package ix.ncats.controllers.test;
+package ix.core.controllers.test;
 
 import java.io.*;
 import java.util.*;
@@ -8,18 +8,22 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
-import ix.utils.Global;
-import ix.utils.Eutils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 
-import ix.core.models.Publication;
+import ix.utils.Eutils;
+import ix.core.models.*;
 import ix.core.controllers.PublicationFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
+public class Publications extends Controller {
+    public static Result relatedByPMID (Long pmid) {
+	return PublicationFactory.relatedByPMID(pmid);
+    }
 
-public class EutilsTest extends Controller {
     public static Result index () {
-        return ok (ix.ncats.views.html.eutils.render());
+        return ok (ix.core.views.html.test.publications.render());
     }
 
     public static Result fetch () {
@@ -43,7 +47,8 @@ public class EutilsTest extends Controller {
                         Logger.debug("Publication "+pub.id+"saved!");
                     }
                     else {
-                        Logger.debug("Unable to retrieve publication for "+pmid);
+                        Logger.debug
+			    ("Unable to retrieve publication for "+pmid);
                     }
                 }
                 else {

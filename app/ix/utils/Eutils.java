@@ -320,6 +320,45 @@ public class Eutils {
         return null;
     }
 
+    static public List<Long> fetchRelated (Long pmid) {
+        WSRequestHolder ws = WS.url
+	    ("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi")
+	    .setTimeout(5000)
+	    .setFollowRedirects(true)
+	    .setQueryParameter("dbfrom", "pubmed")
+	    .setQueryParameter("linkname", "pubmed_pubmed")
+            .setQueryParameter("rettype", "xml")
+	    .setQueryParameter("retmax", "100")
+            .setQueryParameter("id", pmid.toString());
+
+	List<Long> pmids = new ArrayList<Long>();
+        F.Promise<WSResponse> promise = ws.get();
+        try {
+            WSResponse response = promise.get(5000);
+	    Document doc = response.asXml();
+	    NodeList nodes = doc.getElementsByTagName("LinkSetDb");
+	    if (nodes.getLength() > 0) {
+		Element db = (Element)nodes.item(0);
+		nodes = db.getElementsByTagName("Id");
+		for (int i = 0; i < nodes.getLength(); ++i) {
+		    String text = nodes.item(i).getTextContent();
+		    try {
+			long id = Long.parseLong(text);
+			pmids.add(id);
+		    }
+		    catch (NumberFormatException ex) {
+			Logger.warn("Not a valid PMID: "+text);
+		    }
+		}
+	    }
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't get response for "+pmid, ex);
+        }
+        return pmids;
+	
+    }
+
     static Document getDOM (String url) {
         /*
          * We first read the xml into a utf-8 byte buffer, then use the
