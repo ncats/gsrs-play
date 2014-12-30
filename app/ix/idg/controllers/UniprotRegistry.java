@@ -34,6 +34,7 @@ public class UniprotRegistry extends DefaultHandler {
     String commentType;
     Integer refkey;
     Keyword keyword;
+    Keyword organism;
     Set<Integer> evidence = new HashSet<Integer>();
     Map<Long, Publication> pubs = new HashMap<Long, Publication>();
     Map<Integer, Publication> pubkeys = new HashMap<Integer, Publication>();
@@ -158,6 +159,18 @@ public class UniprotRegistry extends DefaultHandler {
             keyword.url = "http://www.uniprot.org/keywords/"
 		+attrs.getValue("id");
         }
+	else if (qName.equals("name")) {
+	    if ("organism".equals(parent)) {
+		String type = attrs.getValue("type");
+		if ("scientific".equals(type)) {
+		    organism = new Keyword ();
+		    organism.label = "UniProt Organism";
+		}
+		else {
+		    organism = null;
+		}
+	    }
+	}
         path.push(qName);
     }
 
@@ -202,6 +215,16 @@ public class UniprotRegistry extends DefaultHandler {
                 if (disease != null)
                     disease.name = value;
             }
+	    else if ("gene".equals(parent)) {
+		Keyword gene = new Keyword ("UniProt Gene", value);
+		target.genes.add(gene);
+	    }
+	    else if ("organism".equals(parent)) {
+		if (organism != null) {
+		    organism.term = value;
+		    target.organism = organism;
+		}
+	    }
         }
         else if (qName.equals("description")) {
             if ("disease".equals(parent)) {

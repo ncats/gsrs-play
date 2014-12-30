@@ -17,6 +17,8 @@ import ix.core.models.XRef;
 @Inheritance
 @DiscriminatorValue("ENT")
 public class EntityModel extends Model {
+    static private final String JOIN = "_ix_idg_e8dead8d";
+    
     @Id
     public Long id;
 
@@ -28,8 +30,18 @@ public class EntityModel extends Model {
     public String description;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_entity_synonym")
+    @JoinTable(name="ix_idg_entity_synonym",
+	       joinColumns=@JoinColumn(name="ix_idg_entity_synonym_id",
+				       referencedColumnName="id")
+	       )
     public List<Keyword> synonyms = new ArrayList<Keyword>();
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_idg_entity_gene",
+	       joinColumns=@JoinColumn(name="ix_idg_entity_gene_id",
+				       referencedColumnName="id")
+	       )
+    public List<Keyword> genes = new ArrayList<Keyword>();
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_idg_entity_property")
