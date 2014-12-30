@@ -10,18 +10,18 @@ import ix.core.models.Indexable;
 import ix.core.models.Value;
 import ix.core.models.Keyword;
 import ix.core.models.Publication;
-import ix.core.models.Predicate;
+import ix.core.models.XRef;
 
-@javax.persistence.Entity
+@Entity
 @Table(name="ix_idg_entity")
 @Inheritance
 @DiscriminatorValue("ENT")
-public class Entity extends Model {
+public class EntityModel extends Model {
     @Id
     public Long id;
 
     @Column(length=1024)
-    @Indexable(facet=true,suggest=true,name="Entity")
+    @Indexable(suggest=true,name="Entity")
     public String name;
 
     @Lob
@@ -36,16 +36,12 @@ public class Entity extends Model {
     public List<Value> properties = new ArrayList<Value>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_entity_annotation")
-    public List<Value> annotations = new ArrayList<Value>();
+    @JoinTable(name="ix_idg_entity_link")
+    public List<XRef> links = new ArrayList<XRef>();
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_idg_entity_publication")
     public List<Publication> publications = new ArrayList<Publication>();
 
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_entity_predicate")
-    public List<Predicate> predicates = new ArrayList<Predicate>();
-
-    public Entity () {}
+    public EntityModel () {}
 }

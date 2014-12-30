@@ -9,17 +9,8 @@ public class VIntArray extends VBin {
     public VIntArray () {}
     public VIntArray (String label, int[] array) {
         this.label = label;
-        data = new byte[array.length*4];
-        for (int i = 0, j = 0; i < array.length; ++i) {
-            int x = array[i];
-            data[j+3] = (byte)((x >> 24) & 0xff);
-            data[j+2] = (byte)((x >> 16) & 0xff);
-            data[j+1] = (byte)((x >>  8) & 0xff);
-            data[j] = (byte)(x & 0xff);
-            j += 4;
-        }
-        size = data.length;
         mimeType = getClass().getName();
+	setArray (array);
     }
 
     public int getLength () { return data.length / 4; }
@@ -39,5 +30,18 @@ public class VIntArray extends VBin {
                 | (data[j] & 0xff);
             j += 4;
         }
+    }
+
+    public void setArray (int[] array) {
+        data = new byte[array.length*4];
+        for (int i = 0, j = 0; i < array.length; ++i) {
+            int x = array[i];
+            data[j+3] = (byte)((x >> 24) & 0xff);
+            data[j+2] = (byte)((x >> 16) & 0xff);
+            data[j+1] = (byte)((x >>  8) & 0xff);
+            data[j] = (byte)(x & 0xff);
+            j += 4;
+        }
+        size = data.length;
     }
 }

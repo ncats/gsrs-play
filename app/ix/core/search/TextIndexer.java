@@ -707,7 +707,7 @@ public class TextIndexer {
             Logger.debug(">>> Updating "+entity+"...");
 
         try {
-            for (Field f : entity.getClass().getDeclaredFields()) {
+            for (Field f : entity.getClass().getFields()) {
                 if (f.getAnnotation(Id.class) != null) {
                     Object id = f.get(entity);
                     if (id != null) {

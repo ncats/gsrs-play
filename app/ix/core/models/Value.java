@@ -16,10 +16,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 public class Value extends Model {
     @Id
     public Long id;
-    public boolean deprecated;
-
-    @OneToOne
-    public Namespace namespace;
     public String label;
     
     public Value () {}

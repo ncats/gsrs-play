@@ -3,12 +3,11 @@ package ix.core.models;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
-import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_namespace")
-public class Namespace extends Model {
+public class Namespace extends IxModel {
     public enum Modifier {
         Public, // anyone can access this resource
             Internal, // only authenticated users have access
@@ -24,9 +23,6 @@ public class Namespace extends Model {
 
     @Column(length=1024)
     public String location; // url, path, etc.
-
-    public final Date created = new Date ();
-    public Date modified;
     public Modifier modifier = Modifier.Private;
 
     public Namespace () {}
@@ -40,12 +36,6 @@ public class Namespace extends Model {
 
     public boolean isPublic () { 
         return modifier == Modifier.Public; 
-    }
-
-    @PrePersist
-    @PreUpdate
-    public void modified () {
-        this.modified = new Date ();
     }
 
     public static Namespace newPublic () {

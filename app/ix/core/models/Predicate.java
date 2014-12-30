@@ -2,15 +2,13 @@ package ix.core.models;
 
 import java.util.List;
 import java.util.ArrayList;
-
-import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_predicate")
 @Inheritance
 @DiscriminatorValue("PRE")
-public class Predicate extends Model {
+public class Predicate extends IxModel {
     @Id
     public Long id;
 

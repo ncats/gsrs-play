@@ -130,7 +130,7 @@ public class EntityFactory extends Controller {
     }
 
 
-    static class EntityMapper extends ObjectMapper {
+    static public class EntityMapper extends ObjectMapper {
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             _serializationConfig = getSerializationConfig();
@@ -268,7 +268,7 @@ public class EntityFactory extends Controller {
         return q.toString();
     }
 
-    static EntityMapper getEntityMapper () {
+    static public EntityMapper getEntityMapper () {
         List<Class> views = new ArrayList<Class>();
 
         Map<String, String[]> params = request().queryString();

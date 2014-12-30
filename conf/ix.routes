@@ -3,4 +3,16 @@
 ->      /granite        ix.ncats.granite.Routes
 ->      /reach  ix.ncats.reach.Routes
 ->      /clinical       ix.ncats.clinical.Routes
+->	/ginas		ix.ginas.Routes
+->	/idg		ix.idg.Routes
+
+#
+# assets
+#
+GET     /assets/*file   controllers.Assets.at(path="/public", file)
+GET     /webjars/*file          controllers.WebJarAssets.at(file)
+
+#
+# other routes
+#
 ->      /       ix.ncats.apps.Routes

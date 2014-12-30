@@ -1,0 +1,4 @@
+#
+# GINAS
+#
+GET	/	ix.ginas.controllers.GinasFactory.index

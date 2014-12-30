@@ -44,7 +44,7 @@ public class Publication extends Model {
     public List<PubAuthor> authors = new ArrayList<PubAuthor>();
 
     //@JsonView(BeanViews.Full.class)
-    @ManyToOne(cascade=CascadeType.ALL)
+    @OneToOne(cascade=CascadeType.ALL)
     public Journal journal;
 
     @ManyToMany(cascade=CascadeType.ALL)

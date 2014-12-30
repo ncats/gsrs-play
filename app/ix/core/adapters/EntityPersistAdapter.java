@@ -10,6 +10,7 @@ import java.lang.reflect.*;
 import com.avaje.ebean.event.*;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 //import javax.annotation.PreDestroy;
 import javax.persistence.Entity;
 import javax.persistence.PostLoad;
@@ -162,8 +163,34 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     @Override
     public void postUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
+	ObjectMapper mapper = new ObjectMapper ();
+	
+	Class cls = bean.getClass();
+	if (!Edit.class.isAssignableFrom(cls)) {
+	    for (Field f : cls.getFields()) {
+		if (f.getAnnotation(Id.class) != null) {
+		    try {
+			Object id = f.get(bean);
+			if (id instanceof Long) {
+			    Edit edit = new Edit (cls, (Long)id);
+			    edit.oldValue = mapper.writeValueAsString
+				(request.getOldValues());
+			    edit.newValue = mapper.writeValueAsString(bean);
+			    edit.save();
+			}
+			else {
+			    Logger.warn("Entity bean ["+cls.getName()+"]="+id
+					+" doesn't have id of type Long!");
+			}
+		    }
+		    catch (Exception ex) {
+			Logger.trace("Can't retrieve bean id", ex);
+		    }
+		}
+	    }
+	}
+	
         if (debug (2)) {
-            ObjectMapper mapper = new ObjectMapper ();
             Logger.debug(">> Old: "+mapper.valueToTree(request.getOldValues())
                          +"\n>> New: "+mapper.valueToTree(bean));
         }

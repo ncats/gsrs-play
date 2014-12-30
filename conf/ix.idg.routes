@@ -1,0 +1,11 @@
+#
+# UniProt
+#
+GET	/uniprot	ix.idg.controllers.UniprotFactory.index
+POST	/uniprot	ix.idg.controllers.UniprotFactory.fetch
+
+#
+# TCRD 
+#
+GET     /tcrd   ix.idg.controllers.TcrdLoader.index
+POST    /tcrd   ix.idg.controllers.TcrdLoader.load

@@ -4,32 +4,39 @@ import java.util.List;
 import java.util.ArrayList;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+
 import javax.persistence.*;
 
 import play.Logger;
 import play.db.ebean.Model;
+
 import ix.utils.Global;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name="ix_core_xref")
-public class XRef extends Model {
-    @JsonIgnore
+public class XRef extends IxModel {
+    //@JsonIgnore
     @Id
-    @Column(name="iid")
-    public Long _id;
+    public Long id;
+
+    @ManyToOne(cascade=CascadeType.ALL)
+    @JsonView(BeanViews.Full.class)
+    public Namespace namespace;
 
     /**
      * not id of the XRef instance but id of the instance for which this
      * XRef is pointing to
      */
-    public Long id; 
-
+    @Column(nullable=false)
+    public Long refid; 
     @Column(length=512,nullable=false)
     public String kind;
-
+    public boolean deprecated;
+    
     @JsonIgnore
     @Transient
     @Indexable(indexed=false)
@@ -50,7 +57,7 @@ public class XRef extends Model {
             throw new IllegalArgumentException
                 ("Namespace parameter can't be null");
         this.kind = kind;
-        this.id = id;
+        this.refid = id;
     }
 
     public XRef (Object instance) {
@@ -63,14 +70,14 @@ public class XRef extends Model {
                 if (null != f.getAnnotation(Id.class)) {
                     Object id = f.get(instance);
                     if (id != null && id instanceof Long) {
-                        this.id = (Long)id;
+                        this.refid = (Long)id;
                     }
                     break;
                 }
             }
 
             kind = cls.getName();
-            if (id == null)
+            if (refid == null)
                 throw new IllegalArgumentException
                     (cls.getName()+": Can't create XRef for Entity "
                      +"with no Id defined!");
@@ -91,16 +98,22 @@ public class XRef extends Model {
             try {
                 Model.Finder finder = new Model.Finder
                     (Long.class, Class.forName(kind));
-                _instance = finder.byId(id);
+                _instance = finder.byId(refid);
             }
             catch (Exception ex) {
-                Logger.trace("Can't retrieve XRef "+kind+":"+id, ex);
+                Logger.trace("Can't retrieve XRef "+kind+":"+refid, ex);
             }
         }
         return _instance;
     }
 
     public String getHRef () {
-        return Global.getRef(kind, id);
+        return Global.getRef(kind, refid);
+    }
+    
+    @JsonView(BeanViews.Compact.class)
+    @JsonProperty("nsref")
+    public String getNamespaceRef () {
+        return Global.getRef(namespace);
     }
 }

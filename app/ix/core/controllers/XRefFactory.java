@@ -8,32 +8,17 @@ import play.data.*;
 import play.mvc.*;
 
 import ix.core.NamedResource;
-import ix.core.models.Namespace;
+import ix.core.models.XRef;
 
-@NamedResource(name="namespaces",type=Namespace.class)
-public class NamespaceFactory extends EntityFactory {
-    public static final Model.Finder<Long, Namespace> finder = 
-        new Model.Finder(Long.class, Namespace.class);
+@NamedResource(name="xrefs", type=XRef.class)
+public class XRefFactory extends EntityFactory {
+    public static final Model.Finder<Long, XRef> finder = 
+        new Model.Finder(Long.class, XRef.class);
 
-    public static List<Namespace> all () { return all (finder); }
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);
     }
-
-    public static Namespace get (String name) {
-	try {
-	    Namespace ns = finder.where()
-		.eq("name", name)
-		.findUnique();
-	    return ns;
-	}
-	catch (Exception ex) {
-	    Logger.trace("Can't query namespace", ex);
-	}
-	return null;
-    }
-    
     public static Result get (Long id, String select) {
         return get (id, select, finder);
     }
@@ -43,11 +28,11 @@ public class NamespaceFactory extends EntityFactory {
     }
 
     public static Result edits (Long id) {
-        return edits (id, Namespace.class);
+        return edits (id, XRef.class);
     }
 
     public static Result create () {
-        return create (Namespace.class, finder);
+        return create (XRef.class, finder);
     }
 
     public static Result delete (Long id) {
@@ -55,6 +40,6 @@ public class NamespaceFactory extends EntityFactory {
     }
 
     public static Result update (Long id, String field) {
-        return update (id, field, Namespace.class, finder);
+        return update (id, field, XRef.class, finder);
     }
 }

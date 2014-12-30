@@ -63,7 +63,7 @@ public class TcrdLoader extends Controller {
                  "where a.target_id = b.id\n"+
                  "and a.protein_id = c.id limit 10");
 
-            UniprotParser uni = new UniprotParser ();
+            UniprotRegistry uni = new UniprotRegistry ();
             while (rset.next()) {
                 long protId = rset.getLong("protein_id");
                 if (rset.wasNull()) {
@@ -78,14 +78,12 @@ public class TcrdLoader extends Controller {
                     .where().eq("synonyms.term", acc).findList();
                 if (targets.isEmpty()) {
                     try {
-                        uni.parse("http://www.uniprot.org/uniprot/"
-                                  +acc+".xml");
-                        
+                        uni.register(acc);
                         Target target = uni.getTarget();
-                        target.family = fam;
+                        target.idgFamily = fam;
                         target.idgClass = tdl;
-                        
-                        target.save();
+                        target.update();
+			
                         Logger.debug(target.id+": "+target.name);
                         ++count;
                     }

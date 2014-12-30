@@ -3,12 +3,12 @@ package ix.idg.models;
 import ix.core.models.Indexable;
 import javax.persistence.*;
 
-@javax.persistence.Entity
+@Entity
 @DiscriminatorValue("TAR")
-public class Target extends Entity {
+public class Target extends EntityModel {
     @Column(length=128)
-    @Indexable(facet=true,name="Target Family")
-    public String family;
+    @Indexable(facet=true,name="IDG Target Family")
+    public String idgFamily;
 
     @Column(length=10)
     @Indexable(facet=true,name="IDG Classification")

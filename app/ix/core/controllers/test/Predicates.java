@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 
+import ix.core.controllers.EntityFactory;
 import ix.core.models.*;
 
 public class Predicates extends Controller {
@@ -37,7 +38,7 @@ public class Predicates extends Controller {
             .setFirstRow(skip)
             .setMaxRows(top)
             .findList();
-        ObjectMapper mapper = new ObjectMapper ();
+        ObjectMapper mapper = EntityFactory.getEntityMapper();
         return ok (mapper.valueToTree(xrefs));
     }
 

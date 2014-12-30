@@ -11,10 +11,16 @@ public class Keyword extends Value {
     @Column(length=255)
     @Indexable(facet=true, suggest=true, name="Keyword")
     public String term;
+    @Lob
+    public String url;
 
     public Keyword () {}
     public Keyword (String term) {
         this.term = term;
+    }
+    public Keyword (String label, String term) {
+	super (label);
+	this.term = term;
     }
 
     @Override

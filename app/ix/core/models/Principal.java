@@ -1,13 +1,12 @@
 package ix.core.models;
 
-import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_principal")
 @Inheritance
 @DiscriminatorValue("PRI")
-public class Principal extends Model {
+public class Principal extends IxModel {
     @Id
     public Long id;
 

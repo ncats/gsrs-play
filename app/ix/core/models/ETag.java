@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name="ix_core_etag")
-public class ETag extends Model {
+public class ETag extends IxModel {
     @Id
     @JsonIgnore
     public Long id;
@@ -32,8 +32,6 @@ public class ETag extends Model {
     public Integer top;
 
     public Integer status;
-    public final Date created = new Date ();
-    public Date modified;
 
     @Column(length=2048)
     public String query;
@@ -60,11 +58,5 @@ public class ETag extends Model {
             id.append(String.format("%1$02x", buf[i]&0xff));
 
         return id.toString();
-    }
-
-    @PrePersist
-    @PreUpdate
-    public void modified () {
-        this.modified = new Date ();
     }
 }
