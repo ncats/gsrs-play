@@ -112,8 +112,8 @@ public class XRef extends IxModel {
     }
     
     @JsonView(BeanViews.Compact.class)
-    @JsonProperty("nsref")
-    public String getNamespaceRef () {
+    @JsonProperty("_namespace")
+    public String getJsonNamespace () {
         return Global.getRef(namespace);
     }
 }

@@ -6,6 +6,10 @@ import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import ix.utils.Global;
 
 @Entity
@@ -39,6 +43,7 @@ public class Publication extends Model {
     @Basic(fetch=FetchType.EAGER)
     public String abstractText;
 
+    @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_core_publication_author")
     public List<PubAuthor> authors = new ArrayList<PubAuthor>();
@@ -56,6 +61,18 @@ public class Publication extends Model {
         this.title = title;
     }
 
+    @Transient
+    private ObjectMapper mapper = new ObjectMapper ();
+    
+    @JsonView(BeanViews.Compact.class)
+    @JsonProperty("_authors")
+    public JsonNode getJsonAuthors () {
+	ObjectNode node = mapper.createObjectNode();
+	node.put("count", authors.size());
+	node.put("href", Global.getRef(getClass (), id)+"/authors");
+	return node;
+    }
+    
     /*
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("journalRef")

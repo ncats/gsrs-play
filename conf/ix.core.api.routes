@@ -6,6 +6,9 @@
 ##################################
 ## API for entity routing
 ##################################
+GET	/edits/:uuid	ix.core.controllers.EditFactory.get(uuid: String)
+GET	/edits/:uuid/	ix.core.controllers.EditFactory.get(uuid: String)
+GET	/edits/:uuid/*field	ix.core.controllers.EditFactory.field(uuid: String, field: String)
 GET     /search         ix.core.controllers.SearchFactory.search(q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
 GET     /suggest/@fields       ix.core.controllers.SearchFactory.suggestFields
 GET     /suggest/:field       ix.core.controllers.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)

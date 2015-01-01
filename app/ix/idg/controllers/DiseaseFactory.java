@@ -6,6 +6,7 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+import com.avaje.ebean.Expr;
 
 import ix.core.NamedResource;
 import ix.idg.models.Disease;
@@ -51,5 +52,17 @@ public class DiseaseFactory extends EntityFactory {
 
     public static Result update (Long id, String field) {
         return update (id, field, Disease.class, finder);
+    }
+
+    public static Disease fetchIfAbsent (Disease.Source source, String id) {
+	List<Disease> diseases =
+	    finder.where(Expr.and(Expr.eq("synonyms.label", source.toString()),
+				  Expr.eq("synonyms.term", id)))
+	    .findList();
+	if (diseases.isEmpty()) {
+	    
+	}
+	
+	return null;
     }
 }

@@ -303,7 +303,7 @@ public class Eutils {
 
     static Document getDOM (Long pmid) {
         WSRequestHolder ws = WS.url(EUTILS_BASE)
-            .setTimeout(5000)
+            .setTimeout(0)
             .setFollowRedirects(true)
             .setQueryParameter("db", "pubmed")
             .setQueryParameter("rettype", "xml")

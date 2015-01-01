@@ -18,6 +18,7 @@ import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,9 +44,6 @@ public class EntityFactory extends Controller {
 
     static final ExecutorService threadPool = 
         Executors.newCachedThreadPool();
-
-    static final Model.Finder<Long, Edit> editFinder = 
-        new Model.Finder(Long.class, Edit.class);
 
     static final Model.Finder<Long, Principal> principalFinder = 
         new Model.Finder(Long.class, Principal.class);
@@ -427,6 +425,16 @@ public class EntityFactory extends Controller {
 
     protected static <T> Result field (Long id, String field, 
                                        Model.Finder<Long, T> finder) {
+	
+        T inst = finder.byId(id);
+            //query.setId(id).findUnique();
+        if (inst == null) {
+            return notFound ("Bad request: "+request().uri());
+        }
+	return field (inst, field);
+    }
+    
+    protected static <T> Result field (Object inst, String field) {
         /*
         Query<T> query = finder.query();
         int depth = 0;
@@ -445,17 +453,12 @@ public class EntityFactory extends Controller {
         }
         */
 
-        T inst = finder.byId(id);
-            //query.setId(id).findUnique();
-        if (inst == null) {
-            return notFound ("Bad request: "+request().uri());
-        }
-
         String[] paths = field.split("/");
         Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
         StringBuilder uri = new StringBuilder ();
         
         int i = 0;
+	Field f = null;
         Object obj = inst;
         for (; i < paths.length && obj != null; ++i) {
             String pname = paths[i]; // field name
@@ -478,7 +481,7 @@ public class EntityFactory extends Controller {
                 /**
                  * TODO: check for JsonProperty annotation!
                  */                
-                Field f = obj.getClass().getField(pname);
+		f = obj.getClass().getField(pname);
                 String fname = f.getName();
                 Class<?> ftype = f.getType();
                 
@@ -572,8 +575,19 @@ public class EntityFactory extends Controller {
         
         ObjectMapper mapper = getEntityMapper ();
         JsonNode node = mapper.valueToTree(obj);
-        return isRaw && !node.isContainerNode() 
-            ? ok (node.asText()) : ok (node);
+        if (isRaw && !node.isContainerNode()) {
+	    // make sure the content type is properly set if the
+	    // value is a json string
+	    JsonDeserialize json = (JsonDeserialize)
+		f.getAnnotation(JsonDeserialize.class);
+	    Results.Status status = ok (node.asText());
+	    if (json != null && json.as() == JsonNode.class) {
+		status.as("application/json");
+	    }
+	    
+	    return status;
+	}
+	return ok (node);
     }
 
     protected static <T extends Model> 
@@ -618,7 +632,7 @@ public class EntityFactory extends Controller {
 
     protected static Result edits (Long id, Class<?>... cls) {
         for (Class<?> c : cls) {
-            List<Edit> edits = editFinder.where
+            List<Edit> edits = EditFactory.finder.where
                 (Expr.and(Expr.eq("refid", id),
                           Expr.eq("kind", c.getName())))
                 .orderBy("modified desc").findList();
@@ -648,12 +662,11 @@ public class EntityFactory extends Controller {
         if (obj == null)
             return notFound ("Not a valid entity id="+id);
 
-        Curation curation = null;
+	Principal principal = null;
         if (request().username() != null) {
-            Principal principal = principalFinder
+	    principal = principalFinder
                 .where().eq("name", request().username())
                 .findUnique();
-            curation = new Curation (principal);
             // create new user if doesn't exist
             /*
             if (principal == null) {
@@ -862,8 +875,7 @@ public class EntityFactory extends Controller {
                 for (Object[] c : changes) {
                     Edit e = new Edit (type, id);
                     e.path = (String)c[0];
-                    if (curation != null)
-                        e.curations.add(curation);
+		    e.editor = principal;
                     e.oldValue = (String)c[1];
                     e.newValue = mapper.writeValueAsString(c[2]);
                     e.save();

@@ -884,6 +884,9 @@ public class TextIndexer {
                         facetsConfig.setRequireDimCount(facetLabel, true);
                         ixFields.add(new FacetField
                                      (facetLabel, facetValue));
+			// allow searching of this field
+			ixFields.add
+			    (new TextField (facetLabel, facetValue, NO));
                     }
                 }
                 catch (Exception ex) {

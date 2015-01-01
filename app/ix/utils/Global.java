@@ -204,7 +204,21 @@ public class Global extends GlobalSettings {
         return h+_instance.ctx.context()+_instance.ctx.api();
     }
 
-    public static String getRef (String type, long id) {
+    public static String getRef (Class<?> type, Object id) {
+        Global g = getInstance ();
+        try {
+            String name = g.getResource(type);
+            if (name == null)
+                throw new IllegalArgumentException
+                    ("Class "+type+" isn't a NamedResource!");
+            return getNamespace()+"/"+name+"("+id+")";
+        }
+        catch (Exception ex) {
+            throw new IllegalArgumentException (ex);
+        }
+    }
+    
+    public static String getRef (String type, Object id) {
         Global g = getInstance ();
         try {
             String name = g.getResource(Class.forName(type));

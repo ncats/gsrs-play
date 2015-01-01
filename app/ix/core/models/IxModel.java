@@ -9,7 +9,7 @@ public class IxModel extends Model {
     public final Date created = new Date ();
     public Date modified;
 
-    @PrePersist    
+    @PrePersist
     @PreUpdate
     public void modified () {
         this.modified = new Date ();

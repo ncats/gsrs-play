@@ -12,16 +12,19 @@ import org.xml.sax.helpers.*;
 import org.xml.sax.*;
 
 import play.Logger;
+import play.db.ebean.Model;
 import com.avaje.ebean.Expr;
 
 import ix.core.models.*;
 import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.PredicateFactory;
+import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.NamespaceFactory;
 import ix.idg.controllers.DiseaseFactory;
 
 import ix.idg.models.Target;
 import ix.idg.models.Disease;
+import ix.idg.models.EntityModel;
 
 import ix.utils.Global;
 
@@ -55,13 +58,18 @@ public class UniprotRegistry extends DefaultHandler {
         }
     }
 
-    public void register (String acc) throws Exception {
+    public void register (Target target, String acc) throws Exception {
         URI u = new URI ("http://www.uniprot.org/uniprot/"+acc+".xml");
-        register (u.toURL().openStream());
+        register (target, u.toURL().openStream());
     }
 
-    public void register (InputStream is) throws Exception {
-        SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
+    public void register (String acc) throws Exception {
+	register (null, acc);
+    }
+
+    public void register (Target target, InputStream is) throws Exception {
+	this.target = target;
+	SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
         parser.parse(is, this);
     }
 
@@ -74,7 +82,9 @@ public class UniprotRegistry extends DefaultHandler {
 
     @Override
     public void startDocument () {
-        target = new Target ();
+	if (target == null) {
+	    target = new Target ();
+	}
         npubs = 0;
         pubs.clear();
         pubkeys.clear();
@@ -85,6 +95,15 @@ public class UniprotRegistry extends DefaultHandler {
     @Override
     public void endDocument () {
         target.save();
+	// create the other direction
+	for (XRef ref : target.links) {
+	    Model obj = (Model)ref.deRef();
+	    if (obj instanceof EntityModel) {
+		XRef xref = createXRef (target);
+		((EntityModel)obj).links.add(xref);
+		obj.update();
+	    }
+	}
         Logger.debug("Target "+target.id+" \""+target.name+"\" added!");
     }
 
@@ -193,7 +212,6 @@ public class UniprotRegistry extends DefaultHandler {
 	else if (qName.equals("shortName")) {
 	    Keyword kw = new Keyword (value);
 	    kw.label = "UniProt Shortname";
-	    kw.url = "http://www.uniprot.org/uniprot/"+value;
 	    target.synonyms.add(kw);
 	}
         else if (qName.equals("fullName")) {
@@ -222,7 +240,17 @@ public class UniprotRegistry extends DefaultHandler {
 	    else if ("organism".equals(parent)) {
 		if (organism != null) {
 		    organism.term = value;
-		    target.organism = organism;
+		    List<Keyword> org = KeywordFactory.finder.where
+			(Expr.and(Expr.eq("label", organism.label),
+				  Expr.eq("term", organism.term)))
+			.findList();
+		    if (org.isEmpty()) {
+			organism.save();
+			target.organism = organism;
+		    }
+		    else {
+			target.organism = org.iterator().next();
+		    }
 		}
 	    }
         }
