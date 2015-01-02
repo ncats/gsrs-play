@@ -34,10 +34,154 @@ public class Eutils {
         "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
     static String EUTILS_URL = EUTILS_BASE + "?db=pubmed&rettype=xml&id=";
 
+    static public int TIMEOUT = 20000;
+
+    public interface Callback {
+	void onReceived (Publication pub);
+	void onFailure (Long pmid, Throwable t);
+    }
+    
+    public static Publication parsePublication (Document dom) {
+	NodeList nodes = dom.getElementsByTagName("PubmedArticle");
+	if (nodes.getLength() == 0) {
+	    Logger.warn("Not a valid PubMed DOM!");
+	    return null;
+	}
+
+	Element article = (Element)nodes.item(0);
+	nodes = article.getElementsByTagName("PMID");
+	if (nodes.getLength() == 0) {
+	    Logger.warn("No PMID found in PubMed DOM!");
+	    return null;
+	}
+	    
+	Publication pub = new Publication ();
+	pub.pmid = Long.parseLong(nodes.item(0).getTextContent());
+	
+	nodes = article.getElementsByTagName("Journal");
+	Element jelm = nodes.getLength() > 0 
+	    ? (Element)nodes.item(0) : null;
+	if (jelm != null) {
+	    pub.journal = getJournal (jelm);
+	}
+	//Logger.debug("Journal: "+pub.journal);
+            
+	// title
+	nodes = article.getElementsByTagName("ArticleTitle");
+	if (nodes.getLength() > 0) {
+	    pub.title = nodes.item(0).getTextContent();
+	}
+            
+	// abstract
+	nodes = article.getElementsByTagName("AbstractText");
+	if (nodes.getLength() > 0) {
+	    StringBuilder text = new StringBuilder ();
+	    for (int i = 0; i < nodes.getLength(); ++i) {
+		if (text.length() > 0) text.append("\n");
+		Element elm = (Element)nodes.item(i);
+		String label = elm.getAttribute("Label");
+		if (label != null && label.length() > 0) {
+		    text.append(label+": ");
+		}
+		text.append(elm.getTextContent());
+	    }
+	    pub.abstractText = text.toString();
+	}
+            
+	// authors
+	nodes = article.getElementsByTagName("AuthorList");
+	if (nodes.getLength() > 0) {
+	    nodes = ((Element)nodes.item(0))
+		.getElementsByTagName("Author");
+
+	    for (int i = 0, j = 0; i < nodes.getLength(); ++i) {
+		Node n = nodes.item(i);
+		Author author = getAuthor (n);
+		if (author != null)
+		    pub.authors.add
+			(new PubAuthor 
+			 (j++, i+1 == nodes.getLength(), author));
+	    }
+	}
+                        
+	nodes = article.getElementsByTagName("MedlinePgn");
+	if (nodes.getLength() > 0) {
+	    pub.pages = nodes.item(0).getTextContent();
+	}
+            
+	nodes = article.getElementsByTagName("ELocationID");
+	if (nodes.getLength() > 0) {
+	    Element elm = (Element)nodes.item(0);
+	    if ("doi".equalsIgnoreCase(elm.getAttribute("EIdType"))) {
+		pub.doi = elm.getTextContent();
+	    }
+	}
+            
+	nodes = dom.getElementsByTagName("ArticleId");
+	for (int i = 0; i < nodes.getLength(); ++i) {
+	    Element elm = (Element)nodes.item(i);
+	    String idtype = elm.getAttribute("IdType");
+	    if ("doi".equalsIgnoreCase(idtype)) {
+		pub.doi = elm.getTextContent();
+	    }
+	    else if ("pubmed".equalsIgnoreCase(idtype)) {
+	    }
+	    else if ("pmc".equalsIgnoreCase(idtype)) 
+		pub.pmcid = elm.getTextContent();
+	}
+            
+	nodes = dom.getElementsByTagName("NameOfSubstance");
+	if (nodes.getLength() > 0) {
+	    List<String> substances = new ArrayList<String>();
+	    for (int i = 0; i < nodes.getLength(); ++i) {
+		substances.add(nodes.item(i).getTextContent());
+	    }
+	}
+            
+	nodes = dom.getElementsByTagName("MeshHeading");
+	if (nodes.getLength() > 0) {
+	    String descriptor = null;
+                
+	    for (int i = 0; i < nodes.getLength(); ++i) {
+		Element headElm = (Element)nodes.item(i);
+		NodeList n = headElm
+		    .getElementsByTagName("DescriptorName");
+                    
+		List<Mesh> heading = new ArrayList<Mesh>();
+		// there must be at least one descriptor name
+		if (n.getLength() > 0) {
+		    descriptor = n.item(0).getTextContent();
+		}
+                    
+		n = headElm.getElementsByTagName("QualifierName");
+		if (n.getLength() > 0 && descriptor != null) {
+		    for (int j = 0; j < n.getLength(); ++j) {
+			Element elm = (Element)n.item(j);
+			String term = descriptor
+			    +"/"+elm.getTextContent();
+			Mesh m = new Mesh (term);
+			if ("Y".equalsIgnoreCase
+			    (elm.getAttribute("MajorTopicYN")))
+			    m.majorTopic = true;
+			heading.add(m);
+		    }
+		}
+                    
+		if (descriptor == null) {
+		    Logger.warn
+			("MeshHeading has no DescriptorName");
+		}
+		else if (heading.isEmpty())
+		    pub.mesh.add(new Mesh (descriptor));
+		else
+		    pub.mesh.addAll(heading);
+	    }
+	}
+	return pub;
+    }
+    
     public static Publication fetchPublication (Long pmid) {
         String url = EUTILS_URL+pmid;
-
-        Publication pub = null;
         try {
             //org.w3c.dom.Document dom = getDOM (url);
             org.w3c.dom.Document dom = getDOM (pmid);
@@ -47,144 +191,41 @@ public class Eutils {
                 return null;
             }
             
-            NodeList nodes = dom.getElementsByTagName("Article");
-            if (nodes.getLength() == 0) {
-                Logger.warn("PMID "+pmid+" has no Article element!");
-                return null;
-            }
-
-            pub = new Publication ();
-            Element article = (Element)nodes.item(0);
-            
-            pub.pmid = pmid;
-
-            nodes = article.getElementsByTagName("Journal");
-            Element jelm = nodes.getLength() > 0 
-                ? (Element)nodes.item(0) : null;
-            if (jelm != null) {
-                pub.journal = getJournal (jelm);
-            }
-            //Logger.debug("Journal: "+pub.journal);
-            
-            // title
-            nodes = article.getElementsByTagName("ArticleTitle");
-            if (nodes.getLength() > 0) {
-                pub.title = nodes.item(0).getTextContent();
-            }
-            
-            // abstract
-            nodes = article.getElementsByTagName("AbstractText");
-            if (nodes.getLength() > 0) {
-                StringBuilder text = new StringBuilder ();
-                for (int i = 0; i < nodes.getLength(); ++i) {
-                    if (text.length() > 0) text.append("\n");
-                    Element elm = (Element)nodes.item(i);
-                    String label = elm.getAttribute("Label");
-                    if (label != null && label.length() > 0) {
-                        text.append(label+": ");
-                    }
-                    text.append(elm.getTextContent());
-                }
-                pub.abstractText = text.toString();
-            }
-            
-            // authors
-            nodes = article.getElementsByTagName("AuthorList");
-            if (nodes.getLength() > 0) {
-                nodes = ((Element)nodes.item(0))
-                    .getElementsByTagName("Author");
-
-                for (int i = 0, j = 0; i < nodes.getLength(); ++i) {
-                    Node n = nodes.item(i);
-                    Author author = getAuthor (n);
-                    if (author != null)
-                        pub.authors.add
-                            (new PubAuthor 
-                             (j++, i+1 == nodes.getLength(), author));
-                }
-            }
-                        
-            nodes = article.getElementsByTagName("MedlinePgn");
-            if (nodes.getLength() > 0) {
-                pub.pages = nodes.item(0).getTextContent();
-            }
-            
-            nodes = article.getElementsByTagName("ELocationID");
-            if (nodes.getLength() > 0) {
-                Element elm = (Element)nodes.item(0);
-                if ("doi".equalsIgnoreCase(elm.getAttribute("EIdType"))) {
-                    pub.doi = elm.getTextContent();
-                }
-            }
-            
-            nodes = dom.getElementsByTagName("ArticleId");
-            for (int i = 0; i < nodes.getLength(); ++i) {
-                Element elm = (Element)nodes.item(i);
-                String idtype = elm.getAttribute("IdType");
-                if ("doi".equalsIgnoreCase(idtype)) {
-                    pub.doi = elm.getTextContent();
-                }
-                else if ("pubmed".equalsIgnoreCase(idtype)) {
-                }
-                else if ("pmc".equalsIgnoreCase(idtype)) 
-                    pub.pmcid = elm.getTextContent();
-            }
-            
-            nodes = dom.getElementsByTagName("NameOfSubstance");
-            if (nodes.getLength() > 0) {
-                List<String> substances = new ArrayList<String>();
-                for (int i = 0; i < nodes.getLength(); ++i) {
-                    substances.add(nodes.item(i).getTextContent());
-                }
-            }
-            
-            nodes = dom.getElementsByTagName("MeshHeading");
-            if (nodes.getLength() > 0) {
-                String descriptor = null;
-                
-                for (int i = 0; i < nodes.getLength(); ++i) {
-                    Element headElm = (Element)nodes.item(i);
-                    NodeList n = headElm
-                        .getElementsByTagName("DescriptorName");
-                    
-                    List<Mesh> heading = new ArrayList<Mesh>();
-                    // there must be at least one descriptor name
-                    if (n.getLength() > 0) {
-                        descriptor = n.item(0).getTextContent();
-                    }
-                    
-                    n = headElm.getElementsByTagName("QualifierName");
-                    if (n.getLength() > 0 && descriptor != null) {
-                        for (int j = 0; j < n.getLength(); ++j) {
-                            Element elm = (Element)n.item(j);
-                            String term = descriptor
-                                +"/"+elm.getTextContent();
-                            Mesh m = new Mesh (term);
-                            if ("Y".equalsIgnoreCase
-                                (elm.getAttribute("MajorTopicYN")))
-                                m.majorTopic = true;
-                            heading.add(m);
-                        }
-                    }
-                    
-                    if (descriptor == null) {
-                        Logger.warn
-                            ("MeshHeading has no DescriptorName");
-                    }
-                    else if (heading.isEmpty())
-                        pub.mesh.add(new Mesh (descriptor));
-                    else
-                        pub.mesh.addAll(heading);
-                }
-            }
-
+	    return parsePublication (dom);
             //Logger.info("pub "+pub+"...");
         }
-        catch (Exception ex) {
+        catch (Throwable ex) {
             Logger.trace("Fetch failed: "+url, ex);
         }
 
-        return pub;
+        return null;
+    }
+
+    public static void fetchPublication (final Long pmid,
+					 final Callback callback) {
+        F.Promise<WSResponse> promise = getPromise (pmid);
+        try {
+	    promise.onFailure(new F.Callback<Throwable> () {
+		    public void invoke (Throwable t) {
+			Logger.warn
+			    ("Failure: can't retrieve PMID "+pmid+"; "+t);
+			callback.onFailure(pmid, t);
+		    }
+		});
+	    promise.onRedeem(new F.Callback<WSResponse> () {
+		    public void invoke (WSResponse res) {
+			//Logger.warn("Redeem: "+res);
+			Publication pub = parsePublication (res.asXml());
+			callback.onReceived(pub);
+		    }
+		});
+            WSResponse response = promise.get(100);
+	    callback.onReceived(parsePublication (response.asXml()));
+        }
+        catch (Throwable ex) {
+            Logger.trace("Can't get response for "+pmid, ex);
+	    callback.onFailure(pmid, ex);
+        }
     }
 
     static Author getAuthor (Node node) {
@@ -301,29 +342,39 @@ public class Eutils {
         return journal;
     }
 
-    static Document getDOM (Long pmid) {
-        WSRequestHolder ws = WS.url(EUTILS_BASE)
-            .setTimeout(0)
-            .setFollowRedirects(true)
-            .setQueryParameter("db", "pubmed")
-            .setQueryParameter("rettype", "xml")
-            .setQueryParameter("id", pmid.toString());
-
-        F.Promise<WSResponse> promise = ws.get();
+    static Document getDOM (final Long pmid) {
+        F.Promise<WSResponse> promise = getPromise (pmid);
         try {
-            WSResponse response = promise.get(5000);
+	    promise.onFailure(new F.Callback<Throwable> () {
+		    public void invoke (Throwable t) {
+			Logger.warn
+			    ("Failure: can't retrieve PMID "+pmid+"; "+t);
+		    }
+		});
+            WSResponse response = promise.get(TIMEOUT);
             return response.asXml();
         }
-        catch (Exception ex) {
+        catch (Throwable ex) {
             Logger.trace("Can't get response for "+pmid, ex);
         }
         return null;
     }
 
+    static F.Promise<WSResponse> getPromise (final Long pmid) {
+        WSRequestHolder ws = WS.url(EUTILS_BASE)
+            .setTimeout(TIMEOUT)
+            .setFollowRedirects(true)
+            .setQueryParameter("db", "pubmed")
+            .setQueryParameter("rettype", "xml")
+            .setQueryParameter("id", pmid.toString());
+
+        return ws.get();
+    }
+
     static public List<Long> fetchRelated (Long pmid) {
         WSRequestHolder ws = WS.url
 	    ("http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi")
-	    .setTimeout(5000)
+	    .setTimeout(TIMEOUT)
 	    .setFollowRedirects(true)
 	    .setQueryParameter("dbfrom", "pubmed")
 	    .setQueryParameter("linkname", "pubmed_pubmed")
@@ -334,7 +385,7 @@ public class Eutils {
 	List<Long> pmids = new ArrayList<Long>();
         F.Promise<WSResponse> promise = ws.get();
         try {
-            WSResponse response = promise.get(5000);
+            WSResponse response = promise.get(TIMEOUT);
 	    Document doc = response.asXml();
 	    NodeList nodes = doc.getElementsByTagName("LinkSetDb");
 	    if (nodes.getLength() > 0) {

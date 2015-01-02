@@ -180,12 +180,6 @@ create table ix_ncats_funding (
   constraint pk_ix_ncats_funding primary key (id))
 ;
 
-create table ix_core_gene (
-  id                        bigint not null,
-  name                      varchar(255),
-  constraint pk_ix_core_gene primary key (id))
-;
-
 create table ix_ncats_grant (
   id                        bigint not null,
   application_id            bigint,
@@ -611,12 +605,6 @@ create table ix_idg_entity_synonym (
   constraint pk_ix_idg_entity_synonym primary key (ix_idg_entity_synonym_id, ix_core_value_id))
 ;
 
-create table ix_idg_entity_gene (
-  ix_idg_entity_gene_id          bigint not null,
-  ix_core_value_id               bigint not null,
-  constraint pk_ix_idg_entity_gene primary key (ix_idg_entity_gene_id, ix_core_value_id))
-;
-
 create table ix_idg_entity_property (
   ix_idg_entity_id               bigint not null,
   ix_core_value_id               bigint not null,
@@ -635,16 +623,16 @@ create table ix_idg_entity_publication (
   constraint pk_ix_idg_entity_publication primary key (ix_idg_entity_id, ix_core_publication_id))
 ;
 
+create table ix_idg_ligand (
+  ix_idg_entity_id               bigint not null,
+  ix_ginas_structure_id          bigint not null,
+  constraint pk_ix_idg_ligand primary key (ix_idg_entity_id, ix_ginas_structure_id))
+;
+
 create table ix_core_event_figure (
   ix_core_event_id               bigint not null,
   ix_core_figure_id              bigint not null,
   constraint pk_ix_core_event_figure primary key (ix_core_event_id, ix_core_figure_id))
-;
-
-create table ix_core_gene_synonym (
-  ix_core_gene_id                bigint not null,
-  ix_core_value_id               bigint not null,
-  constraint pk_ix_core_gene_synonym primary key (ix_core_gene_id, ix_core_value_id))
 ;
 
 create table ix_ncats_grant_investigator (
@@ -874,8 +862,6 @@ create sequence ix_core_figure_seq;
 
 create sequence ix_ncats_funding_seq;
 
-create sequence ix_core_gene_seq;
-
 create sequence ix_ncats_grant_seq;
 
 create sequence ix_core_group_seq;
@@ -1029,10 +1015,6 @@ alter table ix_idg_entity_synonym add constraint fk_ix_idg_entity_synonym_ix_i_0
 
 alter table ix_idg_entity_synonym add constraint fk_ix_idg_entity_synonym_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_idg_entity_gene add constraint fk_ix_idg_entity_gene_ix_idg__01 foreign key (ix_idg_entity_gene_id) references ix_idg_entity (id) on delete restrict on update restrict;
-
-alter table ix_idg_entity_gene add constraint fk_ix_idg_entity_gene_ix_core_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
-
 alter table ix_idg_entity_property add constraint fk_ix_idg_entity_property_ix__01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
 
 alter table ix_idg_entity_property add constraint fk_ix_idg_entity_property_ix__02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
@@ -1045,13 +1027,13 @@ alter table ix_idg_entity_publication add constraint fk_ix_idg_entity_publicatio
 
 alter table ix_idg_entity_publication add constraint fk_ix_idg_entity_publication__02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
 
+alter table ix_idg_ligand add constraint fk_ix_idg_ligand_ix_idg_entit_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand add constraint fk_ix_idg_ligand_ix_ginas_str_02 foreign key (ix_ginas_structure_id) references ix_ginas_structure (id) on delete restrict on update restrict;
+
 alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
 
 alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_02 foreign key (ix_core_figure_id) references ix_core_figure (id) on delete restrict on update restrict;
-
-alter table ix_core_gene_synonym add constraint fk_ix_core_gene_synonym_ix_co_01 foreign key (ix_core_gene_id) references ix_core_gene (id) on delete restrict on update restrict;
-
-alter table ix_core_gene_synonym add constraint fk_ix_core_gene_synonym_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
 alter table ix_ncats_grant_investigator add constraint fk_ix_ncats_grant_investigato_01 foreign key (ix_ncats_grant_id) references ix_ncats_grant (id) on delete restrict on update restrict;
 
@@ -1247,8 +1229,6 @@ drop table if exists ix_idg_entity;
 
 drop table if exists ix_idg_entity_synonym;
 
-drop table if exists ix_idg_entity_gene;
-
 drop table if exists ix_idg_entity_property;
 
 drop table if exists ix_idg_entity_link;
@@ -1262,10 +1242,6 @@ drop table if exists ix_core_event_figure;
 drop table if exists ix_core_figure;
 
 drop table if exists ix_ncats_funding;
-
-drop table if exists ix_core_gene;
-
-drop table if exists ix_core_gene_synonym;
 
 drop table if exists ix_ncats_grant;
 
@@ -1408,8 +1384,6 @@ drop sequence if exists ix_core_event_seq;
 drop sequence if exists ix_core_figure_seq;
 
 drop sequence if exists ix_ncats_funding_seq;
-
-drop sequence if exists ix_core_gene_seq;
 
 drop sequence if exists ix_ncats_grant_seq;
 

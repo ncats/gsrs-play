@@ -6,21 +6,19 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
-import com.avaje.ebean.Expr;
 
 import ix.core.NamedResource;
-import ix.idg.models.Disease;
+import ix.idg.models.Ligand;
 import ix.core.controllers.EntityFactory;
 
-@NamedResource(name="diseases",type=Disease.class)
-public class DiseaseFactory extends EntityFactory {
-    static final public Model.Finder<Long, Disease> finder = 
-        new Model.Finder(Long.class, Disease.class);
+@NamedResource(name="ligands",type=Ligand.class)
+public class LigandFactory extends EntityFactory {
+    static final public Model.Finder<Long, Ligand> finder = 
+        new Model.Finder(Long.class, Ligand.class);
 
-    public static Disease getDisease (Long id) {
+    public static Ligand getLigand (Long id) {
         return getEntity (id, finder);
     }
-
     public static Result count () {
         return count (finder);
     }
@@ -32,7 +30,7 @@ public class DiseaseFactory extends EntityFactory {
     }
 
     public static Result edits (Long id) {
-        return edits (id, Disease.class);
+        return edits (id, Ligand.class);
     }
 
     public static Result get (Long id, String expand) {
@@ -44,7 +42,7 @@ public class DiseaseFactory extends EntityFactory {
     }
 
     public static Result create () {
-        return create (Disease.class, finder);
+        return create (Ligand.class, finder);
     }
 
     public static Result delete (Long id) {
@@ -52,17 +50,6 @@ public class DiseaseFactory extends EntityFactory {
     }
 
     public static Result update (Long id, String field) {
-        return update (id, field, Disease.class, finder);
-    }
-
-    public static Disease registerIfAbsent (String name) {
-	List<Disease> diseases = finder.where().eq("name", name).findList();
-	if (diseases.isEmpty()) {
-	    Disease dis = new Disease ();
-	    dis.name = name;
-	    dis.save();
-	    return dis;
-	}
-	return diseases.iterator().next();
+        return update (id, field, Ligand.class, finder);
     }
 }

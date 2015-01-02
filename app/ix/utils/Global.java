@@ -195,13 +195,17 @@ public class Global extends GlobalSettings {
         }
     }
 
-    public static String getNamespace () {
+    public static String getHost () {
         Http.Request req = Controller.request();
         String h = _instance.ctx.host();
         if (h == null) {
             h = (req.secure()? "https":"http") + "://"+req.host();
         }
-        return h+_instance.ctx.context()+_instance.ctx.api();
+	return h;
+    }
+    
+    public static String getNamespace () {
+        return getHost ()+_instance.ctx.context()+_instance.ctx.api();
     }
 
     public static String getRef (Class<?> type, Object id) {

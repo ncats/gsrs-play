@@ -33,6 +33,16 @@ public class NamespaceFactory extends EntityFactory {
 	}
 	return null;
     }
+
+    public static Namespace registerIfAbsent (String name, String location) {
+	Namespace ns = get (name);
+	if (ns == null) {
+            ns = Namespace.newPublic(name);
+            ns.location = location;
+            ns.save();
+	}
+	return ns;
+    }
     
     public static Result get (Long id, String select) {
         return get (id, select, finder);

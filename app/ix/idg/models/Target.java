@@ -12,7 +12,7 @@ import javax.persistence.*;
 public class Target extends EntityModel {
     @OneToOne
     public Keyword organism;
-        
+
     @Column(length=128)
     @Indexable(facet=true,name="IDG Target Family")
     public String idgFamily;

@@ -20,8 +20,10 @@ import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.NamespaceFactory;
+import ix.core.controllers.EntityFactory;
 import ix.idg.controllers.DiseaseFactory;
 
+import ix.idg.models.Gene;
 import ix.idg.models.Target;
 import ix.idg.models.Disease;
 import ix.idg.models.EntityModel;
@@ -34,6 +36,7 @@ public class UniprotRegistry extends DefaultHandler {
     Target target;
     XRef xref;
     Disease disease;
+    Gene gene;
     String commentType;
     Integer refkey;
     Keyword keyword;
@@ -48,14 +51,8 @@ public class UniprotRegistry extends DefaultHandler {
     int npubs;
 
     public UniprotRegistry () {
-        namespace = NamespaceFactory.get("UniProt");
-        if (namespace == null) {
-            namespace = Namespace.newPublic("UniProt");
-            namespace.location = "http://www.uniprot.org";
-            namespace.save();
-            Logger.debug("New namespace created: "
-                         +namespace.id+" "+namespace.name);
-        }
+        namespace = NamespaceFactory.registerIfAbsent
+	    ("UniProt", "http://www.uniprot.org");
     }
 
     public void register (Target target, String acc) throws Exception {
@@ -86,6 +83,11 @@ public class UniprotRegistry extends DefaultHandler {
 	    target = new Target ();
 	}
         npubs = 0;
+	gene = null;
+	disease = null;
+	xref = null;
+	organism = null;
+	keyword = null;
         pubs.clear();
         pubkeys.clear();
         values.clear();
@@ -94,6 +96,7 @@ public class UniprotRegistry extends DefaultHandler {
 
     @Override
     public void endDocument () {
+	//Logger.debug("About to register target\n"+EntityFactory.getEntityMapper().toJson(target, true));
         target.save();
 	// create the other direction
 	for (XRef ref : target.links) {
@@ -164,12 +167,15 @@ public class UniprotRegistry extends DefaultHandler {
                           Expr.eq("synonyms.term", id))).findList();
             if (diseases.isEmpty()) {
                 disease = new Disease ();
+		Logger.debug("New disease "+id);
 		Keyword kw = new Keyword ("UniProt", id);
 		kw.url = "http://www.uniprot.org/diseases/"+id;
                 disease.synonyms.add(kw);
             }
             else {
-                disease = null;
+                disease = diseases.iterator().next();
+		Logger.debug("Disease "+id+" is already in db!\n"
+			     +EntityFactory.getEntityMapper().toJson(disease, true));
             }
         }
         else if (qName.equals("keyword")) {
@@ -189,8 +195,15 @@ public class UniprotRegistry extends DefaultHandler {
 		    organism = null;
 		}
 	    }
+	    else if ("gene".equals(parent)) {
+		String type = attrs.getValue("type");
+		if ("primary".equals(type)) {
+		    gene = new Gene ();
+		}
+	    }
 	}
         path.push(qName);
+	//Logger.debug("++"+getPath ());
     }
 
     @Override
@@ -234,8 +247,20 @@ public class UniprotRegistry extends DefaultHandler {
                     disease.name = value;
             }
 	    else if ("gene".equals(parent)) {
-		Keyword gene = new Keyword ("UniProt Gene", value);
-		target.genes.add(gene);
+		if (gene != null) {
+		    if (gene.name == null) {
+			gene = GeneFactory.registerIfAbsent(value);
+			target.links.add(createXRef (gene));
+		    }
+		    else {
+			Keyword kw = new Keyword ("UniProt Gene", value);
+			gene.synonyms.add(kw);
+			gene.update();
+		    }
+		}
+		// also add gene as synonym
+		Keyword kw = new Keyword ("UniProt Gene", value);
+		target.synonyms.add(kw);
 	    }
 	    else if ("organism".equals(parent)) {
 		if (organism != null) {
@@ -277,7 +302,7 @@ public class UniprotRegistry extends DefaultHandler {
                 xref.save();
         }
         else if (qName.equals("disease")) {
-            if (disease != null) {
+            if (disease.id == null) {
                 disease.save();
                 Logger.debug("New disease "
                              +disease.id+" \""+disease.name+"\" added!");
@@ -287,7 +312,7 @@ public class UniprotRegistry extends DefaultHandler {
             String text = values.get("text");
             if ("disease".equals(commentType)) {
                 XRef xref = createXRef (disease);
-                xref.properties.add(new Text (value, disease.name));
+                xref.properties.add(new Text (disease.name, value));
                 target.links.add(xref);
             }
             else {
@@ -299,6 +324,9 @@ public class UniprotRegistry extends DefaultHandler {
 	    keyword.term = value;
             target.properties.add(keyword);
         }
+	else if (qName.equals("gene"))
+	    gene = null;
+	//Logger.debug("--"+p);
     }
 
     String getPath () {
@@ -309,7 +337,7 @@ public class UniprotRegistry extends DefaultHandler {
         return sb.toString();
     }
 
-    XRef createXRef (Object obj) {
+    public XRef createXRef (Object obj) {
         XRef xref = new XRef (obj);
         xref.namespace = namespace;
         return xref;

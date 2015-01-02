@@ -16,15 +16,15 @@ public class TargetFactory extends EntityFactory {
     static final public Model.Finder<Long, Target> finder = 
         new Model.Finder(Long.class, Target.class);
 
-    public static List<Target> all () { return all (finder); }
     public static Target getTarget (Long id) {
         return getEntity (id, finder);
     }
+
     public static Result count () {
         return count (finder);
     }
     public static Result page (int top, int skip) {
-        return TargetFactory.page (top, skip, null);
+        return page (top, skip, null);
     }
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);

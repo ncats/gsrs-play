@@ -26,8 +26,6 @@ import ix.utils.Global;
 @Inheritance
 @DiscriminatorValue("ENT")
 public class EntityModel extends Model {
-    static private final String JOIN = "_ix_idg_e8dead8d";
-    
     @Id
     public Long id;
 
@@ -46,18 +44,12 @@ public class EntityModel extends Model {
 	       )
     public List<Keyword> synonyms = new ArrayList<Keyword>();
 
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_entity_gene",
-	       joinColumns=@JoinColumn(name="ix_idg_entity_gene_id",
-				       referencedColumnName="id")
-	       )
-    public List<Keyword> genes = new ArrayList<Keyword>();
-
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_idg_entity_property")
     public List<Value> properties = new ArrayList<Value>();
 
+    @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_idg_entity_link")
     public List<XRef> links = new ArrayList<XRef>();
@@ -71,6 +63,18 @@ public class EntityModel extends Model {
 
     @Transient
     protected ObjectMapper mapper = new ObjectMapper ();
+
+    @JsonView(BeanViews.Compact.class)
+    @JsonProperty("_links")
+    public JsonNode getJsonLinks () {
+	ObjectNode node = null;
+	if (!links.isEmpty()) {
+	    node = mapper.createObjectNode();
+	    node.put("count", links.size());
+	    node.put("href", Global.getRef(getClass (), id)+"/links");
+	}
+	return node;
+    }
 
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_properties")

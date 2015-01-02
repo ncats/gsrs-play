@@ -113,7 +113,7 @@ public class DiseaseOntologyRegistry {
 	Logger.debug(diseaseMap.size()+" disease(s) registered!");
     }
     
-    XRef createXRef (Object obj) {
+    public XRef createXRef (Object obj) {
         XRef xref = new XRef (obj);
         xref.namespace = namespace;
         return xref;

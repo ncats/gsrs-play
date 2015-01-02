@@ -13,6 +13,7 @@ import com.avaje.ebean.*;
 
 import ix.core.models.*;
 import ix.idg.models.*;
+import ix.core.controllers.NamespaceFactory;
 
 public class TcrdLoader extends Controller {
     static final Model.Finder<Long, Target> targetDb = 
@@ -76,21 +77,6 @@ public class TcrdLoader extends Controller {
         try {
             con = DriverManager.getConnection
                 (jdbcUrl, jdbcUsername, jdbcPassword);
-            Statement stm = con.createStatement();
-            ResultSet rset = stm.executeQuery
-                ("select distinct doid from target2disease");
-            while (rset.next()) {
-                String doid = rset.getString("doid");
-                try {
-                    URL url = new URL
-                        ("http://www.disease-ontology.org/api/metadata/"+doid);
-                    
-                }
-                catch (Exception ex) {
-                    Logger.trace("Can't retrieve "+doid, ex);
-                }
-            }
-            
             count = load (con);
         }
         catch (SQLException ex) {
@@ -110,16 +96,22 @@ public class TcrdLoader extends Controller {
         Statement stm = con.createStatement();
         PreparedStatement pstm = con.prepareStatement
             ("select * from target2disease where target_id = ?");
+	PreparedStatement pstm2 = con.prepareStatement
+	    ("select * from chembl_activity where target_id = ?");
+	PreparedStatement pstm3 = con.prepareStatement
+	    ("select * from drugdb_activity where target_id = ?");
+	
         int count = 0;
 
-        Namespace resource = Namespace.newPublic("IDGv2");
-        resource.location = "https://pharos.nih.gov";
+        Namespace namespace = NamespaceFactory.registerIfAbsent
+	    ("TCRDv090", "https://pharos.nih.gov");
+
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from t2tc a, target b, protein c\n"+
                  "where a.target_id = b.id\n"+
                  "and a.protein_id = c.id "
-                 +"limit 10"
+                 //+"limit 50"
                  );
 
 	    Set<TcrdTarget> targets = new HashSet<TcrdTarget>();
@@ -139,7 +131,8 @@ public class TcrdLoader extends Controller {
                     .where().eq("synonyms.term", acc).findList();
                 
                 if (tlist.isEmpty()) {
-		    targets.add(new TcrdTarget (acc, fam, tdl, id));
+		    TcrdTarget t = new TcrdTarget (acc, fam, tdl, id);
+		    targets.add(t);
 		}
 	    }
 	    rset.close();
@@ -154,17 +147,15 @@ public class TcrdLoader extends Controller {
 		    target.synonyms.add
 			(new Keyword ("TCRD Target", String.valueOf(t.id)));
 		    
+		    pstm.setLong(1, t.id);
+		    addDiseaseRefs (target, namespace, pstm);
+		    pstm2.setLong(1, t.id);
+		    addChemblRefs (target, pstm2);
+		    pstm3.setLong(1, t.id);
+		    addDrugDbRefs (target, pstm3);
+		    
 		    UniprotRegistry uni = new UniprotRegistry ();
 		    uni.register(target, t.acc);
-			/*
-			  pstm.setLong(1, id);
-			  ResultSet rs = pstm.executeQuery();
-			  while (rs.next()) {
-                            String doid = rs.getString("doid");
-                            
-                        }
-                        rs.close();
-			*/                        
 		    ++count;
 		}
 		catch (Throwable e) {
@@ -177,7 +168,84 @@ public class TcrdLoader extends Controller {
         finally {
 	    stm.close();            
             pstm.close();
+	    pstm2.close();
+	    pstm3.close();
         }
+    }
+
+    static void addDiseaseRefs (Target target, Namespace namespace,
+				PreparedStatement pstm)	throws SQLException {
+	ResultSet rs = pstm.executeQuery();
+	try {
+	    while (rs.next()) {
+		String doid = rs.getString("doid");
+		List<Disease> diseases = DiseaseFactory.finder
+		    .where(Expr.and(Expr.eq("synonyms.label", "DOID"),
+				    Expr.eq("synonyms.term", doid)))
+		    .findList();
+		if (diseases.isEmpty()) {
+		    Logger.warn("Target "+target.id+" references "
+				+"unknown disease "+doid);
+		}
+		else {
+		    double zscore = rs.getDouble("zscore");
+		    double conf = rs.getDouble("conf");
+		    for (Disease d : diseases) {
+			XRef xref = new XRef (d);
+			xref.namespace = namespace;
+			xref.properties.add
+			    (new Text ("TCRD Disease Inference",
+				       d.name));
+			xref.properties.add
+			    (new VNum ("TCRD Z-score", zscore));
+			xref.properties.add
+			    (new VNum ("TCRD Confidence", conf));
+			target.links.add(xref);
+		    }
+		}
+	    }
+	}
+	finally {
+	    rs.close();
+	}
+    }
+
+    static void addChemblRefs (Target target, PreparedStatement pstm)
+	throws SQLException {
+	ResultSet rs = pstm.executeQuery();
+	try {
+	    /*
+	    Namespace ns = NamespaceFactory.registerIfAbsent
+		("ChEMBL", "https://www.ebi.ac.uk/chembl");
+	    */
+	    while (rs.next()) {
+		String chemblId = rs.getString("cmpd_chemblid");
+		Keyword kw = new Keyword ("ChEMBL Activity", chemblId);
+		kw.url =
+		    "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId;
+		target.properties.add(kw);
+	    }
+	}
+	finally {
+	    rs.close();
+	}
+    }
+
+    static void addDrugDbRefs (Target target, PreparedStatement pstm)
+	throws SQLException {
+	ResultSet rs = pstm.executeQuery();
+	try {
+	    while (rs.next()) {
+		String drug = rs.getString("drug");
+		String ref = rs.getString("reference");
+		Keyword kw = new Keyword ("Drug", drug);
+		kw.url = ref;
+		target.properties.add(kw);
+	    }
+	}
+	finally {
+	    rs.close();
+	}
     }
 
     public static Result index () {

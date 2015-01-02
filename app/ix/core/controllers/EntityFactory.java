@@ -136,6 +136,22 @@ public class EntityFactory extends Controller {
                 _serializationConfig = _serializationConfig.withView(v);
             }
         }
+
+	public String toJson (Object obj) {
+	    return toJson (obj, false);
+	}
+	
+	public String toJson (Object obj, boolean pretty) {
+	    try {
+		return pretty
+		    ? writerWithDefaultPrettyPrinter().writeValueAsString(obj)
+		    : writeValueAsString (obj);
+	    }
+	    catch (Exception ex) {
+		Logger.trace("Can't write Json", ex);
+	    }
+	    return null;
+	}
     }
 
     protected static <T> List<T> filter (FetchOptions options,

@@ -6,21 +6,19 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
-import com.avaje.ebean.Expr;
 
 import ix.core.NamedResource;
-import ix.idg.models.Disease;
+import ix.idg.models.Gene;
 import ix.core.controllers.EntityFactory;
 
-@NamedResource(name="diseases",type=Disease.class)
-public class DiseaseFactory extends EntityFactory {
-    static final public Model.Finder<Long, Disease> finder = 
-        new Model.Finder(Long.class, Disease.class);
+@NamedResource(name="genes",type=Gene.class)
+public class GeneFactory extends EntityFactory {
+    static final public Model.Finder<Long, Gene> finder = 
+        new Model.Finder(Long.class, Gene.class);
 
-    public static Disease getDisease (Long id) {
+    public static Gene getGene (Long id) {
         return getEntity (id, finder);
     }
-
     public static Result count () {
         return count (finder);
     }
@@ -32,7 +30,7 @@ public class DiseaseFactory extends EntityFactory {
     }
 
     public static Result edits (Long id) {
-        return edits (id, Disease.class);
+        return edits (id, Gene.class);
     }
 
     public static Result get (Long id, String expand) {
@@ -44,7 +42,7 @@ public class DiseaseFactory extends EntityFactory {
     }
 
     public static Result create () {
-        return create (Disease.class, finder);
+        return create (Gene.class, finder);
     }
 
     public static Result delete (Long id) {
@@ -52,17 +50,17 @@ public class DiseaseFactory extends EntityFactory {
     }
 
     public static Result update (Long id, String field) {
-        return update (id, field, Disease.class, finder);
+        return update (id, field, Gene.class, finder);
     }
 
-    public static Disease registerIfAbsent (String name) {
-	List<Disease> diseases = finder.where().eq("name", name).findList();
-	if (diseases.isEmpty()) {
-	    Disease dis = new Disease ();
-	    dis.name = name;
-	    dis.save();
-	    return dis;
+    public static Gene registerIfAbsent (String name) {
+	List<Gene> genes = finder.where().eq("name", name).findList();
+	if (genes.isEmpty()) {
+	    Gene g = new Gene ();
+	    g.name = name;
+	    g.save();
+	    return g;
 	}
-	return diseases.iterator().next();
+	return genes.iterator().next();
     }
 }

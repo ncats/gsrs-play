@@ -141,7 +141,7 @@ public class SearchFactory extends EntityFactory {
             etag.skip = skip;
             etag.count = nodes.size();
             etag.total = result.count();
-            etag.uri = request().uri();
+            etag.uri = Global.getHost()+request().uri();
             etag.path = request().path();
             etag.sha1 = Util.sha1Request(request(), "q", "facet");
             etag.query = q;
