@@ -12,7 +12,7 @@ public class Keyword extends Value {
     @Indexable(facet=true, suggest=true, name="Keyword")
     public String term;
     @Lob
-    public String url;
+    public String href;
 
     public Keyword () {}
     public Keyword (String term) {

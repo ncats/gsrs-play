@@ -10,6 +10,7 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+import com.avaje.ebean.Expr;
 
 import ix.core.NamedResource;
 import ix.core.models.Keyword;
@@ -47,5 +48,20 @@ public class KeywordFactory extends EntityFactory {
 
     public static Result update (Long id, String field) {
         return update (id, field, Keyword.class, finder);
+    }
+
+    public static Keyword registerIfAbsent
+	(String label, String term, String url) {
+	List<Keyword> keywords =
+	    finder.where(Expr.and(Expr.eq("label", label),
+				  Expr.eq("term", term))).findList();
+	if (keywords.isEmpty()) {
+	    Keyword kw = new Keyword (label, term);
+	    kw.href = url;
+	    kw.save();
+	    return kw;
+	}
+	
+	return keywords.iterator().next();
     }
 }

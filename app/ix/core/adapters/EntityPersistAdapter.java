@@ -166,26 +166,29 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 	ObjectMapper mapper = new ObjectMapper ();
 	
 	Class cls = bean.getClass();
-	if (!Edit.class.isAssignableFrom(cls)) {
-	    for (Field f : cls.getFields()) {
-		if (f.getAnnotation(Id.class) != null) {
-		    try {
-			Object id = f.get(bean);
-			if (id instanceof Long) {
-			    Edit edit = new Edit (cls, (Long)id);
-			    edit.oldValue = mapper.writeValueAsString
-				(request.getOldValues());
-			    edit.newValue = mapper.writeValueAsString(bean);
-			    edit.save();
-			}
-			else {
-			    Logger.warn("Entity bean ["+cls.getName()+"]="+id
-					+" doesn't have id of type Long!");
-			}
+	if (Edit.class.isAssignableFrom(cls)) {
+	    // don't touch this class
+	    return;
+	}
+
+	for (Field f : cls.getFields()) {
+	    if (f.getAnnotation(Id.class) != null) {
+		try {
+		    Object id = f.get(bean);
+		    if (id instanceof Long) {
+			Edit edit = new Edit (cls, (Long)id);
+			edit.oldValue = mapper.writeValueAsString
+			    (request.getOldValues());
+			edit.newValue = mapper.writeValueAsString(bean);
+			edit.save();
 		    }
-		    catch (Exception ex) {
-			Logger.trace("Can't retrieve bean id", ex);
+		    else {
+			Logger.warn("Entity bean ["+cls.getName()+"]="+id
+				    +" doesn't have id of type Long!");
 		    }
+		}
+		catch (Exception ex) {
+		    Logger.trace("Can't retrieve bean id", ex);
 		}
 	    }
 	}
@@ -195,9 +198,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                          +"\n>> New: "+mapper.valueToTree(bean));
         }
 
-        String name = bean.getClass().getName();
-        Method m = postUpdateCallback.get(name);
         try {
+	    String name = cls.getName();
+	    Method m = postUpdateCallback.get(name);
             if (m != null) {
                 try {
                     m.invoke(bean);

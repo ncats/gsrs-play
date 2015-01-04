@@ -38,6 +38,7 @@ import ix.core.models.Principal;
 import ix.core.models.BeanViews;
 import ix.core.models.Curation;
 import ix.utils.Util;
+import ix.utils.Global;
 
 public class EntityFactory extends Controller {
     static final SecureRandom rand = new SecureRandom ();
@@ -206,7 +207,7 @@ public class EntityFactory extends Controller {
         etag.skip = options.skip;
         etag.query = canonicalizeQuery (request ());
         etag.count = results.size();
-        etag.uri = request().uri();
+        etag.uri = Global.getHost()+request().uri();
         etag.path = request().path();
         // only include query parameters that fundamentally alters the
         // number of results

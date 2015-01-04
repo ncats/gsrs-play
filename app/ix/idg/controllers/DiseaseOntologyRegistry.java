@@ -62,11 +62,12 @@ public class DiseaseOntologyRegistry {
 		disease.name = obo.name;
 		disease.description = obo.def;
 		Keyword kw = new Keyword ("DOID", obo.id);
-		kw.url = "http://www.disease-ontology.org/api/metadata/"+obo.id;
+		kw.href =
+		    "http://www.disease-ontology.org/api/metadata/"+obo.id;
 		disease.synonyms.add(kw);
 		for (String id : obo.alts) {
 		    kw = new Keyword ("DOID", id);
-		    //kw.url = "http://www.disease-ontology.org/api/metadata/"+id;
+		    //kw.href = "http://www.disease-ontology.org/api/metadata/"+id;
 		    disease.synonyms.add(kw);
 		}
 		for (String alias : obo.synonyms) {

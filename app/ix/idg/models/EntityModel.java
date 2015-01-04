@@ -112,4 +112,8 @@ public class EntityModel extends Model {
 	}
 	return node;
     }
+
+    public String getHRef () {
+	return Global.getRef(this)+"?view=full";
+    }
 }

@@ -10,7 +10,7 @@ public class Subunit extends GinasModel {
     public String sequence;
     
     @JsonProperty("subunitIndex")
-    public int index;
+    public int position;
 
     public Subunit () {}
     public Integer getLength () {

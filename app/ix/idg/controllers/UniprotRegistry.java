@@ -141,7 +141,7 @@ public class UniprotRegistry extends DefaultHandler {
                     String id = attrs.getValue("id");
 		    Keyword kw = new Keyword (type, id);
 		    if ("MIM".equals(type))
-			kw.url = "http://www.omim.org/entry/"+id;
+			kw.href = "http://www.omim.org/entry/"+id;
                     disease.synonyms.add(kw);
                 }
             }
@@ -169,7 +169,7 @@ public class UniprotRegistry extends DefaultHandler {
                 disease = new Disease ();
 		Logger.debug("New disease "+id);
 		Keyword kw = new Keyword ("UniProt", id);
-		kw.url = "http://www.uniprot.org/diseases/"+id;
+		kw.href = "http://www.uniprot.org/diseases/"+id;
                 disease.synonyms.add(kw);
             }
             else {
@@ -181,7 +181,7 @@ public class UniprotRegistry extends DefaultHandler {
         else if (qName.equals("keyword")) {
             keyword = new Keyword ();
 	    keyword.label = "Keyword";
-            keyword.url = "http://www.uniprot.org/keywords/"
+            keyword.href = "http://www.uniprot.org/keywords/"
 		+attrs.getValue("id");
         }
 	else if (qName.equals("name")) {
@@ -219,7 +219,7 @@ public class UniprotRegistry extends DefaultHandler {
         if (qName.equals("accession")) {
 	    Keyword kw = new Keyword (value);
 	    kw.label = "UniProt Accession";
-	    kw.url = "http://www.uniprot.org/uniprot/"+value;
+	    kw.href = "http://www.uniprot.org/uniprot/"+value;
 	    target.synonyms.add(kw);
         }
 	else if (qName.equals("shortName")) {
@@ -298,8 +298,11 @@ public class UniprotRegistry extends DefaultHandler {
             }
         }
         else if (qName.equals("reference")) {
-            if (xref != null)
+            if (xref != null) {
                 xref.save();
+		target.links.add(xref);
+	    }
+	    refkey = null;
         }
         else if (qName.equals("disease")) {
             if (disease.id == null) {
@@ -310,7 +313,7 @@ public class UniprotRegistry extends DefaultHandler {
         }
         else if (qName.equals("comment")) {
             String text = values.get("text");
-            if ("disease".equals(commentType)) {
+            if (disease != null && "disease".equals(commentType)) {
                 XRef xref = createXRef (disease);
                 xref.properties.add(new Text (disease.name, value));
                 target.links.add(xref);
@@ -326,6 +329,11 @@ public class UniprotRegistry extends DefaultHandler {
         }
 	else if (qName.equals("gene"))
 	    gene = null;
+	else if (qName.equals("ecNumber")) {
+	    Keyword kw = new Keyword ("EC", value);
+	    kw.href = "http://enzyme.expasy.org/EC/"+value;
+	    target.properties.add(kw);
+	}
 	//Logger.debug("--"+p);
     }
 

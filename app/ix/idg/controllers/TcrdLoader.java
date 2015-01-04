@@ -14,6 +14,9 @@ import com.avaje.ebean.*;
 import ix.core.models.*;
 import ix.idg.models.*;
 import ix.core.controllers.NamespaceFactory;
+import ix.core.controllers.KeywordFactory;
+import ix.utils.Global;
+import ix.core.plugins.*;
 
 public class TcrdLoader extends Controller {
     static final Model.Finder<Long, Target> targetDb = 
@@ -26,12 +29,15 @@ public class TcrdLoader extends Controller {
 	String family;
 	String tdl;
 	Long id;
+	Long protein;
 
-	TcrdTarget (String acc, String family, String tdl, Long id) {
+	TcrdTarget (String acc, String family, String tdl,
+		    Long id, Long protein) {
 	    this.acc = acc;
 	    this.family = family;
 	    this.tdl = tdl;
 	    this.id = id;
+	    this.protein = protein;
 	}
 
 	public int hashCode () { return acc.hashCode(); }
@@ -56,6 +62,9 @@ public class TcrdLoader extends Controller {
             return badRequest ("No JDBC URL specified!");
         }
 
+	String maxRows = requestData.get("max-rows");
+	Logger.debug("Max Rows: "+maxRows);
+
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart part = body.getFile("load-do-obo");
         if (part != null) {
@@ -77,7 +86,17 @@ public class TcrdLoader extends Controller {
         try {
             con = DriverManager.getConnection
                 (jdbcUrl, jdbcUsername, jdbcPassword);
-            count = load (con);
+	    
+	    int rows = 0;
+	    if (maxRows != null) {
+		try {
+		    rows = Integer.parseInt(maxRows);
+		}
+		catch (NumberFormatException ex) {
+		    Logger.warn("Bogus maxRows \""+maxRows+"\"; default to 0!");
+		}
+	    }
+            count = load (con, rows);
         }
         catch (SQLException ex) {
             return internalServerError (ex.getMessage());
@@ -92,7 +111,7 @@ public class TcrdLoader extends Controller {
         return ok (count+" target(s) loaded!");
     }
 
-    static int load (Connection con) throws SQLException {
+    static int load (Connection con, int rows) throws SQLException {
         Statement stm = con.createStatement();
         PreparedStatement pstm = con.prepareStatement
             ("select * from target2disease where target_id = ?");
@@ -100,18 +119,24 @@ public class TcrdLoader extends Controller {
 	    ("select * from chembl_activity where target_id = ?");
 	PreparedStatement pstm3 = con.prepareStatement
 	    ("select * from drugdb_activity where target_id = ?");
+	PreparedStatement pstm4 = con.prepareStatement
+	    ("select * from generif where protein_id = ?");
 	
         int count = 0;
 
         Namespace namespace = NamespaceFactory.registerIfAbsent
 	    ("TCRDv090", "https://pharos.nih.gov");
-
+	
+	TextIndexerPlugin indexer = 
+	    Play.application().plugin(TextIndexerPlugin.class);
+	
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from t2tc a, target b, protein c\n"+
                  "where a.target_id = b.id\n"+
                  "and a.protein_id = c.id "
-                 //+"limit 50"
+		 +(rows > 0 ? ("limit "+rows) : "")
+                 //+"limit 20"
                  );
 
 	    Set<TcrdTarget> targets = new HashSet<TcrdTarget>();
@@ -131,7 +156,7 @@ public class TcrdLoader extends Controller {
                     .where().eq("synonyms.term", acc).findList();
                 
                 if (tlist.isEmpty()) {
-		    TcrdTarget t = new TcrdTarget (acc, fam, tdl, id);
+		    TcrdTarget t = new TcrdTarget (acc, fam, tdl, id, protId);
 		    targets.add(t);
 		}
 	    }
@@ -146,16 +171,26 @@ public class TcrdLoader extends Controller {
 		    target.idgClass = t.tdl;
 		    target.synonyms.add
 			(new Keyword ("TCRD Target", String.valueOf(t.id)));
+		    UniprotRegistry uni = new UniprotRegistry ();
+		    uni.register(target, t.acc);
 		    
 		    pstm.setLong(1, t.id);
 		    addDiseaseRefs (target, namespace, pstm);
+
 		    pstm2.setLong(1, t.id);
 		    addChemblRefs (target, pstm2);
+
 		    pstm3.setLong(1, t.id);
 		    addDrugDbRefs (target, pstm3);
 		    
-		    UniprotRegistry uni = new UniprotRegistry ();
-		    uni.register(target, t.acc);
+		    pstm4.setLong(1, t.protein);
+		    addGeneRIF (target, pstm4);
+
+		    // reindex this entity; we have to do this since
+		    // the target.update doesn't trigger the postUpdate
+		    // event.. need to figure exactly why.
+		    indexer.getIndexer().update(target);
+		    
 		    ++count;
 		}
 		catch (Throwable e) {
@@ -174,9 +209,26 @@ public class TcrdLoader extends Controller {
     }
 
     static void addDiseaseRefs (Target target, Namespace namespace,
-				PreparedStatement pstm)	throws SQLException {
+				PreparedStatement pstm)	throws Exception {
 	ResultSet rs = pstm.executeQuery();
 	try {
+	    XRef self = null;
+	    String label = "IDG Target Family";
+	    Keyword family = KeywordFactory.registerIfAbsent
+		(label, target.idgFamily,
+		 Global.getNamespace()
+		 +"/targets/search?facet="
+		 +URLEncoder.encode(label, "utf-8")+"/"
+		 +URLEncoder.encode(target.idgFamily, "utf-8"));
+
+	    label = "IDG Classification";
+	    Keyword clazz = KeywordFactory.registerIfAbsent
+		(label, target.idgClass,
+		 Global.getNamespace()
+		 +"/targets/search?facet="
+		 +URLEncoder.encode(label,"utf-8")+"/"
+		 +URLEncoder.encode(target.idgClass, "utf-8"));
+	    
 	    while (rs.next()) {
 		String doid = rs.getString("doid");
 		List<Disease> diseases = DiseaseFactory.finder
@@ -193,23 +245,59 @@ public class TcrdLoader extends Controller {
 		    for (Disease d : diseases) {
 			XRef xref = new XRef (d);
 			xref.namespace = namespace;
-			xref.properties.add
-			    (new Text ("TCRD Disease Inference",
-				       d.name));
+			Keyword kw = KeywordFactory.registerIfAbsent
+			    ("TCRD Disease", d.name, xref.getHRef());
+			xref.properties.add(kw);
 			xref.properties.add
 			    (new VNum ("TCRD Z-score", zscore));
 			xref.properties.add
 			    (new VNum ("TCRD Confidence", conf));
+			target.properties.add(kw);
 			target.links.add(xref);
+
+			// now add all the parent of this disease node
+			addXRefs (target, namespace, d.links);
+			
+			if (self == null) {
+			    self = new XRef (target);
+			    self.namespace = namespace;
+			    self.properties.add(family);
+			    self.properties.add(clazz);
+			    self.save();
+			}
+
+			// link the other way
+			d.properties.add(family);
+			d.properties.add(clazz);
+			d.links.add(self);
+			d.update();
 		    }
 		}
 	    }
+	    target.update();
 	}
 	finally {
 	    rs.close();
 	}
     }
 
+    static void addXRefs (Target target,
+			  Namespace namespace, List<XRef> links) {
+	for (XRef xr : links) {
+	    if (Disease.class.getName().equals(xr.kind)) {
+		Disease neighbor = (Disease)xr.deRef();
+		Keyword kw = new Keyword ("TCRD Disease", neighbor.name);
+		kw.href = xr.getHRef();
+		target.properties.add(kw);
+		// recurse
+		addXRefs (target, namespace, neighbor.links);
+	    }
+	}
+    }
+
+    /**
+     * TODO: this should be using the Ligand class!
+     */
     static void addChemblRefs (Target target, PreparedStatement pstm)
 	throws SQLException {
 	ResultSet rs = pstm.executeQuery();
@@ -218,29 +306,47 @@ public class TcrdLoader extends Controller {
 	    Namespace ns = NamespaceFactory.registerIfAbsent
 		("ChEMBL", "https://www.ebi.ac.uk/chembl");
 	    */
+	    int count = 0;
 	    while (rs.next()) {
 		String chemblId = rs.getString("cmpd_chemblid");
-		Keyword kw = new Keyword ("ChEMBL Activity", chemblId);
-		kw.url =
+		Keyword kw = new Keyword ("TCRD ChEMBL", chemblId);
+		kw.href =
 		    "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId;
 		target.properties.add(kw);
+		++count;
 	    }
+	    if (count > 0) {
+		Logger.debug("Updated target "+target.id+": "+target.name
+			     +" with "+count+" ChEMBL references!");
+		target.update();
+	    }	    
 	}
 	finally {
 	    rs.close();
 	}
     }
-
+    
+    /**
+     * TODO: this should be using the Ligand class!
+     */
     static void addDrugDbRefs (Target target, PreparedStatement pstm)
 	throws SQLException {
 	ResultSet rs = pstm.executeQuery();
 	try {
+	    int count = 0;
 	    while (rs.next()) {
 		String drug = rs.getString("drug");
 		String ref = rs.getString("reference");
-		Keyword kw = new Keyword ("Drug", drug);
-		kw.url = ref;
+		Keyword kw = new Keyword ("TCRD Drug", drug);
+		if (ref != null && ref.startsWith("http"))
+		    kw.href = ref;
 		target.properties.add(kw);
+		++count;
+	    }
+	    if (count > 0) {
+		Logger.debug("Updated target "+target.id+": "+target.name
+			     +" with "+count+" TCRD Drug references!");
+		target.update();
 	    }
 	}
 	finally {
@@ -248,6 +354,46 @@ public class TcrdLoader extends Controller {
 	}
     }
 
+    static void addGeneRIF (Target target, PreparedStatement pstm)
+	throws SQLException {
+	ResultSet rs = pstm.executeQuery();
+	try {
+	    int count = 0;
+	    while (rs.next()) {
+		long pmid = rs.getLong("pubmed_ids");
+		String text = rs.getString("text");
+		int updates = 0;
+		for (XRef xref : target.links) {
+		    if (Publication.class.getName().equals(xref.kind)) {
+			Publication pub = (Publication)xref.deRef();
+			if (pub == null) {
+			    Logger.error("XRef "+xref.id+" reference a "
+					 +"bogus publication!");
+			}
+			else if (pmid == pub.pmid) {
+			    xref.properties.add(new Text ("GeneRIF", text));
+			    xref.update();
+			    ++updates;
+			}
+		    }
+		}
+		
+		if (updates > 0) {
+		    ++count;
+		}
+	    }
+	    
+	    if (count > 0) {
+		Logger.debug("Updated target "+target.id+": "+target.name
+			     +" with "+count+" GeneRIF references!");
+		target.update();
+	    }
+	}
+	finally {
+	    rs.close();
+	}
+    }
+    
     public static Result index () {
         return ok (ix.idg.views.html.tcrd.render("IDG TCRD Loader"));
     }
