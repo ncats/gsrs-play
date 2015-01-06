@@ -1,0 +1,16 @@
+@(code: Int, message: String)
+@main("Error") {
+<div class="jumbotron">
+  <div class="container">
+    @if(code == 200) {
+    <div class="alert alert-success" role="alert">
+      <h1>Status @code: @message!</h1>
+    </div>
+    } else {
+    <div class="alert alert-warning" role="alert">
+      <h1>Status @code: @message!</h1>
+    </div>
+    }
+  </div>
+</div>
+}

@@ -154,12 +154,15 @@ public class TextIndexer {
         List<Facet> facets = new ArrayList<Facet>();
         List matches = new ArrayList ();
         int count;
+	SearchOptions options;
         
-        SearchResult (String query) {
+        SearchResult (SearchOptions options, String query) {
+	    this.options = options;
             this.query = query;
         }
 
         public String getQuery () { return query; }
+	public SearchOptions getOptions () { return options; }
         public List<Facet> getFacets () { return facets; }
         public List getMatches () { return matches; }
         public int size () { return matches.size(); }
@@ -401,7 +404,7 @@ public class TextIndexer {
 
     public SearchResult search 
         (SearchOptions options, String text) throws IOException {
-        SearchResult searchResult = new SearchResult (text);
+        SearchResult searchResult = new SearchResult (options, text);
 
         Query query = null;
         if (text == null) {

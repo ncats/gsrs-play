@@ -20,6 +20,10 @@ public class TargetFactory extends EntityFactory {
         return getEntity (id, finder);
     }
 
+    public static List<Target> getTargets (int top, int skip, String filter) {
+	return filter (new FetchOptions (top, skip, filter), finder);
+    }
+
     public static Result count () {
         return count (finder);
     }

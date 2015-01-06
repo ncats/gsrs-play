@@ -32,14 +32,8 @@ public class DiseaseOntologyRegistry {
     Namespace namespace;
     
     public DiseaseOntologyRegistry () {
-        namespace = NamespaceFactory.get("Disease Ontology");
-        if (namespace == null) {
-            namespace = Namespace.newPublic("Disease Ontology");
-            namespace.location = "http://www.disease-ontology.org";
-            namespace.save();
-            Logger.debug("New namespace created: "
-                         +namespace.id+" "+namespace.name);
-        }
+        namespace = NamespaceFactory.registerIfAbsent
+	    ("Disease Ontology", "http://www.disease-ontology.org");
     }
 
     /**

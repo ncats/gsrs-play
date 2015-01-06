@@ -1,0 +1,16 @@
+@import ix.idg.models.Target
+
+@(target: Target)
+@main(target.name) {
+<div class="container-fluid">
+  <div class="col-md-12">
+    <div class="row">
+      <div class="panel panel-default">
+	<div class="panel-heading">
+	  <h3 class="panel-title">@target.name</h3>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
+}

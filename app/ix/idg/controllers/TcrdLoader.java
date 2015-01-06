@@ -23,6 +23,9 @@ public class TcrdLoader extends Controller {
         new Model.Finder(Long.class, Target.class);
     static final Model.Finder<Long, Disease> diseaseDb = 
         new Model.Finder(Long.class, Disease.class);
+    
+    static final TextIndexerPlugin indexer = 
+	Play.application().plugin(TextIndexerPlugin.class);
 
     static class TcrdTarget implements Comparable<TcrdTarget> {
 	String acc;
@@ -88,7 +91,7 @@ public class TcrdLoader extends Controller {
                 (jdbcUrl, jdbcUsername, jdbcPassword);
 	    
 	    int rows = 0;
-	    if (maxRows != null) {
+	    if (maxRows != null && maxRows.length() > 0) {
 		try {
 		    rows = Integer.parseInt(maxRows);
 		}
@@ -126,10 +129,7 @@ public class TcrdLoader extends Controller {
 
         Namespace namespace = NamespaceFactory.registerIfAbsent
 	    ("TCRDv090", "https://pharos.nih.gov");
-	
-	TextIndexerPlugin indexer = 
-	    Play.application().plugin(TextIndexerPlugin.class);
-	
+		
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from t2tc a, target b, protein c\n"+
@@ -252,7 +252,6 @@ public class TcrdLoader extends Controller {
 			    (new VNum ("TCRD Z-score", zscore));
 			xref.properties.add
 			    (new VNum ("TCRD Confidence", conf));
-			target.properties.add(kw);
 			target.links.add(xref);
 
 			// now add all the parent of this disease node
@@ -267,10 +266,9 @@ public class TcrdLoader extends Controller {
 			}
 
 			// link the other way
-			d.properties.add(family);
-			d.properties.add(clazz);
 			d.links.add(self);
 			d.update();
+			indexer.getIndexer().update(d);
 		    }
 		}
 	    }
@@ -286,9 +284,12 @@ public class TcrdLoader extends Controller {
 	for (XRef xr : links) {
 	    if (Disease.class.getName().equals(xr.kind)) {
 		Disease neighbor = (Disease)xr.deRef();
-		Keyword kw = new Keyword ("TCRD Disease", neighbor.name);
-		kw.href = xr.getHRef();
-		target.properties.add(kw);
+		Keyword kw = KeywordFactory.registerIfAbsent
+		    ("TCRD Disease", neighbor.name, xr.getHRef());
+		XRef xref = new XRef (neighbor);
+		xref.namespace = namespace;
+		xref.properties.add(kw);
+		target.links.add(xref);
 		// recurse
 		addXRefs (target, namespace, neighbor.links);
 	    }
@@ -309,9 +310,9 @@ public class TcrdLoader extends Controller {
 	    int count = 0;
 	    while (rs.next()) {
 		String chemblId = rs.getString("cmpd_chemblid");
-		Keyword kw = new Keyword ("TCRD ChEMBL", chemblId);
-		kw.href =
-		    "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId;
+		Keyword kw = KeywordFactory.registerIfAbsent
+		    ("TCRD ChEMBL", chemblId,
+		     "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId);
 		target.properties.add(kw);
 		++count;
 	    }
@@ -337,9 +338,9 @@ public class TcrdLoader extends Controller {
 	    while (rs.next()) {
 		String drug = rs.getString("drug");
 		String ref = rs.getString("reference");
-		Keyword kw = new Keyword ("TCRD Drug", drug);
-		if (ref != null && ref.startsWith("http"))
-		    kw.href = ref;
+		Keyword kw = KeywordFactory.registerIfAbsent
+		    ("TCRD Drug", drug, ref != null
+		     && ref.startsWith("http") ? ref : null);
 		target.properties.add(kw);
 		++count;
 	    }

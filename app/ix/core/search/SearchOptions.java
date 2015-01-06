@@ -11,7 +11,8 @@ public class SearchOptions {
     public int fdim; // facet dimension
     // whether drilldown (false) or sideway (true)
     public boolean sideway = true;
-
+    public String filter;
+    
     /**
      * Facet is of the form: DIMENSION/VALUE...
      */

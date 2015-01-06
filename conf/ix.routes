@@ -9,8 +9,8 @@
 #
 # assets
 #
-GET     /assets/*file   controllers.Assets.at(path="/public", file)
-GET     /webjars/*file          controllers.WebJarAssets.at(file)
+GET     /ix/assets/*file   controllers.Assets.at(path="/public", file)
+GET     /ix/webjars/*file          controllers.WebJarAssets.at(file)
 
 #
 # other routes

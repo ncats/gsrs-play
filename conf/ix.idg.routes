@@ -9,3 +9,11 @@ POST	/uniprot	ix.idg.controllers.UniprotFactory.fetch
 #
 GET     /tcrd   ix.idg.controllers.TcrdLoader.index
 POST    /tcrd   ix.idg.controllers.TcrdLoader.load
+
+#
+# main app
+#
+GET	/index	ix.idg.controllers.IDGApp.index
+GET	/targets	ix.idg.controllers.IDGApp.targets(rows: Int ?= 10, page: Int ?= 1)
+GET	/targets/:id	ix.idg.controllers.IDGApp.target(id: Long)
+GET	/diseases	ix.idg.controllers.IDGApp.diseases
