@@ -1,0 +1,61 @@
+@import ix.core.search.TextIndexer._
+@import java.net.URLEncoder
+@(facets: Array[Facet])
+
+<script>
+  var filters = {};
+</script>
+
+@facet(f: Facet) = {
+<div class="panel panel-default">
+  <div class="panel-heading"">
+    <h3 class="panel-title">
+      @f.getName().replaceAll("TCRD","").replaceAll("IDG","").trim()
+    </h3>
+  </div>
+  <div class="panel-body">
+    <table class="table table-condensed">
+      @for(i <- 0 until Math.min(5,f.getValues().size())) {
+	<tr>
+	  @defining(UUID.randomUUID().toString()) { id =>
+	     <td>
+	       <input type="checkbox" checked="true" onclick="filterToggle(this)" id="@id"/>
+	     </td>
+	     <script>
+	        filters['@id'] = {
+	           checked: false,
+                   name: '@f.getName()',
+	           value: '@f.getValues().get(i).getLabel()'
+	        };
+	     </script>
+          }
+
+         <td>@f.getValues().get(i).getLabel()</td>
+	 <td><span class="badge">@f.getValues().get(i).getCount()</span></td>
+        </tr>
+      }
+    </table>
+  </div>
+</div>
+}
+
+<div class="panel-group">
+  @for(f <- facets) {
+     @facet(f)
+  }
+</div>
+
+<script>
+function filterToggle (el) {
+  filters[el.id].checked = el.checked;
+  console.clear();
+  var facet = "";
+  for (var f in filters) {
+    if (filters[f].checked) {
+      facet += "&facet="+encodeURIComponent(filters[f].name) 
+            + '/' + encodeURIComponent(filters[f].value);
+    }
+  }
+  console.log(facet);
+}
+</script>

@@ -109,13 +109,14 @@ public class IDGApp extends Controller {
 	    TextIndexer.Facet[] facets = Cache.getOrElse
 		("TargetFacets", new Callable<TextIndexer.Facet[]>() {
 			public TextIndexer.Facet[] call () {
-			    return filter (getFacets (Target.class, 100),
+			    return filter (getFacets (Target.class, 20),
 					   "IDG Classification",
 					   "IDG Target Family",
-					   "MeSH",
-					   "Keyword",
 					   "TCRD Disease",
-					   "TCRD Drug");
+					   "TCRD Drug"
+					   //"MeSH",
+					   //"Keyword"
+					   );
 			}
 		    }, 3600);
 	    
@@ -125,9 +126,9 @@ public class IDGApp extends Controller {
 	    
 	    List<Target> targets =
 		TargetFactory.getTargets(rows, (page-1)*rows, null);
+	    
 	    return ok (ix.idg.views.html.targets.render
-		       (page, rows, pages, facets,
-			targets.toArray(new Target[0])));
+		       (page, rows, pages, facets, targets));
 	}
 	catch (Exception ex) {
 	    return badRequest (ix.idg.views.html.error.render

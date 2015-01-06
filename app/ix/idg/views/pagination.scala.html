@@ -1,0 +1,53 @@
+@(current: Int, rows: Int, pages: Array[Int])
+
+@item(page: Int) = {
+<li><a href="?rows=@rows&page=@page">
+    <span aria-hidden="true">@page</span>
+</a></li>
+}
+
+@if(pages.length > 1) {
+<nav>  
+  <ul class="pagination">
+    @if(current <= 1) {
+       <li class="disabled">
+         <a href="?rows=@rows&page=@current" aria-label="Previous">
+           <span aria-hidden="true">&laquo;</span>
+         </a>
+       </li>
+    } else {
+       <li>
+         <a href="?rows=@rows&page=@{current-1}" aria-label="Previous">
+           <span aria-hidden="true">&laquo;</span>
+         </a>
+       </li>
+    }
+    @for(i <- pages) {
+        @if(i == 0) {
+           <li class="disabled">
+             <a href="#"><span><i class="fa fa-ellipsis-h"></i></span></a>
+           </li>
+        } else {
+           @if(i == current) {
+              <li class="active"><a href="">@current</a></li>         
+           } else {
+              @item(i)
+           }
+        }
+     }
+     @if(current >= pages(pages.length-1)) {                  
+         <li class="disabled">
+           <a href="?rows=@rows&page=@current" aria-label="Next">
+             <span aria-hidden="true">&raquo;</span>
+           </a>
+         </li>
+     } else {
+         <li>
+           <a href="?rows=@rows&page=@{current+1}" aria-label="Next">
+             <span aria-hidden="true">&raquo;</span>
+           </a>
+         </li>
+     }
+  </ul>
+</nav>
+}      
