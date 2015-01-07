@@ -1,21 +1,23 @@
 package ix.idg.controllers;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
-import java.net.*;
-import java.util.concurrent.Callable;
-
-import play.*;
-import play.cache.Cache;
-import play.data.*;
-import play.mvc.*;
-
-import ix.core.models.*;
-import ix.idg.models.*;
 import ix.core.controllers.SearchFactory;
+import ix.core.models.Text;
+import ix.core.models.Value;
+import ix.core.models.XRef;
 import ix.core.search.TextIndexer;
-import ix.utils.Global;
+import ix.idg.models.Disease;
+import ix.idg.models.Target;
+import play.Logger;
+import play.cache.Cache;
+import play.mvc.Controller;
+import play.mvc.Result;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
 
 
 public class IDGApp extends Controller {
@@ -136,7 +138,48 @@ public class IDGApp extends Controller {
 	}
     }
 
-    public static Result diseases () {
-	return ok (ix.idg.views.html.diseases.render());
-    }
+	public static Result disease(long id) {
+		try {
+			Disease d = DiseaseFactory.getDisease(id);
+			for (XRef xref : d.links) {
+				System.out.println(xref.refid + "/" + xref.kind + "/" + xref.deRef());
+				List<Value> props = xref.properties;
+				for (Value prop: props) {
+					System.out.println("prop = " + prop);
+					if (prop.getValue() instanceof Text) {
+						Text text = (Text) prop.getValue();
+						System.out.println("\t"+text.getText()+"/"+text.getValue());
+					}
+				}
+				System.out.println();
+			}
+			return DiseaseFactory.create();
+//			return ok(ix.idg.views.html.diseasedetails.render(t));
+		} catch (Exception ex) {
+			return internalServerError
+					(ix.idg.views.html.error.render(500, "Internal server error"));
+		}
+	}
+
+	public static Result diseases(int rows, int page) throws Exception {
+		TextIndexer.Facet[] facets = new TextIndexer.Facet[]{};
+//		TextIndexer.Facet[] facets = Cache.getOrElse("DiseaseFacets", new Callable<TextIndexer.Facet[]>() {
+//			public TextIndexer.Facet[] call() {
+//				return filter(getFacets(Disease.class, 20),
+//						"IDG Classification",
+//						"IDG Target Family"
+//						//"MeSH",
+//						//"Keyword"
+//				);
+//			}
+//		}, 3600);
+		int total = DiseaseFactory.finder.findRowCount();
+		rows = Math.min(total, Math.max(1, rows));
+		int[] pages = paging(rows, page, total);
+
+		List<Disease> diseases =
+				DiseaseFactory.getDiseases(rows, (page - 1) * rows, null);
+
+		return ok(ix.idg.views.html.diseases.render(page, rows, pages, facets, diseases));
+	}
 }
