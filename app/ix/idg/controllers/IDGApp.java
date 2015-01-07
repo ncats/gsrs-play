@@ -2,6 +2,7 @@ package ix.idg.controllers;
 
 
 import ix.core.controllers.SearchFactory;
+import ix.core.models.Keyword;
 import ix.core.models.Text;
 import ix.core.models.Value;
 import ix.core.models.XRef;
@@ -291,9 +292,12 @@ public class IDGApp extends Controller {
 				List<Value> props = xref.properties;
 				for (Value prop: props) {
 					System.out.println("prop = " + prop);
-					if (prop.getValue() instanceof Text) {
-						Text text = (Text) prop.getValue();
-						System.out.println("\t"+text.getText()+"/"+text.getValue());
+					if (prop instanceof Text) {
+						Text text = (Text) prop;
+						System.out.println("\ttext = " + text.text +"/"+text.label);
+					} else if (prop instanceof Keyword) {
+						Keyword kw = (Keyword) prop;
+						System.out.println("\tkw = " + kw.term +"/"+kw.label);
 					}
 				}
 				System.out.println();

@@ -1,4 +1,6 @@
 @import ix.idg.models.Disease
+@import ix.core.models.Keyword
+@import ix.core.models.Text
 
 @(d: Disease)
 
@@ -9,6 +11,20 @@
     }
 }
 
+@getxrefs(t: Disease) = {
+    @for(xref <- t.links) {
+        @for(prop <- xref.properties) {
+            @{
+                prop match {
+                    case x:Text => ""
+                    case x:Keyword => x.term
+                }
+            }
+            <br>
+        }
+
+    }
+}
 
 @main(d.name) {
     <div class="container-fluid">
@@ -19,11 +35,11 @@
                         <h3 class="panel-title">@d.name.capitalize</h3>
                     </div>
                 </div>
-                <p>@if(d.description != null){
-                            @d.description.replace("_", " ")
-                        } else {}</p>
-                <p>View more details at <a href="http://disease-ontology.org/term/@getsyn(d, "DOID")">Disease Ontology</a>,
-                    <a href="http://www.malacards.org/search/results/@getsyn(d, "DOID")">MalaCards</a> or OMIM
+                <p>@if(d.description != null) {@d.description.replace("_", " ")} else {}</p>
+                <p>View more details at <a href="http://disease-ontology.org/term/@getsyn(d, " DOID ")">
+                    Disease Ontology </a>
+                    ,
+                    <a href="http://www.malacards.org/search/results/@getsyn(d, " DOID ")">MalaCards </a>
                 </p>
             </div>
             <div class="row">
@@ -38,7 +54,17 @@
                         <li role="presentation" >
                             <a href="#trials" aria-controls="trials" role="tab" data-toggle="tab">Clinical Trials</a>
                         </li>
+                        <li role="presentation" >
+                            <a href="#xrefs" aria-controls="xrefs" role="tab" data-toggle="tab">External References</a>
+                        </li>
                     </ul>
+
+                    <div class="tab-content">
+                        <div role="tabpanel" class="tab-pane active" id="targets"></div>
+                        <div role="tabpanel" class="tab-pane" id="molecules"></div>
+                        <div role="tabpanel" class="tab-pane" id="trials"></div>
+                        <div role="tabpanel" class="tab-pane" id="xrefs">@getxrefs(d)</div>
+                    </div>
                 </div>
             </div>
         </div>
