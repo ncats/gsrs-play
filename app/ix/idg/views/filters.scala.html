@@ -1,5 +1,7 @@
 @import ix.core.search.TextIndexer._
-@import java.net.URLEncoder
+@import ix.idg.controllers.IDGApp
+@import ix.utils.Util
+
 @(facets: Array[Facet])
 
 <script>
@@ -17,15 +19,19 @@
     <table class="table table-condensed">
       @for(i <- 0 until Math.min(5,f.getValues().size())) {
 	<tr>
-	  @defining(UUID.randomUUID().toString()) { id =>
+	  @defining(IDGApp.sha1(f,i)) { id =>
 	     <td>
-	       <input type="checkbox" checked="true" onclick="filterToggle(this)" id="@id"/>
+	       <input type="checkbox" 
+		      @if(IDGApp.hasFacet(f,i)) {
+		         checked="true" 
+                      }
+		      onclick="filterToggle(this)" id="@id"/>
 	     </td>
 	     <script>
 	        filters['@id'] = {
-	           checked: false,
-                   name: '@f.getName()',
-	           value: '@f.getValues().get(i).getLabel()'
+	           checked: @IDGApp.hasFacet(f,i),
+                   name: '@IDGApp.encode(f)',
+	           value: '@IDGApp.encode(f,i)'
 	        };
 	     </script>
           }
@@ -48,14 +54,14 @@
 <script>
 function filterToggle (el) {
   filters[el.id].checked = el.checked;
-  console.clear();
+  //console.clear();
   var facet = "";
   for (var f in filters) {
     if (filters[f].checked) {
-      facet += "&facet="+encodeURIComponent(filters[f].name) 
-            + '/' + encodeURIComponent(filters[f].value);
+      facet += "&facet="+filters[f].name + '/' + filters[f].value;
     }
   }
-  console.log(facet);
+// console.log(el.id+' '+facet);
+  location.assign('@IDGApp.url("facet","page")'+facet);
 }
 </script>

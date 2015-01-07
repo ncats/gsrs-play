@@ -31,17 +31,36 @@ public class Util {
                 }
             }
 
-            byte[] d = md.digest();
-            StringBuilder sb = new StringBuilder ();
-            for (int i = 0; i < d.length; ++i)
-                sb.append(String.format("%1$02x", d[i]& 0xff));
-
-            return sb.toString();
+            return toHex (md.digest());
         }
         catch (Exception ex) {
             Logger.trace("Can't generate hash for request: "+req.uri(), ex);
         }
         return null;
+    }
+
+    public static String toHex (byte[] d) {
+	StringBuilder sb = new StringBuilder ();
+	for (int i = 0; i < d.length; ++i)
+	    sb.append(String.format("%1$02x", d[i]& 0xff));
+	return sb.toString();
+    }
+
+    public static String sha1 (String... values) {
+	if (values == null)
+	    return null;
+	
+	try {
+            MessageDigest md = MessageDigest.getInstance("SHA1");
+	    for (String v : values) {
+		md.update(v.getBytes("utf8"));
+	    }
+	    return toHex (md.digest());
+	}
+	catch (Exception ex) {
+            Logger.trace("Can't generate sha1 hash!", ex);
+	}
+	return null;
     }
     
     private Util () {

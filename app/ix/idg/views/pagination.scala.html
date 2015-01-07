@@ -1,25 +1,33 @@
-@(current: Int, rows: Int, pages: Array[Int])
+@import ix.idg.controllers.IDGApp
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int])
 
 @item(page: Int) = {
-<li><a href="?rows=@rows&page=@page">
+<li><a href="@IDGApp.page(rows,page)">
     <span aria-hidden="true">@page</span>
 </a></li>
 }
 
-@if(pages.length > 1) {
-<nav>  
-  <ul class="pagination">
+
+<nav>
+  <div class="btn-toolbar" role="toolbar">
+    <div class="btn-group" role="group">
+      <h3><span class="label label-default">@total</span></h3>
+    </div>
+    @if(pages.length > 1) {
+    <div class="btn-group" role="group">
+      <ul class="pagination">
     @if(current <= 1) {
        <li class="disabled">
-         <a href="?rows=@rows&page=@current" aria-label="Previous">
+         <a href='@IDGApp.page(rows,current)' aria-label="Previous">
            <span aria-hidden="true">&laquo;</span>
          </a>
        </li>
     } else {
        <li>
-         <a href="?rows=@rows&page=@{current-1}" aria-label="Previous">
-           <span aria-hidden="true">&laquo;</span>
-         </a>
+            <a href='@IDGApp.page(rows, current-1)' aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
        </li>
     }
     @for(i <- pages) {
@@ -29,7 +37,9 @@
            </li>
         } else {
            @if(i == current) {
-              <li class="active"><a href="">@current</a></li>         
+              <li class="active">
+                <a href='@IDGApp.page(rows,current)'>@current</a>
+              </li>
            } else {
               @item(i)
            }
@@ -37,17 +47,20 @@
      }
      @if(current >= pages(pages.length-1)) {                  
          <li class="disabled">
-           <a href="?rows=@rows&page=@current" aria-label="Next">
+           <a href='@IDGApp.page(rows,current)' aria-label="Next">
              <span aria-hidden="true">&raquo;</span>
            </a>
          </li>
      } else {
          <li>
-           <a href="?rows=@rows&page=@{current+1}" aria-label="Next">
+           <a href='@IDGApp.page(rows,current+1)' aria-label="Next">
              <span aria-hidden="true">&raquo;</span>
            </a>
          </li>
      }
   </ul>
+    </div>
+    }      
+  </div>
 </nav>
-}      
+

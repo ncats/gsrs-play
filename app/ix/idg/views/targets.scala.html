@@ -3,7 +3,7 @@
 @import ix.core.search.TextIndexer.Facet
 @import scala.collection.JavaConversions._
 
-@(current: Int, rows: Int, pages: Array[Int],
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
      facets: Array[Facet], targets: List[Target])
 
 @tabrow(t: Target) = {
@@ -17,20 +17,17 @@
 
 @main("Targets") {
 <div class="container">
-@**
-@request().uri()
-**@
   <div class="row">
     <div class="col-md-3">
       @filters(facets)
     </div>
     <div class="col-md-9">
-      @pagination(current, rows, pages)
+      @pagination(current, rows, total, pages)
       <div class="panel panel-default">
 	<table class="table table-striped">
 	  <tr>
 	    <th>Name</th>
-	    <th>IDG Class</th>
+	    <th>Classification</th>
 	    <th>Target Family</th>
 	  </tr>
 	  @for(t <- targets) {
