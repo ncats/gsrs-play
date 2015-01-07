@@ -58,10 +58,14 @@ function filterToggle (el) {
   var facet = "";
   for (var f in filters) {
     if (filters[f].checked) {
-      facet += "&facet="+filters[f].name + '/' + filters[f].value;
+      if (facet.length > 0) {
+         facet += '&';
+      }
+      facet += "facet="+filters[f].name + '/' + filters[f].value;
     }
   }
 // console.log(el.id+' '+facet);
-  location.assign('@IDGApp.url("facet","page")'+facet);
+  var url = '@IDGApp.url("facet","page")';
+  location.assign((url.length == 0 ? (url+'?') : url)+facet);
 }
 </script>

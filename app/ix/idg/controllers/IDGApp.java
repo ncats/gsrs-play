@@ -102,22 +102,13 @@ public class IDGApp extends Controller {
 	return null;
     }
 
-    public static String pageCur (int rows, int page) {
-	String url = "http"+ (request().secure() ? "s" : "") + "://"
-	    +request().host()
-	    +request().uri();
-	Logger.debug(url);
-	WSRequestHolder ws = WS.url(url)
-	    .setQueryParameter("rows", String.valueOf(rows))
-	    .setQueryParameter("page", String.valueOf(page))
-	    ;
-	return ws.getUrl();
-    }
-
     public static String page (int rows, int page) {
 	String url = "http"+ (request().secure() ? "s" : "") + "://"
 	    +request().host()
 	    +request().uri();
+	if (url.charAt(url.length() -1) == '?') {
+	    url = url.substring(0, url.length()-1);
+	}
 	//Logger.debug(url);
 
 	Map<String, Collection<String>> params =
@@ -139,7 +130,11 @@ public class IDGApp extends Controller {
 	String url = "http"+ (request().secure() ? "s" : "") + "://"
 	    +request().host()
 	    +request().uri();
-
+	if (url.charAt(url.length()-1) == '?') {
+	    url = url.substring(0, url.length()-1);
+	}
+	Logger.debug(">> uri="+request().uri());
+	
 	Map<String, Collection<String>> params =
 	    WS.url(url).getQueryParameters();
 	for (String p : remove)
@@ -215,6 +210,7 @@ public class IDGApp extends Controller {
     }
     
     public static Result targets (int rows, final int page) {
+	Logger.debug("Targets: rows="+rows+" page="+page);
 	try {
 	    final int total = TargetFactory.finder.findRowCount();
 	    if (request().queryString().containsKey("facet")) {
@@ -278,8 +274,9 @@ public class IDGApp extends Controller {
 	    }
 	}
 	catch (Exception ex) {
+	    ex.printStackTrace();
 	    return badRequest (ix.idg.views.html.error.render
-			       (404, "Invalid page requested: "+page));
+			       (404, "Invalid page requested: "+page+ex));
 	}
     }
 
