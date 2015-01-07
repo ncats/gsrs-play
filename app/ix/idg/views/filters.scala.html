@@ -66,6 +66,7 @@ function filterToggle (el) {
   }
 // console.log(el.id+' '+facet);
   var url = '@IDGApp.url("facet","page")';
-  location.assign((url.length == 0 ? (url+'?') : url)+facet);
+  url += url.length == 0 ? '?' : '&';
+  location.assign(url+facet);
 }
 </script>
