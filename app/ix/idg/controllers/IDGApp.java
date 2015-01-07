@@ -306,26 +306,67 @@ public class IDGApp extends Controller {
 		}
 	}
 
-	public static Result diseases(int rows, int page) throws Exception {
-//		TextIndexer.Facet[] facets = new TextIndexer.Facet[]{};
-		TextIndexer.Facet[] facets = Cache.getOrElse("DiseaseFacets", new Callable<TextIndexer.Facet[]>() {
-			public TextIndexer.Facet[] call() {
-				return filter(getFacets(Disease.class, 20),
-						"IDG Classification",
-						"IDG Target Family",
-						"MIM"
-						//"MeSH",
-						//"Keyword"
-				);
+	public static Result diseases(int rows, int page) {
+		Logger.debug("Diseases: rows=" + rows + " page=" + page);
+		try {
+
+			final int total = DiseaseFactory.finder.findRowCount();
+			if (request().queryString().containsKey("facet")) {
+				// filtering
+				TextIndexer.SearchResult result = Cache.getOrElse
+						(Util.sha1Request(request(), "facet"),
+								new Callable<TextIndexer.SearchResult>() {
+									public TextIndexer.SearchResult call() {
+										try {
+											return SearchFactory.search
+													(Disease.class, null, total, 0,
+															20, request().queryString());
+										} catch (IOException ex) {
+											Logger.trace("Can't perform search", ex);
+										}
+										return null;
+									}
+								}, 60);
+				rows = Math.min(result.count(), Math.max(1, rows));
+				int[] pages = paging(rows, page, result.count());
+
+				TextIndexer.Facet[] facets = filter
+						(result.getFacets(),
+								"IDG Classification",
+								"IDG Target Family",
+								"MIM");
+
+				List<Disease> diseases = new ArrayList<>();
+				for (int i = (page - 1) * rows, j = 0; j < rows
+						&& i < result.count(); ++j, ++i) {
+					diseases.add((Disease) result.getMatches().get(i));
+				}
+
+				return ok(ix.idg.views.html.diseases.render
+						(page, rows, result.count(),
+								pages, facets, diseases));
+			} else {
+				TextIndexer.Facet[] facets = Cache.getOrElse("DiseaseFacets", new Callable<TextIndexer.Facet[]>() {
+					public TextIndexer.Facet[] call() {
+						return filter(getFacets(Disease.class, 20),
+								"IDG Classification",
+								"IDG Target Family",
+								"MIM"
+						);
+					}
+				}, 3600);
+				rows = Math.min(total, Math.max(1, rows));
+				int[] pages = paging(rows, page, total);
+
+				List<Disease> diseases =
+						DiseaseFactory.getDiseases(rows, (page - 1) * rows, null);
+
+				return ok(ix.idg.views.html.diseases.render(page, rows, total, pages, facets, diseases));
 			}
-		}, 3600);
-		int total = DiseaseFactory.finder.findRowCount();
-		rows = Math.min(total, Math.max(1, rows));
-		int[] pages = paging(rows, page, total);
-
-		List<Disease> diseases =
-				DiseaseFactory.getDiseases(rows, (page - 1) * rows, null);
-
-		return ok(ix.idg.views.html.diseases.render(page, rows, total, pages, facets, diseases));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return badRequest(ix.idg.views.html.error.render
+					(404, "Invalid page requested: " + page + e));
+		}
 	}
 }
