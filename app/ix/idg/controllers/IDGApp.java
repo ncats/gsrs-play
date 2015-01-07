@@ -302,7 +302,16 @@ public class IDGApp extends Controller {
 				}
 				System.out.println();
 			}
-			return ok(ix.idg.views.html.diseasedetails.render(d));
+
+			// resolve the targets for this disease
+			List<Target> targets = new ArrayList<Target>();
+			for (XRef ref : d.links) {
+				if (Target.class.isAssignableFrom(Class.forName(ref.kind))) {
+					Target t = (Target) ref.deRef();
+					targets.add(t);
+				}
+			}
+			return ok(ix.idg.views.html.diseasedetails.render(d, targets.toArray(new Target[]{})));
 		} catch (Exception ex) {
 			return internalServerError
 					(ix.idg.views.html.error.render(500, "Internal server error"));
