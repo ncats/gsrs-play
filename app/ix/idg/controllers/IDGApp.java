@@ -162,17 +162,18 @@ public class IDGApp extends Controller {
 	}
 
 	public static Result diseases(int rows, int page) throws Exception {
-		TextIndexer.Facet[] facets = new TextIndexer.Facet[]{};
-//		TextIndexer.Facet[] facets = Cache.getOrElse("DiseaseFacets", new Callable<TextIndexer.Facet[]>() {
-//			public TextIndexer.Facet[] call() {
-//				return filter(getFacets(Disease.class, 20),
-//						"IDG Classification",
-//						"IDG Target Family"
-//						//"MeSH",
-//						//"Keyword"
-//				);
-//			}
-//		}, 3600);
+//		TextIndexer.Facet[] facets = new TextIndexer.Facet[]{};
+		TextIndexer.Facet[] facets = Cache.getOrElse("DiseaseFacets", new Callable<TextIndexer.Facet[]>() {
+			public TextIndexer.Facet[] call() {
+				return filter(getFacets(Disease.class, 20),
+						"IDG Classification",
+						"IDG Target Family",
+						"MIM"
+						//"MeSH",
+						//"Keyword"
+				);
+			}
+		}, 3600);
 		int total = DiseaseFactory.finder.findRowCount();
 		rows = Math.min(total, Math.max(1, rows));
 		int[] pages = paging(rows, page, total);
