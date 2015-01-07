@@ -85,6 +85,13 @@ public class DiseaseOntologyRegistry {
 				disease.links.add(x);
 				nxref++;
 			}
+
+			// for now let also put these xref entries into the properties
+			for (String xref : obo.xrefs) {
+				String ns = xref.split(":")[0];
+				kw = new Keyword(ns, xref);
+				disease.properties.add(kw);
+			}
 			Logger.debug(disease.id+": "+obo.id+" "+obo.name+ " with "+nxref+" xref's");
 	    }
 	}

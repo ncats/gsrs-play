@@ -12,18 +12,18 @@
 }
 
 @getxrefs(t: Disease) = {
-    @for(xref <- t.links) {
-        @for(prop <- xref.properties) {
-            @{
-                prop match {
-                    case x:Text => ""
-                    case x:Keyword => x.term
-                }
-            }
-            <br>
-        }
 
+    @for(prop <- t.properties) {
+        @{
+            prop match {
+                case x: Text => ""
+                case x: Keyword => x.term
+            }
+        }
+        <br>
     }
+
+
 }
 
 @main(d.name) {
@@ -36,10 +36,10 @@
                     </div>
                 </div>
                 <p>@if(d.description != null) {@d.description.replace("_", " ")} else {}</p>
-                <p>View more details at <a href="http://disease-ontology.org/term/@getsyn(d, " DOID ")">
+                <p>View more details at <a href="http://disease-ontology.org/term/@getsyn(d, "DOID")">
                     Disease Ontology </a>
                     ,
-                    <a href="http://www.malacards.org/search/results/@getsyn(d, " DOID ")">MalaCards </a>
+                    <a href="http://www.malacards.org/search/results/@getsyn(d, "DOID")">MalaCards </a>
                 </p>
             </div>
             <div class="row">
