@@ -1,14 +1,44 @@
 @import ix.idg.models.Disease
 
-@(disease: Disease)
-@main(disease.name) {
+@(d: Disease)
+
+@getsyn(t: Disease, label: String) = {
+    @* We only consider the first DOID, even if there are alternates *@
+    @for(kw <- t.synonyms.filter(_.label == label).take(1)) {
+        @kw.term.stripMargin
+    }
+}
+
+
+@main(d.name) {
     <div class="container-fluid">
         <div class="col-md-12">
             <div class="row">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title">@disease.name</h3>
+                        <h3 class="panel-title">@d.name.capitalize</h3>
                     </div>
+                </div>
+                <p>@if(d.description != null){
+                            @d.description.replace("_", " ")
+                        } else {}</p>
+                <p>View more details at <a href="http://disease-ontology.org/term/@getsyn(d, "DOID")">Disease Ontology</a>,
+                    <a href="http://www.malacards.org/search/results/@getsyn(d, "DOID")">MalaCards</a> or OMIM
+                </p>
+            </div>
+            <div class="row">
+                <div role="tabpanel">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active">
+                            <a href="#targets" aria-controls="targets" role="tab" data-toggle="tab">Targets</a>
+                        </li>
+                        <li role="presentation" >
+                            <a href="#molecules" aria-controls="molecules" role="tab" data-toggle="tab">Molecules</a>
+                        </li>
+                        <li role="presentation" >
+                            <a href="#trials" aria-controls="trials" role="tab" data-toggle="tab">Clinical Trials</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
