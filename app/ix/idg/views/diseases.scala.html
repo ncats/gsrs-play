@@ -3,13 +3,13 @@
 @import ix.core.search.TextIndexer.Facet
 @import scala.collection.JavaConversions._
 
-@(current: Int, rows: Int, pages: Array[Int],
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
         facets: Array[Facet], diseases: List[Disease])
 
 @getdoid(t: Disease) = {
     @* We only consider the first DOID, even if there are alternates *@
     @for(kw <- t.synonyms.filter(_.label == "DOID").take(1)) {
-        @kw.term.replace("DOID:", "")
+        <a href="http://disease-ontology.org/term/@kw.term">@kw.term.replace("DOID:", "")</a>
     }
 }
 
@@ -31,7 +31,7 @@
             @filters(facets)
             </div>
             <div class="col-md-9">
-                @pagination(current, rows, pages)
+                @pagination(current, rows, total, pages)
                 <div class="panel panel-default">
                     <table class="table table-striped">
                         <tr>

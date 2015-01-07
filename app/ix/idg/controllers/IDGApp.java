@@ -326,6 +326,6 @@ public class IDGApp extends Controller {
 		List<Disease> diseases =
 				DiseaseFactory.getDiseases(rows, (page - 1) * rows, null);
 
-		return ok(ix.idg.views.html.diseases.render(page, rows, pages, facets, diseases));
+		return ok(ix.idg.views.html.diseases.render(page, rows, total, pages, facets, diseases));
 	}
 }
