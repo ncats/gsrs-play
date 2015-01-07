@@ -63,31 +63,33 @@ public class DiseaseOntologyRegistry {
 
 
             // TODO we should probably resolve these with the appropriate xternal resource
-			int nxref = 0;
-			for (String xref : obo.xrefs) {
-				String ns = xref.split(":")[0];
-				String xid = xref.split(":")[1];
-
-				XRef x = new XRef(disease);
-				if (ns.equals("OMIM"))
-					x.namespace = NamespaceFactory.registerIfAbsent("OMIM", "http://www.omim.org/");
-				else if (ns.equals("MSH"))
-					x.namespace = NamespaceFactory.registerIfAbsent("MeSH", "http://www.ncbi.nlm.nih.gov/mesh");
-				else if (ns.equals("NCI"))
-					x.namespace = NamespaceFactory.registerIfAbsent("NCI", "http://www.cancer.gov/");
-				else if (ns.startsWith("SNOMEDCT"))
-					x.namespace = NamespaceFactory.registerIfAbsent("SNOMED", "http://www.nlm.nih.gov/research/umls/Snomed/snomed_main.html");
-				else if (ns.equals("UMLS_CUI"))
-					x.namespace = NamespaceFactory.registerIfAbsent("UMLS_CUI", "http://www.nlm.nih.gov/research/umls");
-				else if (ns.equals("ICD9CM"))
-					x.namespace = NamespaceFactory.registerIfAbsent("ICD9CM", "http://www.cdc.gov/nchs/icd/icd9cm.htm");
-				x.properties.add(new Keyword(ns, xref)); // TODO should we be adding actual objects representing these namespaces?
-				disease.links.add(x);
-				nxref++;
-			}
+//			int nxref = 0;
+//			for (String xref : obo.xrefs) {
+//				String ns = xref.split(":")[0];
+//				String xid = xref.split(":")[1];
+//
+//				XRef x = new XRef(disease);
+//				if (ns.equals("OMIM"))
+//					x.namespace = NamespaceFactory.registerIfAbsent("OMIM", "http://www.omim.org/");
+//				else if (ns.equals("MSH"))
+//					x.namespace = NamespaceFactory.registerIfAbsent("MeSH", "http://www.ncbi.nlm.nih.gov/mesh");
+//				else if (ns.equals("NCI"))
+//					x.namespace = NamespaceFactory.registerIfAbsent("NCI", "http://www.cancer.gov/");
+//				else if (ns.startsWith("SNOMEDCT"))
+//					x.namespace = NamespaceFactory.registerIfAbsent("SNOMED", "http://www.nlm.nih.gov/research/umls/Snomed/snomed_main.html");
+//				else if (ns.equals("UMLS_CUI"))
+//					x.namespace = NamespaceFactory.registerIfAbsent("UMLS_CUI", "http://www.nlm.nih.gov/research/umls");
+//				else if (ns.equals("ICD9CM"))
+//					x.namespace = NamespaceFactory.registerIfAbsent("ICD9CM", "http://www.cdc.gov/nchs/icd/icd9cm.htm");
+//				x.properties.add(new Keyword(ns, xref)); // TODO should we be adding actual objects representing these namespaces?
+//				disease.links.add(x);
+//				nxref++;
+//			}
 
 			// for now let also put these xref entries into the properties
+			int nxref = 0;
 			for (String xref : obo.xrefs) {
+				nxref++;
 				String ns = xref.split(":")[0];
 				kw = new Keyword(ns, xref);
 				disease.properties.add(kw);
