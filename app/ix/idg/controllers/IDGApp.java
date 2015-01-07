@@ -298,8 +298,7 @@ public class IDGApp extends Controller {
 				}
 				System.out.println();
 			}
-			return DiseaseFactory.create();
-//			return ok(ix.idg.views.html.diseasedetails.render(t));
+			return ok(ix.idg.views.html.diseasedetails.render(d));
 		} catch (Exception ex) {
 			return internalServerError
 					(ix.idg.views.html.error.render(500, "Internal server error"));
@@ -333,8 +332,7 @@ public class IDGApp extends Controller {
 				TextIndexer.Facet[] facets = filter
 						(result.getFacets(),
 								"IDG Classification",
-								"IDG Target Family",
-								"MIM");
+								"IDG Target Family");
 
 				List<Disease> diseases = new ArrayList<>();
 				for (int i = (page - 1) * rows, j = 0; j < rows
@@ -350,8 +348,7 @@ public class IDGApp extends Controller {
 					public TextIndexer.Facet[] call() {
 						return filter(getFacets(Disease.class, 20),
 								"IDG Classification",
-								"IDG Target Family",
-								"MIM"
+								"IDG Target Family"
 						);
 					}
 				}, 3600);
