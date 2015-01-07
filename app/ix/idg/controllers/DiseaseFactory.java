@@ -1,16 +1,12 @@
 package ix.idg.controllers;
 
-import java.util.*;
-
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
-import com.avaje.ebean.Expr;
-
 import ix.core.NamedResource;
-import ix.idg.models.Disease;
 import ix.core.controllers.EntityFactory;
+import ix.idg.models.Disease;
+import play.db.ebean.Model;
+import play.mvc.Result;
+
+import java.util.List;
 
 @NamedResource(name="diseases",type=Disease.class)
 public class DiseaseFactory extends EntityFactory {
@@ -19,6 +15,10 @@ public class DiseaseFactory extends EntityFactory {
 
     public static Disease getDisease (Long id) {
         return getEntity (id, finder);
+    }
+
+    public static List<Disease> getDiseases(int top, int skip, String filter) {
+        return filter(new FetchOptions(top, skip, filter), finder);
     }
 
     public static Result count () {
