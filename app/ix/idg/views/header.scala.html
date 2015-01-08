@@ -1,4 +1,4 @@
-@(home: String, kind: String)
+@(kind: String)
 
 <script>
 $(document).ready(function () {
@@ -47,7 +47,11 @@ $(document).ready(function () {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="@home" style="padding: 0px 0px"><img height="50" alt="Pharos Logo" src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'/></a>
+      <a class="navbar-brand" href="@ix.idg.controllers.routes.IDGApp.index()"
+         style="padding: 0px 0px">
+        <img height="50" alt="Pharos Logo"
+             src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'/>
+      </a>
     </div>
     
     <!-- Collect the nav links, forms, and other content for toggling -->
@@ -59,6 +63,14 @@ $(document).ready(function () {
           <ul class="dropdown-menu" role="menu">
             <li><a href="#kinome">Kinome Dendrogram</a></li>
             <li><a href="#novelty">Novelty Plot</a></li>
+            <li class="dropdown-submenu">
+              <a href="#network">Similarity Networks</a>
+              <ul class="dropdown-menu">
+                <li><a href="#network-celline">Cell line</a></li>
+                <li><a href="#network-phenotype">Phenotype</a></li>
+                <li><a href="#network-pathway">Pathway</a></li>
+              </ul>
+            </li>
           </ul>
         </li>
       <form class="navbar-form navbar-right" role="search" method="GET"

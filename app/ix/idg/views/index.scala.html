@@ -1,6 +1,81 @@
-@(title: String)
 
-@main(title, null) {
-<div class="container-fluid">
-</div>
-}
+@(title: String, diseases: Int, targets: Int, ligands: Int)
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>@title</title>
+    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
+    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+    <link rel="stylesheet" type="text/css"
+	  href='@routes.Assets.at("ncats/stylesheets/main.css")'>
+    <link rel="stylesheet" type="text/css"
+	  href='@routes.Assets.at("ncats/css/idg.css")'>    
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
+  </head>
+  <body>
+    <div class="container vertical-center" id = "main-box">
+      <div class="row">
+	<div class="col-md-3 col-md-offset-3" >
+	  <a href= "@ix.idg.controllers.routes.IDGApp.diseases()">
+	    <div class=" alert alert-primary" id="disease">
+	      <h1>Diseases</h1>
+	      
+	      <span class="fa fa-stethoscope big"></span>
+	      <span class="badge">@diseases</span>
+	    </div>
+	  </a>
+	</div>
+	<div class="col-md-3" >
+	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	    <div class="alert alert-success" id = "targets">
+	      
+	      <h1>Targets</h1>
+	      
+	      <span class="fa fa-bullseye big"></span>
+	      <span class="badge">@targets</span>
+	    </div>
+	  </a>
+	</div>
+      </div>
+      <div class= "row">
+	<div class="col-md-3 col-md-offset-3" >
+	  <div class="alert" id ="logo">
+	    <img src ='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'
+		 class = "img-responsive" id="pharos" alt="Pharos Logo"/>
+	  </div>
+	</div>
+	<div class="col-md-3" >
+	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	    <div class ="alert alert-danger" id = "ligands">
+	      <h1>Ligands</h1>
+	      <span class="fa fa-link big"></span>
+	      <span class="badge">@ligands</span>
+	    </div>
+	  </a>
+	</div>
+      </div>
+      <div class="row">
+	<div class="col-md-6 col-md-offset-3">
+	  <form class="" role="search" method="GET"
+            action="@ix.idg.controllers.routes.IDGApp.search(null)">
+	  
+	    <div class="input-group">
+	      <input type="text" class="form-control" id="search"
+		     title="Search"
+		     placeholder="Search..." name="q">
+	      <input type="hidden" name="kind" value=""/>
+	      <span class="input-group-btn">
+		<button class="btn btn-default" id="search" 
+			type="search" value="submit">
+		  <span class="glyphicon glyphicon-search"></span>
+		</button>
+	      </span>
+	    </div>
+	  </form>
+	</div>
+      </div>
+    </div>
+  </body>
+</html>

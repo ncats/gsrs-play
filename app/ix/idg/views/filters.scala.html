@@ -17,7 +17,7 @@
   </div>
   <div class="panel-body">
     <table class="table table-condensed">
-      @for(i <- 0 until Math.min(5,f.getValues().size())) {
+      @for(i <- 0 until Math.min(IDGApp.MAX_FACETS, f.getValues().size())) {
 	<tr>
 	  @defining(IDGApp.sha1(f,i)) { id =>
 	     <td>
@@ -37,7 +37,9 @@
           }
 
          <td>@f.getValues().get(i).getLabel()</td>
-	 <td><span class="badge">@f.getValues().get(i).getCount()</span></td>
+	 <td><span class="badge" style="float:right;">
+	     @f.getValues().get(i).getCount()</span>
+	 </td>
         </tr>
       }
     </table>

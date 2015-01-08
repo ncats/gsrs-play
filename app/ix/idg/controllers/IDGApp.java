@@ -20,8 +20,25 @@ import ix.core.search.TextIndexer;
 import ix.utils.Global;
 import ix.utils.Util;
 
-
 public class IDGApp extends Controller {
+    static public final int CACHE_TIMEOUT = 60*60;
+    static public final int MAX_FACETS = 6;
+    
+    public static class DiseaseRelevance
+	implements Comparable<DiseaseRelevance> {
+	public Disease disease;
+	public Double zscore;
+	public Double conf;
+
+	DiseaseRelevance () {}
+	public int compareTo (DiseaseRelevance dr) {
+	    double d = dr.zscore - zscore;
+	    if (d < 0) return -1;
+	    if (d > 0) return 1;
+	    return 0;
+	}
+    }
+    
     public static final String[] FACETS = {
         "IDG Classification",
         "IDG Target Family",
@@ -65,21 +82,47 @@ public class IDGApp extends Controller {
     
     public static Result index () {
         return ok (ix.idg.views.html.index.render
-                   ("Pharos: Illuminating the Druggable Genome"));
+                   ("Pharos: Illuminating the Druggable Genome",
+		    DiseaseFactory.finder.findRowCount(),
+		    TargetFactory.finder.findRowCount(),
+		    LigandFactory.finder.findRowCount()));
     }
 
     public static Result error (int code, String mesg) {
         return ok (ix.idg.views.html.error.render(code, mesg));
     }
 
-    public static Result target (long id) {
+    public static Result target (final long id) {
         try {
-            Target t = TargetFactory.getTarget(id);
-            return ok (ix.idg.views.html.targetdetails.render(t));
+            Target t = Cache.getOrElse
+		(Target.class.getName()+":"+id, new Callable<Target> () {
+			public Target call () {
+			    return TargetFactory.getTarget(id);
+			}
+		    }, CACHE_TIMEOUT);
+	    
+	    List<DiseaseRelevance> diseases = new ArrayList<DiseaseRelevance>();
+	    for (XRef xref : t.links) {
+		if (Disease.class.getName().equals(xref.kind)) {
+		    DiseaseRelevance dr = new DiseaseRelevance ();
+		    dr.disease = (Disease)xref.deRef(); 
+		    for (Value p : xref.properties) {
+			if ("TCRD Z-score".equals(p.label))
+			    dr.zscore = (Double)p.getValue();
+			else if ("TCRD Confidence".equals(p.label))
+			    dr.conf = (Double)p.getValue();
+		    }
+		    if (dr.zscore != null || dr.conf != null)
+			diseases.add(dr);
+		}
+	    }
+	    Collections.sort(diseases);
+	    
+            return ok (ix.idg.views.html.targetdetails.render(t, diseases));
         }
         catch (Exception ex) {
             return internalServerError
-                (ix.idg.views.html.error.render(500, "Internal server error"));
+                (ix.idg.views.html.error.render(400, "Invalid target id: "+id));
         }
     }
 
@@ -230,21 +273,28 @@ public class IDGApp extends Controller {
 	    query.putAll(request().queryString());
 		
             if (query.containsKey("facet") || q != null) {
+		List<String> qfacets = new ArrayList<String>();
 		if (q != null && q.indexOf('/') > 0) {
 		    // treat this as facet
-		    List<String> facets = new ArrayList<String>();
 		    if (query.get("facet") != null) {
 			for (String f : query.get("facet"))
-			    facets.add(f);
+			    qfacets.add(f);
 		    }
-		    facets.add("MeSH/"+q);
-		    query.put("facet", facets.toArray(new String[0]));
+		    qfacets.add("MeSH/"+q);
+		    query.put("facet", qfacets.toArray(new String[0]));
 		}
+
+		List<String> args = new ArrayList<String>();
+		args.add(request().uri());
+		if (q != null)
+		    args.add(q);
+		for (String f : qfacets)
+		    args.add(f);
 		
                 // filtering
                 TextIndexer.SearchResult result = Cache.getOrElse
-                    (Util.sha1(request().uri()),
-                     new Callable<TextIndexer.SearchResult>() {
+                    (Util.sha1(args.toArray(new String[0])),
+		     new Callable<TextIndexer.SearchResult>() {
                          public TextIndexer.SearchResult call () {
                              try {
                                  return SearchFactory.search
@@ -284,7 +334,7 @@ public class IDGApp extends Controller {
                                 return filter (getFacets (Target.class, 20),
                                                FACETS);
                             }
-                        }, 3600);
+                        }, 60);
                 
                 rows = Math.min(total, Math.max(1, rows));
                 int[] pages = paging (rows, page, total);               
@@ -412,5 +462,9 @@ public class IDGApp extends Controller {
 
     public static Result diseases (final String q, int rows, final int page) {
 	return ok (ix.idg.views.html.diseases.render());
+    }
+
+    public static Result ligands () {
+	return ok (ix.idg.views.html.ligands.render());
     }
 }
