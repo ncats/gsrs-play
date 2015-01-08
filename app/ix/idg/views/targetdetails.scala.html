@@ -71,7 +71,7 @@
 	      </tr>
 	      @for(dr <- diseases) {
 	        <tr>
-		  <td>@dr.disease.name</td>
+		  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
 		  <td>@dr.zscore</td>
 		  <td>@dr.conf</td>
 		</tr>
