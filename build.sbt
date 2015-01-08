@@ -24,6 +24,8 @@ libraryDependencies ++= Seq(
     ,"org.apache.lucene" % "lucene-queryparser" % "4.10.0"
     ,"org.webjars" %% "webjars-play" % "2.3.0"
     ,"org.webjars" % "bootstrap" % "3.2.0"
+    //,"org.webjars" % "typeahead.js" % "0.9.3"
+    ,"org.webjars" % "typeaheadjs" % "0.10.5-1"
     ,"org.webjars" % "jquery-ui" % "1.11.2"
     ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"
     ,"org.webjars" % "metroui" % "2.0.23"
@@ -33,8 +35,5 @@ libraryDependencies ++= Seq(
     ,"org.webjars" % "respond" % "1.4.2"
     ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
 //  ,"com.wordnik" %% "swagger-play2" % "1.3.10" exclude("org.reflections", "reflections")
-//  ,"com.fasterxml.jackson.core" % "jackson-core" % "2.4.1"
-//  ,"com.fasterxml.jackson.core" % "jackson-annotations" % "2.4.1"
-//  ,"com.fasterxml.jackson.core" % "jackson-databind" % "2.4.1"
 )     
 

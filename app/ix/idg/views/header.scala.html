@@ -1,4 +1,41 @@
-@(home: String)
+@(home: String, kind: String)
+
+<script>
+$(document).ready(function () {
+    var entities = new Bloodhound({
+       datumTokenizer: function(d) {
+          return Bloodhound.tokenizers.whitespace(d.key);
+       },
+       queryTokenizer: Bloodhound.tokenizers.whitespace,
+       remote: '/api/suggest/Entity?q=%QUERY',
+    });
+
+  var mesh = new Bloodhound({
+       datumTokenizer: function(d) {
+          return d.key.split(/\//);
+       },
+       queryTokenizer: Bloodhound.tokenizers.whitespace,
+       remote: '/api/suggest/MeSH?q=%QUERY',
+  });
+  entities.initialize();
+  mesh.initialize();
+  
+  $('.typeahead').typeahead({
+       hint: true,
+       highlight: true,
+       minLength: 2
+  }, {
+      name: 'Target',
+      displayKey: 'key',
+      source: entities.ttAdapter()
+  }, {
+     name: 'MeSH',
+     displayKey: 'key',
+     source: mesh.ttAdapter()
+  }
+  );
+});
+</script>
 
 <nav class="navbar navbar-default">
   <div class="container-fluid">
@@ -14,12 +51,30 @@
     </div>
     
     <!-- Collect the nav links, forms, and other content for toggling -->
-    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-      <form class="navbar-form navbar-right" role="search">
+    <div class="collapse navbar-collapse">
+      <ul class="nav navbar-nav navbar-right">
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+             role="button" aria-expanded="false">Visualization <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu">
+            <li><a href="#kinome">Kinome Dendrogram</a></li>
+            <li><a href="#novelty">Novelty Plot</a></li>
+          </ul>
+        </li>
+      <form class="navbar-form navbar-right" role="search" method="GET"
+            action="@ix.idg.controllers.routes.IDGApp.search(kind)">
         <div class="form-group">
-          <input type="text" class="form-control" placeholder="Search...">
+          <input type="text" id="search" name="q"
+                 class="typeahead form-control" placeholder="Search..."/>
+          @if(kind != null) {
+             <input type="hidden" name="kind" value="@kind"/>
+          }
         </div>
+        <button type="submit" class="btn btn-default">
+          <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+        </button>
       </form>
+      </ul> 
     </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid -->
 </nav>

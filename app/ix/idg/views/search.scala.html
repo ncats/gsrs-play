@@ -1,0 +1,80 @@
+@import ix.idg.models.Target
+@import ix.idg.models.Disease
+@import ix.core.search.TextIndexer
+@import ix.core.search.TextIndexer._
+
+@(query: String, total: Int, facets: Array[Facet],
+targets: List[Target], totalTargets: Int,
+diseases: List[Disease], totalDiseases: Int)
+
+@tabrow(t: Target) = {
+<tr>
+  <td><a href="@ix.idg.controllers.routes.IDGApp.target(t.id)">@t.name</a></td>
+  <td>@t.idgClass</td>
+  <td>@t.idgFamily</td>
+</tr>
+}
+
+@main("Search: "+query, null) {
+<div class="container-fluid">
+  <div class="row">
+    @if(total > 0) {
+    <div class="col-md-3">
+      @filters(facets)
+    </div> 
+    <div class="col-md-9">
+      } else {
+      <div class="col-md-12">
+      }
+      <div 
+	 @if(total > 0) {
+	class="alert alert-success" 
+	} else {
+	class="alert alert-danger" 
+	}
+	role="alert">
+	<span><h4>Query:<pre>@query</pre></h4></span>
+      </div>
+      <div class="btn-group" role="group">
+	<h3><span class="label label-default">@total entities found.</span></h3>
+      </div>
+      <div class="panel panel-default">
+	<div class="panel-body">
+	  <table class="table table-striped">
+	    <tr>
+	      <th>Name</th>
+	      <th>Classification</th>
+	      <th>Target Family</th>
+	    </tr>
+	    @for(t <- targets) {
+	      @tabrow(t)
+		      }
+		      </table>
+	   @if(targets.length < totalTargets) {
+	    <span><i class="fa fa-ellipsis-h"></i></span>
+	    }
+	</div>
+	<div class="panel-footer">
+	  <a href="@ix.idg.controllers.routes.IDGApp.targets(query, 20, 1)">@totalTargets target(s)</a>
+	</div>
+      </div>
+      <div class="panel panel-default">
+	<div class="panel-body">
+	  <table class="table table-striped">
+	    <tr>
+	      <th>Name</th>
+	      <th>Description</th>
+	      <th>Related</th>
+	    </tr>
+		      </table>
+	   @if(diseases.length < totalDiseases) {
+	    <span><i class="fa fa-ellipsis-h"></i></span>
+	    }
+	</div>
+	<div class="panel-footer">
+	  <a href="@ix.idg.controllers.routes.IDGApp.diseases()">@totalDiseases disease(s)</a>
+	</div>
+    </div>
+  </div>
+</div>
+}

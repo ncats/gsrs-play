@@ -1,4 +1,4 @@
-@(title: String)(content: Html)
+@(title: String, kind: String)(content: Html)
 
 <!DOCTYPE html>
 <html>
@@ -6,11 +6,15 @@
     <title>@title</title>
     <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
     <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/footer.css")'>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>    
   </head>
   <body>
-    @header(request().host())
+    @header(request().host(), kind)
     @content
+    @footer()
   </body>
 </html>
