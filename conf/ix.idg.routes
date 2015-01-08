@@ -16,6 +16,7 @@ POST    /tcrd   ix.idg.controllers.TcrdLoader.load
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 20, page: Int ?= 1)
 GET	/targets/:id	ix.idg.controllers.IDGApp.target(id: Long)
-GET	/diseases	ix.idg.controllers.IDGApp.diseases
+GET	/diseases	ix.idg.controllers.IDGApp.diseases(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
+GET	/diseases/:id	ix.idg.controllers.IDGApp.disease(id: Long)
 GET	/ligands	ix.idg.controllers.IDGApp.ligands
-GET	/search		ix.idg.controllers.IDGApp.search(kind: String)
+GET	/search		ix.idg.controllers.IDGApp.search(kind: String ?= null)

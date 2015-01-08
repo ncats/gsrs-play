@@ -1,4 +1,53 @@
 @import ix.idg.controllers.DiseaseFactory
+@import ix.idg.models.Disease
+@import ix.core.search.TextIndexer.Facet
+@import scala.collection.JavaConversions._
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+        facets: Array[Facet], diseases: List[Disease])
+
+@getdoid(t: Disease) = {
+    @* We only consider the first DOID, even if there are alternates *@
+    @for(kw <- t.synonyms.filter(_.label == "DOID").take(1)) {
+        <a href="http://disease-ontology.org/term/@kw.term">@kw.term.replace("DOID:", "")</a>
+    }
+}
+
+@tabrow(t: Disease) = {
+    <tr>
+        <td>@getdoid(t)</td>
+        <td><a href="@ix.idg.controllers.routes.IDGApp.disease(t.id)">@t.name.capitalize</a></td>
+        <td>@if(t.description != null){
+            @t.description.replace("_", " ")
+        } else {}</td>
+    </tr>
+}
 
 @main("Diseases", "ix.idg.models.Disease") {
+    <div class="container">
+        @**
+        @request().uri()
+        **@
+        <div class="row">
+            <div class="col-md-3">
+            @filters(facets)
+            </div>
+            <div class="col-md-9">
+                @pagination(current, rows, total, pages)
+                <div class="panel panel-default">
+                    <table class="table table-striped">
+                        <tr>
+                            <th>DOID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                        </tr>
+                        @for(t <- diseases) {
+                            @tabrow(t)
+                        }
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 }
+

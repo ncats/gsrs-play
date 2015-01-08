@@ -1,24 +1,29 @@
 package ix.idg.controllers;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
-import java.net.*;
-import java.util.concurrent.Callable;
-
-import play.*;
-import play.cache.Cache;
-import play.data.*;
-import play.mvc.*;
-import play.libs.ws.*;
-
-import ix.core.models.*;
-import ix.idg.models.*;
 import ix.core.controllers.SearchFactory;
+import ix.core.models.Keyword;
+import ix.core.models.Text;
+import ix.core.models.Value;
+import ix.core.models.XRef;
 import ix.core.search.TextIndexer;
-
-import ix.utils.Global;
+import ix.idg.models.Disease;
+import ix.idg.models.Target;
 import ix.utils.Util;
+import play.Logger;
+import play.cache.Cache;
+import play.libs.ws.WS;
+import play.mvc.Controller;
+import play.mvc.Result;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.Callable;
 
 public class IDGApp extends Controller {
     static public final int CACHE_TIMEOUT = 60*60;
@@ -263,16 +268,62 @@ public class IDGApp extends Controller {
         }
         return filtered.toArray(new TextIndexer.Facet[0]);
     }
-    
+
+    static TextIndexer.SearchResult getSearchResult
+	(final Class kind, final String q, final int total) {
+	
+	final Map<String, String[]> query =  new HashMap<String, String[]>();
+	query.putAll(request().queryString());
+		
+	List<String> qfacets = new ArrayList<String>();
+	if (q != null && q.indexOf('/') > 0) {
+	    // treat this as facet
+	    if (query.get("facet") != null) {
+		for (String f : query.get("facet"))
+		    qfacets.add(f);
+	    }
+	    qfacets.add("MeSH/"+q);
+	    query.put("facet", qfacets.toArray(new String[0]));
+	}
+	
+	List<String> args = new ArrayList<String>();
+	args.add(request().uri());
+	if (q != null)
+	    args.add(q);
+	for (String f : qfacets)
+	    args.add(f);
+	
+	// filtering
+	try {
+	    TextIndexer.SearchResult result = Cache.getOrElse
+		(Util.sha1(args.toArray(new String[0])),
+		 new Callable<TextIndexer.SearchResult>() {
+		     public TextIndexer.SearchResult call () throws Exception {
+			 return SearchFactory.search
+			 (kind, q != null
+			  && q.indexOf('/') > 0 ? null : q,
+			  total, 0, 20, query);
+		     }
+		 }, CACHE_TIMEOUT);
+	    return result;
+	}
+	catch (Exception ex) {
+	    Logger.trace("Unable to perform search", ex);
+	}
+	return null;
+    }
+
     public static Result targets (final String q, int rows, final int page) {
         Logger.debug("Targets: q="+q+" rows="+rows+" page="+page);
         try {
             final int total = TargetFactory.finder.findRowCount();
+	    /*
 	    final Map<String, String[]> query =
 		new HashMap<String, String[]>();
 	    query.putAll(request().queryString());
-		
-            if (query.containsKey("facet") || q != null) {
+	    */	
+            if (request().queryString().containsKey("facet") || q != null) {
+		/*		
 		List<String> qfacets = new ArrayList<String>();
 		if (q != null && q.indexOf('/') > 0) {
 		    // treat this as facet
@@ -308,6 +359,9 @@ public class IDGApp extends Controller {
                              return null;
                          }
                      }, 60);
+		*/
+		TextIndexer.SearchResult result =
+		    getSearchResult (Target.class, q, total);
 		
 		TextIndexer.Facet[] facets = filter
 		    (result.getFacets(), FACETS);
@@ -329,7 +383,8 @@ public class IDGApp extends Controller {
             }
             else {
                 TextIndexer.Facet[] facets = Cache.getOrElse
-                    ("TargetFacets", new Callable<TextIndexer.Facet[]>() {
+                    (Target.class.getName()+".facets",
+		     new Callable<TextIndexer.Facet[]>() {
                             public TextIndexer.Facet[] call () {
                                 return filter (getFacets (Target.class, 20),
                                                FACETS);
@@ -350,10 +405,6 @@ public class IDGApp extends Controller {
             return badRequest (ix.idg.views.html.error.render
                                (404, "Invalid page requested: "+page+ex));
         }
-    }
-
-    public static Result diseases () {
-        return ok (ix.idg.views.html.diseases.render());
     }
 
     public static Result search (String kind) {
@@ -460,11 +511,116 @@ public class IDGApp extends Controller {
 				    (500, "Unable to fullfil request"));
     }
 
-    public static Result diseases (final String q, int rows, final int page) {
-	return ok (ix.idg.views.html.diseases.render());
-    }
-
     public static Result ligands () {
 	return ok (ix.idg.views.html.ligands.render());
+    }
+
+    public static Result disease(long id) {
+	try {
+	    Disease d = DiseaseFactory.getDisease(id);
+	    for (XRef xref : d.links) {
+		System.out.println(xref.refid + "/" + xref.kind + "/" + xref.deRef());
+		List<Value> props = xref.properties;
+		for (Value prop: props) {
+		    System.out.println("prop = " + prop);
+		    if (prop instanceof Text) {
+			Text text = (Text) prop;
+			System.out.println("\ttext = " + text.text +"/"+text.label);
+		    } else if (prop instanceof Keyword) {
+			Keyword kw = (Keyword) prop;
+			System.out.println("\tkw = " + kw.term +"/"+kw.label);
+		    }
+		}
+		System.out.println();
+	    }
+	    
+	    // resolve the targets for this disease
+	    List<Target> targets = new ArrayList<Target>();
+	    for (XRef ref : d.links) {
+		if (Target.class.isAssignableFrom(Class.forName(ref.kind))) {
+		    Target t = (Target) ref.deRef();
+		    targets.add(t);
+		}
+	    }
+	    return ok(ix.idg.views.html.diseasedetails.render(d, targets.toArray(new Target[]{})));
+	} catch (Exception ex) {
+	    return internalServerError
+		(ix.idg.views.html.error.render(500, "Internal server error"));
+	}
+    }
+
+    public static Result diseases (String q, int rows, int page) {
+	Logger.debug("Diseases: rows=" + rows + " page=" + page);
+	try {
+	    
+	    final int total = DiseaseFactory.finder.findRowCount();
+	    if (request().queryString().containsKey("facet") || q != null) {
+		/*
+		// filtering
+		TextIndexer.SearchResult result = Cache.getOrElse
+		    (Util.sha1Request(request(), "facet"),
+		     new Callable<TextIndexer.SearchResult>() {
+			 public TextIndexer.SearchResult call() {
+			     try {
+				 return SearchFactory.search
+				 (Disease.class, null, total, 0,
+				  20, request().queryString());
+			     } catch (IOException ex) {
+				 Logger.trace("Can't perform search", ex);
+			     }
+			     return null;
+			 }
+		     }, 60);
+		rows = Math.min(result.count(), Math.max(1, rows));
+		int[] pages = paging(rows, page, result.count());
+		*/
+		TextIndexer.SearchResult result =
+		    getSearchResult (Disease.class, q, total);
+		
+		TextIndexer.Facet[] facets = filter
+		    (result.getFacets(),
+		     "IDG Classification",
+		     "IDG Target Family");
+		
+		List<Disease> diseases = new ArrayList<Disease>();
+		int[] pages = new int[0];
+		if (result.count() > 0) {
+		    rows = Math.min(result.count(), Math.max(1, rows));
+		    pages = paging (rows, page, result.count());
+		    for (int i = (page - 1) * rows, j = 0; j < rows
+			     && i < result.count(); ++j, ++i) {
+			diseases.add((Disease) result.getMatches().get(i));
+		    }
+		}
+		
+		return ok(ix.idg.views.html.diseases.render
+			  (page, rows, result.count(),
+			   pages, facets, diseases));
+	    }
+	    else {
+		TextIndexer.Facet[] facets = Cache.getOrElse
+		    (Disease.class.getName()+".facets",
+		     new Callable<TextIndexer.Facet[]>() {
+			 public TextIndexer.Facet[] call() {
+			     return filter(getFacets(Disease.class, 20),
+					   "IDG Classification",
+					   "IDG Target Family"
+					   );
+			}
+		     }, CACHE_TIMEOUT);
+		rows = Math.min(total, Math.max(1, rows));
+		int[] pages = paging(rows, page, total);
+		
+		List<Disease> diseases =
+		    DiseaseFactory.getDiseases(rows, (page - 1) * rows, null);
+		
+		return ok(ix.idg.views.html.diseases.render
+			  (page, rows, total, pages, facets, diseases));
+	    }
+	} catch (Exception e) {
+	    e.printStackTrace();
+	    return badRequest(ix.idg.views.html.error.render
+			      (404, "Invalid page requested: " + page + e));
+	}
     }
 }

@@ -1,0 +1,94 @@
+@import ix.idg.models.Disease
+@import ix.idg.models.Target
+@import ix.core.models.Keyword
+@import ix.core.models.Text
+
+@(d: Disease, targets: Array[Target])
+
+@getsyn(t: Disease, label: String) = {
+    @* We only consider the first DOID, even if there are alternates *@
+    @for(kw <- t.synonyms.filter(_.label == label).take(1)) {
+        @kw.term.stripMargin
+    }
+}
+
+@getxrefs(t: Disease) = {
+
+    @for(prop <- t.properties) {
+        @{
+            prop match {
+                case x: Text => ""
+                case x: Keyword => x.term
+            }
+        }
+        <br>
+    }
+}
+
+@tabrow(t: Target) = {
+    <tr>
+        <td><a href="@ix.idg.controllers.routes.IDGApp.target(t.id)">@t.name</a></td>
+        <td>@t.idgClass</td>
+        <td>@t.idgFamily</td>
+    </tr>
+}
+
+@main(d.name, "ix.idg.models.Disease") {
+    <div class="container-fluid">
+      <div class="col-md-12">
+	<div class="page-header">
+	  <h1>@d.name</h1>
+	</div>
+        <div class="row">
+          <div class="panel panel-default">
+	    <div class="panel-body">
+              <p>@if(d.description != null) {@d.description.replace("_", " ")} else {}</p>
+	      @for(syn <- d.synonyms) {
+	         @if(syn.label.equals("DOID") && syn.href != null) {
+			  <p>View more details at <a href="@syn.href">
+			      Disease Ontology</a>, <a href="http://www.malacards.org/search/results/@syn.term">MalaCards</a>
+		    }
+	      }
+              </p>
+            </div>
+	  </div>
+	</div>
+        <div class="row">
+          <div role="tabpanel">
+            <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="active">
+                          <a href="#targets" aria-controls="targets" role="tab" data-toggle="tab">Targets (@targets.length)</a>
+                        </li>
+                        <li role="presentation" >
+                          <a href="#molecules" aria-controls="molecules" role="tab" data-toggle="tab">Molecules</a>
+                        </li>
+                        <li role="presentation" >
+                          <a href="#trials" aria-controls="trials" role="tab" data-toggle="tab">Clinical Trials</a>
+                        </li>
+                        <li role="presentation" >
+                          <a href="#xrefs" aria-controls="xrefs" role="tab" data-toggle="tab">External References (@d.properties.size())</a>
+                        </li>
+            </ul>
+	    
+            <div class="tab-content">
+              <div role="tabpanel" class="tab-pane active" id="targets">
+                <table class="table table-striped">
+                  <tr>
+                    <th>Name</th>
+                    <th>Classification</th>
+                    <th>Target Family</th>
+                  </tr>
+                  @for(t <- targets) {
+                            @tabrow(t)
+                            }
+                            </table>
+              </div>
+              <div role="tabpanel" class="tab-pane" id="molecules"></div>
+              <div role="tabpanel" class="tab-pane" id="trials"></div>
+              <div role="tabpanel" class="tab-pane" id="xrefs">@getxrefs(d)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
