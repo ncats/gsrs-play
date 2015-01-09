@@ -15,7 +15,7 @@ margin-top:-10px;
 }
 
 #main-box{
-	padding-top:150px;
+	padding-top:100px;
 	height:100%;
 	background-color: white;
 }
@@ -80,4 +80,8 @@ position: absolute;
 left: 1%;
 right: 5%;
 top: 15%;
+}
+
+.tt-dropdown-menu{
+	background-color:white;
 }

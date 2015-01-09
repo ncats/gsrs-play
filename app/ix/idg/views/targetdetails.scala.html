@@ -1,115 +1,128 @@
 @import ix.idg.models.Target
+@import ix.core.models.Publication
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
 
 @(target: Target, diseases: List[DiseaseRelevance])
-@main(target.name, "ix.idg.models.Target") {
+@main(target.name, target.getClass().getName()) {
 <div class="container-fluid">
   <div class="col-md-12">
     <div class="page-header">
-      <h1>@target.name</h1>
+      <h1>
+        <!--button class="btn btn-primary" type="button"-->
+          <span class="label label-primary">@target.idgClass</span>
+        <!--/button-->
+        @target.name
+      </h1>
     </div>
     <div class="row">
       <!--
-	-- Synonyms
-	-->
+        -- Synonyms
+        -->
       <div class="col-md-4">
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-	    <h3 class="panel-title">Synonyms</h3>
-	  </div>
-	  <div class="panel-body">
-	    <table class="table table-striped">
-	      <tr>
-		<td>Accession</td>
-		<td>
-		  @for(kw <- target.synonyms) {
-		  @if("UniProt Accession".equals(kw.label)) {
-		    <a href="@kw.href">@kw.term</a>
-		  }
-		  }
-		</td>
-	      </tr>
-	      <tr>
-		<td>Fullname</td>
-		<td>
-		  @for(kw <- target.synonyms) {
-	             @if("UniProt Fullname".equals(kw.label)) {
-			@kw.term<br>
-		     }
-	          }
-		</td>
-	      </tr>
-	      <tr>
-		<td>Shortname</td>
-		<td>
-		  @for(kw <- target.synonyms) {
-	             @if("UniProt Shortname".equals(kw.label)) {
-			     @kw.term<br>
-	             }
-	          }
-		</td>
-	      </tr>
-	    </table>
-	  </div>
-	</div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Synonyms</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-striped">
+              <tr>
+                <td>Accession</td>
+                <td>
+                  @for(kw <- target.synonyms) {
+                  @if("UniProt Accession".equals(kw.label)) {
+                    <a href="@kw.href">@kw.term</a>
+                  }
+                  }
+                </td>
+              </tr>
+              <tr>
+                <td>Fullname</td>
+                <td>
+                  @for(kw <- target.synonyms) {
+                     @if("UniProt Fullname".equals(kw.label)) {
+                        @kw.term<br>
+                     }
+                  }
+                </td>
+              </tr>
+              <tr>
+                <td>Shortname</td>
+                <td>
+                  @for(kw <- target.synonyms) {
+                     @if("UniProt Shortname".equals(kw.label)) {
+                             @kw.term<br>
+                     }
+                  }
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
       </div>
       <!--
-	-- Disease Relevance
-	-->
+        -- Disease Relevance
+        -->
       <div class="col-md-6">
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-	    <h3 class="panel-title">IDG Disease Relevance</h3>
-	  </div>
-	  <div class="panel-body">
-	    <table class="table table-striped">
-	      <tr>
-		<th>Disease</th>
-		<th>Z-score</th>
-		<th>Confidence</th>
-	      </tr>
-	      @for(dr <- diseases) {
-	        <tr>
-		  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
-		  <td>@dr.zscore</td>
-		  <td>@dr.conf</td>
-		</tr>
-	      }
-	    </table>
-	  </div>
-	</div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">IDG Disease Relevance</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-striped">
+              <tr>
+                <th>Disease</th>
+                <th>Z-score</th>
+                <th>Confidence</th>
+              </tr>
+              @for(dr <- diseases) {
+                <tr>
+                  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
+                  <td>@dr.zscore</td>
+                  <td>@dr.conf</td>
+                </tr>
+              }
+            </table>
+          </div>
+        </div>
       </div>
       <!--
-	-- Genes
-	-->
+        -- Genes
+        -->
       <div class="col-md-2">
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-	    <h3 class="panel-title">Genes</h3>
-	  </div>
-	  <div class="panel-body">
-	    @for(kw <- target.synonyms) {
-	        @if("UniProt Gene".equals(kw.label)) {
-		    <a href="http://www.genenames.org/cgi-bin/gene_symbol_report?match=@kw.term">@kw.term</a>
-		}
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Genes</h3>
+          </div>
+          <div class="panel-body">
+            @for(kw <- target.synonyms) {
+                @if("UniProt Gene".equals(kw.label)) {
+                    <a href="http://www.genenames.org/cgi-bin/gene_symbol_report?match=@kw.term">@kw.term</a>
+                }
             }
-	  </div>
-	</div>
+          </div>
+        </div>
       </div>
     </div> <!-- row -->
     <!--
       -- Annotations
       -->
+    <!--
     <div class="row">
       <div class="col-md-12">
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-	    <h3 class="panel-title">Annotations</h3>
-	  </div>
-	  <div class="panel-body">
-	  </div>
-	</div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Annotations</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-striped">
+              <tr>
+                <th>Type</th>
+                <th>Value</th>
+              </tr>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
     <!-- 
@@ -117,14 +130,59 @@
       -->
     <div class="row">
       <div class="col-md-12">
-	<div class="panel panel-default">
-	  <div class="panel-heading">
-	    <h3 class="panel-title">Publications</h3>
-	  </div>
-	  <div class="panel-body">
-	  </div>
-	</div>
-      </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Publications</h3>
+          </div>
+          <div class="panel-body">
+            <div class="panel-body">
+              <table class="table table-striped">
+                <tr>
+                  <th>PMID</th>
+                  <th>Title</th>
+                  <th>Relevance</th>
+                </tr>
+                  @for(xref <- target.links) {
+                     @if(xref.kind.equals("ix.core.models.Publication")) {
+                       @defining(xref.deRef().asInstanceOf[Publication]) { pub =>
+                       <tr>
+                        <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a></td>
+                        <td>@pub.title</td>
+                        <td>
+                          @for(p <- xref.properties) {
+                            @p.label match {
+                               case "/uniprot/entry/reference/scope" => {
+                                 @if(p.getValue().toString().length() > 50) {
+                                    <span class="label label-default">
+                                      <a href="#" data-toggle="tooltip" data-animation="true" title="@p.getValue()" style="color:white;">@p.getValue().toString().substring(0, 50)...</a></span>
+                                 } else {
+                                   <span class="label label-default">@p.getValue()</span>
+                                 }
+                               }
+                               case "/uniprot/entry/reference/source/tissue" => {
+                                    <span class="label label-primary">@p.getValue()</span>
+                               }
+                               case "GeneRIF" => {
+                                  @if(p.getValue().toString().length() > 50) {
+                                    <span class="label label-warning">
+                                      <a href="#" data-toggle="tooltip" data-animation="true" title="@p.getValue()" style="color:white;">@p.getValue().toString().substring(0, 50)...</a></span>
+                                  } else {
+                                   <span class="label label-warning">@p.getValue()</span>
+                                  }
+                               }
+                               case _ => {
+                               }
+                            }
+                          }
+                        </td>
+                       </tr>
+                      }
+                    }
+                  }   
+              </table>
+            </div>
+          </div>
+        </div>
     </div>
   </div>
 </div>

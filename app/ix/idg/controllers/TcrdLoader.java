@@ -228,6 +228,9 @@ public class TcrdLoader extends Controller {
 		 +"/targets/search?facet="
 		 +URLEncoder.encode(label,"utf-8")+"/"
 		 +URLEncoder.encode(target.idgClass, "utf-8"));
+
+	    Keyword name = KeywordFactory.registerIfAbsent
+		("UniProt Target", target.name, target.getHRef());
 	    
 	    while (rs.next()) {
 		String doid = rs.getString("doid");
@@ -262,6 +265,7 @@ public class TcrdLoader extends Controller {
 			    self.namespace = namespace;
 			    self.properties.add(family);
 			    self.properties.add(clazz);
+			    self.properties.add(name);
 			    self.save();
 			}
 

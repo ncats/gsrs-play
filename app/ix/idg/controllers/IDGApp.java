@@ -44,11 +44,17 @@ public class IDGApp extends Controller {
 	}
     }
     
-    public static final String[] FACETS = {
+    public static final String[] TARGET_FACETS = {
         "IDG Classification",
         "IDG Target Family",
         "TCRD Disease",
         "TCRD Drug"
+    };
+
+    public static final String[] DISEASE_FACETS = {
+	"IDG Classification",
+	"IDG Target Family",
+	"UniProt Target"
     };
     
     public static int[] paging (int rowsPerPage, int page, int total) {
@@ -317,54 +323,12 @@ public class IDGApp extends Controller {
         Logger.debug("Targets: q="+q+" rows="+rows+" page="+page);
         try {
             final int total = TargetFactory.finder.findRowCount();
-	    /*
-	    final Map<String, String[]> query =
-		new HashMap<String, String[]>();
-	    query.putAll(request().queryString());
-	    */	
             if (request().queryString().containsKey("facet") || q != null) {
-		/*		
-		List<String> qfacets = new ArrayList<String>();
-		if (q != null && q.indexOf('/') > 0) {
-		    // treat this as facet
-		    if (query.get("facet") != null) {
-			for (String f : query.get("facet"))
-			    qfacets.add(f);
-		    }
-		    qfacets.add("MeSH/"+q);
-		    query.put("facet", qfacets.toArray(new String[0]));
-		}
-
-		List<String> args = new ArrayList<String>();
-		args.add(request().uri());
-		if (q != null)
-		    args.add(q);
-		for (String f : qfacets)
-		    args.add(f);
-		
-                // filtering
-                TextIndexer.SearchResult result = Cache.getOrElse
-                    (Util.sha1(args.toArray(new String[0])),
-		     new Callable<TextIndexer.SearchResult>() {
-                         public TextIndexer.SearchResult call () {
-                             try {
-                                 return SearchFactory.search
-                                 (Target.class, q != null
-				  && q.indexOf('/') > 0 ? null : q,
-				  total, 0, 20, query);
-                             }
-                             catch (IOException ex) {
-                                 Logger.trace("Can't perform search", ex);
-                             }
-                             return null;
-                         }
-                     }, 60);
-		*/
 		TextIndexer.SearchResult result =
 		    getSearchResult (Target.class, q, total);
 		
 		TextIndexer.Facet[] facets = filter
-		    (result.getFacets(), FACETS);
+		    (result.getFacets(), TARGET_FACETS);
 		List<Target> targets = new ArrayList<Target>();
 		int[] pages = new int[0];
 		if (result.count() > 0) {
@@ -387,7 +351,7 @@ public class IDGApp extends Controller {
 		     new Callable<TextIndexer.Facet[]>() {
                             public TextIndexer.Facet[] call () {
                                 return filter (getFacets (Target.class, 20),
-                                               FACETS);
+                                               TARGET_FACETS);
                             }
                         }, 60);
                 
@@ -479,7 +443,8 @@ public class IDGApp extends Controller {
                         }, 60);
 	    }
 	    
-	    TextIndexer.Facet[] facets = filter (result.getFacets(), FACETS);
+	    TextIndexer.Facet[] facets = filter
+		(result.getFacets(), TARGET_FACETS);
 	    
 	    int max = Math.min(rows, Math.max(1,result.count()));
 	    int totalTargets = 0, totalDiseases = 0;
@@ -519,19 +484,19 @@ public class IDGApp extends Controller {
 	try {
 	    Disease d = DiseaseFactory.getDisease(id);
 	    for (XRef xref : d.links) {
-		System.out.println(xref.refid + "/" + xref.kind + "/" + xref.deRef());
+		//Logger.debug(xref.refid + "/" + xref.kind + "/" + xref.deRef());
 		List<Value> props = xref.properties;
 		for (Value prop: props) {
-		    System.out.println("prop = " + prop);
+		    //Logger.debug("prop = " + prop);
 		    if (prop instanceof Text) {
 			Text text = (Text) prop;
-			System.out.println("\ttext = " + text.text +"/"+text.label);
+			//Logger.debug("\ttext = " + text.text +"/"+text.label);
 		    } else if (prop instanceof Keyword) {
 			Keyword kw = (Keyword) prop;
-			System.out.println("\tkw = " + kw.term +"/"+kw.label);
+			//Logger.debug("\tkw = " + kw.term +"/"+kw.label);
 		    }
 		}
-		System.out.println();
+		//System.out.println();
 	    }
 	    
 	    // resolve the targets for this disease
@@ -542,7 +507,8 @@ public class IDGApp extends Controller {
 		    targets.add(t);
 		}
 	    }
-	    return ok(ix.idg.views.html.diseasedetails.render(d, targets.toArray(new Target[]{})));
+	    return ok(ix.idg.views.html.diseasedetails.render
+		      (d, targets.toArray(new Target[]{})));
 	} catch (Exception ex) {
 	    return internalServerError
 		(ix.idg.views.html.error.render(500, "Internal server error"));
@@ -555,32 +521,11 @@ public class IDGApp extends Controller {
 	    
 	    final int total = DiseaseFactory.finder.findRowCount();
 	    if (request().queryString().containsKey("facet") || q != null) {
-		/*
-		// filtering
-		TextIndexer.SearchResult result = Cache.getOrElse
-		    (Util.sha1Request(request(), "facet"),
-		     new Callable<TextIndexer.SearchResult>() {
-			 public TextIndexer.SearchResult call() {
-			     try {
-				 return SearchFactory.search
-				 (Disease.class, null, total, 0,
-				  20, request().queryString());
-			     } catch (IOException ex) {
-				 Logger.trace("Can't perform search", ex);
-			     }
-			     return null;
-			 }
-		     }, 60);
-		rows = Math.min(result.count(), Math.max(1, rows));
-		int[] pages = paging(rows, page, result.count());
-		*/
 		TextIndexer.SearchResult result =
 		    getSearchResult (Disease.class, q, total);
 		
 		TextIndexer.Facet[] facets = filter
-		    (result.getFacets(),
-		     "IDG Classification",
-		     "IDG Target Family");
+		    (result.getFacets(), DISEASE_FACETS);
 		
 		List<Disease> diseases = new ArrayList<Disease>();
 		int[] pages = new int[0];
@@ -603,9 +548,7 @@ public class IDGApp extends Controller {
 		     new Callable<TextIndexer.Facet[]>() {
 			 public TextIndexer.Facet[] call() {
 			     return filter(getFacets(Disease.class, 20),
-					   "IDG Classification",
-					   "IDG Target Family"
-					   );
+					   DISEASE_FACETS);
 			}
 		     }, CACHE_TIMEOUT);
 		rows = Math.min(total, Math.max(1, rows));

@@ -1,42 +1,5 @@
 @(kind: String)
 
-<script>
-$(document).ready(function () {
-    var entities = new Bloodhound({
-       datumTokenizer: function(d) {
-          return Bloodhound.tokenizers.whitespace(d.key);
-       },
-       queryTokenizer: Bloodhound.tokenizers.whitespace,
-       remote: '/api/suggest/Entity?q=%QUERY',
-    });
-
-  var mesh = new Bloodhound({
-       datumTokenizer: function(d) {
-          return d.key.split(/\//);
-       },
-       queryTokenizer: Bloodhound.tokenizers.whitespace,
-       remote: '/api/suggest/MeSH?q=%QUERY',
-  });
-  entities.initialize();
-  mesh.initialize();
-  
-  $('.typeahead').typeahead({
-       hint: true,
-       highlight: true,
-       minLength: 2
-  }, {
-      name: 'Target',
-      displayKey: 'key',
-      source: entities.ttAdapter()
-  }, {
-     name: 'MeSH',
-     displayKey: 'key',
-     source: mesh.ttAdapter()
-  }
-  );
-});
-</script>
-
 <nav class="navbar navbar-default">
   <div class="container-fluid">
     <!-- Brand and toggle get grouped for better mobile display -->

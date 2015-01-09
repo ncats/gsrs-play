@@ -18,7 +18,7 @@ diseases: List[Disease], totalDiseases: Int)
 @main("Search: "+query, null) {
 <div class="container-fluid">
   <div class="row">
-    @if(total > 0) {
+    @if(facets.length > 0) {
     <div class="col-md-3">
       @filters(facets)
     </div> 
@@ -33,7 +33,7 @@ diseases: List[Disease], totalDiseases: Int)
 	class="alert alert-danger" 
 	}
 	role="alert">
-	<span><h4>Query:<pre>@query</pre></h4></span>
+	<span><h4>Query:<code>@query</code></h4></span>
       </div>
       <div class="btn-group" role="group">
 	<h3><span class="label label-default">@total entities found.</span></h3>
@@ -64,9 +64,14 @@ diseases: List[Disease], totalDiseases: Int)
 	    <tr>
 	      <th>Name</th>
 	      <th>Description</th>
-	      <th>Related</th>
 	    </tr>
-		      </table>
+	    @for(d <- diseases) {
+	    <tr>
+	      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(d.id)">@d.name</a></td>
+	      <td>@d.description</td>
+	    </tr>
+            }
+	  </table>
 	   @if(diseases.length < totalDiseases) {
 	    <span><i class="fa fa-ellipsis-h"></i></span>
 	    }

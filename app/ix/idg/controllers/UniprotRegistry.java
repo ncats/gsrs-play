@@ -131,6 +131,7 @@ public class UniprotRegistry extends DefaultHandler {
                     }
                     pubkeys.put(refkey, pub);
                     xref = createXRef (pub);
+		    xref.properties.add(new Text ("Title", pub.title));
                 }
                 catch (NumberFormatException ex) {
                     Logger.warn("Bogus PMID "+id);
