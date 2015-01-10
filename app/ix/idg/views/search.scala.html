@@ -15,7 +15,11 @@ diseases: List[Disease], totalDiseases: Int)
 </tr>
 }
 
-@main("Search: "+query, null) {
+@main("Search: "+query, null){
+<ol class="breadcrumb">
+  <li><a href="@ix.idg.controllers.routes.IDGApp.index()">Home</li>
+</ol>
+}{
 <div class="container-fluid">
   <div class="row">
     @if(facets.length > 0) {

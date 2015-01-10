@@ -4,7 +4,14 @@
 @import ix.idg.controllers.IDGApp._
 
 @(target: Target, diseases: List[DiseaseRelevance])
-@main(target.name, target.getClass().getName()) {
+
+@main(target.name, target.getClass().getName()){
+<ol class="breadcrumb">
+  <li><a href="@ix.idg.controllers.routes.IDGApp.index()">Home</a></li>
+    <li><a href="@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">Targets</a></li>
+    <li class="active">@target.name</li>
+</ol>
+}{
 <div class="container-fluid">
   <div class="col-md-12">
     <div class="page-header">
@@ -30,9 +37,9 @@
                 <td>Accession</td>
                 <td>
                   @for(kw <- target.synonyms) {
-                  @if("UniProt Accession".equals(kw.label)) {
-                    <a href="@kw.href">@kw.term</a>
-                  }
+                     @if("UniProt Accession".equals(kw.label)) {
+                        <a href="@kw.href">@kw.term</a>
+                     }
                   }
                 </td>
               </tr>
@@ -178,11 +185,12 @@
                        </tr>
                       }
                     }
-                  }   
+                  }
               </table>
             </div>
           </div>
         </div>
+      </div>
     </div>
   </div>
 </div>

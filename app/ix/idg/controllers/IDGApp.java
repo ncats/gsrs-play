@@ -56,7 +56,7 @@ public class IDGApp extends Controller {
 	"IDG Target Family",
 	"UniProt Target"
     };
-    
+
     public static int[] paging (int rowsPerPage, int page, int total) {
         int max = (total+ rowsPerPage-1)/rowsPerPage;
         if (page < 0 || page > max) {
@@ -111,7 +111,7 @@ public class IDGApp extends Controller {
 			    return TargetFactory.getTarget(id);
 			}
 		    }, CACHE_TIMEOUT);
-	    
+
 	    List<DiseaseRelevance> diseases = new ArrayList<DiseaseRelevance>();
 	    for (XRef xref : t.links) {
 		if (Disease.class.getName().equals(xref.kind)) {
@@ -373,10 +373,12 @@ public class IDGApp extends Controller {
 
     public static Result search (String kind) {
 	try {
+	    String q = request().getQueryString("q");
 	    if (kind != null && !"".equals(kind)) {
 		if (Target.class.isAssignableFrom(Class.forName(kind)))
-		    return redirect (routes.IDGApp.targets
-				     (request().getQueryString("q"), 20, 1));
+		    return redirect (routes.IDGApp.targets(q, 20, 1));
+		if (Disease.class.isAssignableFrom(Class.forName(kind)))
+		    return redirect (routes.IDGApp.diseases(q, 10, 1));
 	    }
 	    
 	    // generic entity search..

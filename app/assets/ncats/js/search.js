@@ -37,8 +37,12 @@ $(document).ready(function () {
         for (var f in val) {
             console.log(f+' '+val[f]);
         }
-
-        $('.typeahead').typeahead('val', '"'+val.key+'"');
+        if (val.key.indexOf('/') > 0) {
+            /* this is mesh term, so don't quote */
+        }
+        else {
+            $('.typeahead').typeahead('val', '"'+val.key+'"');
+        }
     });
     
     $('.typeahead').on("typeahead:closed", function (evt) {

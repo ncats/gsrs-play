@@ -1,6 +1,11 @@
 @import ix.idg.controllers.LigandFactory
 
-@main("Ligands", "ix.idg.models.Ligand") {
+@main("Ligands", "ix.idg.models.Ligand"){
+<ol class="breadcrumb">
+  <li><a href="@ix.idg.controllers.routes.IDGApp.index()">Home</a></li>
+  <li class="active">Ligands</li>
+</ol>
+}{
 <div class="container-fluid">
   <div class="col-md-12">
     <div class="page-header">

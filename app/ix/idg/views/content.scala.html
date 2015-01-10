@@ -1,0 +1,47 @@
+@import ix.core.search.TextIndexer.Facet
+
+@(title: String, kind: String,
+  current: Int, rows: Int, total: Int,
+  pages: Array[Int], facets: Array[Facet])(breadcrumb: Html)(content: Html)
+
+@main(title, kind){ @breadcrumb }{
+<div class="container">
+  <div class="row">
+    @if(total > 0 && facets.length > 0) {
+    <div class="col-md-3">
+      @filters(facets)
+    </div>
+    <div class="col-md-9">
+      } else {
+      <div class="col-md-12">
+	}
+      @if(request().getQueryString("q") != null) {
+	<div
+	   @if(total > 0) {
+	   class="alert alert-success alert-dismissible"
+	  } else {
+	   class="alert alert-danger alert-dismissible"
+	  }
+	  role="alert">
+	<button type="button" class="close" data-dismiss="alert"
+		onclick="dismissQuery()"
+		aria-label="Close">
+	  <span aria-hidden="true">&times;</span>
+	</button>
+	<span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code></h4></span>
+      </div>
+      }
+      @pagination(current, rows, total, pages)
+	<div class="panel panel-default">
+	  @content
+	</div>
+      </div>
+   </div>
+</div>
+  
+<script>
+  function dismissQuery () {
+    location.assign('@ix.idg.controllers.routes.IDGApp.targets(null, Math.max(rows, 20), 1)');
+  }
+</script>
+}
