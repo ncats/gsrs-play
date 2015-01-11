@@ -1,7 +1,9 @@
+
 @import ix.idg.models.Target
 @import ix.core.models.Publication
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
+@import ix.utils.Util
 
 @(target: Target, diseases: List[DiseaseRelevance])
 
@@ -16,10 +18,14 @@
   <div class="col-md-12">
     <div class="page-header">
       <h1>
-        <!--button class="btn btn-primary" type="button"-->
-          <span class="label label-primary">@target.idgClass</span>
-        <!--/button-->
-        @target.name
+        <table>
+         <td style="padding: 15px;">
+           <span class="label label-primary">@target.idgClass</span>
+         </td>
+         <td>
+          @target.name
+         </td>
+        </table>
       </h1>
     </div>
     <div class="row">
@@ -160,8 +166,16 @@
                             @p.label match {
                                case "/uniprot/entry/reference/scope" => {
                                  @if(p.getValue().toString().length() > 50) {
-                                    <span class="label label-default">
-                                      <a href="#" data-toggle="tooltip" data-animation="true" title="@p.getValue()" style="color:white;">@p.getValue().toString().substring(0, 50)...</a></span>
+                                    <a class="label label-default"
+                                      href="#@Util.sha1(p.getValue().toString()).substring(0,6)"
+                                      tabindex="0"
+                                      data-toggle="popover"
+                                      data-animation="true"
+                                      data-placement="top"
+                                      data-trigger="click hover focus"
+                                      data-title="SCOPE"
+                                      data-content="@p.getValue()">@p.getValue().toString().substring(0, 50)...
+                                      </a></span>
                                  } else {
                                    <span class="label label-default">@p.getValue()</span>
                                  }
@@ -171,8 +185,16 @@
                                }
                                case "GeneRIF" => {
                                   @if(p.getValue().toString().length() > 50) {
-                                    <span class="label label-warning">
-                                      <a href="#" data-toggle="tooltip" data-animation="true" title="@p.getValue()" style="color:white;">@p.getValue().toString().substring(0, 50)...</a></span>
+                                      <a href="#@Util.sha1(p.getValue().toString()).substring(0,6)"
+                                      class="label label-warning"
+                                      tabindex="0"
+                                      data-toggle="popover"
+                                      data-animation="true"
+                                      data-placement="top"
+                                      data-trigger="click hover focus"
+                                      data-title="GeneRIF"
+                                      data-content="@p.getValue()">@p.getValue().toString().substring(0, 50)...
+                                        </a></span>
                                   } else {
                                    <span class="label label-warning">@p.getValue()</span>
                                   }
@@ -195,3 +217,9 @@
   </div>
 </div>
 }
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+});
+</script>

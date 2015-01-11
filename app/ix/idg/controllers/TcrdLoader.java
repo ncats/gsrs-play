@@ -57,6 +57,16 @@ public class TcrdLoader extends Controller {
 
     public static Result load () {
         DynamicForm requestData = Form.form().bindFromRequest();
+	if (Play.isProd()) { // production..
+	    String secret = requestData.get("secret-code");
+	    if (secret == null || secret.length() == 0
+		|| !secret.equals(Play.application()
+				  .configuration().getString("ix.secret"))) {
+		return unauthorized
+		    ("You do not have permission to access resource!");
+	    }
+	}
+	
         String jdbcUrl = requestData.get("jdbcUrl");
         String jdbcUsername = requestData.get("jdbc-username");
         String jdbcPassword = requestData.get("jdbc-password");

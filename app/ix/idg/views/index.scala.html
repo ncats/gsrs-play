@@ -43,13 +43,7 @@
 	</div>
       </div>
       <div class= "row">
-	<div class="col-md-3 col-md-offset-3" >
-	  <div class="alert" id ="logo">
-	    <img src ='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'
-		 class = "img-responsive" id="pharos" alt="Pharos Logo"/>
-	  </div>
-	</div>
-	<div class="col-md-3" >
+	<div class="col-md-3 col-md-push-6">
 	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
 	    <div class ="alert alert-danger" id = "ligands">
 	      <h1>Ligands</h1>
@@ -57,6 +51,12 @@
 	      <span class="badge">@ligands</span>
 	    </div>
 	  </a>
+	</div>
+	<div class="col-md-3" >
+	  <div class="alert" id ="logo">
+	    <img src ='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'
+		 class = "img-responsive" id="pharos" alt="Pharos Logo"/>
+	  </div>
 	</div>
       </div>
       <div class="row">
