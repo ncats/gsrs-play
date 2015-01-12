@@ -103,6 +103,14 @@ public class UniprotRegistry extends DefaultHandler {
 	    Model obj = (Model)ref.deRef();
 	    if (obj instanceof EntityModel) {
 		XRef xref = createXRef (target);
+		for (Keyword kw : target.synonyms) {
+		    if ("UniProt Accession".equals(kw.label)) {
+			Keyword uni = KeywordFactory.registerIfAbsent
+			    ("UniProt Target", target.name, kw.href);
+			xref.properties.add(uni);
+			break; // just grab the first one
+		    }
+		}
 		((EntityModel)obj).links.add(xref);
 		obj.update();
 	    }
@@ -169,8 +177,8 @@ public class UniprotRegistry extends DefaultHandler {
             if (diseases.isEmpty()) {
                 disease = new Disease ();
 		Logger.debug("New disease "+id);
-		Keyword kw = new Keyword ("UniProt", id);
-		kw.href = "http://www.uniprot.org/diseases/"+id;
+		Keyword kw = KeywordFactory.registerIfAbsent
+		    ("UniProt", id, "http://www.uniprot.org/diseases/"+id);
                 disease.synonyms.add(kw);
             }
             else {
@@ -314,10 +322,22 @@ public class UniprotRegistry extends DefaultHandler {
         }
         else if (qName.equals("comment")) {
             String text = values.get("text");
-            if (disease != null && "disease".equals(commentType)) {
+            if (disease != null) {
                 XRef xref = createXRef (disease);
-                xref.properties.add(new Text (disease.name, value));
+		for (Keyword kw : disease.synonyms) {
+		    if ("UniProt".equals(kw.label)) {
+			Keyword uni = KeywordFactory.registerIfAbsent
+			    ("UniProt Disease", disease.name, kw.href);
+			xref.properties.add(uni);
+		    }
+		}
+		
+		if ("disease".equals(commentType)) {
+		    xref.properties.add(new Text
+					("UniProt Disease Comment", value));
+		}
                 target.links.add(xref);
+		disease = null;
             }
             else {
                 target.properties.add(new Text (commentType, text));

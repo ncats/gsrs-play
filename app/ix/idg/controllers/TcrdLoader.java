@@ -231,7 +231,7 @@ public class TcrdLoader extends Controller {
 		 +URLEncoder.encode(label, "utf-8")+"/"
 		 +URLEncoder.encode(target.idgFamily, "utf-8"));
 
-	    label = "IDG Classification";
+	    label = "IDG Target Classification";
 	    Keyword clazz = KeywordFactory.registerIfAbsent
 		(label, target.idgClass,
 		 Global.getNamespace()
@@ -240,7 +240,7 @@ public class TcrdLoader extends Controller {
 		 +URLEncoder.encode(target.idgClass, "utf-8"));
 
 	    Keyword name = KeywordFactory.registerIfAbsent
-		("UniProt Target", target.name, target.getHRef());
+		("UniProt Target", target.name, target.getSelf());
 	    
 	    while (rs.next()) {
 		String doid = rs.getString("doid");

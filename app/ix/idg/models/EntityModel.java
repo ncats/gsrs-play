@@ -113,7 +113,7 @@ public class EntityModel extends Model {
 	return node;
     }
 
-    public String getHRef () {
+    public String getSelf () {
 	return Global.getRef(this)+"?view=full";
     }
 }

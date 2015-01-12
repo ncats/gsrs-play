@@ -1,5 +1,6 @@
 
 @import ix.idg.models.Target
+@import ix.core.models.Value
 @import ix.core.models.Publication
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
@@ -7,9 +8,25 @@
 
 @(target: Target, diseases: List[DiseaseRelevance])
 
+@label(x: Value, title: String, label: String) = {
+  @if(x.getValue().toString().length() > 50) {
+       <a class="label label-@label"
+           href="#@Util.sha1(x.getValue().toString()).substring(0,6)"
+           tabindex="0"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="top"
+           data-trigger="click hover focus"
+           data-title="@title"
+           data-content="@x.getValue()">@x.getValue().toString().substring(0, 50)...</a></span>
+  } else {
+      <span class="label label-@label">@x.getValue()</span>
+  }
+}
+
 @main(target.name, target.getClass().getName()){
 <ol class="breadcrumb">
-  <li><a href="@ix.idg.controllers.routes.IDGApp.index()">Home</a></li>
+  <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
     <li><a href="@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">Targets</a></li>
     <li class="active">@target.name</li>
 </ol>
@@ -19,12 +36,13 @@
     <div class="page-header">
       <h1>
         <table>
-         <td style="padding: 15px;">
+        <tr>
+         <td>
            <span class="label label-primary">@target.idgClass</span>
          </td>
-         <td>
-          @target.name
-         </td>
+         <td style="padding:5px;"></td>
+         <td>@target.name</td>
+        </tr>
         </table>
       </h1>
     </div>
@@ -72,37 +90,9 @@
             </table>
           </div>
         </div>
-      </div>
-      <!--
-        -- Disease Relevance
-        -->
-      <div class="col-md-6">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">IDG Disease Relevance</h3>
-          </div>
-          <div class="panel-body">
-            <table class="table table-striped">
-              <tr>
-                <th>Disease</th>
-                <th>Z-score</th>
-                <th>Confidence</th>
-              </tr>
-              @for(dr <- diseases) {
-                <tr>
-                  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
-                  <td>@dr.zscore</td>
-                  <td>@dr.conf</td>
-                </tr>
-              }
-            </table>
-          </div>
-        </div>
-      </div>
       <!--
         -- Genes
         -->
-      <div class="col-md-2">
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">Genes</h3>
@@ -115,6 +105,61 @@
             }
           </div>
         </div>
+      </div>
+      <!--
+        -- Disease Relevance
+        -->
+      <div class="col-md-8">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">IDG Disease Relevance</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-striped">
+              <tr>
+                <th>Disease</th>
+                <th>Z-score</th>
+                <th>Confidence</th>
+              </tr>
+              @for(dr <- diseases) {
+                @if(dr.zscore != null) {
+                <tr>
+                  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
+                  <td>@dr.zscore</td>
+                  <td>@dr.conf</td>
+                </tr>
+                }
+              }
+            </table>
+          </div>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">UniProt Disease Relevance</h3>
+          </div>
+          <div class="panel-body">
+            <table class="table table-striped">
+              <tr>
+                <th>Disease</th>
+                <th>OMIM</th>                
+                <th>Comment</th>
+              </tr>
+              @for(dr <- diseases) {
+                @if(dr.comment != null) {
+                <tr>
+                  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
+                  @if(dr.omim != null) {
+                    <td><a href="@dr.omim.href">@dr.omim.term</a></td>
+                  } else {
+                     <td></td>
+                  }
+                  <td>@dr.comment</td>
+                </tr>
+                }
+              }
+            </table>
+        </div>
+       </div>
       </div>
     </div> <!-- row -->
     <!--
@@ -165,39 +210,13 @@
                           @for(p <- xref.properties) {
                             @p.label match {
                                case "/uniprot/entry/reference/scope" => {
-                                 @if(p.getValue().toString().length() > 50) {
-                                    <a class="label label-default"
-                                      href="#@Util.sha1(p.getValue().toString()).substring(0,6)"
-                                      tabindex="0"
-                                      data-toggle="popover"
-                                      data-animation="true"
-                                      data-placement="top"
-                                      data-trigger="click hover focus"
-                                      data-title="SCOPE"
-                                      data-content="@p.getValue()">@p.getValue().toString().substring(0, 50)...
-                                      </a></span>
-                                 } else {
-                                   <span class="label label-default">@p.getValue()</span>
-                                 }
+                                 @label(p, "SCOPE", "default")
                                }
                                case "/uniprot/entry/reference/source/tissue" => {
                                     <span class="label label-primary">@p.getValue()</span>
                                }
                                case "GeneRIF" => {
-                                  @if(p.getValue().toString().length() > 50) {
-                                      <a href="#@Util.sha1(p.getValue().toString()).substring(0,6)"
-                                      class="label label-warning"
-                                      tabindex="0"
-                                      data-toggle="popover"
-                                      data-animation="true"
-                                      data-placement="top"
-                                      data-trigger="click hover focus"
-                                      data-title="GeneRIF"
-                                      data-content="@p.getValue()">@p.getValue().toString().substring(0, 50)...
-                                        </a></span>
-                                  } else {
-                                   <span class="label label-warning">@p.getValue()</span>
-                                  }
+                                  @label(p, "GeneRIF", "warning")
                                }
                                case _ => {
                                }
