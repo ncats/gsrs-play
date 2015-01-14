@@ -303,7 +303,9 @@ public class UniprotRegistry extends DefaultHandler {
         }
         else if (qName.equals("tissue")) {
             if (xref != null) {
-                xref.properties.add(new Text (p, value));
+		Keyword tissue = KeywordFactory.registerIfAbsent
+		    ("UniProt Tissue", value, null);
+                xref.properties.add(tissue);
             }
         }
         else if (qName.equals("reference")) {

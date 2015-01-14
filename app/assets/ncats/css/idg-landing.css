@@ -1,8 +1,7 @@
 @CHARSET "UTF-8";
 html, body {
     height: 100%;
-    text-align: center;    
-/*  background-color: #FAFAFA;*/
+    /*  background-color: #FAFAFA;*/
 }
 
 h1, .h1 {
@@ -10,14 +9,8 @@ h1, .h1 {
     margin-top:-10px;
 }
 
-@media ( max-width : 1200px) {
-    h1{
-	font-size:32pt;
-    }
-}
-
 #main-box{
-    padding-top:50px;
+    padding-top:100px;
     height:100%;
     background-color: white;
 }
@@ -38,32 +31,31 @@ h1, .h1 {
 .column{
     color: black;
     text-align:left;
+    
 }
 
-
-.data{
+.data {
     text-align:left;
     background-color:white;
     border: 1px solid gray;
     border-bottom-width: 0px;
 }
 
-#logo, #ligands, #disease, #targets{
-    height: 200px;
-    margin-left: auto;
-    margin-right: auto;
+#results {
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
 .alert{
-    text-align:center;
-    box-shadow: 0 0 30px gray;
+        text-align:center;
+        box-shadow: 0 0 30px gray;
 }
 
 .badge{
     font-size: 16px;
     position: absolute;
     bottom: 15%;
-    right: 10%;
+    right: 45%;
 }
 
 a:hover,
@@ -74,17 +66,87 @@ a:focus {
 
 .big{
     font-size: 9em;
-}	
-
-#pharos {
-/*    position: absolute;
-    left: 1%;
-    right: 5%;
-    top: 15%;*/
-    height: 170px;
-    margin: auto;
 }
+
 
 .tt-dropdown-menu{
     background-color:white;
+}
+
+/* .main-search{ */
+/*      width:60%; */
+/* } */
+
+#search-row{
+    margin-left: 5%;
+    margin-top: -2%;
+}
+
+#small-box{
+    display:none;
+}
+
+
+@media (max-width: 768px){
+    #main-box{
+        display: none;
+    }
+    #small-box{
+        display:initial;
+    }
+}
+
+@media (min-width: 768px){
+    #disease{
+        margin-left:inherit;
+    }
+    #target {
+        margin-left: -10%;
+        margin-top: -5%;
+    }
+    #logo {
+        margin-left: -5%;
+        margin-top: -6%;
+    }
+    #ligand{
+        margin-left: -1%;
+        margin-top: -5%;
+    }
+}
+ 
+@media (min-width: 992px){
+    #up{
+        margin-top:-70px;
+    }
+    #ligand{
+        margin-top: -60px;
+        margin-right: 60%;
+    }
+}
+
+@media (min-width: 1200px){
+    #up{
+        margin-top:-70px;
+    }
+    #ligand{
+        margin-left: 10%;
+        margin-top: -70px;
+    }
+    #disease{
+        margin-left:10%;
+    }
+    
+    #target{
+        margin-left:-34%;
+        margin-top: initial;
+    }
+    
+    #pharos{
+        margin-top:-8%;
+    }
+    
+    #logo{
+        margin-left: -10%;
+        margin-top: 5%;
+    }
 }

@@ -59,6 +59,14 @@ public class IDGApp extends Controller {
         "UniProt Target"
     };
 
+    public static final String[] ALL_FACETS = {
+        "IDG Classification",
+        "IDG Target Family",
+        "TCRD Disease",
+	"UniProt Target",
+        "TCRD Drug"
+    };
+
     public static int[] paging (int rowsPerPage, int page, int total) {
         int max = (total+ rowsPerPage-1)/rowsPerPage;
         if (page < 0 || page > max) {
@@ -94,7 +102,7 @@ public class IDGApp extends Controller {
     }
     
     public static Result index () {
-        return ok (ix.idg.views.html.index.render
+        return ok (ix.idg.views.html.index2.render
                    ("Pharos: Illuminating the Druggable Genome",
                     DiseaseFactory.finder.findRowCount(),
                     TargetFactory.finder.findRowCount(),
@@ -304,7 +312,8 @@ public class IDGApp extends Controller {
         query.putAll(request().queryString());
                 
         List<String> qfacets = new ArrayList<String>();
-        if (q != null && q.indexOf('/') > 0) {
+	final boolean hasFacets = q != null && q.indexOf('/') > 0;
+        if (hasFacets) {
             // treat this as facet
             if (query.get("facet") != null) {
                 for (String f : query.get("facet"))
@@ -330,8 +339,7 @@ public class IDGApp extends Controller {
                 (sha1, new Callable<TextIndexer.SearchResult>() {
                      public TextIndexer.SearchResult call () throws Exception {
                          return SearchFactory.search
-                         (kind, q != null
-                          && q.indexOf('/') > 0 ? null : q,
+                         (kind, hasFacets ? null : q,
                           total, 0, 20, query);
                      }
                  }, CACHE_TIMEOUT);
@@ -342,9 +350,30 @@ public class IDGApp extends Controller {
 				       +sha1.substring(0, 8)+"...",
 				       ellapsed));
 	    
+	    if (hasFacets && result.count() == 0) {
+		start = System.currentTimeMillis();
+		// empty result.. perhaps the query contains /'s
+		result = Cache.getOrElse
+		    (sha1, new Callable<TextIndexer.SearchResult>() {
+			    public TextIndexer.SearchResult call ()
+				throws Exception {
+				return SearchFactory.search
+				(kind, q, total, 0, 20,
+				 request().queryString());
+			    }
+			}, CACHE_TIMEOUT);
+		ellapsed = (System.currentTimeMillis() - start)*1e-3;
+		Logger.debug(String.format("Retry as query; "
+					   +"ellapsed %1$.3fs to retrieve "
+					   +"results for "
+					   +sha1.substring(0, 8)+"...",
+					   ellapsed));
+	    }
+	    
             return result;
         }
         catch (Exception ex) {
+	    ex.printStackTrace();
             Logger.trace("Unable to perform search", ex);
         }
         return null;
@@ -437,57 +466,71 @@ public class IDGApp extends Controller {
         final String query = request().getQueryString("q");
         Logger.debug("Query: \""+query+"\"");
 
-        String sha1 = Util.sha1(query);
         try {
-            TextIndexer.SearchResult result;
-            final Map<String, String[]> queryString =
-                new HashMap<String, String[]>();
-            queryString.putAll(request().queryString());
-            
+            TextIndexer.SearchResult result = null;            
             if (query.indexOf('/') > 0) { // use mesh facet
+		final Map<String, String[]> queryString =
+		    new HashMap<String, String[]>();
+		queryString.putAll(request().queryString());
+		
+		// append this facet to the list 
+		List<String> f = new ArrayList<String>();
+		f.add("MeSH/"+query);
+		String[] ff = queryString.get("facet");
+		if (ff != null) {
+		    for (String fv : ff)
+			f.add(fv);
+		}
+		queryString.put("facet", f.toArray(new String[0]));
+		long start = System.currentTimeMillis();
                 result = Cache.getOrElse
-                (sha1, new Callable<TextIndexer.SearchResult>() {
-                        public TextIndexer.SearchResult
-                            call ()  throws Exception {
-                            
-                            // append this facet to the list 
-                            List<String> f = new ArrayList<String>();
-                            f.add("MeSH/"+query);
-                            String[] ff = queryString.get("facet");
-                            if (ff != null) {
-                                for (String fv : ff)
-                                    f.add(fv);
-                            }
-                            queryString.put("facet", f.toArray(new String[0]));
-                            
-                            return SearchFactory.search
-                            (null, null, 500, 0, 20, queryString);
-                        }
-                    }, 60);
+		    (Util.sha1(queryString.get("facet")),
+		     new Callable<TextIndexer.SearchResult>() {
+			 public TextIndexer.SearchResult
+			     call ()  throws Exception {
+			     return SearchFactory.search
+			     (null, null, 500, 0, 20, queryString);
+			 }
+		     }, CACHE_TIMEOUT);
+		double ellapsed = (System.currentTimeMillis()-start)*1e-3;
+		Logger.debug
+		    ("1. Ellapsed time "+String.format("%1$.3fs", ellapsed));
             }
-            else {
+
+	    if (result == null || result.count() == 0) {
+		long start = System.currentTimeMillis();		
                 result = Cache.getOrElse
-                    (sha1, new Callable<TextIndexer.SearchResult>() {
+                    (Util.sha1Request(request(), "facet", "q"),
+		     new Callable<TextIndexer.SearchResult>() {
                             public TextIndexer.SearchResult
                                 call () throws Exception {
                                 return SearchFactory.search
-                                (null, query, 500, 0, 20, queryString);
+                                (null, query, 500, 0, 20,
+				 request().queryString());
                             }
-                        }, 60);
+                        }, CACHE_TIMEOUT);
+		double ellapsed = (System.currentTimeMillis()-start)*1e-3;
+		Logger.debug
+		    ("2. Ellapsed time "+String.format("%1$.3fs", ellapsed));
             }
             
             TextIndexer.Facet[] facets = filter
-                (result.getFacets(), TARGET_FACETS);
+                (result.getFacets(), ALL_FACETS);
             
             int max = Math.min(rows, Math.max(1,result.count()));
-            int totalTargets = 0, totalDiseases = 0;
+            int total = 0, totalTargets = 0, totalDiseases = 0;
             for (TextIndexer.Facet f : result.getFacets()) {
                 if (f.getName().equals("ix.Class")) {
                     for (TextIndexer.FV fv : f.getValues()) {
-                        if (Target.class.getName().equals(fv.getLabel()))
+                        if (Target.class.getName().equals(fv.getLabel())) {
                             totalTargets = fv.getCount();
-                        else if (Disease.class.getName().equals(fv.getLabel()))
+			    total += totalTargets;
+			}
+                        else if (Disease.class.getName()
+				 .equals(fv.getLabel())) {
                             totalDiseases = fv.getCount();
+			    total += totalDiseases;
+			}
                     }
                 }
             }
@@ -498,7 +541,7 @@ public class IDGApp extends Controller {
                 filter (Disease.class, result.getMatches(), max);
             
             return ok (ix.idg.views.html.search.render
-                       (query, result.count(), facets,
+                       (query, total, facets,
                         targets, totalTargets, diseases, totalDiseases));
         }
         catch (Exception ex) {

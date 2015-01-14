@@ -1,0 +1,90 @@
+@CHARSET "UTF-8";
+html, body {
+    height: 100%;
+    text-align: center;    
+/*  background-color: #FAFAFA;*/
+}
+
+h1, .h1 {
+    font-size: 36pt;
+    margin-top:-10px;
+}
+
+@media ( max-width : 1200px) {
+    h1{
+	font-size:32pt;
+    }
+}
+
+#main-box{
+    padding-top:100px;
+    height:100%;
+    background-color: white;
+}
+
+#demo-All2{
+    text-align:left;
+}
+
+#header{
+    background-color: #1f355c;
+}
+.head{
+    background-color: gray;
+    color: white;
+    text-align:left;
+}
+
+.column{
+    color: black;
+    text-align:left;
+}
+
+
+.data{
+    text-align:left;
+    background-color:white;
+    border: 1px solid gray;
+    border-bottom-width: 0px;
+}
+
+#logo, #ligands, #disease, #targets{
+    height: 200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.alert{
+    text-align:center;
+    box-shadow: 0 0 30px gray;
+}
+
+.badge{
+    font-size: 16px;
+    position: absolute;
+    bottom: 15%;
+    right: 10%;
+}
+
+a:hover,
+a:focus {
+    color: white;
+    text-decoration: none;
+}
+
+.big{
+    font-size: 9em;
+}	
+
+#pharos {
+/*    position: absolute;
+    left: 1%;
+    right: 5%;
+    top: 15%;*/
+    height: 170px;
+    margin: auto;
+}
+
+.tt-dropdown-menu{
+    background-color:white;
+}

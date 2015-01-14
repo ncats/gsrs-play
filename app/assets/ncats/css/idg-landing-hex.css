@@ -1,0 +1,187 @@
+@CHARSET "UTF-8";
+html, body {
+  height: 100%;
+/*  background-color: #FAFAFA;*/
+}
+
+h1, .h1 {
+font-size: 36pt;
+margin-top:-10px;
+}
+        
+#main-box{
+        padding-top:50px;
+        height:100%;
+        background-color: white;
+}
+
+#demo-All2{
+        text-align:left;
+}
+
+#header{
+        background-color: #1f355c;
+}
+.head{
+        background-color: gray;
+        color: white;
+        text-align:left;
+}
+
+.column{
+        color: black;
+        text-align:left;
+
+}
+
+
+.data{
+        text-align:left;
+        background-color:white;
+                border: 1px solid gray;
+                border-bottom-width: 0px;
+                
+        
+}
+
+#results{
+        margin-top: 0px;
+        margin-bottom: 0px;
+}
+
+.alert{
+        text-align:center;
+        box-shadow: 0 0 30px gray;
+}
+
+a:hover, a:focus {
+color: white;
+text-decoration: none;
+}
+
+.big{
+font-size: 9em;
+}
+        
+
+.tt-dropdown-menu{
+        background-color:white;
+}
+/* .main-search{ */
+/*      width:60%; */
+/* } */
+
+#search-row{
+        margin-left: 5%;
+margin-top: -2%;
+}
+
+#small-box{
+        display:none;
+}
+
+
+@media (max-width: 768px){
+#main-box{
+        display:none;
+}
+        #small-box{
+        display:initial;
+}
+.badge{
+        position: absolute;
+top: 75%;
+left: 47%;
+}
+}
+
+@media (min-width: 768px){
+#disease{
+        margin-left: 3%;
+}
+#target {
+margin-left: -10%;
+margin-top: -5%;
+}
+#logo {
+margin-left: -5%;
+margin-top: -6%;
+}
+#ligand{
+        margin-left: 3%;
+margin-top: -5%;
+}
+.badge {
+margin-top: 85%;
+margin-left: 45%;
+}
+}
+
+@media (min-width: 992px){
+        #up{
+        margin-top:-70px;
+        }
+        #ligand{
+margin-top: -85px;
+margin-left: 11%;
+        }
+        #disease{
+        margin-left:10%;
+}
+#target {
+margin-left: -34%;
+margin-top: -1%;
+}
+        .badge {
+margin-top: 85%;
+margin-left: 45%;
+}
+#logo{
+        margin-left: -10%;
+        margin-top: -2%;
+}
+}
+@media (min-width: 1200px){
+        #up{
+        margin-top:-70px;
+        }
+#ligand{
+        margin-left: 10%;
+        margin-top: -70px;
+}
+#disease{
+        margin-left:10%;
+}
+        
+#target{
+        margin-left:-34%;
+        margin-top: initial;
+}
+
+#pharos{
+        margin-top:-8%;
+}
+
+#logo{
+margin-left: -10%;
+margin-top: 5%;
+}
+.badge{
+font-size: 16px;
+margin-top: 75%;
+margin-left: 40%;
+}
+}
+
+.twitter-typeahead {
+    width: 100% !important
+    ;
+    height: 20px !important
+    ;
+}
+
+.tt-dropdown-menu {
+    top: 180% !important
+    ;
+    background-color: rgba(255, 255, 255, .9);
+}

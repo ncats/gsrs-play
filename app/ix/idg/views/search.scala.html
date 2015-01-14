@@ -17,7 +17,7 @@ diseases: List[Disease], totalDiseases: Int)
 
 @main("Search: "+query, null){
 <ol class="breadcrumb">
-  <li><a href="@ix.idg.controllers.routes.IDGApp.index()">Home</li>
+  <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
 </ol>
 }{
 <div class="container-fluid">
@@ -40,7 +40,11 @@ diseases: List[Disease], totalDiseases: Int)
 	<span><h4>Query:<code>@query</code></h4></span>
       </div>
       <div class="btn-group" role="group">
-	<h3><span class="label label-default">@total entities found.</span></h3>
+	@if(total == 1) {
+	<h3><span class="label label-default">@total result found.</span></h3>
+	} else {
+        <h3><span class="label label-default">@total results found.</span></h3>
+	}
       </div>
       <div class="panel panel-default">
 	<div class="panel-body">
@@ -84,6 +88,7 @@ diseases: List[Disease], totalDiseases: Int)
 	  <a href="@ix.idg.controllers.routes.IDGApp.diseases(query, 10, 1)">@totalDiseases disease(s)</a>
 	</div>
     </div>
-  </div>
+      </div>
+    </div>
 </div>
 }

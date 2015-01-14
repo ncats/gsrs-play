@@ -6,3 +6,10 @@
     content: "&raquo;";
     color: #aaa;
 }
+
+.tt-dropdown-menu {
+    background-color: rgba(255, 255, 255, .9);
+}
+
+.twitter-typeahead {
+}
