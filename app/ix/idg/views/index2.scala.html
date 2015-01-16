@@ -1,8 +1,11 @@
 @(title: String, diseases: Int, targets: Int, ligands: Int)
 
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
 <title>@title</title>
 <link rel="stylesheet"
 	href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
@@ -16,6 +19,8 @@
 <script
 	src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
 <script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("respond.js"))'></script>	
+<script
 	src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
 <script
 	src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
@@ -23,81 +28,108 @@
 	type='text/javascript'></script>
 </head>
 <body>
-  <div class="container vertical-center" id="main-box">
-    <div class="row icons">
-      <a href="@ix.idg.controllers.routes.IDGApp.diseases()">
-	<div class="col-xs-6 col-xs-offset-3 col-sm-5 col-sm-offset-3 col-md-4 col-md-offset-3 col-lg-3 col-lg-offset-2 hex" id="disease">
-	  <div>
-	    <img src="@routes.Assets.at("ncats/images/diseases.svg")" class = "off" />	    <img src="@routes.Assets.at("ncats/images/diseases-shadow.svg")" class = "on"/>
-	  </div>
-	  <span class="badge">@diseases</span>
+	<div class="container vertical-center" id="main-box">
+		<div class="row icons">
+			<a href="@ix.idg.controllers.routes.IDGApp.diseases()">
+				<div
+					class="col-xs-6 col-xs-offset-3 col-sm-5 col-sm-offset-3 col-md-4 col-md-offset-3 col-lg-3 col-lg-offset-2 hex"
+					id="disease">
+					<!--[if gte IE 9]><!-->
+					<img src="@routes.Assets.at("ncats/images/diseases.svg")" class="off" /> <img
+						src="@routes.Assets.at("ncats/images/diseases-shadow.svg")" class="on" />
+					<!--<![endif]-->
+
+					<!--[if lte IE 8]>
+   <img src="@routes.Assets.at("ncats/images/diseases.png")" class = "off" />    
+   <img src="@routes.Assets.at("ncats/images/diseases-shadow.png")" class = "on"/>
+<![endif]-->
+					<span class="badge">@diseases</span>
+				</div>
+			</a>
+		</div>
+
+		<div class="row icons">
+			<a href="@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+				<div
+					class="col-xs-6 col-xs-offset-3 col-sm-5 col-sm-offset-1  col-md-4 col-md-offset-1 col-lg-3 col-lg-offset-1 hex"
+					id="target">
+					<!--[if gte IE 9]><!-->
+					<img src="@routes.Assets.at("ncats/images/targets.svg")" class="off" /> <img
+						src="@routes.Assets.at("ncats/images/targets-shadow.svg")" class="on" />
+					<!--<![endif]-->
+
+					<!--[if lte IE 8]>
+   <img src="@routes.Assets.at("ncats/images/targets.png")" class = "off" />    
+   <img src="@routes.Assets.at("ncats/images/targets-shadow.png")" class = "on"/>
+<![endif]-->
+					<span class="badge">@targets</span>
+				</div>
+			</a>
+			<div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" id="logo">
+				<img src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'
+					class="img-responsive" id="pharos" />
+				<div class="row" id="search-row">
+					<div class="col-sm-11 col-sm-offset-1">
+						<form class="main-search" role="search" method="GET"
+							action="@ix.idg.controllers.routes.IDGApp.search(null)">
+							<div class="input-group">
+								<input type="text" class="form-control typeahead" id="search"
+									title="Search" placeholder="Search..." name="q"> <input
+									type="hidden" name="kind" value="" /> <span
+									class="input-group-btn">
+									<button class="btn btn-default" id="search" type="search"
+										value="submit">
+										<span class="fa fa-search"></span>
+									</button>
+								</span>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row icons">
+			<a href="@ix.idg.controllers.routes.IDGApp.ligands()">
+				<div
+					class="col-xs-6 col-xs-offset-3 col-sm-5 col-sm-offset-3 col-md-4 col-md-offset-3 col-lg-3 col-lg-offset-2 hex"
+					id="ligand">
+					<!--[if gte IE 9]><!-->
+					<img src="@routes.Assets.at("ncats/images/ligands.svg")" class="off" /> <img
+						src="@routes.Assets.at("ncats/images/ligands-shadow.svg")" class="on" />
+					<!--<![endif]-->
+
+					<!--[if lte IE 8]>
+   <img src="@routes.Assets.at("ncats/images/ligands.png")" class = "off" />    
+   <img src="@routes.Assets.at("ncats/images/ligands-shadow.png")" class = "on"/>
+<![endif]-->
+					<span class="badge">@ligands</span>
+				</div>
+			</a>
+		</div>
+		<div class="row">
+			<div class="col-xs-6 col-xs-offset-3" id="logo-hide">
+				<img src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'
+					class="img-responsive">
+				<div class="row">
+					<div class="col-xs-12">
+						<form class="main-search" role="search" method="GET"
+							action="@ix.idg.controllers.routes.IDGApp.search(null)">
+							<div class="input-group">
+								<input type="text" class="typeahead form-control" id="search"
+									title="Search" placeholder="Search..." name="q" /> <input
+									type="hidden" name="kind" value="" /> <span
+									class="input-group-btn">
+									<button class="btn btn-default" id="search" type="search"
+										value="submit">
+										<span class="fa fa-search"></span>
+									</button>
+								</span>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
-      </a>
-    </div>
-    
-    <div class="row icons">
-      <a href="@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
-	<div class="col-xs-6 col-xs-offset-3 col-sm-5 col-sm-offset-1  col-md-4 col-md-offset-1 col-lg-3 col-lg-offset-1 hex" id="target">
-	  <img src="@routes.Assets.at("ncats/images/targets.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/targets-shadow.svg")" class = "on"/>
-	  <span class="badge">@targets</span>
-	</div>
-      </a>
-      <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" id="logo">
-	<img src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")' class = "img-responsive" id="pharos" />
-	<div class="row" id="search-row">
-	  <div class="col-sm-11 col-sm-offset-1">
-	    <form class="main-search" role="search" method="GET"
-		  action="@ix.idg.controllers.routes.IDGApp.search(null)">
-	      <div class="input-group">
-		<input type="text" class="form-control typeahead" id="search"
-		       title="Search" placeholder="Search..." name="q">
-		<input type="hidden" name="kind" value="" />
-		<span class="input-group-btn">
-		  <button class="btn btn-default" id="search" type="search"
-			  value="submit">
-		    <span class="fa fa-search"></span>
-		  </button>
-		</span>
-	      </div>
-	    </form>
-	  </div>
-	</div>
-      </div>
-    </div>
-    <div class="row icons">
-      <a href="@ix.idg.controllers.routes.IDGApp.ligands()">
-	<div class="col-xs-6 col-xs-offset-3 col-sm-5 col-sm-offset-3 col-md-4 col-md-offset-3 col-lg-3 col-lg-offset-2 hex" id="ligand">
-	  <img src="@routes.Assets.at("ncats/images/ligands.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/ligands-shadow.svg")" class = "on"/>
-	  <span class="badge">@ligands</span>
-	</div>
-      </a>
-    </div>
-    <div class="row">
-      <div class="col-xs-6 col-xs-offset-3" id = "logo-hide">
-	<img src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'
-	     class="img-responsive">
-	<div class="row">
-	  <div class="col-xs-12">
-	    <form class="main-search" role="search" method="GET"
-		  action="@ix.idg.controllers.routes.IDGApp.search(null)">
-	      <div class="input-group">
-		<input type="text" class="typeahead form-control" id="search"
-		       title="Search" placeholder="Search..." name="q"/>
-		<input  type="hidden" name="kind" value="" />
-		<span class="input-group-btn">
-		  <button class="btn btn-default" id="search" type="search"
-			  value="submit">
-		    <span class="fa fa-search"></span>
-		  </button>
-		</span>
-	      </div>
-	    </form>
-	  </div>
-	</div>
-      </div>
-    </div>
-  </div>
 </body>
 </html>

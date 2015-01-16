@@ -1,5 +1,3 @@
-@CHARSET "UTF-8";
-
 @-moz-document url-prefix() {
 	.badge{
 	margin-top: 81% !important;
@@ -23,7 +21,7 @@ margin-left: 41% !important;
 	#logo-hide{
 	display:initial;
 	}
-	}
+}
 @media (min-width: 768px){	
 	#logo-hide{
 	display:none;
@@ -105,4 +103,4 @@ div.hex:hover .on {
 div.hex .on {
 	display: none;
 }
-}
+
