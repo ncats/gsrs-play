@@ -1,187 +1,108 @@
 @CHARSET "UTF-8";
-html, body {
-  height: 100%;
-/*  background-color: #FAFAFA;*/
+
+@-moz-document url-prefix() {
+	.badge{
+	margin-top: 81% !important;
+margin-left: 41% !important;
+	}	
 }
 
-h1, .h1 {
-font-size: 36pt;
-margin-top:-10px;
+@media ( max-width : 768px) {
+	@-moz-document url-prefix() {
+	.badge{
+	margin-top: 81% !important;
+margin-left: 41% !important;
+	}
 }
-        
-#main-box{
-        padding-top:50px;
-        height:100%;
-        background-color: white;
-}
-
-#demo-All2{
-        text-align:left;
-}
-
-#header{
-        background-color: #1f355c;
-}
-.head{
-        background-color: gray;
-        color: white;
-        text-align:left;
-}
-
-.column{
-        color: black;
-        text-align:left;
-
-}
-
-
-.data{
-        text-align:left;
-        background-color:white;
-                border: 1px solid gray;
-                border-bottom-width: 0px;
-                
-        
-}
-
-#results{
-        margin-top: 0px;
-        margin-bottom: 0px;
-}
-
-.alert{
-        text-align:center;
-        box-shadow: 0 0 30px gray;
-}
-
-a:hover, a:focus {
-color: white;
-text-decoration: none;
-}
-
-.big{
-font-size: 9em;
-}
-        
-
-.tt-dropdown-menu{
-        background-color:white;
-}
-/* .main-search{ */
-/*      width:60%; */
-/* } */
-
-#search-row{
-        margin-left: 5%;
+	.row.icons {
+		margin-bottom: 5%;
+	}
+	#logo{
+	display: none;
+	}
+	#logo-hide{
+	display:initial;
+	}
+	}
+@media (min-width: 768px){	
+	#logo-hide{
+	display:none;
+	}
+}	
+@media (min-width: 992px){
+	#target{
+	margin-left:12%;
+	margin-top:-2%;
+	}
+#ligand {
 margin-top: -2%;
 }
-
-#small-box{
-        display:none;
 }
 
-
-@media (max-width: 768px){
-#main-box{
-        display:none;
-}
-        #small-box{
-        display:initial;
-}
-.badge{
-        position: absolute;
-top: 75%;
-left: 47%;
-}
-}
-
-@media (min-width: 768px){
-#disease{
-        margin-left: 3%;
-}
-#target {
-margin-left: -10%;
-margin-top: -5%;
-}
-#logo {
-margin-left: -5%;
-margin-top: -6%;
-}
-#ligand{
-        margin-left: 3%;
-margin-top: -5%;
-}
-.badge {
-margin-top: 85%;
-margin-left: 45%;
-}
-}
-
-@media (min-width: 992px){
-        #up{
-        margin-top:-70px;
-        }
-        #ligand{
-margin-top: -85px;
-margin-left: 11%;
-        }
-        #disease{
-        margin-left:10%;
-}
-#target {
-margin-left: -34%;
-margin-top: -1%;
-}
-        .badge {
-margin-top: 85%;
-margin-left: 45%;
-}
-#logo{
-        margin-left: -10%;
-        margin-top: -2%;
-}
-}
 @media (min-width: 1200px){
-        #up{
-        margin-top:-70px;
-        }
-#ligand{
-        margin-left: 10%;
-        margin-top: -70px;
+	#target{
+	margin-top: -2%;
+	margin-left: 7.333333333333332%;
+	}
+	#ligand{
+margin-top: -2%;
+margin-left: 16.666666666666664%;
 }
-#disease{
-        margin-left:10%;
-}
-        
-#target{
-        margin-left:-34%;
-        margin-top: initial;
+	}
+
+		
+#main-box {
+	padding-top: 50px;
+	background-color: white;
 }
 
-#pharos{
-        margin-top:-8%;
+#search-row {
+	margin-left: 5%;
+	margin-top: -2%;
 }
 
-#logo{
-margin-left: -10%;
-margin-top: 5%;
+.badge {
+	position: inherit;
+	margin-top: 75%;
+	margin-left: 35.6%;
+	background-color: white;
+	font-size: 16px;
+	width: 20%;
 }
-.badge{
-font-size: 16px;
-margin-top: 75%;
-margin-left: 40%;
+
+#disease .badge {
+	color: #337ab7;
 }
+
+#target .badge {
+	color: #41b880;
+}
+
+#ligand .badge {
+	color: #d9534f;
 }
 
 .twitter-typeahead {
-    width: 100% !important
-    ;
-    height: 20px !important
-    ;
+	width: 100% !important;
+	height: 20px !important;
 }
 
 .tt-dropdown-menu {
-    top: 180% !important
-    ;
-    background-color: rgba(255, 255, 255, .9);
+	top: 180% !important;
+	background-color: rgba(255, 255, 255, .9);
+}
+
+.on, .off {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+div.hex:hover .on {
+	display: initial;
+}
+
+div.hex .on {
+	display: none;
+}
 }
