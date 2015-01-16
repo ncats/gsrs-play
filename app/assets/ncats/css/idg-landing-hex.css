@@ -17,6 +17,12 @@ margin-left: 41% !important;
 	#logo-hide{
 	display:initial;
 	}
+	.badge{
+	font-size: 12px !important;
+margin-top: 75% !important;
+margin-left: 30% !important;
+	
+	}
 	}
 @media (min-width: 768px){	
 	#logo-hide{
