@@ -1,24 +1,37 @@
+<script>
 $(document).ready(function () {
     var target = new Bloodhound({
         datumTokenizer: function(d) {
             return Bloodhound.tokenizers.whitespace(d.key);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/suggest/Target?q=%QUERY',
+        remote: {
+          wildcard: 'QUERY',
+          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Target", "QUERY",10)'
+        }
+/*
+remote: '/api/suggest/Target?q=%QUERY',
+*/
     });
     var disease = new Bloodhound({
         datumTokenizer: function(d) {
             return Bloodhound.tokenizers.whitespace(d.key);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/suggest/Disease?q=%QUERY',
+        remote: {
+          wildcard: 'QUERY',
+          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Disease", "QUERY",10)'
+        }
     });
     var gene = new Bloodhound({
         datumTokenizer: function(d) {
             return Bloodhound.tokenizers.whitespace(d.key);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/suggest/Gene?q=%QUERY',
+        remote: {
+          wildcard: 'QUERY',
+          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Gene", "QUERY",10)'
+        }
     });
     var mesh = new Bloodhound({
         datumTokenizer: function(d) {
@@ -42,14 +55,14 @@ $(document).ready(function () {
         displayKey: 'key',
         source: target.ttAdapter(),
         templates: {
-            suggestion: Handlebars.compile('<p><img width="20" src="/ix/assets/ncats/images/Target-badge-square.png"/> {{key}}</p>')
+        suggestion: Handlebars.compile('<p><img width="20" src="@routes.Assets.at("ncats/images/Target-badge-square.png")"/> {{key}}</p>')
         }       
     }, {
         name: 'Disease',
         displayKey: 'key',
         source: disease.ttAdapter(),
         templates: {
-            suggestion: Handlebars.compile('<p><img width="20" src="/ix/assets/ncats/images/Disease-badge-square.png"/> {{key}}</p>')
+        suggestion: Handlebars.compile('<p><img width="20" src="@routes.Assets.at("ncats/images/Disease-badge-square.png")"/> {{key}}</p>')
         }
     }, {
         name: 'Gene',
@@ -85,3 +98,4 @@ $(document).ready(function () {
         console.log('typeahead closed!');
     });
 });
+</script>

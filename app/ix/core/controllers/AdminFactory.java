@@ -153,19 +153,15 @@ public class AdminFactory extends Controller {
     public static Result createTest1 () {
         Principal user1 = new Principal ("jdoe@army.mil");
         user1.username = "Joe Doe";
-        user1.pkey = pkey ();
 
         Principal user2 = new Principal ("jdoe@navy.mil");
         user2.username = "Jane Doe";
-        user2.pkey = pkey ();
         
         Principal user3 = new Principal ("jdoe@marine.mil");
         user3.username = "Jimmy Doe";
-        user3.pkey = pkey ();
 
         Principal user4 = new Principal (true, "jdean@nsa.mil");
         user4.username = "Jimmy Dean";
-        user4.pkey = pkey ();
 
         Principal user5 = new Principal ();
         

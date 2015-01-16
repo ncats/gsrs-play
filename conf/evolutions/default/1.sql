@@ -27,15 +27,15 @@ create table ix_core_attribute (
 ;
 
 create table ix_ginas_citation (
-  id                        bigint not null,
+  uuid                      varchar(40) not null,
   created                   timestamp,
   modified                  timestamp,
-  uuid                      varchar(40) not null,
+  deprecated                boolean,
   citation                  varchar(255),
   doc_type                  varchar(255),
   public_domain             boolean,
   document_date             timestamp,
-  constraint pk_ix_ginas_citation primary key (id))
+  constraint pk_ix_ginas_citation primary key (uuid))
 ;
 
 create table ix_ncats_clinical_trial (
@@ -86,10 +86,23 @@ create table ix_core_curation (
   constraint pk_ix_core_curation primary key (id))
 ;
 
-create table ix_core_etag (
+create table ix_idg_disease (
   id                        bigint not null,
+  namespace_id              bigint,
   created                   timestamp,
   modified                  timestamp,
+  deprecated                boolean,
+  name                      varchar(1024),
+  description               clob,
+  constraint pk_ix_idg_disease primary key (id))
+;
+
+create table ix_core_etag (
+  id                        bigint not null,
+  namespace_id              bigint,
+  created                   timestamp,
+  modified                  timestamp,
+  deprecated                boolean,
   etag                      varchar(16),
   uri                       varchar(4000),
   path                      varchar(255),
@@ -137,17 +150,6 @@ create table ix_ncats_clinical_eligibility (
   constraint pk_ix_ncats_clinical_eligibility primary key (id))
 ;
 
-create table ix_idg_entity (
-  dtype                     varchar(10) not null,
-  id                        bigint not null,
-  name                      varchar(1024),
-  description               clob,
-  organism_id               bigint,
-  idg_family                varchar(128),
-  idg_class                 varchar(10),
-  constraint pk_ix_idg_entity primary key (id))
-;
-
 create table ix_core_event (
   id                        bigint not null,
   title                     varchar(1024),
@@ -178,6 +180,17 @@ create table ix_ncats_funding (
   ic                        varchar(255),
   amount                    integer,
   constraint pk_ix_ncats_funding primary key (id))
+;
+
+create table ix_idg_gene (
+  id                        bigint not null,
+  namespace_id              bigint,
+  created                   timestamp,
+  modified                  timestamp,
+  deprecated                boolean,
+  name                      varchar(1024),
+  description               clob,
+  constraint pk_ix_idg_gene primary key (id))
 ;
 
 create table ix_ncats_grant (
@@ -254,22 +267,31 @@ create table ix_core_journal (
   constraint pk_ix_core_journal primary key (id))
 ;
 
-create table ix_ginas_name (
+create table ix_idg_ligand (
   id                        bigint not null,
+  namespace_id              bigint,
   created                   timestamp,
   modified                  timestamp,
+  deprecated                boolean,
+  name                      varchar(1024),
+  description               clob,
+  constraint pk_ix_idg_ligand primary key (id))
+;
+
+create table ix_ginas_name (
   uuid                      varchar(40) not null,
+  created                   timestamp,
+  modified                  timestamp,
+  deprecated                boolean,
   name                      varchar(512) not null,
   type                      varchar(10),
   public_domain             boolean,
   preferred                 boolean,
-  constraint pk_ix_ginas_name primary key (id))
+  constraint pk_ix_ginas_name primary key (uuid))
 ;
 
 create table ix_core_namespace (
   id                        bigint not null,
-  created                   timestamp,
-  modified                  timestamp,
   name                      varchar(255),
   location                  varchar(1024),
   modifier                  integer,
@@ -318,9 +340,10 @@ create table ix_core_payload (
 create table ix_core_predicate (
   dtype                     varchar(10) not null,
   id                        bigint not null,
+  namespace_id              bigint,
   created                   timestamp,
   modified                  timestamp,
-  namespace_id              bigint,
+  deprecated                boolean,
   subject_id                bigint,
   predicate                 varchar(255) not null,
   constraint pk_ix_core_predicate primary key (id))
@@ -329,13 +352,14 @@ create table ix_core_predicate (
 create table ix_core_principal (
   dtype                     varchar(10) not null,
   id                        bigint not null,
+  namespace_id              bigint,
   created                   timestamp,
   modified                  timestamp,
+  deprecated                boolean,
   username                  varchar(255),
   email                     varchar(255),
   admin                     boolean,
   uri                       varchar(1024),
-  pkey                      varchar(255),
   selfie_id                 bigint,
   lastname                  varchar(255),
   forename                  varchar(255),
@@ -356,7 +380,6 @@ create table ix_core_principal (
   role                      integer,
   constraint ck_ix_core_principal_dept check (dept in (0,1,2,3)),
   constraint ck_ix_core_principal_role check (role in (0,1,2,3,4)),
-  constraint uq_ix_core_principal_pkey unique (pkey),
   constraint pk_ix_core_principal primary key (id))
 ;
 
@@ -428,10 +451,10 @@ create table ix_core_stitch (
 ;
 
 create table ix_ginas_structure (
-  id                        bigint not null,
+  uuid                      varchar(40) not null,
   created                   timestamp,
   modified                  timestamp,
-  uuid                      varchar(40) not null,
+  deprecated                boolean,
   molfile                   clob,
   stereo_chemistry          integer,
   optical_activity          integer,
@@ -445,32 +468,46 @@ create table ix_ginas_structure (
   count                     integer,
   constraint ck_ix_ginas_structure_stereo_chemistry check (stereo_chemistry in (0,1,2,3,4,5)),
   constraint ck_ix_ginas_structure_optical_activity check (optical_activity in (0,1,2,3,4)),
-  constraint pk_ix_ginas_structure primary key (id))
+  constraint pk_ix_ginas_structure primary key (uuid))
 ;
 
 create table ix_ginas_substance (
   dtype                     varchar(10) not null,
-  id                        bigint not null,
+  uuid                      varchar(40) not null,
   created                   timestamp,
   modified                  timestamp,
-  uuid                      varchar(40) not null,
+  deprecated                boolean,
   substance_class           integer,
-  structure_id              bigint,
+  structure_uuid            varchar(40),
   protein_type              varchar(32),
   sequence_origin           varchar(128),
   sequence_type             varchar(32),
   constraint ck_ix_ginas_substance_substance_class check (substance_class in (0,1,2,3,4,5,6,7,8,9,10)),
-  constraint pk_ix_ginas_substance primary key (id))
+  constraint pk_ix_ginas_substance primary key (uuid))
 ;
 
 create table ix_ginas_subunit (
-  id                        bigint not null,
+  uuid                      varchar(40) not null,
   created                   timestamp,
   modified                  timestamp,
-  uuid                      varchar(40) not null,
+  deprecated                boolean,
   sequence                  clob,
   position                  integer,
-  constraint pk_ix_ginas_subunit primary key (id))
+  constraint pk_ix_ginas_subunit primary key (uuid))
+;
+
+create table ix_idg_target (
+  id                        bigint not null,
+  namespace_id              bigint,
+  created                   timestamp,
+  modified                  timestamp,
+  deprecated                boolean,
+  name                      varchar(1024),
+  description               clob,
+  organism_id               bigint,
+  idg_family                varchar(128),
+  idg_class                 varchar(10),
+  constraint pk_ix_idg_target primary key (id))
 ;
 
 create table ix_core_value (
@@ -499,12 +536,12 @@ create table ix_core_value (
 
 create table ix_core_xref (
   id                        bigint not null,
+  namespace_id              bigint,
   created                   timestamp,
   modified                  timestamp,
-  namespace_id              bigint,
+  deprecated                boolean,
   refid                     bigint not null,
   kind                      varchar(512) not null,
-  deprecated                boolean,
   constraint pk_ix_core_xref primary key (id))
 ;
 
@@ -522,9 +559,9 @@ create table ix_core_acl_group (
 ;
 
 create table ix_ginas_citation_tag (
-  ix_ginas_citation_id           bigint not null,
+  ix_ginas_citation_uuid         varchar(40) not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_ginas_citation_tag primary key (ix_ginas_citation_id, ix_core_value_id))
+  constraint pk_ix_ginas_citation_tag primary key (ix_ginas_citation_uuid, ix_core_value_id))
 ;
 
 create table ix_ncats_clinical_trial_keyword (
@@ -587,6 +624,30 @@ create table _ix_ncats_cca46885_3 (
   constraint pk__ix_ncats_cca46885_3 primary key (ix_ncats_clinical_condition_wikipedia_id, ix_core_value_id))
 ;
 
+create table ix_idg_disease_synonym (
+  ix_idg_disease_synonym_id      bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_disease_synonym primary key (ix_idg_disease_synonym_id, ix_core_value_id))
+;
+
+create table ix_idg_disease_property (
+  ix_idg_disease_id              bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_disease_property primary key (ix_idg_disease_id, ix_core_value_id))
+;
+
+create table ix_idg_disease_link (
+  ix_idg_disease_id              bigint not null,
+  ix_core_xref_id                bigint not null,
+  constraint pk_ix_idg_disease_link primary key (ix_idg_disease_id, ix_core_xref_id))
+;
+
+create table ix_idg_disease_publication (
+  ix_idg_disease_id              bigint not null,
+  ix_core_publication_id         bigint not null,
+  constraint pk_ix_idg_disease_publication primary key (ix_idg_disease_id, ix_core_publication_id))
+;
+
 create table _ix_ncats_840372f9_1 (
   ix_ncats_clinical_eligibility_inclusion_id bigint not null,
   ix_core_value_id               bigint not null,
@@ -599,40 +660,34 @@ create table _ix_ncats_840372f9_2 (
   constraint pk__ix_ncats_840372f9_2 primary key (ix_ncats_clinical_eligibility_exclusion_id, ix_core_value_id))
 ;
 
-create table ix_idg_entity_synonym (
-  ix_idg_entity_synonym_id       bigint not null,
-  ix_core_value_id               bigint not null,
-  constraint pk_ix_idg_entity_synonym primary key (ix_idg_entity_synonym_id, ix_core_value_id))
-;
-
-create table ix_idg_entity_property (
-  ix_idg_entity_id               bigint not null,
-  ix_core_value_id               bigint not null,
-  constraint pk_ix_idg_entity_property primary key (ix_idg_entity_id, ix_core_value_id))
-;
-
-create table ix_idg_entity_link (
-  ix_idg_entity_id               bigint not null,
-  ix_core_xref_id                bigint not null,
-  constraint pk_ix_idg_entity_link primary key (ix_idg_entity_id, ix_core_xref_id))
-;
-
-create table ix_idg_entity_publication (
-  ix_idg_entity_id               bigint not null,
-  ix_core_publication_id         bigint not null,
-  constraint pk_ix_idg_entity_publication primary key (ix_idg_entity_id, ix_core_publication_id))
-;
-
-create table ix_idg_ligand (
-  ix_idg_entity_id               bigint not null,
-  ix_ginas_structure_id          bigint not null,
-  constraint pk_ix_idg_ligand primary key (ix_idg_entity_id, ix_ginas_structure_id))
-;
-
 create table ix_core_event_figure (
   ix_core_event_id               bigint not null,
   ix_core_figure_id              bigint not null,
   constraint pk_ix_core_event_figure primary key (ix_core_event_id, ix_core_figure_id))
+;
+
+create table ix_idg_gene_synonym (
+  ix_idg_gene_synonym_id         bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_gene_synonym primary key (ix_idg_gene_synonym_id, ix_core_value_id))
+;
+
+create table ix_idg_gene_property (
+  ix_idg_gene_id                 bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_gene_property primary key (ix_idg_gene_id, ix_core_value_id))
+;
+
+create table ix_idg_gene_link (
+  ix_idg_gene_id                 bigint not null,
+  ix_core_xref_id                bigint not null,
+  constraint pk_ix_idg_gene_link primary key (ix_idg_gene_id, ix_core_xref_id))
+;
+
+create table ix_idg_gene_publication (
+  ix_idg_gene_id                 bigint not null,
+  ix_core_publication_id         bigint not null,
+  constraint pk_ix_idg_gene_publication primary key (ix_idg_gene_id, ix_core_publication_id))
 ;
 
 create table ix_ncats_grant_investigator (
@@ -677,10 +732,40 @@ create table _ix_ncats_4a162ae3_3 (
   constraint pk__ix_ncats_4a162ae3_3 primary key (ix_ncats_clinical_intervention_id, ix_ncats_clinical_cohort_id))
 ;
 
-create table ix_ginas_name_domain (
-  ix_ginas_name_id               bigint not null,
+create table ix_idg_ligand_synonym (
+  ix_idg_ligand_synonym_id       bigint not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_ginas_name_domain primary key (ix_ginas_name_id, ix_core_value_id))
+  constraint pk_ix_idg_ligand_synonym primary key (ix_idg_ligand_synonym_id, ix_core_value_id))
+;
+
+create table ix_idg_ligand_property (
+  ix_idg_ligand_id               bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_ligand_property primary key (ix_idg_ligand_id, ix_core_value_id))
+;
+
+create table ix_idg_ligand_link (
+  ix_idg_ligand_id               bigint not null,
+  ix_core_xref_id                bigint not null,
+  constraint pk_ix_idg_ligand_link primary key (ix_idg_ligand_id, ix_core_xref_id))
+;
+
+create table ix_idg_ligand_publication (
+  ix_idg_ligand_id               bigint not null,
+  ix_core_publication_id         bigint not null,
+  constraint pk_ix_idg_ligand_publication primary key (ix_idg_ligand_id, ix_core_publication_id))
+;
+
+create table ix_idg_ligand_structure (
+  ix_idg_ligand_id               bigint not null,
+  ix_ginas_structure_uuid        varchar(40) not null,
+  constraint pk_ix_idg_ligand_structure primary key (ix_idg_ligand_id, ix_ginas_structure_uuid))
+;
+
+create table ix_ginas_name_domain (
+  ix_ginas_name_uuid             varchar(40) not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_ginas_name_domain primary key (ix_ginas_name_uuid, ix_core_value_id))
 ;
 
 create table ix_core_payload_attribute (
@@ -774,57 +859,81 @@ create table ix_core_stitch_attribute (
 ;
 
 create table ix_ginas_structure_hash (
-  ix_ginas_structure_id          bigint not null,
+  ix_ginas_structure_uuid        varchar(40) not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_ginas_structure_hash primary key (ix_ginas_structure_id, ix_core_value_id))
+  constraint pk_ix_ginas_structure_hash primary key (ix_ginas_structure_uuid, ix_core_value_id))
 ;
 
 create table ix_ginas_structure_fingerprint (
-  ix_ginas_structure_id          bigint not null,
+  ix_ginas_structure_uuid        varchar(40) not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_ginas_structure_fingerprint primary key (ix_ginas_structure_id, ix_core_value_id))
+  constraint pk_ix_ginas_structure_fingerprint primary key (ix_ginas_structure_uuid, ix_core_value_id))
 ;
 
 create table ix_ginas_structure_citation (
-  ix_ginas_structure_id          bigint not null,
-  ix_ginas_citation_id           bigint not null,
-  constraint pk_ix_ginas_structure_citation primary key (ix_ginas_structure_id, ix_ginas_citation_id))
+  ix_ginas_structure_uuid        varchar(40) not null,
+  ix_ginas_citation_uuid         varchar(40) not null,
+  constraint pk_ix_ginas_structure_citation primary key (ix_ginas_structure_uuid, ix_ginas_citation_uuid))
 ;
 
 create table ix_ginas_substance_name (
-  ix_ginas_substance_id          bigint not null,
-  ix_ginas_name_id               bigint not null,
-  constraint pk_ix_ginas_substance_name primary key (ix_ginas_substance_id, ix_ginas_name_id))
+  ix_ginas_substance_uuid        varchar(40) not null,
+  ix_ginas_name_uuid             varchar(40) not null,
+  constraint pk_ix_ginas_substance_name primary key (ix_ginas_substance_uuid, ix_ginas_name_uuid))
 ;
 
 create table ix_ginas_substance_code (
-  ix_ginas_substance_id          bigint not null,
+  ix_ginas_substance_uuid        varchar(40) not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_ginas_substance_code primary key (ix_ginas_substance_id, ix_core_value_id))
+  constraint pk_ix_ginas_substance_code primary key (ix_ginas_substance_uuid, ix_core_value_id))
 ;
 
 create table ix_ginas_substance_property (
-  ix_ginas_substance_id          bigint not null,
+  ix_ginas_substance_uuid        varchar(40) not null,
   ix_core_value_id               bigint not null,
-  constraint pk_ix_ginas_substance_property primary key (ix_ginas_substance_id, ix_core_value_id))
+  constraint pk_ix_ginas_substance_property primary key (ix_ginas_substance_uuid, ix_core_value_id))
 ;
 
 create table ix_ginas_substance_citation (
-  ix_ginas_substance_id          bigint not null,
-  ix_ginas_citation_id           bigint not null,
-  constraint pk_ix_ginas_substance_citation primary key (ix_ginas_substance_id, ix_ginas_citation_id))
+  ix_ginas_substance_uuid        varchar(40) not null,
+  ix_ginas_citation_uuid         varchar(40) not null,
+  constraint pk_ix_ginas_substance_citation primary key (ix_ginas_substance_uuid, ix_ginas_citation_uuid))
 ;
 
 create table ix_ginas_substance_moiety (
-  ix_ginas_substance_id          bigint not null,
-  ix_ginas_structure_id          bigint not null,
-  constraint pk_ix_ginas_substance_moiety primary key (ix_ginas_substance_id, ix_ginas_structure_id))
+  ix_ginas_substance_uuid        varchar(40) not null,
+  ix_ginas_structure_uuid        varchar(40) not null,
+  constraint pk_ix_ginas_substance_moiety primary key (ix_ginas_substance_uuid, ix_ginas_structure_uuid))
 ;
 
 create table ix_ginas_protein_subunit (
-  ix_ginas_substance_id          bigint not null,
-  ix_ginas_subunit_id            bigint not null,
-  constraint pk_ix_ginas_protein_subunit primary key (ix_ginas_substance_id, ix_ginas_subunit_id))
+  ix_ginas_substance_uuid        varchar(40) not null,
+  ix_ginas_subunit_uuid          varchar(40) not null,
+  constraint pk_ix_ginas_protein_subunit primary key (ix_ginas_substance_uuid, ix_ginas_subunit_uuid))
+;
+
+create table ix_idg_target_synonym (
+  ix_idg_target_synonym_id       bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_target_synonym primary key (ix_idg_target_synonym_id, ix_core_value_id))
+;
+
+create table ix_idg_target_property (
+  ix_idg_target_id               bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_idg_target_property primary key (ix_idg_target_id, ix_core_value_id))
+;
+
+create table ix_idg_target_link (
+  ix_idg_target_id               bigint not null,
+  ix_core_xref_id                bigint not null,
+  constraint pk_ix_idg_target_link primary key (ix_idg_target_id, ix_core_xref_id))
+;
+
+create table ix_idg_target_publication (
+  ix_idg_target_id               bigint not null,
+  ix_core_publication_id         bigint not null,
+  constraint pk_ix_idg_target_publication primary key (ix_idg_target_id, ix_core_publication_id))
 ;
 
 create table ix_core_xref_property (
@@ -838,8 +947,6 @@ create sequence ix_ncats_clinical_arm_seq;
 
 create sequence ix_core_attribute_seq;
 
-create sequence ix_ginas_citation_seq;
-
 create sequence ix_ncats_clinical_trial_seq;
 
 create sequence ix_ncats_clinical_cohort_seq;
@@ -848,19 +955,21 @@ create sequence ix_ncats_clinical_condition_seq;
 
 create sequence ix_core_curation_seq;
 
+create sequence ix_idg_disease_seq;
+
 create sequence ix_core_etag_seq;
 
 create sequence ix_core_etagref_seq;
 
 create sequence ix_ncats_clinical_eligibility_seq;
 
-create sequence ix_idg_entity_seq;
-
 create sequence ix_core_event_seq;
 
 create sequence ix_core_figure_seq;
 
 create sequence ix_ncats_funding_seq;
+
+create sequence ix_idg_gene_seq;
 
 create sequence ix_ncats_grant_seq;
 
@@ -872,7 +981,7 @@ create sequence ix_core_investigator_seq;
 
 create sequence ix_core_journal_seq;
 
-create sequence ix_ginas_name_seq;
+create sequence ix_idg_ligand_seq;
 
 create sequence ix_core_namespace_seq;
 
@@ -900,11 +1009,7 @@ create sequence ix_core_role_seq;
 
 create sequence ix_core_stitch_seq;
 
-create sequence ix_ginas_structure_seq;
-
-create sequence ix_ginas_substance_seq;
-
-create sequence ix_ginas_subunit_seq;
+create sequence ix_idg_target_seq;
 
 create sequence ix_core_value_seq;
 
@@ -916,38 +1021,50 @@ alter table ix_ncats_clinical_trial add constraint fk_ix_ncats_clinical_trial_el
 create index ix_ix_ncats_clinical_trial_eli_2 on ix_ncats_clinical_trial (eligibility_id);
 alter table ix_core_curation add constraint fk_ix_core_curation_curator_3 foreign key (curator_id) references ix_core_principal (id) on delete restrict on update restrict;
 create index ix_ix_core_curation_curator_3 on ix_core_curation (curator_id);
-alter table ix_core_etagref add constraint fk_ix_core_etagref_etag_4 foreign key (etag_id) references ix_core_etag (id) on delete restrict on update restrict;
-create index ix_ix_core_etagref_etag_4 on ix_core_etagref (etag_id);
-alter table ix_core_edit add constraint fk_ix_core_edit_editor_5 foreign key (editor_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_edit_editor_5 on ix_core_edit (editor_id);
-alter table ix_idg_entity add constraint fk_ix_idg_entity_organism_6 foreign key (organism_id) references ix_core_value (id) on delete restrict on update restrict;
-create index ix_ix_idg_entity_organism_6 on ix_idg_entity (organism_id);
-alter table ix_core_figure add constraint fk_ix_core_figure_parent_7 foreign key (parent_id) references ix_core_figure (id) on delete restrict on update restrict;
-create index ix_ix_core_figure_parent_7 on ix_core_figure (parent_id);
-alter table ix_ncats_funding add constraint fk_ix_ncats_funding_ix_ncats_g_8 foreign key (grant_id) references ix_ncats_grant (id) on delete restrict on update restrict;
-create index ix_ix_ncats_funding_ix_ncats_g_8 on ix_ncats_funding (grant_id);
-alter table ix_core_investigator add constraint fk_ix_core_investigator_organi_9 foreign key (organization_id) references ix_core_organization (id) on delete restrict on update restrict;
-create index ix_ix_core_investigator_organi_9 on ix_core_investigator (organization_id);
-alter table ix_core_predicate add constraint fk_ix_core_predicate_namespac_10 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_predicate_namespac_10 on ix_core_predicate (namespace_id);
-alter table ix_core_predicate add constraint fk_ix_core_predicate_subject_11 foreign key (subject_id) references ix_core_xref (id) on delete restrict on update restrict;
-create index ix_ix_core_predicate_subject_11 on ix_core_predicate (subject_id);
-alter table ix_core_principal add constraint fk_ix_core_principal_selfie_12 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
-create index ix_ix_core_principal_selfie_12 on ix_core_principal (selfie_id);
-alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_p_13 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
-create index ix_ix_core_processingstatus_p_13 on ix_core_processingstatus (payload_id);
-alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_14 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
-create index ix_ix_ncats_project_curation_14 on ix_ncats_project (curation_id);
-alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_15 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_pubauthor_author_15 on ix_core_pubauthor (author_id);
-alter table ix_core_publication add constraint fk_ix_core_publication_journa_16 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
-create index ix_ix_core_publication_journa_16 on ix_core_publication (journal_id);
-alter table ix_core_role add constraint fk_ix_core_role_principal_17 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_role_principal_17 on ix_core_role (principal_id);
-alter table ix_ginas_substance add constraint fk_ix_ginas_substance_structu_18 foreign key (structure_id) references ix_ginas_structure (id) on delete restrict on update restrict;
-create index ix_ix_ginas_substance_structu_18 on ix_ginas_substance (structure_id);
-alter table ix_core_xref add constraint fk_ix_core_xref_namespace_19 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_xref_namespace_19 on ix_core_xref (namespace_id);
+alter table ix_idg_disease add constraint fk_ix_idg_disease_namespace_4 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_idg_disease_namespace_4 on ix_idg_disease (namespace_id);
+alter table ix_core_etag add constraint fk_ix_core_etag_namespace_5 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_etag_namespace_5 on ix_core_etag (namespace_id);
+alter table ix_core_etagref add constraint fk_ix_core_etagref_etag_6 foreign key (etag_id) references ix_core_etag (id) on delete restrict on update restrict;
+create index ix_ix_core_etagref_etag_6 on ix_core_etagref (etag_id);
+alter table ix_core_edit add constraint fk_ix_core_edit_editor_7 foreign key (editor_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_edit_editor_7 on ix_core_edit (editor_id);
+alter table ix_core_figure add constraint fk_ix_core_figure_parent_8 foreign key (parent_id) references ix_core_figure (id) on delete restrict on update restrict;
+create index ix_ix_core_figure_parent_8 on ix_core_figure (parent_id);
+alter table ix_ncats_funding add constraint fk_ix_ncats_funding_ix_ncats_g_9 foreign key (grant_id) references ix_ncats_grant (id) on delete restrict on update restrict;
+create index ix_ix_ncats_funding_ix_ncats_g_9 on ix_ncats_funding (grant_id);
+alter table ix_idg_gene add constraint fk_ix_idg_gene_namespace_10 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_idg_gene_namespace_10 on ix_idg_gene (namespace_id);
+alter table ix_core_investigator add constraint fk_ix_core_investigator_organ_11 foreign key (organization_id) references ix_core_organization (id) on delete restrict on update restrict;
+create index ix_ix_core_investigator_organ_11 on ix_core_investigator (organization_id);
+alter table ix_idg_ligand add constraint fk_ix_idg_ligand_namespace_12 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_idg_ligand_namespace_12 on ix_idg_ligand (namespace_id);
+alter table ix_core_predicate add constraint fk_ix_core_predicate_namespac_13 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_predicate_namespac_13 on ix_core_predicate (namespace_id);
+alter table ix_core_predicate add constraint fk_ix_core_predicate_subject_14 foreign key (subject_id) references ix_core_xref (id) on delete restrict on update restrict;
+create index ix_ix_core_predicate_subject_14 on ix_core_predicate (subject_id);
+alter table ix_core_principal add constraint fk_ix_core_principal_namespac_15 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_principal_namespac_15 on ix_core_principal (namespace_id);
+alter table ix_core_principal add constraint fk_ix_core_principal_selfie_16 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
+create index ix_ix_core_principal_selfie_16 on ix_core_principal (selfie_id);
+alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_p_17 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
+create index ix_ix_core_processingstatus_p_17 on ix_core_processingstatus (payload_id);
+alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_18 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_ncats_project_curation_18 on ix_ncats_project (curation_id);
+alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_19 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_pubauthor_author_19 on ix_core_pubauthor (author_id);
+alter table ix_core_publication add constraint fk_ix_core_publication_journa_20 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
+create index ix_ix_core_publication_journa_20 on ix_core_publication (journal_id);
+alter table ix_core_role add constraint fk_ix_core_role_principal_21 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_role_principal_21 on ix_core_role (principal_id);
+alter table ix_ginas_substance add constraint fk_ix_ginas_substance_structu_22 foreign key (structure_uuid) references ix_ginas_structure (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_substance_structu_22 on ix_ginas_substance (structure_uuid);
+alter table ix_idg_target add constraint fk_ix_idg_target_namespace_23 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_idg_target_namespace_23 on ix_idg_target (namespace_id);
+alter table ix_idg_target add constraint fk_ix_idg_target_organism_24 foreign key (organism_id) references ix_core_value (id) on delete restrict on update restrict;
+create index ix_ix_idg_target_organism_24 on ix_idg_target (organism_id);
+alter table ix_core_xref add constraint fk_ix_core_xref_namespace_25 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_xref_namespace_25 on ix_core_xref (namespace_id);
 
 
 
@@ -959,7 +1076,7 @@ alter table ix_core_acl_group add constraint fk_ix_core_acl_group_ix_core__01 fo
 
 alter table ix_core_acl_group add constraint fk_ix_core_acl_group_ix_core__02 foreign key (ix_core_group_id) references ix_core_group (id) on delete restrict on update restrict;
 
-alter table ix_ginas_citation_tag add constraint fk_ix_ginas_citation_tag_ix_g_01 foreign key (ix_ginas_citation_id) references ix_ginas_citation (id) on delete restrict on update restrict;
+alter table ix_ginas_citation_tag add constraint fk_ix_ginas_citation_tag_ix_g_01 foreign key (ix_ginas_citation_uuid) references ix_ginas_citation (uuid) on delete restrict on update restrict;
 
 alter table ix_ginas_citation_tag add constraint fk_ix_ginas_citation_tag_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
@@ -1003,6 +1120,22 @@ alter table _ix_ncats_cca46885_3 add constraint fk__ix_ncats_cca46885_3_ix_nc_01
 
 alter table _ix_ncats_cca46885_3 add constraint fk__ix_ncats_cca46885_3_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
+alter table ix_idg_disease_synonym add constraint fk_ix_idg_disease_synonym_ix__01 foreign key (ix_idg_disease_synonym_id) references ix_idg_disease (id) on delete restrict on update restrict;
+
+alter table ix_idg_disease_synonym add constraint fk_ix_idg_disease_synonym_ix__02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_disease_property add constraint fk_ix_idg_disease_property_ix_01 foreign key (ix_idg_disease_id) references ix_idg_disease (id) on delete restrict on update restrict;
+
+alter table ix_idg_disease_property add constraint fk_ix_idg_disease_property_ix_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_disease_link add constraint fk_ix_idg_disease_link_ix_idg_01 foreign key (ix_idg_disease_id) references ix_idg_disease (id) on delete restrict on update restrict;
+
+alter table ix_idg_disease_link add constraint fk_ix_idg_disease_link_ix_cor_02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
+
+alter table ix_idg_disease_publication add constraint fk_ix_idg_disease_publication_01 foreign key (ix_idg_disease_id) references ix_idg_disease (id) on delete restrict on update restrict;
+
+alter table ix_idg_disease_publication add constraint fk_ix_idg_disease_publication_02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
+
 alter table _ix_ncats_840372f9_1 add constraint fk__ix_ncats_840372f9_1_ix_nc_01 foreign key (ix_ncats_clinical_eligibility_inclusion_id) references ix_ncats_clinical_eligibility (id) on delete restrict on update restrict;
 
 alter table _ix_ncats_840372f9_1 add constraint fk__ix_ncats_840372f9_1_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
@@ -1011,29 +1144,25 @@ alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_nc_01
 
 alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_idg_entity_synonym add constraint fk_ix_idg_entity_synonym_ix_i_01 foreign key (ix_idg_entity_synonym_id) references ix_idg_entity (id) on delete restrict on update restrict;
-
-alter table ix_idg_entity_synonym add constraint fk_ix_idg_entity_synonym_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
-
-alter table ix_idg_entity_property add constraint fk_ix_idg_entity_property_ix__01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
-
-alter table ix_idg_entity_property add constraint fk_ix_idg_entity_property_ix__02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
-
-alter table ix_idg_entity_link add constraint fk_ix_idg_entity_link_ix_idg__01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
-
-alter table ix_idg_entity_link add constraint fk_ix_idg_entity_link_ix_core_02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
-
-alter table ix_idg_entity_publication add constraint fk_ix_idg_entity_publication__01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
-
-alter table ix_idg_entity_publication add constraint fk_ix_idg_entity_publication__02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
-
-alter table ix_idg_ligand add constraint fk_ix_idg_ligand_ix_idg_entit_01 foreign key (ix_idg_entity_id) references ix_idg_entity (id) on delete restrict on update restrict;
-
-alter table ix_idg_ligand add constraint fk_ix_idg_ligand_ix_ginas_str_02 foreign key (ix_ginas_structure_id) references ix_ginas_structure (id) on delete restrict on update restrict;
-
 alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
 
 alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_02 foreign key (ix_core_figure_id) references ix_core_figure (id) on delete restrict on update restrict;
+
+alter table ix_idg_gene_synonym add constraint fk_ix_idg_gene_synonym_ix_idg_01 foreign key (ix_idg_gene_synonym_id) references ix_idg_gene (id) on delete restrict on update restrict;
+
+alter table ix_idg_gene_synonym add constraint fk_ix_idg_gene_synonym_ix_cor_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_gene_property add constraint fk_ix_idg_gene_property_ix_id_01 foreign key (ix_idg_gene_id) references ix_idg_gene (id) on delete restrict on update restrict;
+
+alter table ix_idg_gene_property add constraint fk_ix_idg_gene_property_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_gene_link add constraint fk_ix_idg_gene_link_ix_idg_ge_01 foreign key (ix_idg_gene_id) references ix_idg_gene (id) on delete restrict on update restrict;
+
+alter table ix_idg_gene_link add constraint fk_ix_idg_gene_link_ix_core_x_02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
+
+alter table ix_idg_gene_publication add constraint fk_ix_idg_gene_publication_ix_01 foreign key (ix_idg_gene_id) references ix_idg_gene (id) on delete restrict on update restrict;
+
+alter table ix_idg_gene_publication add constraint fk_ix_idg_gene_publication_ix_02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
 
 alter table ix_ncats_grant_investigator add constraint fk_ix_ncats_grant_investigato_01 foreign key (ix_ncats_grant_id) references ix_ncats_grant (id) on delete restrict on update restrict;
 
@@ -1063,7 +1192,27 @@ alter table _ix_ncats_4a162ae3_3 add constraint fk__ix_ncats_4a162ae3_3_ix_nc_01
 
 alter table _ix_ncats_4a162ae3_3 add constraint fk__ix_ncats_4a162ae3_3_ix_nc_02 foreign key (ix_ncats_clinical_cohort_id) references ix_ncats_clinical_cohort (id) on delete restrict on update restrict;
 
-alter table ix_ginas_name_domain add constraint fk_ix_ginas_name_domain_ix_gi_01 foreign key (ix_ginas_name_id) references ix_ginas_name (id) on delete restrict on update restrict;
+alter table ix_idg_ligand_synonym add constraint fk_ix_idg_ligand_synonym_ix_i_01 foreign key (ix_idg_ligand_synonym_id) references ix_idg_ligand (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_synonym add constraint fk_ix_idg_ligand_synonym_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_property add constraint fk_ix_idg_ligand_property_ix__01 foreign key (ix_idg_ligand_id) references ix_idg_ligand (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_property add constraint fk_ix_idg_ligand_property_ix__02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_link add constraint fk_ix_idg_ligand_link_ix_idg__01 foreign key (ix_idg_ligand_id) references ix_idg_ligand (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_link add constraint fk_ix_idg_ligand_link_ix_core_02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_publication add constraint fk_ix_idg_ligand_publication__01 foreign key (ix_idg_ligand_id) references ix_idg_ligand (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_publication add constraint fk_ix_idg_ligand_publication__02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_structure add constraint fk_ix_idg_ligand_structure_ix_01 foreign key (ix_idg_ligand_id) references ix_idg_ligand (id) on delete restrict on update restrict;
+
+alter table ix_idg_ligand_structure add constraint fk_ix_idg_ligand_structure_ix_02 foreign key (ix_ginas_structure_uuid) references ix_ginas_structure (uuid) on delete restrict on update restrict;
+
+alter table ix_ginas_name_domain add constraint fk_ix_ginas_name_domain_ix_gi_01 foreign key (ix_ginas_name_uuid) references ix_ginas_name (uuid) on delete restrict on update restrict;
 
 alter table ix_ginas_name_domain add constraint fk_ix_ginas_name_domain_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
@@ -1127,41 +1276,57 @@ alter table ix_core_stitch_attribute add constraint fk_ix_core_stitch_attribute_
 
 alter table ix_core_stitch_attribute add constraint fk_ix_core_stitch_attribute_i_02 foreign key (ix_core_attribute_id) references ix_core_attribute (id) on delete restrict on update restrict;
 
-alter table ix_ginas_structure_hash add constraint fk_ix_ginas_structure_hash_ix_01 foreign key (ix_ginas_structure_id) references ix_ginas_structure (id) on delete restrict on update restrict;
+alter table ix_ginas_structure_hash add constraint fk_ix_ginas_structure_hash_ix_01 foreign key (ix_ginas_structure_uuid) references ix_ginas_structure (uuid) on delete restrict on update restrict;
 
 alter table ix_ginas_structure_hash add constraint fk_ix_ginas_structure_hash_ix_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_ginas_structure_fingerprint add constraint fk_ix_ginas_structure_fingerp_01 foreign key (ix_ginas_structure_id) references ix_ginas_structure (id) on delete restrict on update restrict;
+alter table ix_ginas_structure_fingerprint add constraint fk_ix_ginas_structure_fingerp_01 foreign key (ix_ginas_structure_uuid) references ix_ginas_structure (uuid) on delete restrict on update restrict;
 
 alter table ix_ginas_structure_fingerprint add constraint fk_ix_ginas_structure_fingerp_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_ginas_structure_citation add constraint fk_ix_ginas_structure_citatio_01 foreign key (ix_ginas_structure_id) references ix_ginas_structure (id) on delete restrict on update restrict;
+alter table ix_ginas_structure_citation add constraint fk_ix_ginas_structure_citatio_01 foreign key (ix_ginas_structure_uuid) references ix_ginas_structure (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_structure_citation add constraint fk_ix_ginas_structure_citatio_02 foreign key (ix_ginas_citation_id) references ix_ginas_citation (id) on delete restrict on update restrict;
+alter table ix_ginas_structure_citation add constraint fk_ix_ginas_structure_citatio_02 foreign key (ix_ginas_citation_uuid) references ix_ginas_citation (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_substance_name add constraint fk_ix_ginas_substance_name_ix_01 foreign key (ix_ginas_substance_id) references ix_ginas_substance (id) on delete restrict on update restrict;
+alter table ix_ginas_substance_name add constraint fk_ix_ginas_substance_name_ix_01 foreign key (ix_ginas_substance_uuid) references ix_ginas_substance (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_substance_name add constraint fk_ix_ginas_substance_name_ix_02 foreign key (ix_ginas_name_id) references ix_ginas_name (id) on delete restrict on update restrict;
+alter table ix_ginas_substance_name add constraint fk_ix_ginas_substance_name_ix_02 foreign key (ix_ginas_name_uuid) references ix_ginas_name (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_substance_code add constraint fk_ix_ginas_substance_code_ix_01 foreign key (ix_ginas_substance_id) references ix_ginas_substance (id) on delete restrict on update restrict;
+alter table ix_ginas_substance_code add constraint fk_ix_ginas_substance_code_ix_01 foreign key (ix_ginas_substance_uuid) references ix_ginas_substance (uuid) on delete restrict on update restrict;
 
 alter table ix_ginas_substance_code add constraint fk_ix_ginas_substance_code_ix_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_ginas_substance_property add constraint fk_ix_ginas_substance_propert_01 foreign key (ix_ginas_substance_id) references ix_ginas_substance (id) on delete restrict on update restrict;
+alter table ix_ginas_substance_property add constraint fk_ix_ginas_substance_propert_01 foreign key (ix_ginas_substance_uuid) references ix_ginas_substance (uuid) on delete restrict on update restrict;
 
 alter table ix_ginas_substance_property add constraint fk_ix_ginas_substance_propert_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_ginas_substance_citation add constraint fk_ix_ginas_substance_citatio_01 foreign key (ix_ginas_substance_id) references ix_ginas_substance (id) on delete restrict on update restrict;
+alter table ix_ginas_substance_citation add constraint fk_ix_ginas_substance_citatio_01 foreign key (ix_ginas_substance_uuid) references ix_ginas_substance (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_substance_citation add constraint fk_ix_ginas_substance_citatio_02 foreign key (ix_ginas_citation_id) references ix_ginas_citation (id) on delete restrict on update restrict;
+alter table ix_ginas_substance_citation add constraint fk_ix_ginas_substance_citatio_02 foreign key (ix_ginas_citation_uuid) references ix_ginas_citation (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_substance_moiety add constraint fk_ix_ginas_substance_moiety__01 foreign key (ix_ginas_substance_id) references ix_ginas_substance (id) on delete restrict on update restrict;
+alter table ix_ginas_substance_moiety add constraint fk_ix_ginas_substance_moiety__01 foreign key (ix_ginas_substance_uuid) references ix_ginas_substance (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_substance_moiety add constraint fk_ix_ginas_substance_moiety__02 foreign key (ix_ginas_structure_id) references ix_ginas_structure (id) on delete restrict on update restrict;
+alter table ix_ginas_substance_moiety add constraint fk_ix_ginas_substance_moiety__02 foreign key (ix_ginas_structure_uuid) references ix_ginas_structure (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_protein_subunit add constraint fk_ix_ginas_protein_subunit_i_01 foreign key (ix_ginas_substance_id) references ix_ginas_substance (id) on delete restrict on update restrict;
+alter table ix_ginas_protein_subunit add constraint fk_ix_ginas_protein_subunit_i_01 foreign key (ix_ginas_substance_uuid) references ix_ginas_substance (uuid) on delete restrict on update restrict;
 
-alter table ix_ginas_protein_subunit add constraint fk_ix_ginas_protein_subunit_i_02 foreign key (ix_ginas_subunit_id) references ix_ginas_subunit (id) on delete restrict on update restrict;
+alter table ix_ginas_protein_subunit add constraint fk_ix_ginas_protein_subunit_i_02 foreign key (ix_ginas_subunit_uuid) references ix_ginas_subunit (uuid) on delete restrict on update restrict;
+
+alter table ix_idg_target_synonym add constraint fk_ix_idg_target_synonym_ix_i_01 foreign key (ix_idg_target_synonym_id) references ix_idg_target (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_synonym add constraint fk_ix_idg_target_synonym_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_property add constraint fk_ix_idg_target_property_ix__01 foreign key (ix_idg_target_id) references ix_idg_target (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_property add constraint fk_ix_idg_target_property_ix__02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_link add constraint fk_ix_idg_target_link_ix_idg__01 foreign key (ix_idg_target_id) references ix_idg_target (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_link add constraint fk_ix_idg_target_link_ix_core_02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_publication add constraint fk_ix_idg_target_publication__01 foreign key (ix_idg_target_id) references ix_idg_target (id) on delete restrict on update restrict;
+
+alter table ix_idg_target_publication add constraint fk_ix_idg_target_publication__02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
 
 alter table ix_core_xref_property add constraint fk_ix_core_xref_property_ix_c_01 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
 
@@ -1213,6 +1378,16 @@ drop table if exists _ix_ncats_cca46885_3;
 
 drop table if exists ix_core_curation;
 
+drop table if exists ix_idg_disease;
+
+drop table if exists ix_idg_disease_synonym;
+
+drop table if exists ix_idg_disease_property;
+
+drop table if exists ix_idg_disease_link;
+
+drop table if exists ix_idg_disease_publication;
+
 drop table if exists ix_core_etag;
 
 drop table if exists ix_core_etagref;
@@ -1225,16 +1400,6 @@ drop table if exists _ix_ncats_840372f9_1;
 
 drop table if exists _ix_ncats_840372f9_2;
 
-drop table if exists ix_idg_entity;
-
-drop table if exists ix_idg_entity_synonym;
-
-drop table if exists ix_idg_entity_property;
-
-drop table if exists ix_idg_entity_link;
-
-drop table if exists ix_idg_entity_publication;
-
 drop table if exists ix_core_event;
 
 drop table if exists ix_core_event_figure;
@@ -1242,6 +1407,16 @@ drop table if exists ix_core_event_figure;
 drop table if exists ix_core_figure;
 
 drop table if exists ix_ncats_funding;
+
+drop table if exists ix_idg_gene;
+
+drop table if exists ix_idg_gene_synonym;
+
+drop table if exists ix_idg_gene_property;
+
+drop table if exists ix_idg_gene_link;
+
+drop table if exists ix_idg_gene_publication;
 
 drop table if exists ix_ncats_grant;
 
@@ -1266,6 +1441,18 @@ drop table if exists _ix_ncats_4a162ae3_3;
 drop table if exists ix_core_investigator;
 
 drop table if exists ix_core_journal;
+
+drop table if exists ix_idg_ligand;
+
+drop table if exists ix_idg_ligand_synonym;
+
+drop table if exists ix_idg_ligand_property;
+
+drop table if exists ix_idg_ligand_link;
+
+drop table if exists ix_idg_ligand_publication;
+
+drop table if exists ix_idg_ligand_structure;
 
 drop table if exists ix_ginas_name;
 
@@ -1347,6 +1534,16 @@ drop table if exists ix_ginas_substance_citation;
 
 drop table if exists ix_ginas_subunit;
 
+drop table if exists ix_idg_target;
+
+drop table if exists ix_idg_target_synonym;
+
+drop table if exists ix_idg_target_property;
+
+drop table if exists ix_idg_target_link;
+
+drop table if exists ix_idg_target_publication;
+
 drop table if exists ix_core_value;
 
 drop table if exists ix_core_xref;
@@ -1361,8 +1558,6 @@ drop sequence if exists ix_ncats_clinical_arm_seq;
 
 drop sequence if exists ix_core_attribute_seq;
 
-drop sequence if exists ix_ginas_citation_seq;
-
 drop sequence if exists ix_ncats_clinical_trial_seq;
 
 drop sequence if exists ix_ncats_clinical_cohort_seq;
@@ -1371,19 +1566,21 @@ drop sequence if exists ix_ncats_clinical_condition_seq;
 
 drop sequence if exists ix_core_curation_seq;
 
+drop sequence if exists ix_idg_disease_seq;
+
 drop sequence if exists ix_core_etag_seq;
 
 drop sequence if exists ix_core_etagref_seq;
 
 drop sequence if exists ix_ncats_clinical_eligibility_seq;
 
-drop sequence if exists ix_idg_entity_seq;
-
 drop sequence if exists ix_core_event_seq;
 
 drop sequence if exists ix_core_figure_seq;
 
 drop sequence if exists ix_ncats_funding_seq;
+
+drop sequence if exists ix_idg_gene_seq;
 
 drop sequence if exists ix_ncats_grant_seq;
 
@@ -1395,7 +1592,7 @@ drop sequence if exists ix_core_investigator_seq;
 
 drop sequence if exists ix_core_journal_seq;
 
-drop sequence if exists ix_ginas_name_seq;
+drop sequence if exists ix_idg_ligand_seq;
 
 drop sequence if exists ix_core_namespace_seq;
 
@@ -1423,11 +1620,7 @@ drop sequence if exists ix_core_role_seq;
 
 drop sequence if exists ix_core_stitch_seq;
 
-drop sequence if exists ix_ginas_structure_seq;
-
-drop sequence if exists ix_ginas_substance_seq;
-
-drop sequence if exists ix_ginas_subunit_seq;
+drop sequence if exists ix_idg_target_seq;
 
 drop sequence if exists ix_core_value_seq;
 

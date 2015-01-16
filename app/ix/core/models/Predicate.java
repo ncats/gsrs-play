@@ -9,12 +9,6 @@ import javax.persistence.*;
 @Inheritance
 @DiscriminatorValue("PRE")
 public class Predicate extends IxModel {
-    @Id
-    public Long id;
-
-    @OneToOne
-    public Namespace namespace; // namespace of dictionary, ontology, etc.
-
     @OneToOne
     @Column(nullable=false)
     public XRef subject;
