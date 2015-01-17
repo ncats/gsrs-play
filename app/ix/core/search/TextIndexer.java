@@ -154,15 +154,15 @@ public class TextIndexer {
         List<Facet> facets = new ArrayList<Facet>();
         List matches = new ArrayList ();
         int count;
-	SearchOptions options;
+        SearchOptions options;
         
         SearchResult (SearchOptions options, String query) {
-	    this.options = options;
+            this.options = options;
             this.query = query;
         }
 
         public String getQuery () { return query; }
-	public SearchOptions getOptions () { return options; }
+        public SearchOptions getOptions () { return options; }
         public List<Facet> getFacets () { return facets; }
         public List getMatches () { return matches; }
         public int size () { return matches.size(); }
@@ -379,7 +379,7 @@ public class TextIndexer {
         Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
         fields.put("id", new KeywordAnalyzer ());
         fields.put(FIELD_KIND, new KeywordAnalyzer ());
-	return 	new PerFieldAnalyzerWrapper 
+        return  new PerFieldAnalyzerWrapper 
             (new StandardAnalyzer (LUCENE_VERSION), fields);
     }
 
@@ -887,9 +887,12 @@ public class TextIndexer {
                         facetsConfig.setRequireDimCount(facetLabel, true);
                         ixFields.add(new FacetField
                                      (facetLabel, facetValue));
-			// allow searching of this field
-			ixFields.add
-			    (new TextField (facetLabel, facetValue, NO));
+                        // allow searching of this field
+                        ixFields.add
+                            (new TextField (facetLabel, facetValue, NO));
+                        if (indexable.suggest()) {
+                            //suggestField (facetLabel, facetValue);
+                        }
                     }
                 }
                 catch (Exception ex) {
@@ -931,6 +934,19 @@ public class TextIndexer {
         }
     }
 
+    void suggestField (String name, String value) {
+        try {
+            SuggestLookup lookup = lookups.get(name);
+            if (lookup == null) {
+                lookups.put(name, lookup = new SuggestLookup (name));
+            }
+            lookup.add(value);
+        }
+        catch (Exception ex) { // 
+            Logger.trace("Can't create Lookup!", ex);
+        }
+    }
+    
     void indexField (List<IndexableField> fields, 
                      Collection<String> path, Object value) {
         indexField (fields, null, path, value, NO);
@@ -1042,16 +1058,7 @@ public class TextIndexer {
                 // also index the corresponding text field with the 
                 //   dimension name
                 fields.add(new TextField (dim, text, NO));
-                try {
-                    SuggestLookup lookup = lookups.get(dim);
-                    if (lookup == null) {
-                        lookups.put(dim, lookup = new SuggestLookup (dim));
-                    }
-                    lookup.add(text);
-                }
-                catch (Exception ex) { // 
-                    Logger.debug("Can't create Lookup!", ex);
-                }
+                suggestField (dim, text);
             }
 
             if (!(value instanceof Number)) {

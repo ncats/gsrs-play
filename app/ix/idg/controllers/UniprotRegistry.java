@@ -34,6 +34,7 @@ public class UniprotRegistry extends DefaultHandler {
     public static final String ACCESSION = "UniProt Accession";
     public static final String GENE = "UniProt Gene";
     public static final String DISEASE = "UniProt Disease";
+    public static final String DISEASE_RELEVANCE = "UniProt Disease Relevance";
     public static final String TARGET = "UniProt Target";    
     public static final String KEYWORD = "UniProt Keyword";
     public static final String ORGANISM = "UniProt Organism";
@@ -350,7 +351,7 @@ public class UniprotRegistry extends DefaultHandler {
                 
                 if ("disease".equals(commentType)) {
                     xref.properties.add(new Text
-                                        (DISEASE+" Relevance", value));
+                                        (DISEASE_RELEVANCE, value));
                 }
                 target.links.add(xref);
                 disease = null;

@@ -38,7 +38,7 @@ remote: '/api/suggest/Target?q=%QUERY',
             return d.key.split(/\//);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/suggest/MeSH?q=%QUERY',
+        remote: '@ix.core.controllers.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
     });
     
     target.initialize();
@@ -69,14 +69,15 @@ remote: '/api/suggest/Target?q=%QUERY',
         displayKey: 'key',
         source: gene.ttAdapter(),
         templates: {
-            header: '<h3>Gene</h3>'
+            header: '<h4>Gene</h4>'
         }
     }, {
         name: 'MeSH',
         displayKey: 'key',
         source: mesh.ttAdapter(),
         templates: {
-            suggestion: Handlebars.compile('<p><strong>{{key}}</strong></p>')
+/*suggestion: Handlebars.compile('<p><strong>{{key}}</strong></p>')*/
+          header: '<p4>MeSH</p4>'
         }
     });
 
@@ -86,7 +87,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         for (var f in val) {
             console.log(f+' '+val[f]);
         }
-        if (val.key.indexOf('/') > 0) {
+        if (d == 'MeSH') {
             /* this is mesh term, so don't quote */
         }
         else {
