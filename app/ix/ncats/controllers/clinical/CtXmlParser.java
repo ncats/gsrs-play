@@ -306,7 +306,7 @@ public class CtXmlParser extends DefaultHandler {
             try {
                 long pmid = Long.parseLong(value);
                 if (!pmids.contains(pmid)) {
-                    Publication pub = PublicationFactory.fetchIfAbsent(pmid);
+                    Publication pub = PublicationFactory.registerIfAbsent(pmid);
                     if (pub != null)
                         ct.publications.add(pub);
                     pmids.add(pmid);

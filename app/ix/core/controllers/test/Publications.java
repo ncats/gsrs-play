@@ -19,7 +19,7 @@ import ix.core.controllers.PublicationFactory;
 
 public class Publications extends Controller {
     public static Result relatedByPMID (Long pmid) {
-	return PublicationFactory.relatedByPMID(pmid);
+        return PublicationFactory.relatedByPMID(pmid);
     }
 
     public static Result index () {
@@ -36,24 +36,14 @@ public class Publications extends Controller {
         for (String p : arg.split("[,\\s;]+")) {
             try {
                 long pmid = Long.parseLong(p);
-                Publication pub = PublicationFactory.byPMID(pmid);
-                if (pub == null) {
-                    Logger.debug("fetching "+pmid);
-                    pub = Eutils.fetchPublication(pmid);
-                    if (pub != null) {
-                        Logger.debug(mapper.writeValueAsString(pub));
-                        pubs.add(pub);
-                        pub.save();
-                        Logger.debug("Publication "+pub.id+"saved!");
-                    }
-                    else {
-                        Logger.debug
-			    ("Unable to retrieve publication for "+pmid);
-                    }
+                Publication pub = PublicationFactory.registerIfAbsent(pmid);
+                if (pub != null) {
+                    Logger.debug("Publication "+pub.id+" retrieved!");
+                    pubs.add(pub);
                 }
                 else {
-                    Logger.debug("Already have "+pmid);
-                    pubs.add(pub);
+                    Logger.debug
+                        ("Unable to retrieve publication for "+pmid);
                 }
             }
             catch (Exception ex) {

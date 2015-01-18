@@ -145,9 +145,11 @@ public class UniprotRegistry extends DefaultHandler {
                     long pmid = Long.parseLong(id);
                     Publication pub = pubs.get(pmid);
                     if (pub == null) {
-                        pub = PublicationFactory.fetchIfAbsent(pmid);
-                        target.publications.add(pub);
-                        pubs.put(pmid, pub);
+                        pub = PublicationFactory.registerIfAbsent(pmid);
+                        if (pub != null) {
+                            target.publications.add(pub);
+                            pubs.put(pmid, pub);
+                        }
                     }
                     pubkeys.put(refkey, pub);
                     xref = createXRef (pub);

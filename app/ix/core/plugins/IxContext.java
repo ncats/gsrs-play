@@ -13,9 +13,11 @@ public class IxContext extends Plugin {
     public static final String PROPS_NS = "ix";
     public static final String PROPS_HOME = PROPS_NS+".home";
     public static final String PROPS_DEBUG = PROPS_NS+".debug";
+    public static final String PROPS_CACHE = PROPS_NS+".cache.base";
 
     private final Application app;
     private File home = new File (".");
+    private File cache;
     private int debug;
     private String context;
     private String api;
@@ -37,6 +39,18 @@ public class IxContext extends Plugin {
             throw new IllegalArgumentException
                 (PROPS_HOME+" \""+h+"\" is not accessible!");
         Logger.info("## "+PROPS_HOME+": \""+home.getCanonicalPath()+"\"");
+        
+        h = app.configuration().getString(PROPS_CACHE);
+        if (h != null) {
+            cache = new File (h);
+        }
+        else {
+            cache = new File (home, "cache");
+            Logger.warn("** No cache property "+PROPS_CACHE+" defined!");
+        }
+        if (!cache.exists())
+            cache.mkdirs();
+        Logger.info("## "+PROPS_CACHE+": \""+cache.getCanonicalPath()+"\"");
 
         Integer level = app.configuration().getInt(PROPS_DEBUG);
         if (level != null)
@@ -96,6 +110,7 @@ public class IxContext extends Plugin {
 
     public boolean enabled () { return true; }
     public File home () { return home; }
+    public File cache () { return cache; }
     public boolean debug (int level) { return debug >= level; }
     public String context () { return context; }
     public String api () { return api; }
