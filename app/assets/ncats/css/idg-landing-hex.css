@@ -34,7 +34,7 @@
 @media (min-width: 992px){
     #target{
         margin-left:12%;
-        margin-top:-2%;
+        margin-top:0%;
     }
     #ligand {
         margin-top: -2%;
@@ -66,9 +66,9 @@
 .badge {
     position: inherit;
     margin-top: 75%;
-    margin-left: 35.6%;
+    margin-left: 35%;
     background-color: white;
-    font-size: 16px;
+    font-size: 14px;
     width: 20%;
 }
 

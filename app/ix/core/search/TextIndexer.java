@@ -514,12 +514,19 @@ public class TextIndexer {
             // the first term is the drilldown dimension
             for (String dd : options.facets) {
                 String[] d = dd.split("/");
+                StringBuilder full = new StringBuilder ();
                 for (int i = 1; i < d.length; ++i) {
                     if (DEBUG (1)) {
                         Logger.debug("Drilling down \""
                                      +d[0]+"/"+d[i]+"\"...");
                     }
                     ddq.add(d[0], d[i]);
+                    if (full.length() > 0) {
+                        full.append('/');
+                    }
+                    full.append(d[i]);
+                    if (!d[i].equals(full.toString()))
+                        ddq.add(d[0], full.toString());
                 }
             }
 
@@ -880,20 +887,6 @@ public class TextIndexer {
                     else { // treat as string
                         indexField (ixFields, indexable, path, value);
                     }
-
-                    // dynamic facet if available
-                    if (facetLabel != null && facetValue != null) {
-                        facetsConfig.setMultiValued(facetLabel, true);
-                        facetsConfig.setRequireDimCount(facetLabel, true);
-                        ixFields.add(new FacetField
-                                     (facetLabel, facetValue));
-                        // allow searching of this field
-                        ixFields.add
-                            (new TextField (facetLabel, facetValue, NO));
-                        if (indexable.suggest()) {
-                            //suggestField (facetLabel, facetValue);
-                        }
-                    }
                 }
                 catch (Exception ex) {
                     if (DEBUG (3)) {
@@ -903,8 +896,19 @@ public class TextIndexer {
                     }
                 }
                 path.pop();
-            }
+            } // foreach field
 
+            // dynamic facet if available
+            if (facetLabel != null && facetValue != null) {
+                facetsConfig.setMultiValued(facetLabel, true);
+                facetsConfig.setRequireDimCount(facetLabel, true);
+                ixFields.add(new FacetField (facetLabel, facetValue));
+                // allow searching of this field
+                ixFields.add(new TextField (facetLabel, facetValue, NO));
+                // all dynamic facets are suggestable???
+                suggestField (facetLabel, facetValue);
+            }
+            
             Method[] methods = entity.getClass().getMethods();
             for (Method m: methods) {
                 Indexable indexable = 
@@ -936,6 +940,7 @@ public class TextIndexer {
 
     void suggestField (String name, String value) {
         try {
+            name = name.replaceAll("[\\s/]","_");
             SuggestLookup lookup = lookups.get(name);
             if (lookup == null) {
                 lookups.put(name, lookup = new SuggestLookup (name));
