@@ -14,11 +14,13 @@ public class IxContext extends Plugin {
     public static final String PROPS_HOME = PROPS_NS+".home";
     public static final String PROPS_DEBUG = PROPS_NS+".debug";
     public static final String PROPS_CACHE = PROPS_NS+".cache.base";
+    public static final String PROPS_CACHE_TIME = PROPS_NS+".cache.time";
 
     private final Application app;
     private File home = new File (".");
     private File cache;
     private int debug;
+    private int cacheTime;
     private String context;
     private String api;
     private String host;
@@ -51,7 +53,9 @@ public class IxContext extends Plugin {
         if (!cache.exists())
             cache.mkdirs();
         Logger.info("## "+PROPS_CACHE+": \""+cache.getCanonicalPath()+"\"");
-
+        cacheTime = app.configuration().getInt(PROPS_CACHE_TIME, 60);
+        Logger.info("## "+PROPS_CACHE_TIME+": "+cacheTime+"s");
+        
         Integer level = app.configuration().getInt(PROPS_DEBUG);
         if (level != null)
             this.debug = level;
@@ -111,6 +115,7 @@ public class IxContext extends Plugin {
     public boolean enabled () { return true; }
     public File home () { return home; }
     public File cache () { return cache; }
+    public int cacheTime () { return cacheTime; }
     public boolean debug (int level) { return debug >= level; }
     public String context () { return context; }
     public String api () { return api; }

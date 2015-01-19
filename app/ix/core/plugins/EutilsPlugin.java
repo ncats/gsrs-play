@@ -18,7 +18,6 @@ public class EutilsPlugin extends Plugin {
     private final Application app;
     private IxContext ctx;
     private File eutilsDir;
-    private int cacheTime;
     
     public EutilsPlugin (Application app) {
         this.app = app;
@@ -34,9 +33,7 @@ public class EutilsPlugin extends Plugin {
         if (!eutilsDir.exists()) {
             eutilsDir.mkdirs();
         }
-        cacheTime = app.configuration().getInt("ix.cache.time", 60);
-        Logger.info("Plugin "+getClass().getName()+" initialized; base="
-                    +eutilsDir+" cacheTime="+cacheTime+"s");
+        Logger.info("Plugin "+getClass().getName()+" initialized!");
     }
 
     public void onStop () {
@@ -49,8 +46,8 @@ public class EutilsPlugin extends Plugin {
     
     Publication fetchAndCache (Long pmid) throws Exception {
         File file = getCacheFile (pmid);
-        if (file.exists()) {
-            Logger.debug("Cached file: "+file);
+        if (file.exists() && file.length() > 0l) {
+            Logger.debug("Cached file: "+file+" "+file.length());
             return Eutils.parsePublication(file);
         }
         else {
@@ -79,7 +76,7 @@ public class EutilsPlugin extends Plugin {
                     public Publication call () throws Exception {
                         return fetchAndCache (pmid);
                     }
-                }, cacheTime);
+                }, ctx.cacheTime());
         }
         catch (Exception ex) {
             ex.printStackTrace();

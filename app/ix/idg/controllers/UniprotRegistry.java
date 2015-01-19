@@ -11,7 +11,9 @@ import javax.xml.parsers.*;
 import org.xml.sax.helpers.*;
 import org.xml.sax.*;
 
+import play.Play;
 import play.Logger;
+import play.libs.ws.*;
 import play.db.ebean.Model;
 import com.avaje.ebean.Expr;
 
@@ -27,6 +29,7 @@ import ix.idg.models.Gene;
 import ix.idg.models.Target;
 import ix.idg.models.Disease;
 
+import ix.core.plugins.IxContext;
 import ix.utils.Global;
 
 
@@ -43,9 +46,10 @@ public class UniprotRegistry extends DefaultHandler {
     public static final String NAME = "UniProt Name";
     public static final String TISSUE = "UniProt Tissue";
 
+    static final int TIMEOUT = 5000; // 5s
     static public Namespace namespace = NamespaceFactory.registerIfAbsent
         ("UniProt", "http://www.uniprot.org");
-    
+
     StringBuilder content = new StringBuilder ();
     Target target;
     XRef xref;
@@ -62,13 +66,40 @@ public class UniprotRegistry extends DefaultHandler {
     
     LinkedList<String> path = new LinkedList<String>();
     int npubs;
+    File cacheDir;
 
     public UniprotRegistry () {
+        IxContext ctx = Play.application().plugin(IxContext.class);
+        cacheDir = new File (ctx.cache(), "uniprot");
+        if (!cacheDir.exists())
+            cacheDir.mkdirs();
+    }
+
+    File getCacheFile (String acc) {
+        String name = acc.substring(0, 2);
+        return new File (new File (cacheDir, name), acc+".xml");
     }
 
     public void register (Target target, String acc) throws Exception {
-        URI u = new URI ("http://www.uniprot.org/uniprot/"+acc+".xml");
-        register (target, u.toURL().openStream());
+        File file = getCacheFile (acc);
+        if (file.exists() && file.length() > 0l) {
+            Logger.debug("Cached file: "+file+" "+file.length());
+            register (target, new FileInputStream (file));
+        }
+        else {
+            file.getParentFile().mkdirs(); 
+            WSRequestHolder ws = WS
+                .url("http://www.uniprot.org/uniprot/"+acc+".xml")
+                .setTimeout(TIMEOUT)
+                .setFollowRedirects(true);
+            byte[] buf = ws.get().get(TIMEOUT).asByteArray();
+            // cache the download
+            FileOutputStream fos = new FileOutputStream (file);
+            fos.write(buf, 0, buf.length);
+            fos.close();
+            // now register
+            register (target, new ByteArrayInputStream (buf));
+        }
     }
 
     public void register (String acc) throws Exception {

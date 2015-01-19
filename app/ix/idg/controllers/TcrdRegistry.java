@@ -157,6 +157,7 @@ public class TcrdRegistry extends Controller {
                  "and a.protein_id = c.id "
                  +(rows > 0 ? ("limit "+rows) : "")
                  //+"limit 20"
+                 +" order by c.id, c.uniprot"
                  );
 
             Set<TcrdTarget> targets = new HashSet<TcrdTarget>();
