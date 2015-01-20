@@ -26,8 +26,10 @@ import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 public class IDGApp extends Controller {
-    static public final int CACHE_TIMEOUT = 60*60;
+    static public final int CACHE_TIMEOUT = 24*60*60; // 1 day
     static public final int MAX_FACETS = 6;
+    static final int FACET_DIM = 20;
+    static final int MAX_SEARCH_RESULTS = 1000;
     
     public static class DiseaseRelevance
         implements Comparable<DiseaseRelevance> {
@@ -341,7 +343,7 @@ public class IDGApp extends Controller {
                      public TextIndexer.SearchResult call () throws Exception {
                          return SearchFactory.search
                          (kind, hasFacets ? null : q,
-                          total, 0, 20, query);
+                          total, 0, FACET_DIM, query);
                      }
                  }, CACHE_TIMEOUT);
             
@@ -359,7 +361,7 @@ public class IDGApp extends Controller {
                             public TextIndexer.SearchResult call ()
                                 throws Exception {
                                 return SearchFactory.search
-                                (kind, q, total, 0, 20,
+                                (kind, q, total, 0, FACET_DIM,
                                  request().queryString());
                             }
                         }, CACHE_TIMEOUT);
@@ -490,7 +492,8 @@ public class IDGApp extends Controller {
                          public TextIndexer.SearchResult
                              call ()  throws Exception {
                              return SearchFactory.search
-                             (null, null, 500, 0, 20, queryString);
+                             (null, null, MAX_SEARCH_RESULTS,
+                              0, FACET_DIM, queryString);
                          }
                      }, CACHE_TIMEOUT);
                 double ellapsed = (System.currentTimeMillis()-start)*1e-3;
@@ -506,7 +509,7 @@ public class IDGApp extends Controller {
                             public TextIndexer.SearchResult
                                 call () throws Exception {
                                 return SearchFactory.search
-                                (null, query, 500, 0, 20,
+                                (null, query, MAX_SEARCH_RESULTS, 0, FACET_DIM,
                                  request().queryString());
                             }
                         }, CACHE_TIMEOUT);

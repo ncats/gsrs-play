@@ -436,7 +436,7 @@ public class TextIndexer {
     protected void search (SearchResult searchResult, 
                            SearchOptions options,
                            Query query, Filter filter) throws IOException {
-        Logger.debug("## Query: "+query+" Filter: "+filter);
+        Logger.debug("## Query: "+query+" Filter: "+filter+" Options:"+options);
         IndexSearcher searcher = new IndexSearcher
             (DirectoryReader.open(indexWriter, true));
         
@@ -520,17 +520,19 @@ public class TextIndexer {
                         Logger.debug("Drilling down \""
                                      +d[0]+"/"+d[i]+"\"...");
                     }
+                    
                     ddq.add(d[0], d[i]);
                     if (full.length() > 0) {
                         full.append('/');
                     }
                     full.append(d[i]);
-                    if (!d[i].equals(full.toString()))
+                    if (!d[i].equals(full.toString())) {
                         ddq.add(d[0], full.toString());
+                    }
                 }
             }
-
-            List<FacetResult> facetResults;
+            
+            Facets facets;
             if (options.sideway) {
                 DrillSideways sideway = new DrillSideways 
                     (searcher, facetsConfig, taxon);
@@ -538,7 +540,7 @@ public class TextIndexer {
                     sideway.search(ddq, filter, null, 
                                    options.max(), sorter, false, false);
 
-                facetResults = swResult.facets.getAllDims(options.fdim);
+                facets = swResult.facets;
                 hits = swResult.hits;
             }
             else { // drilldown
@@ -548,11 +550,11 @@ public class TextIndexer {
                     : (FacetsCollector.search
                        (searcher, ddq, filter, options.max(), fc));
 
-                Facets facets = new FastTaxonomyFacetCounts
+                facets = new FastTaxonomyFacetCounts
                     (taxon, facetsConfig, fc);
-                facetResults = facets.getAllDims(options.fdim);
             }
 
+            List<FacetResult> facetResults = facets.getAllDims(options.fdim);
             if (DEBUG (1)) {
                 Logger.info("## Drilled "
                             +(options.sideway ? "sideway" : "down")
@@ -567,6 +569,17 @@ public class TextIndexer {
                         Logger.info(" + ["+result.dim+"]");
                     }
                     Facet f = new Facet (result.dim);
+
+                    // make sure the facet value is returned                
+                    String label = null; 
+                    for (String d : drills) {
+                        if (d.startsWith(result.dim)) {
+                            int pos = d.indexOf('/');
+                            if (pos > 0)
+                                label = d.substring(pos+1);
+                        }
+                    }
+                    
                     for (int i = 0; i < result.labelValues.length; ++i) {
                         LabelAndValue lv = result.labelValues[i];
                         if (DEBUG (1)) {
@@ -575,6 +588,22 @@ public class TextIndexer {
                         }
                         f.values.add(new FV (lv.label, 
                                              lv.value.intValue()));
+                        if (lv.label.equals(label)) {
+                            // got it
+                            label = null;
+                        }
+                    }
+                    
+                    if (label != null) {
+                        Number value =
+                            facets.getSpecificValue(result.dim, label);
+                        if (value != null) {
+                            f.values.add(new FV (label, value.intValue()));
+                        }
+                        else {
+                            Logger.warn("Facet \""+result.dim+"\" doesn't any "
+                                        +"value for label \""+label+"\"!");
+                        }
                     }
                     searchResult.facets.add(f);
                 }
