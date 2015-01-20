@@ -16,10 +16,13 @@ import ix.utils.Global;
 
 @Entity
 @Table(name="ix_core_edit")
-public class Edit extends IxModel {
+public class Edit extends Model {
     @JsonIgnore
     @Id
     public UUID id; // internal random id
+
+    public final Date created = new Date ();
+    public Date modified;
 
     public Long refid; // edited entity
     public String kind;
@@ -50,10 +53,16 @@ public class Edit extends IxModel {
         this.refid = refid;
     }
 
+    @PrePersist
+    @PreUpdate
+    public void modified () {
+        this.modified = new Date ();
+    }
+    
     public String getOldValue () {
-	return Global.getNamespace()+"/edits/"+id+"/$oldValue";
+        return Global.getNamespace()+"/edits/"+id+"/$oldValue";
     }
     public String getNewValue () {
-	return Global.getNamespace()+"/edits/"+id+"/$newValue";
+        return Global.getNamespace()+"/edits/"+id+"/$newValue";
     }
 }

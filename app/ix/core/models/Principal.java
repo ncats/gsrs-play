@@ -7,18 +7,12 @@ import javax.persistence.*;
 @Inheritance
 @DiscriminatorValue("PRI")
 public class Principal extends IxModel {
-    @Id
-    public Long id;
-
     public String username;
     public String email;
     public boolean admin = false;
 
     @Column(length=1024)
     public String uri; // can be email or any unique uri
-
-    @Column(length=255,unique=true)
-    public String pkey; // private key
 
     @ManyToOne(cascade=CascadeType.ALL)
     public Figure selfie;

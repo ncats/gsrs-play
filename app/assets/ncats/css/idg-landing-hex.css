@@ -1,106 +1,107 @@
 @-moz-document url-prefix() {
-	.badge{
-	margin-top: 81% !important;
-margin-left: 41% !important;
-	}	
+    .badge{
+        margin-top: 81% !important;
+        margin-left: 41% !important;
+    }   
 }
 
 @media ( max-width : 768px) {
-	@-moz-document url-prefix() {
-	.badge{
-	margin-top: 81% !important;
-margin-left: 41% !important;
-	}
+    @-moz-document url-prefix() {
+        .badge{
+            margin-top: 81% !important;
+            margin-left: 41% !important;
+        }
+    }
+    .row.icons {
+        margin-bottom: 5%;
+    }
+    #logo{
+        display: none;
+    }
+    #logo-hide{
+        display:initial;
+    }
 }
-	.row.icons {
-		margin-bottom: 5%;
-	}
-	#logo{
-	display: none;
-	}
-	#logo-hide{
-	display:initial;
-	}
+
+@media (min-width: 768px){      
+    #logo-hide{
+        display:none;
+    }
 }
-@media (min-width: 768px){	
-	#logo-hide{
-	display:none;
-	}
-}	
+
 @media (min-width: 992px){
-	#target{
-	margin-left:12%;
-	margin-top:-2%;
-	}
-#ligand {
-margin-top: -2%;
-}
+    #target{
+        margin-left:12%;
+        margin-top:0%;
+    }
+    #ligand {
+        margin-top: -2%;
+    }
 }
 
 @media (min-width: 1200px){
-	#target{
-	margin-top: -2%;
-	margin-left: 7.333333333333332%;
-	}
-	#ligand{
-margin-top: -2%;
-margin-left: 16.666666666666664%;
+    #target{
+        margin-top: -2%;
+        margin-left: 7.333333333333332%;
+    }
+    #ligand{
+        margin-top: -2%;
+        margin-left: 16.666666666666664%;
+    }
 }
-	}
 
-		
+
 #main-box {
-	padding-top: 50px;
-	background-color: white;
+    padding-top: 50px;
+    background-color: white;
 }
 
 #search-row {
-	margin-left: 5%;
-	margin-top: -2%;
+    margin-left: 5%;
+    margin-top: -2%;
 }
 
 .badge {
-	position: inherit;
-	margin-top: 75%;
-	margin-left: 35.6%;
-	background-color: white;
-	font-size: 16px;
-	width: 20%;
+    position: inherit;
+    margin-top: 75%;
+    margin-left: 35%;
+    background-color: white;
+    font-size: 14px;
+    width: 20%;
 }
 
 #disease .badge {
-	color: #337ab7;
+    color: #337ab7;
 }
 
 #target .badge {
-	color: #41b880;
+    color: #41b880;
 }
 
 #ligand .badge {
-	color: #d9534f;
+    color: #d9534f;
 }
 
 .twitter-typeahead {
-	width: 100% !important;
-	height: 20px !important;
+    width: 100% !important;
+    height: 20px !important;
 }
 
 .tt-dropdown-menu {
-	top: 180% !important;
-	background-color: rgba(255, 255, 255, .9);
+    top: 180% !important;
+    background-color: rgba(255, 255, 255, .9);
 }
 
 .on, .off {
-	position: absolute;
-	top: 0;
-	left: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 div.hex:hover .on {
-	display: initial;
+    display: initial;
 }
 
 div.hex .on {
-	display: none;
+    display: none;
 }
-

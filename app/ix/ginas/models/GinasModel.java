@@ -1,29 +1,29 @@
 package ix.ginas.models;
 
 import java.util.UUID;
+import java.util.Date;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 
-import ix.core.models.IxModel;
+import play.db.ebean.Model;
 
 @MappedSuperclass
-public class GinasModel extends IxModel {
-    @JsonIgnore
+public class GinasModel extends Model {
     @Id
-    public Long id;
+    public UUID uuid;
 
-    @Column(nullable=false,length=40)
-    public String uuid;
+    public final Date created = new Date ();
+    public Date modified;
+    public boolean deprecated;
 
     public GinasModel () {
     }
 
     @PrePersist
-    public void persisted () {
-	if (uuid == null) {
-	    uuid = UUID.randomUUID().toString();
-	}
+    @PreUpdate
+    public void modified () {
+        this.modified = new Date ();
     }
 }

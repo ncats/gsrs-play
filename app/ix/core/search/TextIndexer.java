@@ -154,15 +154,15 @@ public class TextIndexer {
         List<Facet> facets = new ArrayList<Facet>();
         List matches = new ArrayList ();
         int count;
-	SearchOptions options;
+        SearchOptions options;
         
         SearchResult (SearchOptions options, String query) {
-	    this.options = options;
+            this.options = options;
             this.query = query;
         }
 
         public String getQuery () { return query; }
-	public SearchOptions getOptions () { return options; }
+        public SearchOptions getOptions () { return options; }
         public List<Facet> getFacets () { return facets; }
         public List getMatches () { return matches; }
         public int size () { return matches.size(); }
@@ -379,7 +379,7 @@ public class TextIndexer {
         Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
         fields.put("id", new KeywordAnalyzer ());
         fields.put(FIELD_KIND, new KeywordAnalyzer ());
-	return 	new PerFieldAnalyzerWrapper 
+        return  new PerFieldAnalyzerWrapper 
             (new StandardAnalyzer (LUCENE_VERSION), fields);
     }
 
@@ -436,7 +436,7 @@ public class TextIndexer {
     protected void search (SearchResult searchResult, 
                            SearchOptions options,
                            Query query, Filter filter) throws IOException {
-        Logger.debug("## Query: "+query+" Filter: "+filter);
+        Logger.debug("## Query: "+query+" Filter: "+filter+" Options:"+options);
         IndexSearcher searcher = new IndexSearcher
             (DirectoryReader.open(indexWriter, true));
         
@@ -514,16 +514,25 @@ public class TextIndexer {
             // the first term is the drilldown dimension
             for (String dd : options.facets) {
                 String[] d = dd.split("/");
+                StringBuilder full = new StringBuilder ();
                 for (int i = 1; i < d.length; ++i) {
                     if (DEBUG (1)) {
                         Logger.debug("Drilling down \""
                                      +d[0]+"/"+d[i]+"\"...");
                     }
+                    
                     ddq.add(d[0], d[i]);
+                    if (full.length() > 0) {
+                        full.append('/');
+                    }
+                    full.append(d[i]);
+                    if (!d[i].equals(full.toString())) {
+                        ddq.add(d[0], full.toString());
+                    }
                 }
             }
-
-            List<FacetResult> facetResults;
+            
+            Facets facets;
             if (options.sideway) {
                 DrillSideways sideway = new DrillSideways 
                     (searcher, facetsConfig, taxon);
@@ -531,7 +540,7 @@ public class TextIndexer {
                     sideway.search(ddq, filter, null, 
                                    options.max(), sorter, false, false);
 
-                facetResults = swResult.facets.getAllDims(options.fdim);
+                facets = swResult.facets;
                 hits = swResult.hits;
             }
             else { // drilldown
@@ -541,11 +550,11 @@ public class TextIndexer {
                     : (FacetsCollector.search
                        (searcher, ddq, filter, options.max(), fc));
 
-                Facets facets = new FastTaxonomyFacetCounts
+                facets = new FastTaxonomyFacetCounts
                     (taxon, facetsConfig, fc);
-                facetResults = facets.getAllDims(options.fdim);
             }
 
+            List<FacetResult> facetResults = facets.getAllDims(options.fdim);
             if (DEBUG (1)) {
                 Logger.info("## Drilled "
                             +(options.sideway ? "sideway" : "down")
@@ -560,6 +569,17 @@ public class TextIndexer {
                         Logger.info(" + ["+result.dim+"]");
                     }
                     Facet f = new Facet (result.dim);
+
+                    // make sure the facet value is returned                
+                    String label = null; 
+                    for (String d : drills) {
+                        if (d.startsWith(result.dim)) {
+                            int pos = d.indexOf('/');
+                            if (pos > 0)
+                                label = d.substring(pos+1);
+                        }
+                    }
+                    
                     for (int i = 0; i < result.labelValues.length; ++i) {
                         LabelAndValue lv = result.labelValues[i];
                         if (DEBUG (1)) {
@@ -568,6 +588,22 @@ public class TextIndexer {
                         }
                         f.values.add(new FV (lv.label, 
                                              lv.value.intValue()));
+                        if (lv.label.equals(label)) {
+                            // got it
+                            label = null;
+                        }
+                    }
+                    
+                    if (label != null) {
+                        Number value =
+                            facets.getSpecificValue(result.dim, label);
+                        if (value != null) {
+                            f.values.add(new FV (label, value.intValue()));
+                        }
+                        else {
+                            Logger.warn("Facet \""+result.dim+"\" doesn't any "
+                                        +"value for label \""+label+"\"!");
+                        }
                     }
                     searchResult.facets.add(f);
                 }
@@ -880,17 +916,6 @@ public class TextIndexer {
                     else { // treat as string
                         indexField (ixFields, indexable, path, value);
                     }
-
-                    // dynamic facet if available
-                    if (facetLabel != null && facetValue != null) {
-                        facetsConfig.setMultiValued(facetLabel, true);
-                        facetsConfig.setRequireDimCount(facetLabel, true);
-                        ixFields.add(new FacetField
-                                     (facetLabel, facetValue));
-			// allow searching of this field
-			ixFields.add
-			    (new TextField (facetLabel, facetValue, NO));
-                    }
                 }
                 catch (Exception ex) {
                     if (DEBUG (3)) {
@@ -900,8 +925,19 @@ public class TextIndexer {
                     }
                 }
                 path.pop();
-            }
+            } // foreach field
 
+            // dynamic facet if available
+            if (facetLabel != null && facetValue != null) {
+                facetsConfig.setMultiValued(facetLabel, true);
+                facetsConfig.setRequireDimCount(facetLabel, true);
+                ixFields.add(new FacetField (facetLabel, facetValue));
+                // allow searching of this field
+                ixFields.add(new TextField (facetLabel, facetValue, NO));
+                // all dynamic facets are suggestable???
+                suggestField (facetLabel, facetValue);
+            }
+            
             Method[] methods = entity.getClass().getMethods();
             for (Method m: methods) {
                 Indexable indexable = 
@@ -931,6 +967,20 @@ public class TextIndexer {
         }
     }
 
+    void suggestField (String name, String value) {
+        try {
+            name = name.replaceAll("[\\s/]","_");
+            SuggestLookup lookup = lookups.get(name);
+            if (lookup == null) {
+                lookups.put(name, lookup = new SuggestLookup (name));
+            }
+            lookup.add(value);
+        }
+        catch (Exception ex) { // 
+            Logger.trace("Can't create Lookup!", ex);
+        }
+    }
+    
     void indexField (List<IndexableField> fields, 
                      Collection<String> path, Object value) {
         indexField (fields, null, path, value, NO);
@@ -1042,16 +1092,7 @@ public class TextIndexer {
                 // also index the corresponding text field with the 
                 //   dimension name
                 fields.add(new TextField (dim, text, NO));
-                try {
-                    SuggestLookup lookup = lookups.get(dim);
-                    if (lookup == null) {
-                        lookups.put(dim, lookup = new SuggestLookup (dim));
-                    }
-                    lookup.add(text);
-                }
-                catch (Exception ex) { // 
-                    Logger.debug("Can't create Lookup!", ex);
-                }
+                suggestField (dim, text);
             }
 
             if (!(value instanceof Number)) {

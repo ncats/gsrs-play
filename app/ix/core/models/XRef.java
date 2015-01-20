@@ -19,14 +19,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 @Table(name="ix_core_xref")
 public class XRef extends IxModel {
-    //@JsonIgnore
-    @Id
-    public Long id;
-
-    @ManyToOne(cascade=CascadeType.ALL)
-    @JsonView(BeanViews.Full.class)
-    public Namespace namespace;
-
     /**
      * not id of the XRef instance but id of the instance for which this
      * XRef is pointing to
@@ -109,11 +101,5 @@ public class XRef extends IxModel {
 
     public String getHRef () {
         return Global.getRef(kind, refid);
-    }
-    
-    @JsonView(BeanViews.Compact.class)
-    @JsonProperty("_namespace")
-    public String getJsonNamespace () {
-        return Global.getRef(namespace);
-    }
+    }    
 }

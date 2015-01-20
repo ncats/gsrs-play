@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @DynamicFacet(label="label", value="term")
 public class Keyword extends Value {
     @Column(length=255)
-    @Indexable(facet=true, suggest=true, name="Keyword")
     public String term;
     @Lob
     public String href;
@@ -19,8 +18,8 @@ public class Keyword extends Value {
         this.term = term;
     }
     public Keyword (String label, String term) {
-	super (label);
-	this.term = term;
+        super (label);
+        this.term = term;
     }
 
     @Override

@@ -2,6 +2,7 @@ package ix.core.search;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class SearchOptions {
     public Class<?> kind; // filter by type
@@ -29,4 +30,26 @@ public class SearchOptions {
     }
 
     public int max () { return skip+top; }
+    public String toString () {
+        StringBuilder sb = new StringBuilder
+            ("SearchOptions{kind="+kind.getName()+",top="+top
+             +",skip="+skip+",fdim="+fdim+",sideway="+sideway
+             +",filter="+filter+",facets={");
+        for (Iterator<String> it = facets.iterator(); it.hasNext(); ) {
+            sb.append(it.next());
+            if (it.hasNext()) sb.append(",");
+        }
+        sb.append("},order={");
+        for (Iterator<String> it = order.iterator(); it.hasNext(); ) {
+            sb.append(it.next());
+            if (it.hasNext()) sb.append(",");
+        }
+        sb.append("},expand={");
+        for (Iterator<String> it = expand.iterator(); it.hasNext(); ) {
+            sb.append(it.next());
+            if (it.hasNext()) sb.append(",");
+        }
+        sb.append("}}");
+        return sb.toString();
+    }
 }

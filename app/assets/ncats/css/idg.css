@@ -9,6 +9,7 @@
 
 .tt-dropdown-menu {
     background-color: rgba(255, 255, 255, .9);
+    overflow-y: auto;
 }
 
 .twitter-typeahead {

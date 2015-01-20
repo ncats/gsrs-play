@@ -1,31 +1,44 @@
+<script>
 $(document).ready(function () {
     var target = new Bloodhound({
         datumTokenizer: function(d) {
             return Bloodhound.tokenizers.whitespace(d.key);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/suggest/Target?q=%QUERY',
+        remote: {
+          wildcard: 'QUERY',
+          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Target", "QUERY",10)'
+        }
+/*
+remote: '/api/suggest/Target?q=%QUERY',
+*/
     });
     var disease = new Bloodhound({
         datumTokenizer: function(d) {
             return Bloodhound.tokenizers.whitespace(d.key);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/suggest/Disease?q=%QUERY',
+        remote: {
+          wildcard: 'QUERY',
+          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Disease", "QUERY",10)'
+        }
     });
     var gene = new Bloodhound({
         datumTokenizer: function(d) {
             return Bloodhound.tokenizers.whitespace(d.key);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/suggest/Gene?q=%QUERY',
+        remote: {
+          wildcard: 'QUERY',
+          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Gene", "QUERY",10)'
+        }
     });
     var mesh = new Bloodhound({
         datumTokenizer: function(d) {
             return d.key.split(/\//);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '/api/suggest/MeSH?q=%QUERY',
+        remote: '@ix.core.controllers.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
     });
     
     target.initialize();
@@ -42,28 +55,29 @@ $(document).ready(function () {
         displayKey: 'key',
         source: target.ttAdapter(),
         templates: {
-            suggestion: Handlebars.compile('<p><img width="20" src="/ix/assets/ncats/images/Target-badge-square.png"/> {{key}}</p>')
+        suggestion: Handlebars.compile('<p><img width="20" src="@routes.Assets.at("ncats/images/Target-badge-square.png")"/> {{key}}</p>')
         }       
     }, {
         name: 'Disease',
         displayKey: 'key',
         source: disease.ttAdapter(),
         templates: {
-            suggestion: Handlebars.compile('<p><img width="20" src="/ix/assets/ncats/images/Disease-badge-square.png"/> {{key}}</p>')
+        suggestion: Handlebars.compile('<p><img width="20" src="@routes.Assets.at("ncats/images/Disease-badge-square.png")"/> {{key}}</p>')
         }
     }, {
         name: 'Gene',
         displayKey: 'key',
         source: gene.ttAdapter(),
         templates: {
-            header: '<h3>Gene</h3>'
+            header: '<h4>Gene</h4>'
         }
     }, {
         name: 'MeSH',
         displayKey: 'key',
         source: mesh.ttAdapter(),
         templates: {
-            suggestion: Handlebars.compile('<p><strong>{{key}}</strong></p>')
+/*suggestion: Handlebars.compile('<p><strong>{{key}}</strong></p>')*/
+          header: '<p4>MeSH</p4>'
         }
     });
 
@@ -73,7 +87,7 @@ $(document).ready(function () {
         for (var f in val) {
             console.log(f+' '+val[f]);
         }
-        if (val.key.indexOf('/') > 0) {
+        if (d == 'MeSH') {
             /* this is mesh term, so don't quote */
         }
         else {
@@ -85,3 +99,4 @@ $(document).ready(function () {
         console.log('typeahead closed!');
     });
 });
+</script>

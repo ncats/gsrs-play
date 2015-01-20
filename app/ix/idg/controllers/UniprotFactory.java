@@ -32,27 +32,13 @@ public class UniprotFactory extends Controller {
         String arg = requestData.get("accession");
         Logger.debug("## accession="+arg);
         ObjectMapper mapper = EntityFactory.getEntityMapper();
-        UniprotRegistry uni = new UniprotRegistry ();
 
         List<Target> targets = new ArrayList<Target>();
         for (String acc : arg.split("[,\\s;]+")) {
             try {
-                List<Target> list = targetDb
-                    .where().eq("synonyms.term", acc).findList();
-                if (list.isEmpty()) {
-                    try {
-                        uni.register(acc);
-                        Target target = uni.getTarget();
-                        targets.add(target);
-                    }
-                    catch (Throwable t) {
-                        Logger.trace("Can't parse "+acc, t);
-                    }
-                }                   
-                else {
-                    Logger.debug("Already have "+acc);
-                    targets.addAll(list);
-                }
+                Target target = TargetFactory.registerIfAbsent(acc);
+                if (target != null)
+                    targets.add(target);
             }
             catch (Exception ex) {
                 Logger.trace("Can't process accession "+acc, ex);

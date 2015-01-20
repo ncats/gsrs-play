@@ -39,7 +39,7 @@
       <form class="navbar-form navbar-right" role="search" method="GET"
             action="@ix.idg.controllers.routes.IDGApp.search(kind)">
         <div class="form-group">
-          <input type="text" id="search" name="q"
+          <input type="text" id="search-header-field" name="q"
                  class="typeahead form-control" placeholder="Search..."/>
           @if(kind != null) {
              <input type="hidden" name="kind" value="@kind"/>

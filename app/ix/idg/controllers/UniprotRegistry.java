@@ -11,7 +11,9 @@ import javax.xml.parsers.*;
 import org.xml.sax.helpers.*;
 import org.xml.sax.*;
 
+import play.Play;
 import play.Logger;
+import play.libs.ws.*;
 import play.db.ebean.Model;
 import com.avaje.ebean.Expr;
 
@@ -26,12 +28,28 @@ import ix.idg.controllers.DiseaseFactory;
 import ix.idg.models.Gene;
 import ix.idg.models.Target;
 import ix.idg.models.Disease;
-import ix.idg.models.EntityModel;
 
+import ix.core.plugins.IxContext;
 import ix.utils.Global;
 
 
 public class UniprotRegistry extends DefaultHandler {
+    public static final String ACCESSION = "UniProt Accession";
+    public static final String GENE = "UniProt Gene";
+    public static final String DISEASE = "UniProt Disease";
+    public static final String DISEASE_RELEVANCE = "UniProt Disease Relevance";
+    public static final String TARGET = "UniProt Target";    
+    public static final String KEYWORD = "UniProt Keyword";
+    public static final String ORGANISM = "UniProt Organism";
+    public static final String SHORTNAME = "UniProt Shortname";
+    public static final String FULLNAME = "UniProt Fullname";
+    public static final String NAME = "UniProt Name";
+    public static final String TISSUE = "UniProt Tissue";
+
+    static final int TIMEOUT = 5000; // 5s
+    static public Namespace namespace = NamespaceFactory.registerIfAbsent
+        ("UniProt", "http://www.uniprot.org");
+
     StringBuilder content = new StringBuilder ();
     Target target;
     XRef xref;
@@ -46,27 +64,51 @@ public class UniprotRegistry extends DefaultHandler {
     Map<Integer, Publication> pubkeys = new HashMap<Integer, Publication>();
     Map<String, String> values = new HashMap<String, String>();
     
-    Namespace namespace;
     LinkedList<String> path = new LinkedList<String>();
     int npubs;
+    File cacheDir;
 
     public UniprotRegistry () {
-        namespace = NamespaceFactory.registerIfAbsent
-	    ("UniProt", "http://www.uniprot.org");
+        IxContext ctx = Play.application().plugin(IxContext.class);
+        cacheDir = new File (ctx.cache(), "uniprot");
+        if (!cacheDir.exists())
+            cacheDir.mkdirs();
+    }
+
+    File getCacheFile (String acc) {
+        String name = acc.substring(0, 2);
+        return new File (new File (cacheDir, name), acc+".xml");
     }
 
     public void register (Target target, String acc) throws Exception {
-        URI u = new URI ("http://www.uniprot.org/uniprot/"+acc+".xml");
-        register (target, u.toURL().openStream());
+        File file = getCacheFile (acc);
+        if (file.exists() && file.length() > 0l) {
+            Logger.debug("Cached file: "+file+" "+file.length());
+            register (target, new FileInputStream (file));
+        }
+        else {
+            file.getParentFile().mkdirs(); 
+            WSRequestHolder ws = WS
+                .url("http://www.uniprot.org/uniprot/"+acc+".xml")
+                .setTimeout(TIMEOUT)
+                .setFollowRedirects(true);
+            byte[] buf = ws.get().get(TIMEOUT).asByteArray();
+            // cache the download
+            FileOutputStream fos = new FileOutputStream (file);
+            fos.write(buf, 0, buf.length);
+            fos.close();
+            // now register
+            register (target, new ByteArrayInputStream (buf));
+        }
     }
 
     public void register (String acc) throws Exception {
-	register (null, acc);
+        register (null, acc);
     }
 
     public void register (Target target, InputStream is) throws Exception {
-	this.target = target;
-	SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
+        this.target = target;
+        SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
         parser.parse(is, this);
     }
 
@@ -79,42 +121,43 @@ public class UniprotRegistry extends DefaultHandler {
 
     @Override
     public void startDocument () {
-	if (target == null) {
-	    target = new Target ();
-	}
+        if (target == null) {
+            target = new Target ();
+        }
         npubs = 0;
-	gene = null;
-	disease = null;
-	xref = null;
-	organism = null;
-	keyword = null;
+        gene = null;
+        disease = null;
+        xref = null;
+        organism = null;
+        keyword = null;
         pubs.clear();
         pubkeys.clear();
         values.clear();
         evidence.clear();
+        target.namespace = namespace;
     }
 
     @Override
     public void endDocument () {
-	//Logger.debug("About to register target\n"+EntityFactory.getEntityMapper().toJson(target, true));
+        //Logger.debug("About to register target\n"+EntityFactory.getEntityMapper().toJson(target, true));
         target.save();
-	// create the other direction
-	for (XRef ref : target.links) {
-	    Model obj = (Model)ref.deRef();
-	    if (obj instanceof EntityModel) {
-		XRef xref = createXRef (target);
-		for (Keyword kw : target.synonyms) {
-		    if ("UniProt Accession".equals(kw.label)) {
-			Keyword uni = KeywordFactory.registerIfAbsent
-			    ("UniProt Target", target.name, kw.href);
-			xref.properties.add(uni);
-			break; // just grab the first one
-		    }
-		}
-		((EntityModel)obj).links.add(xref);
-		obj.update();
-	    }
-	}
+        // create the other direction
+        for (XRef ref : target.links) {
+            Model obj = (Model)ref.deRef();
+            if (obj instanceof EntityModel) {
+                XRef xref = createXRef (target);
+                for (Keyword kw : target.synonyms) {
+                    if (ACCESSION.equals(kw.label)) {
+                        Keyword uni = KeywordFactory.registerIfAbsent
+                            (TARGET, target.name, kw.href);
+                        xref.properties.add(uni);
+                        break; // just grab the first one
+                    }
+                }
+                ((EntityModel)obj).getLinks().add(xref);
+                obj.update();
+            }
+        }
         Logger.debug("Target "+target.id+" \""+target.name+"\" added!");
     }
 
@@ -133,13 +176,15 @@ public class UniprotRegistry extends DefaultHandler {
                     long pmid = Long.parseLong(id);
                     Publication pub = pubs.get(pmid);
                     if (pub == null) {
-                        pub = PublicationFactory.fetchIfAbsent(pmid);
-                        target.publications.add(pub);
-                        pubs.put(pmid, pub);
+                        pub = PublicationFactory.registerIfAbsent(pmid);
+                        if (pub != null) {
+                            target.publications.add(pub);
+                            pubs.put(pmid, pub);
+                        }
                     }
                     pubkeys.put(refkey, pub);
                     xref = createXRef (pub);
-		    xref.properties.add(new Text ("Title", pub.title));
+                    //xref.properties.add(new Text ("Title", pub.title));
                 }
                 catch (NumberFormatException ex) {
                     Logger.warn("Bogus PMID "+id);
@@ -148,9 +193,9 @@ public class UniprotRegistry extends DefaultHandler {
             else if ("disease".equals(parent)) {
                 if (disease != null) {
                     String id = attrs.getValue("id");
-		    Keyword kw = new Keyword (type, id);
-		    if ("MIM".equals(type))
-			kw.href = "http://www.omim.org/entry/"+id;
+                    Keyword kw = new Keyword (type, id);
+                    if ("MIM".equals(type))
+                        kw.href = "http://www.omim.org/entry/"+id;
                     disease.synonyms.add(kw);
                 }
             }
@@ -172,47 +217,50 @@ public class UniprotRegistry extends DefaultHandler {
         else if (qName.equals("disease")) {
             String id = attrs.getValue("id");
             List<Disease> diseases = DiseaseFactory.finder.where
-                (Expr.and(Expr.eq("synonyms.label", "UniProt"),
+                (Expr.and(Expr.eq("synonyms.label", namespace.name),
                           Expr.eq("synonyms.term", id))).findList();
             if (diseases.isEmpty()) {
                 disease = new Disease ();
-		Logger.debug("New disease "+id);
-		Keyword kw = KeywordFactory.registerIfAbsent
-		    ("UniProt", id, "http://www.uniprot.org/diseases/"+id);
+                disease.namespace = namespace;
+                Logger.debug("New disease "+id);
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (namespace.name, id, "http://www.uniprot.org/diseases/"+id);
                 disease.synonyms.add(kw);
             }
             else {
                 disease = diseases.iterator().next();
-		Logger.debug("Disease "+id+" is already in db!\n"
-			     +EntityFactory.getEntityMapper().toJson(disease, true));
+                Logger.debug("Disease "+id+" is already in db!\n"
+                             +EntityFactory.getEntityMapper()
+                             .toJson(disease, true));
             }
         }
         else if (qName.equals("keyword")) {
             keyword = new Keyword ();
-	    keyword.label = "Keyword";
+            keyword.label = KEYWORD;
             keyword.href = "http://www.uniprot.org/keywords/"
-		+attrs.getValue("id");
+                +attrs.getValue("id");
         }
-	else if (qName.equals("name")) {
-	    if ("organism".equals(parent)) {
-		String type = attrs.getValue("type");
-		if ("scientific".equals(type)) {
-		    organism = new Keyword ();
-		    organism.label = "UniProt Organism";
-		}
-		else {
-		    organism = null;
-		}
-	    }
-	    else if ("gene".equals(parent)) {
-		String type = attrs.getValue("type");
-		if ("primary".equals(type)) {
-		    gene = new Gene ();
-		}
-	    }
-	}
+        else if (qName.equals("name")) {
+            if ("organism".equals(parent)) {
+                String type = attrs.getValue("type");
+                if ("scientific".equals(type)) {
+                    organism = new Keyword ();
+                    organism.label = ORGANISM;
+                }
+                else {
+                    organism = null;
+                }
+            }
+            else if ("gene".equals(parent)) {
+                String type = attrs.getValue("type");
+                if ("primary".equals(type)) {
+                    gene = new Gene ();
+                    gene.namespace = namespace;
+                }
+            }
+        }
         path.push(qName);
-	//Logger.debug("++"+getPath ());
+        //Logger.debug("++"+getPath ());
     }
 
     @Override
@@ -226,67 +274,67 @@ public class UniprotRegistry extends DefaultHandler {
         //Logger.debug(p+"="+value);
         
         if (qName.equals("accession")) {
-	    Keyword kw = new Keyword (value);
-	    kw.label = "UniProt Accession";
-	    kw.href = "http://www.uniprot.org/uniprot/"+value;
-	    target.synonyms.add(kw);
+            Keyword kw = new Keyword (value);
+            kw.label = ACCESSION;
+            kw.href = "http://www.uniprot.org/uniprot/"+value;
+            target.synonyms.add(kw);
         }
-	else if (qName.equals("shortName")) {
-	    Keyword kw = new Keyword (value);
-	    kw.label = "UniProt Shortname";
-	    target.synonyms.add(kw);
-	}
+        else if (qName.equals("shortName")) {
+            Keyword kw = new Keyword (value);
+            kw.label = SHORTNAME;
+            target.synonyms.add(kw);
+        }
         else if (qName.equals("fullName")) {
             if ("recommendedName".equals(parent)) 
                 target.name = value;
             else {
                 Keyword kw = new Keyword (value);
-                kw.label = "UniProt Fullname";
+                kw.label = FULLNAME;
                 target.synonyms.add(kw);
             }
         }
         else if (qName.equals("name")) {
             if ("entry".equals(parent)) {
                 Keyword kw = new Keyword (value);
-                kw.label = "UniProt Name";
+                kw.label = NAME;
                 target.synonyms.add(kw);
             }
             else if ("disease".equals(parent)) {
                 if (disease != null)
                     disease.name = value;
             }
-	    else if ("gene".equals(parent)) {
-		if (gene != null) {
-		    if (gene.name == null) {
-			gene = GeneFactory.registerIfAbsent(value);
-			target.links.add(createXRef (gene));
-		    }
-		    else {
-			Keyword kw = new Keyword ("UniProt Gene", value);
-			gene.synonyms.add(kw);
-			gene.update();
-		    }
-		}
-		// also add gene as synonym
-		Keyword kw = new Keyword ("UniProt Gene", value);
-		target.synonyms.add(kw);
-	    }
-	    else if ("organism".equals(parent)) {
-		if (organism != null) {
-		    organism.term = value;
-		    List<Keyword> org = KeywordFactory.finder.where
-			(Expr.and(Expr.eq("label", organism.label),
-				  Expr.eq("term", organism.term)))
-			.findList();
-		    if (org.isEmpty()) {
-			organism.save();
-			target.organism = organism;
-		    }
-		    else {
-			target.organism = org.iterator().next();
-		    }
-		}
-	    }
+            else if ("gene".equals(parent)) {
+                if (gene != null) {
+                    if (gene.name == null) {
+                        gene = GeneFactory.registerIfAbsent(value);
+                        target.links.add(createXRef (gene));
+                    }
+                    else {
+                        Keyword kw = new Keyword (GENE, value);
+                        gene.synonyms.add(kw);
+                        gene.update();
+                    }
+                }
+                // also add gene as synonym
+                Keyword kw = new Keyword (GENE, value);
+                target.synonyms.add(kw);
+            }
+            else if ("organism".equals(parent)) {
+                if (organism != null) {
+                    organism.term = value;
+                    List<Keyword> org = KeywordFactory.finder.where
+                        (Expr.and(Expr.eq("label", organism.label),
+                                  Expr.eq("term", organism.term)))
+                        .findList();
+                    if (org.isEmpty()) {
+                        organism.save();
+                        target.organism = organism;
+                    }
+                    else {
+                        target.organism = org.iterator().next();
+                    }
+                }
+            }
         }
         else if (qName.equals("description")) {
             if ("disease".equals(parent)) {
@@ -303,17 +351,17 @@ public class UniprotRegistry extends DefaultHandler {
         }
         else if (qName.equals("tissue")) {
             if (xref != null) {
-		Keyword tissue = KeywordFactory.registerIfAbsent
-		    ("UniProt Tissue", value, null);
+                Keyword tissue = KeywordFactory.registerIfAbsent
+                    (TISSUE, value, null);
                 xref.properties.add(tissue);
             }
         }
         else if (qName.equals("reference")) {
             if (xref != null) {
                 xref.save();
-		target.links.add(xref);
-	    }
-	    refkey = null;
+                target.links.add(xref);
+            }
+            refkey = null;
         }
         else if (qName.equals("disease")) {
             if (disease.id == null) {
@@ -326,20 +374,20 @@ public class UniprotRegistry extends DefaultHandler {
             String text = values.get("text");
             if (disease != null) {
                 XRef xref = createXRef (disease);
-		for (Keyword kw : disease.synonyms) {
-		    if ("UniProt".equals(kw.label)) {
-			Keyword uni = KeywordFactory.registerIfAbsent
-			    ("UniProt Disease", disease.name, kw.href);
-			xref.properties.add(uni);
-		    }
-		}
-		
-		if ("disease".equals(commentType)) {
-		    xref.properties.add(new Text
-					("UniProt Disease Comment", value));
-		}
+                for (Keyword kw : disease.synonyms) {
+                    if ("UniProt".equals(kw.label)) {
+                        Keyword uni = KeywordFactory.registerIfAbsent
+                            (DISEASE, disease.name, kw.href);
+                        xref.properties.add(uni);
+                    }
+                }
+                
+                if ("disease".equals(commentType)) {
+                    xref.properties.add(new Text
+                                        (DISEASE_RELEVANCE, value));
+                }
                 target.links.add(xref);
-		disease = null;
+                disease = null;
             }
             else {
                 target.properties.add(new Text (commentType, text));
@@ -347,17 +395,17 @@ public class UniprotRegistry extends DefaultHandler {
             commentType = null;
         }
         else if (qName.equals("keyword")) {
-	    keyword.term = value;
+            keyword.term = value;
             target.properties.add(keyword);
         }
-	else if (qName.equals("gene"))
-	    gene = null;
-	else if (qName.equals("ecNumber")) {
-	    Keyword kw = new Keyword ("EC", value);
-	    kw.href = "http://enzyme.expasy.org/EC/"+value;
-	    target.properties.add(kw);
-	}
-	//Logger.debug("--"+p);
+        else if (qName.equals("gene"))
+            gene = null;
+        else if (qName.equals("ecNumber")) {
+            Keyword kw = new Keyword ("EC", value);
+            kw.href = "http://enzyme.expasy.org/EC/"+value;
+            target.properties.add(kw);
+        }
+        //Logger.debug("--"+p);
     }
 
     String getPath () {

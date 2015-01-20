@@ -4,10 +4,11 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
 import javax.persistence.*;
+import play.db.ebean.Model;
 
 @Entity
 @Table(name="ix_core_namespace")
-public class Namespace extends IxModel {
+public class Namespace extends Model {
     public enum Modifier {
         Public, // anyone can access this resource
             Internal, // only authenticated users have access

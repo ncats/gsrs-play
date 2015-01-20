@@ -19,12 +19,14 @@ import ix.core.models.Author;
 import ix.core.models.PubAuthor;
 import ix.core.NamedResource;
 import ix.utils.Eutils;
-
+import ix.core.plugins.EutilsPlugin;
 
 @NamedResource(name="publications", type=Publication.class)
 public class PublicationFactory extends EntityFactory {
     public static final Model.Finder<Long, Publication> finder = 
         new Model.Finder(Long.class, Publication.class);
+    public static final EutilsPlugin eutils =
+        Play.application().plugin(EutilsPlugin.class);
 
     public static List<Publication> all () { return all (finder); }
     public static Result count () { return count (finder); }
@@ -67,8 +69,8 @@ public class PublicationFactory extends EntityFactory {
     }
 
     public static Result relatedByPMID (long pmid) {
-	ObjectMapper mapper = getEntityMapper ();
-	return ok (mapper.valueToTree(getRelated (pmid)));
+        ObjectMapper mapper = getEntityMapper ();
+        return ok (mapper.valueToTree(getRelated (pmid)));
     }
 
     public static Result field (Long id, String path) {
@@ -92,20 +94,20 @@ public class PublicationFactory extends EntityFactory {
     }
 
     public static List<Publication> getRelated (long pmid) {
-	List<Long> pmids = Eutils.fetchRelated(pmid);
-	List<Publication> pubs = new ArrayList<Publication>();
-	for (Long id : pmids) {
-	    Publication pub = fetchIfAbsent (id);
-	    if (pub != null)
-		pubs.add(pub);
-	}
-	return pubs;
+        List<Long> pmids = Eutils.fetchRelated(pmid);
+        List<Publication> pubs = new ArrayList<Publication>();
+        for (Long id : pmids) {
+            Publication pub = registerIfAbsent (id);
+            if (pub != null)
+                pubs.add(pub);
+        }
+        return pubs;
     }
 
-    public static Publication fetchIfAbsent (long pmid) {
+    public static Publication registerIfAbsent (long pmid) {
         Publication pub = byPMID (pmid);
         if (pub == null) {
-            pub = Eutils.fetchPublication(pmid);
+            pub = eutils.getPublication(pmid);
             if (pub != null) {
                 for (PubAuthor p : pub.authors) {
                     p.author = instrument (p.author);

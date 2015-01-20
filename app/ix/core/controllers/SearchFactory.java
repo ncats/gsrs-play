@@ -39,79 +39,90 @@ public class SearchFactory extends EntityFactory {
         return plugin != null ? plugin.getIndexer() : null;
     }
 
-    public static TextIndexer.SearchResult
-	search (Class kind, String q, int top, int skip, int fdim,
-		Map<String, String[]> queryParams) throws IOException {
-	SearchOptions options = new SearchOptions (kind, top, skip, fdim);
-
-	StringBuilder filter = new StringBuilder ();
-	if (queryParams != null) {
-	    for (Map.Entry<String, String[]> me : queryParams.entrySet()) {
-		if ("facet".equalsIgnoreCase(me.getKey())) {
-		    for (String s : me.getValue()){
-			options.facets.add(s);
-			if (filter.length() > 0)
-			    filter.append("&");
-			filter.append("facet="+s);
-		    }
-		}
-		else if ("order".equalsIgnoreCase(me.getKey())) {
-		    for (String s : me.getValue())
-			options.order.add(s);
-		}
-		else if ("expand".equalsIgnoreCase(me.getKey())) {
-		    for (String s : me.getValue())
-			options.expand.add(s);
-		}
-		else if ("drill".equalsIgnoreCase(me.getKey())) {
-		    for (String s : me.getValue())
-			options.sideway = "sideway".equalsIgnoreCase(s);
-		}
-		
-		if (Global.DEBUG(1)) {
-		    StringBuilder sb = new StringBuilder ();
-		    for (String s : me.getValue())
-			sb.append("\n"+s);
-		    Logger.debug(me.getKey()+sb);
-		}
-	    }
-	}
-	
-	if (q == null) {
-	}
-	else if (q.startsWith("etag:") || q.startsWith("ETag:")) {
-	    String id = q.substring(5, 21);
-	    try {
-		ETag etag = etagDb.where().eq("etag", id).findUnique();
-		if (etag.query != null) {
-		    if (etag.filter != null) {
-			String[] facets = etag.filter.split("&");
-			for (int i = facets.length; --i >= 0; ) {
-			    if (facets[i].length() > 0) {
-				filter.insert(0, facets[i]+"&");
-				options.facets.add
-				    (0, facets[i].replaceAll("facet=", ""));
-			    }
-			}
-		    }
-		    q = etag.query; // rewrite the query
-		}
-		else {
-		    Logger.warn("ETag "+id+" is not a search!");
-		}
-	    }
-	    catch (Exception ex) {
-		Logger.trace("Can't find ETag "+id, ex);
-	    }
-	}
-	
-	return getIndexer().search(options, q);
+    public static SearchOptions parseSearchOptions
+        (SearchOptions options, Map<String, String[]> queryParams) {
+        if (options == null) {
+            options = new SearchOptions ();
+        }
+        for (Map.Entry<String, String[]> me : queryParams.entrySet()) {
+            if ("facet".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue()){
+                    options.facets.add(s);
+                }
+            }
+            else if ("order".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue())
+                    options.order.add(s);
+            }
+            else if ("expand".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue())
+                    options.expand.add(s);
+            }
+            else if ("drill".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue())
+                    options.sideway = "sideway".equalsIgnoreCase(s);
+            }
+            
+            if (Global.DEBUG(1)) {
+                StringBuilder sb = new StringBuilder ();
+                for (String s : me.getValue())
+                    sb.append("\n"+s);
+                Logger.debug(me.getKey()+sb);
+            }
+        }
+        return options;
     }
-	
+    
+    public static TextIndexer.SearchResult
+        search (Class kind, String q, int top, int skip, int fdim,
+                Map<String, String[]> queryParams) throws IOException {
+        SearchOptions options = new SearchOptions (kind, top, skip, fdim);
+
+        StringBuilder filter = new StringBuilder ();
+        if (queryParams != null) {
+            parseSearchOptions (options, queryParams);
+            for (String f : options.facets) {
+                if (filter.length() > 0)
+                    filter.append("&");
+                filter.append("facet="+f);
+            }
+        }
+        
+        if (q == null) {
+        }
+        else if (q.startsWith("etag:") || q.startsWith("ETag:")) {
+            String id = q.substring(5, 21);
+            try {
+                ETag etag = etagDb.where().eq("etag", id).findUnique();
+                if (etag.query != null) {
+                    if (etag.filter != null) {
+                        String[] facets = etag.filter.split("&");
+                        for (int i = facets.length; --i >= 0; ) {
+                            if (facets[i].length() > 0) {
+                                filter.insert(0, facets[i]+"&");
+                                options.facets.add
+                                    (0, facets[i].replaceAll("facet=", ""));
+                            }
+                        }
+                    }
+                    q = etag.query; // rewrite the query
+                }
+                else {
+                    Logger.warn("ETag "+id+" is not a search!");
+                }
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't find ETag "+id, ex);
+            }
+        }
+        
+        return getIndexer().search(options, q);
+    }
+        
     public static Result search (String q, int top, int skip, int fdim) {
         return search (null, q, top, skip, fdim);
     }
-	
+        
     public static Result search (Class kind, String q, 
                                  int top, int skip, int fdim) {
         if (Global.DEBUG(1)) {
@@ -120,14 +131,14 @@ public class SearchFactory extends EntityFactory {
                          +q+" top="+top+" skip="+skip+" fdim="+fdim);
         }
 
-	try {
-	    TextIndexer.SearchResult result = search
-		(kind, q, top, skip, fdim, request().queryString());
-	    SearchOptions options = result.getOptions();
-	    
-	    ObjectMapper mapper = getEntityMapper ();
-	    ArrayNode nodes = mapper.createArrayNode();
-	    for (Object obj : result.getMatches()) {
+        try {
+            TextIndexer.SearchResult result = search
+                (kind, q, top, skip, fdim, request().queryString());
+            SearchOptions options = result.getOptions();
+            
+            ObjectMapper mapper = getEntityMapper ();
+            ArrayNode nodes = mapper.createArrayNode();
+            for (Object obj : result.getMatches()) {
                 if (obj != null) {
                     try {
                         ObjectNode node = (ObjectNode)mapper.valueToTree(obj);

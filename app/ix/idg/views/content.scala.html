@@ -1,7 +1,7 @@
 @import ix.core.search.TextIndexer.Facet
 
 @(title: String, kind: String,
-  current: Int, rows: Int, total: Int,
+  resetAction: String, current: Int, rows: Int, total: Int,
   pages: Array[Int], facets: Array[Facet])(breadcrumb: Html)(content: Html)
 
 @main(title, kind){ @breadcrumb }{
@@ -41,7 +41,7 @@
   
 <script>
   function dismissQuery () {
-    location.assign('@ix.idg.controllers.routes.IDGApp.targets(null, Math.max(rows, 20), 1)');
+    location.assign('@resetAction');
   }
 </script>
 }

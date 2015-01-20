@@ -17,14 +17,13 @@
   </div>
   <div class="panel-body">
     <table class="table table-condensed">
-      @for(i <- 0 until Math.min(IDGApp.MAX_FACETS, f.getValues().size())) {
+      @** move all selected filters upfront **@
+      @for(i <- 0 until f.getValues().size()) {
+        @if(IDGApp.hasFacet(f,i)) {
 	<tr>
 	  @defining(IDGApp.sha1(f,i)) { id =>
 	     <td>
-	       <input type="checkbox" 
-		      @if(IDGApp.hasFacet(f,i)) {
-		         checked="true" 
-                      }
+	       <input type="checkbox" checked="true"
 		      onclick="filterToggle(this)" id="@id"/>
 	     </td>
 	     <script>
@@ -37,10 +36,34 @@
           }
 
          <td>@f.getValues().get(i).getLabel()</td>
-	 <td><span class="badge" style="float:right;">
-	     @f.getValues().get(i).getCount()</span>
+	 <td>
+           <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
 	 </td>
         </tr>
+        }
+      }
+      @for(i <- 0 until Math.min(IDGApp.MAX_FACETS, f.getValues().size())) {
+        @if(!IDGApp.hasFacet(f,i)) {
+	<tr>
+	  @defining(IDGApp.sha1(f,i)) { id =>
+	     <td>
+	       <input type="checkbox" onclick="filterToggle(this)" id="@id"/>
+	     </td>
+	     <script>
+	        filters['@id'] = {
+	           checked: @IDGApp.hasFacet(f,i),
+                   name: '@IDGApp.encode(f)',
+	           value: '@IDGApp.encode(f,i)'
+	        };
+	     </script>
+          }
+
+         <td>@f.getValues().get(i).getLabel()</td>
+	 <td>
+           <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
+	 </td>
+        </tr>
+        }
       }
     </table>
   </div>
@@ -56,9 +79,10 @@
 <script>
 function filterToggle (el) {
   filters[el.id].checked = el.checked;
-  //console.clear();
+  /*console.clear();*/
   var facet = "";
   for (var f in filters) {
+    console.log(f+': '+filters[f].checked);
     if (filters[f].checked) {
       if (facet.length > 0) {
          facet += '&';
@@ -66,9 +90,9 @@ function filterToggle (el) {
       facet += "facet="+filters[f].name + '/' + filters[f].value;
     }
   }
-// console.log(el.id+' '+facet);
+  console.log(el.id+' '+facet);
   var url = '@IDGApp.url("facet","page")';
   url += url.length == 0 ? '?' : '&';
-  location.assign(url+facet);
+  location.href = url+facet;
 }
 </script>
