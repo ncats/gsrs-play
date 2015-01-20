@@ -8,10 +8,11 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
-
 import ix.core.NamedResource;
 import ix.ncats.models.Project;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.FetchOptions;
+import ix.core.models.Publication;
 
 @NamedResource(name="projects",type=Project.class)
 public class ProjectFactory extends EntityFactory {
@@ -54,5 +55,9 @@ public class ProjectFactory extends EntityFactory {
 
     public static Result update (Long id, String field) {
         return update (id, field, Project.class, finder);
+    }
+    
+    public static List<Project> getProjs ( int top, int skip, String filter){
+    	return filter (new FetchOptions( top, skip, filter), finder);
     }
 }

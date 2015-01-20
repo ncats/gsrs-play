@@ -49,7 +49,7 @@ public class EntityFactory extends Controller {
     static final Model.Finder<Long, Principal> principalFinder = 
         new Model.Finder(Long.class, Principal.class);
 
-    protected static class FetchOptions {
+    public static class FetchOptions {
 	public int top;
 	public int skip;
 	public String filter;

@@ -1,0 +1,31 @@
+@CHARSET "UTF-8";
+
+body {
+  text-shadow: none;
+}
+a{
+	color: #1f355c;
+}
+
+a:hover {
+color: #cf2b2e;
+text-decoration: none;
+}
+
+.pagination>li>a, .pagination>li>a:hover{
+color: #1f355c;
+}
+
+.pagination>.active>a{
+	background-color: #1f355c;
+	border-color: #1f355c;
+}
+.nca{
+	text-decoration: underline;
+color: #1f355c;
+}
+
+.pages{
+	float: right;
+margin: 10px 25px;
+}

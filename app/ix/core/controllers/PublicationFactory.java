@@ -131,4 +131,12 @@ public class PublicationFactory extends EntityFactory {
 
         return author;
     }
+    
+    public static Publication getEntity( long id){
+    	return getEntity (id, finder);
+    }
+    
+    public static List<Publication> getPubs ( int top, int skip, String filter){
+    	return filter (new FetchOptions( top, skip, filter), finder);
+    }
 }

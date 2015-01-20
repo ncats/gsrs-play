@@ -1,0 +1,28 @@
+@(title: String, kind: String)(content: Html)
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>@title</title>
+    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
+    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/footer.css")'>
+    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/idg.css")'>  
+    <link rel="stylesheet" href='@routes.Assets.at("publications/css/overwrite.css")'>  
+    <link rel="stylesheet" href='@routes.Assets.at("publications/css/reach.css")'>  
+      
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
+    <script src='@routes.Assets.at("ncats/js/search.js")' type='text/javascript'></script>
+  </head>
+  <body>
+    @header(kind)
+    <div class="container">
+
+    
+    @content
+</div>
+  </body>
+</html>

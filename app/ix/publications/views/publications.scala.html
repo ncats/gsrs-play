@@ -1,0 +1,166 @@
+@import ix.core.controllers.PublicationFactory
+@import ix.core.models.Publication
+@import ix.core.models.PubAuthor
+@import ix.ncats.models.NIHAuthor
+@import ix.core.search.TextIndexer.Facet
+@import scala.collection.JavaConversions._
+
+@(query: String, current: Int, rows: Int, total: Int, pages: Array[Int],
+     facets: Array[Facet], pubs: List[Publication])
+
+
+
+@authrow(a: PubAuthor)={
+ <li class ="text-left pub-authors">
+  @if(!a.isLast){
+ 	@if(a.author.isInstanceOf[NIHAuthor]){
+ 		<a href = "/staff/@a.author.id" class="nca" title="View '@a.author.forename @a.author.lastname's Publications">@a.author.forename @a.author.lastname,</a>
+  	}else{
+  		@a.author.forename @a.author.lastname,
+  	}
+  }else{
+   	@if(a.author.isInstanceOf[NIHAuthor]){
+ 		<a href = "/staff/@a.author.id" class="nca" title="View '@a.author.forename @a.author.lastname's Publications">@a.author.forename @a.author.lastname</a>
+ 	}else{
+		@a.author.forename @a.author.lastname	
+	} 
+  }		
+  </li>
+}
+
+@tabrow(p: Publication) = {
+<tr>
+  <td>
+  <ul class = "list-inline text-left">
+  <li><a href="@ix.publications.controllers.routes.ReachApp.publication(p.id)" class="pub-title">@p.title</a></li>
+  
+   @for(a <- p.authors) {
+            @authrow(a)
+          }
+          <br/>
+           <br/>
+  <li id = "journal"><b>@p.journal.isoAbbr</b> vol: @p.journal.volume, pg:@p.pages, @p.journal.year.</li>
+        
+          
+            
+     </ul>
+     <ul class = "text-left links">
+     @if(p.doi){
+		<li>Journal Publication Link doi:<a href="http://www.dx.doi.org/@p.doi"> @p.doi</a></li>
+	}
+	@if(p.pmcid){
+		<li >Pubmed Central ID:<a href="http://www.ncbi.nlm.nih.gov/pmc/articles/@p.pmcid">@p.pmcid</a></li>
+}
+		<li >PubMed ID:<a href="http://www.ncbi.nlm.nih.gov/pubmed/@p.pmid">@p.pmid</a></li>
+
+ </ul>
+ @if(!p.figures.isEmpty()){
+	<div><a href="@p.figures(0).getUrl()" class="highslide" id="zoom" onclick="return hs.expand(this)"><img src="@p.figures(0).getUrl()"  class="pub-img"/></a></div>
+          }
+          
+         
+        </td> 
+</tr>
+}
+
+@main("Publications", "NCATS Publications") {
+
+<div class="row" id="searching">
+
+	<div class="col-md-6 col-md-offset-3">
+		<form class="navbar-form" role="search" method="GET"
+            action="@ix.publications.controllers.routes.ReachApp.search(null)">
+        <div class="form-group" id ="search-form">
+          <input type="text" class="form-control" name="q" placeholder="Search..." id = "search-input">
+          <span class="input-group-btn" id = "search-button">
+				<button class="btn btn-default" id="pubSearch" type="search"
+					style="font-size: 11pt;" value="submit">
+					<span class="glyphicon glyphicon-search"></span>
+				</button>
+				</span>
+        </div>
+      </form>
+	</div>
+	</div>
+	<div class="row" id="pub-history">
+		<div class="col-md-3 col-xs-4">
+
+					<div id="accordion">
+@filters(facets)
+				</div>		
+			</div>
+			<!--END panel panel-primary-->
+
+
+
+
+		<div class="col-md-9 col-xs-8">
+		
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					<h2 class="panel-title" id="pubChartType">Publications by Year</h2>
+				</div>
+				<!--END panel-heading-->
+				<div class="panel-body" id="pub-main">
+					<div class="row" id="formRow">
+						<div class="col-md- 6">
+							<form action="#" class="text-left">
+
+								<fieldset>
+									<label for=chart id="chartLabel">Results filtered by: </label>
+									<select name="chart" class="facetCharts" id="chart">
+										<option value="0">Program</option>
+										<option value="1" selected="selected">Year</option>
+										<option value="2">Author</option>
+										<option value="3">Category</option>
+										<option value="4">Subject</option>
+										<option value="5">Journal</option>
+									</select>
+								</fieldset>
+
+							</form>
+						</div>
+					</div>
+					<div id="history-bar">
+@chart(facets);
+</div>
+
+
+					<div id="results">
+						<ul id="results-list">
+							<li><a href="#All" id="results-All">All</a></li>
+
+						</ul>
+
+						<div id="All" class="tab">
+							<div>
+								<ol class="breadcrumb" id="filters"></ol>
+							</div>
+
+							<table class="table table-striped">
+							<thead>
+	  <tr>
+	    <th>@pagination(current, rows, total, pages)</th>
+	   
+	  </tr>
+	  </thead>
+	  							<tfoot>
+	  <tr>
+	    <th>@pagination(current, rows, total, pages)</th>
+	   
+	  </tr>
+	  </tfoot>
+	  @for(p <- pubs) {
+             @tabrow(p)
+          }
+	</table>
+						</div>
+
+					</div>
+				</div>
+				<!--END panel-body-->
+			</div>
+		</div>
+		<!--END panel panel-primary-->
+</div>
+	}

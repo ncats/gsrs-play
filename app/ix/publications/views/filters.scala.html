@@ -1,0 +1,72 @@
+@import ix.core.search.TextIndexer._
+@import ix.publications.controllers.ReachApp
+@import ix.utils.Util
+
+@(facets: Array[Facet])
+
+<script>
+  var filters = {};
+</script>
+
+@facet(f: Facet) = {
+<div class="panel panel-primary">
+  <div class="panel-heading"">
+    <h3 class="panel-title">
+      @f.getName().trim()
+    </h3>
+  </div>
+  <div class="panel-body">
+    <table class="table table-condensed">
+      @for(i <- 0 until Math.min(50,f.getValues().size())) {
+	<tr>
+	  @defining(ReachApp.sha1(f,i)) { id =>
+	     <td>
+	       <input type="checkbox" 
+		      @if(ReachApp.hasFacet(f,i)) {
+		         checked="true" 
+                      }
+		      onclick="filterToggle(this)" id="@id"/>
+	     </td>
+	     <script>
+	        filters['@id'] = {
+	           checked: @ReachApp.hasFacet(f,i),
+                   name: '@ReachApp.encode(f)',
+	           value: '@ReachApp.encode(f,i)'
+	        };
+	     </script>
+          }
+
+         <td>@f.getValues().get(i).getLabel()</td>
+	 <td><span class="badge">@f.getValues().get(i).getCount()</span></td>
+        </tr>
+      }
+    </table>
+  </div>
+</div>
+}
+
+<div class="panel-group">
+  @for(f <- facets) {
+     @facet(f)
+  }
+</div>
+
+<script>
+function filterToggle (el) {
+  filters[el.id].checked = el.checked;
+  //console.clear();
+  var facet = "";
+  for (var f in filters) {
+    if (filters[f].checked) {
+      if (facet.length > 0) {
+         facet += '&';
+      }
+      facet += "facet="+filters[f].name + '/' + filters[f].value;
+    }
+  }
+// console.log(el.id+' '+facet);
+  var url = '@ReachApp.url("facet","page")';
+  url += url.length == 0 ? '?' : '&';
+  location.assign(url+facet);
+}
+</script>

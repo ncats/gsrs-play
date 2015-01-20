@@ -1,0 +1,130 @@
+@(count: Integer, message: String, pub: ix.core.models.Publication)
+@import helper._ 
+
+@back = @{ pub.id -1 } 
+@forward = @{ pub.id + 1 }
+@scripts ={
+
+    <script type="text/javascript">
+	hs.graphicsDir = '/assets/images/';
+    hs.outlineType = null;
+    hs.wrapperClassName = null;
+	hs.showCredits= false;
+</script>
+}
+
+@main("Publications", "NCATS Publications") {
+
+<div class="row">
+	<div class="col-md-1  arrow-holder">
+		@if(back > 0){ <a href="@back" class='arrow'>&lsaquo;</a> <a
+			href="/publications"><span
+			class="glyphicon glyphicon-home house"></a> }else{ <a
+			href="/publications"><span
+			class="glyphicon glyphicon-home house"></a> }
+	</div>
+	<div class="col-md-10">
+		<h1>@pub.title</h1>
+	</div>
+	<div class="col-md-1 arrow-holder">
+		@if(forward <= count){ <a href="@forward" class='arrow'>&rsaquo;</a>
+		}else{ <a href="/publications"><span
+			class="glyphicon glyphicon-home house"></a> }
+	</div>
+</div>
+
+<div class="row">
+	@if(pub.mesh.size()!=0){
+	<div class="col-md-2">
+		<div class="panel panel-primary">
+			<div class="panel-heading">
+				<h3 class="panel-title">Keywords:</h3>
+			</div>
+			<!--END panel-heading-->
+			<div class="panel-body"id ="detailKeywords">
+
+				<ul class="keywords" style="text-align: left;">
+					@for(a<-pub.mesh){
+					<li>@a.heading</li> }
+				</ul>
+
+
+			</div>
+		</div>
+	</div>
+	<div class="col-md-10">
+		}else{
+		<div class="col-md-12">
+			}
+			<div class="panel panel-primary">
+				<div class="panel-heading">
+					<h3 class="panel-title">Publication Details:</h3>
+				</div>
+				<!--END panel-heading-->
+				<div class="panel-body">
+
+					@if(pub.abstractText != null){
+					<div class="row">
+						<div class="col-md-2 category">Abstract:</div>
+						<div class="col-md-10 data">@pub.abstractText</div>
+					</div>
+					<br /> 
+					} 
+					@if(pub.figures.size()!=0){
+					<div class="row">
+						<div class="col-md-2 category">Images:</div>
+						<div class="col-md-10 data" id="pubImg">
+							<a href="/api/figures/@pub.figures(0).id?format=image"
+								class="highslide" id="zoom" onclick="return hs.expand(this)">
+								<img src="/api/figures/@pub.figures(0).id?format=image"
+								class="pub-img">
+							</a>
+						
+						</div>
+					
+						<br/>
+					}
+
+
+				</div>
+				<div class="row">
+					<div class="col-md-2 category">Authors:</div>
+					<div class="col-md-10 data" >
+						
+						@for(a <- pub.authors){ 
+						@a.author.getName(); }
+			
+					</div>
+				</div>
+			<div class="row">
+				<div class="col-md-2 category">External Links:</div>
+				<div class="col-md-10 data">
+				
+				<ul class="pubs-info">
+				 @if(pub.doi!= null){
+					<li><p>
+							Journal Publication Link doi:<a href="http://www.dx.doi.org/@pub.doi">@pub.doi</a>
+						</p></li> }
+						@if(pub.pmcid!= null){
+					<li>
+						<p>
+							Pubmed Central ID:<a
+								href="http://www.ncbi.nlm.nih.gov/pmc/articles/@pub.pmcid">@pub.pmcid</a>
+						</p>
+					</li> }
+					<li>
+						<p>
+							PubMed ID:<a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a>
+						</p>
+					</li>
+				</ul>
+				</div>
+				</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+}
