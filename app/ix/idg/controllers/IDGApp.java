@@ -356,6 +356,7 @@ public class IDGApp extends Controller {
             if (hasFacets && result.count() == 0) {
                 start = System.currentTimeMillis();
                 // empty result.. perhaps the query contains /'s
+                Cache.remove(sha1); // clear cache
                 result = Cache.getOrElse
                     (sha1, new Callable<TextIndexer.SearchResult>() {
                             public TextIndexer.SearchResult call ()
@@ -416,7 +417,7 @@ public class IDGApp extends Controller {
                                 return filter (getFacets (Target.class, 20),
                                                TARGET_FACETS);
                             }
-                        }, 60);
+                        }, CACHE_TIMEOUT);
                 
                 rows = Math.min(total, Math.max(1, rows));
                 int[] pages = paging (rows, page, total);               

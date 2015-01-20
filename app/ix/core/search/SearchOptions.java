@@ -32,8 +32,8 @@ public class SearchOptions {
     public int max () { return skip+top; }
     public String toString () {
         StringBuilder sb = new StringBuilder
-            ("SearchOptions{kind="+kind.getName()+",top="+top
-             +",skip="+skip+",fdim="+fdim+",sideway="+sideway
+            ("SearchOptions{kind="+(kind!=null ? kind.getName():"")
+             +",top="+top+",skip="+skip+",fdim="+fdim+",sideway="+sideway
              +",filter="+filter+",facets={");
         for (Iterator<String> it = facets.iterator(); it.hasNext(); ) {
             sb.append(it.next());
