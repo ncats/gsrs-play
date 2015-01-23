@@ -6,6 +6,15 @@ $(document).ready(function() {
 			index = ui.item.index;
 			drawChart(filters[index]);
 		});
+	
+	console.log(search);
+	$.extend($.expr[":"], {
+		"containsIN": function(elem, i, match, array) {
+		return (elem.textContent || elem.innerText || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+		}
+		});
+	
+	
 	var search = $(location).attr('search');
 	if(search !==""){
 		search = search.split('?q=');
@@ -29,19 +38,15 @@ $(document).ready(function() {
 //		}
 //			search = search[1].split('&')[0];
 //		}
-	}
-	console.log(search);
-	$.extend($.expr[":"], {
-		"containsIN": function(elem, i, match, array) {
-		return (elem.textContent || elem.innerText || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
-		}
-		});
-	
-	
-	$('tbody',  '#publications').highlight(search);
+		$('tbody',  '#publications').highlight(search);
 
+		
+		$("div:containsIN('"+search+"')").removeClass('hidden');
+		
+	}
 	
-	$("div:containsIN('"+search+"')").removeClass('hidden');
+	
+	
 	
 	});
 

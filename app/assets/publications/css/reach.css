@@ -36,6 +36,10 @@ margin-top: 50%;
 width: 100%;
 }
 
+#publications{
+	table-layout: fixed;
+}
+
 /*PAGINATION CSS */
 .pagination>li>a, .pagination>li>a:hover{
 color: #1f355c;

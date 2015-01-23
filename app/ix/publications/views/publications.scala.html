@@ -132,11 +132,15 @@ console.log(@query);
 <div class="row pagination-list">
 					@pagination(current, rows, total, pages)
 					</div>
+					<div class = "row">
+					<div class = "col-md-12">
 							<table class="table table-striped" id = "publications">
 		  @for(p <- pubs) {
              @tabrow(p)
           }
 	</table>
+	</div>
+	</div>
 	<div class="row pagination-list">
 					@pagination(current, rows, total, pages)
 					</div>
