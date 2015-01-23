@@ -25,7 +25,40 @@ color: #1f355c;
 color: #1f355c;
 }
 
-.pages{
+.input-group {
+width: 100%;
+}
+
+#pages-right{
+	float:right;
+}
+
+.pagination-list{
+	margin-right: 0px;
+	margin-left: 0px;
+	margin-top: -3%;
+margin-bottom: -1%;
+}
+
+.badge{
 	float: right;
-margin: 10px 25px;
+}
+
+#select-drop{
+	float:left;
+}
+
+.house {
+font-size: 40px;
+margin-top: 50%;
+}
+
+.twitter-typeahead {
+    width: 100% !important;
+    height: 20px !important;
+}
+
+.tt-dropdown-menu {
+    top: 180% !important;
+    background-color: rgba(255, 255, 255, .9);
 }

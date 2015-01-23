@@ -128,6 +128,7 @@ public class TextIndexer {
         }
         public String getLabel () { return label; }
         public Integer getCount () { return count; }
+       
     }
 
     public static class Facet implements Comparator<FV> {
@@ -146,6 +147,22 @@ public class TextIndexer {
             if (d == 0)
                 d = v1.label.compareTo(v2.label);
             return d;
+        }
+        public ArrayList<String> getLabelString (){
+        	ArrayList<String> strings = new ArrayList<String>();
+        	for(int i = 0; i<values.size(); i++){
+        		String label = values.get(i).getLabel();
+        		strings.add(label);
+        	}
+			return strings;
+        }
+        public ArrayList <Integer> getLabelCount (){
+        	ArrayList<Integer> counts = new ArrayList<Integer>();
+        	for(int i = 0; i<values.size(); i++){
+        		int count = values.get(i).getCount();
+        		counts.add(count);
+        	}
+			return counts;
         }
     }
 

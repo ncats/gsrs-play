@@ -3,12 +3,19 @@
 @import ix.core.models.PubAuthor
 @import ix.ncats.models.NIHAuthor
 @import ix.core.search.TextIndexer.Facet
+@import ix.publications.controllers.ReachApp
 @import scala.collection.JavaConversions._
+
 
 @(query: String, current: Int, rows: Int, total: Int, pages: Array[Int],
      facets: Array[Facet], pubs: List[Publication])
-
-
+		
+@scripts={    
+<script>
+var url = '@ReachApp.url("facet","page")';
+console.log(url);
+</script>
+}
 
 @authrow(a: PubAuthor)={
  <li class ="text-left pub-authors">
@@ -63,25 +70,31 @@
 </tr>
 }
 
-@main("Publications", "NCATS Publications") {
+@main("Publications", scripts, "NCATS Publications") {
 
 <div class="row" id="searching">
 
 	<div class="col-md-6 col-md-offset-3">
-		<form class="navbar-form" role="search" method="GET"
-            action="@ix.publications.controllers.routes.ReachApp.search(null)">
-        <div class="form-group" id ="search-form">
-          <input type="text" class="form-control" name="q" placeholder="Search..." id = "search-input">
-          <span class="input-group-btn" id = "search-button">
-				<button class="btn btn-default" id="pubSearch" type="search"
-					style="font-size: 11pt;" value="submit">
-					<span class="glyphicon glyphicon-search"></span>
-				</button>
-				</span>
-        </div>
-      </form>
+		   <form class="main-search" role="search" method="GET"
+				action="@ix.publications.controllers.routes.ReachApp.search(null)">
+	      <div class="input-group">
+		<input type="text" class="form-control typeahead" id="search"
+		       title="Search" placeholder="Search..." name="q">
+		<input type="hidden" name="kind" value="ix.core.models.Publication" />
+		<span class="input-group-btn">
+		  <button class="btn btn-default" id="search" type="search"
+			  value="submit">
+		    <span class="fa fa-search"></span>
+		  </button>
+		</span>
+	      </div>
+	    </form>
+			
+		</div>
 	</div>
-	</div>
+
+
+
 	<div class="row" id="pub-history">
 		<div class="col-md-3 col-xs-4">
 
@@ -102,58 +115,22 @@
 				</div>
 				<!--END panel-heading-->
 				<div class="panel-body" id="pub-main">
-					<div class="row" id="formRow">
-						<div class="col-md- 6">
-							<form action="#" class="text-left">
 
-								<fieldset>
-									<label for=chart id="chartLabel">Results filtered by: </label>
-									<select name="chart" class="facetCharts" id="chart">
-										<option value="0">Program</option>
-										<option value="1" selected="selected">Year</option>
-										<option value="2">Author</option>
-										<option value="3">Category</option>
-										<option value="4">Subject</option>
-										<option value="5">Journal</option>
-									</select>
-								</fieldset>
+						@bardropdown(facets)
 
-							</form>
-						</div>
-					</div>
-					<div id="history-bar">
-@chart(facets);
-</div>
-
-
+					<div id="history-bar"></div>
 					<div id="results">
-						<ul id="results-list">
-							<li><a href="#All" id="results-All">All</a></li>
-
-						</ul>
-
-						<div id="All" class="tab">
-							<div>
-								<ol class="breadcrumb" id="filters"></ol>
-							</div>
-
+<div class="row pagination-list">
+					@pagination(current, rows, total, pages)
+					</div>
 							<table class="table table-striped">
-							<thead>
-	  <tr>
-	    <th>@pagination(current, rows, total, pages)</th>
-	   
-	  </tr>
-	  </thead>
-	  							<tfoot>
-	  <tr>
-	    <th>@pagination(current, rows, total, pages)</th>
-	   
-	  </tr>
-	  </tfoot>
-	  @for(p <- pubs) {
+		  @for(p <- pubs) {
              @tabrow(p)
           }
 	</table>
+	<div class="row pagination-list">
+					@pagination(current, rows, total, pages)
+					</div>
 						</div>
 
 					</div>
@@ -162,5 +139,4 @@
 			</div>
 		</div>
 		<!--END panel panel-primary-->
-</div>
 	}

@@ -1,35 +1,18 @@
 @(count: Integer, message: String, pub: ix.core.models.Publication)
 @import helper._ 
 
-@back = @{ pub.id -1 } 
-@forward = @{ pub.id + 1 }
 @scripts ={
 
-    <script type="text/javascript">
-	hs.graphicsDir = '/assets/images/';
-    hs.outlineType = null;
-    hs.wrapperClassName = null;
-	hs.showCredits= false;
-</script>
 }
 
-@main("Publications", "NCATS Publications") {
+@main("Publications", scripts, "NCATS Publications") {
 
 <div class="row">
-	<div class="col-md-1  arrow-holder">
-		@if(back > 0){ <a href="@back" class='arrow'>&lsaquo;</a> <a
-			href="/publications"><span
-			class="glyphicon glyphicon-home house"></a> }else{ <a
-			href="/publications"><span
-			class="glyphicon glyphicon-home house"></a> }
+		<div class="col-md-1  home-link">
+		<a href = "/projects"><span class="glyphicon glyphicon-home house"></a>
 	</div>
 	<div class="col-md-10">
 		<h1>@pub.title</h1>
-	</div>
-	<div class="col-md-1 arrow-holder">
-		@if(forward <= count){ <a href="@forward" class='arrow'>&rsaquo;</a>
-		}else{ <a href="/publications"><span
-			class="glyphicon glyphicon-home house"></a> }
 	</div>
 </div>
 

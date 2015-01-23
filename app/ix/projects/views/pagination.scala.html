@@ -3,16 +3,20 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int])
 
 @item(page: Int) = {
+
 <li id = "results-badge"><a href="@ReachApp.page(rows,page)">
     <span aria-hidden="true">@page</span>
 </a></li>
 }
   <div class="btn-toolbar" role="toolbar" id = "paging-list">
-    <div class="btn-group" role="group" id="results-badge">
-      <h3 id = "results"><span class="label label-default">@total</span></h3>
+    <div class = "col-md-1">
+    <div class="btn-group" role="group" id="results-page">
+    <h3 id = "results"><span class="label label-default">@total</span></h3>
+      </div>
     </div>
+    <div class ="col-md-11" >
     @if(pages.length > 1) {
-    <div class="btn-group" role="group">
+    <div class="btn-group" role="group" id = "pages-right">
       <ul class="pagination">
     @if(current <= 1) {
        <li class="disabled">
@@ -56,6 +60,7 @@
          </li>
      }
   </ul>
+  </div>
     </div>
     }      
   </div>

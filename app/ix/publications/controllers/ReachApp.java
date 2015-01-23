@@ -26,7 +26,7 @@ import ix.utils.Util;
 public class ReachApp extends Controller {
 	
     static public final int CACHE_TIMEOUT = 60*60;
-    static public final int MAX_FACETS = 6;
+    static public final int MAX_FACETS = 100;
     
     public static final String[] PUBLICATION_FACETS = {
     	"Program",
@@ -45,6 +45,13 @@ public class ReachApp extends Controller {
 	       "MeSH"
     };
     	
+    public static String[] toJsonLabels (TextIndexer.Facet facet) {
+    	  String[] labels = new String[facet.getValues().size()];
+    	  for (int i = 0; i < labels.length; ++i)
+    	    labels[i] = facet.getValues().get(i).getLabel();
+    	  return labels;
+    	    }
+
     
     public static int[] paging (int rowsPerPage, int page, int total) {
 	int max = (total+ rowsPerPage-1)/rowsPerPage;
@@ -91,7 +98,7 @@ public class ReachApp extends Controller {
 
     public static Result publication (long id) {
 	try {
-	    Publication p = (Publication) PublicationFactory.get(id, null);
+	    Publication p = PublicationFactory.getPub(id);
 	    return ok (ix.publications.views.html.details.render((int) id, "publications",p));
 	}
 	catch (Exception ex) {
@@ -410,6 +417,7 @@ Collections.sort(args);
         }
     }
     public static Result search (String kind) {
+    	Logger.info("KIND=====================" + kind);
         try {
             String q = request().getQueryString("q");
             if (kind != null && !"".equals(kind)) {
