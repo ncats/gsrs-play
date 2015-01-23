@@ -8,8 +8,8 @@
 @main("Publications", scripts, "NCATS Publications") {
 
 <div class="row">
-		<div class="col-md-1  home-link">
-		<a href = "/projects"><span class="glyphicon glyphicon-home house"></a>
+		<div class="col-md-1">
+		<a href = "/publications"><span class="glyphicon glyphicon-home house"></a>
 	</div>
 	<div class="col-md-10">
 		<h1>@pub.title</h1>
@@ -28,7 +28,7 @@
 
 				<ul class="keywords" style="text-align: left;">
 					@for(a<-pub.mesh){
-					<li>@a.heading</li> }
+					<li>@a.heading.replaceAll("/","/ ")</li> }
 				</ul>
 
 

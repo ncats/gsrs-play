@@ -7,7 +7,7 @@
 
 
 <div class="row">
-		<div class="col-md-1  home-link">
+		<div class="col-md-1">
 		<a href = "/projects"><span class="glyphicon glyphicon-home house"></a>
 	</div>
 	<div class="col-md-10">
@@ -26,7 +26,7 @@
 				
 				<ul class = "keywords" style="text-align: left;">
 					@for(a<-pub.keywords){
-					<li>@a.term</li> }
+					<li>@a.term.replaceAll("/","/ ")</li> }
 				</ul>
 				
 

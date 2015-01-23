@@ -15,19 +15,25 @@
 var url = '@ReachApp.url("facet","page")';
 console.log(url);
 </script>
+<script type="text/javascript">
+	hs.graphicsDir = '@routes.Assets.at("publications/images/")';
+	hs.outlineType = null;
+	hs.wrapperClassName = null;
+	hs.showCredits = false;
+</script>
 }
 
 @authrow(a: PubAuthor)={
  <li class ="text-left pub-authors">
   @if(!a.isLast){
  	@if(a.author.isInstanceOf[NIHAuthor]){
- 		<a href = "/staff/@a.author.id" class="nca" title="View '@a.author.forename @a.author.lastname's Publications">@a.author.forename @a.author.lastname,</a>
+ 		<a href = "" class="nca" title="View @a.author.forename @a.author.lastname's Publications">@a.author.forename @a.author.lastname,</a>
   	}else{
   		@a.author.forename @a.author.lastname,
   	}
   }else{
    	@if(a.author.isInstanceOf[NIHAuthor]){
- 		<a href = "/staff/@a.author.id" class="nca" title="View '@a.author.forename @a.author.lastname's Publications">@a.author.forename @a.author.lastname</a>
+ 		<a href = "" class="nca" title="View '@a.author.forename @a.author.lastname's Publications">@a.author.forename @a.author.lastname</a>
  	}else{
 		@a.author.forename @a.author.lastname	
 	} 
@@ -39,7 +45,7 @@ console.log(url);
 <tr>
   <td>
   <ul class = "list-inline text-left">
-  <li><a href="@ix.publications.controllers.routes.ReachApp.publication(p.id)" class="pub-title">@p.title</a></li>
+  <li><a href="@ix.publications.controllers.routes.ReachApp.publication(p.id)" class="pub-title">@p.title</a></li><br/>
   
    @for(a <- p.authors) {
             @authrow(a)

@@ -13,9 +13,13 @@
       
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
-    <script src='@routes.Assets.at("ncats/js/search.js")' type='text/javascript'></script>
+   <script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
+@typeahead() 
   </head>
   <body>
     @header(kind)
