@@ -109,7 +109,10 @@ background-color: rgba(31,53,92,.2);
 width: 116% !important;
 }
 
-/*PROJECTS*/
 .keywords {
 padding-left: 8%;
+}
+
+.hidden{
+	display: none;
 }

@@ -14,6 +14,7 @@
 <script>
 var url = '@ReachApp.url("facet","page")';
 console.log(url);
+console.log(@query);
 </script>
 <script type="text/javascript">
 	hs.graphicsDir = '@routes.Assets.at("publications/images/")';
@@ -70,7 +71,9 @@ console.log(url);
  @if(!p.figures.isEmpty()){
 	<div><a href="@p.figures(0).getUrl()" class="highslide" id="zoom" onclick="return hs.expand(this)"><img src="@p.figures(0).getUrl()"  class="pub-img"/></a></div>
           }
-          
+        @if(!p.abstractText.isEmpty()){
+	<div class = "hidden">@p.abstractText</div>
+          }   
          
         </td> 
 </tr>
@@ -129,7 +132,7 @@ console.log(url);
 <div class="row pagination-list">
 					@pagination(current, rows, total, pages)
 					</div>
-							<table class="table table-striped">
+							<table class="table table-striped" id = "publications">
 		  @for(p <- pubs) {
              @tabrow(p)
           }

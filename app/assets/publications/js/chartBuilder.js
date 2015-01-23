@@ -6,6 +6,43 @@ $(document).ready(function() {
 			index = ui.item.index;
 			drawChart(filters[index]);
 		});
+	var search = $(location).attr('search');
+	if(search !==""){
+		search = search.split('?q=');
+		search = search[1].split('&')[0];
+		search = search.split('%2C+');
+		console.log(search);
+		if(search.length > 1){
+//			search = search.replace("%22","");
+			search = search[1].replace("%22", "").replace("+", " ")+' '+ search[0].replace("%22", "").replace("+", " ");
+			console.log(search);
+		}else{
+			search = decodeURI(search[0]);
+		}
+		
+//			
+//		search = search[1].split('&')[0];
+////		search = decodeURI(search);
+//		
+//		search = search.split('%2C+');
+//		search = search[1].replace("+", " ")+ ' '+ search[0].replace("+", " ");
+//		}
+//			search = search[1].split('&')[0];
+//		}
+	}
+	console.log(search);
+	$.extend($.expr[":"], {
+		"containsIN": function(elem, i, match, array) {
+		return (elem.textContent || elem.innerText || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+		}
+		});
+	
+	
+	$('tbody',  '#publications').highlight(search);
+
+	
+	$("div:containsIN('"+search+"')").removeClass('hidden');
+	
 	});
 
 function getLabel(index){
