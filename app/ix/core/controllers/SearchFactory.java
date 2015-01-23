@@ -62,6 +62,19 @@ public class SearchFactory extends EntityFactory {
                 for (String s : me.getValue())
                     options.sideway = "sideway".equalsIgnoreCase(s);
             }
+            else if ("kind".equalsIgnoreCase(me.getKey())) {
+                if (options.kind == null) {
+                    for (String kind: me.getValue()) {
+                        try {
+                            options.kind = Class.forName(kind);
+                            break; // there should only be one!
+                        }
+                        catch (Exception ex) {
+                            Logger.error("Unable to load class: "+kind);
+                        }
+                    }
+                }
+            }
             
             if (Global.DEBUG(1)) {
                 StringBuilder sb = new StringBuilder ();
