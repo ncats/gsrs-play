@@ -38,7 +38,7 @@ public class TcrdRegistry extends Controller {
         Play.application().plugin(TextIndexerPlugin.class);
 
     public static final Namespace namespace = NamespaceFactory.registerIfAbsent
-        ("TCRDv093", "https://pharos.nih.gov");
+        ("TCRDv094", "https://pharos.nih.gov");
 
     static class TcrdTarget implements Comparable<TcrdTarget> {
         String acc;
@@ -155,9 +155,8 @@ public class TcrdRegistry extends Controller {
                 ("select * from t2tc a, target b, protein c\n"+
                  "where a.target_id = b.id\n"+
                  "and a.protein_id = c.id "
+                 +" order by c.id, c.uniprot "           
                  +(rows > 0 ? ("limit "+rows) : "")
-                 //+"limit 20"
-                 +" order by c.id, c.uniprot"
                  );
 
             Set<TcrdTarget> targets = new HashSet<TcrdTarget>();
@@ -192,21 +191,22 @@ public class TcrdRegistry extends Controller {
                     target.idgClass = t.tdl;
                     target.synonyms.add
                         (new Keyword (TARGET, String.valueOf(t.id)));
+
                     UniprotRegistry uni = new UniprotRegistry ();
                     uni.register(target, t.acc);
                     
                     pstm.setLong(1, t.id);
                     addDiseaseRefs (target, namespace, pstm);
-
+                    
                     pstm2.setLong(1, t.id);
                     addChemblRefs (target, pstm2);
-
+                    
                     pstm3.setLong(1, t.id);
                     addDrugDbRefs (target, pstm3);
                     
                     pstm4.setLong(1, t.protein);
                     addGeneRIF (target, pstm4);
-
+                    
                     // reindex this entity; we have to do this since
                     // the target.update doesn't trigger the postUpdate
                     // event.. need to figure exactly why.
@@ -215,6 +215,7 @@ public class TcrdRegistry extends Controller {
                     ++count;
                 }
                 catch (Throwable e) {
+                    e.printStackTrace();
                     Logger.trace("Can't parse "+t.acc, e);
                 }
             }

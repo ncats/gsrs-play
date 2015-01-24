@@ -31,6 +31,7 @@ import ix.idg.models.Disease;
 
 import ix.core.plugins.IxContext;
 import ix.utils.Global;
+import ix.utils.Util;
 
 
 public class UniprotRegistry extends DefaultHandler {
@@ -90,6 +91,7 @@ public class UniprotRegistry extends DefaultHandler {
             file.getParentFile().mkdirs(); 
             WSRequestHolder ws = WS
                 .url("http://www.uniprot.org/uniprot/"+acc+".xml")
+                .setHeader("User-Agent", Util.randomUserAgent())
                 .setTimeout(TIMEOUT)
                 .setFollowRedirects(true);
             byte[] buf = ws.get().get(TIMEOUT).asByteArray();
@@ -97,6 +99,7 @@ public class UniprotRegistry extends DefaultHandler {
             FileOutputStream fos = new FileOutputStream (file);
             fos.write(buf, 0, buf.length);
             fos.close();
+            Logger.debug("Cached "+acc+" ("+buf.length+" bytes)");
             // now register
             register (target, new ByteArrayInputStream (buf));
         }

@@ -32,7 +32,18 @@ remote: '/api/suggest/Target?q=%QUERY',
           wildcard: 'QUERY',
           url: '@ix.core.controllers.routes.SearchFactory.suggestField("Gene", "QUERY",10)'
         }
+});
+    var drug = new Bloodhound({
+        datumTokenizer: function(d) {
+            return Bloodhound.tokenizers.whitespace(d.key);
+        },
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: {
+          wildcard: 'QUERY',
+          url: '@ix.core.controllers.routes.SearchFactory.suggestField("IDG_Drug", "QUERY",10)'
+        }
     });
+
     var mesh = new Bloodhound({
         datumTokenizer: function(d) {
             return d.key.split(/\//);
@@ -45,7 +56,8 @@ remote: '/api/suggest/Target?q=%QUERY',
     disease.initialize();
     gene.initialize();
     mesh.initialize();
-    
+    drug.initialize();
+
     $('.typeahead').typeahead({
         hint: true,
         highlight: true,
@@ -70,6 +82,12 @@ remote: '/api/suggest/Target?q=%QUERY',
         source: gene.ttAdapter(),
         templates: {
             header: '<h4>Gene</h4>'
+    }}, {
+        name: 'Drug',
+        displayKey: 'key',
+        source: drug.ttAdapter(),
+        templates: {
+            header: '<h4>Drug</h4>'
         }
     }, {
         name: 'MeSH',
