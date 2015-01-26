@@ -111,7 +111,7 @@ public class ReachApp extends Controller {
     public static Result project (long id) {
         try {
             Project p = ProjectFactory.getProject(id);
-            return ok (ix.projects.views.html.details.render((int) id, "projects",p));
+            return ok (ix.projects.views.html.details.render("projects",p));
         }
         catch (Exception ex) {
             return internalServerError

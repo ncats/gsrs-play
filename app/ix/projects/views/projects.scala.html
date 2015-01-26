@@ -1,7 +1,5 @@
 @import ix.ncats.controllers.reach.ProjectFactory 
 @import ix.ncats.models.Project 
-@import ix.core.models.PubAuthor 
-@import ix.ncats.models.NIHAuthor 
 @import ix.core.search.TextIndexer.Facet
 @import scala.collection.JavaConversions._ 
 
@@ -58,7 +56,8 @@ projects: List[Project])
 							class="img-hover-parent img-hover-grow overlay-parent overlay-parent-slideup-title-black box ">
 							<a href="projects/@p.id" title=""
 								class="portfolio-entry-media-link">
-								@if(!p.figures.isEmpty()){ <img src="@p.figures(1).getUrl()"
+								@if(p.figures.size() > 1){ 
+								<img src="@p.figures(1).getUrl()"
 								class="img-responsive thumb" alt="@p.title"> }else{
 								@p.title }
 								<div class="overlay-slideup-title black clr">

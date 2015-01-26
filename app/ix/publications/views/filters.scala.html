@@ -14,7 +14,7 @@ var filterList = [];
 <div class="panel panel-primary">
   <div class="panel-heading"">
     <h3 class="panel-title">
-      @f.getName().trim()
+      @f.getName().replaceAll("MeSH","Keyword").trim()
     </h3>
   </div>
   <div class="panel-body">

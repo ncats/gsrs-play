@@ -3,52 +3,39 @@ $(document).ready(function() {
 	var filters = parseFilters(filterList);
 	drawChart(filters[index]);
 	$("#chartSelect").on("selectmenuchange", function( event, ui ) {
-			index = ui.item.index;
-			drawChart(filters[index]);
-		});
-	
-	console.log(search);
+		index = ui.item.index;
+		drawChart(filters[index]);
+	});
+
+//	HIGHLIGHTING//	
 	$.extend($.expr[":"], {
 		"containsIN": function(elem, i, match, array) {
-		return (elem.textContent || elem.innerText || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
+			return (elem.textContent || elem.innerText || "").toLowerCase().indexOf((match[3] || "").toLowerCase()) >= 0;
 		}
-		});
-	
-	
+	});
+
+
 	var search = $(location).attr('search');
-	if(search !==""){
+	if(search !=="" && search !="undefined"){
 		search = search.split('?q=');
-		search = search[1].split('&')[0];
-		search = search.split('%2C+');
-		console.log(search);
 		if(search.length > 1){
-//			search = search.replace("%22","");
+			search = search[1].split('&')[0];
+		}
+		if(search.length > 1){
+			search = search.split('%2C+');
+		}
+		if(search.length > 1){
 			search = search[1].replace("%22", "").replace("+", " ")+' '+ search[0].replace("%22", "").replace("+", " ");
-			console.log(search);
 		}else{
 			search = decodeURI(search[0]);
 		}
-		
-//			
-//		search = search[1].split('&')[0];
-////		search = decodeURI(search);
-//		
-//		search = search.split('%2C+');
-//		search = search[1].replace("+", " ")+ ' '+ search[0].replace("+", " ");
-//		}
-//			search = search[1].split('&')[0];
-//		}
 		$('tbody',  '#publications').highlight(search);
-
-		
 		$("div:containsIN('"+search+"')").removeClass('hidden');
-		
+
 	}
-	
-	
-	
-	
-	});
+
+});
+//END HIGHLIGHTING//	
 
 function getLabel(index){
 	var facetName;
@@ -75,7 +62,7 @@ function getLabel(index){
 	return facetName;
 }
 
-  
+
 function drawChart(facets){
 	var labels =[];
 	var counts =[];
@@ -143,15 +130,37 @@ function drawChart(facets){
 				point: {
 					events: {
 						click: function() {
+							console.log(this);
+							console.log(checked.length);
+							console.log($(location));
 							var facet;
 							var search = $(location).attr('search');
-							if(search ===""){
-								facet = "?facet="+getLabel(index) + '/' + this.category;
+							if(!this.selected){
+								if(search ===""){
+									facet = "?facet="+getLabel(index) + '/' + this.category;
+								}else{
+									facet = "&facet="+getLabel(index) + '/' + this.category;
+								}
+							location.href += facet;
 
 							}else{
-								facet = "&facet="+getLabel(index) + '/' + this.category;
+								var url =  $(location).attr('href');
+								console.log(search);
+								if(checked.length == 1){
+									console.log( $(location).attr('origin')+$(location).attr('pathname'));
+									location.href = $(location).attr('origin')+$(location).attr('pathname');
+								}else{
+									if(this.index === 0){
+									facet = "facet="+getLabel(index) + '/' + this.category + '&';
+								}else{
+									facet = "&facet="+getLabel(index) + '/' + this.category;
+								}
+								console.log(facet);
+								search = url.replace((facet),"");
+								console.log(search);
+								location.href= search;
+								}
 							}
-							location.href += facet;
 						}
 					}
 				}
@@ -166,7 +175,7 @@ function drawChart(facets){
 	var chart2 = $("#history-bar").highcharts();
 	for(var j in checked){
 		chart2.series[0].data[checked[j]].select(true,true);		
-}
+	}
 
 }
 
@@ -179,9 +188,9 @@ function parseFilters(filters){
 	var meshList = [];
 	var journalList =[];
 	for (var f in filters){
-	//	console.log(filters[f]);
+		//	console.log(filters[f]);
 		var name = filters[f].name;
-	//	console.log(name);
+		//	console.log(name);
 		var filter = {};
 		if(name == "Program"){
 			filter = filters[f];
@@ -189,20 +198,20 @@ function parseFilters(filters){
 		}
 		if (name == "Journal+Year+Published"){
 			filter = filters[f];
-				journalYearList.push(filter);
-			}
+			journalYearList.push(filter);
+		}
 		if (name == "Author"){
 			filter = filters[f];
-				authorList.push(filter);
-			}
+			authorList.push(filter);
+		}
 		if (name == "Category"){
 			filter = filters[f];
-				categoryList.push(filter);
-			}
+			categoryList.push(filter);
+		}
 		if (name == "MeSH"){
 			filter = filters[f];
-				meshList.push(filter);
-			}
+			meshList.push(filter);
+		}
 		if (name == "Journal"){
 			filter = filters[f];
 			journalList.push(filter);
@@ -214,5 +223,5 @@ function parseFilters(filters){
 	chartFilters.push(categoryList);
 	chartFilters.push(meshList);
 	chartFilters.push(journalList);
-return chartFilters;
+	return chartFilters;
 }

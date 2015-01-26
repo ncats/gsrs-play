@@ -5,7 +5,7 @@
 @(facets: Array[Facet])
 
 @option(f: Facet) = {
-<option value="@f.getName().trim()">@f.getName().trim()</option>
+<option value="@f.getName().trim()">@f.getName().replaceAll("MeSH","Keyword").trim()</option>
 }
 					<div class="row" id="formRow">
 												<div class="col-md-6">

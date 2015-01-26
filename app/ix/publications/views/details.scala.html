@@ -1,11 +1,7 @@
 @(count: Integer, message: String, pub: ix.core.models.Publication)
 @import helper._ 
 
-@scripts ={
-
-}
-
-@main("Publications", scripts, "NCATS Publications") {
+@main("Publications", "NCATS Publications") {
 
 <div class="row">
 		<div class="col-md-1">
@@ -85,21 +81,17 @@
 				
 				<ul class="pubs-info">
 				 @if(pub.doi!= null){
-					<li><p>
-							Journal Publication Link doi:<a href="http://www.dx.doi.org/@pub.doi">@pub.doi</a>
-						</p></li> }
+					<li>
+							Full Article Text: <a href="http://www.dx.doi.org/@pub.doi"><strong>@pub.doi </strong></a><span class = "glyphicon glyphicon-share-alt"></span>
+					</li> }
 						@if(pub.pmcid!= null){
 					<li>
-						<p>
-							Pubmed Central ID:<a
-								href="http://www.ncbi.nlm.nih.gov/pmc/articles/@pub.pmcid">@pub.pmcid</a>
-						</p>
-					</li> }
+							Pubmed Central ID: <a
+								href="http://www.ncbi.nlm.nih.gov/pmc/articles/@pub.pmcid"><strong>@pub.pmcid </strong></a><span class = "glyphicon glyphicon-share-alt"></span>
+										</li> }
 					<li>
-						<p>
-							PubMed ID:<a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a>
-						</p>
-					</li>
+						PubMed ID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid"><strong>@pub.pmid </strong></a><span class = "glyphicon glyphicon-share-alt"></span>
+						</li>
 				</ul>
 				</div>
 				</div>

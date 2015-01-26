@@ -1,4 +1,4 @@
-@(title: String, scripts: Html, kind: String)(content: Html)
+@(title: String, kind: String)(content: Html)
 
 <!DOCTYPE html>
 <html>
@@ -44,10 +44,16 @@
 <script
 	src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
 @typeahead() 
-@scripts
+<script type="text/javascript">
+	hs.graphicsDir = '@routes.Assets.at("publications/images/")';
+	hs.outlineType = null;
+	hs.wrapperClassName = null;
+	hs.showCredits = false;
+</script>
 </head>
 <body>
-	@header(kind)
+	<div class="container" style="height:200px;"></div>
+
 	<div class="container">@content</div>
 </body>
 </html>

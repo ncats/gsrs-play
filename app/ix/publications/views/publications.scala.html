@@ -10,19 +10,6 @@
 @(query: String, current: Int, rows: Int, total: Int, pages: Array[Int],
      facets: Array[Facet], pubs: List[Publication])
 		
-@scripts={    
-<script>
-var url = '@ReachApp.url("facet","page")';
-console.log(url);
-console.log(@query);
-</script>
-<script type="text/javascript">
-	hs.graphicsDir = '@routes.Assets.at("publications/images/")';
-	hs.outlineType = null;
-	hs.wrapperClassName = null;
-	hs.showCredits = false;
-</script>
-}
 
 @authrow(a: PubAuthor)={
  <li class ="text-left pub-authors">
@@ -59,12 +46,12 @@ console.log(@query);
      </ul>
      <ul class = "text-left links">
      @if(p.doi){
-		<li>Journal Publication Link doi:<a href="http://www.dx.doi.org/@p.doi"> @p.doi</a></li>
+		<li>Full Article Text: <a href="http://www.dx.doi.org/@p.doi"><strong>@p.doi </strong></a><span class = "glyphicon glyphicon-share-alt"></span> </li>
 	}
 	@if(p.pmcid){
-		<li >Pubmed Central ID:<a href="http://www.ncbi.nlm.nih.gov/pmc/articles/@p.pmcid">@p.pmcid</a></li>
+		<li >Pubmed Central ID: <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/@p.pmcid"><strong>@p.pmcid </strong></a><span class = "glyphicon glyphicon-share-alt"></span></li>
 }
-		<li >PubMed ID:<a href="http://www.ncbi.nlm.nih.gov/pubmed/@p.pmid">@p.pmid</a></li>
+		<li >PubMed ID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/@p.pmid"><strong>@p.pmid </strong></a><span class = "glyphicon glyphicon-share-alt"></span></li>
 
  </ul>
  @if(!p.figures.isEmpty()){
@@ -78,7 +65,7 @@ console.log(@query);
 </tr>
 }
 
-@main("Publications", scripts, "NCATS Publications") {
+@main("Publications", "NCATS Publications") {
 
 <div class="row" id="searching">
 
