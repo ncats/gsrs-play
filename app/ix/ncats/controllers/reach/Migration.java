@@ -62,6 +62,16 @@ public class Migration extends Controller {
 
     public static Result migrate () {
         DynamicForm requestData = Form.form().bindFromRequest();
+        if (Play.isProd()) { // production..
+            String secret = requestData.get("secret-code");
+            if (secret == null || secret.length() == 0
+                || !secret.equals(Play.application()
+                                  .configuration().getString("ix.secret"))) {
+                return unauthorized
+                    ("You do not have permission to access resource!");
+            }
+        }
+        
         String jdbcUrl = requestData.get("jdbcUrl");
         String jdbcUsername = requestData.get("jdbc-username");
         String jdbcPassword = requestData.get("jdbc-password");
@@ -446,17 +456,60 @@ public class Migration extends Controller {
     }
     
     static Author instrument (Author a) {
+        if (a.forename == null)
+            return a;
+
+        String[] toks = a.forename.split("[\\s]+");
+        String firstname = toks[0];
+        String initials = null;
+        boolean quote = false;
+        if (toks.length > 1) {
+            if (toks[1].length() == 1)
+                initials = toks[1];
+            else {
+                firstname = a.forename;
+                quote = true;
+            }
+        }
+        else
+            firstname = a.forename;
+        String lastname = a.lastname;
+
         List<Employee> employees = emplFinder
             .where(Expr.and(Expr.eq("lastname", a.lastname),
-                            Expr.eq("forename", a.forename)))
+                            Expr.eq("forename", firstname)))
             .findList();
 
         Author author = a;
         if (employees.isEmpty()) {
+            if (quote) {
+                firstname = "\""+firstname+"\"";
+            }
+            else if (firstname.length() == 1)
+                firstname += "*";
+            else if ("steve".equalsIgnoreCase(firstname) 
+                     || "steven".equalsIgnoreCase(firstname))
+                firstname = "(steve steven)";
+            else if ("matt".equalsIgnoreCase(firstname)
+                     || "matthew".equalsIgnoreCase(firstname)
+                     || "mathew".equalsIgnoreCase(firstname))
+                firstname = "(matt matthew mathew)";
+            else if ("dave".equalsIgnoreCase(firstname) 
+                     || "david".equalsIgnoreCase(firstname))
+                firstname = "(dave david)";
+            else if ("sam".equalsIgnoreCase(firstname)
+                     || "samuel".equalsIgnoreCase(firstname))
+                firstname = "(sam samuel)";
+            else if ("henrike".equalsIgnoreCase(firstname))
+                lastname = "(veith nelson)";
+            else if ("Wichterman".equalsIgnoreCase(lastname)
+                     || "Kouznetsova".equalsIgnoreCase(lastname))
+                lastname = "(Kouznetsova Wichterman)";
+
             try {
                 // try text searching
                 TextIndexer.SearchResult results = getIndexer().search
-                    ("lastname:"+a.lastname+" AND forename:"+a.forename, 10);
+                    ("lastname:"+lastname+" AND forename:"+firstname, 10);
                 if (!results.isEmpty()) {
                     for (Iterator it = results.getMatches().iterator();
                          it.hasNext(); ) {

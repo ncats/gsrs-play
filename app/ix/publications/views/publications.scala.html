@@ -47,10 +47,9 @@ console.log(@query);
   <td>
   <ul class = "list-inline text-left">
   <li><a href="@ix.publications.controllers.routes.ReachApp.publication(p.id)" class="pub-title">@p.title</a></li><br/>
-  
-   @for(a <- p.authors) {
-            @authrow(a)
-          }
+  @for(a <- p.authors) {
+	    @authrow(a)
+             }
           <br/>
            <br/>
   <li id = "journal"><b>@p.journal.isoAbbr</b> vol: @p.journal.volume, pg:@p.pages, @p.journal.year.</li>
@@ -71,7 +70,7 @@ console.log(@query);
  @if(!p.figures.isEmpty()){
 	<div><a href="@p.figures(0).getUrl()" class="highslide" id="zoom" onclick="return hs.expand(this)"><img src="@p.figures(0).getUrl()"  class="pub-img"/></a></div>
           }
-        @if(!p.abstractText.isEmpty()){
+        @if(p.abstractText){
 	<div class = "hidden">@p.abstractText</div>
           }   
          
@@ -136,7 +135,7 @@ console.log(@query);
 					<div class = "col-md-12">
 							<table class="table table-striped" id = "publications">
 		  @for(p <- pubs) {
-             @tabrow(p)
+			    @tabrow(p)
           }
 	</table>
 	</div>

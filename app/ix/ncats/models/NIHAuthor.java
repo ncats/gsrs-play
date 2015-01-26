@@ -17,7 +17,7 @@ public class NIHAuthor extends Author {
     public String dn; // distinguished name
     public Long uid; // unique id
 
-    @Column(length=15)
+    @Column(length=32)
     public String phone;
 
     @Lob
