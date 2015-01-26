@@ -67,12 +67,21 @@ public class Publication extends Model {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_authors")
     public JsonNode getJsonAuthors () {
-	ObjectNode node = mapper.createObjectNode();
-	node.put("count", authors.size());
-	node.put("href", Global.getRef(getClass (), id)+"/authors");
-	return node;
+        ObjectNode node = mapper.createObjectNode();
+        node.put("count", authors.size());
+        node.put("href", Global.getRef(getClass (), id)+"/authors");
+        return node;
     }
-    
+
+    @PostLoad
+    public void orderAuthors () {
+        Collections.sort(authors, new Comparator<PubAuthor>() {
+                public int compare (PubAuthor pa1, PubAuthor pa2) {
+                    return pa1.position - pa2.position;
+                }
+            });
+    }
+        
     /*
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("journalRef")

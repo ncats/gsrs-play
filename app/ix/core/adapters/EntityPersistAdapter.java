@@ -5,6 +5,7 @@ import play.Play;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 
 import java.lang.reflect.*;
 import com.avaje.ebean.event.*;
@@ -42,6 +43,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         new HashMap<String, Method>();
     private Map<String, Method> postDeleteCallback = 
         new HashMap<String, Method>();
+    private Map<String, Method> postLoadCallback = 
+        new HashMap<String, Method>();
+    
 
     public EntityPersistAdapter () {
     }
@@ -96,6 +100,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                     Logger.info("Method "+m.getName()
                                 +"["+cls.getName()
                                 +"] is registered for PostRemove");
+                }
+
+                if (m.isAnnotationPresent(PostLoad.class)) {
+                    postLoadCallback.put(cls.getName(), m);
+                    Logger.info("Method "+m.getName()
+                                +"["+cls.getName()
+                                +"] is registered for PostLoad");
                 }
             }
         }
@@ -163,44 +174,44 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     @Override
     public void postUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-	ObjectMapper mapper = new ObjectMapper ();
-	
-	Class cls = bean.getClass();
-	if (Edit.class.isAssignableFrom(cls)) {
-	    // don't touch this class
-	    return;
-	}
+        ObjectMapper mapper = new ObjectMapper ();
+        
+        Class cls = bean.getClass();
+        if (Edit.class.isAssignableFrom(cls)) {
+            // don't touch this class
+            return;
+        }
 
-	for (Field f : cls.getFields()) {
-	    if (f.getAnnotation(Id.class) != null) {
-		try {
-		    Object id = f.get(bean);
-		    if (id instanceof Long) {
-			Edit edit = new Edit (cls, (Long)id);
-			edit.oldValue = mapper.writeValueAsString
-			    (request.getOldValues());
-			edit.newValue = mapper.writeValueAsString(bean);
-			edit.save();
-		    }
-		    else {
-			Logger.warn("Entity bean ["+cls.getName()+"]="+id
-				    +" doesn't have id of type Long!");
-		    }
-		}
-		catch (Exception ex) {
-		    Logger.trace("Can't retrieve bean id", ex);
-		}
-	    }
-	}
-	
+        for (Field f : cls.getFields()) {
+            if (f.getAnnotation(Id.class) != null) {
+                try {
+                    Object id = f.get(bean);
+                    if (id instanceof Long) {
+                        Edit edit = new Edit (cls, (Long)id);
+                        edit.oldValue = mapper.writeValueAsString
+                            (request.getOldValues());
+                        edit.newValue = mapper.writeValueAsString(bean);
+                        edit.save();
+                    }
+                    else {
+                        Logger.warn("Entity bean ["+cls.getName()+"]="+id
+                                    +" doesn't have id of type Long!");
+                    }
+                }
+                catch (Exception ex) {
+                    Logger.trace("Can't retrieve bean id", ex);
+                }
+            }
+        }
+        
         if (debug (2)) {
             Logger.debug(">> Old: "+mapper.valueToTree(request.getOldValues())
                          +"\n>> New: "+mapper.valueToTree(bean));
         }
 
         try {
-	    String name = cls.getName();
-	    Method m = postUpdateCallback.get(name);
+            String name = cls.getName();
+            Method m = postUpdateCallback.get(name);
             if (m != null) {
                 try {
                     m.invoke(bean);
@@ -240,6 +251,19 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         Object bean = request.getBean();
         String name = bean.getClass().getName();
         Method m = postDeleteCallback.get(name);
+        try {
+            if (m != null)
+                m.invoke(bean);
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't invoke method "+m.getName()+"["+name+"]", ex);
+        }
+    }
+
+    @Override
+    public void postLoad (Object bean, Set<String> includedProperties) {
+        String name = bean.getClass().getName();
+        Method m = postLoadCallback.get(name);
         try {
             if (m != null)
                 m.invoke(bean);
