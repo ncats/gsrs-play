@@ -20,7 +20,7 @@ public class Project extends Model {
     @Id
     public Long id;
 
-    @Column(length=1024)
+    @Column(length=2048)
     public String title;
     @Lob
     public String objective;

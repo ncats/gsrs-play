@@ -149,9 +149,13 @@ public class Migration extends Controller {
                     proj.isPublic = "Y".equalsIgnoreCase
                         (rset.getString("is_public"));
 
-                    Event ev = new Event ();
-                    ev.title = rset.getString("status");
-                    proj.milestones.add(ev);
+                    String status = rset.getString("status");
+                    if (status != null) {
+                        Event ev = new Event ();
+                        ev.title = "Status";
+                        ev.description = status;
+                        proj.milestones.add(ev);
+                    }
 
                     String progs = rset.getString("programs");
                     if (progs != null) {
