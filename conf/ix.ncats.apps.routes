@@ -1,6 +1,6 @@
 #
 # NCATS Projects
-#
+GET	/index		ix.publications.controllers.ReachApp.index
 GET	/projects	ix.publications.controllers.ReachApp.projects(q: String ?= null, rows: Int ?= 12, page: Int ?= 1)
 GET	/projects/:id	ix.publications.controllers.ReachApp.project(id: Long)
 GET	/search		ix.publications.controllers.ReachApp.search(kind: String)
@@ -9,3 +9,6 @@ GET	/search		ix.publications.controllers.ReachApp.search(kind: String)
 #
 GET	/publications	ix.publications.controllers.ReachApp.publications(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/publications/:id	ix.publications.controllers.ReachApp.publication(id: Long)
+GET /trnd				ix.publications.controllers.ReachApp.trnd
+GET /holman				ix.publications.controllers.ReachApp.holman			
+GET /projectexample			ix.publications.controllers.ReachApp.projectexample
