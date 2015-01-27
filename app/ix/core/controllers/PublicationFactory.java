@@ -43,6 +43,10 @@ public class PublicationFactory extends EntityFactory {
         return filter (new FetchOptions (top, skip, filter), finder);
     }
 
+    public static List<Publication> filter (FetchOptions options) {
+        return filter (options, finder);
+    }
+
     public static List<Publication> filter (JsonNode json, int top, int skip) {
         return filter (json, top, skip, finder);
     }
@@ -140,10 +144,6 @@ public class PublicationFactory extends EntityFactory {
     }
     
     public static Publication getEntity( long id){
-    	return getEntity (id, finder);
-    }
-    
-    public static List<Publication> getPubs ( int top, int skip, String filter){
-    	return filter (new FetchOptions( top, skip, filter), finder);
+        return getEntity (id, finder);
     }
 }

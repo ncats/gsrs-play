@@ -9,6 +9,7 @@ public class Author extends Principal {
     public String lastname;
     public String forename;
     public String initials;
+    public String prefname; // preferred name
 
     @Column(length=20)
     public String suffix; // Ph.D, M.D., etc.
@@ -19,8 +20,8 @@ public class Author extends Principal {
     public String affiliation;
     public String orcid; // http://orcid.org/
 
-    @Column(length=1024)
-    public String url;
+    @ManyToOne(cascade=CascadeType.ALL)
+    public Organization institution;
 
     public Author () {}
     public Author (String lastname, String firstname) {
@@ -29,9 +30,16 @@ public class Author extends Principal {
     }
 
     @Indexable(facet=true, suggest=true, name="Author")
-    public String getName () { 
-        if (lastname != null && forename != null)
-            return lastname+", "+forename; 
+    public String getName () {
+        return getName (true);
+    }
+
+    public String getName (boolean lastfirst) {
+        if (prefname != null)
+            return prefname;
+        else if (lastname != null && forename != null)
+            return lastfirst
+                ? (lastname+", "+forename) : (forename+" "+lastname); 
         else if (lastname != null)
             return lastname;
         else if (forename != null)

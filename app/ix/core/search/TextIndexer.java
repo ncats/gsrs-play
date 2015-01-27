@@ -138,8 +138,11 @@ public class TextIndexer {
         Facet (String name) { this.name = name; }
         public String getName () { return name; }
         public List<FV> getValues () {
-            Collections.sort(values, this);
             return values; 
+        }
+        
+        void sort () {
+            Collections.sort(values, this);
         }
 
         public int compare (FV v1, FV v2) {
@@ -149,20 +152,20 @@ public class TextIndexer {
             return d;
         }
         public ArrayList<String> getLabelString (){
-        	ArrayList<String> strings = new ArrayList<String>();
-        	for(int i = 0; i<values.size(); i++){
-        		String label = values.get(i).getLabel();
-        		strings.add(label);
-        	}
-			return strings;
+            ArrayList<String> strings = new ArrayList<String>();
+            for(int i = 0; i<values.size(); i++){
+                String label = values.get(i).getLabel();
+                strings.add(label);
+            }
+            return strings;
         }
         public ArrayList <Integer> getLabelCount (){
-        	ArrayList<Integer> counts = new ArrayList<Integer>();
-        	for(int i = 0; i<values.size(); i++){
-        		int count = values.get(i).getCount();
-        		counts.add(count);
-        	}
-			return counts;
+            ArrayList<Integer> counts = new ArrayList<Integer>();
+            for(int i = 0; i<values.size(); i++){
+                int count = values.get(i).getCount();
+                counts.add(count);
+            }
+            return counts;
         }
     }
 
@@ -544,7 +547,7 @@ public class TextIndexer {
                     }
                     full.append(d[i]);
                     if (!d[i].equals(full.toString())) {
-                        ddq.add(d[0], full.toString());
+                        //ddq.add(d[0], full.toString());
                     }
                 }
             }
@@ -622,6 +625,8 @@ public class TextIndexer {
                                         +"value for label \""+label+"\"!");
                         }
                     }
+                    
+                    f.sort();
                     searchResult.facets.add(f);
                 }
             }

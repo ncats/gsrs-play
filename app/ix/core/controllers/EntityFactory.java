@@ -50,20 +50,20 @@ public class EntityFactory extends Controller {
         new Model.Finder(Long.class, Principal.class);
 
     public static class FetchOptions {
-	public int top;
-	public int skip;
-	public String filter;
-	public List<String> expand = new ArrayList<String>();
-	public List<String> order = new ArrayList<String>();
-	public List<String> select = new ArrayList<String>();
+        public int top;
+        public int skip;
+        public String filter;
+        public List<String> expand = new ArrayList<String>();
+        public List<String> order = new ArrayList<String>();
+        public List<String> select = new ArrayList<String>();
 
-	// only in the context of a request
-			
-	public FetchOptions () {
-	    for (Map.Entry<String, String[]> me
-		     : request().queryString().entrySet()) {
-		String param = me.getKey();
-		if ("order".equalsIgnoreCase(param)) {
+        // only in the context of a request
+                        
+        public FetchOptions () {
+            for (Map.Entry<String, String[]> me
+                     : request().queryString().entrySet()) {
+                String param = me.getKey();
+                if ("order".equalsIgnoreCase(param)) {
                     for (String s : me.getValue())
                         order.add(s);
                 }
@@ -71,39 +71,39 @@ public class EntityFactory extends Controller {
                     for (String s : me.getValue())
                         expand.add(s);
                 }
-		else if ("select".equalsIgnoreCase(param)) {
-		    for (String s : me.getValue())
-			select.add(s);
-		}
-		else if ("top".equalsIgnoreCase(param)) {
-		    String n = me.getValue()[0];
-		    try {
-			top = Integer.parseInt(n);
-		    }
-		    catch (NumberFormatException ex) {
-			Logger.trace("Bogus top value: "+n, ex);
-		    }
-		}
-		else if ("skip".equalsIgnoreCase(param)) {
-		    String n = me.getValue()[0];
-		    try {
-			skip = Integer.parseInt(n);
-		    }
-		    catch (NumberFormatException ex) {
-			Logger.trace("Bogus skip value:"+n, ex);
-		    }
-		}
-		else if ("filter".equalsIgnoreCase(param)) {
-		    filter = me.getValue()[0];
-		}
-	    }
-	}
-	
-	public FetchOptions (int top, int skip, String filter) {
-	    for (Map.Entry<String, String[]> me
-		     : request().queryString().entrySet()) {
-		String param = me.getKey();
-		if ("order".equalsIgnoreCase(param)) {
+                else if ("select".equalsIgnoreCase(param)) {
+                    for (String s : me.getValue())
+                        select.add(s);
+                }
+                else if ("top".equalsIgnoreCase(param)) {
+                    String n = me.getValue()[0];
+                    try {
+                        top = Integer.parseInt(n);
+                    }
+                    catch (NumberFormatException ex) {
+                        Logger.trace("Bogus top value: "+n, ex);
+                    }
+                }
+                else if ("skip".equalsIgnoreCase(param)) {
+                    String n = me.getValue()[0];
+                    try {
+                        skip = Integer.parseInt(n);
+                    }
+                    catch (NumberFormatException ex) {
+                        Logger.trace("Bogus skip value:"+n, ex);
+                    }
+                }
+                else if ("filter".equalsIgnoreCase(param)) {
+                    filter = me.getValue()[0];
+                }
+            }
+        }
+        
+        public FetchOptions (int top, int skip, String filter) {
+            for (Map.Entry<String, String[]> me
+                     : request().queryString().entrySet()) {
+                String param = me.getKey();
+                if ("order".equalsIgnoreCase(param)) {
                     for (String s : me.getValue())
                         order.add(s);
                 }
@@ -111,17 +111,17 @@ public class EntityFactory extends Controller {
                     for (String s : me.getValue())
                         expand.add(s);
                 }
-	    }
-	    this.top = top;
-	    this.skip = skip;
-	    this.filter = filter;
-	}
+            }
+            this.top = top;
+            this.skip = skip;
+            this.filter = filter;
+        }
 
-	public String toString () {
-	    return "FetchOptions{top="+top+",skip="+skip
-		+",expand="+expand.size()
-		+",filter="+filter+",order="+order.size()+"}";
-	}
+        public String toString () {
+            return "FetchOptions{top="+top+",skip="+skip
+                +",expand="+expand.size()
+                +",filter="+filter+",order="+order.size()+"}";
+        }
     }
 
     protected static <T> List<T> all (Model.Finder<Long, T> finder) {
@@ -138,21 +138,21 @@ public class EntityFactory extends Controller {
             }
         }
 
-	public String toJson (Object obj) {
-	    return toJson (obj, false);
-	}
-	
-	public String toJson (Object obj, boolean pretty) {
-	    try {
-		return pretty
-		    ? writerWithDefaultPrettyPrinter().writeValueAsString(obj)
-		    : writeValueAsString (obj);
-	    }
-	    catch (Exception ex) {
-		Logger.trace("Can't write Json", ex);
-	    }
-	    return null;
-	}
+        public String toJson (Object obj) {
+            return toJson (obj, false);
+        }
+        
+        public String toJson (Object obj, boolean pretty) {
+            try {
+                return pretty
+                    ? writerWithDefaultPrettyPrinter().writeValueAsString(obj)
+                    : writeValueAsString (obj);
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't write Json", ex);
+            }
+            return null;
+        }
     }
 
     protected static <T> List<T> filter (FetchOptions options,
@@ -160,32 +160,32 @@ public class EntityFactory extends Controller {
 
         Logger.debug(request().uri()+": "+options);
         Query<T> query = finder.query();
-	
-	for (String path : options.expand) {
-	    Logger.debug("  -> fetch "+path);
-	    query = query.fetch(path);
+        
+        for (String path : options.expand) {
+            Logger.debug("  -> fetch "+path);
+            query = query.fetch(path);
         }
-	query = query.where(options.filter);
+        query = query.where(options.filter);
 
-	if (!options.order.isEmpty()) {
-	    for (String order : options.order) {
-		Logger.debug("  -> order "+order);
-		char ch = order.charAt(0);
-		if (ch == '$') { // desc
-		    query = query.order(order.substring(1)+" desc");
-		}
-		else {
-		    if (ch == '^') {
-			order = order.substring(1);
-		    }
-		// default to asc
-		    query = query.order(order+" asc");
-		}
-	    }
-	}
-	else {
-	    query = query.orderBy("id asc");
-	}
+        if (!options.order.isEmpty()) {
+            for (String order : options.order) {
+                Logger.debug("  -> order "+order);
+                char ch = order.charAt(0);
+                if (ch == '$') { // desc
+                    query = query.order(order.substring(1)+" desc");
+                }
+                else {
+                    if (ch == '^') {
+                        order = order.substring(1);
+                    }
+                // default to asc
+                    query = query.order(order+" asc");
+                }
+            }
+        }
+        else {
+            query = query.orderBy("id asc");
+        }
 
         List<T> results = query
             .setFirstRow(options.skip)
@@ -199,7 +199,7 @@ public class EntityFactory extends Controller {
                                       final Model.Finder<Long, T> finder) {
 
         //if (select != null) finder.select(select);
-	final FetchOptions options = new FetchOptions (top, skip, filter);
+        final FetchOptions options = new FetchOptions (top, skip, filter);
         List<T> results = filter (options, finder);
 
         final ETag etag = new ETag ();
@@ -230,6 +230,7 @@ public class EntityFactory extends Controller {
                 etag.total = e.total;
             }
             else {
+                // TODO: Need to use Akka here!
                 // execute in the background to determine the actual number
                 // of rows that this query should return
                 threadPool.submit(new Runnable () {
@@ -247,7 +248,7 @@ public class EntityFactory extends Controller {
                                 }
                                 Logger.debug(Thread.currentThread().getName()
                                              +": "+options.filter+" => "
-					     +ids.size());
+                                             +ids.size());
                             }
                             catch (Exception ex) {
                                 Logger.trace(Thread.currentThread().getName()
@@ -442,13 +443,13 @@ public class EntityFactory extends Controller {
 
     protected static <T> Result field (Long id, String field, 
                                        Model.Finder<Long, T> finder) {
-	
+        
         T inst = finder.byId(id);
             //query.setId(id).findUnique();
         if (inst == null) {
             return notFound ("Bad request: "+request().uri());
         }
-	return field (inst, field);
+        return field (inst, field);
     }
     
     protected static <T> Result field (Object inst, String field) {
@@ -475,7 +476,7 @@ public class EntityFactory extends Controller {
         StringBuilder uri = new StringBuilder ();
         
         int i = 0;
-	Field f = null;
+        Field f = null;
         Object obj = inst;
         for (; i < paths.length && obj != null; ++i) {
             String pname = paths[i]; // field name
@@ -498,7 +499,7 @@ public class EntityFactory extends Controller {
                 /**
                  * TODO: check for JsonProperty annotation!
                  */                
-		f = obj.getClass().getField(pname);
+                f = obj.getClass().getField(pname);
                 String fname = f.getName();
                 Class<?> ftype = f.getType();
                 
@@ -593,18 +594,18 @@ public class EntityFactory extends Controller {
         ObjectMapper mapper = getEntityMapper ();
         JsonNode node = mapper.valueToTree(obj);
         if (isRaw && !node.isContainerNode()) {
-	    // make sure the content type is properly set if the
-	    // value is a json string
-	    JsonDeserialize json = (JsonDeserialize)
-		f.getAnnotation(JsonDeserialize.class);
-	    Results.Status status = ok (node.asText());
-	    if (json != null && json.as() == JsonNode.class) {
-		status.as("application/json");
-	    }
-	    
-	    return status;
-	}
-	return ok (node);
+            // make sure the content type is properly set if the
+            // value is a json string
+            JsonDeserialize json = (JsonDeserialize)
+                f.getAnnotation(JsonDeserialize.class);
+            Results.Status status = ok (node.asText());
+            if (json != null && json.as() == JsonNode.class) {
+                status.as("application/json");
+            }
+            
+            return status;
+        }
+        return ok (node);
     }
 
     protected static <T extends Model> 
@@ -679,9 +680,9 @@ public class EntityFactory extends Controller {
         if (obj == null)
             return notFound ("Not a valid entity id="+id);
 
-	Principal principal = null;
+        Principal principal = null;
         if (request().username() != null) {
-	    principal = principalFinder
+            principal = principalFinder
                 .where().eq("name", request().username())
                 .findUnique();
             // create new user if doesn't exist
@@ -892,7 +893,7 @@ public class EntityFactory extends Controller {
                 for (Object[] c : changes) {
                     Edit e = new Edit (type, id);
                     e.path = (String)c[0];
-		    e.editor = principal;
+                    e.editor = principal;
                     e.oldValue = (String)c[1];
                     e.newValue = mapper.writeValueAsString(c[2]);
                     e.save();

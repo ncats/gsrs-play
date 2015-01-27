@@ -24,6 +24,7 @@ public class Figure extends Model {
     @Lob
     @JsonIgnore
     @Indexable(indexed=false)
+    @Basic(fetch=FetchType.EAGER)
     public byte[] data;
 
     public int size;
