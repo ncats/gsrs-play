@@ -90,10 +90,23 @@ public class ReachApp extends Controller {
     }
     
     public static Result index () {
-        return ok (ix.ncats.views.html.index.render
-                   ("Pharos: Illuminating the Druggable Genome"));
+    	 TextIndexer.Facet[] facets =filter (getFacets (Project.class, 20),
+    			 PROJECT_FACETS);
+    	return ok (ix.projects.views.html.index.render
+                   (facets));
     }
-
+    public static Result trnd () {
+   	return ok (ix.publications.views.html.trnd.render
+                  ());
+   }
+    public static Result holman () {
+   	return ok (ix.publications.views.html.holman.render
+                  ());
+   }
+    public static Result projectexample () {
+   	return ok (ix.publications.views.html.projectexample.render());
+   }
+    
     public static Result error (int code, String mesg) {
         return ok (ix.idg.views.html.error.render(code, mesg));
     }

@@ -60,9 +60,8 @@ color: #1f355c;
 	margin-top: -3%;
 margin-bottom: -1%;
 }
-
 .badge{
-	float: right;
+	float:right;
 }
 
 /*END PAGINATION CSS */
@@ -120,3 +119,34 @@ padding-left: 8%;
 .hidden{
 	display: none;
 }
+
+
+/*PROJECT ICON PAGE*/
+.img-rounded{
+border-radius: 20px;
+	background-color: #1f355c;
+		height:250px;
+}
+
+.on, .off{
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+div.hex:hover .on {
+    display: initial;
+}
+
+div.hex .on {
+    display: none;
+}
+
+.badge-count{
+float: right;
+margin-top: 82%;
+margin-right: 7%;
+z-index: 99999;
+position: relative;
+}
+/*END PROJECT ICOM PAGE*/
