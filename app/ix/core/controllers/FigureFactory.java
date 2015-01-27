@@ -31,6 +31,7 @@ public class FigureFactory extends EntityFactory {
     public static Result get (Long id, String select) {
         String format = request().getQueryString("format");
         if (format != null) {
+            Logger.debug("Fetching figure "+id+" format="+format);
             if (format.equalsIgnoreCase("image")) {
                 Figure fig = finder.byId(id);
                 if (fig != null) {

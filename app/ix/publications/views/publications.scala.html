@@ -7,7 +7,7 @@
 @import scala.collection.JavaConversions._
 
 
-@(query: String, current: Int, rows: Int, total: Int, pages: Array[Int],
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
      facets: Array[Facet], pubs: List[Publication])
 		
 
@@ -15,15 +15,15 @@
  <li class ="text-left pub-authors">
   @if(!a.isLast){
  	@if(a.author.isInstanceOf[NIHAuthor]){
- 		<a href = "" class="nca" title="View @a.author.forename @a.author.lastname's Publications">@a.author.forename @a.author.lastname,</a>
+ 		<a href="?facet=Author/@a.author.getName()" class="nca" title="View @a.author.getName(false)'s Publications">@a.author.getName(false)</a>,
   	}else{
-  		@a.author.forename @a.author.lastname,
+  		@a.author.getName(false),
   	}
   }else{
    	@if(a.author.isInstanceOf[NIHAuthor]){
- 		<a href = "" class="nca" title="View '@a.author.forename @a.author.lastname's Publications">@a.author.forename @a.author.lastname</a>
+ 		<a href = "?facet=Author/@a.author.getName()" class="nca" title="View '@a.author.getName(false)'s Publications">@a.author.getName(false)</a>
  	}else{
-		@a.author.forename @a.author.lastname	
+		@a.author.getName(false)	
 	} 
   }		
   </li>
@@ -39,10 +39,18 @@
              }
           <br/>
            <br/>
-  <li id = "journal"><b>@p.journal.isoAbbr</b> vol: @p.journal.volume, pg:@p.pages, @p.journal.year.</li>
-        
-          
-            
+  <li id = "journal">
+    @if(p.journal.isoAbbr) {
+    <b>@p.journal.isoAbbr</b>
+    }else {
+    <b>@p.journal.title</b>
+    }
+    @if(p.journal.volume) {
+     (@p.journal.volume)
+    }
+    @if(p.pages) {
+       , @p.pages
+    }, @p.journal.year.</li>
      </ul>
      <ul class = "text-left links">
      @if(p.doi){

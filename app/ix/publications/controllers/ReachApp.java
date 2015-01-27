@@ -32,28 +32,28 @@ public class ReachApp extends Controller {
     
     public static final String[] PUBLICATION_FACETS = {
         "Program",
-               "Journal Year Published",
-               "Author",
-               "Category",
-               "MeSH",
-               "Journal"
+        "Journal Year Published",
+        "Author",
+        "Category",
+        "MeSH",
+        "Journal"
     };
     
     public static final String[] PROJECT_FACETS = {
         "Program",
-               "Journal Year Published",
-               "Author",
-               "Category",
-               "MeSH"
+        "Journal Year Published",
+        "Author",
+        "Category",
+        "MeSH"
     };
         
     public static String[] toJsonLabels (TextIndexer.Facet facet) {
-          String[] labels = new String[facet.getValues().size()];
-          for (int i = 0; i < labels.length; ++i)
+        String[] labels = new String[facet.getValues().size()];
+        for (int i = 0; i < labels.length; ++i)
             labels[i] = facet.getValues().get(i).getLabel();
-          return labels;
-            }
-
+        return labels;
+    }
+    
     
     public static int[] paging (int rowsPerPage, int page, int total) {
         int max = (total+ rowsPerPage-1)/rowsPerPage;
@@ -91,7 +91,7 @@ public class ReachApp extends Controller {
     
     public static Result index () {
         return ok (ix.ncats.views.html.index.render
-                   ("Pharos: Illuminating the Druggable Genome"));
+                   ("NCATS Publications & Projects"));
     }
 
     public static Result error (int code, String mesg) {
@@ -117,7 +117,7 @@ public class ReachApp extends Controller {
             return internalServerError
                 (ix.idg.views.html.error.render(500, "Internal server error"));
         }
-        }
+    }
     
     public static String sha1 (TextIndexer.Facet facet, int value) {
         return Util.sha1(facet.getName(),
@@ -178,27 +178,27 @@ public class ReachApp extends Controller {
         }
         Logger.debug(">> uri="+request().uri());
         
-    StringBuilder uri = new StringBuilder ("?");
-    Map<String, Collection<String>> params =
-        WS.url(url).getQueryParameters();
-    for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
-        boolean matched = false;
-        for (String s : remove)
-            if (s.equals(me.getKey())) {
-                matched = true;
-                break;
+        StringBuilder uri = new StringBuilder ("?");
+        Map<String, Collection<String>> params =
+            WS.url(url).getQueryParameters();
+        for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
+            boolean matched = false;
+            for (String s : remove)
+                if (s.equals(me.getKey())) {
+                    matched = true;
+                    break;
+                }
+            
+            if (!matched) {
+                for (String v : me.getValue())
+                    if (v != null)
+                        uri.append(me.getKey()+"="+v+"&");
             }
-        
-        if (!matched) {
-            for (String v : me.getValue())
-                if (v != null)
-                    uri.append(me.getKey()+"="+v+"&");
         }
+        Logger.debug(">> "+uri);
+        return uri.substring(0, uri.length()-1);
     }
-    Logger.debug(">> "+uri);
-    return uri.substring(0, uri.length()-1);
-    }
-
+    
     public static boolean hasFacet (TextIndexer.Facet facet, int i) {
         String[] facets = request().queryString().get("facet");
         if (facets != null) {
@@ -258,64 +258,71 @@ public class ReachApp extends Controller {
     }
     
     static TextIndexer.SearchResult getSearchResult
-    (final Class kind, final String q, final int total) {
-    
-    final Map<String, String[]> query =  new HashMap<String, String[]>();
-    query.putAll(request().queryString());
-            
-    List<String> qfacets = new ArrayList<String>();
-    if (q != null && q.indexOf('/') > 0) {
-        // treat this as facet
-        if (query.get("facet") != null) {
-            for (String f : query.get("facet"))
-                qfacets.add(f);
+        (final Class kind, final String q, final int total) {
+        
+        final Map<String, String[]> query =  new HashMap<String, String[]>();
+        query.putAll(request().queryString());
+        
+        List<String> qfacets = new ArrayList<String>();
+        if (q != null && q.indexOf('/') > 0) {
+            // treat this as facet
+            if (query.get("facet") != null) {
+                for (String f : query.get("facet"))
+                    qfacets.add(f);
+            }
+            qfacets.add("MeSH/"+q);
+            query.put("facet", qfacets.toArray(new String[0]));
         }
-        qfacets.add("MeSH/"+q);
-        query.put("facet", qfacets.toArray(new String[0]));
-    }
-    
-    List<String> args = new ArrayList<String>();
-    args.add(request().uri());
-    if (q != null)
-        args.add(q);
-    for (String f : qfacets)
-        args.add(f);
-Collections.sort(args);
-    
-    // filtering
-    try {
-    long start = System.currentTimeMillis();
-    String sha1 = Util.sha1(args.toArray(new String[0]));
-        TextIndexer.SearchResult result = Cache.getOrElse
-            (sha1, new Callable<TextIndexer.SearchResult>() {
-                 public TextIndexer.SearchResult call () throws Exception {
-                     return SearchFactory.search
-                     (kind, q != null
-                      && q.indexOf('/') > 0 ? null : q,
-                      total, 0, 20, query);
-                 }
-             }, CACHE_TIMEOUT);
-    
-    double ellapsed = (System.currentTimeMillis() - start)*1e-3;
-    Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
-                               +"results for "
-                               +sha1.substring(0, 8)+"...",
-                               ellapsed));
-    
-        return result;
-    }
-    catch (Exception ex) {
-        Logger.trace("Unable to perform search", ex);
-    }
-    return null;
-}
 
+        if (kind != null && Publication.class.isAssignableFrom(kind)) {
+            // sort in decreasing order
+            query.put("order", new String[]{"$pmid"});
+            query.put("expand", new String[]{"journal"});
+        }
+        
+        List<String> args = new ArrayList<String>();
+        args.add(request().uri());
+        if (q != null)
+            args.add(q);
+        for (String f : qfacets)
+            args.add(f);
+        Collections.sort(args);
+        
+        // filtering
+        try {
+            long start = System.currentTimeMillis();
+            String sha1 = Util.sha1(args.toArray(new String[0]));
+            TextIndexer.SearchResult result = Cache.getOrElse
+                (sha1, new Callable<TextIndexer.SearchResult>() {
+                        public TextIndexer.SearchResult call ()
+                            throws Exception {
+                            return SearchFactory.search
+                            (kind, q != null
+                             && q.indexOf('/') > 0 ? null : q,
+                             total, 0, 20, query);
+                        }
+                    }, CACHE_TIMEOUT);
+            
+            double ellapsed = (System.currentTimeMillis() - start)*1e-3;
+            Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
+                                       +"results for "
+                                       +sha1.substring(0, 8)+"...",
+                                       ellapsed));
+            
+            return result;
+        }
+        catch (Exception ex) {
+            Logger.trace("Unable to perform search", ex);
+        }
+        return null;
+    }
+    
     
     public static Result publications (final String q, int rows, final int page) {
         Logger.debug("Publications: q="+q+" rows="+rows+" page="+page);
         try {
             final int total = PublicationFactory.finder.findRowCount();
-                    if (request().queryString().containsKey("facet") || q != null) {
+            if (request().queryString().containsKey("facet") || q != null) {
                 TextIndexer.SearchResult result =
                     getSearchResult (Publication.class, q, total);
                 
@@ -341,10 +348,9 @@ Collections.sort(args);
                 }
                 
                 return ok (ix.publications.views.html.publications.render
-                           (null, page, rows, result.count(),
+                           (page, rows, result.count(),
                             pages, facets, publications));
             }
-            
             else {
                 TextIndexer.Facet[] facets = Cache.getOrElse
                     (Publication.class.getName()+".facets",
@@ -353,13 +359,21 @@ Collections.sort(args);
                                 return filter (getFacets (Publication.class, 20),
                                                PUBLICATION_FACETS);
                             }
-                        }, 60);
+                        }, CACHE_TIMEOUT);
             
                 rows = Math.min(total, Math.max(1, rows));
                 int[] pages = paging (rows, page, total);               
 
+                PublicationFactory.FetchOptions opts =
+                    new PublicationFactory.FetchOptions
+                    (rows, (page-1)*rows, null);
+                // make sure all the fields are expanded accordingly!!!
+                opts.order.add("$pmid");
+                opts.expand.add("journal");
+                //opts.expand.add("authors.author");
+                
                 List<Publication> publications =
-                    PublicationFactory.getPubs(rows, (page-1)*rows, null);
+                    PublicationFactory.filter(opts);
 
                 String format = request().getQueryString("format");
                 if (format != null && format.equalsIgnoreCase("json")) {
@@ -369,7 +383,7 @@ Collections.sort(args);
                 }
                 
                 return ok (ix.publications.views.html.publications.render
-                           (null, page, rows, total, pages, facets, publications));
+                           (page, rows, total, pages, facets, publications));
             }
         }
         
@@ -384,7 +398,7 @@ Collections.sort(args);
         Logger.debug("Projects: q="+q+" rows="+rows+" page="+page);
         try {
             final int total = ProjectFactory.finder.findRowCount();
-                    if (request().queryString().containsKey("facet") || q != null) {
+            if (request().queryString().containsKey("facet") || q != null) {
                 TextIndexer.SearchResult result =
                     getSearchResult (Project.class, q, total);
                 
@@ -415,17 +429,17 @@ Collections.sort(args);
                                 return filter (getFacets (Project.class, 20),
                                                PROJECT_FACETS);
                             }
-                        }, 60);
+                        }, CACHE_TIMEOUT);
             
                 rows = Math.min(total, Math.max(1, rows));
                 int[] pages = paging (rows, page, total);               
 
                 List<Project> projects =
-                    ProjectFactory.getProjs(rows, (page-1)*rows, null);
+                    ProjectFactory.filter(rows, (page-1)*rows, null);
                 return ok (ix.projects.views.html.projects.render
                            (null, page, rows, total, pages, facets, projects));
             }
-            }
+        }
         
         catch (Exception ex) {
             ex.printStackTrace();
@@ -496,7 +510,7 @@ Collections.sort(args);
                             return SearchFactory.search
                             (null, null, 500, 0, 20, queryString);
                         }
-                    }, 60);
+                    }, CACHE_TIMEOUT);
             }
             else {
                 result = Cache.getOrElse
@@ -506,7 +520,7 @@ Collections.sort(args);
                                 return SearchFactory.search
                                 (null, query, 500, 0, 20, queryString);
                             }
-                        }, 60);
+                        }, CACHE_TIMEOUT);
             }
             
             TextIndexer.Facet[] facets = filter
@@ -525,11 +539,9 @@ Collections.sort(args);
 
             List<Publication> publications =
                 filter (Publication.class, result.getMatches(), max);
-            List<Disease> diseases =
-                filter (Disease.class, result.getMatches(), max);
-            
+
             return ok (ix.publications.views.html.publications.render
-                       ( query, 1, max, totalPublications, pages, facets,
+                       (1, max, totalPublications, pages, facets,
                         publications ));
         }
         catch (Exception ex) {
@@ -539,6 +551,4 @@ Collections.sort(args);
         return internalServerError (ix.idg.views.html.error.render
                                     (500, "Unable to fullfil request"));
     }
-
-
 }

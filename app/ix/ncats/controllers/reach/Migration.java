@@ -27,11 +27,13 @@ import ix.core.models.Keyword;
 import ix.core.models.Namespace;
 import ix.core.models.Attribute;
 import ix.core.models.Thumbnail;
+import ix.core.models.Organization;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
 import ix.ncats.models.Program;
 
 import ix.core.controllers.PublicationFactory;
+import ix.core.controllers.OrganizationFactory;
 
 public class Migration extends Controller {
     static final Model.Finder<Long, Project> projFinder = 
@@ -123,6 +125,8 @@ public class Migration extends Controller {
             ("select * from project_tag where proj_id = ? order by proj_id");
         PreparedStatement pstm2 = con.prepareStatement
             ("select * from project_image where proj_id =? order by img_order");
+        PreparedStatement pstm3 = con.prepareStatement
+            ("select * from project_collab where project_id = ?");
 
         Namespace doResource = resFinder
             .where().eq("name", "Disease Ontology").findUnique();
@@ -174,35 +178,6 @@ public class Migration extends Controller {
                     }
 
                     long pid = rset.getLong("proj_id");
-                    pstm.setLong(1, pid);
-                    ResultSet rs = pstm.executeQuery();
-                    while (rs.next()) {
-                        String source = rs.getString("source");
-                        String tag = rs.getString("tag_key");
-                        String value = rs.getString("value");
-
-                        Keyword key = new Keyword (value);
-                        /*
-                        Attribute attr = new Attribute ("DOID", tag);
-                        attr.resource = doResource;
-                        //attr.save();
-                        key.attrs.add(attr);
-
-                        attr = new Attribute 
-                            ("href", 
-                             "http://www.disease-ontology.org/api/metadata/"
-                             +tag);
-                        attr.resource = doResource;
-                        //attr.save();
-                                                key.attrs.add(attr);
-
-                        proj.annotations.add(key);
-                        */
-                        if (!"disease".equalsIgnoreCase(value))
-                            proj.keywords.add(key);
-                    }
-                    rs.close();
-
                     try {
                         List<Figure> figs = createFigures (pstm2, pid);
                         for (Figure f : figs)
@@ -212,10 +187,36 @@ public class Migration extends Controller {
                         Logger.trace
                             ("Can't retrieve images for project="+pid, ex);
                     }
-                    proj.save();
-                
-                    Logger.debug("New project "+proj.id+": "+proj.title);
-                    ++count;
+
+                    try {
+                        List<Keyword> tags = fetchTags (pstm, pid);
+                        proj.keywords.addAll(tags);
+                    }
+                    catch (Exception ex) {
+                        Logger.trace
+                            ("Can't retrieve tags for project: "+proj.title,
+                             ex);
+                    }
+
+                    /*
+                    try {
+                        List<Author> collab = fetchCollaborators (pstm3, pid);
+                        proj.collaborators.addAll(collab);
+                    }
+                    catch (Exception ex) {
+                        Logger.trace("Can't retrieve collaborators for "
+                                     +"project: "+proj.title, ex);
+                    }
+                    */
+
+                    try {
+                        proj.save();
+                        Logger.debug("New project "+proj.id+": "+proj.title);
+                        ++count;
+                    }
+                    catch (Exception ex) {
+                        Logger.trace("Can't save project: "+proj.title, ex);
+                    }
                 }
             }
             rset.close();
@@ -383,6 +384,52 @@ public class Migration extends Controller {
         return keywords;
     }
 
+    static List<Keyword> fetchTags (PreparedStatement pstm, long id)
+        throws Exception {
+        List<Keyword> keywords = new ArrayList<Keyword>();      
+
+        pstm.setLong(1, id);
+        ResultSet rs = pstm.executeQuery();
+        try {
+            while (rs.next()) {
+                String source = rs.getString("source");
+                String tag = rs.getString("tag_key");
+                String value = rs.getString("value");
+
+                if (!"disease".equalsIgnoreCase(value)) {
+                    Keyword key = new Keyword (value);
+                    keywords.add(key);
+                }
+            }
+            return keywords;
+        }
+        finally {
+            rs.close();
+        }
+    }
+
+    public List<Author> fetchCollaborators (PreparedStatement pstm, long id)
+        throws Exception {
+        List<Author> collabs = new ArrayList<Author>();
+        pstm.setLong(1, id);
+        ResultSet rset = pstm.executeQuery();
+        try {
+            while (rset.next()) {
+                Organization org = new Organization ();
+                org.name = rset.getString("base_affil");
+                org.city = rset.getString("city");
+                org.state = rset.getString("state");
+                org.zipcode = rset.getString("zip");
+                org.country = rset.getString("country");
+                org = OrganizationFactory.registerIfAbsent(org);
+            }
+            return collabs;
+        }
+        finally {
+            rset.close();
+        }
+    }
+    
     static List<Keyword> fetchPrograms (PreparedStatement pstm, long id)
         throws Exception {
         pstm.setLong(1, id);
@@ -491,6 +538,9 @@ public class Migration extends Controller {
             }
             else if (firstname.length() == 1)
                 firstname += "*";
+            else if ("nguyen".equalsIgnoreCase(lastname)
+                     && "D-T".equalsIgnoreCase(firstname))
+                firstname = "trung";
             else if ("steve".equalsIgnoreCase(firstname) 
                      || "steven".equalsIgnoreCase(firstname))
                 firstname = "(steve steven)";
@@ -554,7 +604,7 @@ public class Migration extends Controller {
     public static void updateProfile (Employee empl) {
         if (empl.lastname.equalsIgnoreCase("Carrillo-Carrasco")) {
             empl.suffix = "M.D.";
-            empl.url = "http://www.ncats.nih.gov/about/org/profiles/carrillo-carrasco.html";
+            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/carrillo-carrasco.html";
             empl.biography = 
 "Nuria Carrillo-Carrasco leads the clinical team for the Therapeutics for Rare and Neglected Diseases (TRND) program. The group conducts natural history studies and early-phase clinical trials needed to advance promising therapies for rare diseases, develops biomarkers, and identifies appropriate endpoints for clinical trials. Before she joined TRND, Carrillo-Carrasco studied clinical and translational aspects of inborn errors of metabolism and gene therapy.\n"+
 "Carrillo-Carrasco's research focuses on therapeutic development for rare genetic diseases, including GNE myopathy, creatine transporter defect and other inborn errors of metabolism. She is a faculty member for the Medical Biochemical Genetics fellowship program at NIH. Carrillo-Carrasco earned her M.D. from the National Autonomous University of Mexico and completed her pediatrics residency at Georgetown University Hospital. She is board certified in pediatrics, medical genetics and biochemical genetics.";
@@ -567,7 +617,7 @@ public class Migration extends Controller {
 "Carrillo-Carrasco is interested in addressing the challenges of developing therapeutics for rare diseases by improving drug development tools and the design of natural history studies and clinical trials for these diseases. Currently, she is the principal investigator of two studies of GNE myopathy: a natural history study and a clinical trial of ManNAc as a potential therapy for the disease. GNE myopathy is an extremely rare disorder that occurs in just one of every 1 million people and causes devastating progressive muscle weakness. No treatment exists for the disorder, which is caused by mutations in the GNE gene that lead to a defect in the sialic acid biosynthetic pathway. As part of the natural history study, Carrillo-Carrasco has characterized more than 40 patients on clinical, functional and molecular grounds and is evaluating appropriate outcome measures to be used in clinical trials, developing better diagnostic tools and discovering biomarkers for the disease.";
         }
         else if (empl.lastname.equalsIgnoreCase("Gee")) {
-            empl.url = "http://www.ncats.nih.gov/about/org/profiles/gee.html";
+            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/gee.html";
             empl.suffix = "M.S.";
             empl.title =
 "Research Scientist, Biology\n"+
@@ -584,7 +634,7 @@ public class Migration extends Controller {
             empl.selfie = createFigure
                 ("http://www.ncats.nih.gov/about/org/profiles/images/GerholdD.jpg");
             empl.suffix = "Ph.D.";
-            empl.url = "http://www.ncats.nih.gov/about/org/profiles/gerhold.html";
+            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/gerhold.html";
             empl.title = 
 "Leader, Genomic Toxicology\n"+
 "Division of Pre-Clinical Innovation\n"+

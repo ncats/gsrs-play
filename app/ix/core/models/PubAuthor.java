@@ -19,6 +19,7 @@ public class PubAuthor extends Model {
     public Boolean correspondence;
 
     @OneToOne(cascade=CascadeType.ALL)
+    @Basic(fetch=FetchType.EAGER)
     public Author author;
 
     public PubAuthor () {}
