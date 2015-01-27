@@ -1,0 +1,205 @@
+/* 
+	pure layout properties are not indent. you can edit them for your needs.
+	pure technical properties are indent 3 tabs. Generally there is no need to edit them. // important for functionality
+	some properties are indent 1 tab, they are important for functionality but have to be adapted to your layout
+
+*/
+
+
+.sbh {
+		position: absolute;
+		left: -999px;
+		width: 0;
+		overflow: hidden;	
+}
+
+#nav2 {
+	float:left;
+	padding-top:15px;
+	padding-right:16px;
+	background: transparent url(../images/centercolumn-bkgnd.jpg) no-repeat left top;
+	font-weight:lighter;
+	position:relative;
+	z-index: 100;
+	
+}
+
+#nav2 ul {
+	width: 190px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	/*z-index:1000;*/
+	background-color:#FFF;
+}
+
+#nav2 ul.bumpup {
+
+}
+
+#nav2 ul li ul {
+	width: 225px;
+}
+
+
+#nav2 ul li {
+	position: relative;
+	padding-left:18px;
+	background: url('../images/bullet-4px-999999-square.gif') no-repeat;
+	background-position: 10px 10px;
+	margin:0;
+	width:177px;
+}
+
+#nav2 ul li.section {
+	background:repeat #E8E7F1; 
+	padding-left:7px;
+	width:188px;
+}
+
+#nav2 ul li.sectionparent {
+	background: url('../images/navback.jpg') repeat;
+	padding:6px 0px 6px 11px;
+	width:184px;
+	color: #524D94;
+	font-weight:bold;
+	list-style:none;
+}
+
+#nav2 ul li.sectionoff {
+	background: none;
+	padding-left:5px;
+	border-top:1px #DDD solid;
+	width:190px;
+}
+
+#nav2 ul.bumpup li.sectionoff {
+
+}
+
+#nav2 li ul {
+	top: -1px;
+	position: absolute;
+	left: -9999px;
+	display: none;
+}
+
+#nav2 ul li a, 
+#nav2 ul li strong {
+	display: block;		
+	text-decoration: none;
+	color: #666;
+	padding: 5px;
+}
+
+#nav2 ul.bumpup li a {
+
+}
+
+
+#nav2 ul li.section a, 
+#nav2 ul li.section strong {
+	background:url(../images/navback.jpg) repeat;
+	display: block;		
+	text-decoration: none;
+	color: #642F6C;
+	padding: 5px;
+}
+
+
+a.listfocus  {
+	font-weight:bold !important; 
+	color:#642F6C !important;
+	background:url(../images/navback.jpg) repeat !important;
+}
+
+
+
+/*#nav2 li.parent>a:after {
+	content: " >";
+}*/
+
+#nav2 ul li:hover, #nav2 ul li:focus, #nav2 ul li:active,
+#nav2 ul li.ofocus, #nav2 li ul li.ofocus { 
+	background-color:#EFEFEF;
+}
+
+#nav2 ul li.section:hover, #nav2 ul li.section:focus, #nav2 ul li.section:active,
+#nav2 ul li.section.ofocus, #nav2 li ul li.section.ofocus { 
+	border:none;
+	background: url('../images/navback.jpg') repeat;
+	background:repeat #E8E7F1;
+}
+
+#nav2 .navfxenabled li:hover ul { 
+	left: -999px;
+}
+
+#nav2 li:hover ul, 
+#nav2 .navfxenabled li.over ul,
+#nav2 li ul li:hover ul, 
+#nav2 .navfxenabled li ul li.over ul
+{ 
+	display: block;
+	left: 184px;	
+}
+
+
+#nav2 li:hover ul ul, 
+#nav2 .navfxenabled li.over ul ul { 
+	left: -999px;
+}
+
+#nav2 ul li.active>a, #nav2 ul li.activepath>a, 
+#nav2 li.active a:hover, #nav2 li.activepath a:hover,
+#nav2 li.active a:active, #nav2 li.activepath a:active,
+#nav2 li.active a:focus, #nav2 li.activepath a:focus,
+#nav2 li.active strong,
+#nav2 #ofocus {
+	z-index: 90;
+}
+
+#nav2 .active ul a, #nav2 .activepath ul a {
+	color: #666; 
+	
+}
+
+#nav2 li.active ol, 
+#nav2 li.activepath ul {
+	display: block;
+	margin-left:10px;
+}
+
+#nav2 a:focus+ul, #nav2 a:active+ul {
+	left: 184px;
+}
+
+#nav2 li ul li a:focus+ul {
+	left: 1248px;		
+}
+
+#nav2 li ul li a:focus, #nav2 li ul li a:active {
+	position: absolute;
+	left: 1148px;	
+}
+
+#nav2 li ul li ul a:focus, #nav2 li ul li ul a:active {
+	position: absolute;
+	left: 2180px;	
+}
+
+#nav2 li ul li a:hover, #nav2  li ul li a:hover,
+#nav2 li:hover ul li a:focus, #nav2  li:hover ul li a:active,
+#nav2 .navfxenabled li ul li a:focus, #nav2 .navfxenabled  li ul li a:active
+{
+	position: static;
+	z-index: 90;
+}
+
+#nav2 ul ul {
+	border:1px solid #CCC;
+}
+
+#nav2 ul ul li {
+	width:207px;
+}

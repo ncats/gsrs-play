@@ -1,0 +1,106 @@
+.xsmallview{ /*CSS for "extra small font" setting*/
+font-size: 1px;
+}
+
+.smallview{ /*CSS for "small font" setting*/
+font-size: 11px;
+}
+
+.normalview{ /*CSS to return page to default setting (with no additional CSS rules added)*/
+}
+
+.largeview{ /*CSS for "large font" setting*/
+font-size: 21px;
+}
+
+.xlargeview{ /*CSS for "extra large font" setting*/
+font-size: 24px;
+}
+
+a.texttoggler{ /*CSS for Text Size Toggler control*/
+margin-right: 6px;
+}
+
+a.texttoggler img{ /*CSS for Text Size Toggler control*/
+border: 1px solid gray;
+}
+
+a.texttoggler img:hover{ /*CSS for Text Size Toggler control*/
+border: 1px solid red;
+}
+
+a.selectedtoggler img{ /*CSS for Selected Text Size Toggler control*/
+border: 1px solid red;
+}
+
+.xsmallview, .xsmallview .content{ /*CSS for "extra small font" setting*/
+ font-size: 11px;
+ }
+
+ .smallview, .smallview .content{ /*CSS for "small font" setting*/
+ font-size: 13px;
+ }
+
+ .normalview, .normalview .content{ /*CSS to return page to default setting (with no additional CSS rules added)*/
+ }
+
+ .largeview, .largeview .content{ /*CSS for "large font" setting*/
+ font-size: 21px;
+ }
+
+ .xlargeview, .xlargeview .content{ /*CSS for "extra large font" setting*/
+ font-size: 24px;
+ }
+ .xsmallview .content{ /*CSS for "extra small font" setting*/
+ font-size: 11px;
+ }
+
+ .smallview .content{ /*CSS for "small font" setting*/
+ font-size: 13px;
+ }
+
+ .normalview .content{ /*CSS to return page to default setting (with no additional CSS rules added)*/
+ }
+
+ .largeview .content{ /*CSS for "large font" setting*/
+ font-size: 21px;
+ }
+
+ .xlargeview .content{ /*CSS for "extra large font" setting*/
+ font-size: 24px;
+ }
+ 
+.largeview #inthenews li{
+	padding-right: 1em;
+}
+
+.largeview #slideshow, #slideshow .slides {
+	height: 440px;
+	background-color: #12647A;
+}
+
+.largeview #inthenews {
+	max-height: 430px;
+}
+
+.smallview #homephoto {
+	margin-bottom:10px !important; 
+	float:right; 
+	position:relative; 
+	top:-125px;
+	}
+.largeview #homephoto {
+	margin-bottom:60px !important; 
+	float:right; 
+	position:relative; 
+	top:-278px;
+	}
+.smallview #slideshow .description {
+font-size: 11px;
+	}
+.largeview #slideshow .description {
+font-size: 21px;
+}
+.largeview #slideshow .slides-nav {
+	top: 353px;
+}

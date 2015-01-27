@@ -1,0 +1,116 @@
+@import ix.ncats.models.Project 
+@import ix.core.search.TextIndexer.Facet
+
+@(facets: Array[Facet])
+
+@main("Publications", "NCATS Publications") {
+@for(f <- facets) {
+@f.getName().replaceAll("MeSH","Keyword").trim()
+ @for(i <- 0 until f.getValues().size()) {
+     @f.getValues().get(i).getLabel()
+     @f.getValues().get(i).getCount()
+  }
+}
+
+
+<div class="row" style = "height:250px;">
+<h1> NCATS PROJECTS</h1>
+</div>
+
+<div class="row" id="searching">
+
+	<div class="col-md-6 col-md-offset-3">
+		   <form class="main-search" role="search" method="GET"
+				action="@ix.publications.controllers.routes.ReachApp.search(null)">
+	      <div class="input-group">
+		<input type="text" class="form-control typeahead" id="search"
+		       title="Search" placeholder="Search..." name="q">
+		<input type="hidden" name="kind" value="ix.ncats.models.Project" />
+		<span class="input-group-btn">
+		  <button class="btn btn-default" id="search" type="search"
+			  value="submit">
+		    <span class="fa fa-search"></span>
+		  </button>
+		</span>
+	      </div>
+	    </form>
+			
+		</div>
+	</div>
+
+<div class="row" id="pub-history">
+	<div class="col-md-3 col-xs-4">@filters(facets)</div>
+	<!--END panel panel-primary-->
+
+
+
+	<div class="col-md-9 col-xs-8">
+      <div class="row">
+	<div class="col-sm-4 hex" >
+	  <a href= "@ix.idg.controllers.routes.IDGApp.diseases()">
+	    <div class="img-rounded" id="disease">
+              	  <img src="@routes.Assets.at("publications/images/cancer.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("publications/images/cancer-on.svg")" class = "on"/>
+	      <span class="badge count">diseases</span>
+	    </div>
+	  </a>
+	</div>
+	<div class="col-sm-4 hex" >
+	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	    <div class="img-rounded" id = "targets" >
+	      	  <img src="@routes.Assets.at("ncats/images/ligands.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/ligands-shadow.svg")" class = "on"/>
+	      <span class="badge count">targets</span>
+	    </div>
+	  </a>
+	</div>
+	<div class="col-sm-4 hex" >
+	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	    <div class="img-rounded" id = "targets">
+	      	  <img src="@routes.Assets.at("ncats/images/Ligands-icon.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/ligands-shadow.svg")" class = "on"/>
+	      <span class="badge count">targets2</span>
+	    </div>
+	  </a>
+	</div>
+      </div>
+      
+      <div class="row" style = "height:30px;">
+</div>
+      
+      <div class= "row">
+	<div class="col-sm-4 hex">
+	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	    <div class ="img-rounded" id = "ligands">
+	     	  <img src="@routes.Assets.at("ncats/images/targets.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/targets-shadow.svg")" class = "on"/>
+	      <span class="badge count">ligands</span>
+	    </div>
+	  </a>
+	</div>
+	<div class="col-sm-4 hex">
+	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	    <div class ="img-rounded" id = "ligands">
+	      	  <img src="@routes.Assets.at("ncats/images/diseases.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/diseases-shadow.svg")" class = "on"/>
+      
+	    </div>
+	  </a>
+	  <span class="badge count">ligands</span>
+	</div>
+	<div class="col-sm-4 hex" >
+	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	    <div class="img-rounded" id = "targets">
+	      	  <img src="@routes.Assets.at("ncats/images/targets.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/targets-shadow.svg")" class = "on"/>
+	      <span class="badge count">targets</span>
+	    </div>
+	  </a>
+	</div>
+      </div>
+      
+            <div class="row" style = "height:30px;">
+</div>
+
+  
+ }
