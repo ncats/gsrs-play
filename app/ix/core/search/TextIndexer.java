@@ -131,7 +131,7 @@ public class TextIndexer {
        
     }
 
-    public static class Facet implements Comparator<FV> {
+    public static class Facet {
         String name;
         List<FV> values = new ArrayList<FV>();
 
@@ -141,16 +141,31 @@ public class TextIndexer {
             return values; 
         }
         
-        void sort () {
-            Collections.sort(values, this);
+        public void sort () {
+            sortCounts (true);
         }
 
-        public int compare (FV v1, FV v2) {
-            int d = v2.count - v1.count;
-            if (d == 0)
-                d = v1.label.compareTo(v2.label);
-            return d;
+        public void sortLabels (final boolean desc) {
+            Collections.sort(values, new Comparator<FV>() {
+                    public int compare (FV v1, FV v2) {
+                        return desc ? v2.label.compareTo(v1.label)
+                            : v1.label.compareTo(v2.label);
+                    }
+                });
         }
+        
+        public void sortCounts (final boolean desc) {
+            Collections.sort(values, new Comparator<FV> () {
+                    public int compare (FV v1, FV v2) {
+                        int d = desc ? (v2.count - v1.count)
+                            : (v1.count-v2.count);
+                        if (d == 0)
+                            d = v1.label.compareTo(v2.label);
+                        return d;
+                    }
+                });
+        }
+
         public ArrayList<String> getLabelString (){
             ArrayList<String> strings = new ArrayList<String>();
             for(int i = 0; i<values.size(); i++){

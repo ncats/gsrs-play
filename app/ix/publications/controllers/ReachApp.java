@@ -17,22 +17,25 @@ import ix.idg.models.*;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.SearchFactory;
+import ix.core.controllers.XRefFactory;
 import ix.core.search.TextIndexer;
 import ix.ncats.controllers.reach.ProjectFactory;
 import ix.ncats.models.Project;
 import ix.utils.Global;
 import ix.utils.Util;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.avaje.ebean.Expr;
 
 
 public class ReachApp extends Controller {
         
     static public final int CACHE_TIMEOUT = 60*60;
     static public final int MAX_FACETS = 100;
+    static final String YEAR_FACET = "Journal Year Published";
     
     public static final String[] PUBLICATION_FACETS = {
         "Program",
-        "Journal Year Published",
+        YEAR_FACET,
         "Author",
         "Category",
         "MeSH",
@@ -41,11 +44,20 @@ public class ReachApp extends Controller {
     
     public static final String[] PROJECT_FACETS = {
         "Program",
-        "Journal Year Published",
+        YEAR_FACET,
         "Author",
         "Category",
         "MeSH"
     };
+
+    public static class RSS {
+        public String title;
+        public String link;
+        public String id;
+        public String updated;
+        public String summary;
+        RSS () {}
+    }
         
     public static String[] toJsonLabels (TextIndexer.Facet facet) {
         String[] labels = new String[facet.getValues().size()];
@@ -254,6 +266,11 @@ public class ReachApp extends Controller {
                 if (n.equals(f.getName()))
                     filtered.add(f);
         }
+        for (TextIndexer.Facet f : filtered)
+            // treat year special...
+            if (f.getName().equals(YEAR_FACET))
+                f.sortLabels(true);
+        
         return filtered.toArray(new TextIndexer.Facet[0]);
     }
     
@@ -264,7 +281,8 @@ public class ReachApp extends Controller {
         query.putAll(request().queryString());
         
         List<String> qfacets = new ArrayList<String>();
-        if (q != null && q.indexOf('/') > 0) {
+        final boolean hasMesh = q != null && q.indexOf('/') > 0;        
+        if (hasMesh) {
             // treat this as facet
             if (query.get("facet") != null) {
                 for (String f : query.get("facet"))
@@ -279,6 +297,7 @@ public class ReachApp extends Controller {
             query.put("order", new String[]{"$pmid"});
             query.put("expand", new String[]{"journal"});
         }
+        //query.put("drill", new String[]{"down"});
         
         List<String> args = new ArrayList<String>();
         args.add(request().uri());
@@ -297,9 +316,7 @@ public class ReachApp extends Controller {
                         public TextIndexer.SearchResult call ()
                             throws Exception {
                             return SearchFactory.search
-                            (kind, q != null
-                             && q.indexOf('/') > 0 ? null : q,
-                             total, 0, 20, query);
+                            (kind, hasMesh ? null : q,  total, 0, 20, query);
                         }
                     }, CACHE_TIMEOUT);
             
@@ -370,7 +387,6 @@ public class ReachApp extends Controller {
                 // make sure all the fields are expanded accordingly!!!
                 opts.order.add("$pmid");
                 opts.expand.add("journal");
-                //opts.expand.add("authors.author");
                 
                 List<Publication> publications =
                     PublicationFactory.filter(opts);
@@ -550,5 +566,39 @@ public class ReachApp extends Controller {
         
         return internalServerError (ix.idg.views.html.error.render
                                     (500, "Unable to fullfil request"));
+    }
+
+    public static Result rsspub (String key, int count) {
+        List<XRef> xrefs = XRefFactory.finder
+            .where(Expr.and(Expr.eq("properties.label", "web-tag"),
+                            Expr.eq("properties.term", key)))
+            .findList();
+        
+        List<RSS> entries = new ArrayList<RSS>();
+        int min = Math.min(count, xrefs.size());
+        Iterator<XRef> it = xrefs.iterator();
+        for (int i = 0; i < min && it.hasNext(); ++i) {
+            XRef ref = it.next();
+            Publication pub = (Publication)ref.deRef();
+            RSS rss = null;
+            for (Value v : ref.properties) {
+                if (v.label.equals("rss-content")) {
+                    Keyword kw = (Keyword)v;
+                    rss = new RSS();
+                    rss.title = kw.term;
+                }
+            }
+            
+            if (rss == null) {
+                rss = new RSS ();
+                rss.title = pub.title;
+            }
+            rss.link = Global.getRef(pub);
+            rss.id = "urn:uuid:"+UUID.randomUUID();
+            rss.summary = pub.abstractText;
+            entries.add(rss);
+        }
+        return ok (ix.publications.views.xml.rsspub.render
+                   (key, entries.toArray(new RSS[0])));
     }
 }

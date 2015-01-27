@@ -1,6 +1,6 @@
 name := "inxight"
 
-version := "0.0.6-reach"
+version := "0.0.8-reach"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 

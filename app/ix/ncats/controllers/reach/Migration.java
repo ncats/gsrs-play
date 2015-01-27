@@ -28,6 +28,7 @@ import ix.core.models.Namespace;
 import ix.core.models.Attribute;
 import ix.core.models.Thumbnail;
 import ix.core.models.Organization;
+import ix.core.models.XRef;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
 import ix.ncats.models.Program;
@@ -299,12 +300,15 @@ public class Migration extends Controller {
             ("select * from pub_tag where db_pub_id = ?");
         PreparedStatement pstm3 = con.prepareStatement
             ("select * from pub_program where db_pub_id = ?");
+        PreparedStatement pstm4 = con.prepareStatement
+            ("select * from publication where db_pub_id = ?");
 
         try {
             // now migrate publications
             ResultSet rset = stm.executeQuery
                 ("select * from publication "
                  //+"where rownum <= 10"
+                 +"order by pmid, db_pub_id"
                 );
             int publications = 0;
             while (rset.next()) {
@@ -319,20 +323,15 @@ public class Migration extends Controller {
                             for (PubAuthor p : pub.authors) {
                                 p.author = instrument (p.author);
                             }
-
+                            
+                            long id = rset.getLong("db_pub_id");
                             // get image (if any)
+                            List<Keyword> tags = new ArrayList<Keyword>();
                             try {
-                                long id = rset.getLong("db_pub_id");
                                 List<Figure> figs = createFigures (pstm, id);
                                 for (Figure f : figs) {
                                     pub.figures.add(f);
                                 }
-
-                                for (Keyword k : fetchCategories (pstm2, id))
-                                    pub.keywords.add(k);
-                                
-                                for (Keyword k : fetchPrograms (pstm3, id))
-                                    pub.keywords.add(k);
                             }
                             catch (Exception ex) {
                                 Logger.trace
@@ -340,10 +339,61 @@ public class Migration extends Controller {
                                      ex);
                             }
 
-                            pub.save();
-                            Logger.debug("+ New publication added "+pub.id
-                                         +": "+pub.title);
-                            ++publications;
+                            try {
+                                for (Keyword k : fetchCategories (pstm2, id)) {
+                                    if ("web-tag".equalsIgnoreCase(k.label)) {
+                                        tags.add(k);
+                                    }
+                                    pub.keywords.add(k);
+                                }
+                                
+                                for (Keyword k : fetchPrograms (pstm3, id))
+                                    pub.keywords.add(k);
+                            }
+                            catch (Exception ex) {
+                                Logger.trace
+                                    ("Can't retrieve categories for pmid="+pmid,
+                                     ex);
+                            }
+
+                            try {
+                                pub.save();
+                                Logger.debug("+ New publication added "+pub.id
+                                             +": "+pub.title);
+                                
+                                // now create an xref with the tags
+                                if (!tags.isEmpty()) {
+                                    XRef ref = new XRef (pub);
+                                    pstm4.setLong(1, id);
+                                    ResultSet rs = pstm4.executeQuery();
+                                    if (rs.next()) {
+                                        String alias =
+                                            rs.getString("web_alias");
+                                        if (alias != null) {
+                                            Logger.debug
+                                                ("++ web alias: "+alias);
+                                        }
+                                        else { // just use the title
+                                            alias = pub.title;
+                                        }
+                                        Keyword k = new Keyword
+                                            ("rss-content", alias);
+                                        ref.properties.add(k);
+                                    }
+                                    rs.close();
+                                    ref.properties.addAll(tags);
+                                    ref.save();
+                                    Logger.debug("+ XRef "+ref.id+" created "
+                                                 +"for publication "+pub.id
+                                                 +" with "+tags.size()
+                                                 +" tags!");
+                                }
+                                ++publications;
+                            }
+                            catch (Exception ex) {
+                                Logger.trace("Can't save publication: "
+                                             +pub.title, ex);
+                            }
                         }
                         else {
                             Logger.warn("Can't locate PMID "+pmid);
@@ -373,7 +423,8 @@ public class Migration extends Controller {
         List<Keyword> keywords = new ArrayList<Keyword>();
         while (rset.next()) {
             String tag = rset.getString("tag_key");
-            if ("category".equalsIgnoreCase(tag)) {
+            if ("category".equalsIgnoreCase(tag)
+                || "web-tag".equalsIgnoreCase(tag)) {
                 Keyword kw = new Keyword ();
                 kw.label = tag;
                 kw.term = rset.getString("value");
