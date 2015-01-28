@@ -364,10 +364,11 @@ create table ix_core_principal (
   lastname                  varchar(255),
   forename                  varchar(255),
   initials                  varchar(255),
+  prefname                  varchar(255),
   suffix                    varchar(20),
   affiliation               clob,
   orcid                     varchar(255),
-  url                       varchar(1024),
+  institution_id            bigint,
   ncats_employee            boolean,
   dn                        varchar(1024),
   uid                       bigint,
@@ -1047,24 +1048,26 @@ alter table ix_core_principal add constraint fk_ix_core_principal_namespac_15 fo
 create index ix_ix_core_principal_namespac_15 on ix_core_principal (namespace_id);
 alter table ix_core_principal add constraint fk_ix_core_principal_selfie_16 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
 create index ix_ix_core_principal_selfie_16 on ix_core_principal (selfie_id);
-alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_p_17 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
-create index ix_ix_core_processingstatus_p_17 on ix_core_processingstatus (payload_id);
-alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_18 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
-create index ix_ix_ncats_project_curation_18 on ix_ncats_project (curation_id);
-alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_19 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_pubauthor_author_19 on ix_core_pubauthor (author_id);
-alter table ix_core_publication add constraint fk_ix_core_publication_journa_20 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
-create index ix_ix_core_publication_journa_20 on ix_core_publication (journal_id);
-alter table ix_core_role add constraint fk_ix_core_role_principal_21 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_role_principal_21 on ix_core_role (principal_id);
-alter table ix_ginas_substance add constraint fk_ix_ginas_substance_structu_22 foreign key (structure_uuid) references ix_ginas_structure (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_substance_structu_22 on ix_ginas_substance (structure_uuid);
-alter table ix_idg_target add constraint fk_ix_idg_target_namespace_23 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_idg_target_namespace_23 on ix_idg_target (namespace_id);
-alter table ix_idg_target add constraint fk_ix_idg_target_organism_24 foreign key (organism_id) references ix_core_value (id) on delete restrict on update restrict;
-create index ix_ix_idg_target_organism_24 on ix_idg_target (organism_id);
-alter table ix_core_xref add constraint fk_ix_core_xref_namespace_25 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_xref_namespace_25 on ix_core_xref (namespace_id);
+alter table ix_core_principal add constraint fk_ix_core_principal_institut_17 foreign key (institution_id) references ix_core_organization (id) on delete restrict on update restrict;
+create index ix_ix_core_principal_institut_17 on ix_core_principal (institution_id);
+alter table ix_core_processingstatus add constraint fk_ix_core_processingstatus_p_18 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
+create index ix_ix_core_processingstatus_p_18 on ix_core_processingstatus (payload_id);
+alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_19 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_ncats_project_curation_19 on ix_ncats_project (curation_id);
+alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_20 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_pubauthor_author_20 on ix_core_pubauthor (author_id);
+alter table ix_core_publication add constraint fk_ix_core_publication_journa_21 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
+create index ix_ix_core_publication_journa_21 on ix_core_publication (journal_id);
+alter table ix_core_role add constraint fk_ix_core_role_principal_22 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_role_principal_22 on ix_core_role (principal_id);
+alter table ix_ginas_substance add constraint fk_ix_ginas_substance_structu_23 foreign key (structure_uuid) references ix_ginas_structure (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_substance_structu_23 on ix_ginas_substance (structure_uuid);
+alter table ix_idg_target add constraint fk_ix_idg_target_namespace_24 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_idg_target_namespace_24 on ix_idg_target (namespace_id);
+alter table ix_idg_target add constraint fk_ix_idg_target_organism_25 foreign key (organism_id) references ix_core_value (id) on delete restrict on update restrict;
+create index ix_ix_idg_target_organism_25 on ix_idg_target (organism_id);
+alter table ix_core_xref add constraint fk_ix_core_xref_namespace_26 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_xref_namespace_26 on ix_core_xref (namespace_id);
 
 
 
