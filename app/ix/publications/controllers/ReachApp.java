@@ -115,6 +115,29 @@ public class ReachApp extends Controller {
    	return ok (ix.publications.views.html.holman.render
                   ());
    }
+    public static Result ncgc () {
+   	return ok (ix.publications.views.html.ncgc.render
+                  ());
+   }
+    public static Result xrna () {
+   	return ok (ix.publications.views.html.xrna.render
+                  ());
+   }
+    
+    public static Result ebola () {
+       	return ok (ix.publications.views.html.ebola.render
+                      ());
+       }
+    
+    public static Result samples () {
+       	return ok (ix.publications.views.html.samples.render
+                      ());
+       }
+    
+    public static Result gaucher () {
+       	return ok (ix.publications.views.html.gaucher.render
+                      ());
+       }
     public static Result projectexample () {
    	return ok (ix.publications.views.html.projectexample.render());
    }

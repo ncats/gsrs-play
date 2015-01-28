@@ -130,8 +130,6 @@ border-radius: 20px;
 
 .on, .off{
     position: absolute;
-    top: 0;
-    left: 0;
 }
 
 div.hex:hover .on {
@@ -142,9 +140,9 @@ div.hex .on {
     display: none;
 }
 
-.badge-count{
+.count{
 float: right;
-margin-top: 82%;
+margin-top: 80%;
 margin-right: 7%;
 z-index: 99999;
 position: relative;
