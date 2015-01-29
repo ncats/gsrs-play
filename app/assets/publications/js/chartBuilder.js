@@ -1,4 +1,5 @@
 $(document).ready(function() {
+	console.log(filters);
 	$("#chartSelect").selectmenu();
 	var filters = parseFilters(filterList);
 	drawChart(filters[index]);
