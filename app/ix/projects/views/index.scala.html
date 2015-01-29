@@ -11,16 +11,12 @@
 <h1>NCATS PROJECTS</h1>
 </div>
 
+ @defining(facets.filter(_.getName().equalsIgnoreCase("category"))) { cat =>
 
-
-<div class="row" id="pub-history">
-	<div class="col-md-3 col-xs-4">@filters(facets.filter(_.getName().equalsIgnoreCase("program")))</div>
-	<!--END panel panel-primary-->
-
-   @defining(facets.filter(_.getName().equalsIgnoreCase("category"))) { cat =>
-	<div class="col-md-9 col-xs-8">
-      <div class="row">
-	<div class="col-sm-4 hex" >
+<div class="row">
+<div class = "col-sm-8 col-sm-offset-2">
+<div class = "row">
+<div class="col-sm-4 box">
 	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Cancer">
 	    <div class="rounded" id="cancer">
               	  <img src="@routes.Assets.at("publications/images/cancer.svg")" alt="Sort by projects involving cancer" class = "off"/>
@@ -29,8 +25,7 @@
 	    </div>
 	  </a>
 	</div>
-	<div class="col-sm-4 hex" >
-
+	<div class="col-sm-4 box" >
 	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Rare+Disease">
 	    <div class="rounded" id = "rare" >
           	  <img src="@routes.Assets.at("publications/images/rare.svg")" alt="Sort by projects involving rare diseases" class = "off"/>
@@ -39,7 +34,7 @@
 	    </div>
 	  </a>
 	</div>
-	<div class="col-sm-4 hex" >
+	<div class="col-sm-4 box" >
 	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Infectious+Disease">
 	    <div class="rounded" id = "infectious">
           	  <img src="@routes.Assets.at("publications/images/infectious.svg")" alt="Sort by projects involving infectious diseases" class = "off"/>
@@ -54,7 +49,7 @@
       </div>
       
       <div class= "row">
-	<div class="col-sm-4 hex">
+	<div class="col-sm-4 box">
 	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Central+Nervous+System+Disease">
 	    <div class ="rounded" id = "nervous">
 	     	 	  <img src="@routes.Assets.at("publications/images/nervous.svg")" alt="Sort by projects involving central nervous system diseases"class = "off"/>
@@ -63,7 +58,7 @@
 	    </div>
 	  </a>
 	</div>
-	<div class="col-sm-4 hex">
+	<div class="col-sm-4 box">
 	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Metabolic+Disorder">
 	    <div class ="rounded" id = "metabolic">
 	     	 	  <img src="@routes.Assets.at("publications/images/metabolic.svg")" alt="Sort by projects involving metabolic diseases" class = "off"/>
@@ -73,7 +68,7 @@
 	  </a>
 	  
 	</div>
-	<div class="col-sm-4 hex" >
+	<div class="col-sm-4 box" >
 	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Cardiovascular+Disease">
 	    <div class="rounded" id = "cardio">
 	      	  <img src="@routes.Assets.at("publications/images/cardio.svg")" alt="Sort by projects involving cardiovascular diseases"class = "off"/>
@@ -87,7 +82,7 @@
 </div>
       
       <div class= "row">
-	<div class="col-sm-4 hex">
+	<div class="col-sm-4 box">
 	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Technology">
 	    <div class ="rounded" id = "technology">
 	     	 	  <img src="@routes.Assets.at("publications/images/techno.svg")" alt="Sort by projects involving unique technologies" class = "off"/>
@@ -96,7 +91,7 @@
 	    </div>
 	  </a>
 	</div>
-	<div class="col-sm-4 hex">
+	<div class="col-sm-4 box">
 	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Other">
 	    <div class ="rounded" id = "other">
 	     	 	  <img src="@routes.Assets.at("publications/images/all.svg")" alt="Sort by projects that defy categorization" class = "off"/>
@@ -106,7 +101,7 @@
 	  </a>
 	  
 	</div>
-	<div class="col-sm-4 hex" >
+	<div class="col-sm-4 box" >
 	  <a href= "@ix.publications.controllers.routes.ReachApp.projects()">
 	    <div class="rounded" id = "all">
 	      	  <img src="@routes.Assets.at("publications/images/all.svg")" alt="See all projects" class = "off"/>
@@ -116,9 +111,10 @@
 	  </a>
 	</div>
       </div>
-      
-            <div class="row" style = "height:30px;">
+      </div>
 </div>
 	    }
+  <div class="row" style = "height:100px;">
+</div>
   
  }
