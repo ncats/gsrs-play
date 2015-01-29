@@ -122,24 +122,41 @@ padding-left: 8%;
 
 
 /*PROJECT ICON PAGE*/
-
+/* centered columns styles */
+.row-centered {
+    text-align:center;
+}
+.col-centered {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-4px;
+}
 
 .on, .off{
         border-radius: 20px;
         background-color: #1f355c;
 }
 
-div.hex:hover .on {
+div.box:hover .on {
     display: block;
 }
-div.hex:hover .off {
+
+div.box:hover .off {
     display: none;
 }
 
-div.hex .on {
+div.box .on {
     display: none;
 }
 
+.box{
+	height:100%;
+	margin-bottom:0px;
+	
+}
 .count{
 margin-top: -15%;
 margin-right: 7%;
@@ -149,4 +166,13 @@ font-size: 12pt;
 color: #1f355c;
 background-color: white;
 }
-/*END PROJECT ICOM PAGE*/
+/*END PROJECT ICON PAGE*/
+
+/*PROJECTS PAGE*/
+
+.proj-img{
+	height:250px;
+}
+
+
+/*END PROJECTs PAGE*/
