@@ -10,11 +10,11 @@ GET	/search		ix.publications.controllers.ReachApp.search(kind: String)
 GET	/publications	ix.publications.controllers.ReachApp.publications(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/publications/:id	ix.publications.controllers.ReachApp.publication(id: Long)
 GET	/rss		ix.publications.controllers.ReachApp.rss(id: String, kind: String ?= null, count: Int ?= 5)
-GET /trnd	ix.publications.controllers.ReachApp.trnd
-GET /holman	ix.publications.controllers.ReachApp.holman
-GET /projectexample	ix.publications.controllers.ReachApp.projectexample
-GET /ncgc	ix.publications.controllers.ReachApp.ncgc
-GET /xrna	ix.publications.controllers.ReachApp.xrna
-GET /ebola	ix.publications.controllers.ReachApp.ebola
-GET /samples ix.publications.controllers.ReachApp.samples
-GET /gaucher ix.publications.controllers.ReachApp.gaucher
+GET /mock/trnd.php	ix.publications.controllers.ReachApp.trnd
+GET /mock/holman.php	ix.publications.controllers.ReachApp.holman
+GET /mock/projectexample.php	ix.publications.controllers.ReachApp.projectexample
+GET /mock/ncgc.php	ix.publications.controllers.ReachApp.ncgc
+GET /mock/xrna.php	ix.publications.controllers.ReachApp.xrna
+GET /mock/ebola.php	ix.publications.controllers.ReachApp.ebola
+GET /mock	ix.publications.controllers.ReachApp.samples
+GET /mock/gaucher.php ix.publications.controllers.ReachApp.gaucher

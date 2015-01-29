@@ -133,6 +133,8 @@ public class Migration extends Controller {
             ("select * from project_image where proj_id =? order by img_order");
         PreparedStatement pstm3 = con.prepareStatement
             ("select * from project_collab where project_id = ?");
+        PreparedStatement pstm4 = con.prepareStatement
+            ("select * from project_category where proj_id = ?");
 
         Namespace doResource = resFinder
             .where().eq("name", "Disease Ontology").findUnique();
@@ -146,7 +148,7 @@ public class Migration extends Controller {
         int count = 0;
         try {
             ResultSet rset = stm.executeQuery
-                ("select * from project_summary");
+                ("select * from project_summary order by proj_id");
             while (rset.next()) {
                 String title = rset.getString("title");
                 List<Project> projs = projFinder
@@ -193,6 +195,15 @@ public class Migration extends Controller {
                         Logger.trace
                             ("Can't retrieve images for project="+pid, ex);
                     }
+                    try {
+                        List<Keyword> categories =
+                            fetchProjCategories (pstm4, pid);
+                        proj.keywords.addAll(categories);
+                    }
+                    catch (Exception ex) {
+                        Logger.trace
+                            ("Can't retrieve categories for project="+pid,ex);
+                    }
                     
                     List<Keyword> web = new ArrayList<Keyword>();
                     try {
@@ -229,8 +240,11 @@ public class Migration extends Controller {
                             if (alias == null) {
                                 alias = proj.title;
                             }
-                            Keyword k = new Keyword ("rss-content", alias);
-                            ref.properties.add(k);
+                            ref.properties.add
+                                (new Keyword ("rss-content", alias));
+                            ref.properties.add
+                                (new Keyword
+                                 ("UUID", UUID.randomUUID().toString()));
                             ref.properties.addAll(web);
                             ref.save();
                             Logger.debug("+ XRef "+ref.id+" created "
@@ -364,7 +378,8 @@ public class Migration extends Controller {
                             }
                             
                             try {
-                                for (Keyword k : fetchCategories (pstm2, id)) {
+                                for (Keyword k :
+                                         fetchPubCategories (pstm2, id)) {
                                     if ("web-tag".equalsIgnoreCase(k.label)) {
                                         tags.add(k);
                                     }
@@ -405,6 +420,9 @@ public class Migration extends Controller {
                                         ref.properties.add(k);
                                     }
                                     rs.close();
+                                    ref.properties.add
+                                        (new Keyword
+                                         ("UUID", UUID.randomUUID().toString()));
                                     ref.properties.addAll(tags);
                                     ref.save();
                                     Logger.debug("+ XRef "+ref.id+" created "
@@ -440,7 +458,20 @@ public class Migration extends Controller {
         }
     }
 
-    static List<Keyword> fetchCategories (PreparedStatement pstm, long id)
+    static List<Keyword> fetchProjCategories (PreparedStatement pstm, long id)
+        throws Exception {
+        List<Keyword> cats = new ArrayList<Keyword>();
+        pstm.setLong(1, id);
+        ResultSet rset = pstm.executeQuery();
+        while (rset.next()) {
+            String cat = rset.getString("category");
+            cats.add(new Keyword ("Category", cat));
+        }
+        rset.close();
+        return cats;
+    }
+    
+    static List<Keyword> fetchPubCategories (PreparedStatement pstm, long id)
         throws Exception {
         pstm.setLong(1, id);
         ResultSet rset = pstm.executeQuery();

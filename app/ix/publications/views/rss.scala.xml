@@ -19,6 +19,7 @@
        <id>@e.id</id>
        <updated>@e.updated</updated>
        <summary>@e.summary</summary>
+       <category term="@e.category"/>
      </entry>
   }
 </feed>
