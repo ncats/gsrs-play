@@ -1,11 +1,14 @@
 package ix.ncats.models;
 
 import play.db.ebean.Model;
+
 import javax.persistence.*;
+
 import java.util.List;
 import java.util.ArrayList;
 
 import ix.core.models.Author;
+import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Figure;
 import ix.core.models.Value;
