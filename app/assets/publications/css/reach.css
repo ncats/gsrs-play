@@ -36,7 +36,7 @@ margin-top: 50%;
 width: 100%;
 }
 
-#publications{
+#publications, #facets{
 	table-layout: fixed;
 }
 
@@ -122,18 +122,18 @@ padding-left: 8%;
 
 
 /*PROJECT ICON PAGE*/
-.img-rounded{
-border-radius: 20px;
-	background-color: #1f355c;
-		height:250px;
-}
+
 
 .on, .off{
-    position: absolute;
+	border-radius: 20px;
+	background-color: #1f355c;
 }
 
 div.hex:hover .on {
-    display: initial;
+    display: block;
+}
+div.hex:hover .off {
+    display: none;
 }
 
 div.hex .on {
@@ -141,10 +141,12 @@ div.hex .on {
 }
 
 .count{
-float: right;
-margin-top: 80%;
+margin-top: -12%;
 margin-right: 7%;
 z-index: 99999;
 position: relative;
+font-size: 12pt;
+color: #1f355c;
+background-color: white;
 }
 /*END PROJECT ICOM PAGE*/
