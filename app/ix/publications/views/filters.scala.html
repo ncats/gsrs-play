@@ -68,7 +68,6 @@ var filterList = [];
 			//console.log(filterList);
 	        </script>
           }
-
          <td>@f.getValues().get(i).getLabel()</td>
 	 <td>
            <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
@@ -102,7 +101,7 @@ function filterToggle (el) {
     }
   }
   console.log(el.id+' '+facet);
-  var url = '@ReachApp.url("facet","page")';
+  var url = '@HtmlFormat.raw(ReachApp.url("facet","page"))';
   url += url.length == 0 ? '?' : '&';
   location.href = url+facet;
 }

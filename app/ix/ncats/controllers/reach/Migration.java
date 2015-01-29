@@ -16,6 +16,7 @@ import org.apache.commons.codec.binary.Base64;
 import ix.utils.Global;
 import ix.utils.Eutils;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.plugins.EutilsPlugin;
 
 import ix.core.search.TextIndexer;
 import ix.core.models.Event;
@@ -47,6 +48,8 @@ public class Migration extends Controller {
         new Model.Finder(Long.class, Namespace.class);
     static final Model.Finder<Long, Program> progFinder = 
         new Model.Finder(Long.class, Program.class);
+    static final EutilsPlugin eutils =
+        Play.application().plugin(EutilsPlugin.class);
 
     static {
         try {
@@ -107,7 +110,9 @@ public class Migration extends Controller {
 
             int pubs = migratePublications (con);
 
-            return ok (pubs+" publications migrated");
+            return redirect (ix.publications
+                             .controllers.routes
+                             .ReachApp.publications(null, 10, 1));
         }
         catch (SQLException ex) {
             return internalServerError (ex.getMessage());
@@ -188,10 +193,15 @@ public class Migration extends Controller {
                         Logger.trace
                             ("Can't retrieve images for project="+pid, ex);
                     }
-
+                    
+                    List<Keyword> web = new ArrayList<Keyword>();
                     try {
                         List<Keyword> tags = fetchTags (pstm, pid);
-                        proj.keywords.addAll(tags);
+                        for (Keyword t : tags) {
+                            if ("web-tag".equalsIgnoreCase(t.label))
+                                web.add(t);
+                            proj.keywords.add(t);
+                        }
                     }
                     catch (Exception ex) {
                         Logger.trace
@@ -213,6 +223,21 @@ public class Migration extends Controller {
                     try {
                         proj.save();
                         Logger.debug("New project "+proj.id+": "+proj.title);
+                        if (!web.isEmpty()) {
+                            XRef ref = new XRef (proj);
+                            String alias = rset.getString("web_alias");
+                            if (alias == null) {
+                                alias = proj.title;
+                            }
+                            Keyword k = new Keyword ("rss-content", alias);
+                            ref.properties.add(k);
+                            ref.properties.addAll(web);
+                            ref.save();
+                            Logger.debug("+ XRef "+ref.id+" created "
+                                         +"for project "+proj.id
+                                         +" with "+web.size()
+                                         +" tags!");
+                        }
                         ++count;
                     }
                     catch (Exception ex) {
@@ -318,7 +343,7 @@ public class Migration extends Controller {
                 else {
                     Publication pub = PublicationFactory.byPMID(pmid);
                     if (pub == null) {
-                        pub = Eutils.fetchPublication(pmid);
+                        pub = eutils.getPublication(pmid);
                         if (pub != null) {
                             for (PubAuthor p : pub.authors) {
                                 p.author = instrument (p.author);
@@ -335,10 +360,9 @@ public class Migration extends Controller {
                             }
                             catch (Exception ex) {
                                 Logger.trace
-                                    ("Can't retrieve images for pmid="+pmid, 
-                                     ex);
+                                    ("Can't retrieve images for pmid="+pmid, ex);
                             }
-
+                            
                             try {
                                 for (Keyword k : fetchCategories (pstm2, id)) {
                                     if ("web-tag".equalsIgnoreCase(k.label)) {
@@ -355,7 +379,7 @@ public class Migration extends Controller {
                                     ("Can't retrieve categories for pmid="+pmid,
                                      ex);
                             }
-
+                            
                             try {
                                 pub.save();
                                 Logger.debug("+ New publication added "+pub.id
@@ -368,7 +392,7 @@ public class Migration extends Controller {
                                     ResultSet rs = pstm4.executeQuery();
                                     if (rs.next()) {
                                         String alias =
-                                            rs.getString("web_alias");
+                                        rs.getString("web_alias");
                                         if (alias != null) {
                                             Logger.debug
                                                 ("++ web alias: "+alias);
@@ -400,8 +424,8 @@ public class Migration extends Controller {
                         }
                     }
                     else {
-                        Logger.debug("Publication "
-                                     +pmid+" is already downloaded!");
+                        Logger.warn
+                            ("Publication "+pmid+" is already registered!");
                     }
                 }
             }
@@ -447,8 +471,12 @@ public class Migration extends Controller {
                 String tag = rs.getString("tag_key");
                 String value = rs.getString("value");
 
-                if (!"disease".equalsIgnoreCase(value)) {
-                    Keyword key = new Keyword (value);
+                if (tag.startsWith("DOID")) {
+                    Keyword key = new Keyword ("Disease", value);
+                    key.href = "http://disease-ontology.org/term/"+tag;
+                }
+                else {
+                    Keyword key = new Keyword (tag, value);
                     keywords.add(key);
                 }
             }

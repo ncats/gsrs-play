@@ -1,18 +1,35 @@
-<div class="box">
-		<h3>See related Projects</h3>
-<ul>
-<li>LINK 1</li>
-<li>Link 2</li>
+@import ix.utils.Global
+@import ix.publications.controllers.ReachApp
 
-<li><a href = "http://publications.ncats.nih.gov/projects?facet=Program/TRND">See More...</a></li>
-</ul>
-	</div>
-<div class="box">
-		<h3>See related Publications</h3>
-<ul>
-<li>LINK 1</li>
-<li>Link 2</li>
+@(key: String)
 
-<li><a href = "http://publications.ncats.nih.gov/publications?facet=Program/TRND">See More...</a></li>
-</ul>
-	</div>
+@defining(ReachApp.getRSS(key,"ix.ncats.models.Project", 5)) { feed =>
+@if(feed.length > 0) {
+<div class="box">
+    <h3>See related Projects</h3>
+    <ul>
+    @for(rss <- feed) {
+      @if(rss.link.indexOf("/projects") > 0) {
+      <li><a href="@rss.link">@rss.title</a></li>
+      }
+    }
+    <li><a href="@{Global.getHost()+ ix.publications.controllers.routes.ReachApp.projects()}?facet=web-tag/@key">See More...</a></li>
+    </ul>
+</div>
+}
+}
+@defining(ReachApp.getRSS(key,"ix.core.models.Publication", 5)) { feed =>
+@if(feed.length > 0) {
+<div class="box">
+  <h3>See related Publications</h3>
+  <ul>
+    @for(rss <- feed) {
+      @if(rss.link.indexOf("/publications") > 0) {
+      <li><a href="@rss.link">@rss.title</a></li>
+      }
+    }
+    <li><a href = "@{Global.getHost()+ix.publications.controllers.routes.ReachApp.publications()}?facet=web-tag/@key">See More...</a></li>
+  </ul>
+</div>
+}
+}

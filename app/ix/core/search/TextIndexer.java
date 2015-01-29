@@ -131,6 +131,10 @@ public class TextIndexer {
        
     }
 
+    public interface FacetFilter {
+        boolean accepted (FV fv);
+    }
+
     public static class Facet {
         String name;
         List<FV> values = new ArrayList<FV>();
@@ -143,6 +147,14 @@ public class TextIndexer {
         
         public void sort () {
             sortCounts (true);
+        }
+
+        public Facet filter (FacetFilter filter) {
+            Facet filtered = new Facet (name);
+            for (FV fv : values)
+                if (filter.accepted(fv))
+                    filtered.values.add(fv);
+            return filtered;
         }
 
         public void sortLabels (final boolean desc) {
@@ -166,6 +178,7 @@ public class TextIndexer {
                 });
         }
 
+        @JsonIgnore
         public ArrayList<String> getLabelString (){
             ArrayList<String> strings = new ArrayList<String>();
             for(int i = 0; i<values.size(); i++){
@@ -174,6 +187,8 @@ public class TextIndexer {
             }
             return strings;
         }
+        
+        @JsonIgnore
         public ArrayList <Integer> getLabelCount (){
             ArrayList<Integer> counts = new ArrayList<Integer>();
             for(int i = 0; i<values.size(); i++){

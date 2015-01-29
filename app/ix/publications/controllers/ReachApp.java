@@ -19,6 +19,7 @@ import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.SearchFactory;
 import ix.core.controllers.XRefFactory;
 import ix.core.search.TextIndexer;
+import static ix.core.search.TextIndexer.*;
 import ix.ncats.controllers.reach.ProjectFactory;
 import ix.ncats.models.Project;
 import ix.utils.Global;
@@ -59,7 +60,7 @@ public class ReachApp extends Controller {
         RSS () {}
     }
         
-    public static String[] toJsonLabels (TextIndexer.Facet facet) {
+    public static String[] toJsonLabels (Facet facet) {
         String[] labels = new String[facet.getValues().size()];
         for (int i = 0; i < labels.length; ++i)
             labels[i] = facet.getValues().get(i).getLabel();
@@ -102,21 +103,20 @@ public class ReachApp extends Controller {
     }
     
     public static Result index () {
-    	 TextIndexer.Facet[] facets =filter (getFacets (Project.class, 20),
-    			 PROJECT_FACETS);
-    	return ok (ix.projects.views.html.index.render
-                   (facets));
+         Facet[] facets =
+             filter (getFacets (Project.class, 20),PROJECT_FACETS);
+        return ok (ix.projects.views.html.index.render(facets));
     }
     public static Result trnd () {
-   	return ok (ix.publications.views.html.trnd.render
+        return ok (ix.publications.views.html.trnd.render
                   ());
    }
     public static Result holman () {
-   	return ok (ix.publications.views.html.holman.render
+        return ok (ix.publications.views.html.holman.render
                   ());
    }
     public static Result projectexample () {
-   	return ok (ix.publications.views.html.projectexample.render());
+        return ok (ix.publications.views.html.projectexample.render());
    }
     
     public static Result error (int code, String mesg) {
@@ -144,12 +144,12 @@ public class ReachApp extends Controller {
         }
     }
     
-    public static String sha1 (TextIndexer.Facet facet, int value) {
+    public static String sha1 (Facet facet, int value) {
         return Util.sha1(facet.getName(),
                          facet.getValues().get(value).getLabel());
     }
     
-    public static String encode (TextIndexer.Facet facet) {
+    public static String encode (Facet facet) {
         try {
             return URLEncoder.encode(facet.getName(), "utf8");
         }
@@ -159,7 +159,7 @@ public class ReachApp extends Controller {
         return null;
     }
     
-    public static String encode (TextIndexer.Facet facet, int i) {
+    public static String encode (Facet facet, int i) {
         String value = facet.getValues().get(i).getLabel();
         try {
             return URLEncoder.encode(value, "utf8");
@@ -224,7 +224,7 @@ public class ReachApp extends Controller {
         return uri.substring(0, uri.length()-1);
     }
     
-    public static boolean hasFacet (TextIndexer.Facet facet, int i) {
+    public static boolean hasFacet (Facet facet, int i) {
         String[] facets = request().queryString().get("facet");
         if (facets != null) {
             for (String f : facets) {
@@ -255,39 +255,37 @@ public class ReachApp extends Controller {
         return false;
     }
 
-    static List<TextIndexer.Facet> getFacets
-        (final Class kind, final int fdim) {
+    static List<Facet> getFacets (final Class kind, final int fdim) {
         try {
-            TextIndexer.SearchResult result =
+            SearchResult result =
                 SearchFactory.search(kind, null, 0, 0, fdim, null);
             return result.getFacets();
         }
         catch (IOException ex) {
             Logger.trace("Can't retrieve facets for "+kind, ex);
         }
-        return new ArrayList<TextIndexer.Facet>();
+        return new ArrayList<Facet>();
     }
 
-    static TextIndexer.Facet[] filter (List<TextIndexer.Facet> facets,
-                                       String... names) {
+    static Facet[] filter (List<Facet> facets, String... names) {
         if (names == null || names.length == 0)
-            return facets.toArray(new TextIndexer.Facet[0]);
+            return facets.toArray(new Facet[0]);
         
-        List<TextIndexer.Facet> filtered = new ArrayList<TextIndexer.Facet>();
+        List<Facet> filtered = new ArrayList<Facet>();
         for (String n : names) {
-            for (TextIndexer.Facet f : facets)
+            for (Facet f : facets)
                 if (n.equals(f.getName()))
                     filtered.add(f);
         }
-        for (TextIndexer.Facet f : filtered)
+        for (Facet f : filtered)
             // treat year special...
             if (f.getName().equals(YEAR_FACET))
                 f.sortLabels(true);
         
-        return filtered.toArray(new TextIndexer.Facet[0]);
+        return filtered.toArray(new Facet[0]);
     }
     
-    static TextIndexer.SearchResult getSearchResult
+    static SearchResult getSearchResult
         (final Class kind, final String q, final int total) {
         
         final Map<String, String[]> query =  new HashMap<String, String[]>();
@@ -324,9 +322,9 @@ public class ReachApp extends Controller {
         try {
             long start = System.currentTimeMillis();
             String sha1 = Util.sha1(args.toArray(new String[0]));
-            TextIndexer.SearchResult result = Cache.getOrElse
-                (sha1, new Callable<TextIndexer.SearchResult>() {
-                        public TextIndexer.SearchResult call ()
+            SearchResult result = Cache.getOrElse
+                (sha1, new Callable<SearchResult>() {
+                        public SearchResult call ()
                             throws Exception {
                             return SearchFactory.search
                             (kind, hasMesh ? null : q,  total, 0, 20, query);
@@ -353,11 +351,11 @@ public class ReachApp extends Controller {
         try {
             final int total = PublicationFactory.finder.findRowCount();
             if (request().queryString().containsKey("facet") || q != null) {
-                TextIndexer.SearchResult result =
+                SearchResult result =
                     getSearchResult (Publication.class, q, total);
                 
-                TextIndexer.Facet[] facets = filter
-                    (result.getFacets(), PUBLICATION_FACETS);
+                Facet[] facets =
+                    filter (result.getFacets(), PUBLICATION_FACETS);
                 List<Publication> publications = new ArrayList<Publication>();
                 int[] pages = new int[0];
                 if (result.count() > 0) {
@@ -382,12 +380,13 @@ public class ReachApp extends Controller {
                             pages, facets, publications));
             }
             else {
-                TextIndexer.Facet[] facets = Cache.getOrElse
+                Facet[] facets = Cache.getOrElse
                     (Publication.class.getName()+".facets",
-                     new Callable<TextIndexer.Facet[]>() {
-                            public TextIndexer.Facet[] call () {
-                                return filter (getFacets (Publication.class, 20),
-                                               PUBLICATION_FACETS);
+                     new Callable<Facet[]>() {
+                            public Facet[] call () {
+                                return filter
+                                (getFacets (Publication.class, 20),
+                                 PUBLICATION_FACETS);
                             }
                         }, CACHE_TIMEOUT);
             
@@ -428,10 +427,9 @@ public class ReachApp extends Controller {
         try {
             final int total = ProjectFactory.finder.findRowCount();
             if (request().queryString().containsKey("facet") || q != null) {
-                TextIndexer.SearchResult result =
-                    getSearchResult (Project.class, q, total);
+                SearchResult result = getSearchResult (Project.class, q, total);
                 
-                TextIndexer.Facet[] facets = filter
+                Facet[] facets = filter
                     (result.getFacets(), PROJECT_FACETS);
                 List<Project> projects = new ArrayList<Project>();
                 int[] pages = new int[0];
@@ -451,10 +449,10 @@ public class ReachApp extends Controller {
             }
             
             else {
-                TextIndexer.Facet[] facets = Cache.getOrElse
+                Facet[] facets = Cache.getOrElse
                     (Project.class.getName()+".facets",
-                     new Callable<TextIndexer.Facet[]>() {
-                            public TextIndexer.Facet[] call () {
+                     new Callable<Facet[]>() {
+                            public Facet[] call () {
                                 return filter (getFacets (Project.class, 20),
                                                PROJECT_FACETS);
                             }
@@ -515,15 +513,15 @@ public class ReachApp extends Controller {
 
         String sha1 = Util.sha1(query);
         try {
-            TextIndexer.SearchResult result;
+            SearchResult result;
             final Map<String, String[]> queryString =
                 new HashMap<String, String[]>();
             queryString.putAll(request().queryString());
             
             if (query.indexOf('/') > 0) { // use mesh facet
                 result = Cache.getOrElse
-                (sha1, new Callable<TextIndexer.SearchResult>() {
-                        public TextIndexer.SearchResult
+                (sha1, new Callable<SearchResult>() {
+                        public SearchResult
                             call ()  throws Exception {
                             
                             // append this facet to the list 
@@ -543,8 +541,8 @@ public class ReachApp extends Controller {
             }
             else {
                 result = Cache.getOrElse
-                    (sha1, new Callable<TextIndexer.SearchResult>() {
-                            public TextIndexer.SearchResult
+                    (sha1, new Callable<SearchResult>() {
+                            public SearchResult
                                 call () throws Exception {
                                 return SearchFactory.search
                                 (null, query, 500, 0, 20, queryString);
@@ -552,14 +550,14 @@ public class ReachApp extends Controller {
                         }, CACHE_TIMEOUT);
             }
             
-            TextIndexer.Facet[] facets = filter
+            Facet[] facets = filter
                 (result.getFacets(), PUBLICATION_FACETS);
             int max = Math.min(rows, Math.max(1,result.count()));
             int [] pages = paging (rows, max, result.count());
             int totalPublications = 0;
-            for (TextIndexer.Facet f : result.getFacets()) {
+            for (Facet f : result.getFacets()) {
                 if (f.getName().equals("ix.Class")) {
-                    for (TextIndexer.FV fv : f.getValues()) {
+                    for (FV fv : f.getValues()) {
                         if (Publication.class.getName().equals(fv.getLabel()))
                             totalPublications = fv.getCount();
                         }
@@ -581,7 +579,11 @@ public class ReachApp extends Controller {
                                     (500, "Unable to fullfil request"));
     }
 
-    public static Result rsspub (String key, int count) {
+    public static RSS[] getRSS (String key, int count) {
+        return getRSS (key, null, count);
+    }
+    
+    public static RSS[] getRSS (String key, String kind, int count) {
         List<XRef> xrefs = XRefFactory.finder
             .where(Expr.and(Expr.eq("properties.label", "web-tag"),
                             Expr.eq("properties.term", key)))
@@ -592,7 +594,9 @@ public class ReachApp extends Controller {
         Iterator<XRef> it = xrefs.iterator();
         for (int i = 0; i < min && it.hasNext(); ++i) {
             XRef ref = it.next();
-            Publication pub = (Publication)ref.deRef();
+            if (kind != null && !kind.equals(ref.kind))
+                continue;
+            
             RSS rss = null;
             for (Value v : ref.properties) {
                 if (v.label.equals("rss-content")) {
@@ -601,17 +605,44 @@ public class ReachApp extends Controller {
                     rss.title = kw.term;
                 }
             }
-            
-            if (rss == null) {
-                rss = new RSS ();
-                rss.title = pub.title;
+
+            Object objRef = ref.deRef();            
+            if (objRef instanceof Publication) {
+                Publication pub = (Publication)objRef;
+                if (rss == null) {
+                    rss = new RSS ();
+                    rss.title = pub.title;
+                }
+                rss.link = Global.getHost()
+                    +ix.publications.controllers
+                    .routes.ReachApp.publication(pub.id);
+                rss.summary = pub.abstractText;
             }
-            rss.link = Global.getRef(pub);
+            else if (objRef instanceof Project) {
+                Project proj = (Project)objRef;
+                if (rss == null) {
+                    rss = new RSS ();
+                    rss.title = proj.title;
+                }
+                rss.link = Global.getHost()
+                    +ix.publications.controllers
+                    .routes.ReachApp.project(proj.id);
+                rss.summary = proj.objective;
+            }
             rss.id = "urn:uuid:"+UUID.randomUUID();
-            rss.summary = pub.abstractText;
+
             entries.add(rss);
         }
-        return ok (ix.publications.views.xml.rsspub.render
-                   (key, entries.toArray(new RSS[0])));
+        
+        return entries.toArray(new RSS[0]);
+    }
+    
+    public static Result rss (String key, int count) {
+        return rss (key, null, count);
+    }
+    
+    public static Result rss (String key, String kind, int count) {
+        return ok (ix.publications.views.xml.rss.render
+                   (key, getRSS (key, kind, count)));
     }
 }

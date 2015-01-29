@@ -20,32 +20,32 @@ public class NIHLdapConnector {
         "OU=Users,OU=NCATS,OU=NIH,OU=AD,DC=nih,DC=gov";
 
     private SearchControls userSearchControls = 
-	new SearchControls (SearchControls.SUBTREE_SCOPE, 0, 0, 
-			    new String[]{"mail", 
-					 "displayName", 
-					 "givenName",
-					 "telephoneNumber",
-					 "employeeID",
-					 "department"}, 
-			    true, true);
+        new SearchControls (SearchControls.SUBTREE_SCOPE, 0, 0, 
+                            new String[]{"mail", 
+                                         "displayName", 
+                                         "givenName",
+                                         "telephoneNumber",
+                                         "employeeID",
+                                         "department"}, 
+                            true, true);
 
     Hashtable env = new Hashtable ();
     public NIHLdapConnector (String username, String password) {
-	env.put(Context.INITIAL_CONTEXT_FACTORY, 
-		"com.sun.jndi.ldap.LdapCtxFactory");
-	env.put(Context.PROVIDER_URL, LDAP_URL);
-	//env.put(Context.SECURITY_PROTOCOL, LDAP_PROTOCOL);
-	// don't need to define trustStore here... we're not validating
-	//  the certificate
-	//env.put( "java.naming.ldap.factory.socket",
-	//	 DummySSLSocketFactory.class.getName());
-	//env.put(Context.SECURITY_AUTHENTICATION, LDAP_AUTHENTICATION);
+        env.put(Context.INITIAL_CONTEXT_FACTORY, 
+                "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, LDAP_URL);
+        //env.put(Context.SECURITY_PROTOCOL, LDAP_PROTOCOL);
+        // don't need to define trustStore here... we're not validating
+        //  the certificate
+        //env.put( "java.naming.ldap.factory.socket",
+        //       DummySSLSocketFactory.class.getName());
+        //env.put(Context.SECURITY_AUTHENTICATION, LDAP_AUTHENTICATION);
         env.put(Context.SECURITY_AUTHENTICATION, "simple");
-	env.put(Context.SECURITY_PRINCIPAL, "cn="+username
+        env.put(Context.SECURITY_PRINCIPAL, "cn="+username
                 +",OU=Users,OU=NCATS,OU=NIH,OU=AD,DC=nih,DC=gov");
-	env.put(Context.SECURITY_CREDENTIALS, password);
-	//env.put("javax.security.sasl.qop", "auth");
-	//env.put("javax.security.sasl.strength", "high");
+        env.put(Context.SECURITY_CREDENTIALS, password);
+        //env.put("javax.security.sasl.qop", "auth");
+        //env.put("javax.security.sasl.strength", "high");
     }
 
     public List<Employee> list () throws Exception {
@@ -72,10 +72,19 @@ public class NIHLdapConnector {
                 if (suffix != null) {
                     if (suffix.startsWith("Dr")) {
                         // can't figure out whether it's MD, DDS, DSc, or PhD
-                        e.suffix = "Ph.D."; 
+                        e.suffix = "Ph.D.";
+                        if (e.lastname.equalsIgnoreCase("austin")
+                            && e.forename.equalsIgnoreCase("christopher")) {
+                            e.suffix = "M.D.";
+                        }
                     }
                 }
                 employees.add(e);
+            }
+            else {
+                play.Logger.warn(getAttr (attrs, "sn")+", "
+                                 +getAttr (attrs, "givenName")
+                                 +" doesn't have employeeID");
             }
         }
         ctx.close();
