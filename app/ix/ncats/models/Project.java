@@ -21,6 +21,7 @@ public class Project extends Model {
     public Long id;
 
     @Column(length=2048)
+    @Indexable(suggest=true,name="Project")
     public String title;
     @Lob
     public String objective;

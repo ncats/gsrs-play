@@ -116,26 +116,26 @@ public class ReachApp extends Controller {
                   ());
    }
     public static Result ncgc () {
-   	return ok (ix.publications.views.html.ncgc.render
+        return ok (ix.publications.views.html.ncgc.render
                   ());
    }
     public static Result xrna () {
-   	return ok (ix.publications.views.html.xrna.render
+        return ok (ix.publications.views.html.xrna.render
                   ());
    }
     
     public static Result ebola () {
-       	return ok (ix.publications.views.html.ebola.render
+        return ok (ix.publications.views.html.ebola.render
                       ());
        }
     
     public static Result samples () {
-       	return ok (ix.publications.views.html.samples.render
+        return ok (ix.publications.views.html.samples.render
                       ());
        }
     
     public static Result gaucher () {
-       	return ok (ix.publications.views.html.gaucher.render
+        return ok (ix.publications.views.html.gaucher.render
                       ());
        }
     public static Result projectexample () {
@@ -331,7 +331,7 @@ public class ReachApp extends Controller {
             query.put("order", new String[]{"$pmid"});
             query.put("expand", new String[]{"journal"});
         }
-        //query.put("drill", new String[]{"down"});
+        query.put("drill", new String[]{"down"});
         
         List<String> args = new ArrayList<String>();
         args.add(request().uri());
@@ -613,13 +613,13 @@ public class ReachApp extends Controller {
             .findList();
         
         List<RSS> entries = new ArrayList<RSS>();
-        int min = Math.min(count, xrefs.size());
         Iterator<XRef> it = xrefs.iterator();
-        for (int i = 0; i < min && it.hasNext(); ++i) {
+        for (int i = 0; i < count && it.hasNext();) {
             XRef ref = it.next();
             if (kind != null && !kind.equals(ref.kind))
                 continue;
             
+            ++i;
             RSS rss = null;
             for (Value v : ref.properties) {
                 if (v.label.equals("rss-content")) {
