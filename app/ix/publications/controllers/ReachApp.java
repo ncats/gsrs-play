@@ -377,6 +377,13 @@ public class ReachApp extends Controller {
         return null;
     }
     
+    public static Integer getPublicationCount () {
+        return PublicationFactory.getCount();
+    }
+
+    public static Integer getProjectCount () {
+        return ProjectFactory.getCount();
+    }
     
     public static Result publications (final String q, int rows, final int page) {
         Logger.debug("Publications: q="+q+" rows="+rows+" page="+page);

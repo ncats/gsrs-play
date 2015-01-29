@@ -145,6 +145,13 @@ public class TextIndexer {
             return values; 
         }
         
+        public Integer getCount (String label) {
+            for (FV fv : values)
+                if (fv.label.equalsIgnoreCase(label))
+                    return fv.count;
+            return null;
+        }
+        
         public void sort () {
             sortCounts (true);
         }

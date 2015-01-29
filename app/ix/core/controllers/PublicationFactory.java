@@ -51,6 +51,16 @@ public class PublicationFactory extends EntityFactory {
         return filter (json, top, skip, finder);
     }
 
+    public static Integer getCount () {
+        try {
+            return getCount (finder);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     public static Result get (Long id, String expand) {
         String type = request().getQueryString("type");
         if (type != null) {

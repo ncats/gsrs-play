@@ -3,7 +3,8 @@
 
 @(facets: Array[Facet])
 
-@main("Publications", "NCATS Publications") {
+@main("Projects", "NCATS Projects") {
+@**
 @for(f <- facets) {
 @f.getName().replaceAll("MeSH","Keyword").trim()
  @for(i <- 0 until f.getValues().size()) {
@@ -11,10 +12,10 @@
      @f.getValues().get(i).getCount()
   }
 }
-
+**@
 
 <div class="row" style = "height:100px;">
-<h1> NCATS PROJECTS</h1>
+<h1>NCATS PROJECTS</h1>
 </div>
 
 <div class="row" id="searching">
@@ -39,71 +40,70 @@
 	</div>
 
 <div class="row" id="pub-history">
-	<div class="col-md-3 col-xs-4">@filters(facets)</div>
+	<div class="col-md-3 col-xs-4">@filters(facets.filter(_.getName().equalsIgnoreCase("program")))</div>
 	<!--END panel panel-primary-->
 
-
-
+   @defining(facets.filter(_.getName().equalsIgnoreCase("category"))) { cat =>
 	<div class="col-md-9 col-xs-8">
       <div class="row">
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.idg.controllers.routes.IDGApp.diseases()">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Cancer">
 	    <div class="rounded" id="cancer">
               	  <img src="@routes.Assets.at("publications/images/cancer.svg")" alt="Sort by projects involving cancer" class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/cancer-on.svg")" alt="Sort by projects involving cancer" class = "on"/>
-	      <span class="badge count">cancer</span>
+	      <span class="badge count">@cat(0).getCount("Cancer")</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Rare+Disease">
 	    <div class="rounded" id = "rare" >
           	  <img src="@routes.Assets.at("publications/images/rare.svg")" alt="Sort by projects involving rare diseases" class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/rare-on.svg")" alt="Sort by projects involving rare diseases" class = "on"/>
-	      <span class="badge count">rare</span>
+	      <span class="badge count">@cat(0).getCount("Rare Disease")</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Infectious+Disease">
 	    <div class="rounded" id = "infectious">
           	  <img src="@routes.Assets.at("publications/images/infectious.svg")" alt="Sort by projects involving infectious diseases" class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/infectious-on.svg")" alt="Sort by projects involving infectious diseases" class = "on"/>
-	      <span class="badge count">infectious</span>
+	      <span class="badge count">@cat(0).getCount("Infectious Disease")</span>
 	    </div>
 	  </a>
 	</div>
       </div>
       
       <div class="row" style = "height:30px;">
-</div>
+      </div>
       
       <div class= "row">
 	<div class="col-sm-4 hex">
-	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Central+Nervous+System+Disease">
 	    <div class ="rounded" id = "nervous">
 	     	 	  <img src="@routes.Assets.at("publications/images/nervous.svg")" alt="Sort by projects involving central nervous system diseases"class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/nervous-on.svg")" alt="Sort by projects involving central nervous system diseases" class = "on"/>
-	      <span class="badge count">nervous</span>
+	      <span class="badge count">@cat(0).getCount("Central Nervous System Disease")</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex">
-	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Metabolic+Disorder">
 	    <div class ="rounded" id = "metabolic">
 	     	 	  <img src="@routes.Assets.at("publications/images/metabolic.svg")" alt="Sort by projects involving metabolic diseases" class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/metabolic-on.svg")" alt="Sort by projects involving metabolic diseases" class = "on"/>
-      <span class="badge count">metabolic</span>
+      <span class="badge count">@cat(0).getCount("Metabolic Disorder")</span>
 	    </div>
 	  </a>
 	  
 	</div>
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Cardiovascular+Disease">
 	    <div class="rounded" id = "cardio">
 	      	  <img src="@routes.Assets.at("publications/images/cardio.svg")" alt="Sort by projects involving cardiovascular diseases"class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/cardio-on.svg")" alt="Sort by projects involving cardiovascular diseases" class = "on"/>
-	      <span class="badge count">cardio</span>
+	      <span class="badge count">@cat(0).getCount("Cardiovascular Disease")</span>
 	    </div>
 	  </a>
 	</div>
@@ -113,30 +113,30 @@
       
       <div class= "row">
 	<div class="col-sm-4 hex">
-	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Technology">
 	    <div class ="rounded" id = "technology">
 	     	 	  <img src="@routes.Assets.at("publications/images/techno.svg")" alt="Sort by projects involving unique technologies" class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/techno-on.svg")" alt="Sort by projects involving unique technologies" class = "on"/>
-	      <span class="badge count">64</span>
+	      <span class="badge count">@cat(0).getCount("Technology")</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex">
-	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Other">
 	    <div class ="rounded" id = "other">
-	     	 	  <img src="@routes.Assets.at("publications/images/other.svg")" alt="Sort by projects that defy categorization" class = "off"/>
-	  			  <img src="@routes.Assets.at("publications/images/other-on.svg")" alt="Sort by projects that defy categorization" class = "on"/>
-      <span class="badge count">other</span>
+	     	 	  <img src="@routes.Assets.at("publications/images/all.svg")" alt="Sort by projects that defy categorization" class = "off"/>
+	  			  <img src="@routes.Assets.at("publications/images/all-on.svg")" alt="Sort by projects that defy categorization" class = "on"/>
+      <span class="badge count">@cat(0).getCount("other")</span>
 	    </div>
 	  </a>
 	  
 	</div>
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	  <a href= "@ix.publications.controllers.routes.ReachApp.projects()">
 	    <div class="rounded" id = "all">
 	      	  <img src="@routes.Assets.at("publications/images/all.svg")" alt="See all projects" class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/all-on.svg")" alt="See all projects" class = "on"/>
-	      <span class="badge count">all</span>
+	      <span class="badge count">@ix.publications.controllers.ReachApp.getProjectCount()</span>
 	    </div>
 	  </a>
 	</div>
@@ -144,6 +144,6 @@
       
             <div class="row" style = "height:30px;">
 </div>
-
+	    }
   
  }
