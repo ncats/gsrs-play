@@ -8,9 +8,9 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+
 import com.avaje.ebean.Query;
 import com.avaje.ebean.Expr;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,6 +18,7 @@ import ix.core.models.Publication;
 import ix.core.models.Author;
 import ix.core.models.PubAuthor;
 import ix.core.NamedResource;
+import ix.ncats.models.Project;
 import ix.utils.Eutils;
 import ix.core.plugins.EutilsPlugin;
 
@@ -40,6 +41,10 @@ public class PublicationFactory extends EntityFactory {
 
     public static List<Publication> filter (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);
+    }
+
+    public static List<Publication> filter (FetchOptions options) {
+        return filter (options, finder);
     }
 
     public static List<Publication> filter (JsonNode json, int top, int skip) {
@@ -68,6 +73,10 @@ public class PublicationFactory extends EntityFactory {
         return get (id, expand, finder);
     }
 
+    public static Publication getPub (Long id) {
+        return getEntity (id, finder);
+    }
+    
     public static Result relatedByPMID (long pmid) {
         ObjectMapper mapper = getEntityMapper ();
         return ok (mapper.valueToTree(getRelated (pmid)));
@@ -135,10 +144,6 @@ public class PublicationFactory extends EntityFactory {
     }
     
     public static Publication getEntity( long id){
-    	return getEntity (id, finder);
-    }
-    
-    public static List<Publication> getPubs ( int top, int skip, String filter){
-    	return filter (new FetchOptions( top, skip, filter), finder);
+        return getEntity (id, finder);
     }
 }

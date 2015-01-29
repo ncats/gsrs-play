@@ -23,6 +23,15 @@ public class ProjectFactory extends EntityFactory {
     public static Project getProject (Long id) {
         return getEntity (id, finder);
     }
+
+    public static List<Project> filter (int top, int skip) {
+        return filter (top, skip, null);
+    }
+
+    public static List<Project> filter (int top, int skip, String filter) {
+        return filter (new FetchOptions (top, skip, filter), finder);
+    }
+    
     public static Result count () {
         return count (finder);
     }
@@ -55,9 +64,5 @@ public class ProjectFactory extends EntityFactory {
 
     public static Result update (Long id, String field) {
         return update (id, field, Project.class, finder);
-    }
-    
-    public static List<Project> getProjs ( int top, int skip, String filter){
-    	return filter (new FetchOptions( top, skip, filter), finder);
     }
 }

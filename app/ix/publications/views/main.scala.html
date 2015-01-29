@@ -1,28 +1,61 @@
 @(title: String, kind: String)(content: Html)
 
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>@title</title>
-    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
-    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
-    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/footer.css")'>
-    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/idg.css")'>  
-    <link rel="stylesheet" href='@routes.Assets.at("publications/css/overwrite.css")'>  
-    <link rel="stylesheet" href='@routes.Assets.at("publications/css/reach.css")'>  
-      
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
-    <script src='@routes.Assets.at("ncats/js/search.js")' type='text/javascript'></script>
-  </head>
-  <body>
-    @header(kind)
-    <div class="container">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>@title</title>
+<link rel="stylesheet"
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
+<link rel="stylesheet"
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+<link rel="stylesheet"
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.css"))'>
+<link rel="stylesheet"
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("highslide.css"))'>		
+<link rel="stylesheet" href='@routes.Assets.at("ncats/css/footer.css")'>
+<link rel="stylesheet" href='@routes.Assets.at("ncats/css/idg.css")'>
+<link rel="stylesheet"
+	href='@routes.Assets.at("publications/css/overwrite.css")'>
+<link rel="stylesheet"
+	href='@routes.Assets.at("publications/css/reach.css")'>
 
-    
-    @content
-</div>
-  </body>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'
+	type='text/javascript'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
+	<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.js"))'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("highcharts.js"))'
+	type='text/javascript'></script>
+<script
+	src='@routes.Assets.at("publications/js/chartBuilder.js")'
+	type='text/javascript'></script>
+<script type='text/javascript'
+	src='@routes.Assets.at("javascripts/highlighter.js")'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("highslide.js"))'
+	type='text/javascript'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
+@typeahead() 
+<script type="text/javascript">
+	hs.graphicsDir = '@routes.Assets.at("publications/images/")';
+	hs.outlineType = null;
+	hs.wrapperClassName = null;
+	hs.showCredits = false;
+</script>
+</head>
+<body>
+	<div class="container" style="height:200px;"></div>
+
+	<div class="container">@content</div>
+</body>
 </html>

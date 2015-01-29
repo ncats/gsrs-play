@@ -1,0 +1,24 @@
+@import ix.core.search.TextIndexer._
+@import ix.publications.controllers.ReachApp
+@import ix.utils.Util
+
+@(facets: Array[Facet])
+
+@option(f: Facet) = {
+<option value="@f.getName().trim()">@f.getName().replaceAll("MeSH","Keyword").trim()</option>
+}
+					<div class="row" id="formRow">
+												<div class="col-md-6">
+						
+<form action="#" class="text-left">
+<fieldset>
+<label for=chart id="chartLabel">Show results by: </label>
+<select name="chart" class="form-control" id="chartSelect">
+										    @for(f <- facets) {
+     @option(f)
+  }
+									</select>
+								</fieldset>
+							</form>
+</div>
+</div>

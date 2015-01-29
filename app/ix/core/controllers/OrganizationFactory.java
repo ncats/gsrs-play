@@ -10,6 +10,9 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+import com.avaje.ebean.Query;
+import com.avaje.ebean.Expr;
+import com.avaje.ebean.LikeType;
 
 import ix.core.models.Organization;
 import ix.core.NamedResource;
@@ -46,5 +49,22 @@ public class OrganizationFactory extends EntityFactory {
 
     public static Result update (Long id, String field) {
         return update (id, field, Organization.class, finder);
+    }
+
+    public static Organization registerIfAbsent (Organization org) {
+        List<Organization> results = finder.query()
+            .where().add(Expr.exampleLike(org, true, LikeType.EQUAL_TO))
+            .findList();
+        if (results.isEmpty()) {
+            try {
+                org.save();
+                return org;
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't register organization: "+org.name, ex);
+                throw new IllegalArgumentException (ex);
+            }
+        }
+        return results.iterator().next();
     }
 }

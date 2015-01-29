@@ -128,24 +128,74 @@ public class TextIndexer {
         }
         public String getLabel () { return label; }
         public Integer getCount () { return count; }
+       
     }
 
-    public static class Facet implements Comparator<FV> {
+    public interface FacetFilter {
+        boolean accepted (FV fv);
+    }
+
+    public static class Facet {
         String name;
         List<FV> values = new ArrayList<FV>();
 
         Facet (String name) { this.name = name; }
         public String getName () { return name; }
         public List<FV> getValues () {
-            Collections.sort(values, this);
             return values; 
         }
+        
+        public void sort () {
+            sortCounts (true);
+        }
 
-        public int compare (FV v1, FV v2) {
-            int d = v2.count - v1.count;
-            if (d == 0)
-                d = v1.label.compareTo(v2.label);
-            return d;
+        public Facet filter (FacetFilter filter) {
+            Facet filtered = new Facet (name);
+            for (FV fv : values)
+                if (filter.accepted(fv))
+                    filtered.values.add(fv);
+            return filtered;
+        }
+
+        public void sortLabels (final boolean desc) {
+            Collections.sort(values, new Comparator<FV>() {
+                    public int compare (FV v1, FV v2) {
+                        return desc ? v2.label.compareTo(v1.label)
+                            : v1.label.compareTo(v2.label);
+                    }
+                });
+        }
+        
+        public void sortCounts (final boolean desc) {
+            Collections.sort(values, new Comparator<FV> () {
+                    public int compare (FV v1, FV v2) {
+                        int d = desc ? (v2.count - v1.count)
+                            : (v1.count-v2.count);
+                        if (d == 0)
+                            d = v1.label.compareTo(v2.label);
+                        return d;
+                    }
+                });
+        }
+
+        @JsonIgnore
+        public ArrayList<String> getLabelString (){
+            ArrayList<String> strings = new ArrayList<String>();
+            for(int i = 0; i<values.size(); i++){
+                String label = values.get(i).getLabel();
+                strings.add(label);
+            }
+            return strings;
+        }
+        
+        @JsonIgnore
+        public ArrayList <Integer> getLabelCount (){
+            ArrayList<Integer> counts = new ArrayList<Integer>();
+            for(int i = 0; i<values.size(); i++){
+                int count = values.get(i).getCount();
+                counts.add(count);
+            }
+            return counts;
         }
     }
 
@@ -527,7 +577,7 @@ public class TextIndexer {
                     }
                     full.append(d[i]);
                     if (!d[i].equals(full.toString())) {
-                        ddq.add(d[0], full.toString());
+                        //ddq.add(d[0], full.toString());
                     }
                 }
             }
@@ -605,6 +655,8 @@ public class TextIndexer {
                                         +"value for label \""+label+"\"!");
                         }
                     }
+                    
+                    f.sort();
                     searchResult.facets.add(f);
                 }
             }

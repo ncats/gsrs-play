@@ -16,6 +16,7 @@ import org.apache.commons.codec.binary.Base64;
 import ix.utils.Global;
 import ix.utils.Eutils;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.plugins.EutilsPlugin;
 
 import ix.core.search.TextIndexer;
 import ix.core.models.Event;
@@ -27,11 +28,14 @@ import ix.core.models.Keyword;
 import ix.core.models.Namespace;
 import ix.core.models.Attribute;
 import ix.core.models.Thumbnail;
+import ix.core.models.Organization;
+import ix.core.models.XRef;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
 import ix.ncats.models.Program;
 
 import ix.core.controllers.PublicationFactory;
+import ix.core.controllers.OrganizationFactory;
 
 public class Migration extends Controller {
     static final Model.Finder<Long, Project> projFinder = 
@@ -44,6 +48,8 @@ public class Migration extends Controller {
         new Model.Finder(Long.class, Namespace.class);
     static final Model.Finder<Long, Program> progFinder = 
         new Model.Finder(Long.class, Program.class);
+    static final EutilsPlugin eutils =
+        Play.application().plugin(EutilsPlugin.class);
 
     static {
         try {
@@ -62,6 +68,16 @@ public class Migration extends Controller {
 
     public static Result migrate () {
         DynamicForm requestData = Form.form().bindFromRequest();
+        if (Play.isProd()) { // production..
+            String secret = requestData.get("secret-code");
+            if (secret == null || secret.length() == 0
+                || !secret.equals(Play.application()
+                                  .configuration().getString("ix.secret"))) {
+                return unauthorized
+                    ("You do not have permission to access resource!");
+            }
+        }
+        
         String jdbcUrl = requestData.get("jdbcUrl");
         String jdbcUsername = requestData.get("jdbc-username");
         String jdbcPassword = requestData.get("jdbc-password");
@@ -94,7 +110,9 @@ public class Migration extends Controller {
 
             int pubs = migratePublications (con);
 
-            return ok (pubs+" publications migrated");
+            return redirect (ix.publications
+                             .controllers.routes
+                             .ReachApp.publications(null, 10, 1));
         }
         catch (SQLException ex) {
             return internalServerError (ex.getMessage());
@@ -113,6 +131,8 @@ public class Migration extends Controller {
             ("select * from project_tag where proj_id = ? order by proj_id");
         PreparedStatement pstm2 = con.prepareStatement
             ("select * from project_image where proj_id =? order by img_order");
+        PreparedStatement pstm3 = con.prepareStatement
+            ("select * from project_collab where project_id = ?");
 
         Namespace doResource = resFinder
             .where().eq("name", "Disease Ontology").findUnique();
@@ -139,9 +159,13 @@ public class Migration extends Controller {
                     proj.isPublic = "Y".equalsIgnoreCase
                         (rset.getString("is_public"));
 
-                    Event ev = new Event ();
-                    ev.title = rset.getString("status");
-                    proj.milestones.add(ev);
+                    String status = rset.getString("status");
+                    if (status != null) {
+                        Event ev = new Event ();
+                        ev.title = "Status";
+                        ev.description = status;
+                        proj.milestones.add(ev);
+                    }
 
                     String progs = rset.getString("programs");
                     if (progs != null) {
@@ -160,35 +184,6 @@ public class Migration extends Controller {
                     }
 
                     long pid = rset.getLong("proj_id");
-                    pstm.setLong(1, pid);
-                    ResultSet rs = pstm.executeQuery();
-                    while (rs.next()) {
-                        String source = rs.getString("source");
-                        String tag = rs.getString("tag_key");
-                        String value = rs.getString("value");
-
-                        Keyword key = new Keyword (value);
-                        /*
-                        Attribute attr = new Attribute ("DOID", tag);
-                        attr.resource = doResource;
-                        //attr.save();
-                        key.attrs.add(attr);
-
-                        attr = new Attribute 
-                            ("href", 
-                             "http://www.disease-ontology.org/api/metadata/"
-                             +tag);
-                        attr.resource = doResource;
-                        //attr.save();
-                                                key.attrs.add(attr);
-
-                        proj.annotations.add(key);
-                        */
-                        if (!"disease".equalsIgnoreCase(value))
-                            proj.keywords.add(key);
-                    }
-                    rs.close();
-
                     try {
                         List<Figure> figs = createFigures (pstm2, pid);
                         for (Figure f : figs)
@@ -198,10 +193,56 @@ public class Migration extends Controller {
                         Logger.trace
                             ("Can't retrieve images for project="+pid, ex);
                     }
-                    proj.save();
-                
-                    Logger.debug("New project "+proj.id+": "+proj.title);
-                    ++count;
+                    
+                    List<Keyword> web = new ArrayList<Keyword>();
+                    try {
+                        List<Keyword> tags = fetchTags (pstm, pid);
+                        for (Keyword t : tags) {
+                            if ("web-tag".equalsIgnoreCase(t.label))
+                                web.add(t);
+                            proj.keywords.add(t);
+                        }
+                    }
+                    catch (Exception ex) {
+                        Logger.trace
+                            ("Can't retrieve tags for project: "+proj.title,
+                             ex);
+                    }
+
+                    /*
+                    try {
+                        List<Author> collab = fetchCollaborators (pstm3, pid);
+                        proj.collaborators.addAll(collab);
+                    }
+                    catch (Exception ex) {
+                        Logger.trace("Can't retrieve collaborators for "
+                                     +"project: "+proj.title, ex);
+                    }
+                    */
+
+                    try {
+                        proj.save();
+                        Logger.debug("New project "+proj.id+": "+proj.title);
+                        if (!web.isEmpty()) {
+                            XRef ref = new XRef (proj);
+                            String alias = rset.getString("web_alias");
+                            if (alias == null) {
+                                alias = proj.title;
+                            }
+                            Keyword k = new Keyword ("rss-content", alias);
+                            ref.properties.add(k);
+                            ref.properties.addAll(web);
+                            ref.save();
+                            Logger.debug("+ XRef "+ref.id+" created "
+                                         +"for project "+proj.id
+                                         +" with "+web.size()
+                                         +" tags!");
+                        }
+                        ++count;
+                    }
+                    catch (Exception ex) {
+                        Logger.trace("Can't save project: "+proj.title, ex);
+                    }
                 }
             }
             rset.close();
@@ -284,12 +325,15 @@ public class Migration extends Controller {
             ("select * from pub_tag where db_pub_id = ?");
         PreparedStatement pstm3 = con.prepareStatement
             ("select * from pub_program where db_pub_id = ?");
+        PreparedStatement pstm4 = con.prepareStatement
+            ("select * from publication where db_pub_id = ?");
 
         try {
             // now migrate publications
             ResultSet rset = stm.executeQuery
                 ("select * from publication "
                  //+"where rownum <= 10"
+                 +"order by pmid, db_pub_id"
                 );
             int publications = 0;
             while (rset.next()) {
@@ -299,44 +343,89 @@ public class Migration extends Controller {
                 else {
                     Publication pub = PublicationFactory.byPMID(pmid);
                     if (pub == null) {
-                        pub = Eutils.fetchPublication(pmid);
+                        pub = eutils.getPublication(pmid);
                         if (pub != null) {
                             for (PubAuthor p : pub.authors) {
                                 p.author = instrument (p.author);
                             }
-
+                            
+                            long id = rset.getLong("db_pub_id");
                             // get image (if any)
+                            List<Keyword> tags = new ArrayList<Keyword>();
                             try {
-                                long id = rset.getLong("db_pub_id");
                                 List<Figure> figs = createFigures (pstm, id);
                                 for (Figure f : figs) {
                                     pub.figures.add(f);
                                 }
-
-                                for (Keyword k : fetchCategories (pstm2, id))
+                            }
+                            catch (Exception ex) {
+                                Logger.trace
+                                    ("Can't retrieve images for pmid="+pmid, ex);
+                            }
+                            
+                            try {
+                                for (Keyword k : fetchCategories (pstm2, id)) {
+                                    if ("web-tag".equalsIgnoreCase(k.label)) {
+                                        tags.add(k);
+                                    }
                                     pub.keywords.add(k);
+                                }
                                 
                                 for (Keyword k : fetchPrograms (pstm3, id))
                                     pub.keywords.add(k);
                             }
                             catch (Exception ex) {
                                 Logger.trace
-                                    ("Can't retrieve images for pmid="+pmid, 
+                                    ("Can't retrieve categories for pmid="+pmid,
                                      ex);
                             }
-
-                            pub.save();
-                            Logger.debug("+ New publication added "+pub.id
-                                         +": "+pub.title);
-                            ++publications;
+                            
+                            try {
+                                pub.save();
+                                Logger.debug("+ New publication added "+pub.id
+                                             +": "+pub.title);
+                                
+                                // now create an xref with the tags
+                                if (!tags.isEmpty()) {
+                                    XRef ref = new XRef (pub);
+                                    pstm4.setLong(1, id);
+                                    ResultSet rs = pstm4.executeQuery();
+                                    if (rs.next()) {
+                                        String alias =
+                                        rs.getString("web_alias");
+                                        if (alias != null) {
+                                            Logger.debug
+                                                ("++ web alias: "+alias);
+                                        }
+                                        else { // just use the title
+                                            alias = pub.title;
+                                        }
+                                        Keyword k = new Keyword
+                                            ("rss-content", alias);
+                                        ref.properties.add(k);
+                                    }
+                                    rs.close();
+                                    ref.properties.addAll(tags);
+                                    ref.save();
+                                    Logger.debug("+ XRef "+ref.id+" created "
+                                                 +"for publication "+pub.id
+                                                 +" with "+tags.size()
+                                                 +" tags!");
+                                }
+                                ++publications;
+                            }
+                            catch (Exception ex) {
+                                Logger.trace("Can't save publication: "
+                                             +pub.title, ex);
+                            }
                         }
                         else {
                             Logger.warn("Can't locate PMID "+pmid);
                         }
                     }
                     else {
-                        Logger.debug("Publication "
-                                     +pmid+" is already downloaded!");
+                        Logger.warn
+                            ("Publication "+pmid+" is already registered!");
                     }
                 }
             }
@@ -358,7 +447,8 @@ public class Migration extends Controller {
         List<Keyword> keywords = new ArrayList<Keyword>();
         while (rset.next()) {
             String tag = rset.getString("tag_key");
-            if ("category".equalsIgnoreCase(tag)) {
+            if ("category".equalsIgnoreCase(tag)
+                || "web-tag".equalsIgnoreCase(tag)) {
                 Keyword kw = new Keyword ();
                 kw.label = tag;
                 kw.term = rset.getString("value");
@@ -369,6 +459,56 @@ public class Migration extends Controller {
         return keywords;
     }
 
+    static List<Keyword> fetchTags (PreparedStatement pstm, long id)
+        throws Exception {
+        List<Keyword> keywords = new ArrayList<Keyword>();      
+
+        pstm.setLong(1, id);
+        ResultSet rs = pstm.executeQuery();
+        try {
+            while (rs.next()) {
+                String source = rs.getString("source");
+                String tag = rs.getString("tag_key");
+                String value = rs.getString("value");
+
+                if (tag.startsWith("DOID")) {
+                    Keyword key = new Keyword ("Disease", value);
+                    key.href = "http://disease-ontology.org/term/"+tag;
+                }
+                else {
+                    Keyword key = new Keyword (tag, value);
+                    keywords.add(key);
+                }
+            }
+            return keywords;
+        }
+        finally {
+            rs.close();
+        }
+    }
+
+    public List<Author> fetchCollaborators (PreparedStatement pstm, long id)
+        throws Exception {
+        List<Author> collabs = new ArrayList<Author>();
+        pstm.setLong(1, id);
+        ResultSet rset = pstm.executeQuery();
+        try {
+            while (rset.next()) {
+                Organization org = new Organization ();
+                org.name = rset.getString("base_affil");
+                org.city = rset.getString("city");
+                org.state = rset.getString("state");
+                org.zipcode = rset.getString("zip");
+                org.country = rset.getString("country");
+                org = OrganizationFactory.registerIfAbsent(org);
+            }
+            return collabs;
+        }
+        finally {
+            rset.close();
+        }
+    }
+    
     static List<Keyword> fetchPrograms (PreparedStatement pstm, long id)
         throws Exception {
         pstm.setLong(1, id);
@@ -446,17 +586,63 @@ public class Migration extends Controller {
     }
     
     static Author instrument (Author a) {
+        if (a.forename == null)
+            return a;
+
+        String[] toks = a.forename.split("[\\s]+");
+        String firstname = toks[0];
+        String initials = null;
+        boolean quote = false;
+        if (toks.length > 1) {
+            if (toks[1].length() == 1)
+                initials = toks[1];
+            else {
+                firstname = a.forename;
+                quote = true;
+            }
+        }
+        else
+            firstname = a.forename;
+        String lastname = a.lastname;
+
         List<Employee> employees = emplFinder
             .where(Expr.and(Expr.eq("lastname", a.lastname),
-                            Expr.eq("forename", a.forename)))
+                            Expr.eq("forename", firstname)))
             .findList();
 
         Author author = a;
         if (employees.isEmpty()) {
+            if (quote) {
+                firstname = "\""+firstname+"\"";
+            }
+            else if (firstname.length() == 1)
+                firstname += "*";
+            else if ("nguyen".equalsIgnoreCase(lastname)
+                     && "D-T".equalsIgnoreCase(firstname))
+                firstname = "trung";
+            else if ("steve".equalsIgnoreCase(firstname) 
+                     || "steven".equalsIgnoreCase(firstname))
+                firstname = "(steve steven)";
+            else if ("matt".equalsIgnoreCase(firstname)
+                     || "matthew".equalsIgnoreCase(firstname)
+                     || "mathew".equalsIgnoreCase(firstname))
+                firstname = "(matt matthew mathew)";
+            else if ("dave".equalsIgnoreCase(firstname) 
+                     || "david".equalsIgnoreCase(firstname))
+                firstname = "(dave david)";
+            else if ("sam".equalsIgnoreCase(firstname)
+                     || "samuel".equalsIgnoreCase(firstname))
+                firstname = "(sam samuel)";
+            else if ("henrike".equalsIgnoreCase(firstname))
+                lastname = "(veith nelson)";
+            else if ("Wichterman".equalsIgnoreCase(lastname)
+                     || "Kouznetsova".equalsIgnoreCase(lastname))
+                lastname = "(Kouznetsova Wichterman)";
+
             try {
                 // try text searching
                 TextIndexer.SearchResult results = getIndexer().search
-                    ("lastname:"+a.lastname+" AND forename:"+a.forename, 10);
+                    ("lastname:"+lastname+" AND forename:"+firstname, 10);
                 if (!results.isEmpty()) {
                     for (Iterator it = results.getMatches().iterator();
                          it.hasNext(); ) {
@@ -497,7 +683,7 @@ public class Migration extends Controller {
     public static void updateProfile (Employee empl) {
         if (empl.lastname.equalsIgnoreCase("Carrillo-Carrasco")) {
             empl.suffix = "M.D.";
-            empl.url = "http://www.ncats.nih.gov/about/org/profiles/carrillo-carrasco.html";
+            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/carrillo-carrasco.html";
             empl.biography = 
 "Nuria Carrillo-Carrasco leads the clinical team for the Therapeutics for Rare and Neglected Diseases (TRND) program. The group conducts natural history studies and early-phase clinical trials needed to advance promising therapies for rare diseases, develops biomarkers, and identifies appropriate endpoints for clinical trials. Before she joined TRND, Carrillo-Carrasco studied clinical and translational aspects of inborn errors of metabolism and gene therapy.\n"+
 "Carrillo-Carrasco's research focuses on therapeutic development for rare genetic diseases, including GNE myopathy, creatine transporter defect and other inborn errors of metabolism. She is a faculty member for the Medical Biochemical Genetics fellowship program at NIH. Carrillo-Carrasco earned her M.D. from the National Autonomous University of Mexico and completed her pediatrics residency at Georgetown University Hospital. She is board certified in pediatrics, medical genetics and biochemical genetics.";
@@ -510,7 +696,7 @@ public class Migration extends Controller {
 "Carrillo-Carrasco is interested in addressing the challenges of developing therapeutics for rare diseases by improving drug development tools and the design of natural history studies and clinical trials for these diseases. Currently, she is the principal investigator of two studies of GNE myopathy: a natural history study and a clinical trial of ManNAc as a potential therapy for the disease. GNE myopathy is an extremely rare disorder that occurs in just one of every 1 million people and causes devastating progressive muscle weakness. No treatment exists for the disorder, which is caused by mutations in the GNE gene that lead to a defect in the sialic acid biosynthetic pathway. As part of the natural history study, Carrillo-Carrasco has characterized more than 40 patients on clinical, functional and molecular grounds and is evaluating appropriate outcome measures to be used in clinical trials, developing better diagnostic tools and discovering biomarkers for the disease.";
         }
         else if (empl.lastname.equalsIgnoreCase("Gee")) {
-            empl.url = "http://www.ncats.nih.gov/about/org/profiles/gee.html";
+            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/gee.html";
             empl.suffix = "M.S.";
             empl.title =
 "Research Scientist, Biology\n"+
@@ -527,7 +713,7 @@ public class Migration extends Controller {
             empl.selfie = createFigure
                 ("http://www.ncats.nih.gov/about/org/profiles/images/GerholdD.jpg");
             empl.suffix = "Ph.D.";
-            empl.url = "http://www.ncats.nih.gov/about/org/profiles/gerhold.html";
+            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/gerhold.html";
             empl.title = 
 "Leader, Genomic Toxicology\n"+
 "Division of Pre-Clinical Innovation\n"+

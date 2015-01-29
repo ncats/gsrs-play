@@ -20,7 +20,8 @@ public class Project extends Model {
     @Id
     public Long id;
 
-    @Column(length=1024)
+    @Column(length=2048)
+    @Indexable(suggest=true,name="Project")
     public String title;
     @Lob
     public String objective;

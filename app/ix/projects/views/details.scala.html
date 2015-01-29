@@ -1,44 +1,17 @@
-@(count: Int, message: String, pub: ix.ncats.models.Project) 
+@(message: String, pub: ix.ncats.models.Project) 
 
 @import helper._
 
-@back = @{
-  pub.id -1
-}
-@forward = @{
-  pub.id + 1
-}
-@scripts ={
-
-    <script type="text/javascript">
-	hs.graphicsDir = '/assets/images/';
-    hs.outlineType = null;
-    hs.wrapperClassName = null;
-	hs.showCredits= false;
-</script>
-}
 
 @main("Project Details", "NCATS Projects") {
 
 
 <div class="row">
-		<div class="col-md-1  arrow-holder">
-	@if(back > 0){
-		<a href = "@back" class='arrow'>&lsaquo;</a>
-		<a href = "/projects"><span class="glyphicon glyphicon-home house"></a>
-		}else{
-		<a href = "/projects"><span class="glyphicon glyphicon-home house"></a>
-		}
+		<div class="col-md-1">
+		<a href="@ix.publications.controllers.routes.ReachApp.projects()"><span class="glyphicon glyphicon-home house"></a>
 	</div>
 	<div class="col-md-10">
 		<h1>@pub.title</h1>
-	</div>
-	<div class="col-md-1 arrow-holder">
-	@if(forward <= count){
-		<a href = "@forward" class='arrow'>&rsaquo;</a>
-		}else{
-		<a href = "/projects" ><span class="glyphicon glyphicon-home house"></a>
-		}
 	</div>
 </div>
 <div class="row">
@@ -53,7 +26,10 @@
 				
 				<ul class = "keywords" style="text-align: left;">
 					@for(a<-pub.keywords){
-					<li>@a.term</li> }
+					@if(a.term){
+					<li>@a.term.replaceAll("/","/ ")</li> 
+					}
+					}
 				</ul>
 				
 
@@ -73,42 +49,51 @@
 
 				@if(pub.figures.size()!=0){
 				<div>
-					<img src="/api/figures/@pub.figures(0).id?format=image"
+					<img src="@ix.core.controllers.routes.RouteFactory.get("figures",pub.figures(0).id, null)?format=image"
 						class="proj-img">
 				</div>
 				<br /> }
 				<div id="details">
-					@if(pub.scope != null){
+					@if(pub.objective){
 					<div class="row">
 						<div class="col-md-2 category">Objective:</div>
 						<div class="col-md-10 data">@pub.objective</div>
 					</div>
-					<br /> } @if(pub.objective != null){
+					<br /> } 
+					@if(pub.scope){
 					<div class="row">
 						<div class="col-md-2 category">Scope:</div>
 						<div class="col-md-10 data">@pub.scope</div>
 					</div>
-					<br /> } @if(pub.members.size() != 0){
+					<br /> } 
+					@if(pub.members.size() != 0){
 					<div class="row">
 						<div class="col-md-2 category">Members:</div>
 						@for(m<- pub.members){
 						<div class="col-md-10 data">@m.getName();</div>
-						} } @if(pub.collaborators.size() < 0){
+						} 
+						} 
+						@if(pub.collaborators.size() < 0){
 						<div class="row">
 							<div class="col-md-2 category">Collaborators:</div>
 							@for(c<- pub.collaborators){
 							<div class="col-md-10 data">@c.getName()</div>
-							} } @if(pub.milestones.size() != 0){
+							}
+							 } 
+							 @if(pub.milestones.size() != 0){
 							<div class="row">
 								<div class="col-md-2 category">Milestones:</div>
 								@for(m<- pub.milestones){
-								<div class="col-md-10 data">@m.title</div>
-								} } @if(pub.publications.size() < 0){
+								<div class="col-md-10 data">@m.description</div>
+								} 
+								} 
+								@if(pub.publications.size() < 0){
 								<div class="row">
 									<div class="col-md-2 category">Publications:</div>
 									@for(p<- pub.publications){
 									<div class="col-md-10 data">@p.title</div>
-									} }
+									} 
+									}
 
 								</div>
 

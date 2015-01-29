@@ -85,9 +85,16 @@ public class EmployeeFactory extends EntityFactory {
                 for (Employee e : employees) {
                     if (callback == null 
                         || (callback != null && callback.ok(e))) {
-                        Logger.info("lastname=\""+e.lastname
-                                    +"\" forename=\""+e.forename+"\"");
-                        e.save();
+                        try {
+                            e.save();
+                            Logger.info(e.id+": lastname=\""+e.lastname
+                                        +"\" forename=\""+e.forename+"\"");
+                        }
+                        catch (Exception ex) {
+                            Logger.error("Can't save employee: "+e.lastname+
+                                         ", "+e.forename);
+                            ex.printStackTrace();
+                        }
                     }
                 }
                 count = employees.size();

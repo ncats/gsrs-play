@@ -12,20 +12,139 @@ color: #cf2b2e;
 text-decoration: none;
 }
 
-.pagination>li>a, .pagination>li>a:hover{
-color: #1f355c;
-}
-
-.pagination>.active>a{
-	background-color: #1f355c;
-	border-color: #1f355c;
-}
 .nca{
 	text-decoration: underline;
 color: #1f355c;
 }
 
-.pages{
-	float: right;
-margin: 10px 25px;
+.input-group {
+width: 100%;
 }
+
+.highlight
+{
+	background-color: yellow;
+}
+
+#select-drop{
+	float:left;
+}
+
+.house {
+font-size: 40px;
+margin-top: 50%;
+width: 100%;
+}
+
+#publications{
+	table-layout: fixed;
+}
+
+/*PAGINATION CSS */
+.pagination>li>a, .pagination>li>a:hover{
+color: #1f355c;
+}
+
+.pagination>.active>a, .pagination>.active>a:hover {
+	background-color: #1f355c;
+	border-color: #1f355c;
+}
+
+#pages-right{
+	float:right;
+}
+
+.pagination-list{
+	margin-right: 0px;
+	margin-left: 0px;
+	margin-top: -3%;
+margin-bottom: -1%;
+}
+.badge{
+	float:right;
+}
+
+/*END PAGINATION CSS */
+
+/* TYPEAHEAD CSS */
+.twitter-typeahead {
+    width: 100% !important;
+    height: 20px !important;
+}
+
+.tt-dropdown-menu {
+	width: 50%;
+    top: 220% !important;
+    background-color: rgba(255, 255, 255, .9);
+}
+
+.tt-suggestion {
+padding-top: 4%;
+padding-bottom: 1%;
+padding-left: 4%;
+}
+
+.header{
+padding-top: 4%;
+padding-left:2%;
+background-color: rgba(31,53,92,.9);
+color: white;
+padding-bottom: 4%;
+margin-bottom: 0%;
+margin-top: 0%;
+}
+
+
+.tt-suggestion:hover {
+background-color: rgba(31,53,92,.2);
+}
+
+#chartSelect-button {
+width: 51% !important;
+}
+
+.tt-cursor{
+background-color: rgba(31,53,92,.2);
+}
+/* END TYPEAHEAD CSS */
+
+#chartSelect-menu {
+width: 116% !important;
+}
+
+.keywords {
+padding-left: 8%;
+}
+
+.hidden{
+	display: none;
+}
+
+
+/*PROJECT ICON PAGE*/
+.img-rounded{
+border-radius: 20px;
+	background-color: #1f355c;
+		height:250px;
+}
+
+.on, .off{
+    position: absolute;
+}
+
+div.hex:hover .on {
+    display: initial;
+}
+
+div.hex .on {
+    display: none;
+}
+
+.count{
+float: right;
+margin-top: 80%;
+margin-right: 7%;
+z-index: 99999;
+position: relative;
+}
+/*END PROJECT ICOM PAGE*/

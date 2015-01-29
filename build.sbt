@@ -1,6 +1,6 @@
 name := "inxight"
 
-version := "0.0.5-idg"
+version := "0.0.8-reach"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
@@ -27,12 +27,15 @@ libraryDependencies ++= Seq(
     ,"org.webjars" % "typeaheadjs" % "0.10.5-1"
     ,"org.webjars" % "handlebars" % "2.0.0-1"
     ,"org.webjars" % "jquery-ui" % "1.11.2"
+    ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
     ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"
     ,"org.webjars" % "metroui" % "2.0.23"
     ,"org.webjars" % "font-awesome" % "4.2.0"
     ,"org.webjars" % "html5shiv" % "3.7.2"
     ,"org.webjars" % "requirejs" % "2.1.15"
     ,"org.webjars" % "respond" % "1.4.2"
+      ,"org.webjars" % "highcharts" % "4.0.4"
+  ,"org.webjars" % "highslide" % "4.1.13"
     ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
 //  ,"com.wordnik" %% "swagger-play2" % "1.3.10" exclude("org.reflections", "reflections")
 )     
