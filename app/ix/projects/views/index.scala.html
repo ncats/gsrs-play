@@ -13,7 +13,7 @@
 }
 
 
-<div class="row" style = "height:250px;">
+<div class="row" style = "height:100px;">
 <h1> NCATS PROJECTS</h1>
 </div>
 
@@ -48,28 +48,28 @@
       <div class="row">
 	<div class="col-sm-4 hex" >
 	  <a href= "@ix.idg.controllers.routes.IDGApp.diseases()">
-	    <div class="img-rounded" id="disease">
+	    <div class="img-rounded" id="cancer">
               	  <img src="@routes.Assets.at("publications/images/cancer.svg")" class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/cancer-on.svg")" class = "on"/>
-	      <span class="badge count">diseases</span>
+	      <span class="badge count">cancer</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex" >
 	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
-	    <div class="img-rounded" id = "targets" >
-	      	  <img src="@routes.Assets.at("ncats/images/ligands.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/ligands-shadow.svg")" class = "on"/>
-	      <span class="badge count">targets</span>
+	    <div class="img-rounded" id = "rare" >
+          	  <img src="@routes.Assets.at("publications/images/rare.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("publications/images/rare-on.svg")" class = "on"/>
+	      <span class="badge count">rare</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex" >
 	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
-	    <div class="img-rounded" id = "targets">
-	      	  <img src="@routes.Assets.at("ncats/images/Ligands-icon.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/ligands-shadow.svg")" class = "on"/>
-	      <span class="badge count">targets2</span>
+	    <div class="img-rounded" id = "infectious">
+          	  <img src="@routes.Assets.at("publications/images/infectious.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("publications/images/infectious-on.svg")" class = "on"/>
+	      <span class="badge count">infectious</span>
 	    </div>
 	  </a>
 	</div>
@@ -81,29 +81,62 @@
       <div class= "row">
 	<div class="col-sm-4 hex">
 	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
-	    <div class ="img-rounded" id = "ligands">
-	     	  <img src="@routes.Assets.at("ncats/images/targets.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/targets-shadow.svg")" class = "on"/>
-	      <span class="badge count">ligands</span>
+	    <div class ="img-rounded" id = "nervous">
+	     	 	  <img src="@routes.Assets.at("publications/images/nervous.svg")" class = "off"/>
+	  			  <img src="@routes.Assets.at("publications/images/nervous-on.svg")" class = "on"/>
+	      <span class="badge count">nervous</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex">
 	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
-	    <div class ="img-rounded" id = "ligands">
-	      	  <img src="@routes.Assets.at("ncats/images/diseases.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/diseases-shadow.svg")" class = "on"/>
-      
+	    <div class ="img-rounded" id = "metabolic">
+	     	 	  <img src="@routes.Assets.at("publications/images/metabolic.svg")" class = "off"/>
+	  			  <img src="@routes.Assets.at("publications/images/metabolic-on.svg")" class = "on"/>
+      <span class="badge count">metabolic</span>
 	    </div>
 	  </a>
-	  <span class="badge count">ligands</span>
+	  
 	</div>
 	<div class="col-sm-4 hex" >
 	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
-	    <div class="img-rounded" id = "targets">
-	      	  <img src="@routes.Assets.at("ncats/images/targets.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/targets-shadow.svg")" class = "on"/>
-	      <span class="badge count">targets</span>
+	    <div class="img-rounded" id = "cardio">
+	      	  <img src="@routes.Assets.at("ncats/images/cardio.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/cardio-on.svg")" class = "on"/>
+	      <span class="badge count">cardio</span>
+	    </div>
+	  </a>
+	</div>
+      </div>
+          <div class="row" style = "height:30px;">
+</div>
+      
+      <div class= "row">
+	<div class="col-sm-4 hex">
+	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	    <div class ="img-rounded" id = "technology">
+	     	 	  <img src="@routes.Assets.at("publications/images/techno.svg")" class = "off"/>
+	  			  <img src="@routes.Assets.at("publications/images/techno-on.svg")" class = "on"/>
+	      <span class="badge count">technology</span>
+	    </div>
+	  </a>
+	</div>
+	<div class="col-sm-4 hex">
+	  <a href= "@ix.idg.controllers.routes.IDGApp.ligands()">
+	    <div class ="img-rounded" id = "other">
+	     	 	  <img src="@routes.Assets.at("publications/images/other.svg")" class = "off"/>
+	  			  <img src="@routes.Assets.at("publications/images/other-on.svg")" class = "on"/>
+      <span class="badge count">other</span>
+	    </div>
+	  </a>
+	  
+	</div>
+	<div class="col-sm-4 hex" >
+	  <a href= "@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
+	    <div class="img-rounded" id = "all">
+	      	  <img src="@routes.Assets.at("ncats/images/all.svg")" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/all-on.svg")" class = "on"/>
+	      <span class="badge count">all</span>
 	    </div>
 	  </a>
 	</div>

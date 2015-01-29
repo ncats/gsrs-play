@@ -13,3 +13,8 @@ GET	/rss		ix.publications.controllers.ReachApp.rss(id: String, kind: String ?= n
 GET /trnd	ix.publications.controllers.ReachApp.trnd
 GET /holman	ix.publications.controllers.ReachApp.holman
 GET /projectexample	ix.publications.controllers.ReachApp.projectexample
+GET /ncgc	ix.publications.controllers.ReachApp.ncgc
+GET /xrna	ix.publications.controllers.ReachApp.xrna
+GET /ebola	ix.publications.controllers.ReachApp.ebola
+GET /samples ix.publications.controllers.ReachApp.samples
+GET /gaucher ix.publications.controllers.ReachApp.gaucher
