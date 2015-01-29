@@ -3,129 +3,82 @@
 
 @(facets: Array[Facet])
 
-@counts(label: String) = {
-	@for(f <- facets) {
-	@label
- 		@for(i <- 0 until f.getValues().size()) {
-     		@if(f.getValues().get(i).getLabel()==label){
-     			@f.getValues().get(i).getCount()
-     			@label
-     		}
- 		}
-	}
-}
-
-@main("Publications", "NCATS Publications") {
-
-@for(f <- facets) {
-@f.getName().replaceAll("MeSH","Keyword").trim()
- @for(i <- 0 until f.getValues().size()) {
-     @f.getValues().get(i).getLabel()
-     @f.getValues().get(i).getCount()
-  }
-}
+@main("Projects", "NCATS Projects") {
 
 
 
 <div class="row" style = "height:100px;">
-<h1> NCATS PROJECTS</h1>
+<h1>NCATS PROJECTS</h1>
 </div>
 
-<div class="row" id="searching">
 
-	<div class="col-md-6 col-md-offset-3">
-		   <form class="main-search" role="search" method="GET"
-				action="@ix.publications.controllers.routes.ReachApp.search(null)">
-	      <div class="input-group">
-		<input type="text" class="form-control typeahead" id="search"
-		       title="Search" placeholder="Search..." name="q">
-		<input type="hidden" name="kind" value="ix.ncats.models.Project" />
-		<span class="input-group-btn">
-		  <button class="btn btn-default" id="search" type="search"
-			  value="submit">
-		    <span class="fa fa-search"></span>
-		  </button>
-		</span>
-	      </div>
-	    </form>
-			
-		</div>
-	</div>
 
 <div class="row" id="pub-history">
-	<div class="col-md-3 col-xs-4">@filters(facets)</div>
+	<div class="col-md-3 col-xs-4">@filters(facets.filter(_.getName().equalsIgnoreCase("program")))</div>
 	<!--END panel panel-primary-->
 
-
-
+   @defining(facets.filter(_.getName().equalsIgnoreCase("category"))) { cat =>
 	<div class="col-md-9 col-xs-8">
       <div class="row">
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Category/Cancer">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Cancer">
 	    <div class="rounded" id="cancer">
               	  <img src="@routes.Assets.at("publications/images/cancer.svg")" alt="Sort by projects involving cancer" class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/cancer-on.svg")" alt="Sort by projects involving cancer" class = "on"/>
-	      <span class="badge count">
-	      @counts("Cancer")
-    </span>
+	      <span class="badge count">@cat(0).getCount("Cancer")</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Program/NCGC">
+
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Rare+Disease">
 	    <div class="rounded" id = "rare" >
           	  <img src="@routes.Assets.at("publications/images/rare.svg")" alt="Sort by projects involving rare diseases" class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/rare-on.svg")" alt="Sort by projects involving rare diseases" class = "on"/>
-	       <span class="badge count">
-     @counts("Rare Disease")
-     </span>
+	      <span class="badge count">@cat(0).getCount("Rare Disease")</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Program/NCGC">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Infectious+Disease">
 	    <div class="rounded" id = "infectious">
           	  <img src="@routes.Assets.at("publications/images/infectious.svg")" alt="Sort by projects involving infectious diseases" class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/infectious-on.svg")" alt="Sort by projects involving infectious diseases" class = "on"/>
-	       <span class="badge count">
-     @counts("Infectious Disease")
-     </span>
+	      <span class="badge count">@cat(0).getCount("Infectious Disease")</span>
 	    </div>
 	  </a>
 	</div>
       </div>
       
       <div class="row" style = "height:30px;">
-</div>
+      </div>
       
       <div class= "row">
 	<div class="col-sm-4 hex">
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Program/NCGC">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Central+Nervous+System+Disease">
 	    <div class ="rounded" id = "nervous">
 	     	 	  <img src="@routes.Assets.at("publications/images/nervous.svg")" alt="Sort by projects involving central nervous system diseases"class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/nervous-on.svg")" alt="Sort by projects involving central nervous system diseases" class = "on"/>
-	       <span class="badge count">
-	@counts("Rare Disease")</span>
+	      <span class="badge count">@cat(0).getCount("Central Nervous System Disease")</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex">
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Program/NCGC">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Metabolic+Disorder">
 	    <div class ="rounded" id = "metabolic">
 	     	 	  <img src="@routes.Assets.at("publications/images/metabolic.svg")" alt="Sort by projects involving metabolic diseases" class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/metabolic-on.svg")" alt="Sort by projects involving metabolic diseases" class = "on"/>
-       <span class="badge count">
-	 @counts("Rare Disease")</span>
+      <span class="badge count">@cat(0).getCount("Metabolic Disorder")</span>
 	    </div>
 	  </a>
 	  
 	</div>
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Program/NCGC">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Cardiovascular+Disease">
 	    <div class="rounded" id = "cardio">
 	      	  <img src="@routes.Assets.at("publications/images/cardio.svg")" alt="Sort by projects involving cardiovascular diseases"class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/cardio-on.svg")" alt="Sort by projects involving cardiovascular diseases" class = "on"/>
-	      <span class="badge count">@counts("Rare Disease")</span>
+	      <span class="badge count">@cat(0).getCount("Cardiovascular Disease")</span>
 	    </div>
 	  </a>
 	</div>
@@ -135,30 +88,30 @@
       
       <div class= "row">
 	<div class="col-sm-4 hex">
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Program/NCGC">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Technology">
 	    <div class ="rounded" id = "technology">
 	     	 	  <img src="@routes.Assets.at("publications/images/techno.svg")" alt="Sort by projects involving unique technologies" class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/techno-on.svg")" alt="Sort by projects involving unique technologies" class = "on"/>
-	      <span class="badge count">@counts("Rare Disease")</span>
+	      <span class="badge count">@cat(0).getCount("Technology")</span>
 	    </div>
 	  </a>
 	</div>
 	<div class="col-sm-4 hex">
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Program/NCGC">
+	  <a href= "@{ix.publications.controllers.routes.ReachApp.projects()}?facet=Category/Other">
 	    <div class ="rounded" id = "other">
 	     	 	  <img src="@routes.Assets.at("publications/images/all.svg")" alt="Sort by projects that defy categorization" class = "off"/>
 	  			  <img src="@routes.Assets.at("publications/images/all-on.svg")" alt="Sort by projects that defy categorization" class = "on"/>
-      <span class="badge count">@counts("Rare Disease")</span>
+      <span class="badge count">@cat(0).getCount("other")</span>
 	    </div>
 	  </a>
 	  
 	</div>
 	<div class="col-sm-4 hex" >
-	  <a href= "@ix.publications.controllers.routes.ReachApp.projects(null, 12, 1)?facet=Program/NCGC">
+	  <a href= "@ix.publications.controllers.routes.ReachApp.projects()">
 	    <div class="rounded" id = "all">
 	      	  <img src="@routes.Assets.at("publications/images/all.svg")" alt="See all projects" class = "off"/>
 	  <img src="@routes.Assets.at("publications/images/all-on.svg")" alt="See all projects" class = "on"/>
-	      <span class="badge count">@counts("Rare Disease")</span>
+	      <span class="badge count">@ix.publications.controllers.ReachApp.getProjectCount()</span>
 	    </div>
 	  </a>
 	</div>
@@ -166,6 +119,6 @@
       
             <div class="row" style = "height:30px;">
 </div>
-
+	    }
   
  }
