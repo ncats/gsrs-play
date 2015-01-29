@@ -1,0 +1,24 @@
+@import ix.utils.Global
+@import ix.core.models.XRef
+@import ix.publications.controllers.ReachApp
+
+@(key: String, entries: Array[ReachApp.RSS])
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>NCATS Publications RSS Feed</title>
+  <link href="@{Global.getHost() + ix.publications.controllers.routes.ReachApp.rss(key)}"/>
+  <updated>@{new java.util.Date()}</updated>
+  <author>
+    <name></name>
+  </author>
+  <id>urn:uuid:@{java.util.UUID.randomUUID()}</id>
+  @for(e <- entries) {
+     <entry>
+       <title>@e.title</title>
+       <link href="@e.link"/>
+       <id>@e.id</id>
+       <updated>@e.updated</updated>
+       <summary>@e.summary</summary>
+     </entry>
+  }
+</feed>
