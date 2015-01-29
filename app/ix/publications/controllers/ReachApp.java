@@ -6,12 +6,19 @@ import java.util.*;
 import java.net.*;
 import java.util.concurrent.Callable;
 import java.util.Iterator;
+import java.text.SimpleDateFormat;
+import java.text.DateFormat;
+
 import controllers.routes;
 import play.*;
 import play.cache.Cache;
 import play.data.*;
 import play.mvc.*;
 import play.libs.ws.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.avaje.ebean.Expr;
+
 import ix.core.models.*;
 import ix.idg.models.*;
 import ix.core.controllers.EntityFactory;
@@ -24,15 +31,16 @@ import ix.ncats.controllers.reach.ProjectFactory;
 import ix.ncats.models.Project;
 import ix.utils.Global;
 import ix.utils.Util;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.avaje.ebean.Expr;
-
 
 public class ReachApp extends Controller {
         
     static public final int CACHE_TIMEOUT = 60*60;
     static public final int MAX_FACETS = 100;
     static final String YEAR_FACET = "Journal Year Published";
+
+    //2003-12-13T18:30:02Z
+    static final DateFormat DATE_FORMAT = new SimpleDateFormat
+        ("yyy-MM-dd'T'HH:mm:ss'Z'");
     
     public static final String[] PUBLICATION_FACETS = {
         "Program",
@@ -57,6 +65,7 @@ public class ReachApp extends Controller {
         public String id;
         public String updated;
         public String summary;
+        public String category;
         RSS () {}
     }
         
@@ -607,35 +616,40 @@ public class ReachApp extends Controller {
     }
     
     public static RSS[] getRSS (String key, String kind, int count) {
-        List<XRef> xrefs = XRefFactory.finder
-            .where(Expr.and(Expr.eq("properties.label", "web-tag"),
-                            Expr.eq("properties.term", key)))
-            .findList();
-        
-        List<RSS> entries = new ArrayList<RSS>();
-        Iterator<XRef> it = xrefs.iterator();
-        for (int i = 0; i < count && it.hasNext();) {
-            XRef ref = it.next();
-            if (kind != null && !kind.equals(ref.kind))
-                continue;
-            
-            ++i;
-            RSS rss = null;
-            for (Value v : ref.properties) {
-                if (v.label.equals("rss-content")) {
-                    Keyword kw = (Keyword)v;
-                    rss = new RSS();
-                    rss.title = kw.term;
-                }
-            }
+        Map<String, Integer> counts = new HashMap<String, Integer>();   
+        List<XRef> xrefs;
+        if (kind != null) {
+            xrefs = XRefFactory.finder
+                .where().conjunction()
+                .add(Expr.eq("kind", kind))
+                .add(Expr.eq("properties.label", "web-tag"))
+                .add(Expr.eq("properties.term", key))
+                .order("created desc")
+                .setMaxRows(count)
+                .findList();
+        }
+        else {
+            xrefs = XRefFactory.finder
+                .where(Expr.and(Expr.eq("properties.label", "web-tag"),
+                                Expr.eq("properties.term", key)))
+                .order("created desc")
+                .findList();
+        }
 
-            Object objRef = ref.deRef();            
+        List<RSS> entries = new ArrayList<RSS>();
+        for (Iterator<XRef> it = xrefs.iterator(); it.hasNext(); ) {
+            XRef ref = it.next();
+
+            Integer c = counts.get(ref.kind);
+            if (c != null && c >= count)
+                continue;
+            counts.put(ref.kind, c != null ? (c+1) : 1);
+            
+            RSS rss = new RSS ();
+            Object objRef = ref.deRef();
             if (objRef instanceof Publication) {
                 Publication pub = (Publication)objRef;
-                if (rss == null) {
-                    rss = new RSS ();
-                    rss.title = pub.title;
-                }
+                rss.title = pub.title;
                 rss.link = Global.getHost()
                     +ix.publications.controllers
                     .routes.ReachApp.publication(pub.id);
@@ -643,17 +657,24 @@ public class ReachApp extends Controller {
             }
             else if (objRef instanceof Project) {
                 Project proj = (Project)objRef;
-                if (rss == null) {
-                    rss = new RSS ();
-                    rss.title = proj.title;
-                }
+                rss.title = proj.title;
                 rss.link = Global.getHost()
                     +ix.publications.controllers
                     .routes.ReachApp.project(proj.id);
                 rss.summary = proj.objective;
             }
-            rss.id = "urn:uuid:"+UUID.randomUUID();
+            rss.category = ref.kind;
+            rss.updated = DATE_FORMAT.format(ref.modified);
 
+            for (Value v : ref.properties) {
+                if (v.label.equals("rss-content")) {
+                    // override title
+                    rss.title = ((Keyword)v).term;
+                }
+                else if (v.label.equals("UUID")) {
+                    rss.id = "urn:uuid:"+((Keyword)v).term;                 
+                }
+            }
             entries.add(rss);
         }
         

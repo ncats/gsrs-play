@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import ix.core.models.Author;
 import ix.core.models.Keyword;
 import ix.core.models.Figure;
-import ix.core.models.Acl;
 import ix.core.models.Value;
 import ix.core.models.Event;
 import ix.core.models.Curation;
 import ix.core.models.Publication;
+import ix.core.models.Indexable;
 
 @Entity
 @Table(name="ix_ncats_project")
