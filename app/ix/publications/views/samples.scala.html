@@ -1,7 +1,7 @@
 @import ix.utils.Global
 
 @main("Publications", "NCATS Publications") {
-<h1>RSS Feed Sample Pages</h1>
+<h1>NCATS Publication and Project RSS Feed</h1>
 <p>The following pages make use of the NCATS Publication
   and Project RSS Feed. The feed is available at the following url:
   <pre>@{Global.getHost()+ix.publications.controllers.routes.ReachApp.rss("KEY")}</pre>
@@ -11,7 +11,16 @@
   <blockquote>
     <a href="@ix.publications.controllers.routes.ReachApp.rss("NCGC")">@{Global.getHost()+ix.publications.controllers.routes.ReachApp.rss("NCGC")}</a>
   </blockquote>
-  
+  Right now the following are known <code>web-tag</code>'s:
+  <ul>
+    @defining(ix.publications.controllers.ReachApp.getWebTags()) { tags =>
+    @for(t <- tags) {
+	      <li><a href="@{ix.publications.controllers.routes.ReachApp.rss(t)}"><code>@t</code></a></li>
+	      }
+    }
+  </ul>
+
+  <h1>Sample Pages</h1>
 <div class = "row">
   <div class ="col-md-4">
     <h3>Programs</h3>

@@ -18,6 +18,7 @@ import play.libs.ws.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.PagingList;
 
 import ix.core.models.*;
 import ix.idg.models.*;
@@ -695,5 +696,22 @@ public class ReachApp extends Controller {
     public static Result rss (String key, String kind, int count) {
         return ok (ix.publications.views.xml.rss.render
                    (key, getRSS (key, kind, count)));
+    }
+
+    public static String[] getWebTags () {
+        return getWebTags (null);
+    }
+    
+    public static String[] getWebTags (String kind) {
+        Set<String> tags = new HashSet<String>();
+        PagingList<XRef> pages = XRefFactory.finder.findPagingList(100);
+        for (int i = 0; i < pages.getTotalPageCount(); ++i) {
+            for (XRef ref : pages.getPage(i).getList())
+                if (kind == null || kind.equalsIgnoreCase(ref.kind))
+                    for (Value v : ref.properties)
+                        if (v.label.equalsIgnoreCase("web-tag"))
+                            tags.add(((Keyword)v).term);
+        }
+        return tags.toArray(new String[0]);
     }
 }
