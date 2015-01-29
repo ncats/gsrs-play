@@ -173,6 +173,17 @@ background-color: white;
 .proj-img{
 	height:250px;
 }
-
-
+.mobile-show{
+	display:none;
+}
+@media ( max-width : 768px) {
+.mobile-show{
+	display: initial;
+	background-color:black;	
+	color:white;
+}
+.mobile{
+	display:none;
+}
+}
 /*END PROJECTs PAGE*/
