@@ -572,23 +572,40 @@ public class TextIndexer {
                 DrillDownQuery ddq = new DrillDownQuery (facetsConfig, query);
                 // the first term is the drilldown dimension
                 for (String dd : options.facets) {
-                    String[] d = dd.split("/");
-                    StringBuilder full = new StringBuilder ();
-                    for (int i = 1; i < d.length; ++i) {
-                        if (DEBUG (1)) {
-                            Logger.debug("Drilling down \""
-                                         +d[0]+"/"+d[i]+"\"...");
-                        }
-                        
-                        ddq.add(d[0], d[i]);
-                        if (full.length() > 0) {
-                            full.append('/');
-                        }
-                        full.append(d[i]);
-                        if (!d[i].equals(full.toString())) {
-                            //ddq.add(d[0], full.toString());
-                        }
+                    int pos = dd.indexOf('/');
+                    if (pos > 0) {
+                        String facet = dd.substring(0, pos);
+                        String value = dd.substring(pos+1);
+                        ddq.add(facet, value);
                     }
+                    else {
+                        Logger.warn("Bogus drilldown syntax: "+dd);
+                    }
+                        /*
+                    String[] d = dd.split("/");
+                    if (d.length > 1) {
+                        StringBuilder full = new StringBuilder ();
+                        for (int i = 1; i < d.length; ++i) {
+                            if (DEBUG (1)) {
+                                Logger.debug("Drilling down \""
+                                             +d[0]+"/"+d[i]+"\"...");
+                            }
+                            
+                            ddq.add(d[0], d[i]);
+                            if (full.length() > 0) {
+                                full.append('/');
+                            }
+                            full.append(d[i]);
+                            if (!d[i].equals(full.toString())) {
+                                //ddq.add(d[0], full.toString());
+                            }
+                        }
+                        //ddq.add(d[0], full.toString());
+                    }
+                    else {
+                        Logger.warn("Bogus drilldown syntax: "+dd);
+                    }
+                        */
                 }
                 
                 Facets facets;
@@ -633,7 +650,7 @@ public class TextIndexer {
                         // make sure the facet value is returned                
                         String label = null; 
                         for (String d : drills) {
-                            if (d.startsWith(result.dim)) {
+                            if (d.equals(result.dim)) {
                                 int pos = d.indexOf('/');
                                 if (pos > 0)
                                     label = d.substring(pos+1);
