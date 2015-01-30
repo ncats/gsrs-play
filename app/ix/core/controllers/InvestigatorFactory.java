@@ -21,7 +21,9 @@ import ix.core.models.Investigator;
 import ix.core.controllers.EntityFactory;
 
 
-@NamedResource(name="investigators", type=Investigator.class)
+@NamedResource(name="investigators",
+               type=Investigator.class,
+               description="This resource provides investigator's contact information")
 public class InvestigatorFactory extends EntityFactory {
     public static Model.Finder<Long, Investigator> finder = 
         new Model.Finder (Long.class, Investigator.class);

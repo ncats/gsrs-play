@@ -15,7 +15,9 @@ import com.avaje.ebean.Expr;
 import ix.core.NamedResource;
 import ix.core.models.Keyword;
 
-@NamedResource(name="keywords",type=Keyword.class)
+@NamedResource(name="keywords",
+               type=Keyword.class,
+               description="This resource is for handling of keywords, which is a specific resource of Value.")
 public class KeywordFactory extends EntityFactory {
     public static final Model.Finder<Long, Keyword> finder = 
         new Model.Finder(Long.class, Keyword.class);
@@ -51,17 +53,17 @@ public class KeywordFactory extends EntityFactory {
     }
 
     public static Keyword registerIfAbsent
-	(String label, String term, String url) {
-	List<Keyword> keywords =
-	    finder.where(Expr.and(Expr.eq("label", label),
-				  Expr.eq("term", term))).findList();
-	if (keywords.isEmpty()) {
-	    Keyword kw = new Keyword (label, term);
-	    kw.href = url;
-	    kw.save();
-	    return kw;
-	}
-	
-	return keywords.iterator().next();
+        (String label, String term, String url) {
+        List<Keyword> keywords =
+            finder.where(Expr.and(Expr.eq("label", label),
+                                  Expr.eq("term", term))).findList();
+        if (keywords.isEmpty()) {
+            Keyword kw = new Keyword (label, term);
+            kw.href = url;
+            kw.save();
+            return kw;
+        }
+        
+        return keywords.iterator().next();
     }
 }

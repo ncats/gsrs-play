@@ -17,12 +17,15 @@ import play.mvc.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import com.avaje.ebean.*;
 import com.avaje.ebean.event.BeanPersistListener;
 
+import ix.utils.Global;
 import ix.core.models.*;
 import ix.core.NamedResource;
+import ix.core.controllers.search.SearchFactory;
 
 
 public class RouteFactory extends Controller {
@@ -47,8 +50,22 @@ public class RouteFactory extends Controller {
 
     public static Result listResources () {
         Set<String> resources = new TreeSet<String>(registry.keySet());
-        ObjectMapper mapper = new ObjectMapper ();
-        return ok (mapper.valueToTree(resources));
+        List<String> urls = new ArrayList<String>();
+        Call call = routes.RouteFactory.listResources();
+        ObjectMapper mapper = new ObjectMapper ();      
+        ArrayNode nodes = mapper.createArrayNode();
+        for (String res : resources) {
+            ObjectNode n = mapper.createObjectNode();
+            NamedResource named  = (NamedResource)registry
+                .get(res).getAnnotation(NamedResource.class);
+            n.put("name", res);
+            n.put("kind", named.type().getName());
+            n.put("href", Global.getHost()+call.url()+"/"+res);
+            n.put("description", named.description());
+            nodes.add(n);
+        }
+
+        return ok (nodes);
     }
 
     public static Result get (String ns, String resource) {
@@ -154,7 +171,7 @@ public class RouteFactory extends Controller {
     }
 
     public static Result page (String context, int top,
-			       int skip, String filter) {
+                               int skip, String filter) {
         try {
             Method m = getMethod (context, "page", 
                                   int.class, int.class, String.class);

@@ -11,7 +11,9 @@ import ix.core.models.Journal;
 import ix.core.NamedResource;
 
 
-@NamedResource(name="journals", type=Journal.class)
+@NamedResource(name="journals",
+               type=Journal.class,
+               description="Publication journal issue resource")
 public class JournalFactory extends EntityFactory {
     public static final Model.Finder<Long, Journal> finder = 
         new Model.Finder(Long.class, Journal.class);

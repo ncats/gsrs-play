@@ -17,7 +17,9 @@ import ix.core.models.VRange;
 import ix.core.models.VIntArray;
 
 
-@NamedResource(name="values",type=Value.class)
+@NamedResource(name="values",
+               type=Value.class,
+               description="Resource for handling Value's")
 public class ValueFactory extends EntityFactory {
     public static final Model.Finder<Long, Value> finder = 
         new Model.Finder(Long.class, Value.class);

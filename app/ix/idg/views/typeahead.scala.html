@@ -7,7 +7,7 @@ $(document).ready(function () {
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Target", "QUERY",10)'
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Target", "QUERY",10)'
         }
 /*
 remote: '/api/suggest/Target?q=%QUERY',
@@ -20,7 +20,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Disease", "QUERY",10)'
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Disease", "QUERY",10)'
         }
     });
     var gene = new Bloodhound({
@@ -30,7 +30,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Gene", "QUERY",10)'
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Gene", "QUERY",10)'
         }
 });
     var drug = new Bloodhound({
@@ -40,7 +40,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.routes.SearchFactory.suggestField("IDG_Drug", "QUERY",10)'
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("IDG_Drug", "QUERY",10)'
         }
     });
 
@@ -49,7 +49,7 @@ remote: '/api/suggest/Target?q=%QUERY',
             return d.key.split(/\//);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '@ix.core.controllers.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
+        remote: '@ix.core.controllers.search.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
     });
     
     target.initialize();

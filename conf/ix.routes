@@ -1,8 +1,7 @@
 #
-# change api version as appropriate; the version must be insync with
-# application.api variable in application.conf!
+# top-level routing table
 #
-->      /api/v1       ix.core.api.Routes
+->      /api       ix.core.api.Routes
 ->      /admin  ix.core.admin.Routes
 ->      /granite        ix.ncats.granite.Routes
 ->      /reach  ix.ncats.reach.Routes
@@ -13,8 +12,8 @@
 #
 # assets
 #
-GET     /reach/assets/*file   controllers.Assets.at(path="/public", file)
-GET     /reach/webjars/*file          controllers.WebJarAssets.at(file)
+GET     /ix/assets/*file   controllers.Assets.at(path="/public", file)
+GET     /ix/webjars/*file          controllers.WebJarAssets.at(file)
 
 #
 # other routes

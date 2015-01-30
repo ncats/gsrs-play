@@ -10,7 +10,9 @@ import play.mvc.*;
 import ix.core.NamedResource;
 import ix.core.models.XRef;
 
-@NamedResource(name="xrefs", type=XRef.class)
+@NamedResource(name="xrefs",
+               type=XRef.class,
+               description="Cross references are handled by this resource. An XRef is also be used as an indirect way (i.e., pointer) to reference a particular entity.")
 public class XRefFactory extends EntityFactory {
     public static final Model.Finder<Long, XRef> finder = 
         new Model.Finder(Long.class, XRef.class);

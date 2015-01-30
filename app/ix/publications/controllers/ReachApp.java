@@ -24,7 +24,7 @@ import ix.core.models.*;
 import ix.idg.models.*;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PublicationFactory;
-import ix.core.controllers.SearchFactory;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.XRefFactory;
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;

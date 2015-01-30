@@ -16,7 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.NamedResource;
 import ix.core.models.Predicate;
 
-@NamedResource(name="predicates", type=Predicate.class)
+@NamedResource(name="predicates",
+               type=Predicate.class,
+               description="This resource provides support for predicates (i.e., n-tuples of the form <subject> <relationship> <objects...>)")
 public class PredicateFactory extends EntityFactory {
     public static final Model.Finder<Long, Predicate> finder = 
         new Model.Finder(Long.class, Predicate.class);

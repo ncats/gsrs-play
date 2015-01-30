@@ -10,7 +10,9 @@ import play.mvc.*;
 import ix.core.NamedResource;
 import ix.core.models.Namespace;
 
-@NamedResource(name="namespaces",type=Namespace.class)
+@NamedResource(name="namespaces",
+               type=Namespace.class,
+               description="This resource provides meta information about a namespace or data source")
 public class NamespaceFactory extends EntityFactory {
     public static final Model.Finder<Long, Namespace> finder = 
         new Model.Finder(Long.class, Namespace.class);
@@ -22,26 +24,26 @@ public class NamespaceFactory extends EntityFactory {
     }
 
     public static Namespace get (String name) {
-	try {
-	    Namespace ns = finder.where()
-		.eq("name", name)
-		.findUnique();
-	    return ns;
-	}
-	catch (Exception ex) {
-	    Logger.trace("Can't query namespace", ex);
-	}
-	return null;
+        try {
+            Namespace ns = finder.where()
+                .eq("name", name)
+                .findUnique();
+            return ns;
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't query namespace", ex);
+        }
+        return null;
     }
 
     public static Namespace registerIfAbsent (String name, String location) {
-	Namespace ns = get (name);
-	if (ns == null) {
+        Namespace ns = get (name);
+        if (ns == null) {
             ns = Namespace.newPublic(name);
             ns.location = location;
             ns.save();
-	}
-	return ns;
+        }
+        return ns;
     }
     
     public static Result get (Long id, String select) {

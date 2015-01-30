@@ -1,32 +1,6 @@
-##
-## Testing..
-##
-->      /test       ix.core.test.Routes
-
-##################################
-## API for entity routing
-##################################
-GET	/edits/:uuid	ix.core.controllers.EditFactory.get(uuid: String)
-GET	/edits/:uuid/	ix.core.controllers.EditFactory.get(uuid: String)
-GET	/edits/:uuid/*field	ix.core.controllers.EditFactory.field(uuid: String, field: String)
-GET     /search         ix.core.controllers.SearchFactory.search(q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
-GET     /suggest/@fields       ix.core.controllers.SearchFactory.suggestFields
-GET     /suggest/:field       ix.core.controllers.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
-GET     /suggest       ix.core.controllers.SearchFactory.suggest(q: String, max: Int ?= 10)
-GET     /    ix.core.controllers.RouteFactory.listResources()
-GET     /$context<[a-z0-9_]+>/@count       ix.core.controllers.RouteFactory.count(context: String)
-GET     /$context<[a-z0-9_]+>/search        ix.core.controllers.RouteFactory.search(context: String, q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
-GET     /$context<[a-z0-9_]+>/:id  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
-GET     /$context<[a-z0-9_]+>/:id/@edits      ix.core.controllers.RouteFactory.edits(context: String, id:Long)
-GET     /$context<[a-z0-9_]+>(:id)     ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>(:id)/  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>(:id)/@edits      ix.core.controllers.RouteFactory.edits(context: String, id: Long)
-GET     /$context<[a-z0-9_]+>/:id/  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>/:id/*field  ix.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
-GET     /$context<[a-z0-9_]+>(:id)/*field  ix.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
-GET     /$context<[a-z0-9_]+>  ix.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
-GET     /$context<[a-z0-9_]+>/  ix.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
-POST    /$context<[a-z0-9_]+>  ix.core.controllers.RouteFactory.create(context: String)
-PUT     /$context<[a-z0-9_]+>/:id/*field       ix.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
-PUT     /$context<[a-z0-9_]+>(:id)/*field       ix.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
-#GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       ix.core.controllers.RouteFactory.get(ns: String, resource: String)
+#
+# change api version as appropriate; the version must be insync with
+# application.api variable in application.conf!
+#
+->	/v1	ix.core.api.v1.Routes
+GET	/	ix.core.controllers.version.Api.index

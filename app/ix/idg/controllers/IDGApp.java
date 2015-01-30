@@ -1,6 +1,6 @@
 package ix.idg.controllers;
 
-import ix.core.controllers.SearchFactory;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Text;
 import ix.core.models.Value;

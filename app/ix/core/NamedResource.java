@@ -8,4 +8,5 @@ import java.lang.annotation.*;
 public @interface NamedResource {
     String name ();
     Class type ();
+    String description () default "";
 }

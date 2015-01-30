@@ -7,7 +7,7 @@ $(document).ready(function () {
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Category", "QUERY",10)'
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Category", "QUERY",10)'
         }
 /*
 remote: '/api/suggest/Target?q=%QUERY',
@@ -20,7 +20,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Program", "QUERY",10)'
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Program", "QUERY",10)'
         }
     });
     var author = new Bloodhound({
@@ -30,7 +30,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.routes.SearchFactory.suggestField("Author", "QUERY",10)'
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Author", "QUERY",10)'
         }
     });
     var mesh = new Bloodhound({
@@ -40,7 +40,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
             wildcard: 'QUERY',
-            url:  '@ix.core.controllers.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
+            url:  '@ix.core.controllers.search.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
         }
     });
     

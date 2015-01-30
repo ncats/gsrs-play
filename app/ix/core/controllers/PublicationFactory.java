@@ -22,7 +22,9 @@ import ix.ncats.models.Project;
 import ix.utils.Eutils;
 import ix.core.plugins.EutilsPlugin;
 
-@NamedResource(name="publications", type=Publication.class)
+@NamedResource(name="publications",
+               type=Publication.class,
+               description="Resource for handling of publications")
 public class PublicationFactory extends EntityFactory {
     public static final Model.Finder<Long, Publication> finder = 
         new Model.Finder(Long.class, Publication.class);

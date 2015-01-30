@@ -17,7 +17,9 @@ import com.avaje.ebean.LikeType;
 import ix.core.models.Organization;
 import ix.core.NamedResource;
 
-@NamedResource(name="organizations", type=Organization.class)
+@NamedResource(name="organizations",
+               type=Organization.class,
+               description="Information about organization such location and address")
 public class OrganizationFactory extends EntityFactory {
     static public final Model.Finder<Long, Organization> finder = 
         new Model.Finder(Long.class, Organization.class);

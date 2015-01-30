@@ -13,7 +13,9 @@ import ix.core.NamedResource;
 import ix.core.models.Figure;
 import com.fasterxml.jackson.databind.JsonNode;
 
-@NamedResource(name="figures",type=Figure.class)
+@NamedResource(name="figures",
+               type=Figure.class,
+               description="Resource for handling figures and images")
 public class FigureFactory extends EntityFactory {
     public static final Model.Finder<Long, Figure> finder = 
         new Model.Finder(Long.class, Figure.class);

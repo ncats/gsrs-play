@@ -1,4 +1,4 @@
-package ix.core.controllers;
+package ix.core.controllers.search;
 
 import java.io.*;
 import java.security.*;
@@ -26,6 +26,7 @@ import ix.utils.Util;
 import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
 import ix.core.search.SearchOptions;
+import ix.core.controllers.EntityFactory;
 
 public class SearchFactory extends EntityFactory {
     static final Model.Finder<Long, ETag> etagDb = 
