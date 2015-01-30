@@ -1,5 +1,6 @@
 #
-# change api version as appropriate
+# change api version as appropriate; the version must be insync with
+# application.api variable in application.conf!
 #
 ->      /api/v1       ix.core.api.Routes
 ->      /admin  ix.core.admin.Routes
