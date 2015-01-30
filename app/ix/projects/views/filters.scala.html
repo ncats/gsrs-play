@@ -23,7 +23,7 @@
 	<tr>
 	  @defining(ReachApp.sha1(f,i)) { id =>
 	     <td>
-	       <input type="checkbox" checked="true"
+	     	       <input type="checkbox" checked="true"
 		      onclick="filterToggle(this)" id="@id"/>
 	     </td>
 	     <script>
@@ -33,13 +33,14 @@
 	           value: '@ReachApp.encode(f,i)'
 	        };
 	     </script>
-          }
-
-         <td>@f.getValues().get(i).getLabel()</td>
+          
+		
+         <td><label for = "@id">@f.getValues().get(i).getLabel()</label></td>
 	 <td>
            <span class="badge">@f.getValues().get(i).getCount()</span>
 	 </td>
         </tr>
+        }
         }
       }
       @for(i <- 0 until Math.min(ReachApp.MAX_FACETS, f.getValues().size())) {
@@ -56,13 +57,12 @@
 	           value: '@ReachApp.encode(f,i)'
 	        };
 	     </script>
-          }
-
-         <td>@f.getValues().get(i).getLabel()</td>
+                  <td><label for = "@id">@f.getValues().get(i).getLabel()</label></td>
 	 <td>
            <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
 	 </td>
         </tr>
+         }
         }
       }
     </table>
