@@ -53,6 +53,7 @@ projects: List[Project])
 				<div class="row" id="allSlides">
 					@for(p <- projects) {
 					<div class="col-md-4 proj-img">
+					<div class ="mobile-show">@p.title</div>
 						<div
 							class="img-hover-parent img-hover-grow overlay-parent overlay-parent-slideup-title-black box ">
 							<a href="projects/@p.id" title=""
@@ -60,7 +61,7 @@ projects: List[Project])
 								@if(p.figures.size() > 1){ 
 								<img src="@p.figures(1).getUrl()"
 								class="img-responsive thumb" alt="@p.title"> }else{
-								@p.title }
+								<span class ="mobile">@p.title</span> }
 								<div class="overlay-slideup-title black clr">
 									<span class="title">@p.title</span>
 								</div>
