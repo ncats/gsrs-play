@@ -4,7 +4,7 @@ body {
   text-shadow: none;
 }
 a{
-	color: #1f355c;
+        color: #1f355c;
 }
 
 a:hover {
@@ -13,7 +13,7 @@ text-decoration: none;
 }
 
 .nca{
-	text-decoration: underline;
+        text-decoration: underline;
 color: #1f355c;
 }
 
@@ -23,11 +23,11 @@ width: 100%;
 
 .highlight
 {
-	background-color: yellow;
+        background-color: yellow;
 }
 
 #select-drop{
-	float:left;
+        float:left;
 }
 
 .house {
@@ -36,8 +36,8 @@ margin-top: 50%;
 width: 100%;
 }
 
-#publications{
-	table-layout: fixed;
+#publications, #facets{
+        table-layout: fixed;
 }
 
 /*PAGINATION CSS */
@@ -46,22 +46,22 @@ color: #1f355c;
 }
 
 .pagination>.active>a, .pagination>.active>a:hover {
-	background-color: #1f355c;
-	border-color: #1f355c;
+        background-color: #1f355c;
+        border-color: #1f355c;
 }
 
 #pages-right{
-	float:right;
+        float:right;
 }
 
 .pagination-list{
-	margin-right: 0px;
-	margin-left: 0px;
-	margin-top: -3%;
+        margin-right: 0px;
+        margin-left: 0px;
+        margin-top: -3%;
 margin-bottom: -1%;
 }
 .badge{
-	float:right;
+        float:right;
 }
 
 /*END PAGINATION CSS */
@@ -73,7 +73,7 @@ margin-bottom: -1%;
 }
 
 .tt-dropdown-menu {
-	width: 50%;
+        width: 50%;
     top: 220% !important;
     background-color: rgba(255, 255, 255, .9);
 }
@@ -117,34 +117,73 @@ padding-left: 8%;
 }
 
 .hidden{
-	display: none;
+        display: none;
 }
 
 
 /*PROJECT ICON PAGE*/
-.img-rounded{
-border-radius: 20px;
-	background-color: #1f355c;
-		height:250px;
+/* centered columns styles */
+.row-centered {
+    text-align:center;
+}
+.col-centered {
+    display:inline-block;
+    float:none;
+    /* reset the text-align */
+    text-align:left;
+    /* inline-block space fix */
+    margin-right:-4px;
 }
 
-.on, .off{
-    position: absolute;
+.back{
+        border-radius: 20px;
+        background-color: #1f355c;
 }
 
-div.hex:hover .on {
-    display: initial;
+div.box:hover .on {
+    display: block;
 }
 
-div.hex .on {
+div.box:hover .off {
     display: none;
 }
 
+div.box .on {
+    display: none;
+}
+
+.box{
+	height:100%;
+	margin-bottom:0px;
+	
+}
 .count{
-float: right;
-margin-top: 80%;
+margin-top: -15%;
 margin-right: 7%;
 z-index: 99999;
 position: relative;
+font-size: 12pt;
+color: #1f355c;
+background-color: white;
 }
-/*END PROJECT ICOM PAGE*/
+/*END PROJECT ICON PAGE*/
+
+/*PROJECTS PAGE*/
+
+.proj-img{
+	height:250px;
+}
+.mobile-show{
+	display:none;
+}
+@media ( max-width : 768px) {
+.mobile-show{
+	display: initial;
+	background-color:black;	
+	color:white;
+}
+.mobile{
+	display:none;
+}
+}
+/*END PROJECTs PAGE*/

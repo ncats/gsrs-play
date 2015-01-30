@@ -1,9 +1,21 @@
 $(document).ready(function() {
+	
 	$("#chartSelect").selectmenu();
 	var filters = parseFilters(filterList);
-	drawChart(filters[index]);
+	console.log(filters);
+	drawChart(filters.Program);
 	$("#chartSelect").on("selectmenuchange", function( event, ui ) {
-		index = ui.item.index;
+		console.log(ui);
+		index = ui.item.label;
+		if(index =="Journal Year Published"){
+			index = "JournalYear";
+		} 
+		if(index =="Keyword"){
+			index = "MeSH";
+		}
+		console.log(index);
+		console.log(filters);
+		console.log(filters[index]);
 		drawChart(filters[index]);
 	});
 
@@ -67,15 +79,15 @@ function drawChart(facets){
 	var labels =[];
 	var counts =[];
 	var checked =[];
-//	console.log(facets);
-	for(var i=0; i<facets.length; i++){
+	console.log(facets);
+	for(var i in facets){
 		labels.push(facets[i].displayName);
 		counts.push(facets[i].count);
 		if(facets[i].checked){
 			checked.push(i);
 		}
 	}
-	//console.log(checked);
+	console.log(labels);
 	var max = Math.max.apply(Math, counts);
 	var chart =	$("#history-bar").highcharts({
 		credits: {
@@ -180,7 +192,8 @@ function drawChart(facets){
 }
 
 function parseFilters(filters){
-	var chartFilters = [];
+	console.log(filters);
+	var chartFilters = {};
 	var programList = [];
 	var journalYearList = [];
 	var authorList = [];
@@ -217,11 +230,11 @@ function parseFilters(filters){
 			journalList.push(filter);
 		}
 	}
-	chartFilters.push(programList);
-	chartFilters.push(journalYearList);
-	chartFilters.push(authorList);
-	chartFilters.push(categoryList);
-	chartFilters.push(meshList);
-	chartFilters.push(journalList);
+	chartFilters.Program =programList;
+	chartFilters.JournalYear =journalYearList;
+	chartFilters.Author= authorList;
+	chartFilters.Category = categoryList;
+	chartFilters.MeSH= meshList;
+	chartFilters.Journal = journalList;
 	return chartFilters;
 }

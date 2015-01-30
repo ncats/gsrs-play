@@ -16,14 +16,14 @@
     </h3>
   </div>
   <div class="panel-body">
-    <table class="table table-condensed">
+    <table class="table table-condensed" id ="facets">
       @** move all selected filters upfront **@
       @for(i <- 0 until f.getValues().size()) {
         @if(ReachApp.hasFacet(f,i)) {
 	<tr>
 	  @defining(ReachApp.sha1(f,i)) { id =>
 	     <td>
-	       <input type="checkbox" checked="true"
+	     	       <input type="checkbox" checked="true"
 		      onclick="filterToggle(this)" id="@id"/>
 	     </td>
 	     <script>
@@ -33,13 +33,14 @@
 	           value: '@ReachApp.encode(f,i)'
 	        };
 	     </script>
-          }
-
-         <td>@f.getValues().get(i).getLabel()</td>
+          
+		
+         <td><label for = "@id">@f.getValues().get(i).getLabel()</label></td>
 	 <td>
            <span class="badge">@f.getValues().get(i).getCount()</span>
 	 </td>
         </tr>
+        }
         }
       }
       @for(i <- 0 until Math.min(ReachApp.MAX_FACETS, f.getValues().size())) {
@@ -56,13 +57,12 @@
 	           value: '@ReachApp.encode(f,i)'
 	        };
 	     </script>
-          }
-
-         <td>@f.getValues().get(i).getLabel()</td>
+                  <td><label for = "@id">@f.getValues().get(i).getLabel()</label></td>
 	 <td>
            <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
 	 </td>
         </tr>
+         }
         }
       }
     </table>
@@ -91,7 +91,7 @@ function filterToggle (el) {
     }
   }
   console.log(el.id+' '+facet);
-  var url = '@ReachApp.url("facet","page")';
+  var url = '@HtmlFormat.raw(ReachApp.url("facet","page"))';
   url += url.length == 0 ? '?' : '&';
   location.href = url+facet;
 }
