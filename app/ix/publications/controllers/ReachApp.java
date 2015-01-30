@@ -702,16 +702,31 @@ public class ReachApp extends Controller {
         return getWebTags (null);
     }
     
-    public static String[] getWebTags (String kind) {
-        Set<String> tags = new HashSet<String>();
-        PagingList<XRef> pages = XRefFactory.finder.findPagingList(100);
-        for (int i = 0; i < pages.getTotalPageCount(); ++i) {
-            for (XRef ref : pages.getPage(i).getList())
-                if (kind == null || kind.equalsIgnoreCase(ref.kind))
-                    for (Value v : ref.properties)
-                        if (v.label.equalsIgnoreCase("web-tag"))
-                            tags.add(((Keyword)v).term);
+    public static String[] getWebTags (final String kind) {
+        try {
+            String[] tags = Cache.getOrElse
+                ("WebTagCache:"+ (kind != null ? kind : "*"),
+                 new Callable<String[]> () {
+                     public String[] call () throws Exception {
+                         Set<String> tags = new HashSet<String>();
+                         PagingList<XRef> pages =
+                         XRefFactory.finder.findPagingList(100);
+                         for (int i = 0; i < pages.getTotalPageCount(); ++i) {
+                             for (XRef ref : pages.getPage(i).getList())
+                                 if (kind == null
+                                     || kind.equalsIgnoreCase(ref.kind))
+                                     for (Value v : ref.properties)
+                                         if (v.label.equalsIgnoreCase("web-tag"))
+                                             tags.add(((Keyword)v).term);
+                         }
+                         return tags.toArray(new String[0]);
+                     }
+                 }, CACHE_TIMEOUT);
+            return tags;
         }
-        return tags.toArray(new String[0]);
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return new String[0];
     }
 }
