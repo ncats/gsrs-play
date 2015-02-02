@@ -78,6 +78,7 @@ public abstract class EntityModel extends IxModel {
         return node;
     }
 
+    @Indexable(indexed=false)
     public String getSelf () {
         return Global.getRef(this)+"?view=full";
     }

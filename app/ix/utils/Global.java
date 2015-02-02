@@ -196,12 +196,19 @@ public class Global extends GlobalSettings {
     }
 
     public static String getHost () {
-        Http.Request req = Controller.request();
-        String h = _instance.ctx.host();
-        if (h == null) {
-            h = (req.secure()? "https":"http") + "://"+req.host();
+        try {
+            Http.Request req = Controller.request();
+            String h = _instance.ctx.host();
+            if (h == null) {
+                h = (req.secure()? "https":"http") + "://"+req.host();
+            }
+            return h;
         }
-	return h;
+        catch (Exception ex) {
+            // no available http context..
+            Logger.trace("No available HTTP context!", ex);
+        }
+        return "";
     }
     
     public static String getNamespace () {

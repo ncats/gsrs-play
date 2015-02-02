@@ -15,6 +15,7 @@ import play.Play;
 import play.Logger;
 import play.libs.ws.*;
 import play.db.ebean.Model;
+import play.db.ebean.Transactional;
 import com.avaje.ebean.Expr;
 
 import ix.core.models.*;
@@ -90,7 +91,8 @@ public class UniprotRegistry extends DefaultHandler {
         else {
             file.getParentFile().mkdirs(); 
             WSRequestHolder ws = WS
-                .url("http://www.uniprot.org/uniprot/"+acc+".xml")
+                //.url("http://www.uniprot.org/uniprot/"+acc+".xml")
+                .url("https://tripod.nih.gov/uniprot/"+acc)
                 .setHeader("User-Agent", Util.randomUserAgent())
                 .setTimeout(TIMEOUT)
                 .setFollowRedirects(true);
@@ -141,6 +143,7 @@ public class UniprotRegistry extends DefaultHandler {
     }
 
     @Override
+    @Transactional
     public void endDocument () {
         //Logger.debug("About to register target\n"+EntityFactory.getEntityMapper().toJson(target, true));
         target.save();

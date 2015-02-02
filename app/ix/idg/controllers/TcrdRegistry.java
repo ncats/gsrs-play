@@ -3,6 +3,7 @@ package ix.idg.controllers;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.net.*;
 
 import play.*;
@@ -37,6 +38,7 @@ public class TcrdRegistry extends Controller {
     static final TextIndexerPlugin indexer = 
         Play.application().plugin(TextIndexerPlugin.class);
 
+
     public static final Namespace namespace = NamespaceFactory.registerIfAbsent
         ("TCRDv094", "https://pharos.nih.gov");
 
@@ -47,6 +49,7 @@ public class TcrdRegistry extends Controller {
         Long id;
         Long protein;
 
+        TcrdTarget () {}
         TcrdTarget (String acc, String family, String tdl,
                     Long id, Long protein) {
             this.acc = acc;
@@ -56,7 +59,9 @@ public class TcrdRegistry extends Controller {
             this.protein = protein;
         }
 
-        public int hashCode () { return acc.hashCode(); }
+        public int hashCode () {
+            return acc == null ? 1 : acc.hashCode();
+        }
         public boolean equals (Object obj) {
             if (obj instanceof TcrdTarget) {
                 return acc.equals(((TcrdTarget)obj).acc);
@@ -65,6 +70,96 @@ public class TcrdRegistry extends Controller {
         }
         public int compareTo (TcrdTarget t) {
             return acc.compareTo(t.acc);
+        }
+    }
+
+    static TcrdTarget EMPTY = new TcrdTarget ();
+
+    static class RegistrationWorker implements Callable<Integer> {
+        BlockingQueue<TcrdTarget> queue;
+        Connection con;
+        PreparedStatement pstm, pstm2, pstm3, pstm4;
+        Http.Context ctx;
+        
+        RegistrationWorker (Connection con, Http.Context ctx,
+                            BlockingQueue<TcrdTarget> queue)
+            throws SQLException {
+            this.con = con;
+            this.queue = queue;
+            this.ctx = ctx;
+            pstm = con.prepareStatement
+                ("select * from target2disease where target_id = ?");
+            pstm2 = con.prepareStatement
+                ("select * from chembl_activity where target_id = ?");
+            pstm3 = con.prepareStatement
+                ("select * from drugdb_activity where target_id = ?");
+            pstm4 = con.prepareStatement
+                ("select * from generif where protein_id = ?");
+        }
+
+        public Integer call () throws Exception {
+            Http.Context.current.set(ctx);
+            Logger.debug("Thread "+Thread.currentThread()+" initialized!");
+            int count = 0;
+            for (TcrdTarget t; (t = queue.take()) != EMPTY; ) {
+                try {
+                    register (t);
+                    ++count;
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            Logger.debug(Thread.currentThread().getName()+": finished..."
+                         +count+" target(s) processed!");
+
+            try {
+                pstm.close();
+                pstm2.close();
+                pstm3.close();
+                pstm4.close();
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            con.close();
+            
+            return count;
+        }
+
+        void register (TcrdTarget t) throws Exception {
+            Logger.debug(Thread.currentThread().getName()
+                         +": "+t.family+" "+t.tdl+" "+t.acc+" "+t.id);
+            Target target = new Target ();
+            target.idgFamily = t.family;
+            target.idgClass = t.tdl;
+            target.synonyms.add
+                (new Keyword (TARGET, String.valueOf(t.id)));
+            
+            Logger.debug("...uniprot registration");
+            UniprotRegistry uni = new UniprotRegistry ();
+            uni.register(target, t.acc);
+            
+            Logger.debug("...retrieving disease links");
+            pstm.setLong(1, t.id);
+            addDiseaseRefs (target, namespace, pstm);
+            
+            Logger.debug("...retrieving ChEMBL links");
+            pstm2.setLong(1, t.id);
+            addChemblRefs (target, pstm2);
+            
+            Logger.debug("...retrieving Drug links");
+            pstm3.setLong(1, t.id);
+            addDrugDbRefs (target, pstm3);
+            
+            Logger.debug("...retrieving GeneRIF links");
+            pstm4.setLong(1, t.protein);
+            addGeneRIF (target, pstm4);
+            
+            // reindex this entity; we have to do this since
+            // the target.update doesn't trigger the postUpdate
+            // event.. need to figure exactly why.
+            indexer.getIndexer().update(target);
         }
     }
 
@@ -93,6 +188,7 @@ public class TcrdRegistry extends Controller {
 
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart part = body.getFile("load-do-obo");
+        Map<String, Disease> diseases = new HashMap<String, Disease>();
         if (part != null) {
             String name = part.getFilename();
             String content = part.getContentType();
@@ -100,19 +196,15 @@ public class TcrdRegistry extends Controller {
             File file = part.getFile();
             DiseaseOntologyRegistry obo = new DiseaseOntologyRegistry ();
             try {
-                obo.register(new FileInputStream (file));
+                diseases = obo.register(new FileInputStream (file));
             }
             catch (IOException ex) {
                 Logger.trace("Can't load obo file: "+file, ex);
             }
         }
 
-        Connection con = null;
         int count = 0;
         try {
-            con = DriverManager.getConnection
-                (jdbcUrl, jdbcUsername, jdbcPassword);
-            
             int rows = 0;
             if (maxRows != null && maxRows.length() > 0) {
                 try {
@@ -122,34 +214,25 @@ public class TcrdRegistry extends Controller {
                     Logger.warn("Bogus maxRows \""+maxRows+"\"; default to 0!");
                 }
             }
-            count = load (con, rows);
+            count = load (jdbcUrl, jdbcUsername, jdbcPassword, 1, rows);
         }
-        catch (SQLException ex) {
+        catch (Exception ex) {
+            ex.printStackTrace();
             return internalServerError (ex.getMessage());
-        }
-        finally {
-            try {
-                if (con != null) con.close();
-            }
-            catch (SQLException ex) {}
         }
 
         return ok (count+" target(s) loaded!");
     }
 
-    static int load (Connection con, int rows) throws SQLException {
+    static int load (String url, String username,
+                     String password, int threads, int rows)
+        throws Exception {
+
+        Set<TcrdTarget> targets = new HashSet<TcrdTarget>();    
+
+        Connection con = DriverManager.getConnection(url, username, password);
         Statement stm = con.createStatement();
-        PreparedStatement pstm = con.prepareStatement
-            ("select * from target2disease where target_id = ?");
-        PreparedStatement pstm2 = con.prepareStatement
-            ("select * from chembl_activity where target_id = ?");
-        PreparedStatement pstm3 = con.prepareStatement
-            ("select * from drugdb_activity where target_id = ?");
-        PreparedStatement pstm4 = con.prepareStatement
-            ("select * from generif where protein_id = ?");
-        
         int count = 0;
-                
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from t2tc a, target b, protein c\n"+
@@ -158,8 +241,6 @@ public class TcrdRegistry extends Controller {
                  +" order by c.id, c.uniprot "           
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
-
-            Set<TcrdTarget> targets = new HashSet<TcrdTarget>();
             while (rset.next()) {
                 long protId = rset.getLong("protein_id");
                 if (rset.wasNull()) {
@@ -176,60 +257,75 @@ public class TcrdRegistry extends Controller {
                     .where().eq("synonyms.term", acc).findList();
                 
                 if (tlist.isEmpty()) {
-                    TcrdTarget t = new TcrdTarget (acc, fam, tdl, id, protId);
+                    TcrdTarget t =
+                        new TcrdTarget (acc, fam, tdl, id, protId);
                     targets.add(t);
                 }
             }
             rset.close();
-
-            Logger.debug("Preparing to register "+targets.size()+" targets!");
+            stm.close();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            con.close();
+        }
+        
+        if (!targets.isEmpty()) {
+            threads = Math.max(threads, 1);
+            Logger.debug("Preparing to register "
+                         +targets.size()+" targets over "
+                         +threads+" thread(s)!");
+            ExecutorService pool = Executors.newCachedThreadPool();
+            
+            ArrayBlockingQueue<TcrdTarget> queue =
+                new ArrayBlockingQueue<TcrdTarget>(targets.size());
             for (TcrdTarget t : targets) {
-                Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
                 try {
-                    Target target = new Target ();
-                    target.idgFamily = t.family;
-                    target.idgClass = t.tdl;
-                    target.synonyms.add
-                        (new Keyword (TARGET, String.valueOf(t.id)));
-
-                    UniprotRegistry uni = new UniprotRegistry ();
-                    uni.register(target, t.acc);
-                    
-                    pstm.setLong(1, t.id);
-                    addDiseaseRefs (target, namespace, pstm);
-                    
-                    pstm2.setLong(1, t.id);
-                    addChemblRefs (target, pstm2);
-                    
-                    pstm3.setLong(1, t.id);
-                    addDrugDbRefs (target, pstm3);
-                    
-                    pstm4.setLong(1, t.protein);
-                    addGeneRIF (target, pstm4);
-                    
-                    // reindex this entity; we have to do this since
-                    // the target.update doesn't trigger the postUpdate
-                    // event.. need to figure exactly why.
-                    indexer.getIndexer().update(target);
-                    
-                    ++count;
+                    queue.put(t); // shouldn't block
                 }
-                catch (Throwable e) {
-                    e.printStackTrace();
-                    Logger.trace("Can't parse "+t.acc, e);
+                catch (InterruptedException ex) {
+                    ex.printStackTrace();
                 }
             }
             
-            return count;
+            List<Future<Integer>> jobs = new ArrayList<Future<Integer>>();
+            for (int i = 0; i < threads; ++i) {
+                try {
+                    con = DriverManager.getConnection(url, username, password);
+                    jobs.add(pool.submit
+                             (new RegistrationWorker
+                              (con, Http.Context.current(), queue)));
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            for (int i = 0; i < threads; ++i) {
+                try {
+                    queue.put(EMPTY); // add as many as there are threads
+                }
+                catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            Logger.debug("## waiting for threads to finish...");
+            for (Future<Integer> f : jobs) {
+                try {
+                    count += f.get();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
         }
-        finally {
-            stm.close();            
-            pstm.close();
-            pstm2.close();
-            pstm3.close();
-        }
+        return count;   
     }
 
+    @Transactional
     static void addDiseaseRefs (Target target, Namespace namespace,
                                 PreparedStatement pstm) throws Exception {
         ResultSet rs = pstm.executeQuery();
@@ -237,48 +333,66 @@ public class TcrdRegistry extends Controller {
             XRef self = null;
             String label = FAMILY;
             Keyword family = KeywordFactory.registerIfAbsent
-                (label, target.idgFamily,
-                 Global.getNamespace()
-                 +"/targets/search?facet="
-                 +URLEncoder.encode(label, "utf-8")+"/"
-                 +URLEncoder.encode(target.idgFamily, "utf-8"));
+                (label, target.idgFamily, null);
 
             label = CLASSIFICATION;
             Keyword clazz = KeywordFactory.registerIfAbsent
-                (label, target.idgClass,
-                 Global.getNamespace()
-                 +"/targets/search?facet="
-                 +URLEncoder.encode(label,"utf-8")+"/"
-                 +URLEncoder.encode(target.idgClass, "utf-8"));
+                (label, target.idgClass, null);
 
             Keyword name = KeywordFactory.registerIfAbsent
                 (UniprotRegistry.TARGET, target.name, target.getSelf());
-            
+
+            int count = 0;
+            Map<Long, Disease> neighbors = new HashMap<Long, Disease>();
             while (rs.next()) {
                 String doid = rs.getString("doid");
-                List<Disease> diseases = DiseaseFactory.finder
-                    .where(Expr.and(Expr.eq("synonyms.label", "DOID"),
-                                    Expr.eq("synonyms.term", doid)))
-                    .findList();
-                if (diseases.isEmpty()) {
+                Disease disease = null;
+                try {
+                    disease = DiseaseFactory.finder
+                        .where(Expr.and(Expr.eq("synonyms.label", "DOID"),
+                                        Expr.eq("synonyms.term", doid)))
+                        .findUnique();
+                }
+                catch (Exception ex) {
+                    Logger.trace("Disease "+doid+" isn't unique!", ex);
+                    continue;
+                }
+                
+                if (disease == null) {
                     Logger.warn("Target "+target.id+" references "
                                 +"unknown disease "+doid);
                 }
                 else {
                     double zscore = rs.getDouble("zscore");
                     double conf = rs.getDouble("conf");
-                    for (Disease d : diseases) {
-                        XRef xref = new XRef (d);
+
+                    XRef xref = null;
+                    for (XRef ref : target.links) {
+                        if (ref.kind.equals(disease.getClass().getName())
+                            && ref.refid == disease.id) {
+                            xref = ref;
+                            break;
+                        }
+                    }
+
+                    if (xref != null) {
+                        Logger.warn("Disease "+disease.id+" ("
+                                    +disease.name+") is "
+                                    +"already linked with target "
+                                    +target.id+" ("+target.name+")");
+                    }
+                    else {
+                        xref = new XRef (disease);
                         xref.namespace = namespace;
                         Keyword kw = KeywordFactory.registerIfAbsent
-                            (DISEASE, d.name, xref.getHRef());
+                            (DISEASE, disease.name, xref.getHRef());
                         xref.properties.add(kw);
                         xref.properties.add(new VNum (ZSCORE, zscore));
                         xref.properties.add(new VNum (CONF, conf));
                         target.links.add(xref);
-
-                        // now add all the parent of this disease node
-                        addXRefs (target, namespace, d.links);
+                        
+                        // now add all the unique parents of this disease node
+                        getNeighbors (neighbors, disease.links);
                         
                         if (self == null) {
                             self = new XRef (target);
@@ -288,34 +402,55 @@ public class TcrdRegistry extends Controller {
                             self.properties.add(name);
                             self.save();
                         }
-
+                        
                         // link the other way
-                        d.links.add(self);
-                        d.update();
-                        indexer.getIndexer().update(d);
+                        try {
+                            disease.links.add(self);
+                            disease.update();
+                            indexer.getIndexer().update(disease);
+                            ++count;
+                        }
+                        catch (Exception ex) {
+                            Logger.warn("Disease "+disease.id+" ("
+                                        +disease.name+")"
+                                        +" is already link with target "
+                                        +target.id+" ("+target.name+"): "
+                                        +ex.getMessage());
+                        }
                     }
                 }
             }
+
+            // TODO: fix this to properly add parent/neighbor relationships
+            /*
+            for (Disease neighbor : neighbors.values()) {
+                neighbor.links.add(self);
+                neighbor.update();
+                indexer.getIndexer().update(neighbor);
+                
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (DISEASE, neighbor.name, null);
+                XRef xref = new XRef (neighbor);
+                xref.namespace = namespace;
+                xref.properties.add(kw);
+                target.links.add(xref);
+            }
+            */
             target.update();
+            Logger.debug("...."+count+" disease xref(s) added!");
         }
         finally {
             rs.close();
         }
     }
 
-    static void addXRefs (Target target,
-                          Namespace namespace, List<XRef> links) {
+    static void getNeighbors (Map<Long, Disease> neighbors, List<XRef> links) {
         for (XRef xr : links) {
             if (Disease.class.getName().equals(xr.kind)) {
                 Disease neighbor = (Disease)xr.deRef();
-                Keyword kw = KeywordFactory.registerIfAbsent
-                    (DISEASE, neighbor.name, xr.getHRef());
-                XRef xref = new XRef (neighbor);
-                xref.namespace = namespace;
-                xref.properties.add(kw);
-                target.links.add(xref);
+                neighbors.put(neighbor.id, neighbor);
                 // recurse
-                addXRefs (target, namespace, neighbor.links);
+                getNeighbors (neighbors, neighbor.links);
             }
         }
     }
@@ -323,6 +458,7 @@ public class TcrdRegistry extends Controller {
     /**
      * TODO: this should be using the Ligand class!
      */
+    @Transactional
     static void addChemblRefs (Target target, PreparedStatement pstm)
         throws SQLException {
         ResultSet rs = pstm.executeQuery();
@@ -354,6 +490,7 @@ public class TcrdRegistry extends Controller {
     /**
      * TODO: this should be using the Ligand class!
      */
+    @Transactional
     static void addDrugDbRefs (Target target, PreparedStatement pstm)
         throws SQLException {
         ResultSet rs = pstm.executeQuery();
@@ -379,6 +516,7 @@ public class TcrdRegistry extends Controller {
         }
     }
 
+    @Transactional
     static void addGeneRIF (Target target, PreparedStatement pstm)
         throws SQLException {
         ResultSet rs = pstm.executeQuery();
