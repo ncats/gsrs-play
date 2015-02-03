@@ -143,9 +143,14 @@ public class UniprotRegistry extends DefaultHandler {
     }
 
     @Override
-    @Transactional
     public void endDocument () {
         //Logger.debug("About to register target\n"+EntityFactory.getEntityMapper().toJson(target, true));
+        persist (target);
+        Logger.debug("Target "+target.id+" \""+target.name+"\" added!");
+    }
+
+    @Transactional
+    protected static void persist (Target target) {
         target.save();
         // create the other direction
         for (XRef ref : target.links) {
@@ -164,7 +169,6 @@ public class UniprotRegistry extends DefaultHandler {
                 obj.update();
             }
         }
-        Logger.debug("Target "+target.id+" \""+target.name+"\" added!");
     }
 
     @Override
@@ -422,7 +426,7 @@ public class UniprotRegistry extends DefaultHandler {
         return sb.toString();
     }
 
-    public XRef createXRef (Object obj) {
+    public static XRef createXRef (Object obj) {
         XRef xref = new XRef (obj);
         xref.namespace = namespace;
         return xref;

@@ -10,6 +10,7 @@ import play.mvc.*;
 import ix.core.NamedResource;
 import ix.ncats.models.Employee;
 import ix.core.controllers.EntityFactory;
+import ix.ncats.controllers.NIHLdapConnector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

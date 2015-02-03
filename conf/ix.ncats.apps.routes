@@ -18,3 +18,10 @@ GET /mock/xrna.php	ix.publications.controllers.ReachApp.xrna
 GET /mock/ebola.php	ix.publications.controllers.ReachApp.ebola
 GET /mock	ix.publications.controllers.ReachApp.samples
 GET /mock/gaucher.php ix.publications.controllers.ReachApp.gaucher
+#
+# test
+#
+GET /login	ix.ncats.controllers.Authentication.login
+GET /logout	ix.ncats.controllers.Authentication.logout
+GET /auth	ix.ncats.controllers.Authentication.index
+POST  /login	ix.ncats.controllers.Authentication.authenticate
