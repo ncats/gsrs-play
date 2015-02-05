@@ -221,7 +221,7 @@ public class TcrdRegistry extends Controller {
             return internalServerError (ex.getMessage());
         }
 
-        return ok (count+" target(s) loaded!");
+        return redirect (routes.IDGApp.index());
     }
 
     static int load (String url, String username,
@@ -322,7 +322,7 @@ public class TcrdRegistry extends Controller {
                 }
             }
         }
-        return count;   
+        return count;
     }
 
     @Transactional

@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class IDGApp extends Controller {
     static public final int CACHE_TIMEOUT = 24*60*60; // 1 day
@@ -251,6 +253,20 @@ public class IDGApp extends Controller {
         return uri.substring(0, uri.length()-1);
     }
 
+    public static String queryString (Map<String, String[]> queryString) {
+        //Logger.debug("QueryString: "+queryString);
+        StringBuilder q = new StringBuilder ();
+        for (Map.Entry<String, String[]> me : queryString.entrySet()) {
+            for (String s : me.getValue()) {
+                if (q.length() > 0)
+                    q.append('&');
+                q.append(me.getKey()+"="
+                         + ("q".equals(me.getKey()) ? quote (s) : s));
+            }
+        }
+        return q.toString();
+    }
+
     public static boolean hasFacet (TextIndexer.Facet facet, int i) {
         String[] facets = request().queryString().get("facet");
         if (facets != null) {
@@ -466,6 +482,17 @@ public class IDGApp extends Controller {
         }
         return fv;
     }
+
+    /**
+     * make sure if the argument doesn't have quote then add them
+     */
+    static Pattern regex = Pattern.compile("\"([^\"]+)");
+    static String quote (String s) {
+        Matcher m = regex.matcher(s);
+        if (m.find())
+            return s; // nothing to do.. already have quote
+        return "\""+s+"\"";
+    }
     
     public static Result search (int rows) {
         final String query = request().getQueryString("q");
@@ -511,8 +538,8 @@ public class IDGApp extends Controller {
                             public TextIndexer.SearchResult
                                 call () throws Exception {
                                 return SearchFactory.search
-                                (null, query, MAX_SEARCH_RESULTS, 0, FACET_DIM,
-                                 request().queryString());
+                                (null, quote (query), MAX_SEARCH_RESULTS, 0,
+                                 FACET_DIM, request().queryString());
                             }
                         }, CACHE_TIMEOUT);
                 double ellapsed = (System.currentTimeMillis()-start)*1e-3;

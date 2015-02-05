@@ -66,26 +66,14 @@ public class SearchFactory extends EntityFactory {
             else if ("kind".equalsIgnoreCase(me.getKey())) {
                 if (options.kind == null) {
                     for (String kind: me.getValue()) {
-                        try {
-                            options.kind = Class.forName(kind);
-                            break; // there should only be one!
-                        }
-                        catch (Exception ex) {
-                            Logger.error("Unable to load class: "+kind);
-                        }
-                    }
-                }
-            }
-            
-            else if ("kind".equalsIgnoreCase(me.getKey())) {
-                if (options.kind == null) {
-                    for (String kind: me.getValue()) {
-                        try {
-                            options.kind = Class.forName(kind);
-                            break; // there should only be one!
-                        }
-                        catch (Exception ex) {
-                            Logger.error("Unable to load class: "+kind);
+                        if (kind.length() > 0) {
+                            try {
+                                options.kind = Class.forName(kind);
+                                break; // there should only be one!
+                            }
+                            catch (Exception ex) {
+                                Logger.error("Unable to load class: "+kind, ex);
+                            }
                         }
                     }
                 }

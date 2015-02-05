@@ -1,5 +1,6 @@
 @import ix.idg.models.Target
 @import ix.idg.models.Disease
+@import ix.idg.controllers.IDGApp
 @import ix.core.search.TextIndexer
 @import ix.core.search.TextIndexer._
 
@@ -63,7 +64,7 @@ diseases: List[Disease], totalDiseases: Int)
 	    }
 	</div>
 	<div class="panel-footer">
-	  <a href="@ix.idg.controllers.routes.IDGApp.targets(query, 20, 1)">@totalTargets target(s)</a>
+	  <a href="@{ix.idg.controllers.routes.IDGApp.targets()+"?"+IDGApp.queryString(request().queryString())}">@totalTargets target(s)</a>
 	</div>
       </div>
       <div class="panel panel-default">
@@ -85,7 +86,7 @@ diseases: List[Disease], totalDiseases: Int)
 	    }
 	</div>
 	<div class="panel-footer">
-	  <a href="@ix.idg.controllers.routes.IDGApp.diseases(query, 10, 1)">@totalDiseases disease(s)</a>
+	  <a href="@{ix.idg.controllers.routes.IDGApp.diseases()+"?"+IDGApp.queryString(request().queryString())}">@totalDiseases disease(s)</a>
 	</div>
     </div>
       </div>

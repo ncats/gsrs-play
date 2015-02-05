@@ -91,7 +91,7 @@ function filterToggle (el) {
     }
   }
   console.log(el.id+' '+facet);
-  var url = '@IDGApp.url("facet","page")';
+  var url = '@HtmlFormat.raw(IDGApp.url("facet","page"))';
   url += url.length == 0 ? '?' : '&';
   location.href = url+facet;
 }

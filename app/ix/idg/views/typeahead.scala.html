@@ -46,10 +46,13 @@ remote: '/api/suggest/Target?q=%QUERY',
 
     var mesh = new Bloodhound({
         datumTokenizer: function(d) {
-            return d.key.split(/\//);
+            return d.key.split(/[\s\/]/);
         },
         queryTokenizer: Bloodhound.tokenizers.whitespace,
-        remote: '@ix.core.controllers.search.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
+        remote: {
+           wildcard: 'QUERY',
+           url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
+        }
     });
     
     target.initialize();
@@ -67,27 +70,33 @@ remote: '/api/suggest/Target?q=%QUERY',
         displayKey: 'key',
         source: target.ttAdapter(),
         templates: {
-        suggestion: Handlebars.compile('<p><img width="20" src="@routes.Assets.at("ncats/images/Target-badge-square.png")"/> {{key}}</p>')
+           header: '<h4><span class="label label-warning">Target</span></h4>'
+/*
+suggestion: Handlebars.compile('<p><img width="20" src="@routes.Assets.at("ncats/images/Target-badge-square.png")"/> {{key}}</p>')
+*/
         }       
     }, {
         name: 'Disease',
         displayKey: 'key',
         source: disease.ttAdapter(),
         templates: {
-        suggestion: Handlebars.compile('<p><img width="20" src="@routes.Assets.at("ncats/images/Disease-badge-square.png")"/> {{key}}</p>')
+           header: '<h4><span class="label label-warning">Disease</span></h4>'
+/*
+suggestion: Handlebars.compile('<p><img width="20" src="@routes.Assets.at("ncats/images/Disease-badge-square.png")"/> {{key}}</p>')
+*/
         }
     }, {
         name: 'Gene',
         displayKey: 'key',
         source: gene.ttAdapter(),
         templates: {
-            header: '<h4>Gene</h4>'
+            header: '<h4><span class="label label-warning">Gene</span></h4>'
     }}, {
         name: 'Drug',
         displayKey: 'key',
         source: drug.ttAdapter(),
         templates: {
-            header: '<h4>Drug</h4>'
+            header: '<h4><span class="label label-warning">Drug</span></h4>'
         }
     }, {
         name: 'MeSH',
@@ -95,7 +104,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         source: mesh.ttAdapter(),
         templates: {
 /*suggestion: Handlebars.compile('<p><strong>{{key}}</strong></p>')*/
-          header: '<p4>MeSH</p4>'
+          header: '<h4><span class="label label-warning">MeSH</span></h4>'
         }
     });
 
@@ -107,6 +116,7 @@ remote: '/api/suggest/Target?q=%QUERY',
         }
         if (d == 'MeSH') {
             /* this is mesh term, so don't quote */
+/*$('.typeahead').typeahead('val', 'facet=MeSH/'+val.key);*/
         }
         else {
             $('.typeahead').typeahead('val', '"'+val.key+'"');

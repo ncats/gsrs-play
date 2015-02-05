@@ -576,12 +576,12 @@ public class TextIndexer {
                     if (pos > 0) {
                         String facet = dd.substring(0, pos);
                         String value = dd.substring(pos+1);
-                        ddq.add(facet, value);
+                        ddq.add(facet, value.split("/"));
                     }
                     else {
                         Logger.warn("Bogus drilldown syntax: "+dd);
                     }
-                        /*
+                    /*
                     String[] d = dd.split("/");
                     if (d.length > 1) {
                         StringBuilder full = new StringBuilder ();
@@ -591,21 +591,21 @@ public class TextIndexer {
                                              +d[0]+"/"+d[i]+"\"...");
                             }
                             
-                            ddq.add(d[0], d[i]);
+                            //ddq.add(d[0], d[i]);
                             if (full.length() > 0) {
                                 full.append('/');
                             }
                             full.append(d[i]);
                             if (!d[i].equals(full.toString())) {
-                                //ddq.add(d[0], full.toString());
+                                ddq.add(d[0], full.toString());
                             }
                         }
-                        //ddq.add(d[0], full.toString());
+                        ddq.add(d[0], full.toString());
                     }
                     else {
                         Logger.warn("Bogus drilldown syntax: "+dd);
                     }
-                        */
+                    */
                 }
                 
                 Facets facets;
