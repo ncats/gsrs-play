@@ -27,6 +27,8 @@ import com.jolbox.bonecp.BoneCPDataSource;
     
 public class TcrdRegistry extends Controller {
     public static final String DISEASE = "IDG Disease";
+    public static final String CLASSIFICATION = Target.IDG_CLASSIFICATION;
+    public static final String FAMILY = Target.IDG_FAMILY;
     public static final String DRUG = "IDG Drug";
     public static final String ZSCORE = "IDG Z-score";
     public static final String CONF = "IDG Confidence";
