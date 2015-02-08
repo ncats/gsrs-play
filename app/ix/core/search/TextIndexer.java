@@ -493,7 +493,10 @@ public class TextIndexer {
     protected void search (SearchResult searchResult, 
                            SearchOptions options,
                            Query query, Filter filter) throws IOException {
-        Logger.debug("## Query: "+query+" Filter: "+filter+" Options:"+options);
+        if (DEBUG (1)) {
+            Logger.debug("## Query: "
+                         +query+" Filter: "+filter+" Options:"+options);
+        }
         IndexSearcher searcher = new IndexSearcher
             (DirectoryReader.open(indexWriter, true));
         
@@ -581,31 +584,6 @@ public class TextIndexer {
                     else {
                         Logger.warn("Bogus drilldown syntax: "+dd);
                     }
-                    /*
-                    String[] d = dd.split("/");
-                    if (d.length > 1) {
-                        StringBuilder full = new StringBuilder ();
-                        for (int i = 1; i < d.length; ++i) {
-                            if (DEBUG (1)) {
-                                Logger.debug("Drilling down \""
-                                             +d[0]+"/"+d[i]+"\"...");
-                            }
-                            
-                            //ddq.add(d[0], d[i]);
-                            if (full.length() > 0) {
-                                full.append('/');
-                            }
-                            full.append(d[i]);
-                            if (!d[i].equals(full.toString())) {
-                                ddq.add(d[0], full.toString());
-                            }
-                        }
-                        ddq.add(d[0], full.toString());
-                    }
-                    else {
-                        Logger.warn("Bogus drilldown syntax: "+dd);
-                    }
-                    */
                 }
                 
                 Facets facets;
@@ -759,12 +737,14 @@ public class TextIndexer {
             }
         }
 
-        Logger.debug("## Query finishes in "
-                     +String.format
-                     ("%1$.3fs", 
-                      (System.currentTimeMillis()-start)*1e-3)
-                     +"..."+hits.totalHits+" hit(s) found; returning "
-                     +searchResult.matches.size()+"!");
+        if (DEBUG (1)) {
+            Logger.debug("## Query finishes in "
+                         +String.format
+                         ("%1$.3fs", 
+                          (System.currentTimeMillis()-start)*1e-3)
+                         +"..."+hits.totalHits+" hit(s) found; returning "
+                         +searchResult.matches.size()+"!");
+        }
     }
 
     /**
@@ -830,22 +810,24 @@ public class TextIndexer {
             Logger.debug(">>> Updating "+entity+"...");
 
         try {
+            Object id = null;
             for (Field f : entity.getClass().getFields()) {
                 if (f.getAnnotation(Id.class) != null) {
-                    Object id = f.get(entity);
-                    if (id != null) {
-                        String field = entity.getClass().getName()+".id";
-                        indexWriter.deleteDocuments
-                            (new Term (field, id.toString()));
-
-                        if (DEBUG (2))
-                            Logger.debug("++ Updating "+field+"="+id);
-
-                        // now reindex .. there isn't an IndexWriter.update 
-                        // that takes a Query
-                        add (entity);
-                    }
+                    id = f.get(entity);
                 }
+            }
+
+            if (id != null) {
+                String field = entity.getClass().getName()+".id";
+                indexWriter.deleteDocuments
+                    (new Term (field, id.toString()));
+                
+                if (DEBUG (2))
+                    Logger.debug("++ Updating "+field+"="+id);
+                
+                // now reindex .. there isn't an IndexWriter.update 
+                // that takes a Query
+                add (entity);
             }
         }
         catch (Exception ex) {
@@ -860,20 +842,20 @@ public class TextIndexer {
         Class cls = entity.getClass();
         if (cls.isAnnotationPresent(Entity.class)) {
             Field[] fields = cls.getDeclaredFields();
+            Object id = null;       
             for (Field f : fields) {
                 if (f.getAnnotation(Id.class) != null) {
-                    Object id = f.get(entity);
-                    if (id != null) {
-                        String field = entity.getClass().getName()+".id";
-                        
-                        Logger.debug("Deleting document "+field+"...");
-                        indexWriter.deleteDocuments
-                            (new Term (field+".id", id.toString()));
-                    }
-                    else {
-                        Logger.warn("Id field "+f.getName()+" is null");
-                    }
+                    id = f.get(entity);
                 }
+            }
+            if (id != null) {
+                String field = entity.getClass().getName()+".id";
+                Logger.debug("Deleting document "+field+"...");
+                indexWriter.deleteDocuments
+                    (new Term (field+".id", id.toString()));
+            }
+            else {
+                Logger.warn("Entity "+cls+"'s Id field is null!");
             }
         }
         else {

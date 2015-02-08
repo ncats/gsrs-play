@@ -79,7 +79,8 @@ public class EutilsPlugin extends Plugin {
                 }, ctx.cacheTime());
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            //ex.printStackTrace();
+            Logger.trace("Can't retrieve publication "+pmid, ex);
         }
         return null;
     }

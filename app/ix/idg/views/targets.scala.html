@@ -1,4 +1,5 @@
 @import ix.idg.models.Target
+@import ix.idg.controllers.IDGApp
 @import ix.core.search.TextIndexer.Facet
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
@@ -13,7 +14,7 @@
 }
 
 @content("Targets", "ix.idg.models.Target",
-ix.idg.controllers.routes.IDGApp.targets(null,20,1).url,
+ix.idg.controllers.routes.IDGApp.targets().url,
 current, rows, total, pages, facets){
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>

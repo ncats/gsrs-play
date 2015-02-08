@@ -15,8 +15,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ix.core.search.TextIndexer;
+import ix.core.search.SearchOptions;
+import ix.core.plugins.TextIndexerPlugin;
+
 public class DiseaseOntologyRegistry {
+    public static final String DOID = "DOID";
+    
     Namespace namespace;
+    static TextIndexer indexer = play.Play.application()
+        .plugin(TextIndexerPlugin.class).getIndexer();
     
     public DiseaseOntologyRegistry () {
         namespace = NamespaceFactory.registerIfAbsent
@@ -28,26 +36,33 @@ public class DiseaseOntologyRegistry {
      */
     public Map<String, Disease> register (InputStream is) throws IOException {
         OboParser obo = new OboParser (is);
+
+        SearchOptions opt = new SearchOptions ();
+        opt.kind = Disease.class;
+        opt.sideway = false;
         
         Map<String, String> parents  = new HashMap<String, String>();
         Map<String, Disease> diseaseMap = new HashMap<String, Disease>();
         while (obo.next()) {
             if (obo.obsolete)
                 continue;
+            
+            opt.setFacet(DOID, obo.id);
+
             List<Disease> diseases = DiseaseFactory.finder
-                .where(Expr.and(Expr.eq("synonyms.label", "DOID"),
+                .where(Expr.and(Expr.eq("synonyms.label", DOID),
                                 Expr.eq("synonyms.term", obo.id)))
                 .findList();
+            //TextIndexer.SearchResult results = indexer.search(opt, null);
             if (diseases.isEmpty()) {
                 Disease disease = new Disease ();
                 disease.name = obo.name;
                 disease.description = obo.def;
-                Keyword kw = new Keyword ("DOID", obo.id);
-                kw.href =
-                    "http://www.disease-ontology.org/api/metadata/"+obo.id;
+                Keyword kw = new Keyword (DOID, obo.id);
+                kw.href = "http://www.disease-ontology.org/term/"+obo.id;
                 disease.synonyms.add(kw);
                 for (String id : obo.alts) {
-                    kw = new Keyword ("DOID", id);
+                    kw = new Keyword (DOID, id);
                     //kw.href = "http://www.disease-ontology.org/api/metadata/"+id;
                     disease.synonyms.add(kw);
                 }
@@ -59,7 +74,11 @@ public class DiseaseOntologyRegistry {
                     parents.put(obo.id, obo.parentId);
                 }
                 disease.save();
-                diseaseMap.put(obo.id, disease);
+                Disease d = diseaseMap.put(obo.id, disease);
+                if (d != null) {
+                    Logger.warn(obo.id+" maps to "+disease.id+" ("+disease.name
+                                +") and "+d.id+" ("+d.name+")");
+                }
 
 
                 // TODO we should probably resolve these with the appropriate xternal resource
@@ -92,9 +111,10 @@ public class DiseaseOntologyRegistry {
                     nxref++;
                     String ns = xref.split(":")[0];
                     kw = new Keyword(ns, xref);
-                    disease.properties.add(kw);
+                    disease.synonyms.add(kw);
                 }
-                Logger.debug(disease.id+": "+obo.id+" "+obo.name+ " with "+nxref+" xref's");
+                Logger.debug(disease.id+": "+obo.id
+                             +" "+obo.name+ " with "+nxref+" xref's");
             }
         }
 

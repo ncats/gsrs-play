@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.avaje.ebean.*;
+import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.event.BeanPersistListener;
 
 import ix.core.models.ETag;
@@ -608,6 +609,7 @@ public class EntityFactory extends Controller {
         return ok (node);
     }
 
+    @Transactional
     protected static <T extends Model> 
                                 Result create (Class<T> type, 
                                                Model.Finder<Long, T> finder) {
@@ -896,8 +898,19 @@ public class EntityFactory extends Controller {
                     e.editor = principal;
                     e.oldValue = (String)c[1];
                     e.newValue = mapper.writeValueAsString(c[2]);
-                    e.save();
-                    //Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
+                    Transaction tx = Ebean.beginTransaction();
+                    try {
+                        e.save();
+                        tx.commit();
+                        //Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
+                    }
+                    catch (Exception ex) {
+                        Logger.trace
+                            ("Can't persist Edit for "+type+":"+id, ex);
+                    }
+                    finally {
+                        Ebean.endTransaction();
+                    }   
                 }
 
                 return ok (mapper.valueToTree(obj));

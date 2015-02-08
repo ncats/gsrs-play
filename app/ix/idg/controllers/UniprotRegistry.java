@@ -17,6 +17,8 @@ import play.libs.ws.*;
 import play.db.ebean.Model;
 import play.db.ebean.Transactional;
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.Transaction;
+import com.avaje.ebean.Ebean;
 
 import ix.core.models.*;
 import ix.core.controllers.PublicationFactory;
@@ -34,7 +36,6 @@ import ix.core.plugins.IxContext;
 import ix.utils.Global;
 import ix.utils.Util;
 
-
 public class UniprotRegistry extends DefaultHandler {
     public static final String ACCESSION = "UniProt Accession";
     public static final String GENE = "UniProt Gene";
@@ -50,7 +51,7 @@ public class UniprotRegistry extends DefaultHandler {
 
     static final int TIMEOUT = 5000; // 5s
     static public Namespace namespace = NamespaceFactory.registerIfAbsent
-        ("UniProt", "http://www.uniprot.org");
+        ("UniProt", "http://www.uniprot.org");    
 
     StringBuilder content = new StringBuilder ();
     Target target;
@@ -146,28 +147,38 @@ public class UniprotRegistry extends DefaultHandler {
     public void endDocument () {
         //Logger.debug("About to register target\n"+EntityFactory.getEntityMapper().toJson(target, true));
         persist (target);
-        Logger.debug("Target "+target.id+" \""+target.name+"\" added!");
+        Logger.debug(Thread.currentThread().getName()
+                     +": Target "+target.id+" \""+target.name+"\" added!");
     }
 
-    @Transactional
     protected static void persist (Target target) {
-        target.save();
-        // create the other direction
-        for (XRef ref : target.links) {
-            Model obj = (Model)ref.deRef();
-            if (obj instanceof EntityModel) {
-                XRef xref = createXRef (target);
-                for (Keyword kw : target.synonyms) {
-                    if (ACCESSION.equals(kw.label)) {
-                        Keyword uni = KeywordFactory.registerIfAbsent
-                            (TARGET, target.name, kw.href);
-                        xref.properties.add(uni);
-                        break; // just grab the first one
+        Transaction tx = Ebean.beginTransaction();
+        try {
+            target.save();
+            // create the other direction
+            for (XRef ref : target.links) {
+                Model obj = (Model)ref.deRef();
+                if (obj instanceof EntityModel) {
+                    XRef xref = createXRef (target);
+                    for (Keyword kw : target.synonyms) {
+                        if (ACCESSION.equals(kw.label)) {
+                            Keyword uni = KeywordFactory.registerIfAbsent
+                                (TARGET, target.name, kw.href);
+                            xref.properties.add(uni);
+                            break; // just grab the first one
+                        }
                     }
+                    ((EntityModel)obj).getLinks().add(xref);
+                    obj.update();
                 }
-                ((EntityModel)obj).getLinks().add(xref);
-                obj.update();
             }
+            tx.commit();
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't persist target: "+target.name, ex);
+        }
+        finally {
+            Ebean.endTransaction();
         }
     }
 
@@ -337,8 +348,18 @@ public class UniprotRegistry extends DefaultHandler {
                                   Expr.eq("term", organism.term)))
                         .findList();
                     if (org.isEmpty()) {
-                        organism.save();
-                        target.organism = organism;
+                        Transaction tx = Ebean.beginTransaction();
+                        try {
+                            organism.save();
+                            tx.commit();
+                            target.organism = organism;
+                        }
+                        catch (Exception ex) {
+                            Logger.trace("Can't persist Organism", ex);
+                        }
+                        finally {
+                            Ebean.endTransaction();
+                        }
                     }
                     else {
                         target.organism = org.iterator().next();
@@ -368,16 +389,36 @@ public class UniprotRegistry extends DefaultHandler {
         }
         else if (qName.equals("reference")) {
             if (xref != null) {
-                xref.save();
-                target.links.add(xref);
+                Transaction tx = Ebean.beginTransaction();
+                try {
+                    xref.save();
+                    tx.commit();
+                    target.links.add(xref);
+                }
+                catch (Exception ex) {
+                    Logger.trace("Can't persist XRef", ex);
+                }
+                finally {
+                    Ebean.endTransaction();
+                }
             }
             refkey = null;
         }
         else if (qName.equals("disease")) {
             if (disease.id == null) {
-                disease.save();
-                Logger.debug("New disease "
-                             +disease.id+" \""+disease.name+"\" added!");
+                Transaction tx = Ebean.beginTransaction();
+                try {
+                    disease.save();
+                    tx.commit();
+                    Logger.debug("New disease "
+                                 +disease.id+" \""+disease.name+"\" added!");
+                }
+                catch (Exception ex) {
+                    Logger.trace("Can't persist disease", ex);
+                }
+                finally {
+                    Ebean.endTransaction();
+                }
             }
         }
         else if (qName.equals("comment")) {

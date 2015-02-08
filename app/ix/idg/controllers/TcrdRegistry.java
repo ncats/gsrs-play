@@ -5,8 +5,10 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.net.*;
+import javax.sql.DataSource;
 
 import play.*;
+import play.db.DB;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
@@ -18,12 +20,14 @@ import ix.core.controllers.NamespaceFactory;
 import ix.core.controllers.KeywordFactory;
 import ix.utils.Global;
 import ix.core.plugins.*;
+import ix.core.search.TextIndexer;
+import ix.core.search.SearchOptions;
 
+import com.jolbox.bonecp.BoneCPDataSource;
+    
 public class TcrdRegistry extends Controller {
     public static final String DISEASE = "IDG Disease";
     public static final String DRUG = "IDG Drug";
-    public static final String CLASSIFICATION = "IDG Target Classification";
-    public static final String FAMILY = "IDG Target Family";
     public static final String ZSCORE = "IDG Z-score";
     public static final String CONF = "IDG Confidence";
     public static final String ChEMBL = "IDG ChEMBL";
@@ -35,9 +39,11 @@ public class TcrdRegistry extends Controller {
     static final Model.Finder<Long, Disease> diseaseDb = 
         new Model.Finder(Long.class, Disease.class);
     
-    static final TextIndexerPlugin indexer = 
-        Play.application().plugin(TextIndexerPlugin.class);
+    static final TextIndexer indexer = 
+        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
+    static final ConcurrentMap<String, Disease> diseases =
+        new ConcurrentHashMap<String, Disease>();
 
     public static final Namespace namespace = NamespaceFactory.registerIfAbsent
         ("TCRDv094", "https://pharos.nih.gov");
@@ -107,7 +113,7 @@ public class TcrdRegistry extends Controller {
                     ++count;
                 }
                 catch (Exception ex) {
-                    ex.printStackTrace();
+                    Logger.trace("Can't register target "+t.acc, ex);
                 }
             }
             Logger.debug(Thread.currentThread().getName()+": finished..."
@@ -159,7 +165,7 @@ public class TcrdRegistry extends Controller {
             // reindex this entity; we have to do this since
             // the target.update doesn't trigger the postUpdate
             // event.. need to figure exactly why.
-            indexer.getIndexer().update(target);
+            indexer.update(target);
         }
     }
 
@@ -179,8 +185,23 @@ public class TcrdRegistry extends Controller {
         String jdbcUsername = requestData.get("jdbc-username");
         String jdbcPassword = requestData.get("jdbc-password");
         Logger.debug("JDBC: "+jdbcUrl);
+
+        DataSource ds = null;
         if (jdbcUrl == null || jdbcUrl.equals("")) {
-            return badRequest ("No JDBC URL specified!");
+            //return badRequest ("No JDBC URL specified!");
+            ds = DB.getDataSource("tcrd");
+        }
+        else {
+            BoneCPDataSource bone = new BoneCPDataSource ();
+            bone.setJdbcUrl(jdbcUrl);
+            bone.setUsername(jdbcUsername);
+            bone.setPassword(jdbcPassword);
+            ds = bone;
+        }
+
+        if (ds == null) {
+            return badRequest ("Neither DataSource \"tcrd\" found "
+                               +"nor jdbc url is specified!");
         }
 
         String maxRows = requestData.get("max-rows");
@@ -188,7 +209,6 @@ public class TcrdRegistry extends Controller {
 
         Http.MultipartFormData body = request().body().asMultipartFormData();
         Http.MultipartFormData.FilePart part = body.getFile("load-do-obo");
-        Map<String, Disease> diseases = new HashMap<String, Disease>();
         if (part != null) {
             String name = part.getFilename();
             String content = part.getContentType();
@@ -196,7 +216,7 @@ public class TcrdRegistry extends Controller {
             File file = part.getFile();
             DiseaseOntologyRegistry obo = new DiseaseOntologyRegistry ();
             try {
-                diseases = obo.register(new FileInputStream (file));
+                diseases.putAll(obo.register(new FileInputStream (file)));
             }
             catch (IOException ex) {
                 Logger.trace("Can't load obo file: "+file, ex);
@@ -214,7 +234,7 @@ public class TcrdRegistry extends Controller {
                     Logger.warn("Bogus maxRows \""+maxRows+"\"; default to 0!");
                 }
             }
-            count = load (jdbcUrl, jdbcUsername, jdbcPassword, 1, rows);
+            count = load (ds, 1, rows);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -224,13 +244,12 @@ public class TcrdRegistry extends Controller {
         return redirect (routes.IDGApp.index());
     }
 
-    static int load (String url, String username,
-                     String password, int threads, int rows)
+    static int load (DataSource ds, int threads, int rows)
         throws Exception {
 
         Set<TcrdTarget> targets = new HashSet<TcrdTarget>();    
 
-        Connection con = DriverManager.getConnection(url, username, password);
+        Connection con = ds.getConnection();
         Statement stm = con.createStatement();
         int count = 0;
         try {
@@ -289,20 +308,20 @@ public class TcrdRegistry extends Controller {
                     ex.printStackTrace();
                 }
             }
-            
+
             List<Future<Integer>> jobs = new ArrayList<Future<Integer>>();
             for (int i = 0; i < threads; ++i) {
                 try {
-                    con = DriverManager.getConnection(url, username, password);
                     jobs.add(pool.submit
                              (new RegistrationWorker
-                              (con, Http.Context.current(), queue)));
+                              (ds.getConnection(), Http.Context.current(),
+                               queue)));
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
                 }
             }
-
+            
             for (int i = 0; i < threads; ++i) {
                 try {
                     queue.put(EMPTY); // add as many as there are threads
@@ -311,7 +330,7 @@ public class TcrdRegistry extends Controller {
                     ex.printStackTrace();
                 }
             }
-
+            
             Logger.debug("## waiting for threads to finish...");
             for (Future<Integer> f : jobs) {
                 try {
@@ -321,23 +340,21 @@ public class TcrdRegistry extends Controller {
                     ex.printStackTrace();
                 }
             }
+
+            pool.shutdownNow();
         }
         return count;
     }
 
-    @Transactional
     static void addDiseaseRefs (Target target, Namespace namespace,
                                 PreparedStatement pstm) throws Exception {
         ResultSet rs = pstm.executeQuery();
         try {
             XRef self = null;
-            String label = FAMILY;
             Keyword family = KeywordFactory.registerIfAbsent
-                (label, target.idgFamily, null);
-
-            label = CLASSIFICATION;
+                (Target.IDG_FAMILY, target.idgFamily, null);
             Keyword clazz = KeywordFactory.registerIfAbsent
-                (label, target.idgClass, null);
+                (Target.IDG_CLASSIFICATION, target.idgClass, null);
 
             Keyword name = KeywordFactory.registerIfAbsent
                 (UniprotRegistry.TARGET, target.name, target.getSelf());
@@ -346,77 +363,99 @@ public class TcrdRegistry extends Controller {
             Map<Long, Disease> neighbors = new HashMap<Long, Disease>();
             while (rs.next()) {
                 String doid = rs.getString("doid");
-                Disease disease = null;
-                try {
-                    disease = DiseaseFactory.finder
-                        .where(Expr.and(Expr.eq("synonyms.label", "DOID"),
+                Disease disease = diseases.get(doid);
+                if (disease == null) {
+                    List<Disease> dl = DiseaseFactory.finder
+                        .where(Expr.and(Expr.eq("synonyms.label",
+                                                DiseaseOntologyRegistry.DOID),
                                         Expr.eq("synonyms.term", doid)))
-                        .findUnique();
+                        .findList();
+                    
+                    if (dl.isEmpty()) {
+                        Logger.warn("Target "+target.id+" references "
+                                    +"unknown disease "+doid);
+                        continue;
+                    }
+                    else if (dl.size() > 1) {
+                        Logger.warn("Disease "+doid+" maps to "+dl.size()
+                                    +" entries!");
+                        for (Disease d : dl)
+                            Logger.warn("..."+d.id+" "+d.name);
+
+                    }
+                    disease = dl.iterator().next();
+                    diseases.putIfAbsent(doid, disease);
                 }
-                catch (Exception ex) {
-                    Logger.trace("Disease "+doid+" isn't unique!", ex);
-                    continue;
+
+                double zscore = rs.getDouble("zscore");
+                double conf = rs.getDouble("conf");
+                
+                XRef xref = null;
+                for (XRef ref : target.links) {
+                    if (ref.kind.equals(disease.getClass().getName())
+                        && ref.refid == disease.id) {
+                        xref = ref;
+                        break;
+                    }
                 }
                 
-                if (disease == null) {
-                    Logger.warn("Target "+target.id+" references "
-                                +"unknown disease "+doid);
+                if (xref != null) {
+                    Logger.warn("Disease "+disease.id+" ("
+                                +disease.name+") is "
+                                +"already linked with target "
+                                +target.id+" ("+target.name+")");
                 }
                 else {
-                    double zscore = rs.getDouble("zscore");
-                    double conf = rs.getDouble("conf");
-
-                    XRef xref = null;
-                    for (XRef ref : target.links) {
-                        if (ref.kind.equals(disease.getClass().getName())
-                            && ref.refid == disease.id) {
-                            xref = ref;
-                            break;
-                        }
-                    }
-
-                    if (xref != null) {
-                        Logger.warn("Disease "+disease.id+" ("
-                                    +disease.name+") is "
-                                    +"already linked with target "
-                                    +target.id+" ("+target.name+")");
-                    }
-                    else {
-                        xref = new XRef (disease);
-                        xref.namespace = namespace;
-                        Keyword kw = KeywordFactory.registerIfAbsent
-                            (DISEASE, disease.name, xref.getHRef());
-                        xref.properties.add(kw);
-                        xref.properties.add(new VNum (ZSCORE, zscore));
-                        xref.properties.add(new VNum (CONF, conf));
-                        target.links.add(xref);
-                        
-                        // now add all the unique parents of this disease node
-                        getNeighbors (neighbors, disease.links);
-                        
-                        if (self == null) {
+                    xref = new XRef (disease);
+                    xref.namespace = namespace;
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (DISEASE, disease.name, xref.getHRef());
+                    xref.properties.add(kw);
+                    xref.properties.add(new VNum (ZSCORE, zscore));
+                    xref.properties.add(new VNum (CONF, conf));
+                    target.links.add(xref);
+                    
+                    // now add all the unique parents of this disease node
+                    getNeighbors (neighbors, disease.links);
+                    
+                    if (self == null) {
+                        Transaction tx = Ebean.beginTransaction();
+                        try {
                             self = new XRef (target);
                             self.namespace = namespace;
                             self.properties.add(family);
                             self.properties.add(clazz);
                             self.properties.add(name);
                             self.save();
-                        }
-                        
-                        // link the other way
-                        try {
-                            disease.links.add(self);
-                            disease.update();
-                            indexer.getIndexer().update(disease);
-                            ++count;
+                            tx.commit();
                         }
                         catch (Exception ex) {
-                            Logger.warn("Disease "+disease.id+" ("
-                                        +disease.name+")"
-                                        +" is already link with target "
-                                        +target.id+" ("+target.name+"): "
-                                        +ex.getMessage());
+                            Logger.trace("Can't persist XRef for target "
+                                         +target.id, ex);
                         }
+                        finally {
+                            Ebean.endTransaction();
+                        }
+                    }
+                    
+                    // link the other way
+                    Transaction tx = Ebean.beginTransaction();
+                    try {
+                        disease.links.add(self);
+                        disease.update();
+                        tx.commit();
+                        indexer.update(disease);
+                        ++count;
+                    }
+                    catch (Exception ex) {
+                        Logger.warn("Disease "+disease.id+" ("
+                                    +disease.name+")"
+                                    +" is already link with target "
+                                    +target.id+" ("+target.name+"): "
+                                    +ex.getMessage());
+                    }
+                    finally {
+                        Ebean.endTransaction();
                     }
                 }
             }
@@ -426,7 +465,7 @@ public class TcrdRegistry extends Controller {
             for (Disease neighbor : neighbors.values()) {
                 neighbor.links.add(self);
                 neighbor.update();
-                indexer.getIndexer().update(neighbor);
+                indexer.update(neighbor);
                 
                 Keyword kw = KeywordFactory.registerIfAbsent
                     (DISEASE, neighbor.name, null);
@@ -436,8 +475,18 @@ public class TcrdRegistry extends Controller {
                 target.links.add(xref);
             }
             */
-            target.update();
-            Logger.debug("...."+count+" disease xref(s) added!");
+            Transaction tx = Ebean.beginTransaction();
+            try {
+                target.update();
+                tx.commit();
+                Logger.debug("...."+count+" disease xref(s) added!");
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't update target "+target.id, ex);
+            }
+            finally {
+                Ebean.endTransaction();
+            }
         }
         finally {
             rs.close();

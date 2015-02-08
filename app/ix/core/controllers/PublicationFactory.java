@@ -10,7 +10,10 @@ import play.data.*;
 import play.mvc.*;
 
 import com.avaje.ebean.Query;
+import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.Transaction;
+import com.avaje.ebean.Ebean;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -133,7 +136,17 @@ public class PublicationFactory extends EntityFactory {
                 for (PubAuthor p : pub.authors) {
                     p.author = instrument (p.author);
                 }
-                pub.save();
+                Transaction tx = Ebean.beginTransaction();
+                try {
+                    pub.save();
+                    tx.commit();
+                }
+                catch (Exception ex) {
+                    Logger.trace("Can't persist publication "+pub.pmid, ex);
+                }
+                finally {
+                    Ebean.endTransaction();
+                }
             }
         }
         return pub;

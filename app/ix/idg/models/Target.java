@@ -19,6 +19,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 @Table(name="ix_idg_target")
 public class Target extends EntityModel {
+    public static final String IDG_FAMILY = "IDG Target Family";
+    public static final String IDG_CLASSIFICATION =
+        "IDG Target Classification";
+        
     @Column(length=1024)
     @Indexable(suggest=true,name="Target")
     public String name;
@@ -31,11 +35,11 @@ public class Target extends EntityModel {
     public Keyword organism;
 
     @Column(length=128)
-    @Indexable(facet=true,name="IDG Target Family")
+    @Indexable(facet=true,name=IDG_FAMILY)
     public String idgFamily;
 
     @Column(length=10)
-    @Indexable(facet=true,name="IDG Target Classification")
+    @Indexable(facet=true,name=IDG_CLASSIFICATION)
     public String idgClass;
 
     @JsonView(BeanViews.Full.class)

@@ -230,7 +230,7 @@ public class IDGApp extends Controller {
         if (url.charAt(url.length()-1) == '?') {
             url = url.substring(0, url.length()-1);
         }
-        Logger.debug(">> uri="+request().uri());
+        //Logger.debug(">> uri="+request().uri());
 
         StringBuilder uri = new StringBuilder ("?");
         Map<String, Collection<String>> params =
@@ -249,10 +249,21 @@ public class IDGApp extends Controller {
                         uri.append(me.getKey()+"="+v+"&");
             }
         }
-        Logger.debug(">> "+uri);
+        //Logger.debug(">> "+uri);
         return uri.substring(0, uri.length()-1);
     }
 
+    public static String queryString (String... params) {
+        Map<String, String[]> query = new HashMap<String, String[]>();
+        for (String p : params) {
+            String[] values = request().queryString().get(p);
+            if (values != null)
+                query.put(p, values);
+        }
+        
+        return query.isEmpty() ? "" : "?"+queryString (query);
+    }
+    
     public static String queryString (Map<String, String[]> queryString) {
         //Logger.debug("QueryString: "+queryString);
         StringBuilder q = new StringBuilder ();

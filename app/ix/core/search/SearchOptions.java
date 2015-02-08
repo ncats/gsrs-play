@@ -5,11 +5,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class SearchOptions {
+    public static final int DEFAULT_TOP = 10;
+    public static final int DEFAULT_FDIM = 10;
+    
     public Class<?> kind; // filter by type
 
-    public int top;
+    public int top = DEFAULT_TOP;
     public int skip;
-    public int fdim; // facet dimension
+    public int fdim = DEFAULT_FDIM; // facet dimension
     // whether drilldown (false) or sideway (true)
     public boolean sideway = true;
     public String filter;
@@ -27,6 +30,14 @@ public class SearchOptions {
         this.top = Math.max(1, top);
         this.skip = Math.max(0, skip);
         this.fdim = Math.max(1, fdim);
+    }
+
+    public void setFacet (String facet, String value) {
+        facets.clear();
+        addFacet (facet, value);
+    }
+    public void addFacet (String facet, String value) {
+        facets.add(facet+"/"+value);
     }
 
     public int max () { return skip+top; }
