@@ -117,7 +117,7 @@
             <h3 class="panel-title">IDG Disease Relevance</h3>
           </div>
           <div class="panel-body">
-            <table class="table table-striped">
+            <table class="tree table table-striped">
               <tr>
                 <th>Disease</th>
                 <th>Z-score</th>
@@ -125,13 +125,23 @@
               </tr>
               @for(dr <- diseases) {
                 @if(dr.zscore != null) {
-                <tr>
+                <tr class="treegrid-@dr.disease.id">
                   <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
                   <td>@dr.zscore</td>
                   <td>@dr.conf</td>
                 </tr>
-                }
-              }
+
+    	           @for(i <- 0 until dr.lineage.size()) {
+ 		     @defining(dr.lineage(i)) { x =>	    
+   	               <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
+                         <td><a href="@ix.idg.controllers.routes.IDGApp.disease(x.disease.id)">@x.disease.name</a></td>
+                         <td>@x.zscore</td>
+                         <td>@x.conf</td>
+		       </tr>
+		     }
+		   }
+                  }
+		}
             </table>
           </div>
         </div>
@@ -242,5 +252,13 @@
 <script>
 $(function () {
   $('[data-toggle="popover"]').popover();
+});
+
+$(document).ready(function () { 
+  $('.tree').treegrid({
+   expanderExpandedClass: 'fa fa-angle-down',
+   expanderCollapsedClass: 'fa fa-angle-right',
+   initialState: 'collapsed'
+  });
 });
 </script>
