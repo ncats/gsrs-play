@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.lang.reflect.*;
 import java.lang.annotation.Annotation;
 import java.text.DateFormat;
@@ -347,7 +348,8 @@ public class TextIndexer {
     private FacetsConfig facetsConfig;
     private ConcurrentMap<String, SuggestLookup> lookups;
     private ConcurrentMap<String, SortField.Type> sorters;
-
+    private AtomicLong lastModified = new AtomicLong ();
+        
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
 
@@ -628,9 +630,9 @@ public class TextIndexer {
                         // make sure the facet value is returned                
                         String label = null; 
                         for (String d : drills) {
-                            if (d.equals(result.dim)) {
-                                int pos = d.indexOf('/');
-                                if (pos > 0)
+                            int pos = d.indexOf('/');
+                            if (pos > 0) {
+                                if (result.dim.equals(d.substring(0, pos)))
                                     label = d.substring(pos+1);
                             }
                         }
@@ -641,11 +643,15 @@ public class TextIndexer {
                                 Logger.info
                                     ("     \""+lv.label+"\": "+lv.value);
                             }
-                            f.values.add(new FV (lv.label, 
-                                                 lv.value.intValue()));
                             if (lv.label.equals(label)) {
                                 // got it
+                                f.values.add(0, new FV (lv.label, 
+                                                        lv.value.intValue()));
                                 label = null;
+                            }
+                            else {
+                                f.values.add(new FV (lv.label, 
+                                                     lv.value.intValue()));
                             }
                         }
                         
@@ -653,7 +659,8 @@ public class TextIndexer {
                             Number value =
                                 facets.getSpecificValue(result.dim, label);
                             if (value != null) {
-                                f.values.add(new FV (label, value.intValue()));
+                                f.values.add(0, new FV
+                                             (label, value.intValue()));
                             }
                             else {
                                 Logger.warn
@@ -799,7 +806,11 @@ public class TextIndexer {
         
         if (DEBUG (2))
             Logger.debug("<<< "+entity);
+
+        lastModified.set(System.currentTimeMillis());
     }
+
+    public long lastModified () { return lastModified.get(); }
 
     public void update (Object entity) throws IOException {
         if (!entity.getClass().isAnnotationPresent(Entity.class)) {

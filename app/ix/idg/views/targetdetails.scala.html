@@ -26,7 +26,7 @@
   }
 }
 
-@main(target.name, target.getClass().getName()){
+@main(target.name, target.getClass().getName()) {
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
     <li><a href="@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">Targets</a></li>
@@ -143,7 +143,7 @@
             <table class="table table-striped">
               <tr>
                 <th>Disease</th>
-                <th>OMIM</th>                
+                <th>OMIM</th>
                 <th>Comment</th>
               </tr>
               @for(dr <- diseases) {
@@ -151,9 +151,9 @@
                 <tr>
                   <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
                   @if(dr.omim != null) {
-                    <td><a href="@dr.omim.href">@dr.omim.term</a></td>
+                  <td><a href="@dr.omim.href">@dr.omim.term</a></td>
                   } else {
-                     <td></td>
+                  <td></td>
                   }
                   <td>@dr.comment</td>
                 </tr>

@@ -9,6 +9,8 @@ import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
 import ix.idg.models.Target;
 import ix.utils.Util;
+import ix.core.plugins.TextIndexerPlugin;
+
 import play.Logger;
 import play.cache.Cache;
 import play.libs.ws.WS;
@@ -22,6 +24,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.Callable;
@@ -33,7 +37,10 @@ public class IDGApp extends Controller {
     static public final int MAX_FACETS = 6;
     static final int FACET_DIM = 20;
     static final int MAX_SEARCH_RESULTS = 1000;
-    
+
+    static final TextIndexer indexer = 
+        play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+
     public static class DiseaseRelevance
         implements Comparable<DiseaseRelevance> {
         public Disease disease;
@@ -41,6 +48,9 @@ public class IDGApp extends Controller {
         public Double conf;
         public String comment;
         public Keyword omim;
+        public Keyword uniprot;
+        public List<DiseaseRelevance> lineage =
+            new ArrayList<DiseaseRelevance>();
 
         DiseaseRelevance () {}
         public int compareTo (DiseaseRelevance dr) {
@@ -118,6 +128,20 @@ public class IDGApp extends Controller {
         return ok (ix.idg.views.html.error.render(code, mesg));
     }
 
+    static void getLineage (Map<Long, Disease> lineage, Disease d) {
+        for (XRef ref : d.links) {
+            if (Disease.class.getName().equals(ref.kind)) {
+                for (Value prop : ref.properties) {
+                    if (prop.label.equals("is_a")) {
+                        Disease p = (Disease)ref.deRef();
+                        lineage.put(d.id, p);
+                        getLineage (lineage, p);
+                    }
+                }
+            }
+        }
+    }
+
     public static Result target (final long id) {
         try {
             long start = System.currentTimeMillis();
@@ -133,10 +157,15 @@ public class IDGApp extends Controller {
 
             List<DiseaseRelevance> diseases = new ArrayList<DiseaseRelevance>();
             List<DiseaseRelevance> uniprot = new ArrayList<DiseaseRelevance>();
+            Map<Long, Disease> lineage = new HashMap<Long, Disease>();
+            Map<Long, DiseaseRelevance> diseaseRel =
+                new HashMap<Long, DiseaseRelevance>();
             for (XRef xref : t.links) {
                 if (Disease.class.getName().equals(xref.kind)) {
                     DiseaseRelevance dr = new DiseaseRelevance ();
-                    dr.disease = (Disease)xref.deRef(); 
+                    dr.disease = (Disease)xref.deRef();
+                    diseaseRel.put(dr.disease.id, dr);
+                    getLineage (lineage, dr.disease);
                     for (Value p : xref.properties) {
                         if (TcrdRegistry.ZSCORE.equals(p.label))
                             dr.zscore = (Double)p.getValue();
@@ -154,17 +183,40 @@ public class IDGApp extends Controller {
                         for (Keyword kw : dr.disease.synonyms) {
                             if ("MIM".equals(kw.label)) {
                                 dr.omim = kw;
-                                break;
                             }
+                            else if ("UniProt".equals(kw.label))
+                                dr.uniprot = kw;
                         }
                         uniprot.add(dr);
                     }
                 }
             }
             Collections.sort(diseases);
-            diseases.addAll(uniprot); // append uniprot diseases
+
+            Set<Long> hasChildren = new HashSet<Long>();
+            for (Disease d : lineage.values())
+                hasChildren.add(d.id);
+
+            List<DiseaseRelevance> prune = new ArrayList<DiseaseRelevance>();
+            for (DiseaseRelevance dr : diseases) {
+                if (!hasChildren.contains(dr.disease.id)) {
+                    prune.add(dr);
+                    for (Disease p = lineage.get(dr.disease.id); p != null; ) {
+                        DiseaseRelevance parent = diseaseRel.get(p.id);
+                        if (parent == null) {
+                            parent = new DiseaseRelevance ();
+                            parent.disease = p;
+                        }
+                        dr.lineage.add(parent);
+                        p = lineage.get(p.id);
+                    }
+                    Logger.debug("Disease "+dr.disease.id+" ["+dr.disease.name
+                                 +"] has "+dr.lineage.size()+" lineage!");
+                }
+            }
+            prune.addAll(uniprot); // append uniprot diseases
             
-            return ok (ix.idg.views.html.targetdetails.render(t, diseases));
+            return ok (ix.idg.views.html.targetdetails.render(t, prune));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -353,6 +405,7 @@ public class IDGApp extends Controller {
             qfacets.add("MeSH/"+q);
             query.put("facet", qfacets.toArray(new String[0]));
         }
+        //query.put("drill", new String[]{"down"});
         
         List<String> args = new ArrayList<String>();
         args.add(request().uri());
@@ -438,9 +491,12 @@ public class IDGApp extends Controller {
                             pages, facets, targets));
             }
             else {
+                String cache = Target.class.getName()+".facets";
+                if (System.currentTimeMillis() - CACHE_TIMEOUT
+                    <= indexer.lastModified())
+                    Cache.remove(cache);
                 TextIndexer.Facet[] facets = Cache.getOrElse
-                    (Target.class.getName()+".facets",
-                     new Callable<TextIndexer.Facet[]>() {
+                    (cache, new Callable<TextIndexer.Facet[]>() {
                             public TextIndexer.Facet[] call () {
                                 return filter (getFacets (Target.class, 20),
                                                TARGET_FACETS);

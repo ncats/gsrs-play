@@ -11,6 +11,7 @@ public class Keyword extends Value {
     @Column(length=255)
     public String term;
     @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String href;
 
     public Keyword () {}
