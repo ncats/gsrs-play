@@ -114,17 +114,6 @@ public class NIHLdapConnector {
         String id = getAttr (attrs, "employeeID");
         if (id != null) {
             e = new Employee ();            
-            String suffix = getAttr (attrs, "personalTitle");
-            if (suffix != null) {
-                if (suffix.startsWith("Dr")) {
-                    // can't figure out whether it's MD, DDS, DSc, or PhD
-                    e.suffix = "Ph.D.";
-                    if (e.lastname.equalsIgnoreCase("austin")
-                        && e.forename.equalsIgnoreCase("christopher")) {
-                        e.suffix = "M.D.";
-                    }
-                }
-            }
             e.username = getAttr (attrs, "cn");
             e.email = getAttr (attrs, "mail");
             e.lastname = getAttr (attrs, "sn"); // last
@@ -133,6 +122,17 @@ public class NIHLdapConnector {
             e.dn = getAttr (attrs, "distinguishedName");
             e.uid = Long.parseLong(id);
             e.phone = getAttr (attrs, "telephoneNumber");
+            String suffix = getAttr (attrs, "personalTitle");
+            if (suffix != null) {
+                if (suffix.startsWith("Dr")) {
+                    // can't figure out whether it's MD, DDS, DSc, or PhD
+                    e.suffix = "Ph.D.";
+                    if ("austin".equalsIgnoreCase(e.lastname)
+                        && "christopher".equalsIgnoreCase(e.forename)) {
+                        e.suffix = "M.D.";
+                    }
+                }
+            }
         }
         else {
             play.Logger.warn(getAttr (attrs, "sn")+", "

@@ -1,11 +1,11 @@
 $(document).ready(function() {
-	
+	index ="Program";
 	$("#chartSelect").selectmenu();
 	var filters = parseFilters(filterList);
-	console.log(filters);
+//	console.log(filters);
 	drawChart(filters.Program);
 	$("#chartSelect").on("selectmenuchange", function( event, ui ) {
-		console.log(ui);
+	//	console.log(ui);
 		index = ui.item.label;
 		if(index =="Journal Year Published"){
 			index = "JournalYear";
@@ -14,8 +14,6 @@ $(document).ready(function() {
 			index = "MeSH";
 		}
 		console.log(index);
-		console.log(filters);
-		console.log(filters[index]);
 		drawChart(filters[index]);
 	});
 
@@ -49,37 +47,12 @@ $(document).ready(function() {
 });
 //END HIGHLIGHTING//	
 
-function getLabel(index){
-	var facetName;
-	switch(index){
-	case 0:
-		facetName = "Program";
-		break;
-	case 1:
-		facetName = "Journal+Year+Published";
-		break;
-	case 2:
-		facetName = "Author";
-		break;
-	case 3:
-		facetName = "Category";
-		break;
-	case 4:
-		facetName = "MeSH";
-		break;
-	case 5:
-		facetName = "Journal";
-		break;
-	}
-	return facetName;
-}
-
 
 function drawChart(facets){
 	var labels =[];
 	var counts =[];
 	var checked =[];
-	console.log(facets);
+//	console.log(facets);
 	for(var i in facets){
 		labels.push(facets[i].displayName);
 		counts.push(facets[i].count);
@@ -87,7 +60,6 @@ function drawChart(facets){
 			checked.push(i);
 		}
 	}
-	console.log(labels);
 	var max = Math.max.apply(Math, counts);
 	var chart =	$("#history-bar").highcharts({
 		credits: {
@@ -142,34 +114,32 @@ function drawChart(facets){
 				point: {
 					events: {
 						click: function() {
-							console.log(this);
-							console.log(checked.length);
-							console.log($(location));
+//							console.log(index);
 							var facet;
 							var search = $(location).attr('search');
 							if(!this.selected){
 								if(search ===""){
-									facet = "?facet="+getLabel(index) + '/' + this.category;
+									facet = "?facet="+index + '/' + this.category;
 								}else{
-									facet = "&facet="+getLabel(index) + '/' + this.category;
+									facet = "&facet="+index + '/' + this.category;
 								}
 							location.href += facet;
 
 							}else{
 								var url =  $(location).attr('href');
-								console.log(search);
+//								console.log(search);
 								if(checked.length == 1){
-									console.log( $(location).attr('origin')+$(location).attr('pathname'));
+//									console.log( $(location).attr('origin')+$(location).attr('pathname'));
 									location.href = $(location).attr('origin')+$(location).attr('pathname');
 								}else{
 									if(this.index === 0){
-									facet = "facet="+getLabel(index) + '/' + this.category + '&';
+									facet = "facet="+index + '/' + this.category + '&';
 								}else{
-									facet = "&facet="+getLabel(index) + '/' + this.category;
+									facet = "&facet="+index + '/' + this.category;
 								}
-								console.log(facet);
+//								console.log(facet);
 								search = url.replace((facet),"");
-								console.log(search);
+//								console.log(search);
 								location.href= search;
 								}
 							}
@@ -192,7 +162,7 @@ function drawChart(facets){
 }
 
 function parseFilters(filters){
-	console.log(filters);
+//	console.log(filters);
 	var chartFilters = {};
 	var programList = [];
 	var journalYearList = [];

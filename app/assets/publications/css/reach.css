@@ -137,7 +137,7 @@ padding-left: 8%;
 
 .back{
         border-radius: 20px;
-        background-color: #1f355c;
+        background-color: #1c283a;
 }
 
 div.box:hover .on {
@@ -153,16 +153,16 @@ div.box .on {
 }
 
 .box{
-	height:100%;
-	margin-bottom:0px;
-	
+        height:100%;
+        margin-bottom:0px;
+        
 }
 .count{
 margin-top: -15%;
 margin-right: 7%;
 z-index: 99999;
 position: relative;
-font-size: 12pt;
+font-size: 10pt;
 color: #1f355c;
 background-color: white;
 }
@@ -171,19 +171,19 @@ background-color: white;
 /*PROJECTS PAGE*/
 
 .proj-img{
-	height:250px;
+        height:250px;
 }
 .mobile-show{
-	display:none;
+        display:none;
 }
 @media ( max-width : 768px) {
 .mobile-show{
-	display: initial;
-	background-color:black;	
-	color:white;
+        display: initial;
+        background-color:black; 
+        color:white;
 }
 .mobile{
-	display:none;
+        display:none;
 }
 }
 /*END PROJECTs PAGE*/

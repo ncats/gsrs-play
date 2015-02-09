@@ -26,6 +26,10 @@ public class FigureFactory extends EntityFactory {
         return page (top, skip, filter, finder);
     }
 
+    public static Figure getFigure (Long id) {
+        return getEntity (id, finder);
+    }
+    
     public static List<Figure> filter (JsonNode json, int top, int skip) {
         return filter (json, top, skip, finder);
     }

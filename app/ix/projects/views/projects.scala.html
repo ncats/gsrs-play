@@ -23,7 +23,7 @@ projects: List[Project])
 			  value="submit">
 		    <span class="fa fa-search"></span>
 		  </button>
-		  <a href = "./projects" class="btn btn-default">Reset</a>
+		  <a href = "@ix.publications.controllers.routes.ReachApp.projects()" class="btn btn-default">Reset</a>
 		</span>
 	      </div>
 	    </form>
@@ -56,10 +56,10 @@ projects: List[Project])
 					<div class ="mobile-show">@p.title</div>
 						<div
 							class="img-hover-parent img-hover-grow overlay-parent overlay-parent-slideup-title-black box ">
-							<a href="projects/@p.id" title=""
+							<a href="@ix.publications.controllers.routes.ReachApp.project(p.id)" title=""
 								class="portfolio-entry-media-link">
 								@if(p.figures.size() > 1){ 
-								<img src="@p.figures(1).getUrl()"
+								<img src="@ix.core.controllers.routes.RouteFactory.get("figures",p.figures(1).id)?format=image"
 								class="img-responsive thumb" alt="@p.title"> }else{
 								<span class ="mobile">@p.title</span> }
 								<div class="overlay-slideup-title black clr">

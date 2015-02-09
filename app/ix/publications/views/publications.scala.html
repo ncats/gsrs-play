@@ -63,7 +63,7 @@
 
  </ul>
  @if(!p.figures.isEmpty()){
-	<div><a href="@p.figures(0).getUrl()" class="highslide" id="zoom" onclick="return hs.expand(this)"><img src="@p.figures(0).getUrl()"  class="pub-img" alt ="Sample image from publication page"/></a></div>
+	<div><a href="@ix.core.controllers.routes.RouteFactory.get("figures", p.figures(0).id)?format=image" class="highslide" id="zoom" onclick="return hs.expand(this)"><img src="@ix.core.controllers.routes.RouteFactory.get("figures", p.figures(0).id)?format=image"  class="pub-img" alt ="Sample image from publication page"/></a></div>
           }
         @if(p.abstractText){
 	<div class = "hidden">@p.abstractText</div>

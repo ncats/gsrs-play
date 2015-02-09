@@ -126,7 +126,7 @@ public class EmployeeFactory extends EntityFactory {
             return ok ("Loaded "+employees.size()+" record(s)!");
         }
         catch (Exception ex) {
-            Logger.trace("Can't list LDAP", ex);
+            ex.printStackTrace();
             return internalServerError (ex.getMessage());
         }
     }
