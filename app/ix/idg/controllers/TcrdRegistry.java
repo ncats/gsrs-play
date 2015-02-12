@@ -35,7 +35,8 @@ public class TcrdRegistry extends Controller {
     public static final String ChEMBL = "IDG ChEMBL";
     public static final String GENERIF = "IDG GeneRIF";
     public static final String TARGET = "IDG Target";
-        
+    public static final String ChEMBL_PROTEIN_CLASS = "ChEMBL Protein Class";
+
     static final Model.Finder<Long, Target> targetDb = 
         new Model.Finder(Long.class, Target.class);
     static final Model.Finder<Long, Disease> diseaseDb = 
@@ -61,7 +62,12 @@ public class TcrdRegistry extends Controller {
         TcrdTarget (String acc, String family, String tdl,
                     Long id, Long protein) {
             this.acc = acc;
-            this.family = family;
+            if ("nr".equalsIgnoreCase(family))
+                this.family = "Nuclear Receptor";
+            else if ("ic".equalsIgnoreCase(family))
+                this.family = "Ion Channel";
+            else 
+                this.family = family;
             this.tdl = tdl;
             this.id = id;
             this.protein = protein;
@@ -81,6 +87,80 @@ public class TcrdRegistry extends Controller {
         }
     }
 
+    static class ChemblResolver {
+        DataSource chembl;
+        Connection con;
+        PreparedStatement pstm;
+        
+        ChemblResolver () throws SQLException {
+            chembl = DB.getDataSource("chembl");
+            if (chembl == null) {
+                throw new IllegalStateException
+                    ("No \"chembl\" datasource found!");
+            }
+            con = chembl.getConnection();
+            pstm = con.prepareStatement("select distinct e.* "+
+"from target_components a, "+
+"component_synonyms b, "+
+"component_class c, "+
+"protein_classification d, "+
+"protein_family_classification e "+
+"where component_synonym = ? "+
+"and syn_type = 'GENE_SYMBOL' "+
+"and a.component_id = b.component_id "+
+"and a.component_id = c.component_id "+
+"and c.protein_class_id = d.protein_class_id "+
+"and c.protein_class_id = e.protein_class_id "+
+"order by class_level desc, e.protein_class_id");
+        }
+
+        void shutdown () throws SQLException {
+            con.close();
+        }
+        
+        void instrument (Target target) throws SQLException {
+            String gene = null;
+            for (Keyword kw : target.synonyms) {
+                if (UniprotRegistry.GENE.equals(kw.label)) {
+                    gene = kw.term;
+                    break;
+                }
+            }
+
+            if (gene == null)
+                throw new IllegalArgumentException
+                    ("Target "+target.id+" ("+target.name
+                     +") has no gene synonym!");
+            pstm.setString(1, gene);
+            ResultSet rset = pstm.executeQuery();
+            if (rset.next()) {
+                int i = 1;
+                for (; i <= 8; ++i) {
+                    String l = rset.getString("l"+i);
+                    if (l != null) {
+                        Keyword kw = KeywordFactory.registerIfAbsent
+                            (ChEMBL_PROTEIN_CLASS+" ("+i+")", l, null);
+                        target.properties.add(kw);
+                    }
+                    else {
+                        break;
+                    }
+                }
+                Logger.debug("Protein "+target.id+" ("+target.name+") has "
+                             +i+" family level(s)!");
+                if (rset.next()) {
+                    Logger.warn("Protein "+target.id+" ("+target.name
+                                +") has multiple family classes!");
+                }
+            }
+            else {
+                Logger.warn("Target "+target.id+" ("+target.name+") has "
+                            +"no protein family classification!");
+            }
+            rset.close();
+        }
+    }
+
     static TcrdTarget EMPTY = new TcrdTarget ();
 
     static class RegistrationWorker implements Callable<Integer> {
@@ -88,6 +168,7 @@ public class TcrdRegistry extends Controller {
         Connection con;
         PreparedStatement pstm, pstm2, pstm3, pstm4;
         Http.Context ctx;
+        ChemblResolver chembl;
         
         RegistrationWorker (Connection con, Http.Context ctx,
                             BlockingQueue<TcrdTarget> queue)
@@ -103,6 +184,7 @@ public class TcrdRegistry extends Controller {
                 ("select * from drugdb_activity where target_id = ?");
             pstm4 = con.prepareStatement
                 ("select * from generif where protein_id = ?");
+            chembl = new ChemblResolver ();
         }
 
         public Integer call () throws Exception {
@@ -163,7 +245,21 @@ public class TcrdRegistry extends Controller {
             Logger.debug("...retrieving GeneRIF links");
             pstm4.setLong(1, t.protein);
             addGeneRIF (target, pstm4);
-            
+
+            chembl.instrument(target);
+
+            Transaction tx = Ebean.beginTransaction();
+            try {
+                target.update();
+                tx.commit();
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't update target "+target.id, ex);
+            }
+            finally {
+                Ebean.endTransaction();
+            }
+
             // reindex this entity; we have to do this since
             // the target.update doesn't trigger the postUpdate
             // event.. need to figure exactly why.
@@ -477,18 +573,7 @@ public class TcrdRegistry extends Controller {
                 target.links.add(xref);
             }
             */
-            Transaction tx = Ebean.beginTransaction();
-            try {
-                target.update();
-                tx.commit();
-                Logger.debug("...."+count+" disease xref(s) added!");
-            }
-            catch (Exception ex) {
-                Logger.trace("Can't update target "+target.id, ex);
-            }
-            finally {
-                Ebean.endTransaction();
-            }
+            Logger.debug("...."+count+" disease xref(s) added!");           
         }
         finally {
             rs.close();
@@ -530,7 +615,6 @@ public class TcrdRegistry extends Controller {
             if (count > 0) {
                 Logger.debug("Updated target "+target.id+": "+target.name
                              +" with "+count+" ChEMBL references!");
-                target.update();
             }       
         }
         finally {
@@ -559,7 +643,6 @@ public class TcrdRegistry extends Controller {
             if (count > 0) {
                 Logger.debug("Updated target "+target.id+": "+target.name
                              +" with "+count+" TCRD Drug references!");
-                target.update();
             }
         }
         finally {
@@ -600,7 +683,6 @@ public class TcrdRegistry extends Controller {
             if (count > 0) {
                 Logger.debug("Updated target "+target.id+": "+target.name
                              +" with "+count+" GeneRIF references!");
-                target.update();
             }
         }
         finally {

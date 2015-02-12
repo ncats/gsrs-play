@@ -664,6 +664,16 @@ public class Migration extends Controller {
             else if ("sam".equalsIgnoreCase(firstname)
                      || "samuel".equalsIgnoreCase(firstname))
                 firstname = "(sam samuel)";
+            else if ("chris".equalsIgnoreCase(firstname)
+                     || "christopher".equalsIgnoreCase(firstname))
+                firstname = "(chris christopher)";
+            else if ("bill".equalsIgnoreCase(firstname)
+                     || "william".equalsIgnoreCase(firstname))
+                firstname = "(bill william)";
+            else if ("gene".equalsIgnoreCase(firstname)
+                     || "eugen".equalsIgnoreCase(firstname)
+                     || "eugene".equalsIgnoreCase(firstname))
+                firstname = "(gene eugen eugene)";
             else if ("henrike".equalsIgnoreCase(firstname))
                 lastname = "(veith nelson)";
             else if ("Wichterman".equalsIgnoreCase(lastname)

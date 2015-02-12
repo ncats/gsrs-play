@@ -28,6 +28,7 @@ public class Target extends EntityModel {
     public String name;
 
     @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String description;
 
     @JsonView(BeanViews.Full.class)

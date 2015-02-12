@@ -32,8 +32,10 @@ public class TextIndexerPlugin extends Plugin {
     }
 
     public void onStop () {
-        indexer.shutdown();
-        Logger.info("Plugin "+getClass().getName()+" stopped!");
+        if (indexer != null) {
+            indexer.shutdown();
+            Logger.info("Plugin "+getClass().getName()+" stopped!");
+        }
     }
 
     public boolean enabled () { return true; }

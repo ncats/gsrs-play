@@ -20,13 +20,13 @@
     @if(current <= 1) {
        <li class="disabled">
          <a href='@IDGApp.page(rows,current)' aria-label="Previous">
-           <span aria-hidden="true">&laquo;</span>
+	   <span aria-hidden="true" class="fa fa-angle-double-left"></span>   
          </a>
        </li>
     } else {
        <li>
             <a href='@IDGApp.page(rows, current-1)' aria-label="Previous">
-              <span aria-hidden="true">&laquo;</span>
+              <span aria-hidden="true" class="fa fa-angle-double-left"></span>
             </a>
        </li>
     }
@@ -48,13 +48,13 @@
      @if(current >= pages(pages.length-1)) {                  
          <li class="disabled">
            <a href='@IDGApp.page(rows,current)' aria-label="Next">
-             <span aria-hidden="true">&raquo;</span>
+             <span aria-hidden="true" class="fa fa-angle-double-right"></span>
            </a>
          </li>
      } else {
          <li>
            <a href='@IDGApp.page(rows,current+1)' aria-label="Next">
-             <span aria-hidden="true">&raquo;</span>
+             <span aria-hidden="true" class="fa fa-angle-double-right"></span>
            </a>
          </li>
      }

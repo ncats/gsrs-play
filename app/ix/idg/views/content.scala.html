@@ -35,6 +35,9 @@
 	<div class="panel panel-default">
 	  @content
 	</div>
+	@if(pages.length > 1) {
+	  @pagination(current, rows, total, pages)
+	}
       </div>
    </div>
 </div>

@@ -33,7 +33,7 @@
 <tr>
   <td>
   <ul class = "list-inline text-left">
-  <li><a href="@ix.publications.controllers.routes.ReachApp.publication(p.id)" class="pub-title">@p.title</a></li><br/>
+  <li><a href="@ix.publications.controllers.routes.ReachApp.publication(p.pmid)" class="pub-title">@p.title</a></li><br/>
   @for(a <- p.authors) {
 	    @authrow(a)
              }

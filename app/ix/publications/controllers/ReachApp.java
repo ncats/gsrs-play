@@ -42,6 +42,7 @@ public class ReachApp extends Controller {
     //2003-12-13T18:30:02Z
     static final DateFormat DATE_FORMAT = new SimpleDateFormat
         ("yyy-MM-dd'T'HH:mm:ss'Z'");
+    static final String TIMESTAMP = DATE_FORMAT.format(new java.util.Date ());
     
     public static final String[] PUBLICATION_FACETS = {
         "Program",
@@ -66,7 +67,7 @@ public class ReachApp extends Controller {
         public String id;
         public String updated;
         public String summary;
-        public String category;
+        public List<String> categories = new ArrayList<String>();
         RSS () {}
     }
         
@@ -158,8 +159,9 @@ public class ReachApp extends Controller {
 
     public static Result publication (long id) {
         try {
-            Publication p = PublicationFactory.getPub(id);
-            return ok (ix.publications.views.html.details.render((int) id, "publications",p));
+            //Publication p = PublicationFactory.getPub(id);
+            Publication p = PublicationFactory.byPMID(id);
+            return ok (ix.publications.views.html.details.render(p));
         }
         catch (Exception ex) {
             return internalServerError
@@ -619,10 +621,46 @@ public class ReachApp extends Controller {
                                     (500, "Unable to fullfil request"));
     }
 
+    public static RSS[] getPubRSS (String q, int count) {
+        SearchResult results = getSearchResult (Publication.class, q, count);
+        Facet[] facets = filter (results.getFacets(), PUBLICATION_FACETS);
+        
+        RSS[] feed = new RSS[Math.min(count, results.count())];
+        for (int i = 0; i < feed.length; ++i) {
+            Publication pub = (Publication)results.getMatches().get(i);
+            RSS rss = new RSS ();
+            rss.title = pub.title;
+            rss.link = Global.getHost()
+                +ix.publications.controllers
+                .routes.ReachApp.publication(pub.pmid);
+            rss.summary = pub.abstractText;
+            for (Facet f : facets) {
+                if ("Program".equals(f.getName()))
+                    for (FV v : f.getValues())
+                        rss.categories.add(v.getLabel());
+            }
+            rss.id = String.valueOf(pub.id);
+            rss.updated = TIMESTAMP;
+            feed[i] = rss;
+        }
+        return feed;
+    }
+
+    public static Result pubrss (String q, String facet, int count) {
+        // The parameter facet is only for decoration so that the it shows
+        // up in the reverse routing url. The actual query uses
+        // request().queryString() to retrieve the facet values
+        return ok (ix.publications.views.xml.rss.render
+                   ("NCATS Publication RSS Feed",
+                    Global.getHost()+ix.publications.controllers
+                    .routes.ReachApp.pubrss(q, facet, count).url(),
+                    getPubRSS (q, count)));
+    }
+    
     public static RSS[] getRSS (String key, int count) {
         return getRSS (key, null, count);
     }
-    
+
     public static RSS[] getRSS (String key, String kind, int count) {
         Map<String, Integer> counts = new HashMap<String, Integer>();   
         List<XRef> xrefs;
@@ -660,7 +698,7 @@ public class ReachApp extends Controller {
                 rss.title = pub.title;
                 rss.link = Global.getHost()
                     +ix.publications.controllers
-                    .routes.ReachApp.publication(pub.id);
+                    .routes.ReachApp.publication(pub.pmid);
                 rss.summary = pub.abstractText;
             }
             else if (objRef instanceof Project) {
@@ -671,7 +709,7 @@ public class ReachApp extends Controller {
                     .routes.ReachApp.project(proj.id);
                 rss.summary = proj.objective;
             }
-            rss.category = ref.kind;
+            rss.categories.add(ref.kind);
             rss.updated = DATE_FORMAT.format(ref.modified);
 
             for (Value v : ref.properties) {
@@ -695,7 +733,9 @@ public class ReachApp extends Controller {
     
     public static Result rss (String key, String kind, int count) {
         return ok (ix.publications.views.xml.rss.render
-                   (key, getRSS (key, kind, count)));
+                   ("NCATS RSS Feed", ix.publications.controllers
+                    .routes.ReachApp.rss(key, kind, count).url(),
+                    getRSS (key, kind, count)));
     }
 
     public static String[] getWebTags () {

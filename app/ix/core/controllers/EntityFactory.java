@@ -212,7 +212,7 @@ public class EntityFactory extends Controller {
         etag.path = request().path();
         // only include query parameters that fundamentally alters the
         // number of results
-        etag.sha1 = Util.sha1Request(request(), "filter");
+        etag.sha1 = Util.sha1(request(), "filter");
         etag.method = request().method();
         etag.filter = options.filter;
 

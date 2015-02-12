@@ -7,6 +7,7 @@ import javax.persistence.*;
 @Inheritance
 @DiscriminatorValue("PRI")
 public class Principal extends IxModel {
+    @Indexable(facet=true,name="Principal")
     public String username;
     public String email;
     public boolean admin = false;

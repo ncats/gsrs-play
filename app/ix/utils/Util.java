@@ -19,16 +19,25 @@ public class Util {
     public static String randomUserAgent () {
         return UserAgents[rand.nextInt(UserAgents.length)];
     }
+
+    public static String sha1 (Http.Request req) {
+        return sha1 (req, (String[])null);
+    }
     
-    public static String sha1Request (Http.Request req, String... params) {
+    public static String sha1 (Http.Request req, String... params) {
         String path = req.method()+"/"+req.path();
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
             md.update(path.getBytes("utf8"));
 
             Set<String> uparams = new TreeSet<String>();
-            for (String p : params) {
-                uparams.add(p);
+            if (params != null && params.length > 0) {
+                for (String p : params) {
+                    uparams.add(p);
+                }
+            }
+            else {
+                uparams.addAll(req.queryString().keySet());
             }
 
             Set<String> sorted = new TreeSet (req.queryString().keySet());

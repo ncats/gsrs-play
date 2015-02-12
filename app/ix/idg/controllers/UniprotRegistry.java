@@ -442,6 +442,9 @@ public class UniprotRegistry extends DefaultHandler {
             }
             else {
                 target.properties.add(new Text (commentType, text));
+                if ("function".equals(commentType)) {
+                    target.description = text;
+                }
             }
             commentType = null;
         }

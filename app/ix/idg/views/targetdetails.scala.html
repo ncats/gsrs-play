@@ -1,6 +1,7 @@
 
 @import ix.idg.models.Target
 @import ix.core.models.Value
+@import ix.core.models.Keyword
 @import ix.core.models.Publication
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
@@ -8,7 +9,7 @@
 @import ix.idg.controllers.UniprotRegistry
 @import ix.utils.Util
 
-@(target: Target, diseases: List[DiseaseRelevance])
+@(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
 @label(x: Value, title: String, label: String) = {
   @if(x.getValue().toString().length() > 50) {
@@ -26,10 +27,34 @@
   }
 }
 
+@diseaserow(dr: DiseaseRelevance) = {
+   @if(dr.zscore != null) {
+     <tr class="treegrid-@dr.disease.id">
+       <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
+       <td>@dr.zscore</td>
+       <td>@dr.conf</td>
+     </tr>
+
+     @for(i <- 0 until dr.lineage.size()) {
+       @defining(dr.lineage(i)) { x =>	    
+         <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
+            <td><a href="@ix.idg.controllers.routes.IDGApp.disease(x.disease.id)">@x.disease.name</a></td>
+            <td>@x.zscore</td>
+            <td>@x.conf</td>
+         </tr>
+       }
+     }
+   }
+}
+      
+
 @main(target.name, target.getClass().getName()) {
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
-    <li><a href="@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">Targets</a></li>
+    <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
+    @for(kw <- breadcrumb) {
+    <li><a href="@kw.href">@kw.term</a></li>
+    }
     <li class="active">@target.name</li>
 </ol>
 }{
@@ -47,6 +72,13 @@
         </tr>
         </table>
       </h1>
+      @if(target.description != null) {
+	<div class="panel panel-default">
+	  <div class="panel-body">
+	    <p>@target.description
+	  </div>
+	</div>
+      }
     </div>
     <div class="row">
       <!--
@@ -58,7 +90,7 @@
             <h3 class="panel-title">Synonyms</h3>
           </div>
           <div class="panel-body">
-            <table class="table table-striped">
+            <table class="table">
               <tr>
                 <td>Accession</td>
                 <td>
@@ -117,31 +149,33 @@
             <h3 class="panel-title">IDG Disease Relevance</h3>
           </div>
           <div class="panel-body">
-            <table class="tree table table-striped">
+            <table class="tree table table">
               <tr>
                 <th>Disease</th>
                 <th>Z-score</th>
                 <th>Confidence</th>
               </tr>
-              @for(dr <- diseases) {
-                @if(dr.zscore != null) {
-                <tr class="treegrid-@dr.disease.id">
-                  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(dr.disease.id)">@dr.disease.name</a></td>
-                  <td>@dr.zscore</td>
-                  <td>@dr.conf</td>
-                </tr>
-
-    	           @for(i <- 0 until dr.lineage.size()) {
- 		     @defining(dr.lineage(i)) { x =>	    
-   	               <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
-                         <td><a href="@ix.idg.controllers.routes.IDGApp.disease(x.disease.id)">@x.disease.name</a></td>
-                         <td>@x.zscore</td>
-                         <td>@x.conf</td>
-		       </tr>
-		     }
-		   }
-                  }
-		}
+	      @defining(request().getQueryString("view")) { view =>
+	        @view match {
+	          case "full" => {
+                    @for(dr <- diseases) {
+		      @diseaserow(dr)
+	            }
+		  }
+  		  case _ => {
+		    @for(i <- 0 until Math.min(10, diseases.size())) {
+		       @diseaserow(diseases(i))
+		    }
+		    @if(diseases.size() > 10) {
+		      <tr>
+		        <td><a href="@request().uri?view=full">More...</a></td>
+		        <td></td>
+		        <td></td>
+		      </tr>
+		    }
+		  }
+ 	        }
+	      }
             </table>
           </div>
         </div>
@@ -150,7 +184,7 @@
             <h3 class="panel-title">UniProt Disease Relevance</h3>
           </div>
           <div class="panel-body">
-            <table class="table table-striped">
+            <table class="table table">
               <tr>
                 <th>Disease</th>
                 <th>OMIM</th>

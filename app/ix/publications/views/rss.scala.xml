@@ -2,11 +2,11 @@
 @import ix.core.models.XRef
 @import ix.publications.controllers.ReachApp
 
-@(key: String, entries: Array[ReachApp.RSS])
+@(title: String, link: String, entries: Array[ReachApp.RSS])
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>NCATS Publications RSS Feed</title>
-  <link href="@{Global.getHost() + ix.publications.controllers.routes.ReachApp.rss(key)}"/>
+  <title>@title</title>
+  <link href="@link"/>
   <updated>@{new java.util.Date()}</updated>
   <author>
     <name></name>
@@ -19,7 +19,9 @@
        <id>@e.id</id>
        <updated>@e.updated</updated>
        <summary>@e.summary</summary>
-       <category term="@e.category"/>
+       @for(x <- e.categories) {
+       <category term="@x"/>
+       }
      </entry>
   }
 </feed>

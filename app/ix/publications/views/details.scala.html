@@ -1,15 +1,15 @@
-@(count: Integer, message: String, pub: ix.core.models.Publication)
+@(pub: ix.core.models.Publication)
 @import helper._ 
 
-@main("Publications", "NCATS Publications") {
+@main(pub.title, "NCATS Publications") {
 
 <div class="row">
-		<div class="col-md-1">
-		<a href="@ix.publications.controllers.routes.ReachApp.publications()"><span class="glyphicon glyphicon-home house"></span></a>
-	</div>
-	<div class="col-md-10">
-		<h1>@pub.title</h1>
-	</div>
+  <div class="col-md-1">
+    <a href="@ix.publications.controllers.routes.ReachApp.publications()"><span class="glyphicon glyphicon-home house"></span></a>
+  </div>
+  <div class="col-md-10">
+    <h1>@pub.title</h1>
+  </div>
 </div>
 
 <div class="row">

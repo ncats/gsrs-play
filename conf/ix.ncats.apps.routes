@@ -10,6 +10,7 @@ GET	/search		ix.publications.controllers.ReachApp.search(kind: String)
 GET	/publications	ix.publications.controllers.ReachApp.publications(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/publications/:id	ix.publications.controllers.ReachApp.publication(id: Long)
 GET	/rss		ix.publications.controllers.ReachApp.rss(id: String, kind: String ?= null, count: Int ?= 5)
+GET	/pubrss		ix.publications.controllers.ReachApp.pubrss(q: String ?= null, facet: String ?= null, count: Int ?= 5)
 GET /mock/trnd.php	ix.publications.controllers.ReachApp.trnd
 GET /mock/holman.php	ix.publications.controllers.ReachApp.holman
 GET /mock/projectexample.php	ix.publications.controllers.ReachApp.projectexample
