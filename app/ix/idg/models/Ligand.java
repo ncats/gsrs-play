@@ -24,6 +24,10 @@ import ix.utils.Global;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * TODO: this class should eventually be obsoleted in favor of
+ * GInAS' substance!
+ */
 @Entity
 @Table(name="ix_idg_ligand")
 public class Ligand extends EntityModel {
@@ -32,6 +36,7 @@ public class Ligand extends EntityModel {
     public String name;
 
     @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String description;
 
     @JsonView(BeanViews.Full.class)

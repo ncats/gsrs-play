@@ -5,3 +5,4 @@
 2001:ix.core.plugins.IxContext
 2002:ix.core.plugins.TextIndexerPlugin
 2003:ix.core.plugins.EutilsPlugin
+3000:ix.ginas.plugins.StructureProcessorPlugin

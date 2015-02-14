@@ -1,0 +1,34 @@
+@ix.core.views.html.main("Structure Loader") {
+      <div class="site-wrapper">
+        <div class="site-wrapper-inner">
+          <div class="cover-container">
+            <div class="inner cover">
+              <h1 class="cover-heading">Structure Loader</h1>
+              <form class="form-horizontal" role="form" method="POST"
+		    enctype="multipart/form-data"
+                    action="@ix.ginas.controllers.routes.StructureFactory.load()">
+              <div class="form-group">
+                <label for="load-do-obo" class="col-sm-2 control-label">File</label>
+                <div class="col-sm-10">
+                  <input type="file" class="form-control" name="load-file" 
+                    id="load-do-obo">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="max-rows" class="col-sm-2 control-label">Max Strucs</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" name="max-strucs" 
+                    id="max-strucs" placeholder="Enter maximum structures to load (default load all)">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="submit" class="btn btn-default">Load</button>
+                </div>
+              </div>
+            </form>
+            </div>
+          </div>
+        </div>
+      </div>
+}

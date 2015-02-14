@@ -8,22 +8,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 
 import play.db.ebean.Model;
+import ix.core.models.IxModel;
 
 @MappedSuperclass
-public class GinasModel extends Model {
+public class GinasModel extends IxModel {
     @Id
     public UUID uuid;
 
-    public final Date created = new Date ();
-    public Date modified;
-    public boolean deprecated;
-
     public GinasModel () {
-    }
-
-    @PrePersist
-    @PreUpdate
-    public void modified () {
-        this.modified = new Date ();
     }
 }

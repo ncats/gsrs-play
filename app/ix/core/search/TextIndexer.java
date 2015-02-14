@@ -1115,20 +1115,40 @@ public class TextIndexer {
         }
         else if (value instanceof Float) {
             //fields.add(new FloatDocValuesField (full, (Float)value));
-            fields.add(new FloatField (name, (Float)value, store));
+            Float fval = (Float)value;
+            fields.add(new FloatField (name, fval, store));
             if (!full.equals(name))
-                fields.add(new FloatField (full, (Float)value, NO));
+                fields.add(new FloatField (full, fval, NO));
             if (indexable.sortable())
                 sorters.put(full, SortField.Type.FLOAT);
+            
+            FacetField ff = getRangeFacet 
+                ("".equals(indexable.name()) ? name : indexable.name(),
+                 indexable.dranges(), fval, indexable.format());
+            if (ff != null) {
+                facetsConfig.setMultiValued(ff.name(), true);
+                facetsConfig.setRequireDimCount(ff.name(), true);
+                fields.add(ff);
+            }
             asText = false;
         }
         else if (value instanceof Double) {
             //fields.add(new DoubleDocValuesField (full, (Double)value));
-            fields.add(new DoubleField (name, (Double)value, store));
+            Double dval = (Double)value;
+            fields.add(new DoubleField (name, dval, store));
             if (!full.equals(name))
-                fields.add(new DoubleField (full, (Double)value, NO));
+                fields.add(new DoubleField (full, dval, NO));
             if (indexable.sortable())
                 sorters.put(full, SortField.Type.DOUBLE);
+
+            FacetField ff = getRangeFacet 
+                ("".equals(indexable.name()) ? name : indexable.name(),
+                 indexable.dranges(), dval, indexable.format());
+            if (ff != null) {
+                facetsConfig.setMultiValued(ff.name(), true);
+                facetsConfig.setRequireDimCount(ff.name(), true);
+                fields.add(ff);
+            }
             asText = false;
         }
         else if (value instanceof java.util.Date) {
@@ -1204,6 +1224,29 @@ public class TextIndexer {
         return new FacetField (name, ranges[i-1]+":"+ranges[i]);
     }
 
+    static FacetField getRangeFacet
+        (String name, double[] ranges, double value, String format) {
+        if (ranges.length == 0) 
+            return null;
+
+        if (value < ranges[0]) {
+            return new FacetField (name, "<"+String.format(format, ranges[0]));
+        }
+
+        int i = 1;
+        for (; i < ranges.length; ++i) {
+            if (value < ranges[i])
+                break;
+        }
+
+        if (i == ranges.length) {
+            return new FacetField (name, ">"+String.format(format,ranges[i-1]));
+        }
+
+        return new FacetField (name, String.format(format, ranges[i-1])
+                               +":"+String.format(format, ranges[i]));
+    }
+    
     static void setFieldType (FieldType ftype) {
         ftype.setIndexed(true);
         ftype.setTokenized(true);

@@ -16,9 +16,11 @@ import play.cache.Cache;
 import play.libs.ws.WS;
 import play.mvc.Controller;
 import play.mvc.Result;
+import play.mvc.Call;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -239,8 +241,10 @@ public class IDGApp extends Controller {
         for (Value v : t.properties) {
             if (v.label.startsWith(TcrdRegistry.ChEMBL_PROTEIN_CLASS)) {
                 Keyword kw = (Keyword)v;
-                kw.href = ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)
-                    +"&facet="+kw.label+"/"+kw.term;
+                String url = ix.idg.controllers
+                    .routes.IDGApp.targets(null, 30, 1).url();
+                kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
+                    +"facet="+kw.label+"/"+kw.term;
                 breadcrumb.add(kw);
             }
         }
@@ -259,7 +263,17 @@ public class IDGApp extends Controller {
         return Util.sha1(facet.getName(),
                          facet.getValues().get(value).getLabel());
     }
-    
+
+    public static String decode (String s) {
+        try {
+            return URLDecoder.decode(s, "utf8");
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't encode string "+s, ex);
+        }
+        return null;
+    }
+
     public static String encode (TextIndexer.Facet facet) {
         try {
             return URLEncoder.encode(facet.getName(), "utf8");
@@ -294,9 +308,9 @@ public class IDGApp extends Controller {
             WS.url(url).getQueryParameters();
         
         // remove these
-        params.remove("rows");
+        //params.remove("rows");
         params.remove("page");
-        StringBuilder uri = new StringBuilder ("?rows="+rows+"&page="+page);
+        StringBuilder uri = new StringBuilder ("?page="+page);
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             for (String v : me.getValue())
                 uri.append("&"+me.getKey()+"="+v);
@@ -332,6 +346,59 @@ public class IDGApp extends Controller {
             }
         }
         //Logger.debug(">> "+uri);
+        return uri.substring(0, uri.length()-1);
+    }
+
+    /**
+     * more specific version that only remove parameters based on 
+     * given facets
+     */
+    public static String url (TextIndexer.Facet[] facets, String... others) {
+        String url = "http"+ (request().secure() ? "s" : "") + "://"
+            +request().host()
+            +request().uri();
+        if (url.charAt(url.length()-1) == '?') {
+            url = url.substring(0, url.length()-1);
+        }
+        //Logger.debug(">> uri="+request().uri());
+
+        StringBuilder uri = new StringBuilder ("?");
+        Map<String, Collection<String>> params =
+            WS.url(url).getQueryParameters();
+        for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
+            if (me.getKey().equals("facet")) {
+                for (String v : me.getValue())
+                    if (v != null) {
+                        String s = decode (v);
+                        boolean matched = false;
+                        for (TextIndexer.Facet f : facets) {
+                            if (s.startsWith(f.getName())) {
+                                matched = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!matched)
+                            uri.append(me.getKey()+"="+v+"&");
+                    }
+            }
+            else {
+                boolean matched = false;
+                for (String s : others) {
+                    if (s.equals(me.getKey())) {
+                        matched = true;
+                        break;
+                    }
+                }
+                
+                if (!matched)
+                    for (String v : me.getValue())
+                        if (v != null)
+                            uri.append(me.getKey()+"="+v+"&");
+            }
+        }
+        
+        Logger.debug(">> "+uri);
         return uri.substring(0, uri.length()-1);
     }
 
@@ -545,7 +612,7 @@ public class IDGApp extends Controller {
             TextIndexer.Facet[] facets = Cache.getOrElse
                 (cache, new Callable<TextIndexer.Facet[]>() {
                         public TextIndexer.Facet[] call () {
-                            return filter (getFacets (Target.class, 20),
+                            return filter (getFacets (Target.class, FACET_DIM),
                                            TARGET_FACETS);
                         }
                     }, CACHE_TIMEOUT);
@@ -566,7 +633,7 @@ public class IDGApp extends Controller {
             String q = request().getQueryString("q");
             if (kind != null && !"".equals(kind)) {
                 if (Target.class.isAssignableFrom(Class.forName(kind)))
-                    return redirect (routes.IDGApp.targets(q, 20, 1));
+                    return redirect (routes.IDGApp.targets(q, 30, 1));
                 if (Disease.class.isAssignableFrom(Class.forName(kind)))
                     return redirect (routes.IDGApp.diseases(q, 10, 1));
             }
@@ -799,7 +866,7 @@ public class IDGApp extends Controller {
                 (Disease.class.getName()+".facets",
                  new Callable<TextIndexer.Facet[]>() {
                      public TextIndexer.Facet[] call() {
-                         return filter(getFacets(Disease.class, 20),
+                         return filter(getFacets(Disease.class, 30),
                                        DISEASE_FACETS);
                      }
                  }, CACHE_TIMEOUT);

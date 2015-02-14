@@ -17,6 +17,6 @@ import ix.ginas.models.*;
 
 public class GinasFactory extends Controller {
     public static Result index () {
-	return ok ("Welcome to GInAS!");
+        return ok ("Welcome to GInAS!");
     }
 }

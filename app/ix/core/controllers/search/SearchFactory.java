@@ -31,14 +31,9 @@ import ix.core.controllers.EntityFactory;
 public class SearchFactory extends EntityFactory {
     static final Model.Finder<Long, ETag> etagDb = 
         new Model.Finder(Long.class, ETag.class);
-    static TextIndexerPlugin plugin;
 
-    static synchronized TextIndexer getIndexer () {
-        if (plugin == null) {
-            plugin = Play.application().plugin(TextIndexerPlugin.class);
-        }
-        return plugin != null ? plugin.getIndexer() : null;
-    }
+    static TextIndexer indexer =
+        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
     public static SearchOptions parseSearchOptions
         (SearchOptions options, Map<String, String[]> queryParams) {
@@ -132,7 +127,7 @@ public class SearchFactory extends EntityFactory {
             }
         }
         
-        return getIndexer().search(options, q);
+        return indexer.search(options, q);
     }
         
     public static Result search (String q, int top, int skip, int fdim) {
@@ -206,14 +201,14 @@ public class SearchFactory extends EntityFactory {
             ObjectMapper mapper = new ObjectMapper ();
             if (field != null) {
                 List<TextIndexer.SuggestResult> results = 
-                    getIndexer().suggest(field, q, max);
+                    indexer.suggest(field, q, max);
                 return ok (mapper.valueToTree(results));
             }
 
             ObjectNode node = mapper.createObjectNode();
-            for (String f : getIndexer().getSuggestFields()) {
+            for (String f : indexer.getSuggestFields()) {
                 List<TextIndexer.SuggestResult> results = 
-                    getIndexer().suggest(f, q, max);
+                    indexer.suggest(f, q, max);
                 if (!results.isEmpty())
                     node.put(f, mapper.valueToTree(results));
             }
@@ -227,6 +222,6 @@ public class SearchFactory extends EntityFactory {
 
     public static Result suggestFields () {
         ObjectMapper mapper = new ObjectMapper ();
-        return ok (mapper.valueToTree(getIndexer().getSuggestFields()));
+        return ok (mapper.valueToTree(indexer.getSuggestFields()));
     }
 }

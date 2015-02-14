@@ -13,7 +13,9 @@ libraryDependencies ++= Seq(
   javaJdbc,
   javaEbean,
   cache,
-  "mysql" % "mysql-connector-java" % "5.1.31"
+  "com.typesafe.akka" % "akka-cluster_2.11" % "2.3.4"
+    //,"com.typesafe.akka" % "akka-docs_2.11" % "2.3.9"
+    ,"mysql" % "mysql-connector-java" % "5.1.31"
     ,"commons-codec" % "commons-codec" % "1.3"
     ,"org.apache.lucene" % "lucene-core" % "4.10.0"
     ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"
@@ -40,3 +42,12 @@ libraryDependencies ++= Seq(
 //  ,"com.wordnik" %% "swagger-play2" % "1.3.10" exclude("org.reflections", "reflections")
 )     
 
+scalacOptions ++= Seq(
+  "-unchecked",
+  "-deprecation",
+  "-Xlint",
+  "-Ywarn-dead-code",
+  "-language:_",
+  "-target:jvm-1.7",
+  "-encoding", "UTF-8"
+)

@@ -15,4 +15,6 @@ public @interface Indexable {
     // if empty, use the instance variable name
     String name () default "";
     long[] ranges () default {};
+    double[] dranges () default {};
+    String format () default "%1$.2f"; // how to format the value?
 }
