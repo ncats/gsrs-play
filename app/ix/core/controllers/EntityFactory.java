@@ -125,7 +125,7 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static <T> List<T> all (Model.Finder<Long, T> finder) {
+    protected static <K,T> List<T> all (Model.Finder<K, T> finder) {
         return finder.all();
     }
 
@@ -156,8 +156,8 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static <T> List<T> filter (FetchOptions options,
-                                         Model.Finder<Long, T> finder) {
+    protected static <K,T> List<T> filter (FetchOptions options,
+                                           Model.Finder<K, T> finder) {
 
         Logger.debug(request().uri()+": "+options);
         Query<T> query = finder.query();
@@ -188,16 +188,23 @@ public class EntityFactory extends Controller {
             query = query.orderBy("id asc");
         }
 
-        List<T> results = query
-            .setFirstRow(options.skip)
-            .setMaxRows(options.top)
-            .findList();
+        try {
+            List<T> results = query
+                .setFirstRow(options.skip)
+                .setMaxRows(options.top)
+                .findList();
+            //Logger.debug(" ==> "+results.size());
 
-        return results;
+            return results;
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException ("Can't execute query "+ex.getMessage());
+        }
     }
 
-    protected static <T> Result page (int top, int skip, String filter,
-                                      final Model.Finder<Long, T> finder) {
+    protected static <K,T> Result page (int top, int skip, String filter,
+                                        final Model.Finder<K, T> finder) {
 
         //if (select != null) finder.select(select);
         final FetchOptions options = new FetchOptions (top, skip, filter);
@@ -312,12 +319,12 @@ public class EntityFactory extends Controller {
         return new EntityMapper (views.toArray(new Class[0]));
     }
 
-    protected static <T> T getEntity (Long id, Model.Finder<Long, T> finder) {
+    protected static <K,T> T getEntity (K id, Model.Finder<K, T> finder) {
         return finder.byId(id);
     }
     
-    protected static <T> List<T> filter (String filter, 
-                                         Model.Finder<Long, T> finder) {
+    protected static <K,T> List<T> filter (String filter, 
+                                         Model.Finder<K, T> finder) {
         return finder.where(filter).findList();
     }
 
@@ -354,8 +361,8 @@ public class EntityFactory extends Controller {
         return results;
     }
 
-    protected static <T> List<T> filter (JsonNode json, int top, int skip,
-                                         Model.Finder<Long, T> finder) {
+    protected static <K,T> List<T> filter (JsonNode json, int top, int skip,
+                                           Model.Finder<K, T> finder) {
         if (json == null)
             throw new IllegalArgumentException ("Json is null");
 
@@ -385,19 +392,12 @@ public class EntityFactory extends Controller {
         return results;
     }
 
-    protected static <T> Result rss (int top, int skip, final String filter,
-                                     final Model.Finder<Long, T> finder) {
-        response().setContentType("application/rss+xml");
-        List<T> results = filter (new FetchOptions (top, skip, filter), finder);
-        return ok("FIX ME!");
-    }
-
-    protected static <T> Result get (Long id, Model.Finder<Long, T> finder) {
+    protected static <K,T> Result get (K id, Model.Finder<K, T> finder) {
         return get (id, null, finder);
     }
 
-    protected static <T> Result get (Long id, String expand, 
-                                     Model.Finder<Long, T> finder) {
+    protected static <K,T> Result get (K id, String expand, 
+                                       Model.Finder<K, T> finder) {
         ObjectMapper mapper = getEntityMapper ();
         if (expand != null && !"".equals(expand)) {
             Query<T> query = finder.query();
@@ -426,7 +426,7 @@ public class EntityFactory extends Controller {
         return notFound ("Bad request: "+request().uri());
     }
 
-    protected static <T> Result count (Model.Finder<Long, T> finder) {
+    protected static <K,T> Result count (Model.Finder<K, T> finder) {
         try {
             return ok (String.valueOf(getCount (finder)));
         }
@@ -436,14 +436,14 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static <T> Integer getCount (Model.Finder<Long, T> finder) 
+    protected static <K,T> Integer getCount (Model.Finder<K, T> finder) 
         throws InterruptedException, ExecutionException {
         FutureRowCount<T> count = finder.findFutureRowCount();
         return count.get();
     }
 
-    protected static <T> Result field (Long id, String field, 
-                                       Model.Finder<Long, T> finder) {
+    protected static <K,T> Result field (K id, String field, 
+                                         Model.Finder<K, T> finder) {
         
         T inst = finder.byId(id);
             //query.setId(id).findUnique();
@@ -610,9 +610,8 @@ public class EntityFactory extends Controller {
     }
 
     @Transactional
-    protected static <T extends Model> 
-                                Result create (Class<T> type, 
-                                               Model.Finder<Long, T> finder) {
+    protected static <K, T extends Model> 
+        Result create (Class<T> type, Model.Finder<K, T> finder) {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest ("Only POST is accepted!");
         }
@@ -637,9 +636,9 @@ public class EntityFactory extends Controller {
         }
     }
 
-    protected static <T extends Model> 
-                                Result delete (Long id, 
-                                               Model.Finder<Long, T> finder) {
+    protected static <K,T extends Model> 
+                                Result delete (K id, 
+                                               Model.Finder<K, T> finder) {
         T inst = finder.ref(id);
         if (inst != null) {
             ObjectMapper mapper = getEntityMapper ();

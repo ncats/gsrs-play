@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,7 +32,12 @@ import akka.event.LoggingAdapter;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
+import chemaxon.formats.MolImporter;
+import chemaxon.struc.Molecule;
+
 import ix.core.plugins.IxContext;
+import ix.core.models.Payload;
+import ix.core.controllers.PayloadFactory;
 import ix.ginas.chem.*;
 import ix.ginas.models.*;
 
@@ -39,58 +45,92 @@ public class StructureProcessorPlugin extends Plugin {
     private final Application app;
     private IxContext ctx;
     private ActorSystem system;
-    private ActorRef procRef;
+    private ActorRef processor;
     private Inbox inbox;
-    
-    public static class Payload implements Serializable {
+
+    public static class PayloadProcessor {
+        public final UUID id;
+        public PayloadProcessor (Payload payload) {
+            this.id = payload.id;
+        }
+        public PayloadProcessor (UUID id) {
+            this.id = id;
+        }
     }
 
-    public static class Status implements Serializable {
-        final String status;
-        public Status (String status) {
-            this.status = status;
+    public static class PayloadStatus implements Serializable {
+        public final Long id;
+        public PayloadStatus (Long id) {
+            this.id = id;
         }
+    }
 
-        public String status () { return status; }
-        public String toString () { return status; }
+    public static class Reporter extends UntypedActor {
+        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+        
+        public void onReceive (Object mesg) {
+            if (mesg instanceof PayloadStatus) {
+                PayloadStatus status = (PayloadStatus)mesg;
+            }
+            else {
+                unhandled (mesg);
+            }
+        }
     }
 
     public static class Processor extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-        
+
         public void onReceive (Object mesg) {
-            log.info("processor: "+ mesg+"; now I'm sleeping...");
-            
-            try {
-                Thread.sleep(5000);
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            sender().tell(new Status (mesg+" ok"), self ());
-        }
+            if (mesg instanceof PayloadProcessor) {
+                PayloadProcessor payload = (PayloadProcessor)mesg;
+                log.info("Received payload "+payload.id);
 
-        @Override
-        public void preStart () {
-            //log.info("preStart()");
-        }
-
-        @Override
-        public void postStop () {
-            //log.info("postStop()");
+                // now spawn child processor to proces the payload stream
+                ActorRef children = context().actorOf
+                    (Props.create(Processor.class).withRouter
+                     (new FromConfig().withFallback
+                      (new SmallestMailboxRouter (2))), payload.id.toString());
+                try {
+                    int count = process (children, payload);
+                    log.info("pushed "+count+" molecules out for processing!");
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                //sender().tell(new Status (mesg+" ok"), self ());
+            }
+            else if (mesg instanceof Molecule) {
+                Molecule mol = (Molecule)mesg;
+                log.info("processing "+mol.getName());
+                Structure struc = StructureProcessor.instrument(mol);
+                try {
+                    struc.save();
+                }
+                catch (Throwable t) {
+                    t.printStackTrace();
+                }
+            }
+            else {
+                unhandled (mesg);
+            }
         }
     }
 
     public static class ProcessorManager extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);    
         ActorRef router;
+        ActorRef reporter;
         
         public void onReceive (Object mesg) {
-            if (mesg instanceof Status) {
+            if (mesg instanceof PayloadStatus) {
                 log.info(sender()+" => "+mesg);
             }
-            else {
+            else if (mesg instanceof PayloadProcessor) {
                 router.tell(mesg, self ());
+            }
+            else {
+                unhandled (mesg);
             }
         }
 
@@ -99,13 +139,18 @@ public class StructureProcessorPlugin extends Plugin {
             RouterConfig config = new SmallestMailboxRouter (2);
             router = context().actorOf
                 (Props.create(Processor.class).withRouter
-                 (new FromConfig ().withFallback(config)), "router");
+                 (new FromConfig().withFallback(config)), "router");
+            reporter = context().actorOf
+                (Props.create(Reporter.class).withRouter
+                 (new FromConfig().withFallback(config)), "reporter");
         }
 
         @Override
         public void postStop () {
             if (router != null)
                 context().stop(router);
+            if (reporter != null)
+                context().stop(reporter);
         }
     }
 
@@ -122,19 +167,43 @@ public class StructureProcessorPlugin extends Plugin {
         system = ActorSystem.create("StructureProcessor");
         Logger.info("Plugin "+getClass().getName()
                     +" initialized; Akka version "+system.Version());
-        procRef = system.actorOf
+        processor = system.actorOf
             (Props.create(ProcessorManager.class), "processor");
         inbox = Inbox.create(system);
     }
 
     public void onStop () {
-        system.stop(procRef);
-        system.shutdown();
+        if (system != null)
+            system.shutdown();
         Logger.info("Plugin "+getClass().getName()+" stopped!");
     }
 
     public boolean enabled () { return true; }
-    public void process (String mesg) {
-        inbox.send(procRef, mesg);
+    public void submit (Payload payload) {
+        // first see if this payload has already processed..
+        inbox.send(processor, new PayloadProcessor (payload));
+    }
+    public void submit (UUID payload) {
+        inbox.send(processor, new PayloadProcessor (payload));
+    }
+
+    static int process (ActorRef proc, PayloadProcessor pp) throws Exception {
+        InputStream is = PayloadFactory.getStream(pp.id);
+        if (is == null)
+            throw new IllegalArgumentException
+                ("Unkown payload "+pp.id+" specified!");
+        int count = -1; 
+        try {
+            MolImporter mi = new MolImporter (is);
+            count = 0;
+            for (Molecule m; (m = mi.read()) != null; ++count) {
+                proc.tell(m, proc);
+            }
+            mi.close();
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't processing payload "+pp.id, ex);
+        }
+        return count;
     }
 }

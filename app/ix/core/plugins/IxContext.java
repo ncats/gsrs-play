@@ -10,15 +10,28 @@ import play.Application;
 import play.db.DB;
 
 public class IxContext extends Plugin {
-    public static final String PROPS_NS = "ix";
-    public static final String PROPS_HOME = PROPS_NS+".home";
-    public static final String PROPS_DEBUG = PROPS_NS+".debug";
-    public static final String PROPS_CACHE = PROPS_NS+".cache.base";
-    public static final String PROPS_CACHE_TIME = PROPS_NS+".cache.time";
+    static final String IX_HOME = "ix.home";
+    static final String IX_DEBUG = "ix.debug";
+    static final String IX_CACHE = "ix.cache";
+    static final String IX_CACHE_BASE = IX_CACHE+".base";
+    static final String IX_CACHE_TIME = IX_CACHE+".time";
+    static final String IX_TEXT = "ix.text";
+    static final String IX_TEXT_BASE = IX_TEXT+".base";
+    static final String IX_H2 = "ix.h2";
+    static final String IX_H2_BASE = IX_H2+".base";
+    static final String IX_STORAGE = "ix.storage";
+    static final String IX_STORAGE_BASE = IX_STORAGE+".base";
+    static final String IX_PAYLOAD = "ix.payload";
+    static final String IX_PAYLOAD_BASE = IX_PAYLOAD+".base";
+    
 
     private final Application app;
-    private File home = new File (".");
-    private File cache;
+    public File home = new File (".");
+    public File cache;
+    public File text;
+    public File h2;
+    public File payload;
+    
     private int debug;
     private int cacheTime;
     private String context;
@@ -30,7 +43,7 @@ public class IxContext extends Plugin {
     }
 
     private void init () throws Exception {
-        String h = app.configuration().getString(PROPS_HOME);
+        String h = app.configuration().getString(IX_HOME);
         if (h != null) {
             home = new File (h);
             if (!home.exists())
@@ -39,27 +52,21 @@ public class IxContext extends Plugin {
 
         if (!home.exists())
             throw new IllegalArgumentException
-                (PROPS_HOME+" \""+h+"\" is not accessible!");
-        Logger.info("## "+PROPS_HOME+": \""+home.getCanonicalPath()+"\"");
+                (IX_HOME+" \""+h+"\" is not accessible!");
+        Logger.info("## "+IX_HOME+": \""+home.getCanonicalPath()+"\"");
+
+        cache = getFile (IX_CACHE_BASE, "cache");
+        cacheTime = app.configuration().getInt(IX_CACHE_TIME, 60);
+        Logger.info("## "+IX_CACHE_TIME+": "+cacheTime+"s");
+
+        text = getFile (IX_TEXT_BASE, "text");
+        h2 = getFile (IX_H2_BASE, "h2");
+        payload = getFile (IX_PAYLOAD_BASE, "payload");
         
-        h = app.configuration().getString(PROPS_CACHE);
-        if (h != null) {
-            cache = new File (h);
-        }
-        else {
-            cache = new File (home, "cache");
-            Logger.warn("** No cache property "+PROPS_CACHE+" defined!");
-        }
-        if (!cache.exists())
-            cache.mkdirs();
-        Logger.info("## "+PROPS_CACHE+": \""+cache.getCanonicalPath()+"\"");
-        cacheTime = app.configuration().getInt(PROPS_CACHE_TIME, 60);
-        Logger.info("## "+PROPS_CACHE_TIME+": "+cacheTime+"s");
-        
-        Integer level = app.configuration().getInt(PROPS_DEBUG);
+        Integer level = app.configuration().getInt(IX_DEBUG);
         if (level != null)
             this.debug = level;
-        Logger.info("## "+PROPS_DEBUG+": "+debug); 
+        Logger.info("## "+IX_DEBUG+": "+debug); 
 
         DatabaseMetaData meta = DB.getConnection().getMetaData();
         Logger.info("## Database vendor: "+meta.getDatabaseProductName()
@@ -98,6 +105,20 @@ public class IxContext extends Plugin {
                     +((host != null ? host : "") + context+api));
     }
 
+    File getFile (String var, String def) throws IOException {
+        String name = app.configuration().getString(var);
+        File f = null;
+        if (name != null) {
+            f = new File (name);
+        }
+        else {
+            f = new File (home, def);
+        }
+        f.mkdirs();
+        Logger.info("## "+var+": \""+f.getCanonicalPath()+"\"");
+        return f;
+    }
+
     public void onStart () {
         Logger.info("Loading plugin "+getClass().getName()+"...");        
         try {
@@ -113,8 +134,13 @@ public class IxContext extends Plugin {
     }
 
     public boolean enabled () { return true; }
+    
     public File home () { return home; }
     public File cache () { return cache; }
+    public File text () { return text; }
+    public File h2 () { return h2; }
+    public File payload () { return payload; }
+    
     public int cacheTime () { return cacheTime; }
     public boolean debug (int level) { return debug >= level; }
     public String context () { return context; }

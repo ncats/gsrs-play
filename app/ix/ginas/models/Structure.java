@@ -93,30 +93,19 @@ public class Structure extends GinasModel {
     public Double mwt; // molecular weight
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JsonView(BeanViews.Full.class)
-    @JoinTable(name="ix_idg_structure_component")
-    public List<XRef> components = new ArrayList<XRef>();
-    
-    @ManyToMany(cascade=CascadeType.ALL)
+    @JsonView(BeanViews.Full.class)    
     @JoinTable(name="ix_ginas_structure_property")
     public List<Value> properties = new ArrayList<Value>();
 
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JsonView(BeanViews.Full.class)
+    @JoinTable(name="ix_idg_structure_link")
+    public List<XRef> links = new ArrayList<XRef>();
+    
     @Transient
     private ObjectMapper mapper = new ObjectMapper ();
     
     public Structure () {}
-
-    @JsonView(BeanViews.Compact.class)
-    @JsonProperty("_components")
-    public JsonNode getJsonComponents () {
-        ObjectNode node = null;
-        if (!properties.isEmpty()) {
-            node = mapper.createObjectNode();
-            node.put("count", components.size());
-            node.put("href", Global.getRef(getClass (), id)+"/components");
-        }
-        return node;
-    }
 
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_properties")
@@ -126,6 +115,18 @@ public class Structure extends GinasModel {
             node = mapper.createObjectNode();
             node.put("count", properties.size());
             node.put("href", Global.getRef(getClass (), id)+"/properties");
+        }
+        return node;
+    }
+
+    @JsonView(BeanViews.Compact.class)
+    @JsonProperty("_links")
+    public JsonNode getJsonLinks () {
+        ObjectNode node = null;
+        if (!links.isEmpty()) {
+            node = mapper.createObjectNode();
+            node.put("count", links.size());
+            node.put("href", Global.getRef(getClass (), id)+"/links");
         }
         return node;
     }

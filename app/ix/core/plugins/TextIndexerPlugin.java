@@ -24,7 +24,7 @@ public class TextIndexerPlugin extends Plugin {
             throw new IllegalStateException
                 ("IxContext plugin is not loaded!");
         try {
-            indexer = TextIndexer.getInstance(ctx.home());
+            indexer = TextIndexer.getInstance(ctx.text());
         }
         catch (IOException ex) {
             Logger.trace("Can't initialize text indexer", ex);

@@ -1,5 +1,6 @@
 package ix.core.models;
 
+import java.util.Date;
 import play.db.ebean.*;
 import javax.persistence.*;
 
@@ -7,11 +8,13 @@ import javax.persistence.*;
 @Table(name="ix_core_processingstatus")
 public class ProcessingStatus extends Model {
     public enum Status {
-        COMPLETE, RUNNING, FAILED
+        COMPLETE, RUNNING, FAILED, PENDING, STOPPED
     }
 
     @Id
     public Long id;
+    public final Date created = new Date ();
+    public Date modified;
 
     /**
      * job status
@@ -21,7 +24,8 @@ public class ProcessingStatus extends Model {
     /**
      * detailed status message
      */
-    @Column(length=4000)
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String message;
 
     /**
@@ -31,4 +35,10 @@ public class ProcessingStatus extends Model {
     public Payload payload; 
 
     public ProcessingStatus () {}
+
+    @PrePersist
+    @PreUpdate
+    public void modified () {
+        this.modified = new Date ();
+    }
 }

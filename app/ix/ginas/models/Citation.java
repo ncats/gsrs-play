@@ -12,7 +12,6 @@ import ix.core.models.Value;
 public class Citation extends GinasModel {
     public String citation;
     public String docType;
-    public boolean publicDomain;
     public Date documentDate;
     
     @ManyToMany(cascade=CascadeType.ALL)
@@ -21,6 +20,6 @@ public class Citation extends GinasModel {
 
     public Citation () {}
     public Citation (String name) {
-	citation = name;
+        citation = name;
     }
 }

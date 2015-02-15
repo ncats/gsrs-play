@@ -18,11 +18,11 @@ import javax.persistence.*;
 @Table(name="ix_core_payload")
 public class Payload extends Model {
     @Id
-    public UUID uuid;
-    public final Date created = new Date ();
-    
-    @OneToOne
+    public UUID id;
+
+    @ManyToOne(cascade=CascadeType.ALL)
     public Namespace namespace;
+    public final Date created = new Date ();
     
     @Column(length=1024)
     public String name;
@@ -31,7 +31,7 @@ public class Payload extends Model {
     public String sha1;
     
     @Column(length=128)
-    public String mime; // mime type
+    public String mimeType; // mime type
     public Long size;
 
     @ManyToMany(cascade=CascadeType.ALL)

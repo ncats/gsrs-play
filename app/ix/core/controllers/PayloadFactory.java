@@ -12,34 +12,57 @@ import play.data.*;
 import play.mvc.*;
 
 import ix.core.models.Payload;
+import ix.core.NamedResource;
+import ix.core.plugins.PayloadPlugin;
 
+@NamedResource(name="payload",
+               type=Payload.class,
+               description="Resource for handling payload")
 public class PayloadFactory extends EntityFactory {
-    public static final Model.Finder<Long, Payload> finder = 
-        new Model.Finder(Long.class, Payload.class);
+    public static final Model.Finder<UUID, Payload> finder = 
+        new Model.Finder(UUID.class, Payload.class);
+    static PayloadPlugin payloadPlugin =
+        Play.application().plugin(PayloadPlugin.class);
 
-    public static List<Payload> all () { return all (finder); }
+    public static Payload getPayload (UUID id) {
+        return getEntity (id, finder);
+    }
+    
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);
     }
 
-    public static Result get (Long id, String select) {
+    public static Result get (UUID id, String select) {
         return get (id, select, finder);
     }
 
-    public static Result field (Long id, String path) {
+    public static Result field (UUID id, String path) {
         return field (id, path, finder);
     }
 
     public static Result create () {
-        return create (Payload.class, finder);
+        throw new UnsupportedOperationException
+            ("create operation not supported!");
     }
 
-    public static Result delete (Long id) {
-        return delete (id, finder);
+    public static Result delete (UUID id) {
+        throw new UnsupportedOperationException
+            ("delete operation not supported!");
     }
 
-    public static Result update (Long id, String field) {
-        return update (id, field, Payload.class, finder);
+    public static File getFile (UUID id) {
+        Payload payload = getPayload (id);
+        if (payload != null) {
+            return payloadPlugin.getPayload(payload);
+        }
+        return null;
+    }
+    
+    public static InputStream getStream (UUID id) {
+        Payload payload = getPayload (id);
+        if (payload != null)
+            return payloadPlugin.getPayloadAsStream(payload);
+        return null;
     }
 }

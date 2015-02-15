@@ -23,9 +23,6 @@ public class Name extends GinasModel {
     @Column(length=10)
     public String type;
     
-    @Indexable(name="Public Domain", facet=true)
-    public boolean publicDomain;
-
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_name_domain")
     public List<Keyword> domains = new ArrayList<Keyword>();
