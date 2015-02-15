@@ -21,12 +21,15 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
+import akka.actor.PoisonPill;
+import akka.actor.Props;
+import akka.actor.Inbox;
+import akka.actor.Terminated;
+import akka.routing.Broadcast;
 import akka.routing.RouterConfig;
 import akka.routing.FromConfig;
 import akka.routing.RoundRobinRouter;
 import akka.routing.SmallestMailboxRouter;
-import akka.actor.Props;
-import akka.actor.Inbox;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import scala.concurrent.duration.Duration;
@@ -42,6 +45,8 @@ import ix.ginas.chem.*;
 import ix.ginas.models.*;
 
 public class StructureProcessorPlugin extends Plugin {
+    final static Molecule DONE = new Molecule();
+    
     private final Application app;
     private IxContext ctx;
     private ActorSystem system;
@@ -87,15 +92,25 @@ public class StructureProcessorPlugin extends Plugin {
                 log.info("Received payload "+payload.id);
 
                 // now spawn child processor to proces the payload stream
-                ActorRef children = context().actorOf
-                    (Props.create(Processor.class).withRouter
-                     (new FromConfig().withFallback
-                      (new SmallestMailboxRouter (2))), payload.id.toString());
-                try {
+                try {           
+                    ActorRef children = context().actorOf
+                        (Props.create(Processor.class).withRouter
+                         (new FromConfig().withFallback
+                          (new SmallestMailboxRouter (2))),
+                         payload.id.toString());
+                    context().watch(children);
+                    
                     int count = process (children, payload);
+                    
+                    // shutdown.. 
                     log.info("pushed "+count+" molecules out for processing!");
+                    children.tell(new Broadcast (PoisonPill.getInstance()),
+                                  self ());
                 }
                 catch (Exception ex) {
+                    // TODO: send a message back to the sender notifying
+                    // that the given payload is currently processing
+                    // at the moment!
                     ex.printStackTrace();
                 }
                 //sender().tell(new Status (mesg+" ok"), self ());
@@ -103,13 +118,18 @@ public class StructureProcessorPlugin extends Plugin {
             else if (mesg instanceof Molecule) {
                 Molecule mol = (Molecule)mesg;
                 log.info("processing "+mol.getName());
-                Structure struc = StructureProcessor.instrument(mol);
                 try {
+                    Structure struc = StructureProcessor.instrument(mol);
                     struc.save();
                 }
                 catch (Throwable t) {
                     t.printStackTrace();
                 }
+            }
+            else if (mesg instanceof Terminated) {
+                ActorRef actor = ((Terminated)mesg).actor();
+                context().unwatch(actor);
+                log.info("done processing payload {}!", actor.path().name());
             }
             else {
                 unhandled (mesg);

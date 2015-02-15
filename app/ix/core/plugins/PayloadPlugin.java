@@ -1,6 +1,7 @@
 package ix.core.plugins;
 
 import java.io.*;
+import java.util.List;
 import java.security.MessageDigest;
 import java.security.DigestInputStream;
     
@@ -13,6 +14,7 @@ import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
 
 import ix.core.models.Payload;
+import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
 
 public class PayloadPlugin extends Plugin {
@@ -68,15 +70,24 @@ public class PayloadPlugin extends Plugin {
             }
             dis.close();
             fos.close();
-
-            pl.name = part.getFilename();
-            pl.mimeType = part.getContentType();
+            
             pl.sha1 = Util.toHex(md.digest());
-            pl.save();
-            if (pl.id != null) {
-                tmp.renameTo(new File (payload, pl.id.toString()));
+            List<Payload> found =
+                PayloadFactory.finder.where().eq("sha1", pl.sha1).findList();
+            if (found.isEmpty()) {
+                pl.name = part.getFilename();
+                pl.mimeType = part.getContentType();
+                
+                pl.save();
+                if (pl.id != null) {
+                    tmp.renameTo(new File (payload, pl.id.toString()));
+                }
+                Logger.debug(pl.name+" => "+pl.id + " " +pl.sha1);
             }
-            Logger.debug(pl.name+" => "+pl.id + " " +pl.sha1);
+            else {
+                pl = found.iterator().next();
+                Logger.debug("payload already loaded as "+pl.id);
+            }
         }
         catch (Throwable t) {
             Logger.trace("Can't save payload", t);
