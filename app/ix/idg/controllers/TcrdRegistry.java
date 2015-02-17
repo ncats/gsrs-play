@@ -490,8 +490,7 @@ public class TcrdRegistry extends Controller {
                 
                 XRef xref = null;
                 for (XRef ref : target.links) {
-                    if (ref.kind.equals(disease.getClass().getName())
-                        && ref.refid == disease.id) {
+                    if (ref.referenceOf(disease)) {
                         xref = ref;
                         break;
                     }

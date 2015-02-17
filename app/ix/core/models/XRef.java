@@ -1,5 +1,6 @@
 package ix.core.models;
 
+import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
 import java.lang.reflect.Method;
@@ -23,8 +24,8 @@ public class XRef extends IxModel {
      * not id of the XRef instance but id of the instance for which this
      * XRef is pointing to
      */
-    @Column(nullable=false)
-    public Long refid; 
+    @Column(nullable=false,length=40)
+    public String refid; 
     @Column(length=512,nullable=false)
     public String kind;
     public boolean deprecated;
@@ -41,13 +42,18 @@ public class XRef extends IxModel {
     public XRef () {
     }
 
-    public XRef (String namespace, String kind, Long id) {
+    public XRef (String kind, Long id) {
+        this (kind, id.toString());
+    }
+    
+    public XRef (String kind, UUID id) {
+        this (kind, id.toString());
+    }
+    
+    public XRef (String kind, String id) {
         if (id == null)
             throw new IllegalArgumentException
                 ("Can't create XRef with no id");
-        if (namespace == null)
-            throw new IllegalArgumentException
-                ("Namespace parameter can't be null");
         this.kind = kind;
         this.refid = id;
     }
@@ -58,21 +64,24 @@ public class XRef extends IxModel {
             throw new IllegalArgumentException
                 ("Can't create XRef for non-Entity instance");
         try {
-            for (Field f : cls.getFields()) {
-                if (null != f.getAnnotation(Id.class)) {
-                    Object id = f.get(instance);
-                    if (id != null && id instanceof Long) {
-                        this.refid = (Long)id;
-                    }
-                    break;
+            Field fid = getIdField (cls);
+            if (fid != null) {
+                Object id = fid.get(instance);
+                if (id != null) {
+                    this.refid = id.toString();
+                }
+                else {
+                    throw new IllegalArgumentException
+                        (cls.getName()+": Can't create XRef with null id!");
                 }
             }
-
-            kind = cls.getName();
-            if (refid == null)
+            else {
                 throw new IllegalArgumentException
                     (cls.getName()+": Can't create XRef for Entity "
                      +"with no Id defined!");
+            }
+
+            kind = cls.getName();
         }
         catch (Exception ex) {
             throw new IllegalArgumentException (ex);
@@ -88,9 +97,24 @@ public class XRef extends IxModel {
     public Object deRef (boolean force) {
         if (_instance == null || force) {
             try {
-                Model.Finder finder = new Model.Finder
-                    (Long.class, Class.forName(kind));
-                _instance = finder.byId(refid);
+                Class cls = Class.forName(kind);
+                Field fid = getIdField (cls);
+                if (fid != null) {
+                    Class type = fid.getType();
+                    Model.Finder finder = new Model.Finder
+                        (type, cls);
+                    if (Long.class.isAssignableFrom(type))
+                        _instance = finder.byId(Long.parseLong(refid));
+                    else if (UUID.class.isAssignableFrom(type))
+                        _instance = finder.byId(UUID.fromString(refid));
+                    else
+                        _instance = finder.byId(refid);
+                }
+                else {
+                    throw new RuntimeException
+                        ("Class "+kind+" doesn't have any fields "
+                         +"annotated with @Id!");
+                }
             }
             catch (Exception ex) {
                 Logger.trace("Can't retrieve XRef "+kind+":"+refid, ex);
@@ -99,7 +123,37 @@ public class XRef extends IxModel {
         return _instance;
     }
 
+    static Field getIdField (Class cls) {
+        for (Field f : cls.getFields())
+            if (null != f.getAnnotation(Id.class))
+                return f;
+        return null;
+    }
+
     public String getHRef () {
         return Global.getRef(kind, refid);
-    }    
+    }
+
+    public boolean referenceOf (Object instance) {
+        try {
+            Class cls = Class.forName(kind);
+            Class type = instance.getClass();
+            if (cls.isAssignableFrom(type) || type.isAssignableFrom(cls)) {
+                Field fid = getIdField (type);
+                if (fid != null) {
+                    Object id = fid.get(instance);
+                    if (id != null)
+                        return refid.equals(id.toString());
+                }
+                else {
+                    Logger.error
+                        ("Class "+type.getName()+" has no @Id annotation!");
+                }
+            }
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't retrieve class "+kind, ex);
+        }
+        return false;
+    }
 }

@@ -17,6 +17,7 @@ GET     /suggest       ix.core.controllers.search.SearchFactory.suggest(q: Strin
 GET     /$context<[a-z0-9_]+>/@count       ix.core.controllers.RouteFactory.count(context: String)
 GET     /$context<[a-z0-9_]+>/search        ix.core.controllers.RouteFactory.search(context: String, q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
 GET     /$context<[a-z0-9_]+>/$id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}>  ix.core.controllers.RouteFactory.getUUID(context: String, id: String, expand:String ?= null)
+GET     /$context<[a-z0-9_]+>($id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}>)  ix.core.controllers.RouteFactory.getUUID(context: String, id: String, expand:String ?= null)
 GET     /$context<[a-z0-9_]+>/:id  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
 GET     /$context<[a-z0-9_]+>/:id/@edits      ix.core.controllers.RouteFactory.edits(context: String, id:Long)
 GET     /$context<[a-z0-9_]+>(:id)     ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)

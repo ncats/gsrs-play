@@ -1,6 +1,7 @@
 package ix.ginas.plugins;
 
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -15,6 +16,7 @@ import play.Plugin;
 import play.Application;
 import play.cache.Cache;
 import play.libs.Akka;
+import play.db.ebean.Transactional;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -34,15 +36,25 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
+import scala.collection.immutable.Iterable;
+import scala.collection.JavaConverters;
 
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
 
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Transaction;
+
 import ix.core.plugins.IxContext;
+import ix.core.models.XRef;
 import ix.core.models.Payload;
+import ix.core.models.ProcessingJob;
+import ix.core.models.ProcessingRecord;
 import ix.core.controllers.PayloadFactory;
+import ix.core.controllers.ProcessingJobFactory;
 import ix.ginas.chem.*;
 import ix.ginas.models.*;
+import ix.utils.Util;
 
 public class StructureProcessorPlugin extends Plugin {
     final static Molecule DONE = new Molecule();
@@ -52,84 +64,158 @@ public class StructureProcessorPlugin extends Plugin {
     private ActorSystem system;
     private ActorRef processor;
     private Inbox inbox;
+    static final Random rand = new Random ();
 
-    public static class PayloadProcessor {
-        public final UUID id;
-        public PayloadProcessor (Payload payload) {
-            this.id = payload.id;
-        }
-        public PayloadProcessor (UUID id) {
-            this.id = id;
-        }
-    }
-
-    public static class PayloadStatus implements Serializable {
-        public final Long id;
-        public PayloadStatus (Long id) {
-            this.id = id;
-        }
-    }
-
-    public static class Reporter extends UntypedActor {
-        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+    public static class PayloadProcessor implements Serializable {
+        public final Payload payload;
+        public final String id;
+        public final String key;
         
-        public void onReceive (Object mesg) {
-            if (mesg instanceof PayloadStatus) {
-                PayloadStatus status = (PayloadStatus)mesg;
-            }
-            else {
-                unhandled (mesg);
-            }
+        public PayloadProcessor (Payload payload) {
+            this.payload = payload;
+            this.key = randomKey (10);
+            this.id = payload.id + ":" +this.key;
+        }
+
+        static String randomKey (int size) {
+            byte[] b = new byte[size];
+            rand.nextBytes(b);
+            return Util.toHex(b);
         }
     }
+
+    public static class PayloadRecord implements Serializable {
+        public final ProcessingJob job;
+        public final Molecule mol;
+
+        public PayloadRecord (ProcessingJob job, Molecule mol) {
+            this.job = job;
+            this.mol = mol;
+        }
+    }
+
+    public static class PayloadProcessed implements Serializable {
+        public final ProcessingJob job;
+        public PayloadProcessed (ProcessingJob job) {
+            this.job = job;
+        }
+    }
+
 
     public static class Processor extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
+        @Override
+        public void preStart () {
+        }
+        
+        @Override
+        public void postStop () {
+        }
+
+        @Transactional
         public void onReceive (Object mesg) {
             if (mesg instanceof PayloadProcessor) {
                 PayloadProcessor payload = (PayloadProcessor)mesg;
                 log.info("Received payload "+payload.id);
 
                 // now spawn child processor to proces the payload stream
-                try {           
-                    ActorRef children = context().actorOf
+                ActorRef child = null;
+                Collection<ActorRef> children = JavaConverters
+                    .asJavaCollectionConverter(context().children())
+                    .asJavaCollection();
+                for (ActorRef ref : children) {
+                    //ActorRef ref = iter.next();
+                    if (ref.path().name()
+                        .indexOf(payload.payload.id.toString()) >= 0) {
+                        // this child is current running
+                        child = ref;
+                    }
+                }
+                
+                if (child != null) {
+                    // the given payload is currently processing
+                    // at the moment!
+                    ProcessingJob job = new ProcessingJob (payload.key);
+                    job.start = job.stop = System.currentTimeMillis();
+                    job.driver = StructureProcessorPlugin.class.getName();
+                    job.status = ProcessingJob.Status.NOT_RUN;
+                    job.message = "Payload "+payload.payload.id+" is "
+                        +"currently being processed.";
+                    job.payload = payload.payload;
+
+                    save (job);
+                    sender().tell(new PayloadProcessed (job), self ());
+                }
+                else {
+                    child = context().actorOf
                         (Props.create(Processor.class).withRouter
                          (new FromConfig().withFallback
-                          (new SmallestMailboxRouter (2))),
-                         payload.id.toString());
-                    context().watch(children);
-                    
-                    int count = process (children, payload);
-                    
-                    // shutdown.. 
-                    log.info("pushed "+count+" molecules out for processing!");
-                    children.tell(new Broadcast (PoisonPill.getInstance()),
-                                  self ());
+                          (new SmallestMailboxRouter (2))), payload.id);
+                    context().watch(child);
+
+                    try {
+                        ProcessingJob job = process (child, self (), payload);
+                        log.info("Job "+job.id+" submitted!");
+                        child.tell(new Broadcast (PoisonPill.getInstance()),
+                                   self ());
+                    }
+                    catch (Exception ex) {
+                        ex.printStackTrace();
+                        sender().tell(ex, self ());
+                    }
                 }
-                catch (Exception ex) {
-                    // TODO: send a message back to the sender notifying
-                    // that the given payload is currently processing
-                    // at the moment!
-                    ex.printStackTrace();
-                }
-                //sender().tell(new Status (mesg+" ok"), self ());
             }
-            else if (mesg instanceof Molecule) {
-                Molecule mol = (Molecule)mesg;
-                log.info("processing "+mol.getName());
+            else if (mesg instanceof PayloadRecord) {
+                PayloadRecord pr = (PayloadRecord)mesg;
+                //log.info("processing "+pr.record.getName());
+                ProcessingRecord rec = new ProcessingRecord ();
+                rec.name = pr.mol.getName();
+                rec.job = pr.job;
+                rec.start = System.currentTimeMillis();
+                Structure struc = null;
                 try {
-                    Structure struc = StructureProcessor.instrument(mol);
-                    struc.save();
+                    struc = StructureProcessor.instrument(pr.mol);
+                    rec.stop = System.currentTimeMillis();
+                    rec.status = ProcessingRecord.Status.OK;
                 }
                 catch (Throwable t) {
+                    rec.stop = System.currentTimeMillis();
+                    rec.status = ProcessingRecord.Status.FAILED;
+                    rec.message = t.getMessage();
                     t.printStackTrace();
                 }
+                save (struc, rec);
             }
             else if (mesg instanceof Terminated) {
                 ActorRef actor = ((Terminated)mesg).actor();
                 context().unwatch(actor);
-                log.info("done processing payload {}!", actor.path().name());
+                
+                String id = actor.path().name();
+                int pos = id.indexOf(':');
+                if (pos > 0) {
+                    String jid = id.substring(pos+1);
+                    try {                   
+                        ProcessingJob job = ProcessingJobFactory.getJob(jid);
+                        if (job != null) {
+                            job.stop = System.currentTimeMillis();
+                            job.status = ProcessingJob.Status.COMPLETE;
+                            job.update();
+                            log.info("done processing job {}!", job.key);
+                        }
+                        else {
+                            log.error("Failed to retrieve job "+jid);
+                        }
+                    }
+                    catch (Exception ex) {
+                        ex.printStackTrace();
+                        log.error("Failed to retrieve job "
+                                  +jid+"; "+ex.getMessage());
+                    }
+                }
+                else {
+                    log.error("Invalid job id: "+id);
+                }
             }
             else {
                 unhandled (mesg);
@@ -140,14 +226,14 @@ public class StructureProcessorPlugin extends Plugin {
     public static class ProcessorManager extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);    
         ActorRef router;
-        ActorRef reporter;
         
         public void onReceive (Object mesg) {
-            if (mesg instanceof PayloadStatus) {
-                log.info(sender()+" => "+mesg);
-            }
-            else if (mesg instanceof PayloadProcessor) {
+            if (mesg instanceof PayloadProcessor) {
                 router.tell(mesg, self ());
+            }
+            else if (mesg instanceof PayloadProcessed) {
+                PayloadProcessed pp = (PayloadProcessed)mesg;
+                log.info(pp.job.message);
             }
             else {
                 unhandled (mesg);
@@ -160,17 +246,12 @@ public class StructureProcessorPlugin extends Plugin {
             router = context().actorOf
                 (Props.create(Processor.class).withRouter
                  (new FromConfig().withFallback(config)), "router");
-            reporter = context().actorOf
-                (Props.create(Reporter.class).withRouter
-                 (new FromConfig().withFallback(config)), "reporter");
         }
 
         @Override
         public void postStop () {
             if (router != null)
                 context().stop(router);
-            if (reporter != null)
-                context().stop(reporter);
         }
     }
 
@@ -199,31 +280,59 @@ public class StructureProcessorPlugin extends Plugin {
     }
 
     public boolean enabled () { return true; }
-    public void submit (Payload payload) {
+    public String submit (Payload payload) {
         // first see if this payload has already processed..
-        inbox.send(processor, new PayloadProcessor (payload));
-    }
-    public void submit (UUID payload) {
-        inbox.send(processor, new PayloadProcessor (payload));
+        PayloadProcessor pp = new PayloadProcessor (payload);
+        inbox.send(processor, pp);
+        return pp.key;
     }
 
-    static int process (ActorRef proc, PayloadProcessor pp) throws Exception {
-        InputStream is = PayloadFactory.getStream(pp.id);
-        if (is == null)
-            throw new IllegalArgumentException
-                ("Unkown payload "+pp.id+" specified!");
-        int count = -1; 
+    static ProcessingJob process (ActorRef proc, ActorRef sender,
+                                  PayloadProcessor pp) throws Exception {  
+        InputStream is = PayloadFactory.getStream(pp.payload);
+        ProcessingJob job = new ProcessingJob (pp.key);
+        job.start = System.currentTimeMillis();
+        job.driver = StructureProcessorPlugin.class.getName();
+        job.status = ProcessingJob.Status.RUNNING;
+        job.payload = pp.payload;
         try {
+            job.save();
+            
             MolImporter mi = new MolImporter (is);
-            count = 0;
-            for (Molecule m; (m = mi.read()) != null; ++count) {
-                proc.tell(m, proc);
+            int total = 0;
+            for (Molecule m; (m = mi.read()) != null; ++total) {
+                proc.tell(new PayloadRecord (job, m), sender);
             }
             mi.close();
         }
-        catch (Exception ex) {
-            Logger.trace("Can't processing payload "+pp.id, ex);
+        catch (Throwable t) {
+            job.message = t.getMessage();
+            Logger.trace("Can't processing payload "+pp.payload.id, t);
+            job.status = ProcessingJob.Status.FAILED;
+            job.save();
         }
-        return count;
+        return job;
+    }
+
+    @Transactional
+    synchronized static void save (Structure struc, ProcessingRecord rec) {
+        try {
+            if (struc != null) {
+                struc.save();
+                rec.xref = new XRef (struc);
+                rec.xref.save();
+            }
+            rec.save();
+            Logger.debug("Saved struc "+(struc != null ? struc.id:null)
+                         +" record "+rec.id);
+        }
+        catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+
+    @Transactional
+    synchronized static void save (ProcessingJob job) {
+        job.save();
     }
 }
