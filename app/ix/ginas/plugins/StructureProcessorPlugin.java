@@ -16,6 +16,7 @@ import play.Plugin;
 import play.Application;
 import play.cache.Cache;
 import play.libs.Akka;
+import play.db.ebean.Model;
 import play.db.ebean.Transactional;
 
 import akka.actor.ActorRef;
@@ -101,19 +102,100 @@ public class StructureProcessorPlugin extends Plugin {
         }
     }
 
+    public static class PersistModel implements Serializable {
+        public enum Op { SAVE, UPDATE, DELETE };
+        public final Op oper;
+        public final Model[] models;
 
-    public static class Processor extends UntypedActor {
-        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
-
-        @Override
-        public void preStart () {
-        }
-        
-        @Override
-        public void postStop () {
+        public PersistModel (Op oper, Model... models) {
+            this.oper = oper;
+            this.models = models;
         }
 
         @Transactional
+        public void persist () {
+            try {
+                switch (oper) {
+                case SAVE: 
+                    for (Model m : models) {
+                        m.save();
+                    }
+                    break;
+                case UPDATE:
+                    for (Model m : models) {
+                        m.update();
+                    }
+                    break;
+                case DELETE: 
+                    for (Model m : models) {
+                        m.delete();
+                    }
+                    break;
+                }
+            }
+            catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
+        
+        public static PersistModel Update (Model... models) {
+            return new PersistModel (Op.UPDATE, models);
+        }
+        public static PersistModel Save (Model... models) {
+            return new PersistModel (Op.SAVE, models);
+        }
+        public static PersistModel Delete (Model... models) {
+            return new PersistModel (Op.DELETE, models);
+        }
+    }
+
+    public static class PersistRecord implements Serializable {
+        public final Structure struc;
+        public final ProcessingRecord rec;
+        public PersistRecord (Structure struc, ProcessingRecord rec) {
+            this.struc = struc;
+            this.rec = rec;
+        }
+        
+        @Transactional
+        public void persist () {
+            try {
+                if (struc != null) {
+                    struc.save();
+                    rec.xref = new XRef (struc);
+                    rec.xref.save();
+                }
+                rec.save();
+                Logger.debug("Saved struc "+(struc != null ? struc.id:null)
+                             +" record "+rec.id);
+            }
+            catch (Throwable t) {
+                t.printStackTrace();
+            }
+        }
+    }
+
+    public static class Reporter extends UntypedActor {
+        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+
+        public void onReceive (Object mesg) {
+            if (mesg instanceof PersistModel) {
+                ((PersistModel)mesg).persist();
+            }
+            else if (mesg instanceof PersistRecord) {
+                ((PersistRecord)mesg).persist();
+            }
+            else {
+                log.info("unhandled mesg: sender="+sender()+" mesg="+mesg);
+                unhandled (mesg);
+            }
+        }
+    }
+    
+    public static class Processor extends UntypedActor {
+        LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+        ActorRef reporter = context().actorFor("/user/reporter");
+        
         public void onReceive (Object mesg) {
             if (mesg instanceof PayloadProcessor) {
                 PayloadProcessor payload = (PayloadProcessor)mesg;
@@ -125,7 +207,6 @@ public class StructureProcessorPlugin extends Plugin {
                     .asJavaCollectionConverter(context().children())
                     .asJavaCollection();
                 for (ActorRef ref : children) {
-                    //ActorRef ref = iter.next();
                     if (ref.path().name()
                         .indexOf(payload.payload.id.toString()) >= 0) {
                         // this child is current running
@@ -143,9 +224,7 @@ public class StructureProcessorPlugin extends Plugin {
                     job.message = "Payload "+payload.payload.id+" is "
                         +"currently being processed.";
                     job.payload = payload.payload;
-
-                    save (job);
-                    sender().tell(new PayloadProcessed (job), self ());
+                    reporter.tell(PersistModel.Save(job), self ());
                 }
                 else {
                     child = context().actorOf
@@ -155,15 +234,14 @@ public class StructureProcessorPlugin extends Plugin {
                     context().watch(child);
 
                     try {
-                        ProcessingJob job = process (child, self (), payload);
-                        log.info("Job "+job.id+" submitted!");
-                        child.tell(new Broadcast (PoisonPill.getInstance()),
-                                   self ());
+                        ProcessingJob job = process
+                            (reporter, child, self (), payload);
                     }
                     catch (Exception ex) {
                         ex.printStackTrace();
-                        sender().tell(ex, self ());
                     }
+                    child.tell(new Broadcast (PoisonPill.getInstance()),
+                               self ());
                 }
             }
             else if (mesg instanceof PayloadRecord) {
@@ -185,11 +263,11 @@ public class StructureProcessorPlugin extends Plugin {
                     rec.message = t.getMessage();
                     t.printStackTrace();
                 }
-                save (struc, rec);
+                
+                reporter.tell(new PersistRecord (struc, rec), self ());
             }
             else if (mesg instanceof Terminated) {
                 ActorRef actor = ((Terminated)mesg).actor();
-                context().unwatch(actor);
                 
                 String id = actor.path().name();
                 int pos = id.indexOf(':');
@@ -200,7 +278,8 @@ public class StructureProcessorPlugin extends Plugin {
                         if (job != null) {
                             job.stop = System.currentTimeMillis();
                             job.status = ProcessingJob.Status.COMPLETE;
-                            job.update();
+                            reporter.tell
+                                (PersistModel.Update(job), self ());
                             log.info("done processing job {}!", job.key);
                         }
                         else {
@@ -216,42 +295,11 @@ public class StructureProcessorPlugin extends Plugin {
                 else {
                     log.error("Invalid job id: "+id);
                 }
+                context().unwatch(actor);               
             }
             else {
                 unhandled (mesg);
             }
-        }
-    }
-
-    public static class ProcessorManager extends UntypedActor {
-        LoggingAdapter log = Logging.getLogger(getContext().system(), this);    
-        ActorRef router;
-        
-        public void onReceive (Object mesg) {
-            if (mesg instanceof PayloadProcessor) {
-                router.tell(mesg, self ());
-            }
-            else if (mesg instanceof PayloadProcessed) {
-                PayloadProcessed pp = (PayloadProcessed)mesg;
-                log.info(pp.job.message);
-            }
-            else {
-                unhandled (mesg);
-            }
-        }
-
-        @Override
-        public void preStart () {
-            RouterConfig config = new SmallestMailboxRouter (2);
-            router = context().actorOf
-                (Props.create(Processor.class).withRouter
-                 (new FromConfig().withFallback(config)), "router");
-        }
-
-        @Override
-        public void postStop () {
-            if (router != null)
-                context().stop(router);
         }
     }
 
@@ -268,8 +316,11 @@ public class StructureProcessorPlugin extends Plugin {
         system = ActorSystem.create("StructureProcessor");
         Logger.info("Plugin "+getClass().getName()
                     +" initialized; Akka version "+system.Version());
+        RouterConfig config = new SmallestMailboxRouter (2);
         processor = system.actorOf
-            (Props.create(ProcessorManager.class), "processor");
+            (Props.create(Processor.class).withRouter
+             (new FromConfig().withFallback(config)), "processor");
+        system.actorOf(Props.create(Reporter.class), "reporter");
         inbox = Inbox.create(system);
     }
 
@@ -287,7 +338,8 @@ public class StructureProcessorPlugin extends Plugin {
         return pp.key;
     }
 
-    static ProcessingJob process (ActorRef proc, ActorRef sender,
+    static ProcessingJob process (ActorRef reporter,
+                                  ActorRef proc, ActorRef sender,
                                   PayloadProcessor pp) throws Exception {  
         InputStream is = PayloadFactory.getStream(pp.payload);
         ProcessingJob job = new ProcessingJob (pp.key);
@@ -296,8 +348,6 @@ public class StructureProcessorPlugin extends Plugin {
         job.status = ProcessingJob.Status.RUNNING;
         job.payload = pp.payload;
         try {
-            job.save();
-            
             MolImporter mi = new MolImporter (is);
             int total = 0;
             for (Molecule m; (m = mi.read()) != null; ++total) {
@@ -307,32 +357,11 @@ public class StructureProcessorPlugin extends Plugin {
         }
         catch (Throwable t) {
             job.message = t.getMessage();
-            Logger.trace("Can't processing payload "+pp.payload.id, t);
             job.status = ProcessingJob.Status.FAILED;
-            job.save();
+            job.stop = System.currentTimeMillis();
+            reporter.tell(PersistModel.Save(job), sender);
+            Logger.trace("Failed to process payload "+pp.payload.id, t);
         }
         return job;
-    }
-
-    @Transactional
-    synchronized static void save (Structure struc, ProcessingRecord rec) {
-        try {
-            if (struc != null) {
-                struc.save();
-                rec.xref = new XRef (struc);
-                rec.xref.save();
-            }
-            rec.save();
-            Logger.debug("Saved struc "+(struc != null ? struc.id:null)
-                         +" record "+rec.id);
-        }
-        catch (Throwable t) {
-            t.printStackTrace();
-        }
-    }
-
-    @Transactional
-    synchronized static void save (ProcessingJob job) {
-        job.save();
     }
 }
