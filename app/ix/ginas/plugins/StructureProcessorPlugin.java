@@ -58,8 +58,6 @@ import ix.ginas.models.*;
 import ix.utils.Util;
 
 public class StructureProcessorPlugin extends Plugin {
-    final static Molecule DONE = new Molecule();
-    
     private final Application app;
     private IxContext ctx;
     private ActorSystem system;
@@ -219,7 +217,7 @@ public class StructureProcessorPlugin extends Plugin {
                     // at the moment!
                     ProcessingJob job = new ProcessingJob (payload.key);
                     job.start = job.stop = System.currentTimeMillis();
-                    job.driver = StructureProcessorPlugin.class.getName();
+                    job.invoker = StructureProcessorPlugin.class.getName();
                     job.status = ProcessingJob.Status.NOT_RUN;
                     job.message = "Payload "+payload.payload.id+" is "
                         +"currently being processed.";
@@ -280,7 +278,7 @@ public class StructureProcessorPlugin extends Plugin {
                             job.status = ProcessingJob.Status.COMPLETE;
                             reporter.tell
                                 (PersistModel.Update(job), self ());
-                            log.info("done processing job {}!", job.key);
+                            log.info("done processing job {}!", job.jobkey);
                         }
                         else {
                             log.error("Failed to retrieve job "+jid);
@@ -344,7 +342,7 @@ public class StructureProcessorPlugin extends Plugin {
         InputStream is = PayloadFactory.getStream(pp.payload);
         ProcessingJob job = new ProcessingJob (pp.key);
         job.start = System.currentTimeMillis();
-        job.driver = StructureProcessorPlugin.class.getName();
+        job.invoker = StructureProcessorPlugin.class.getName();
         job.status = ProcessingJob.Status.RUNNING;
         job.payload = pp.payload;
         try {

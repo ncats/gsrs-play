@@ -21,6 +21,9 @@ public class Namespace extends Model {
     @Column(unique=true)
     @Indexable(facet=true,name="Namespace")
     public String name;
+    
+    @ManyToOne(cascade=CascadeType.ALL)
+    public Principal owner;
 
     @Column(length=1024)
     public String location; // url, path, etc.

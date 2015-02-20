@@ -43,11 +43,22 @@ remote: '/api/suggest/Target?q=%QUERY',
             url:  '@ix.core.controllers.search.routes.SearchFactory.suggestField("MeSH", "QUERY",10)'
         }
     });
+    var publication = new Bloodhound({
+        datumTokenizer: function(d) {
+            return d.key.split(/\//);
+        },
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: {
+            wildcard: 'QUERY',
+            url:  '@ix.core.controllers.search.routes.SearchFactory.suggestField("Publication", "QUERY",10)'
+        }
+    });
     
     category.initialize();
     program.initialize();
     author.initialize();
     mesh.initialize();
+    publication.initialize();
     
     $('.typeahead').typeahead({
         hint: true,
@@ -81,6 +92,13 @@ remote: '/api/suggest/Target?q=%QUERY',
         templates: {
           header: '<h4 class = "header">MeSH</h4>'
         }
+    },{
+        name: 'Publication',
+	displayKey: 'key',
+	source: publication.ttAdapter(),
+	templates: {
+	  header: '<h4 class="header">Publication</h4>'
+	}
     });
 
     $('.typeahead').on("typeahead:selected", function (evt, val, d) {

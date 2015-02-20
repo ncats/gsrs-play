@@ -19,8 +19,8 @@ public class ProcessingJob extends Model {
     public Long id;
     
     @Column(nullable=false,unique=true)
-    public String key;
-    public String driver;
+    public String jobkey;
+    public String invoker;
 
     public Status status = Status.PENDING;
     public Long start;
@@ -41,7 +41,7 @@ public class ProcessingJob extends Model {
     public ProcessingJob () {
     }
     public ProcessingJob (String key) {
-        this.key = key;
+        this.jobkey = key;
     }
 
     @JsonView(BeanViews.Compact.class)

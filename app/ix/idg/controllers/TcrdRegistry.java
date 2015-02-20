@@ -18,6 +18,7 @@ import ix.core.models.*;
 import ix.idg.models.*;
 import ix.core.controllers.NamespaceFactory;
 import ix.core.controllers.KeywordFactory;
+import ix.core.controllers.PredicateFactory;
 import ix.utils.Global;
 import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
@@ -27,7 +28,7 @@ import com.jolbox.bonecp.BoneCPDataSource;
     
 public class TcrdRegistry extends Controller {
     public static final String DISEASE = "IDG Disease";
-    public static final String CLASSIFICATION = Target.IDG_CLASSIFICATION;
+    public static final String DEVELOPMENT = Target.IDG_DEVELOPMENT;
     public static final String FAMILY = Target.IDG_FAMILY;
     public static final String DRUG = "IDG Drug";
     public static final String ZSCORE = "IDG Z-score";
@@ -36,6 +37,8 @@ public class TcrdRegistry extends Controller {
     public static final String GENERIF = "IDG GeneRIF";
     public static final String TARGET = "IDG Target";
     public static final String ChEMBL_PROTEIN_CLASS = "ChEMBL Protein Class";
+    public static final String ChEMBL_PROTEIN_ANCESTRY =
+        "ChEMBL Protein Ancestry";
 
     static final Model.Finder<Long, Target> targetDb = 
         new Model.Finder(Long.class, Target.class);
@@ -91,27 +94,54 @@ public class TcrdRegistry extends Controller {
         DataSource chembl;
         Connection con;
         PreparedStatement pstm;
+        Map<String, String> uniprotMap;
         
-        ChemblResolver () throws SQLException {
+        ChemblResolver (Map<String, String> uniprotMap)
+            throws SQLException {
             chembl = DB.getDataSource("chembl");
             if (chembl == null) {
                 throw new IllegalStateException
                     ("No \"chembl\" datasource found!");
             }
             con = chembl.getConnection();
-            pstm = con.prepareStatement("select distinct e.* "+
-"from target_components a, "+
-"component_synonyms b, "+
-"component_class c, "+
-"protein_classification d, "+
-"protein_family_classification e "+
-"where component_synonym = ? "+
-"and syn_type = 'GENE_SYMBOL' "+
-"and a.component_id = b.component_id "+
-"and a.component_id = c.component_id "+
-"and c.protein_class_id = d.protein_class_id "+
-"and c.protein_class_id = e.protein_class_id "+
-"order by class_level desc, e.protein_class_id");
+            
+            if (uniprotMap == null || uniprotMap.isEmpty()) {
+                pstm = con.prepareStatement
+                    ("select distinct e.* "+
+                     "from target_components a, "+
+                     "component_synonyms b, "+
+                     "component_class c, "+
+                     "protein_classification d, "+
+                     "protein_family_classification e "+
+                     "where component_synonym = ? "+
+                     "and syn_type = 'GENE_SYMBOL' "+
+                     "and a.component_id = b.component_id "+
+                     "and a.component_id = c.component_id "+
+                     "and c.protein_class_id = d.protein_class_id "+
+                     "and c.protein_class_id = e.protein_class_id "+
+                     "order by class_level desc, e.protein_class_id");
+                Logger.warn("No uniprot <-> chembl mapping provided!");
+            }
+            else {
+                pstm = con.prepareStatement
+                    ("select distinct e.* "+
+                     "from target_components a, "+
+                     "component_synonyms b, "+
+                     "component_class c, "+
+                     "protein_classification d, "+
+                     "protein_family_classification e , "+
+                     "chembl_id_lookup f "+
+                     "where f.entity_type = 'TARGET' "+
+                     "and f.chembl_id = ? "+
+                     "and f.entity_id = a.tid "+
+                     "and a.component_id = b.component_id "+
+                     "and a.component_id = c.component_id "+
+                     "and c.protein_class_id = d.protein_class_id "+
+                     "and c.protein_class_id = e.protein_class_id "+
+                     "order by class_level desc, e.protein_class_id"
+                     );
+            }
+            this.uniprotMap = uniprotMap;           
         }
 
         void shutdown () throws SQLException {
@@ -119,31 +149,88 @@ public class TcrdRegistry extends Controller {
         }
         
         void instrument (Target target) throws SQLException {
-            String gene = null;
-            for (Keyword kw : target.synonyms) {
-                if (UniprotRegistry.GENE.equals(kw.label)) {
-                    gene = kw.term;
-                    break;
+            if (uniprotMap == null || uniprotMap.isEmpty()) {
+                String gene = null;
+                for (Keyword kw : target.synonyms) {
+                    if (UniprotRegistry.GENE.equals(kw.label)) {
+                        gene = kw.term;
+                        break;
+                    }
                 }
+                
+                if (gene == null)
+                    throw new IllegalArgumentException
+                        ("Target "+target.id+" ("+target.name
+                         +") has no gene synonym!");
+                pstm.setString(1, gene);
             }
-
-            if (gene == null)
-                throw new IllegalArgumentException
-                    ("Target "+target.id+" ("+target.name
-                     +") has no gene synonym!");
-            pstm.setString(1, gene);
+            else {
+                String acc = null, chemblId = null;
+                for (Keyword kw : target.synonyms) {
+                    if (UniprotRegistry.ACCESSION.equals(kw.label)) {
+                        acc = kw.term;
+                        chemblId = uniprotMap.get(acc);
+                        if (chemblId != null) {
+                            break;
+                        }
+                    }
+                }
+                
+                if (acc == null)
+                    throw new IllegalArgumentException
+                        ("Target "+target.id+" ("+target.name
+                         +") has no "+UniprotRegistry.ACCESSION+" synonym!");
+                else if (chemblId == null)
+                    throw new IllegalArgumentException
+                        ("Target "+target.id+" ("+target.name
+                         +") accession "+acc+" has not chembl_id mapping!");
+                
+                Logger.debug(acc +" => "+chemblId);
+                pstm.setString(1, chemblId);
+            }
+            
             ResultSet rset = pstm.executeQuery();
             if (rset.next()) {
                 int i = 1;
+                List<Keyword> path = new ArrayList<Keyword>();
                 for (; i <= 8; ++i) {
                     String l = rset.getString("l"+i);
                     if (l != null) {
                         Keyword kw = KeywordFactory.registerIfAbsent
                             (ChEMBL_PROTEIN_CLASS+" ("+i+")", l, null);
+                        path.add(kw);
                         target.properties.add(kw);
                     }
                     else {
                         break;
+                    }
+                }
+                for (int k = path.size(); --k >= 0; ) {
+                    Keyword node = path.get(k);
+                    List<Predicate> predicates = PredicateFactory.finder.where
+                        (Expr.and(Expr.eq("subject.refid", node.id),
+                                  Expr.eq("predicate",
+                                          ChEMBL_PROTEIN_ANCESTRY)))
+                        .findList();
+                    if (predicates.isEmpty()) {
+                        Transaction tx = Ebean.beginTransaction();
+                        try {
+                            Predicate pred = new Predicate
+                                (ChEMBL_PROTEIN_ANCESTRY);
+                            pred.subject = new XRef (node);
+                            pred.subject.save();
+                            for (int j = k; --j >= 0; ) {
+                                pred.objects.add(new XRef (path.get(j)));
+                            }
+                            pred.save();
+                            tx.commit();
+                        }
+                        catch (Throwable t) {
+                            t.printStackTrace();
+                        }
+                        finally {
+                            Ebean.endTransaction();
+                        }
                     }
                 }
                 Logger.debug("Protein "+target.id+" ("+target.name+") has "
@@ -171,7 +258,8 @@ public class TcrdRegistry extends Controller {
         ChemblResolver chembl;
         
         RegistrationWorker (Connection con, Http.Context ctx,
-                            BlockingQueue<TcrdTarget> queue)
+                            BlockingQueue<TcrdTarget> queue,
+                            Map<String, String> uniprotMap)
             throws SQLException {
             this.con = con;
             this.queue = queue;
@@ -184,7 +272,7 @@ public class TcrdRegistry extends Controller {
                 ("select * from drugdb_activity where target_id = ?");
             pstm4 = con.prepareStatement
                 ("select * from generif where protein_id = ?");
-            chembl = new ChemblResolver ();
+            chembl = new ChemblResolver (uniprotMap);
         }
 
         public Integer call () throws Exception {
@@ -222,7 +310,7 @@ public class TcrdRegistry extends Controller {
                          +": "+t.family+" "+t.tdl+" "+t.acc+" "+t.id);
             Target target = new Target ();
             target.idgFamily = t.family;
-            target.idgClass = t.tdl;
+            target.idgTDL = t.tdl;
             target.synonyms.add
                 (new Keyword (TARGET, String.valueOf(t.id)));
             
@@ -320,6 +408,31 @@ public class TcrdRegistry extends Controller {
                 Logger.trace("Can't load obo file: "+file, ex);
             }
         }
+        
+        Map<String, String> uniprotMap = new HashMap<String, String>();
+        part = body.getFile("uniprot-map");
+        if (part != null) {
+            String name = part.getFilename();
+            String content = part.getContentType();
+            File file = part.getFile();
+            try {
+                BufferedReader br = new BufferedReader (new FileReader (file));
+                for (String line; (line = br.readLine()) != null; ) {
+                    if (line.charAt(0) == '#')
+                        continue;
+                    String[] toks = line.split("[\\s\t]+");
+                    if (2 == toks.length) {
+                        uniprotMap.put(toks[0], toks[1]);
+                    }
+                }
+                br.close();
+            }
+            catch (IOException ex) {
+                Logger.trace("Can't load uniprot mapping file: "+file, ex);
+            }
+            Logger.debug("uniprot-map: file="+name+" content="
+                         +content+" count="+uniprotMap.size());
+        }
 
         int count = 0;
         try {
@@ -332,7 +445,7 @@ public class TcrdRegistry extends Controller {
                     Logger.warn("Bogus maxRows \""+maxRows+"\"; default to 0!");
                 }
             }
-            count = load (ds, 1, rows);
+            count = load (ds, 1, rows, uniprotMap);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -342,8 +455,8 @@ public class TcrdRegistry extends Controller {
         return redirect (routes.IDGApp.index());
     }
 
-    static int load (DataSource ds, int threads, int rows)
-        throws Exception {
+    static int load (DataSource ds, int threads, int rows,
+                     Map<String, String> uniprotMap) throws Exception {
 
         Set<TcrdTarget> targets = new HashSet<TcrdTarget>();    
 
@@ -413,7 +526,7 @@ public class TcrdRegistry extends Controller {
                     jobs.add(pool.submit
                              (new RegistrationWorker
                               (ds.getConnection(), Http.Context.current(),
-                               queue)));
+                               queue, uniprotMap)));
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -452,7 +565,7 @@ public class TcrdRegistry extends Controller {
             Keyword family = KeywordFactory.registerIfAbsent
                 (Target.IDG_FAMILY, target.idgFamily, null);
             Keyword clazz = KeywordFactory.registerIfAbsent
-                (Target.IDG_CLASSIFICATION, target.idgClass, null);
+                (Target.IDG_DEVELOPMENT, target.idgTDL, null);
 
             Keyword name = KeywordFactory.registerIfAbsent
                 (UniprotRegistry.TARGET, target.name, target.getSelf());

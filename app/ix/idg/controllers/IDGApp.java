@@ -1,10 +1,13 @@
 package ix.idg.controllers;
 
 import ix.core.controllers.search.SearchFactory;
+import ix.core.controllers.KeywordFactory;
+import ix.core.controllers.PredicateFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Text;
 import ix.core.models.Value;
 import ix.core.models.XRef;
+import ix.core.models.Predicate;
 import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
 import ix.idg.models.Target;
@@ -17,6 +20,7 @@ import play.libs.ws.WS;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Call;
+import com.avaje.ebean.Expr;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -69,20 +73,20 @@ public class IDGApp extends Controller {
     }
     
     public static final String[] TARGET_FACETS = {
-        TcrdRegistry.CLASSIFICATION,
+        TcrdRegistry.DEVELOPMENT,
         TcrdRegistry.FAMILY,
         TcrdRegistry.DISEASE,
         TcrdRegistry.DRUG
     };
 
     public static final String[] DISEASE_FACETS = {
-        TcrdRegistry.CLASSIFICATION,
+        TcrdRegistry.DEVELOPMENT,
         TcrdRegistry.FAMILY,
         UniprotRegistry.TARGET
     };
 
     public static final String[] ALL_FACETS = {
-        TcrdRegistry.CLASSIFICATION,
+        TcrdRegistry.DEVELOPMENT,
         TcrdRegistry.FAMILY,
         TcrdRegistry.DISEASE,
         UniprotRegistry.TARGET,
@@ -626,6 +630,74 @@ public class IDGApp extends Controller {
             return ok (ix.idg.views.html.targets.render
                        (page, rows, total, pages, facets, targets));
         }
+    }
+
+    public static Keyword[] getAncestry (final String facet,
+                                         final String predicate) {
+        try {
+            return Cache.getOrElse
+                (predicate+"/"+facet, new Callable<Keyword[]> () {
+                        public Keyword[] call () throws Exception {
+                            return _getAncestry (facet, predicate);
+                        }
+                    }, CACHE_TIMEOUT);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return new Keyword[0];
+    }
+    
+    public static Keyword[] _getAncestry (String facet, String predicate) {
+        List<Keyword> ancestry = new ArrayList<Keyword>();
+        String[] toks = facet.split("/");
+        if (toks.length == 2) {
+            List<Keyword> terms = KeywordFactory.finder.where
+                (Expr.and(Expr.eq("label", toks[0]),
+                          Expr.eq("term", toks[1]))).
+                findList();
+            if (!terms.isEmpty()) {
+                Keyword anchor = terms.iterator().next();
+                List<Predicate> pred = PredicateFactory.finder
+                    .where().conjunction()
+                    .add(Expr.eq("subject.refid", anchor.id))
+                    .add(Expr.eq("subject.kind", anchor.getClass().getName()))
+                    .add(Expr.eq("predicate", predicate))
+                    .findList();
+                if (!pred.isEmpty()) {
+                    for (XRef ref : pred.iterator().next().objects) {
+                        if (ref.kind.equals(anchor.getClass().getName())) {
+                            Keyword kw = (Keyword)ref.deRef();
+                            String url = ix.idg.controllers
+                                .routes.IDGApp.targets(null, 30, 1).url();
+                            kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
+                                +"facet="+kw.label+"/"+kw.term;
+                            ancestry.add(kw);
+                        }
+                    }
+                    /* This sort is necessary to ensure the correct
+                     * ordering of the nodes. This only works because
+                     * the node labels have proper encoding for the level
+                     * embedded in the label.
+                     */
+                    Collections.sort(ancestry, new Comparator<Keyword>() {
+                            public int compare (Keyword kw1, Keyword kw2) {
+                                return kw1.label.compareTo(kw2.label);
+                            }
+                        });
+                }
+                //ancestry.add(anchor);
+            }
+            else {
+                Logger.warn("Uknown Keyword: label=\""+toks[0]+"\" term=\""
+                            +toks[1]+"\"");
+            }
+        }
+        return ancestry.toArray(new Keyword[0]);
+    }
+
+    public static Keyword[] getProteinAncestry (String facet) {
+        return getAncestry (facet, TcrdRegistry.ChEMBL_PROTEIN_ANCESTRY);
     }
 
     public static Result search (String kind) {

@@ -20,8 +20,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Table(name="ix_idg_target")
 public class Target extends EntityModel {
     public static final String IDG_FAMILY = "IDG Target Family";
-    public static final String IDG_CLASSIFICATION =
-        "IDG Target Classification";
+    public static final String IDG_DEVELOPMENT =
+        "IDG Target Development";
         
     @Column(length=1024)
     @Indexable(suggest=true,name="Target")
@@ -40,8 +40,8 @@ public class Target extends EntityModel {
     public String idgFamily;
 
     @Column(length=10)
-    @Indexable(facet=true,name=IDG_CLASSIFICATION)
-    public String idgClass;
+    @Indexable(facet=true,name=IDG_DEVELOPMENT)
+    public String idgTDL; // target development level
 
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)

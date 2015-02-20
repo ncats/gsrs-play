@@ -26,6 +26,7 @@ public class Publication extends Model {
 
     @Lob
     @Basic(fetch=FetchType.EAGER)
+    @Indexable(suggest=true,name="Publication")
     public String title; // publication title
 
     public String pages;

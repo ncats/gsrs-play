@@ -22,13 +22,10 @@ import ix.core.plugins.TextIndexerPlugin;
 public class DiseaseOntologyRegistry {
     public static final String DOID = "DOID";
     
-    Namespace namespace;
-    static TextIndexer indexer = play.Play.application()
-        .plugin(TextIndexerPlugin.class).getIndexer();
+    static Namespace namespace = NamespaceFactory.registerIfAbsent
+        ("Disease Ontology", "http://www.disease-ontology.org");
     
     public DiseaseOntologyRegistry () {
-        namespace = NamespaceFactory.registerIfAbsent
-            ("Disease Ontology", "http://www.disease-ontology.org");
     }
 
     /**
@@ -37,23 +34,16 @@ public class DiseaseOntologyRegistry {
     public Map<String, Disease> register (InputStream is) throws IOException {
         OboParser obo = new OboParser (is);
 
-        SearchOptions opt = new SearchOptions ();
-        opt.kind = Disease.class;
-        opt.sideway = false;
-        
         Map<String, String> parents  = new HashMap<String, String>();
         Map<String, Disease> diseaseMap = new HashMap<String, Disease>();
         while (obo.next()) {
             if (obo.obsolete)
                 continue;
             
-            opt.setFacet(DOID, obo.id);
-
             List<Disease> diseases = DiseaseFactory.finder
                 .where(Expr.and(Expr.eq("synonyms.label", DOID),
                                 Expr.eq("synonyms.term", obo.id)))
                 .findList();
-            //TextIndexer.SearchResult results = indexer.search(opt, null);
             if (diseases.isEmpty()) {
                 Disease disease = new Disease ();
                 disease.name = obo.name;

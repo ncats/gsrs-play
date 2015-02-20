@@ -9,7 +9,7 @@
 @tabrow(t: Target) = {
 <tr>
   <td><a href="@ix.idg.controllers.routes.IDGApp.target(t.id)">@t.name</a></td>
-  <td>@t.idgClass</td>
+  <td>@t.idgTDL</td>
   <td>@t.idgFamily</td>
 </tr>
 }
@@ -24,6 +24,9 @@ current, rows, total, pages, facets){
       <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
        @for(f <- facets) {
           @if(f.startsWith(TcrdRegistry.ChEMBL_PROTEIN_CLASS)) {
+	     @for(a <- IDGApp.getProteinAncestry(f)) {
+	        <li><a href="@a.href">@a.term</a></li>
+             }
 	     <li class="active">@f.substring(f.indexOf('/')+1)</li>
 	  }
        }
@@ -36,7 +39,7 @@ current, rows, total, pages, facets){
 <table class="table table-striped">
   <tr>
     <th>Name</th>
-    <th>Classification</th>
+    <th>Development Level</th>
     <th>Target Family</th>
   </tr>
   @for(t <- targets) {

@@ -88,6 +88,10 @@ public class PublicationFactory extends EntityFactory {
         return get (id, expand, finder);
     }
 
+    public static Result edits (Long id) {
+        return edits (id, Publication.class);
+    }
+
     public static Publication getPub (Long id) {
         return getEntity (id, finder);
     }
