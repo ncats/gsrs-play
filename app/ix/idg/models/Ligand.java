@@ -18,7 +18,7 @@ import ix.core.models.XRef;
 import ix.core.models.Publication;
 import ix.core.models.BeanViews;
 import ix.core.models.EntityModel;
-import ix.ginas.models.Structure;
+import ix.core.models.Structure;
 import ix.utils.Global;
 
 import com.fasterxml.jackson.annotation.JsonView;

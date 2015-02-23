@@ -1,8 +1,9 @@
 package ix.idg.controllers;
 
 import ix.core.NamedResource;
-import ix.core.controllers.EntityFactory;
 import ix.idg.models.Disease;
+import ix.core.controllers.EntityFactory;
+
 import play.db.ebean.Model;
 import play.mvc.Result;
 
@@ -56,13 +57,13 @@ public class DiseaseFactory extends EntityFactory {
     }
 
     public static Disease registerIfAbsent (String name) {
-	List<Disease> diseases = finder.where().eq("name", name).findList();
-	if (diseases.isEmpty()) {
-	    Disease dis = new Disease ();
-	    dis.name = name;
-	    dis.save();
-	    return dis;
-	}
-	return diseases.iterator().next();
+        List<Disease> diseases = finder.where().eq("name", name).findList();
+        if (diseases.isEmpty()) {
+            Disease dis = new Disease ();
+            dis.name = name;
+            dis.save();
+            return dis;
+        }
+        return diseases.iterator().next();
     }
 }

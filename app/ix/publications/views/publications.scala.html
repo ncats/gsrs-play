@@ -62,8 +62,9 @@
 		<li >PubMed ID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/@p.pmid"><strong>@p.pmid </strong></a><span class = "glyphicon glyphicon-share-alt"></span></li>
 
  </ul>
- @if(!p.figures.isEmpty()){
-	<div><a href="@ix.core.controllers.routes.RouteFactory.get("figures", p.figures(0).id)?format=image" class="highslide" id="zoom" onclick="return hs.expand(this)"><img src="@ix.core.controllers.routes.RouteFactory.get("figures", p.figures(0).id)?format=image"  class="pub-img" alt ="Sample image from publication page"/></a></div>
+     @if(!p.figures.isEmpty()){
+     <div><a href='@{ix.core.controllers.v1.routes.RouteFactory.get("figures", p.figures(0).id)}?format=image'
+	     class="highslide" id="zoom" onclick="return hs.expand(this)"><img src='@{ix.core.controllers.v1.routes.RouteFactory.get("figures", p.figures(0).id)}?format=image'  class="pub-img" alt ="Sample image from publication page"/></a></div>
           }
         @if(p.abstractText){
 	<div class = "hidden">@p.abstractText</div>

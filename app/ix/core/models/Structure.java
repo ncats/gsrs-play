@@ -1,4 +1,4 @@
-package ix.ginas.models;
+package ix.core.models;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -10,19 +10,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import ix.core.models.Keyword;
-import ix.core.models.VIntArray;
-import ix.core.models.Indexable;
-import ix.core.models.XRef;
-import ix.core.models.Value;
-import ix.core.models.BeanViews;
-
 import ix.utils.Global;
 
 @MappedSuperclass
 @Entity
-@Table(name="ix_ginas_structure")
-public class Structure extends GinasModel {
+@Table(name="ix_core_structure")
+public class Structure extends IxModel {
     public static final String LyChI_HASH_L1 = "LyChI Hash L1";
     public static final String LyChI_HASH_L2 = "LyChI Hash L2";
     public static final String LyChI_HASH_L3 = "LyChI Hash L3";
@@ -111,7 +104,7 @@ public class Structure extends GinasModel {
     @JsonProperty("_properties")
     public JsonNode getJsonProperties () {
         ObjectNode node = null;
-        if (properties.isEmpty()) {
+        if (!properties.isEmpty()) {
             node = mapper.createObjectNode();
             node.put("count", properties.size());
             node.put("href", Global.getRef(getClass (), id)+"/properties");
@@ -129,5 +122,9 @@ public class Structure extends GinasModel {
             node.put("href", Global.getRef(getClass (), id)+"/links");
         }
         return node;
+    }
+
+    public String getSelf () {
+        return Global.getRef(this)+"?view=full";
     }
 }

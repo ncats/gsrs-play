@@ -20,7 +20,6 @@ import ix.utils.Util;
 public class PayloadPlugin extends Plugin {
     private final Application app;
     private IxContext ctx;
-    private File payload;
 
     public PayloadPlugin (Application app) {
         this.app = app;
@@ -32,7 +31,6 @@ public class PayloadPlugin extends Plugin {
         if (ctx == null)
             throw new IllegalStateException
                 ("IxContext plugin is not loaded!");
-        payload = ctx.payload();
     }
 
     public void onStop () {
@@ -40,6 +38,53 @@ public class PayloadPlugin extends Plugin {
     }
 
     public boolean enabled () { return true; }
+    public Payload createPayload (String name, String mime, InputStream is)
+        throws Exception {
+        MessageDigest md = MessageDigest.getInstance("SHA1");
+        File tmp = File.createTempFile("___", ".tmp", ctx.payload);
+        FileOutputStream fos = new FileOutputStream (tmp);
+        DigestInputStream dis = new DigestInputStream (is, md);
+        
+        byte[] buf = new byte[2048];
+        Payload payload = new Payload ();            
+        payload.size = 0l;
+        for (int nb; (nb = dis.read(buf, 0, buf.length)) > 0; ) {
+            fos.write(buf, 0, nb);
+            payload.size += nb;
+        }
+        dis.close();
+        fos.close();
+        
+        payload.sha1 = Util.toHex(md.digest());
+        List<Payload> found =
+            PayloadFactory.finder.where().eq("sha1", payload.sha1).findList();
+        if (found.isEmpty()) {
+            payload.name = name;
+            payload.mimeType = mime;
+            
+            payload.save();
+            if (payload.id != null) {
+                tmp.renameTo(new File (ctx.payload, payload.id.toString()));
+            }
+            Logger.debug(payload.name+" => "+payload.id + " " +payload.sha1);
+        }
+        else {
+            payload = found.iterator().next();
+            Logger.debug("payload already loaded as "+payload.id);
+        }
+        return payload;
+    }
+
+    public Payload createPayload (String name, String mime, byte[] content)
+        throws Exception {
+        return createPayload (name, mime, new ByteArrayInputStream (content));
+    }
+
+    public Payload createPayload (String name, String mime, String content)
+        throws Exception {
+        return createPayload (name, mime, content.getBytes("utf8"));
+    }
+    
     public Payload parseMultiPart (String field, Http.Request request)
         throws IOException {
         
@@ -50,55 +95,24 @@ public class PayloadPlugin extends Plugin {
             return null;
         }
         
-        Payload pl = null;
+        Payload payload = null;
         Logger.debug("file="+part.getFilename()
                      +" content="+part.getContentType());
 
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA1");
-            File tmp = File.createTempFile("___", ".tmp", payload);
-            FileOutputStream fos = new FileOutputStream (tmp);
-            DigestInputStream dis = new DigestInputStream
-                (new FileInputStream (part.getFile()), md);
-            
-            byte[] buf = new byte[2048];
-            pl = new Payload ();            
-            pl.size = 0l;
-            for (int nb; (nb = dis.read(buf, 0, buf.length)) > 0; ) {
-                fos.write(buf, 0, nb);
-                pl.size += nb;
-            }
-            dis.close();
-            fos.close();
-            
-            pl.sha1 = Util.toHex(md.digest());
-            List<Payload> found =
-                PayloadFactory.finder.where().eq("sha1", pl.sha1).findList();
-            if (found.isEmpty()) {
-                pl.name = part.getFilename();
-                pl.mimeType = part.getContentType();
-                
-                pl.save();
-                if (pl.id != null) {
-                    tmp.renameTo(new File (payload, pl.id.toString()));
-                }
-                Logger.debug(pl.name+" => "+pl.id + " " +pl.sha1);
-            }
-            else {
-                pl = found.iterator().next();
-                Logger.debug("payload already loaded as "+pl.id);
-            }
+            payload = createPayload (part.getFilename(),
+                                     part.getContentType(),
+                                     new FileInputStream (part.getFile()));
         }
         catch (Throwable t) {
             Logger.trace("Can't save payload", t);
-            pl = null;
         }
         
-        return pl;
+        return payload;
     }
 
     public File getPayload (Payload pl) {
-        File file = new File (payload, pl.id.toString());
+        File file = new File (ctx.payload, pl.id.toString());
         if (!file.exists()) {
             return null;
         }

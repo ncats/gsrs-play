@@ -1,12 +1,12 @@
-##
+##################################
 ## Testing..
-##
+##################################
 ->      /test       ix.core.test.Routes
 
-GET     /    ix.core.controllers.RouteFactory.listResources()
 ##################################
 ## API for entity routing
 ##################################
+GET     /    ix.core.controllers.v1.RouteFactory.listResources()
 GET	/edits/:uuid	ix.core.controllers.EditFactory.get(uuid: String)
 GET	/edits/:uuid/	ix.core.controllers.EditFactory.get(uuid: String)
 GET	/edits/:uuid/*field	ix.core.controllers.EditFactory.field(uuid: String, field: String)
@@ -14,22 +14,22 @@ GET     /search         ix.core.controllers.search.SearchFactory.search(q: Strin
 GET     /suggest/@fields       ix.core.controllers.search.SearchFactory.suggestFields
 GET     /suggest/:field       ix.core.controllers.search.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
 GET     /suggest       ix.core.controllers.search.SearchFactory.suggest(q: String, max: Int ?= 10)
-GET     /$context<[a-z0-9_]+>/@count       ix.core.controllers.RouteFactory.count(context: String)
-GET     /$context<[a-z0-9_]+>/search        ix.core.controllers.RouteFactory.search(context: String, q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
-GET     /$context<[a-z0-9_]+>/$id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}>  ix.core.controllers.RouteFactory.getUUID(context: String, id: String, expand:String ?= null)
-GET     /$context<[a-z0-9_]+>($id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}>)  ix.core.controllers.RouteFactory.getUUID(context: String, id: String, expand:String ?= null)
-GET     /$context<[a-z0-9_]+>/:id  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand:String ?= null)
-GET     /$context<[a-z0-9_]+>/:id/@edits      ix.core.controllers.RouteFactory.edits(context: String, id:Long)
-GET     /$context<[a-z0-9_]+>(:id)     ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>(:id)/  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>(:id)/@edits      ix.core.controllers.RouteFactory.edits(context: String, id: Long)
-GET     /$context<[a-z0-9_]+>/:id/  ix.core.controllers.RouteFactory.get(context: String, id: Long, expand: String ?= null)
-GET     /$context<[a-z0-9_]+>/:id/*field  ix.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
-GET     /$context<[a-z0-9_]+>(:id)/*field  ix.core.controllers.RouteFactory.field(context: String, id: Long, field: String)
-GET     /$context<[a-z0-9_]+>  ix.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
-GET     /$context<[a-z0-9_]+>/  ix.core.controllers.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
-POST    /$context<[a-z0-9_]+>  ix.core.controllers.RouteFactory.create(context: String)
-PUT     /$context<[a-z0-9_]+>/:id/*field       ix.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
-PUT     /$context<[a-z0-9_]+>(:id)/*field       ix.core.controllers.RouteFactory.update(context: String, id:Long, field: String)
-#GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       ix.core.controllers.RouteFactory.get(ns: String, resource: String)
+GET     /$context<[a-z0-9_]+>/@count       ix.core.controllers.v1.RouteFactory.count(context: String)
+GET     /$context<[a-z0-9_]+>/search        ix.core.controllers.v1.RouteFactory.search(context: String, q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
+GET     /$context<[a-z0-9_]+>/$id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}>  ix.core.controllers.v1.RouteFactory.getUUID(context: String, id: String, expand:String ?= null)
+GET     /$context<[a-z0-9_]+>($id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}>)  ix.core.controllers.v1.RouteFactory.getUUID(context: String, id: String, expand:String ?= null)
+GET     /$context<[a-z0-9_]+>/:id  ix.core.controllers.v1.RouteFactory.get(context: String, id: Long, expand:String ?= null)
+GET     /$context<[a-z0-9_]+>/:id/@edits      ix.core.controllers.v1.RouteFactory.edits(context: String, id:Long)
+GET     /$context<[a-z0-9_]+>(:id)     ix.core.controllers.v1.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /$context<[a-z0-9_]+>(:id)/  ix.core.controllers.v1.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /$context<[a-z0-9_]+>(:id)/@edits      ix.core.controllers.v1.RouteFactory.edits(context: String, id: Long)
+GET     /$context<[a-z0-9_]+>/:id/  ix.core.controllers.v1.RouteFactory.get(context: String, id: Long, expand: String ?= null)
+GET     /$context<[a-z0-9_]+>/:id/*field  ix.core.controllers.v1.RouteFactory.field(context: String, id: Long, field: String)
+GET     /$context<[a-z0-9_]+>(:id)/*field  ix.core.controllers.v1.RouteFactory.field(context: String, id: Long, field: String)
+GET     /$context<[a-z0-9_]+>  ix.core.controllers.v1.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
+GET     /$context<[a-z0-9_]+>/  ix.core.controllers.v1.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
+POST    /$context<[a-z0-9_]+>  ix.core.controllers.v1.RouteFactory.create(context: String)
+PUT     /$context<[a-z0-9_]+>/:id/*field       ix.core.controllers.v1.RouteFactory.update(context: String, id:Long, field: String)
+PUT     /$context<[a-z0-9_]+>(:id)/*field       ix.core.controllers.v1.RouteFactory.update(context: String, id:Long, field: String)
+#GET     /$ns<[a-z0-9_]+>/$resource<[a-z0-9_]+>       ix.core.controllers.v1.RouteFactory.get(ns: String, resource: String)
 

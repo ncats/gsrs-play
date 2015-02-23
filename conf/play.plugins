@@ -3,7 +3,8 @@
 # ~~~~~~~
 # this plugin must be first!
 2001:ix.core.plugins.IxContext
-2002:ix.core.plugins.TextIndexerPlugin
-2003:ix.core.plugins.EutilsPlugin
-2004:ix.core.plugins.PayloadPlugin
-3000:ix.ginas.plugins.StructureProcessorPlugin
+2005:ix.core.plugins.TextIndexerPlugin
+2010:ix.core.plugins.EutilsPlugin
+2015:ix.core.plugins.PayloadPlugin
+3000:ix.core.plugins.StructureIndexerPlugin
+3005:ix.core.plugins.StructureProcessorPlugin

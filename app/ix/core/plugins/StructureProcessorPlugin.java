@@ -1,4 +1,4 @@
-package ix.ginas.plugins;
+package ix.core.plugins;
 
 import java.util.*;
 import java.util.concurrent.TimeoutException;
@@ -47,18 +47,20 @@ import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
 
 import ix.core.plugins.IxContext;
+import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.models.XRef;
 import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
-import ix.core.controllers.PayloadFactory;
+import ix.core.models.Structure;
+import ix.core.chem.StructureProcessor;
 import ix.core.controllers.ProcessingJobFactory;
-import ix.ginas.chem.*;
-import ix.ginas.models.*;
+import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
 
 public class StructureProcessorPlugin extends Plugin {
     private final Application app;
+    private StructureIndexerPlugin indexer;
     private IxContext ctx;
     private ActorSystem system;
     private ActorRef processor;
@@ -305,11 +307,17 @@ public class StructureProcessorPlugin extends Plugin {
         this.app = app;
     }
 
+    @Override
     public void onStart () {
         ctx = app.plugin(IxContext.class);
         if (ctx == null)
             throw new IllegalStateException
                 ("IxContext plugin is not loaded!");
+        
+        indexer = app.plugin(StructureIndexerPlugin.class);
+        if (indexer == null)
+            throw new IllegalStateException
+                ("StructureIndexerPlugin is not loaded!");
         
         system = ActorSystem.create("StructureProcessor");
         Logger.info("Plugin "+getClass().getName()
@@ -322,6 +330,7 @@ public class StructureProcessorPlugin extends Plugin {
         inbox = Inbox.create(system);
     }
 
+    @Override
     public void onStop () {
         if (system != null)
             system.shutdown();

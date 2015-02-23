@@ -10,73 +10,68 @@ projects: List[Project])
 
  @main("Projects", "NCATS Projects") {
 <div class="row" id="searching">
-
-	<div class="col-md-6 col-md-offset-3">
-		   <form class="main-search" role="search" method="GET"
-				action="@ix.publications.controllers.routes.ReachApp.search(null)">
-	      <div class="input-group">
-		<input type="text" class="form-control typeahead" id="search"
-		       title="Search" placeholder="Search..." name="q">
-		<input type="hidden" name="kind" value="ix.ncats.models.Project" />
-		<span class="input-group-btn">
-		  <button class="btn btn-default" id="search" type="search"
-			  value="submit">
-		    <span class="fa fa-search"></span>
-		  </button>
-		  <a href = "@ix.publications.controllers.routes.ReachApp.projects()" class="btn btn-default">Reset</a>
-		</span>
-	      </div>
-	    </form>
-			
-		</div>
-	</div>
+  <div class="col-md-6 col-md-offset-3">
+    <form class="main-search" role="search" method="GET"
+	  action="@ix.publications.controllers.routes.ReachApp.search(null)">
+      <div class="input-group">
+	<input type="text" class="form-control typeahead" id="search"
+	       title="Search" placeholder="Search..." name="q">
+	<input type="hidden" name="kind" value="ix.ncats.models.Project" />
+	<span class="input-group-btn">
+	  <button class="btn btn-default" id="search" type="search"
+		  value="submit">
+	    <span class="fa fa-search"></span>
+	  </button>
+	  <a href = "@ix.publications.controllers.routes.ReachApp.projects()" class="btn btn-default">Reset</a>
+	</span>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="row" id="pub-history">
-	<div class="col-md-3 col-xs-4">@filters(facets)</div>
-	<!--END panel panel-primary-->
-
-
-
-	<div class="col-md-9 col-xs-8">
-		<div class="panel panel-primary" id="projSlides">
-			<div class="panel-heading">
-				<h3 class="panel-title">Projects:</h3>
-			</div>
-			<!--END panel-heading-->
-			<div class="panel-body" id="proj-main">
-				<div>
-								<ol class="breadcrumb" id="filters"></ol>
-							</div>
-				<div class="row pagination-list">
-					@pagination(current, 12, total, pages)
-				</div>
-				<div class="row" id="allSlides">
-					@for(p <- projects) {
-					<div class="col-md-4 proj-img">
-					<div class ="mobile-show">@p.title</div>
-						<div
-							class="img-hover-parent img-hover-grow overlay-parent overlay-parent-slideup-title-black box ">
-							<a href="@ix.publications.controllers.routes.ReachApp.project(p.id)" title=""
-								class="portfolio-entry-media-link">
-								@if(p.figures.size() > 1){ 
-								<img src="@ix.core.controllers.routes.RouteFactory.get("figures",p.figures(1).id)?format=image"
-								class="img-responsive thumb" alt="@p.title"> }else{
-								<span class ="mobile">@p.title</span> }
-								<div class="overlay-slideup-title black clr">
-									<span class="title">@p.title</span>
-								</div>
-							</a>
-						</div>
-					</div>
-					}
-				</div>
-				<br/>
-				<div class="row pagination-list">
-					@pagination(current, 12, total, pages)
-
-				</div>
-			</div>
-		</div>
+  <div class="col-md-3 col-xs-4">@filters(facets)</div>
+  <!--END panel panel-primary-->
+  <div class="col-md-9 col-xs-8">
+    <div class="panel panel-primary" id="projSlides">
+      <div class="panel-heading">
+	<h3 class="panel-title">Projects:</h3>
+      </div>
+      <!--END panel-heading-->
+      <div class="panel-body" id="proj-main">
+	<div>
+	  <ol class="breadcrumb" id="filters"></ol>
 	</div>
+	<div class="row pagination-list">
+	  @pagination(current, 12, total, pages)
+	</div>
+	<div class="row" id="allSlides">
+	  @for(p <- projects) {
+	    <div class="col-md-4 proj-img">
+	      <div class ="mobile-show">@p.title</div>
+	      <div class="img-hover-parent img-hover-grow overlay-parent overlay-parent-slideup-title-black box ">
+		<a href="@ix.publications.controllers.routes.ReachApp.project(p.id)" title=""
+		   class="portfolio-entry-media-link">
+		  @if(p.figures.size() > 1){
+	           <img src='@{ix.core.controllers.v1.routes.RouteFactory.get("figures",p.figures(1).id)}?format=image'
+			class="img-responsive thumb" alt="@p.title">
+		  } else {
+		   <span class ="mobile">@p.title</span>
+		  }
+		   <div class="overlay-slideup-title black clr">
+		     <span class="title">@p.title</span>
+		   </div>
+                </a>
+              </div>
+            </div>
+          }
+       </div>
+    <br/>
+    <div class="row pagination-list">
+      @pagination(current, 12, total, pages)
+    </div>
+   </div>
+  </div>
+ </div>
 </div>
 }

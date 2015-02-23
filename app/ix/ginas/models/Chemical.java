@@ -6,6 +6,7 @@ import javax.persistence.*;
 
 import ix.core.models.Indexable;
 import ix.core.models.XRef;
+import ix.core.models.Structure;
 
 @Entity
 @DiscriminatorValue("CHE")

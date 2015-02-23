@@ -97,8 +97,10 @@ public class Predicates extends Controller {
 
             bs.clear();
         }
-        return redirect (ix.core.controllers.routes
-                         .RouteFactory.page("predicates", 10, 0, null));
+
+        Call call = ix.core.controllers
+            .v1.routes.RouteFactory.page("predicates", 10, 0, null);
+        return redirect (call);
     }
 
     static char[] alpha = { 

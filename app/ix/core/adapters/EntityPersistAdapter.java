@@ -186,8 +186,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             if (f.getAnnotation(Id.class) != null) {
                 try {
                     Object id = f.get(bean);
-                    if (id instanceof Long) {
-                        Edit edit = new Edit (cls, (Long)id);
+                    if (id != null) {
+                        Edit edit = new Edit (cls, id);
                         edit.oldValue = mapper.writeValueAsString
                             (request.getOldValues());
                         edit.newValue = mapper.writeValueAsString(bean);

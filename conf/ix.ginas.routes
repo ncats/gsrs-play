@@ -2,5 +2,3 @@
 # GINAS
 #
 GET	/	ix.ginas.controllers.GinasFactory.index
-GET	/struc	ix.ginas.controllers.StructureFactory.index
-POST	/load	ix.ginas.controllers.StructureFactory.load

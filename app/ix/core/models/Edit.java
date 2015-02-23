@@ -20,11 +20,9 @@ public class Edit extends Model {
     @JsonIgnore
     @Id
     public UUID id; // internal random id
-
     public final Date created = new Date ();
-    public Date modified;
 
-    public Long refid; // edited entity
+    public String refid; // edited entity
     public String kind;
 
     @ManyToOne(cascade=CascadeType.ALL)
@@ -48,15 +46,9 @@ public class Edit extends Model {
     public String newValue; // value as Json
 
     public Edit () {}
-    public Edit (Class<?> type, Long refid) {
+    public Edit (Class<?> type, Object refid) {
         this.kind = type.getName();
-        this.refid = refid;
-    }
-
-    @PrePersist
-    @PreUpdate
-    public void modified () {
-        this.modified = new Date ();
+        this.refid = refid.toString();
     }
     
     public String getOldValue () {

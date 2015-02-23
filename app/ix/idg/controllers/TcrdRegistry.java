@@ -14,12 +14,12 @@ import play.data.*;
 import play.mvc.*;
 import com.avaje.ebean.*;
 
+import ix.utils.Global;
 import ix.core.models.*;
 import ix.idg.models.*;
 import ix.core.controllers.NamespaceFactory;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
-import ix.utils.Global;
 import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
 import ix.core.search.SearchOptions;

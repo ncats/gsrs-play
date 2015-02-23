@@ -16,39 +16,39 @@ public class EditFactory extends EntityFactory {
         new Model.Finder(UUID.class, Edit.class);
 
     public static Result get (String uuid) {
-	try {
-	    UUID id = UUID.fromString(uuid);
-	    Edit edit = finder.byId(id);
-	    if (edit != null) {
-		ObjectMapper mapper = getEntityMapper ();
-		return ok (mapper.valueToTree(edit));
-	    }
+        try {
+            UUID id = UUID.fromString(uuid);
+            Edit edit = finder.byId(id);
+            if (edit != null) {
+                ObjectMapper mapper = getEntityMapper ();
+                return ok (mapper.valueToTree(edit));
+            }
 
-	    return notFound ("Bad request: "+request().uri());
-	}
-	catch (Exception ex) {
-	    Logger.trace("Can't retrieve edit "+uuid, ex);
-	}
-	
-	return internalServerError
-	    ("Unable to fullfil request: "+request().uri());
+            return notFound ("Bad request: "+request().uri());
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't retrieve edit "+uuid, ex);
+        }
+        
+        return internalServerError
+            ("Unable to fullfil request: "+request().uri());
     }
 
     public static Result field (String uuid, String field) {
-	try {
-	    UUID id = UUID.fromString(uuid);
-	    Edit edit = finder.byId(id);
-	    if (edit != null) {
-		return field (edit, field);
-	    }
-	    
-	    return notFound ("Bad request: "+request().uri());
-	}
-	catch (Exception ex) {
-	    Logger.trace("Can't retrieve edit "+uuid, ex);
-	}
+        try {
+            UUID id = UUID.fromString(uuid);
+            Edit edit = finder.byId(id);
+            if (edit != null) {
+                return field (edit, field);
+            }
+            
+            return notFound ("Bad request: "+request().uri());
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't retrieve edit "+uuid, ex);
+        }
 
-	return internalServerError
-	    ("Unable to fullfil request: "+request().uri());
+        return internalServerError
+            ("Unable to fullfil request: "+request().uri());
     }
 }

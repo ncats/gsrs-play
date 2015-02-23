@@ -27,7 +27,7 @@ import javax.persistence.Entity;
 
 import ix.core.plugins.IxContext;
 import ix.core.NamedResource;
-import ix.core.controllers.RouteFactory;
+import ix.core.controllers.v1.RouteFactory;
 
 import org.reflections.Reflections;
 

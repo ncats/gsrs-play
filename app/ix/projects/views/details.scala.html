@@ -2,105 +2,99 @@
 
 @import helper._
 
-
 @main("Project Details", "NCATS Projects") {
-
-
 <div class="row">
-		<div class="col-md-1">
-		<a href="@ix.publications.controllers.routes.ReachApp.projects()"><span class="glyphicon glyphicon-home house"></span></a>
-	</div>
-	<div class="col-md-10">
-		<h1>@pub.title</h1>
-	</div>
+  <div class="col-md-1">
+    <a href="@ix.publications.controllers.routes.ReachApp.projects()"><span class="glyphicon glyphicon-home house"></span></a>
+  </div>
+  <div class="col-md-10">
+    <h1>@pub.title</h1>
+  </div>
 </div>
 <div class="row">
-@if(pub.keywords.size()!=0){
-	<div class="col-md-2">
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title">Keywords:</h3>
-			</div>
-			<!--END panel-heading-->
-			<div class="panel-body">
-				
-				<ul class = "keywords" style="text-align: left;">
-					@for(a<-pub.keywords){
-					@if(a.term){
-					<li>@a.term.replaceAll("/","/ ")</li> 
-					}
-					}
-				</ul>
-				
-
-			</div>
-		</div>
+  @if(pub.keywords.size()!=0){
+  <div class="col-md-2">
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+	<h3 class="panel-title">Keywords:</h3>
+      </div>
+      <!--END panel-heading-->
+      <div class="panel-body">
+	
+	<ul class = "keywords" style="text-align: left;">
+	  @for(a<-pub.keywords){
+	     @if(a.term){
+		<li>@a.term.replaceAll("/","/ ")</li> 
+	     }
+	   }
+	</ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-10">
+    } else {
+    <div class="col-md-12">
+    }
+    <div class="panel panel-primary">
+      <div class="panel-heading">
+	<h3 class="panel-title">Project Details:</h3>
+      </div>
+      <!--END panel-heading-->
+      <div class="panel-body">
+	@if(pub.figures.size()!=0){
+	<div>
+	  <img src='@{ix.core.controllers.v1.routes.RouteFactory.get("figures",pub.figures(0).id, null)}?format=image' alt ="@pub.objective" class="proj-img">
 	</div>
-	<div class="col-md-10">
-	}else{<div class="col-md-12">
+	<br/>
 	}
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title">Project Details:</h3>
-			</div>
-			<!--END panel-heading-->
-			<div class="panel-body">
-
-
-				@if(pub.figures.size()!=0){
-				<div>
-					<img src="@ix.core.controllers.routes.RouteFactory.get("figures",pub.figures(0).id, null)?format=image"
-						alt ="@pub.objective" class="proj-img">
-				</div>
-				<br /> }
-				<div id="details">
-					@if(pub.objective){
-					<div class="row">
-						<div class="col-md-2 category">Objective:</div>
-						<div class="col-md-10 data">@pub.objective</div>
-					</div>
-					<br /> } 
-					@if(pub.scope){
-					<div class="row">
-						<div class="col-md-2 category">Scope:</div>
-						<div class="col-md-10 data">@pub.scope</div>
-					</div>
-					<br /> } 
-					@if(pub.members.size() != 0){
-					<div class="row">
-						<div class="col-md-2 category">Members:</div>
-						@for(m<- pub.members){
-						<div class="col-md-10 data">@m.getName();</div>
-						} 
-						} 
-						@if(pub.collaborators.size() < 0){
-						<div class="row">
-							<div class="col-md-2 category">Collaborators:</div>
-							@for(c<- pub.collaborators){
-							<div class="col-md-10 data">@c.getName()</div>
-							}
-							 } 
-							 @if(pub.milestones.size() != 0){
-							<div class="row">
-								<div class="col-md-2 category">Milestones:</div>
-								@for(m<- pub.milestones){
-								<div class="col-md-10 data">@m.description</div>
-								} 
-								} 
-								@if(pub.publications.size() < 0){
-								<div class="row">
-									<div class="col-md-2 category">Publications:</div>
-									@for(p<- pub.publications){
-									<div class="col-md-10 data">@p.title</div>
-									} 
-									}
-
-								</div>
-
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			}
+	<div id="details">
+	  @if(pub.objective){
+	  <div class="row">
+	    <div class="col-md-2 category">Objective:</div>
+	    <div class="col-md-10 data">@pub.objective</div>
+	  </div>
+	  <br />
+	  } 
+	  @if(pub.scope){
+	  <div class="row">
+	    <div class="col-md-2 category">Scope:</div>
+	    <div class="col-md-10 data">@pub.scope</div>
+	  </div>
+	  <br />
+	  } 
+	  @if(pub.members.size() != 0) {
+	  <div class="row">
+	    <div class="col-md-2 category">Members:</div>
+	    @for(m<- pub.members){
+		<div class="col-md-10 data">@m.getName();</div>
+		}
+	  </div>
+	  } 
+	  @if(pub.collaborators.size() < 0){
+	     <div class="row">
+	       <div class="col-md-2 category">Collaborators:</div>
+	       @for(c<- pub.collaborators){
+		   <div class="col-md-10 data">@c.getName()</div>
+		   }
+	     </div>		   
+	  }
+          @if(pub.milestones.size() != 0){
+	     <div class="row">
+	       <div class="col-md-2 category">Milestones:</div>
+	       @for(m<- pub.milestones){
+		   <div class="col-md-10 data">@m.description</div>
+		   }
+	     </div>		   
+	  } 
+          @if(pub.publications.size() < 0){
+	     <div class="row">
+	       <div class="col-md-2 category">Publications:</div>
+	       @for(p<- pub.publications){
+		   <div class="col-md-10 data">@p.title</div>
+	       }
+	     </div>
+	  }
+	</div>
+      </div>
+    </div>
+    }

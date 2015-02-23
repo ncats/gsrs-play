@@ -649,12 +649,12 @@ public class EntityFactory extends Controller {
         return notFound (request().uri()+" not found");
     }
 
-    protected static Result edits (Long id, Class<?>... cls) {
+    protected static Result edits (Object id, Class<?>... cls) {
         for (Class<?> c : cls) {
             List<Edit> edits = EditFactory.finder.where
-                (Expr.and(Expr.eq("refid", id),
+                (Expr.and(Expr.eq("refid", id.toString()),
                           Expr.eq("kind", c.getName())))
-                .orderBy("modified desc").findList();
+                .findList();
             if (!edits.isEmpty()) {
                 ObjectMapper mapper = getEntityMapper ();
                 return ok (mapper.valueToTree(edits));

@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
 <title>@title</title>
@@ -27,7 +27,14 @@
       <a href="@ix.idg.controllers.routes.IDGApp.diseases()">
 	<div class="col-xs-6 col-xs-offset-3 col-sm-4 col-sm-offset-3 col-md-3 col-md-offset-3 col-lg-3 col-lg-offset-2 hex" id="disease">
 	  <div>
-	    <img src="@routes.Assets.at("ncats/images/diseases.svg")" class = "off" />	    <img src="@routes.Assets.at("ncats/images/diseases-shadow.svg")" class = "on"/>
+	    <!--[if gte IE 9]><!-->
+	    <img src="@routes.Assets.at("ncats/images/diseases.svg")" alt="Explore diseases" class="off"/>
+	    <img src="@routes.Assets.at("ncats/images/diseases-shadow.svg")" alt="Explore diseases" class="on"/>
+	    <!--<![endif]-->
+	    <!--[if lte IE 8]>
+	    <img src="@routes.Assets.at("ncats/images/diseases.png")" alt="Explore diseases" class="img-responsive off"/>
+	    <img src="@routes.Assets.at("ncats/images/diseases-shadow.png")" alt="Explore diseases" class="img-responsive on"/>
+	    <![endif]-->	    
 	  </div>
 	  <span class="badge">@diseases</span>
 	</div>
@@ -35,10 +42,16 @@
     </div>
     
     <div class="row icons">
-      <a href="@ix.idg.controllers.routes.IDGApp.targets()">
+      <a href="@ix.idg.controllers.routes.IDGApp.targets(null, 20, 1)">
 	<div class="col-xs-6 col-xs-offset-3 col-sm-4 col-sm-offset-1  col-md-3 col-md-offset-1 col-lg-3 col-lg-offset-1 hex" id="target">
-	  <img src="@routes.Assets.at("ncats/images/targets.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/targets-shadow.svg")" class = "on"/>
+	  <!--[if gte IE 9]><!-->
+	  <img src="@routes.Assets.at("ncats/images/targets.svg")" alt="Explore targets" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/targets-shadow.svg")" alt="Explore targets" class = "on"/>
+	  <!--<![endif]-->
+	  <!--[if lte IE 8]>
+          <img src="@routes.Assets.at("ncats/images/targets.png")" alt="Explore targets" class = "img-responsive off"/>
+	  <img src="@routes.Assets.at("ncats/images/targets-shadow.png")" alt="Explore targets" class = "img-responsive on"/>
+	  <![endif]-->	  
 	  <span class="badge">@targets</span>
 	</div>
       </a>
@@ -67,8 +80,14 @@
     <div class="row icons">
       <a href="@ix.idg.controllers.routes.IDGApp.ligands()">
 	<div class="col-xs-6 col-xs-offset-3 col-sm-4 col-sm-offset-3 col-md-3 col-md-offset-3 col-lg-3 col-lg-offset-2 hex" id="ligand">
-	  <img src="@routes.Assets.at("ncats/images/ligands.svg")" class = "off"/>
-	  <img src="@routes.Assets.at("ncats/images/ligands-shadow.svg")" class = "on"/>
+	  <!--[if gte IE 9]><!-->
+	  <img src="@routes.Assets.at("ncats/images/ligands.svg")" alt="Explore ligands" class = "off"/>
+	  <img src="@routes.Assets.at("ncats/images/ligands-shadow.svg")" alt="Explore ligands" class = "on"/>
+	  <!--<![endif]-->
+	  <!--[if lte IE 8]>
+	  <img src="@routes.Assets.at("ncats/images/ligands.png")" alt="Explore ligands" class = "img-responsive off"/>
+	  <img src="@routes.Assets.at("ncats/images/ligands-shadow.png")" alt="Explore ligands" class = "img-responsive on"/>
+	  <![endif]-->	  
 	  <span class="badge">@ligands</span>
 	</div>
       </a>
@@ -97,5 +116,6 @@
 	</div>
       </div>
     </div>
-</body>
+  </div>
+ </body>
 </html>

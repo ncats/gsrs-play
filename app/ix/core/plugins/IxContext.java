@@ -23,6 +23,8 @@ public class IxContext extends Plugin {
     static final String IX_STORAGE_BASE = IX_STORAGE+".base";
     static final String IX_PAYLOAD = "ix.payload";
     static final String IX_PAYLOAD_BASE = IX_PAYLOAD+".base";
+    static final String IX_STRUCTURE = "ix.structure";
+    static final String IX_STRUCTURE_BASE = IX_STRUCTURE+".base";
     
 
     private final Application app;
@@ -31,6 +33,7 @@ public class IxContext extends Plugin {
     public File text;
     public File h2;
     public File payload;
+    public File structure;
     
     private int debug;
     private int cacheTime;
@@ -62,6 +65,7 @@ public class IxContext extends Plugin {
         text = getFile (IX_TEXT_BASE, "text");
         h2 = getFile (IX_H2_BASE, "h2");
         payload = getFile (IX_PAYLOAD_BASE, "payload");
+        structure = getFile (IX_STRUCTURE_BASE, "structure");
         
         Integer level = app.configuration().getInt(IX_DEBUG);
         if (level != null)
@@ -140,6 +144,7 @@ public class IxContext extends Plugin {
     public File text () { return text; }
     public File h2 () { return h2; }
     public File payload () { return payload; }
+    public File structure () { return structure; }
     
     public int cacheTime () { return cacheTime; }
     public boolean debug (int level) { return debug >= level; }

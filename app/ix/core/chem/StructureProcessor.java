@@ -1,4 +1,4 @@
-package ix.ginas.chem;
+package ix.core.chem;
 
 import java.util.*;
 import java.net.URL;
@@ -23,7 +23,7 @@ import ix.core.models.Text;
 import ix.core.models.Value;
 import ix.core.models.XRef;
 import ix.core.models.BeanViews;
-import ix.ginas.models.Structure;
+import ix.core.models.Structure;
 
 
 public class StructureProcessor {

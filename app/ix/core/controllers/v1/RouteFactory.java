@@ -1,4 +1,4 @@
-package ix.core.controllers;
+package ix.core.controllers.v1;
 
 import java.io.*;
 import java.util.*;
@@ -26,7 +26,7 @@ import ix.utils.Global;
 import ix.core.models.*;
 import ix.core.NamedResource;
 import ix.core.controllers.search.SearchFactory;
-
+import ix.core.controllers.EntityFactory;
 
 public class RouteFactory extends Controller {
     static final public Model.Finder<Long, Namespace> resFinder = 
@@ -51,7 +51,6 @@ public class RouteFactory extends Controller {
     public static Result listResources () {
         Set<String> resources = new TreeSet<String>(registry.keySet());
         List<String> urls = new ArrayList<String>();
-        Call call = routes.RouteFactory.listResources();
         ObjectMapper mapper = new ObjectMapper ();      
         ArrayNode nodes = mapper.createArrayNode();
         for (String res : resources) {
@@ -60,7 +59,7 @@ public class RouteFactory extends Controller {
                 .get(res).getAnnotation(NamedResource.class);
             n.put("name", res);
             n.put("kind", named.type().getName());
-            n.put("href", Global.getHost()+call.url()+"/"+res);
+            n.put("href", Global.getHost()+request().uri()+"/"+res);
             n.put("description", named.description());
             nodes.add(n);
         }

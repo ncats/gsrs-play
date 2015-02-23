@@ -18,7 +18,6 @@ import com.avaje.ebean.*;
 
 import ix.core.NamedResource;
 import ix.core.models.Investigator;
-import ix.core.controllers.EntityFactory;
 
 
 @NamedResource(name="investigators",

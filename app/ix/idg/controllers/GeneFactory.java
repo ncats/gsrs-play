@@ -54,13 +54,13 @@ public class GeneFactory extends EntityFactory {
     }
 
     public static Gene registerIfAbsent (String name) {
-	List<Gene> genes = finder.where().eq("name", name).findList();
-	if (genes.isEmpty()) {
-	    Gene g = new Gene ();
-	    g.name = name;
-	    g.save();
-	    return g;
-	}
-	return genes.iterator().next();
+        List<Gene> genes = finder.where().eq("name", name).findList();
+        if (genes.isEmpty()) {
+            Gene g = new Gene ();
+            g.name = name;
+            g.save();
+            return g;
+        }
+        return genes.iterator().next();
     }
 }
