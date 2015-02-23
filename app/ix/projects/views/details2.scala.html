@@ -1,0 +1,150 @@
+@(message: String, pub: ix.ncats.models.Project) 
+
+@import helper._
+
+
+@main("Project Details", "NCATS Projects") {
+
+<div class="row dark">
+	<div class="col-md-1">
+		<a href="@ix.publications.controllers.routes.ReachApp.projects()"><span
+			class="glyphicon glyphicon-home house"></span></a>
+	</div>
+	<div class="col-md-2 col-md-offset-4" id="pdf">
+		<div>Download summary as PDF</div>
+		<div>Download summary as PPT</div>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-md-10">
+		<h1 class="text-uppercase">
+			<strong>Project Target</strong>
+		</h1>
+		<h2>
+			<em>@pub.title</em>
+		</h2>
+		<h4>Updated: date</h4>
+		<div class="row">
+			@if(pub.keywords.size()!=0){ 
+				@for(k<- pub.keywords){
+					@if(k.label=="Category"){
+			<div class="col-md-2">@k.term</div>
+					}
+				} 
+			}
+		</div>
+	</div>
+	<div class="col-md-1 col-md-1-offset-11">Probe molecule available
+	</div>
+</div>
+@if(pub.objective){
+<div class="row paragraph grey">
+	<div class="col-md-8 col-md-offset-2">
+		<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">Objective</h4>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12 data">@pub.objective</div>
+		</div>
+	</div>
+</div>
+}
+<div class="row images"
+	style="height: 280px; padding-top: 40px; padding-bottom: 40px;">
+	<div class="col-md-5 col-md-offset-1 research">
+		<h3>Research Progression</h3>
+	</div>
+	<div class="col-md-5 spectrum">
+		<h3>Translational spectrum</h3>
+	</div>
+</div>
+
+@if(pub.scope){
+<div class="row paragraph grey">
+	<div class="col-md-8 col-md-offset-2">
+		<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">Scope</h4>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12 data">@pub.scope</div>
+		</div>
+	</div>
+</div>
+} 
+@if(pub.milestones.size() != 0){
+<div class="row paragraph">
+	<div class="col-md-8 col-md-offset-2">
+		<div class = "row">
+		<div class="col-md-12 under">
+			<h4 class="head">Milestones</h4>
+			</div>
+			</div>
+			@for(m<- pub.milestones){
+			<div class="row">
+				<div class="col-md-12 data">@m.description</div>
+			</div>
+			}
+		</div>
+		</div>
+	}
+@if(pub.figures.size()!=0){
+	<div class="row paragraph">
+	<div class="col-md-8 col-md-offset-2">
+	  <img src='@{ix.core.controllers.v1.routes.RouteFactory.get("figures",pub.figures(0).id, null)}?format=image' alt ="@pub.objective" class="proj-img">
+	</div>
+	</div>
+	}
+	
+	@if(pub.members.size() != 0){
+	<div class="row paragraph grey">
+	<div class="col-md-8 col-md-offset-2">
+		<div class = "row">
+		<div class="col-md-12 under">
+			<h4 class="head">NCATS team members</h4>
+			</div>
+		@for(m<- pub.members){
+		<div class="col-md-12 data">@m.getName();</div>
+		} 
+		</div>
+		</div>
+		</div>
+		} 
+		
+		
+		
+		@if(pub.collaborators.size() < 0){
+		<div class="row paragraph">
+	<div class="col-md-8 col-md-offset-2">
+		<div class = "row">
+		<div class="col-md-12 under">
+			<h4 class="head">Collaborating labs</h4>
+			@for(c<- pub.collaborators){
+		<div class="col-md-12 data">@c.getName();</div>
+		}
+			</div>
+			</div>
+			</div>
+			} 
+			
+	<div class="row paragraph grey">
+	<div class="col-md-8 col-md-offset-2">
+		<div class = "row">
+		<div class="col-md-12 under">
+			<h4 class="head">More information</h4>
+			</div>
+			</div>
+			
+			
+
+			</div>
+
+		</div>
+	</div>
+
+
+}

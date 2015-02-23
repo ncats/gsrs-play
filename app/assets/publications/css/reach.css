@@ -215,9 +215,7 @@ background-color: white;
 
 /*PROJECTS PAGE*/
 
-.proj-img{
-        height:250px;
-}
+
 .mobile-show{
         display:none;
 }
@@ -232,3 +230,56 @@ background-color: white;
 }
 }
 /*END PROJECTs PAGE*/
+
+
+/*PROJECT DETAILS PAGE*/
+
+.dark{
+	background-color: #b3b3b3;
+	}
+	
+#pdf, #ppt{
+	background-color:orange;
+	
+}
+
+.grey {
+background-color: #f0f0f0;
+padding-top: 20px;
+padding-bottom: 60px;
+}
+
+.paragraph {
+padding-top: 20px;
+padding-bottom: 60px;
+}
+
+.under{
+	border-bottom: 1px solid;
+	padding-left:0px;
+	padding-right:0px;
+	margin-bottom: 10px;
+}
+
+.data{
+	padding-left:0px;
+}
+.head{
+	margin-bottom: 7px;
+}
+
+.research{
+	background-color: #fcf2e3;
+	border-radius:10px;
+	height: 200px;
+	margin-right:10px;
+}
+
+.spectrum{
+	background-color: #dcf2f0;
+	border-radius:10px;
+	height:200px;
+	margin-left:10px;
+	
+}
+/*END PROJECT DETAILS PAGE*/
