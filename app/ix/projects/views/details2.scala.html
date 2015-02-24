@@ -10,13 +10,17 @@
 		<a href="@ix.publications.controllers.routes.ReachApp.projects()"><span
 			class="glyphicon glyphicon-home house"></span></a>
 	</div>
-	<div class="col-md-2 col-md-offset-4" id="pdf">
-		<div>Download summary as PDF</div>
-		<div>Download summary as PPT</div>
+	<div class="col-md-2 col-md-offset-3" id="pdf">
+		<img src="@routes.Assets.at("publications/images/buttons/pdf.svg")" alt="Download summary as PDF"
+			class="img-responsive" />
+	</div>
+	<div class="col-md-2" id="pdf">
+		<img src="@routes.Assets.at("publications/images/buttons/ppt.svg")" alt="Download summary as PPT"
+			class="img-responsive" />
 	</div>
 </div>
 
-<div class="row">
+<div class="row paragraph">
 	<div class="col-md-10">
 		<h1 class="text-uppercase">
 			<strong>Project Target</strong>
@@ -28,14 +32,25 @@
 		<div class="row">
 			@if(pub.keywords.size()!=0){ 
 				@for(k<- pub.keywords){
-					@if(k.label=="Category"){
-			<div class="col-md-2">@k.term</div>
-					}
+					@if(k.label=="Category"){ 
+						@if(k.term =="Central Nervous System Disease"){
+							<div class="col-md-2">
+								<div class="key-badge text-uppercase">CNS disease</div>
+							</div>
+						}else{
+							<div class="col-md-2">
+								<div class="key-badge text-uppercase">@k.term</div>
+							</div>
+						} 
+					} 
 				} 
 			}
 		</div>
 	</div>
-	<div class="col-md-1 col-md-1-offset-11">Probe molecule available
+	<div class="col-md-2">
+		<img src="@routes.Assets.at("publications/images/buttons/probe.svg")" alt="Probe molecule available"
+			class="img-responsive" />
+
 	</div>
 </div>
 @if(pub.objective){
@@ -51,19 +66,9 @@
 		</div>
 	</div>
 </div>
-}
-<div class="row images"
-	style="height: 280px; padding-top: 40px; padding-bottom: 40px;">
-	<div class="col-md-5 col-md-offset-1 research">
-		<h3>Research Progression</h3>
-	</div>
-	<div class="col-md-5 spectrum">
-		<h3>Translational spectrum</h3>
-	</div>
-</div>
-
+} 
 @if(pub.scope){
-<div class="row paragraph grey">
+<div class="row paragraph">
 	<div class="col-md-8 col-md-offset-2">
 		<div class="row">
 			<div class="col-md-12 under">
@@ -75,76 +80,98 @@
 		</div>
 	</div>
 </div>
-} 
+}
+<div class="row images grey"
+	style="height: 280px; padding-top: 40px; padding-bottom: 40px;">
+	<div class="col-md-5 col-md-offset-1 research">
+		<h3>Research Progression</h3>
+	</div>
+	<div class="col-md-5 spectrum">
+		<h3>Translational spectrum</h3>
+	</div>
+</div>
+
 @if(pub.milestones.size() != 0){
 <div class="row paragraph">
 	<div class="col-md-8 col-md-offset-2">
-		<div class = "row">
-		<div class="col-md-12 under">
-			<h4 class="head">Milestones</h4>
+		<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">Milestones</h4>
 			</div>
+		</div>
+		@for(m<- pub.milestones){
+		<div class="row">
+			<div class="col-md-12 data">@m.description</div>
+		</div>
+		}
+	</div>
+</div>
+} 
+@if(pub.figures.size()!=0){
+<div class="row paragraph">
+	<div class="col-md-8 col-md-offset-2">
+		<img
+			src='@{ix.core.controllers.v1.routes.RouteFactory.get("figures",pub.figures(0).id, null)}?format=image'
+			alt="@pub.objective" class="proj-img">
+	</div>
+</div>
+} 
+@if(pub.members.size() != 0){
+<div class="row paragraph grey">
+	<div class="col-md-8 col-md-offset-2">
+		<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">NCATS team members</h4>
 			</div>
-			@for(m<- pub.milestones){
-			<div class="row">
-				<div class="col-md-12 data">@m.description</div>
-			</div>
+			@for(m<- pub.members){
+			<div class="col-md-12 data">@m.getName();</div>
 			}
 		</div>
-		</div>
-	}
-@if(pub.figures.size()!=0){
-	<div class="row paragraph">
-	<div class="col-md-8 col-md-offset-2">
-	  <img src='@{ix.core.controllers.v1.routes.RouteFactory.get("figures",pub.figures(0).id, null)}?format=image' alt ="@pub.objective" class="proj-img">
 	</div>
-	</div>
-	}
-	
-	@if(pub.members.size() != 0){
-	<div class="row paragraph grey">
+</div>
+} 
+@if(pub.collaborators.size() < 0){
+<div class="row paragraph">
 	<div class="col-md-8 col-md-offset-2">
-		<div class = "row">
-		<div class="col-md-12 under">
-			<h4 class="head">NCATS team members</h4>
+		<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">Collaborating labs</h4>
+				@for(c<- pub.collaborators){
+				<div class="col-md-12 data">@c.getName();</div>
+				}
 			</div>
-		@for(m<- pub.members){
-		<div class="col-md-12 data">@m.getName();</div>
-		} 
-		</div>
-		</div>
-		</div>
-		} 
-		
-		
-		
-		@if(pub.collaborators.size() < 0){
-		<div class="row paragraph">
-	<div class="col-md-8 col-md-offset-2">
-		<div class = "row">
-		<div class="col-md-12 under">
-			<h4 class="head">Collaborating labs</h4>
-			@for(c<- pub.collaborators){
-		<div class="col-md-12 data">@c.getName();</div>
-		}
-			</div>
-			</div>
-			</div>
-			} 
-			
-	<div class="row paragraph grey">
-	<div class="col-md-8 col-md-offset-2">
-		<div class = "row">
-		<div class="col-md-12 under">
-			<h4 class="head">More information</h4>
-			</div>
-			</div>
-			
-			
-
-			</div>
-
 		</div>
 	</div>
+</div>
+}
+
+<div class="row grey">
+	<div class="col-md-8 col-md-offset-2">
+		<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">More information</h4>
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-2 col-md-offset-4" id="pdf">
+			<img src="@routes.Assets.at("publications/images/buttons/pubs.svg")" alt="Download summary as PDF"
+					class="img-responsive" />
+		</div>
+		<div class="col-md-2" id="pdf">
+			<img src="@routes.Assets.at("publications/images/buttons/proj.svg")" alt="Download summary as PPT"
+					class="img-responsive" />
+		</div>
+	</div>
+</div>
 
 
+<div class="row dark">
+
+	<div class="col-md-2 col-md-offset-5">
+		<img src="@routes.Assets.at("publications/images/buttons/work.svg")" alt="Work with us!"
+			class="img-responsive" />
+	</div>
+
+</div>
 }
