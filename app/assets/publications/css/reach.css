@@ -2,7 +2,11 @@
 
 body {
   text-shadow: none;
+  position: relative;
+  padding-top: 50px;
+  font-family: Futura, 'Trebuchet MS', Arial, sans-serif;
 }
+
 a{
         color: #1f355c;
 }
@@ -235,7 +239,7 @@ background-color: white;
 /*PROJECT DETAILS PAGE*/
 
 
-.row{
+.pad{
 	padding-top: 20px;
 padding-bottom: 20px;
 }
@@ -254,16 +258,14 @@ padding-bottom: 60px;
 
 .under{
 	border-bottom: 1px solid;
-	padding-left:0px;
-	padding-right:0px;
 	margin-bottom: 10px;
+	margin-left: 20px;
 }
 
-.data{
-	padding-left:0px;
-}
+
 .head{
 	margin-bottom: 7px;
+	margin-left: -16px;
 }
 
 .research{
@@ -289,5 +291,10 @@ padding-bottom: 60px;
 	text-align:center;
 	font-weight: 700;
 font-size: initial;
+}
+
+.icon{
+	max-height: 150px;
+}
 }
 /*END PROJECT DETAILS PAGE*/

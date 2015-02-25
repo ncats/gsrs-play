@@ -4,24 +4,75 @@
 
 
 @main("Project Details", "NCATS Projects") {
+<div class = "container-fluid" id = "DD">
+<nav class="navbar navbar-default navbar-fixed-top" id="scroll">
+  <div class="container-fluid" id ="ss">
+   <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#menu">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
 
+    <div class="collapse navbar-collapse" id="menu">
+      <ul class="nav navbar-nav">
+        <li><a href="#objective">Objective<span class="sr-only">(current)</span></a></li>
+                 <li><a href="#scope">Scope</a></li>
+            <li><a href="#milestones">Milestones</a></li>
+             <li><a href="#members">Members</a></li>
+            <li><a href="#collaborators">Collaborators</a></li>
+            <li><a href="#info">More Information</a></li>
+          </ul>
+      </div>
+  </div>
+</nav>
 <div class="row dark">
-	<div class="col-md-1">
-		<a href="@ix.publications.controllers.routes.ReachApp.projects()"><span
-			class="glyphicon glyphicon-home house"></span></a>
+<div class ="col-md-10 col-md-offset-1">
+<div class = "row">
+	<div class="col-sm-2">
+		<a href="@ix.publications.controllers.routes.ReachApp.projects()">
+		   <!--[if gte IE 10]><!-->
+	    	  	 		<img src="@routes.Assets.at("publications/images/buttons/home2.svg")" alt="Return to projects"
+			class="img icon"/>
+	    		<!--<![endif]-->
+
+<!--[if lte IE 9]>
+		<img src="@routes.Assets.at("publications/images/buttons/home2.png")" alt="Return to projects"
+			class="img icon"/>
+<![endif]-->
+</a>
 	</div>
-	<div class="col-md-2 col-md-offset-3" id="pdf">
-		<img src="@routes.Assets.at("publications/images/buttons/pdf.svg")" alt="Download summary as PDF"
-			class="img-responsive" />
+	<div class="col-sm-2 col-sm-offset-2 hidden-xs">
+		   <!--[if gte IE 10]><!-->
+	    	  	 		<img src="@routes.Assets.at("publications/images/buttons/pdf.svg")" alt="Download summary as PDF"
+			class="img icon"/>
+	    		<!--<![endif]-->
+
+<!--[if lte IE 9]>
+		<img src="@routes.Assets.at("publications/images/buttons/pdf.png")" alt="Download summary as PDF"
+			class="img icon"/>
+<![endif]-->
 	</div>
-	<div class="col-md-2" id="pdf">
-		<img src="@routes.Assets.at("publications/images/buttons/ppt.svg")" alt="Download summary as PPT"
-			class="img-responsive" />
+	<div class="col-sm-2 hidden-xs">
+			   <!--[if gte IE 10]><!-->
+	    	  	 		<img src="@routes.Assets.at("publications/images/buttons/ppt.svg")" alt="Download summary as PPT"
+			class="img icon"/>
+	    		<!--<![endif]-->
+
+<!--[if lte IE 9]>
+		<img src="@routes.Assets.at("publications/images/buttons/ppt.png")" alt="Download summary as PPT"
+			class="img icon"/>
+<![endif]-->
 	</div>
 </div>
-
+</div>
+</div>
 <div class="row paragraph">
-	<div class="col-md-10">
+<div class ="col-md-10 col-md-offset-1">
+<div class = "row">
+	<div class="col-sm-10">
 		<h1 class="text-uppercase">
 			<strong>Project Target</strong>
 		</h1>
@@ -34,11 +85,11 @@
 				@for(k<- pub.keywords){
 					@if(k.label=="Category"){ 
 						@if(k.term =="Central Nervous System Disease"){
-							<div class="col-md-2">
+							<div class="col-sm-2">
 								<div class="key-badge text-uppercase">CNS disease</div>
 							</div>
 						}else{
-							<div class="col-md-2">
+							<div class="col-sm-2">
 								<div class="key-badge text-uppercase">@k.term</div>
 							</div>
 						} 
@@ -47,15 +98,24 @@
 			}
 		</div>
 	</div>
-	<div class="col-md-2">
-		<img src="@routes.Assets.at("publications/images/buttons/probe.svg")" alt="Probe molecule available"
-			class="img-responsive" />
+	<div class="col-sm-2">
+			   <!--[if gte IE 10]><!-->
+	    	  	 		<img src="@routes.Assets.at("publications/images/buttons/probe.svg")" alt="Probe molecula available"
+			class="img icon"/>
+	    		<!--<![endif]-->
+
+<!--[if lte IE 9]>
+		<img src="@routes.Assets.at("publications/images/buttons/probe.png")" alt="Probe molecule available"
+			class="img icon"/>
+<![endif]-->
 
 	</div>
 </div>
+</div>
+</div>
 @if(pub.objective){
-<div class="row paragraph grey">
-	<div class="col-md-8 col-md-offset-2">
+<div class="row paragraph grey" id="objective">
+	<div class="col-md-6 col-md-offset-3">
 		<div class="row">
 			<div class="col-md-12 under">
 				<h4 class="head">Objective</h4>
@@ -68,8 +128,8 @@
 </div>
 } 
 @if(pub.scope){
-<div class="row paragraph">
-	<div class="col-md-8 col-md-offset-2">
+<div class="row paragraph" id ="scope">
+	<div class="col-md-6 col-md-offset-3">
 		<div class="row">
 			<div class="col-md-12 under">
 				<h4 class="head">Scope</h4>
@@ -81,19 +141,18 @@
 	</div>
 </div>
 }
-<div class="row images grey"
-	style="height: 280px; padding-top: 40px; padding-bottom: 40px;">
-	<div class="col-md-5 col-md-offset-1 research">
+<div class="row paragraph grey" id ="milestones">
+	<div class="col-md-4 col-md-offset-2 research">
 		<h3>Research Progression</h3>
 	</div>
-	<div class="col-md-5 spectrum">
+	<div class="col-md-4 spectrum">
 		<h3>Translational spectrum</h3>
 	</div>
 </div>
 
 @if(pub.milestones.size() != 0){
 <div class="row paragraph">
-	<div class="col-md-8 col-md-offset-2">
+	<div class="col-md-6 col-md-offset-3">
 		<div class="row">
 			<div class="col-md-12 under">
 				<h4 class="head">Milestones</h4>
@@ -117,7 +176,7 @@
 </div>
 } 
 @if(pub.members.size() != 0){
-<div class="row paragraph grey">
+<div class="row paragraph grey" id = "members">
 	<div class="col-md-8 col-md-offset-2">
 		<div class="row">
 			<div class="col-md-12 under">
@@ -131,7 +190,7 @@
 </div>
 } 
 @if(pub.collaborators.size() < 0){
-<div class="row paragraph">
+<div class="row paragraph" id ="collaborators">
 	<div class="col-md-8 col-md-offset-2">
 		<div class="row">
 			<div class="col-md-12 under">
@@ -145,8 +204,8 @@
 </div>
 }
 
-<div class="row grey">
-	<div class="col-md-8 col-md-offset-2">
+<div class="row pad grey" id ="info">
+	<div class="col-md-6 col-md-offset-3">
 		<div class="row">
 			<div class="col-md-12 under">
 				<h4 class="head">More information</h4>
@@ -154,24 +213,46 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-md-2 col-md-offset-4" id="pdf">
-			<img src="@routes.Assets.at("publications/images/buttons/pubs.svg")" alt="Download summary as PDF"
-					class="img-responsive" />
+		<div class="col-sm-2 col-sm-offset-4" id="pdf">
+		   <!--[if gte IE 10]><!-->
+	    	  	 		<img src="@routes.Assets.at("publications/images/buttons/pubs.svg")" alt="View related publications"
+			class="img icon"/>
+	    		<!--<![endif]-->
+
+<!--[if lte IE 9]>
+		<img src="@routes.Assets.at("publications/images/buttons/pubs.png")" alt="View related publications"
+			class="img icon"/>
+<![endif]-->
 		</div>
-		<div class="col-md-2" id="pdf">
-			<img src="@routes.Assets.at("publications/images/buttons/proj.svg")" alt="Download summary as PPT"
-					class="img-responsive" />
+		<div class="col-sm-2" id="pdf">
+		   <!--[if gte IE 10]><!-->
+	    	  	 		<img src="@routes.Assets.at("publications/images/buttons/proj.svg")" alt="View related projects"
+			class="img icon"/>
+	    		<!--<![endif]-->
+
+<!--[if lte IE 9]>
+		<img src="@routes.Assets.at("publications/images/buttons/proj.png")" alt="View related projects"
+			class="img icon"/>
+<![endif]-->
 		</div>
 	</div>
 </div>
 
 
-<div class="row dark">
+<div class="row pad dark">
 
 	<div class="col-md-2 col-md-offset-5">
-		<img src="@routes.Assets.at("publications/images/buttons/work.svg")" alt="Work with us!"
-			class="img-responsive" />
+		   <!--[if gte IE 10]><!-->
+	    	  	 		<img src="@routes.Assets.at("publications/images/buttons/work.svg")" alt="Work with us"
+			class="img icon"/>
+	    		<!--<![endif]-->
+
+<!--[if lte IE 9]>
+		<img src="@routes.Assets.at("publications/images/buttons/work.png")" alt="Work with us"
+			class="img icon"/>
+<![endif]-->
 	</div>
 
+</div>
 </div>
 }
