@@ -27,9 +27,9 @@ import com.avaje.ebean.Transaction;
 
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
+import tripod.chem.indexer.StructureIndexer;
 
 import ix.core.plugins.IxContext;
-import ix.core.search.StructureIndexer;
 import ix.core.models.XRef;
 import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
@@ -61,7 +61,7 @@ public class StructureIndexerPlugin extends Plugin {
                     +" initialized; Akka version "+system.Version());
 
         try {
-            indexer = StructureIndexer.getInstance(ctx.structure());
+            indexer = new StructureIndexer (ctx.structure());
         }
         catch (IOException ex) {
             Logger.trace("Can't initialize structure indexer", ex);
@@ -70,9 +70,10 @@ public class StructureIndexerPlugin extends Plugin {
 
     @Override
     public void onStop () {
-        if (system != null) {
+        if (indexer != null)
+            indexer.shutdown();
+        if (system != null)
             system.shutdown();
-        }
         Logger.info("Plugin "+getClass().getName()+" stopped!");
     }
 

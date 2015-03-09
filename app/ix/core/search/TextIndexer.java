@@ -493,14 +493,25 @@ public class TextIndexer {
     }
 
     protected void search (SearchResult searchResult, 
-                           SearchOptions options,
-                           Query query, Filter filter) throws IOException {
+                           SearchOptions options, Query query,
+                           Filter filter) throws IOException {
+        IndexSearcher searcher = new IndexSearcher
+            (DirectoryReader.open(indexWriter, true));
+        try {
+            search (searcher, searchResult, options, query, filter);
+        }
+        finally {
+            searcher.getIndexReader().close();
+        }
+    }
+    
+    protected void search (IndexSearcher searcher, SearchResult searchResult, 
+                           SearchOptions options, Query query, Filter filter)
+        throws IOException {
         if (DEBUG (1)) {
             Logger.debug("## Query: "
                          +query+" Filter: "+filter+" Options:"+options);
         }
-        IndexSearcher searcher = new IndexSearcher
-            (DirectoryReader.open(indexWriter, true));
         
         long start = System.currentTimeMillis();
         Map<String, Model.Finder> finders = 
