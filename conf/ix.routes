@@ -8,6 +8,7 @@
 ->      /clinical       ix.ncats.clinical.Routes
 ->	/ginas		ix.ginas.Routes
 ->	/idg		ix.idg.Routes
+->	/tox21		ix.tox21.Routes
 
 #
 # assets

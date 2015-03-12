@@ -1,0 +1,100 @@
+@import ix.core.search.TextIndexer._
+@import ix.ncats.controllers.App
+@import ix.utils.Util
+
+@(facets: Array[Facet])
+
+<script>
+  var filters = {};
+</script>
+
+@facet(f: Facet) = {
+<div class="panel panel-default">
+  <div class="panel-heading"">
+    <h3 class="panel-title">
+      @f.getName()
+    </h3>
+  </div>
+  <div class="panel-body">
+    <table class="table table-condensed">
+      @** move all selected filters upfront **@
+      @for(i <- 0 until f.getValues().size()) {
+        @if(App.hasFacet(f,i)) {
+	<tr>
+	  @defining(App.sha1(f,i)) { id =>
+	     <td>
+	       <input type="checkbox" checked="true"
+		      onclick="filterToggle(this)" id="@id"/>
+	     </td>
+	     <script>
+	        filters['@id'] = {
+	           checked: @App.hasFacet(f,i),
+                   name: '@App.encode(f)',
+	           value: '@App.encode(f,i)'
+	        };
+	     </script>
+          }
+
+         <td>@f.getValues().get(i).getLabel()</td>
+	 <td>
+           <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
+	 </td>
+        </tr>
+        }
+      }
+      @for(i <- 0 until Math.min(App.MAX_FACETS, f.getValues().size())) {
+        @if(!App.hasFacet(f,i)) {
+	<tr>
+	  @defining(App.sha1(f,i)) { id =>
+	     <td>
+	       <input type="checkbox" onclick="filterToggle(this)" id="@id"/>
+	     </td>
+	     <script>
+	        filters['@id'] = {
+	           checked: @App.hasFacet(f,i),
+                   name: '@App.encode(f)',
+	           value: '@App.encode(f,i)'
+	        };
+	     </script>
+          }
+
+         <td>@f.getValues().get(i).getLabel()</td>
+	 <td>
+           <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
+	 </td>
+        </tr>
+        }
+      }
+    </table>
+  </div>
+</div>
+}
+
+<div class="panel-group">
+  @for(f <- facets) {
+     @facet(f)
+  }
+</div>
+
+<script>
+function filterToggle (el) {
+  filters[el.id].checked = el.checked;
+  /*console.clear();*/
+  var facet = "";
+  for (var f in filters) {
+    console.log(f+': '+filters[f].checked);
+    if (filters[f].checked) {
+      if (facet.length > 0) {
+         facet += '&';
+      }
+      facet += "facet="+filters[f].name + '/' + filters[f].value;
+    }
+  }
+  console.log(el.id+' '+facet);
+  var url = '@HtmlFormat.raw(App.url(facets, "page"))';
+  url += url.length == 0 ? '?' : '&';
+  url += facet;
+  console.log('>> '+url);
+  location.href = url;
+}
+</script>

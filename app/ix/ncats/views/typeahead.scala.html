@@ -1,0 +1,51 @@
+@import ix.ncats.controllers.App
+
+@(fields: Array[String])
+<script>
+$(document).ready(function () {
+   @for(f <- fields) {
+     @defining(App.randvar()) { xx =>     
+       var @xx = new Bloodhound({
+          datumTokenizer: function(d) {
+              return Bloodhound.tokenizers.whitespace(d.key);
+          },
+          queryTokenizer: Bloodhound.tokenizers.whitespace,
+          remote: {
+            wildcard: 'QUERY',
+            url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("@f", "QUERY",10)'
+          }
+       });
+
+       {@xx}.initialize();
+       $('.typeahead').typeahead({
+         hint: true,
+         highlight: true,
+         minLength: 2
+       }, {
+         name: '@f',
+         displayKey: 'key',
+         source: {@xx}.ttAdapter(),
+         templates: {
+           header: '<h4><span class="label label-warning">@f</span></h4>'
+         }
+       });
+     }
+    }
+    $('.typeahead').on("typeahead:selected", function (evt, val, d) {
+        console.log('typeahead selected: '+val+' type: '+d);
+
+        for (var f in val) {
+            console.log(f+' '+val[f]);
+        }
+        if (d == 'MeSH') {
+        }
+        else {
+            $('.typeahead').typeahead('val', '"'+val.key+'"');
+        }
+    });
+    
+    $('.typeahead').on("typeahead:closed", function (evt) {
+        console.log('typeahead closed!');
+    });
+});
+</script>

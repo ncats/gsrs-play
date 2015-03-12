@@ -1,0 +1,34 @@
+@import ix.tox21.models.Sample
+@import ix.tox21.controllers.Tox21App
+@import ix.core.search.TextIndexer.Facet
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+     facets: Array[Facet], samples: List[Sample])
+
+@tabrow(s: Sample) = {
+<tr>
+  <td><a href="@ix.tox21.controllers.routes.Tox21App.sample(s.toxId)">@s.toxId</a></td>
+  <td></td>
+  <td></td>
+</tr>
+}
+
+@ix.ncats.views.html.content("Samples", "ix.tox21.models.Sample",
+ix.tox21.controllers.routes.Tox21App.samples().url,
+current, rows, total, pages, facets){
+<ol class="breadcrumb">
+  <li><a href="@ix.tox21.controllers.routes.Tox21App.samples()"><span class="fa fa-home"></span> Home</a></li>
+  <li class="active">Samples</li>
+</ol>
+}{
+<table class="table table-striped">
+  <tr>
+    <th>Tox21 Sample</th>
+    <th>Header 1</th>
+    <th>Header 2</th>
+  </tr>
+  @for(s <- samples) {
+     @tabrow(s)
+   }
+</table>
+}
