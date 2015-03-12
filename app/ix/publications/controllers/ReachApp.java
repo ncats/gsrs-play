@@ -180,17 +180,6 @@ public class ReachApp extends Controller {
         }
     }
     
-    public static Result project2 (long id) {
-        try {
-            Project p = ProjectFactory.getProject(id);
-            return ok (ix.projects.views.html.details2.render("projects",p));
-        }
-        catch (Exception ex) {
-            return internalServerError
-                (ix.idg.views.html.error.render(500, "Internal server error"));
-        }
-    }
-    
     public static String sha1 (Facet facet, int value) {
         return Util.sha1(facet.getName(),
                          facet.getValues().get(value).getLabel());
