@@ -644,7 +644,12 @@ public class Migration extends Controller {
         Author author = a;
         if (employees.isEmpty()) {
             if (quote) {
-                firstname = "\""+firstname+"\"";
+                // "N Nora"
+                if ("yang".equalsIgnoreCase(lastname)
+                    && firstname.indexOf("Nora") >= 0)
+                    firstname = "nora";
+                else
+                    firstname = "\""+firstname+"\"";
             }
             else if (firstname.length() == 1)
                 firstname += "*";

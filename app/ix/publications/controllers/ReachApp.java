@@ -168,10 +168,11 @@ public class ReachApp extends Controller {
                 (ix.idg.views.html.error.render(500, "Internal server error"));
         }
     }
+
     public static Result project (long id) {
         try {
             Project p = ProjectFactory.getProject(id);
-            return ok (ix.projects.views.html.details.render("projects",p));
+            return ok (ix.projects.views.html.details2.render("projects",p));
         }
         catch (Exception ex) {
             return internalServerError

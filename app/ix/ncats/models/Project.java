@@ -27,10 +27,13 @@ public class Project extends Model {
     @Indexable(suggest=true,name="Project")
     public String title;
     @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String objective;
     @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String scope;
     @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String opportunities; // collaboration opportunities
     public String team;
     public boolean isPublic = true;
