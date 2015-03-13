@@ -12,8 +12,8 @@ import ix.utils.Global;
 import ix.core.models.*;
 
 @Entity
-@Table(name="ix_tox21_qcdata")
-public class QCData extends Model {
+@Table(name="ix_tox21_qcsample")
+public class QCSample extends Model {
     public enum Grade {
         A ("MW Confirmed, Purity > 90%"),
         Ac ("CAUTION, Low Concentration\n"
@@ -49,10 +49,17 @@ public class QCData extends Model {
     
     @Id
     public Long id;
+
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
+    public String comments;
+    
     @OneToOne
     public Sample sample;
+    
+    @Indexable(facet=true,name="QC Grade")
     public Grade grade;
 
-    public QCData () {
+    public QCSample () {
     }
 }

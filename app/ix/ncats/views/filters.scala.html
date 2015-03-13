@@ -2,7 +2,7 @@
 @import ix.ncats.controllers.App
 @import ix.utils.Util
 
-@(facets: Array[Facet])
+@(maxFacets: Int, facets: Array[Facet])
 
 <script>
   var filters = {};
@@ -42,7 +42,7 @@
         </tr>
         }
       }
-      @for(i <- 0 until Math.min(App.MAX_FACETS, f.getValues().size())) {
+      @for(i <- 0 until Math.min(maxFacets, f.getValues().size())) {
         @if(!App.hasFacet(f,i)) {
 	<tr>
 	  @defining(App.sha1(f,i)) { id =>

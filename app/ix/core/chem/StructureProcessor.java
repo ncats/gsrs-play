@@ -30,37 +30,6 @@ public class StructureProcessor {
     static final Logger logger = 
         Logger.getLogger(StructureProcessor.class.getName());
 
-    public static class PathFingerprint {
-        // fingerprint parameters
-        int size; // in bits
-        int bits; // number of bits to turn on for each path
-        int depth; // recursion depth
-        int[] hash;
-
-        PathFingerprint (int size, int bits, int depth) {
-            this.size = size;
-            this.bits = bits;
-            this.depth = depth;
-            hash = new int[(size+31)/32];
-        }
-
-        public PathFingerprint generate (Molecule mol) {
-            MolHandler mh = new MolHandler (mol.cloneMolecule());
-            mh.aromatize();
-            int[] fp = mh.generateFingerprintInInts(hash.length, bits, depth);
-            for (int i = 0; i < fp.length; ++i)
-                hash[i] = fp[i];
-            fp = null;
-            return this;
-        }
-        
-        public int getSize () { return size; }
-        public int getBits () { return bits; }
-        public int getDepth () { return depth; }
-        public int[] getHash () { return hash; }
-    }
-
-
     private StructureProcessor () {}
 
     public static Molecule flip (Molecule mol) {
@@ -247,14 +216,12 @@ public class StructureProcessor {
         //System.out.print(mol.toFormat("mol"));
         
         String[] hash = LyChIStandardizer.hashKeyArray(stdmol);
-        struc.properties.add(new Keyword (Structure.LyChI_HASH_L1, hash[0]));
-        struc.properties.add(new Keyword (Structure.LyChI_HASH_L2, hash[1]));
-        struc.properties.add(new Keyword (Structure.LyChI_HASH_L3, hash[2]));
-        struc.properties.add(new Keyword (Structure.LyChI_HASH_L4, hash[3]));
-        struc.properties.add(new Text (Structure.LyChI_SMILES,
+        struc.properties.add(new Keyword (Structure.HASH_LyChI_L1, hash[0]));
+        struc.properties.add(new Keyword (Structure.HASH_LyChI_L2, hash[1]));
+        struc.properties.add(new Keyword (Structure.HASH_LyChI_L3, hash[2]));
+        struc.properties.add(new Keyword (Structure.HASH_LyChI_L4, hash[3]));
+        struc.properties.add(new Text (Structure.FORMAT_LyChI_SMILES,
                                        ChemUtil.canonicalSMILES(stdmol)));
-        struc.properties.add
-            (new Text (Structure.LyChI_MOLFILE, stdmol.toFormat("mol")));
         struc.definedStereo = def;
         struc.stereoCenters = stereo;
         struc.ezCenters = ez;
@@ -262,9 +229,6 @@ public class StructureProcessor {
         struc.formula = mol.getFormula();
         struc.mwt = mol.getMass();
         struc.smiles = ChemUtil.canonicalSMILES(mol);
-        
-        PathFingerprint pf = new PathFingerprint (512, 2, 6);
-        pf.generate(mol);
     }
 
     public static String toHex (byte[] binary) {

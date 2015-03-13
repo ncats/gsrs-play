@@ -2,14 +2,14 @@
 
 @(title: String, kind: String,
   resetAction: String, current: Int, rows: Int, total: Int,
-  pages: Array[Int], facets: Array[Facet])(breadcrumb: Html)(content: Html)
+  pages: Array[Int], maxFacets: Int, facets: Array[Facet])(header: Html)(breadcrumb: Html)(content: Html)
 
-@main(title, kind){ @breadcrumb }{
+@main(title, kind){ @header }{ @breadcrumb }{
 <div class="container">
   <div class="row">
     @if(total > 0 && facets.length > 0) {
     <div class="col-md-3">
-      @filters(facets)
+      @filters(maxFacets, facets)
     </div>
     <div class="col-md-9">
       } else {

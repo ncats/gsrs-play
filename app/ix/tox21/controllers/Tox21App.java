@@ -23,6 +23,11 @@ import ix.ncats.controllers.App;
 import ix.tox21.models.*;
 
 public class Tox21App extends App {
+    public static final int MAX_FACETS = 14;
+
+    static final String[] QC_FACETS = new String[] {
+        "QC Grade"
+    };
 
     public static Result load () {
         return ok (ix.tox21.views.html.load.render("Load Tox21 QC database"));
@@ -54,8 +59,7 @@ public class Tox21App extends App {
             con = DriverManager.getConnection
                 (jdbcUrl, jdbcUsername, jdbcPassword);
             load (con);
-            return redirect (ix.tox21.controllers
-                             .routes.Tox21App.samples(null, 30, 1));
+            return redirect (routes.Tox21App.index());
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -74,12 +78,56 @@ public class Tox21App extends App {
     }
 
     static void load (Connection con) throws Exception {
-        
+        Statement stm = con.createStatement();
+        try {
+            ResultSet rset = stm.executeQuery
+                ("select * from ncgc_sample where tox21_t0 is not null");
+            int count = 0;
+            while (rset.next()) {
+                String name = rset.getString("sample_name");
+                String ncgc = rset.getString("sample_id");
+                String cas = rset.getString("cas");
+                String sid = rset.getString("tox21_sid");
+                String smiles = rset.getString("smiles_iso");
+                String struc = rset.getString("structure");
+                String grade = rset.getString("tox21_t0");
+                String toxid = rset.getString("tox21_id");
+
+                Sample sample = new Sample (name);
+                sample.synonyms.add(new Keyword (Sample.S_TOX21, toxid));
+                sample.synonyms.add(new Keyword (Sample.S_SID, sid));
+                sample.synonyms.add(new Keyword (Sample.S_CASRN, cas));
+                sample.synonyms.add(new Keyword (Sample.S_NCGC, ncgc));
+                
+                sample.properties.add(new Text (Sample.P_SMILES_ISO, smiles));
+                if (struc != null)
+                    sample.properties.add(new Text (Sample.P_MOLFILE, struc));
+                try {
+                    sample.save();
+                    QCSample qc = new QCSample ();
+                    qc.sample = sample;
+                    qc.grade = QCSample.Grade.valueOf
+                        (QCSample.Grade.class, grade);
+                    qc.save();
+                    Logger.debug(String.format("%1$5d", count+1)
+                                 +" QC="+qc.id+" Sample="
+                                 +sample.id+" "+ncgc+" "+toxid);
+                    ++count;
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            rset.close();
+            Logger.debug(count+" samples processed!");
+        }
+        finally {
+            stm.close();
+        }
     }
 
     public static Result index () {
-        return redirect (ix.tox21.controllers
-                         .routes.Tox21App.samples(null, 30, 1));
+        return redirect (routes.Tox21App.samples(null, 30, 1));
     }
 
     public static Result samples (final String q,
@@ -106,10 +154,10 @@ public class Tox21App extends App {
         final int total = Tox21Factory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
             TextIndexer.SearchResult result =
-                getSearchResult (Sample.class, q, total);
+                getSearchResult (QCSample.class, q, total);
             
-            TextIndexer.Facet[] facets = filter (result.getFacets());
-            List<Sample> samples = new ArrayList<Sample>();
+            TextIndexer.Facet[] facets = filter (result.getFacets(), QC_FACETS);
+            List<QCSample> samples = new ArrayList<QCSample>();
             int[] pages = new int[0];
             if (result.count() > 0) {
                 rows = Math.min(result.count(), Math.max(1, rows));
@@ -117,7 +165,7 @@ public class Tox21App extends App {
                 
                 for (int i = (page-1)*rows, j = 0; j < rows
                          && i < result.count(); ++j, ++i) {
-                    samples.add((Sample)result.getMatches().get(i));
+                    samples.add((QCSample)result.getMatches().get(i));
                 }
             }
             
@@ -126,23 +174,24 @@ public class Tox21App extends App {
                         pages, facets, samples));
         }
         else {
-            String cache = Sample.class.getName()+".facets";
+            String cache = QCSample.class.getName()+".facets";
             if (System.currentTimeMillis() - CACHE_TIMEOUT
                 <= indexer.lastModified())
                 Cache.remove(cache);
             TextIndexer.Facet[] facets = Cache.getOrElse
                 (cache, new Callable<TextIndexer.Facet[]>() {
                         public TextIndexer.Facet[] call () {
-                            return filter (getFacets (Sample.class, FACET_DIM));
+                            return filter
+                            (getFacets (QCSample.class, FACET_DIM), QC_FACETS);
                         }
                     }, CACHE_TIMEOUT);
             
             rows = Math.min(total, Math.max(1, rows));
             int[] pages = {};
-            List<Sample> samples = new ArrayList<Sample>();
+            List<QCSample> samples = new ArrayList<QCSample>();
             if (rows > 0) {
                 pages = paging (rows, page, total);
-                samples = Tox21Factory.getSamples(rows, (page-1)*rows, null);
+                samples = Tox21Factory.getQCSamples(rows, (page-1)*rows, null);
             }
             return ok (ix.tox21.views.html.samples.render
                        (page, rows, total, pages, facets, samples));
@@ -166,5 +215,10 @@ public class Tox21App extends App {
             return internalServerError
                 (ix.ncats.views.html.error.render(400, "Invalid sample: "+id));
         }
+    }
+
+    public static Result search () {
+        String q = request().getQueryString("q");
+        return redirect (routes.Tox21App.samples(q, 30, 1));
     }
 }

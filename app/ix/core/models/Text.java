@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @DiscriminatorValue("TXT")
 public class Text extends Value {
     @Lob
+    @Basic(fetch=FetchType.EAGER)
     public String text;
 
     public Text () {}

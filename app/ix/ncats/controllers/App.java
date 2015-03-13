@@ -28,7 +28,6 @@ public class App extends Controller {
         play.Play.application()
         .configuration().getInt("ix.cache.time", 24*60*60); // 1 day
     
-    public static final int MAX_FACETS = 6;
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 

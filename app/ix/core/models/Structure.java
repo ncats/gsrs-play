@@ -16,20 +16,20 @@ import ix.utils.Global;
 @Entity
 @Table(name="ix_core_structure")
 public class Structure extends IxModel {
-    public static final String LyChI_HASH_L1 = "LyChI Hash L1";
-    public static final String LyChI_HASH_L2 = "LyChI Hash L2";
-    public static final String LyChI_HASH_L3 = "LyChI Hash L3";
-    public static final String LyChI_HASH_L4 = "LyChI Hash L4";    
-    public static final String LyChI_SMILES = "LyChI SMILES";
-    public static final String LyChI_MOLFILE = "LyChI MolFile";
-    
-    public static final String InChI = "InChI";
-    public static final String InChI_KEY = "InChI Key";
-    public static final String FORMAT_MDL = "Format MDL";
-    public static final String FORMAT_SMILES = "Format SMILES";
-    public static final String FORMAT_MRV = "Format MRV";
-    public static final String PATH_FINGERPRINT = "Path Fingerprint";
-
+    /**
+     * Property labels
+     */
+    public static final String FORMAT_InChI = "Format_InChI";
+    public static final String FORMAT_MDL = "Format_MDL";
+    public static final String FORMAT_SMILES = "Format_SMILES";
+    public static final String FORMAT_MRV = "Format_MRV";
+    public static final String FORMAT_LyChI_SMILES = "Format_LyChI_SMILES";
+    public static final String HASH_LyChI_L1 = "LyChI_L1";
+    public static final String HASH_LyChI_L2 = "LyChI_L2";
+    public static final String HASH_LyChI_L3 = "LyChI_L3";
+    public static final String HASH_LyChI_L4 = "LyChI_L4";    
+    public static final String HASH_InChI_Key = "InChI_Key";
+        
     // stereochemistry
     public enum Stereo {
         ABSOLUTE,
@@ -56,10 +56,12 @@ public class Structure extends IxModel {
     
     @Lob
     @Basic(fetch=FetchType.EAGER)
+    @Indexable(indexed=false)
     public String molfile;
     
     @Lob
     @Basic(fetch=FetchType.EAGER)
+    @Indexable(indexed=false)
     public String smiles;
     
     @Indexable(name="Molecular Formla", facet=true)
@@ -87,12 +89,12 @@ public class Structure extends IxModel {
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)    
-    @JoinTable(name="ix_ginas_structure_property")
+    @JoinTable(name="ix_core_structure_property")
     public List<Value> properties = new ArrayList<Value>();
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
-    @JoinTable(name="ix_idg_structure_link")
+    @JoinTable(name="ix_core_structure_link")
     public List<XRef> links = new ArrayList<XRef>();
     
     @Transient

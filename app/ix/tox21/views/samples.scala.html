@@ -1,31 +1,57 @@
+@import ix.tox21.models.QCSample
 @import ix.tox21.models.Sample
 @import ix.tox21.controllers.Tox21App
 @import ix.core.search.TextIndexer.Facet
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-     facets: Array[Facet], samples: List[Sample])
+     facets: Array[Facet], samples: List[QCSample])
 
-@tabrow(s: Sample) = {
+@tabrow(s: QCSample) = {
+  @defining(s.sample.getSynonym(Sample.S_TOX21).term) { toxid => 
 <tr>
-  <td><a href="@ix.tox21.controllers.routes.Tox21App.sample(s.toxId)">@s.toxId</a></td>
-  <td></td>
+  <td><a href="@ix.tox21.controllers.routes.Tox21App.sample(toxid)">@toxid</a></td>
+  <td>@s.sample.getName()</td>
+  <td>@s.grade (@s.grade.desc)</td>
   <td></td>
 </tr>
+  }
 }
 
-@ix.ncats.views.html.content("Samples", "ix.tox21.models.Sample",
+@ix.ncats.views.html.content("Samples", "ix.tox21.models.QCSample",
 ix.tox21.controllers.routes.Tox21App.samples().url,
-current, rows, total, pages, facets){
+current, rows, total, pages, Tox21App.MAX_FACETS, facets){
+  @ix.ncats.views.html.header{
+   <a class="navbar-brand" href="@ix.tox21.controllers.routes.Tox21App.index"
+      style="padding: 0px 5px; margin-left: 0px;">
+     <img height="50" alt="Tox21 Logo"
+	  src='@routes.Assets.at("ncats/images/Tox21_logo.png")'/>
+   </a>
+  }{
+   <ul class="nav navbar-nav navbar-right">
+     <form class="navbar-form navbar-right" role="search" method="GET"
+           action="@ix.tox21.controllers.routes.Tox21App.search">
+       <div class="form-group">
+         <input type="text" id="search-header-field" name="q"
+		class="typeahead form-control" placeholder="Search..."/>
+       </div>
+       <button type="submit" class="btn btn-default">
+         <span class="fa fa-search" aria-hidden="true"></span>
+       </button>
+     </form>
+   </ul> 
+  }
+}{
 <ol class="breadcrumb">
-  <li><a href="@ix.tox21.controllers.routes.Tox21App.samples()"><span class="fa fa-home"></span> Home</a></li>
-  <li class="active">Samples</li>
+  <li><a href="@ix.tox21.controllers.routes.Tox21App.index"><span class="fa fa-home"></span> Home</a></li>
+  <li class="active">Tox21 Samples</li>
 </ol>
 }{
 <table class="table table-striped">
   <tr>
-    <th>Tox21 Sample</th>
-    <th>Header 1</th>
-    <th>Header 2</th>
+    <th>Tox21 ID</th>
+    <th>Name</th>
+    <th>QC Grade</th>
+    <th>Spectra</th>
   </tr>
   @for(s <- samples) {
      @tabrow(s)
