@@ -27,7 +27,8 @@ public class Sample extends EntityModel {
 
     public static final String P_SMILES_ISO = "SMILES_ISO";
     public static final String P_MOLFILE = "MOLFILE";
-    
+
+    @Indexable(facet=true,suggest=true,name="Sample")
     public String name;
     
     @JsonView(BeanViews.Full.class)

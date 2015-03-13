@@ -5,7 +5,7 @@
   pages: Array[Int], maxFacets: Int, facets: Array[Facet])(header: Html)(breadcrumb: Html)(content: Html)
 
 @main(title, kind){ @header }{ @breadcrumb }{
-<div class="container">
+<div class="container-fluid">
   <div class="row">
     @if(total > 0 && facets.length > 0) {
     <div class="col-md-3">

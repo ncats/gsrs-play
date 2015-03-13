@@ -139,6 +139,11 @@ public class App extends Controller {
         return uri.toString();
     }
 
+    public static String truncate (String str, int size) {
+        if (str.length() <= size) return str;
+        return str.substring(0, size)+"...";
+    }
+
     public static String url (String... remove) {
         String url = "http"+ (request().secure() ? "s" : "") + "://"
             +request().host()
@@ -307,16 +312,15 @@ public class App extends Controller {
 
     public static String randvar (int size) {
         Random rand = new Random ();
-        byte[] b = new byte[size];
-        rand.nextBytes(b);
-        StringBuilder sb = new StringBuilder ("z");
-        for (int i = 0; i < b.length; ++i)
-            sb.append(String.format("%$02x", b[i] & 0xff));
+        char[] alpha = {'a','b','c','x','y','z'};
+        StringBuilder sb = new StringBuilder ();
+        for (int i = 0; i < size; ++i)
+            sb.append(alpha[rand.nextInt(alpha.length)]);
         return sb.toString();
     }
     
     public static String randvar () {
-        return randvar (2);
+        return randvar (5);
     }
 
     public static TextIndexer.SearchResult getSearchResult

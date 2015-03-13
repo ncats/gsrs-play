@@ -89,16 +89,23 @@ public class PayloadPlugin extends Plugin {
         throws IOException {
         
         Http.MultipartFormData body = request.body().asMultipartFormData();
-        Http.MultipartFormData.FilePart part = body.getFile(field);
-        if (part == null) {
+        Http.MultipartFormData.FilePart part = null;    
+        if (body != null) {
+            part = body.getFile(field);
+            if (part == null) {
+                Logger.warn("Unable to parse field "
+                            +field+" in multi-part request!");
+                return null;
+            }
+        }
+        else {
             Logger.warn("Request is not multi-part!");
             return null;
         }
-        
-        Payload payload = null;
         Logger.debug("file="+part.getFilename()
                      +" content="+part.getContentType());
-
+        
+        Payload payload = null;
         try {
             payload = createPayload (part.getFilename(),
                                      part.getContentType(),

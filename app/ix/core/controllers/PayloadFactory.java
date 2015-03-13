@@ -58,7 +58,11 @@ public class PayloadFactory extends EntityFactory {
         }
         return null;
     }
-    
+
+    public static File getFile (Payload payload) {
+        return payloadPlugin.getPayload(payload);
+    }
+
     public static InputStream getStream (UUID id) {
         Payload payload = getPayload (id);
         if (payload != null)

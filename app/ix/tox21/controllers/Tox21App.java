@@ -19,14 +19,21 @@ import ix.utils.Util;
 import ix.core.search.TextIndexer;
 import ix.core.models.*;
 import ix.ncats.controllers.App;
+import ix.core.controllers.PayloadFactory;
+import ix.core.plugins.PayloadPlugin;
 
 import ix.tox21.models.*;
+import chemaxon.formats.MolImporter;
+import chemaxon.struc.Molecule;
 
 public class Tox21App extends App {
     public static final int MAX_FACETS = 14;
+    static final PayloadPlugin Payload =
+        Play.application().plugin(PayloadPlugin.class);
 
     static final String[] QC_FACETS = new String[] {
-        "QC Grade"
+        "QC Grade",
+        "Sample"
     };
 
     public static Result load () {
@@ -54,11 +61,25 @@ public class Tox21App extends App {
             return badRequest ("No JDBC URL specified!");
         }
 
-        Connection con = null;
+        Connection con = null;  
         try {
             con = DriverManager.getConnection
                 (jdbcUrl, jdbcUsername, jdbcPassword);
-            load (con);
+            
+            Payload payload = Payload.parseMultiPart
+                ("tox21-file", request ());
+            if (payload != null) {
+                loadFile (con, payload);
+            }
+            else {
+                payload = Payload.parseMultiPart("tox21-sdf", request ());
+                if (payload != null) {
+                    loadSDF (con, payload);
+                }
+                else { // just use the database
+                    load (con);
+                }
+            }
             return redirect (routes.Tox21App.index());
         }
         catch (Exception ex) {
@@ -77,53 +98,113 @@ public class Tox21App extends App {
         }
     }
 
+    static void loadSDF (Connection con, Payload payload) throws Exception {
+        MolImporter mi = new MolImporter (PayloadFactory.getStream(payload));
+        PreparedStatement pstm = con.prepareStatement
+            ("select * from ncgc_sample where sample_id = ?");
+        try {
+            int count = 0;
+            for (Molecule m = new Molecule (); mi.read(m); ) {
+                String id = m.getProperty("ncgc_id");
+                if (id == null) {
+                    id = m.getProperty("PUBCHEM_EXT_DATASOURCE_REGID");
+                }
+
+                if (id == null) {
+                    Logger.warn("Structure contains no valid id");
+                }
+                else {
+                    pstm.setString(1, id);
+                    if (load (pstm.executeQuery()) > 0) {
+                        ++count;
+                    }
+                }
+            }
+            Logger.debug(count+" samples processed!");      
+        }
+        finally {
+            mi.close();
+            pstm.close();
+        }
+    }
+
+    static void loadFile (Connection con, Payload payload) throws Exception {
+        PreparedStatement pstm = con.prepareStatement
+            ("select * from ncgc_sample where sample_id = ?");
+        BufferedReader br = new BufferedReader
+            (new InputStreamReader (PayloadFactory.getStream(payload)));
+        try {
+            int count = 0;
+            for (String line; (line = br.readLine()) != null; ) {
+                pstm.setString(1, line.trim());
+                if (load (pstm.executeQuery()) > 0) {
+                    ++count;
+                }
+            }
+            Logger.debug(count+" samples processed!");      
+        }
+        finally {
+            pstm.close();
+            br.close();
+        }
+    }
+    
     static void load (Connection con) throws Exception {
         Statement stm = con.createStatement();
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from ncgc_sample where tox21_t0 is not null");
-            int count = 0;
-            while (rset.next()) {
-                String name = rset.getString("sample_name");
-                String ncgc = rset.getString("sample_id");
-                String cas = rset.getString("cas");
-                String sid = rset.getString("tox21_sid");
-                String smiles = rset.getString("smiles_iso");
-                String struc = rset.getString("structure");
-                String grade = rset.getString("tox21_t0");
-                String toxid = rset.getString("tox21_id");
-
-                Sample sample = new Sample (name);
-                sample.synonyms.add(new Keyword (Sample.S_TOX21, toxid));
-                sample.synonyms.add(new Keyword (Sample.S_SID, sid));
-                sample.synonyms.add(new Keyword (Sample.S_CASRN, cas));
-                sample.synonyms.add(new Keyword (Sample.S_NCGC, ncgc));
-                
-                sample.properties.add(new Text (Sample.P_SMILES_ISO, smiles));
-                if (struc != null)
-                    sample.properties.add(new Text (Sample.P_MOLFILE, struc));
-                try {
-                    sample.save();
-                    QCSample qc = new QCSample ();
-                    qc.sample = sample;
-                    qc.grade = QCSample.Grade.valueOf
-                        (QCSample.Grade.class, grade);
-                    qc.save();
-                    Logger.debug(String.format("%1$5d", count+1)
-                                 +" QC="+qc.id+" Sample="
-                                 +sample.id+" "+ncgc+" "+toxid);
-                    ++count;
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            rset.close();
+            int count = load (rset);
             Logger.debug(count+" samples processed!");
         }
         finally {
             stm.close();
         }
+    }
+
+    static int load (ResultSet rset) throws SQLException {
+        int count = 0;
+        while (rset.next()) {
+            String name = rset.getString("sample_name");
+            String ncgc = rset.getString("sample_id");
+            String cas = rset.getString("cas");
+            String sid = rset.getString("tox21_sid");
+            String smiles = rset.getString("smiles_iso");
+            String struc = rset.getString("structure");
+            String grade = rset.getString("tox21_t0");
+            String toxid = rset.getString("tox21_id");
+            
+            Sample sample = new Sample (name);
+            sample.synonyms.add(new Keyword (Sample.S_TOX21, toxid));
+            sample.synonyms.add(new Keyword (Sample.S_SID, sid));
+            sample.synonyms.add(new Keyword (Sample.S_CASRN, cas));
+            sample.synonyms.add(new Keyword (Sample.S_NCGC, ncgc));
+            
+            if (smiles != null)
+                sample.properties.add
+                    (new Text (Sample.P_SMILES_ISO, smiles));
+            
+            if (struc != null)
+                sample.properties.add(new Text (Sample.P_MOLFILE, struc));
+            try {
+                sample.save();
+                QCSample qc = new QCSample ();
+                qc.sample = sample;
+                if (grade != null) {
+                    qc.grade = QCSample.Grade.valueOf
+                        (QCSample.Grade.class, grade);
+                }
+                qc.save();
+                Logger.debug(String.format("%1$5d", count+1)
+                             +" QC="+qc.id+" Sample="
+                             +sample.id+" "+ncgc+" "+toxid+" T0="+grade);
+                ++count;
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return count;
     }
 
     public static Result index () {

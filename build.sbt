@@ -1,6 +1,6 @@
 name := "inxight"
 
-version := "0.0.1-tox21"
+version := "0.0.2-tox21"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 

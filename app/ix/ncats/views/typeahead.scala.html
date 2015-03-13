@@ -3,6 +3,7 @@
 @(fields: Array[String])
 <script>
 $(document).ready(function () {
+   var sources = [];
    @for(f <- fields) {
      @defining(App.randvar()) { xx =>     
        var @xx = new Bloodhound({
@@ -12,25 +13,28 @@ $(document).ready(function () {
           queryTokenizer: Bloodhound.tokenizers.whitespace,
           remote: {
             wildcard: 'QUERY',
-            url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("@f", "QUERY",10)'
+            url: '@ix.core.controllers.search.routes.SearchFactory.suggestField(f, "QUERY",10)'
           }
        });
 
-       {@xx}.initialize();
-       $('.typeahead').typeahead({
-         hint: true,
-         highlight: true,
-         minLength: 2
-       }, {
+       @(xx).initialize();
+       sources[sources.length] = {
          name: '@f',
          displayKey: 'key',
-         source: {@xx}.ttAdapter(),
+         source: @{xx}.ttAdapter(),
          templates: {
            header: '<h4><span class="label label-warning">@f</span></h4>'
          }
-       });
-     }
+       };
+      }
     }
+    
+    $('.typeahead').typeahead({
+         hint: true,
+         highlight: true,
+         minLength: 2
+       }, sources);
+       
     $('.typeahead').on("typeahead:selected", function (evt, val, d) {
         console.log('typeahead selected: '+val+' type: '+d);
 

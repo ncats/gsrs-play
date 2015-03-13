@@ -11,8 +11,18 @@
 <tr>
   <td><a href="@ix.tox21.controllers.routes.Tox21App.sample(toxid)">@toxid</a></td>
   <td>@s.sample.getName()</td>
-  <td>@s.grade (@s.grade.desc)</td>
-  <td></td>
+
+  @s.grade match {
+     case null => {
+        <td></td>
+	}
+     case QCSample.Grade.ND => {
+            <td>@s.grade (@s.grade.desc)</td>
+     }
+     case _ => {
+           <td><a href="https://tripod.nih.gov/tox21/QC/@toxid">@s.grade (@s.grade.desc)</a></td>
+       }
+    }
 </tr>
   }
 }
@@ -50,11 +60,17 @@ current, rows, total, pages, Tox21App.MAX_FACETS, facets){
   <tr>
     <th>Tox21 ID</th>
     <th>Name</th>
-    <th>QC Grade</th>
-    <th>Spectra</th>
+    <th>QC Grade [T0]</th>
   </tr>
   @for(s <- samples) {
      @tabrow(s)
    }
 </table>
 }
+
+@**
+** Specify all fields that you want to support autocomplete;
+** Look at /api/v1/suggest/@fields
+** for a list of fields that can be specified!
+**@
+@ix.ncats.views.html.typeahead(Array("Sample", "Tox21"))
