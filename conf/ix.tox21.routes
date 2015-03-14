@@ -4,11 +4,18 @@
 GET	/	ix.tox21.controllers.Tox21App.index
 GET	/index	ix.tox21.controllers.Tox21App.index
 GET	/search	ix.tox21.controllers.Tox21App.search
-GET	/samples	ix.tox21.controllers.Tox21App.samples(q: String ?= null, rows: Int ?= 30, page: Int ?= 1)
+GET	/samples	ix.tox21.controllers.Tox21App.samples(q: String ?= null, rows: Int ?= 25, page: Int ?= 1)
 GET	/samples/:id	ix.tox21.controllers.Tox21App.sample(id: String)
-
+# render a given Sample (not QCSample!)
+GET	/render/:id	ix.tox21.controllers.Tox21App.render(id: Long)
 #
 # building database
 #
 GET	/load	ix.tox21.controllers.Tox21App.load
 POST	/load	ix.tox21.controllers.Tox21App.loader
+
+#
+# api
+#
+GET	/api/samples	ix.tox21.controllers.Tox21Factory.page(top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
+GET	/api/samples/:id	ix.tox21.controllers.Tox21Factory.get(id: Long, expand: String ?= null)

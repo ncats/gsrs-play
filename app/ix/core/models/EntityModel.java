@@ -33,11 +33,17 @@ public abstract class EntityModel extends IxModel {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_links")
     public JsonNode getJsonLinks () {
-        ObjectNode node = null;
+        JsonNode node = null;
         if (!getLinks().isEmpty()) {
-            node = mapper.createObjectNode();
-            node.put("count", getLinks().size());
-            node.put("href", Global.getRef(getClass (), id)+"/links");
+            try {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("count", getLinks().size());
+                n.put("href", Global.getRef(getClass (), id)+"/links");
+                node = n;
+            }
+            catch (Exception ex) {
+                node = mapper.valueToTree(getLinks ());
+            }
         }
         return node;
     }
@@ -45,11 +51,19 @@ public abstract class EntityModel extends IxModel {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_properties")
     public JsonNode getJsonProperties () {
-        ObjectNode node = null;
+        JsonNode node = null;
         if (!getProperties().isEmpty()) {
-            node = mapper.createObjectNode();
-            node.put("count", getProperties().size());
-            node.put("href", Global.getRef(getClass (), id)+"/properties");
+            try {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("count", getProperties().size());
+                n.put("href", Global.getRef(getClass (), id)+"/properties");
+                node = n;
+            }
+            catch (Exception ex) {
+                // this means that the class doesn't have the NamedResource
+                // annotation, so we can't resolve the context
+                node = mapper.valueToTree(getProperties ());
+            }
         }
         return node;
     }
@@ -57,11 +71,17 @@ public abstract class EntityModel extends IxModel {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_synonyms")
     public JsonNode getJsonSynonyms () {
-        ObjectNode node = null;
+        JsonNode node = null;
         if (!getSynonyms().isEmpty()) {
-            node = mapper.createObjectNode();
-            node.put("count", getSynonyms().size());
-            node.put("href", Global.getRef(getClass (), id)+"/synonyms");
+            try {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("count", getSynonyms().size());
+                n.put("href", Global.getRef(getClass (), id)+"/synonyms");
+                node = n;
+            }
+            catch (Exception ex) {
+                node = mapper.valueToTree(getSynonyms ());
+            }
         }
         return node;
     }
@@ -69,11 +89,17 @@ public abstract class EntityModel extends IxModel {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_publications")
     public JsonNode getJsonPublications () {
-        ObjectNode node = null;
+        JsonNode node = null;
         if (!getPublications().isEmpty()) {
-            node = mapper.createObjectNode();
-            node.put("count", getPublications().size());
-            node.put("href", Global.getRef(getClass (), id)+"/publications");
+            try {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("count", getPublications().size());
+                n.put("href", Global.getRef(getClass (), id)+"/publications");
+                node = n;
+            }
+            catch (Exception ex) {
+                node = mapper.valueToTree(getPublications ());
+            }
         }
         return node;
     }

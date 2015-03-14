@@ -10,11 +10,14 @@ import com.avaje.ebean.Query;
 import com.avaje.ebean.Expr;
 
 import ix.tox21.models.QCSample;
+import ix.tox21.models.Sample;
 import ix.core.controllers.EntityFactory;
 
 public class Tox21Factory extends EntityFactory {
     static final public Model.Finder<Long, QCSample> finder = 
         new Model.Finder(Long.class, QCSample.class);
+    static final public Model.Finder<Long, Sample> sampleFinder =
+        new Model.Finder(Long.class, Sample.class);
 
     public static QCSample getQCSample (Long id) {
         return getEntity (id, finder);
@@ -23,6 +26,10 @@ public class Tox21Factory extends EntityFactory {
     public static List<QCSample> getQCSamples
         (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);
+    }
+    
+    public static Sample getSample (Long id) {
+        return sampleFinder.byId(id);
     }
 
     public static Result count () {

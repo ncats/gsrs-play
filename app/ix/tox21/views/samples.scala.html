@@ -2,25 +2,50 @@
 @import ix.tox21.models.Sample
 @import ix.tox21.controllers.Tox21App
 @import ix.core.search.TextIndexer.Facet
+@import ix.utils.Util;
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
      facets: Array[Facet], samples: List[QCSample])
+
+@label(x: Sample) = {
+     @if(x.getName().length() > 30) {
+       <a  href="#@Util.sha1(x.getName()).substring(0,6)"
+           tabindex="0"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="top"
+           data-trigger="click hover focus"
+           data-title="@x.getName()"
+	   data-html="true"
+           data-content="<img src='@ix.tox21.controllers.routes.Tox21App.render(x.id)'>">@x.getName().substring(0, 30)...</a>
+     } else {
+       <a  href="#@Util.sha1(x.getName()).substring(0,6)"
+           tabindex="0"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="top"
+           data-trigger="click hover focus"
+           data-title="@x.getName()"
+	   data-html="true"
+           data-content="<img src='@ix.tox21.controllers.routes.Tox21App.render(x.id)'>">@x.getName()</a>
+     }
+}
 
 @tabrow(s: QCSample) = {
   @defining(s.sample.getSynonym(Sample.S_TOX21).term) { toxid => 
 <tr>
   <td><a href="@ix.tox21.controllers.routes.Tox21App.sample(toxid)">@toxid</a></td>
-  <td>@s.sample.getName()</td>
+  <td>@label(s.sample)</td>
 
   @s.grade match {
      case null => {
         <td></td>
 	}
      case QCSample.Grade.ND => {
-            <td>@s.grade (@s.grade.desc)</td>
+            <td><span class="label label-default">@{s.grade}</span>&nbsp;@HtmlFormat.raw(s.grade.desc.replaceAll("\n", "<br>"))</td>
      }
      case _ => {
-           <td><a href="https://tripod.nih.gov/tox21/QC/@toxid">@s.grade (@s.grade.desc)</a></td>
+           <td><span class="label label-@{s.grade.label}">@s.grade</span>&nbsp;<a href="https://tripod.nih.gov/tox21/QC/@toxid">@HtmlFormat.raw(s.grade.desc.replaceAll("\n", "<br>"))</a></td>
        }
     }
 </tr>
@@ -34,7 +59,7 @@ current, rows, total, pages, Tox21App.MAX_FACETS, facets){
    <a class="navbar-brand" href="@ix.tox21.controllers.routes.Tox21App.index"
       style="padding: 0px 5px; margin-left: 0px;">
      <img height="50" alt="Tox21 Logo"
-	  src='@routes.Assets.at("ncats/images/Tox21_logo.png")'/>
+	  src='@routes.Assets.at("ncats/images/Tox21_logo_128.png")'/>
    </a>
   }{
    <ul class="nav navbar-nav navbar-right">
@@ -73,4 +98,18 @@ current, rows, total, pages, Tox21App.MAX_FACETS, facets){
 ** Look at /api/v1/suggest/@fields
 ** for a list of fields that can be specified!
 **@
-@ix.ncats.views.html.typeahead(Array("Sample", "Tox21"))
+@ix.ncats.views.html.typeahead(Array("Sample", "Tox21", "NCGC","CASRN","SID"))
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+});
+
+$(document).ready(function () { 
+  $('.tree').treegrid({
+   expanderExpandedClass: 'fa fa-angle-down',
+   expanderCollapsedClass: 'fa fa-angle-right',
+   initialState: 'collapsed'
+  });
+});
+</script>

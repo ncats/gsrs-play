@@ -12,6 +12,8 @@ import play.cache.Cache;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+import play.libs.ws.*;
+import play.libs.F;
 import com.avaje.ebean.*;
 
 import ix.utils.Global;
@@ -194,6 +196,9 @@ public class Tox21App extends App {
                     qc.grade = QCSample.Grade.valueOf
                         (QCSample.Grade.class, grade);
                 }
+                else {
+                    qc.grade = QCSample.Grade.ND;
+                }
                 qc.save();
                 Logger.debug(String.format("%1$5d", count+1)
                              +" QC="+qc.id+" Sample="
@@ -208,7 +213,7 @@ public class Tox21App extends App {
     }
 
     public static Result index () {
-        return redirect (routes.Tox21App.samples(null, 30, 1));
+        return redirect (routes.Tox21App.samples(null, 25, 1));
     }
 
     public static Result samples (final String q,
@@ -223,8 +228,9 @@ public class Tox21App extends App {
         }
         catch (Exception ex) {
             ex.printStackTrace();
-            return badRequest (ix.ncats.views.html.error.render
-                               (404, "Invalid page requested: "+page+ex));
+            return internalServerError
+                (ix.ncats.views.html.error.render
+                 (500, "Internal server error: "+ex));
         }
     }
 
@@ -300,6 +306,55 @@ public class Tox21App extends App {
 
     public static Result search () {
         String q = request().getQueryString("q");
-        return redirect (routes.Tox21App.samples(q, 30, 1));
+        return redirect (routes.Tox21App.samples(q, 25, 1));
+    }
+
+    protected static Result _render (Long id) throws Exception {
+        Sample sample = Tox21Factory.getSample(id);
+        if (sample != null) {
+            String ncgc = sample.getSynonym(Sample.S_NCGC).term;
+            WSRequestHolder ws = WS.url
+                ("https://tripod.nih.gov/servlet/renderServletv13")
+                .setFollowRedirects(true)
+                .setQueryParameter("structure", ncgc)
+                .setQueryParameter("format", "svg")
+                .setQueryParameter("size", "150");
+            F.Promise<WSResponse> promise = ws.get();
+            try {
+                WSResponse res = promise.get(5000);
+                byte[] data = res.asByteArray();
+                //Logger.debug("rendering "+ncgc+": "+data.length);
+                //Logger.debug(new String (data));
+                response().setContentType("image/svg+xml");
+                return ok (data);
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't get response for request "+ws.getUrl(), ex);
+            }
+        }
+        return null;
+    }
+    
+    public static Result render (final Long id) {
+        try {
+            String key = "render::sample::"+id;
+            Result result = Cache.getOrElse
+                (key, new Callable<Result>() {
+                        public Result call () throws Exception {
+                            return _render (id);
+                        }
+                    }, CACHE_TIMEOUT);
+            if (result == null) {
+                // don't cache this..
+                Cache.remove(key);
+            }
+            return result;
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError
+                (ix.ncats.views.html.error.render
+                 (500, "Internal server error: "+ex));
+        }
     }
 }

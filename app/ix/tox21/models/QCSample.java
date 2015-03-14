@@ -15,35 +15,37 @@ import ix.core.models.*;
 @Table(name="ix_tox21_qcsample")
 public class QCSample extends Model {
     public enum Grade {
-        A ("MW Confirmed, Purity > 90%"),
+        A ("MW Confirmed, Purity > 90%", "success"),
         Ac ("CAUTION, Low Concentration\n"
-            +"Concentration 5-30% of expected value"),
-        B ("MW Confirmed, Purity 75-90%"),
+            +"Concentration 5-30% of expected value", "danger"),
+        B ("MW Confirmed, Purity 75-90%", "success"),
         Bc ("CAUTION, Low Concentration\n"
-            +"Concentration 5-30% of expected value"),
-        C ("MW Confirmed, Purity 50-75%"),
+            +"Concentration 5-30% of expected value", "danger"),
+        C ("MW Confirmed, Purity 50-75%", "success"),
         Cc ("CAUTION, Low Concentration\n"
-            +"Concentration 5-30% of expected value"),
-        D ("CAUTION, Purity <50%"),
+            +"Concentration 5-30% of expected value", "danger"),
+        D ("CAUTION, Purity <50%", "warning"),
         F ("CAUTION, Incorrect MW\n"
-           +"Biological Activity Unreliable"),
+           +"Biological Activity Unreliable", "danger"),
         Fc ("CAUTION, Very Low Concentration\n"
             +"Concentration <5% of expected value\n"
-            +"Biological Activity Unreliable"),
+            +"Biological Activity Unreliable", "danger"),
         Fns ("CAUTION, No Sample Detected\n"
-             +"Biological Activity Unreliable"),
+             +"Biological Activity Unreliable", "danger"),
         I ("ISOMERS\n"
-           +"Two or more isomers detected"),
+           +"Two or more isomers detected", "info"),
         M ("DEFINED MIXTURE\n"
-           +"Two or more components"),
+           +"Two or more components", "info"),
         ND ("Not Determined\n"
-            +"Analytical analysis is in progress"),
-        W ("Sample Withdrawn"),
-        Z ("MW Confirmed, No Purity Info");
+            +"Analytical analysis is in progress", "default"),
+        W ("Sample Withdrawn", "warning"),
+        Z ("MW Confirmed, No Purity Info", "warning");
         
         public final String desc;
-        Grade (String desc) {
+        public final String label;
+        Grade (String desc, String label) {
             this.desc = desc;
+            this.label = label;
         }
     }
     
