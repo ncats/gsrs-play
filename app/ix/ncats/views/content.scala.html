@@ -1,15 +1,15 @@
-@import ix.core.search.TextIndexer.Facet
+@import ix.ncats.controllers.App.FacetDecorator
 
 @(title: String, kind: String,
   resetAction: String, current: Int, rows: Int, total: Int,
-  pages: Array[Int], maxFacets: Int, facets: Array[Facet])(header: Html)(breadcrumb: Html)(content: Html)
+  pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)
 
 @main(title, kind){ @header }{ @breadcrumb }{
 <div class="container-fluid">
   <div class="row">
     @if(total > 0 && facets.length > 0) {
     <div class="col-md-3">
-      @filters(maxFacets, facets)
+      @filters(facets)
     </div>
     <div class="col-md-9">
       } else {

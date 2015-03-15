@@ -1,66 +1,85 @@
 @import ix.core.search.TextIndexer._
 @import ix.ncats.controllers.App
+@import ix.ncats.controllers.App.FacetDecorator
 @import ix.utils.Util
 
-@(maxFacets: Int, facets: Array[Facet])
+@(facets: Array[FacetDecorator])
 
 <script>
   var filters = {};
 </script>
 
-@facet(f: Facet) = {
+@facet(f: FacetDecorator) = {
 <div class="panel panel-default">
   <div class="panel-heading"">
     <h3 class="panel-title">
-      @f.getName()
+    @if(f.raw) {
+      @HtmlFormat.raw(f.name())
+    } else {
+      @f.name()
+    }
     </h3>
   </div>
   <div class="panel-body">
     <table class="table table-condensed">
       @** move all selected filters upfront **@
-      @for(i <- 0 until f.getValues().size()) {
-        @if(App.hasFacet(f,i)) {
+      @for(i <- 0 until f.size()) {
+        @if(App.hasFacet(f.facet,i)) {
 	<tr>
-	  @defining(App.sha1(f,i)) { id =>
+	  @defining(App.sha1(f.facet,i)) { id =>
 	     <td>
 	       <input type="checkbox" checked="true"
 		      onclick="filterToggle(this)" id="@id"/>
 	     </td>
 	     <script>
 	        filters['@id'] = {
-	           checked: @App.hasFacet(f,i),
-                   name: '@App.encode(f)',
-	           value: '@App.encode(f,i)'
+	           checked: @App.hasFacet(f.facet,i),
+                   name: '@App.encode(f.facet)',
+	           value: '@App.encode(f.facet, i)'
 	        };
 	     </script>
           }
-
-         <td>@f.getValues().get(i).getLabel()</td>
+	 @if(f.raw) {
+            <td>@HtmlFormat.raw(f.label(i))</td>
+         } else {
+            <td>@f.label(i)</td>
+         }
 	 <td>
-           <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
+           @if(f.raw) {
+             <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))</span>
+           } else {
+             <span class="badge" style="float:right;">@f.value(i)</span>
+           }
 	 </td>
         </tr>
         }
       }
-      @for(i <- 0 until Math.min(maxFacets, f.getValues().size())) {
-        @if(!App.hasFacet(f,i)) {
+      @for(i <- 0 until Math.min(f.max, f.size())) {
+        @if(!App.hasFacet(f.facet,i)) {
 	<tr>
-	  @defining(App.sha1(f,i)) { id =>
+	  @defining(App.sha1(f.facet,i)) { id =>
 	     <td>
 	       <input type="checkbox" onclick="filterToggle(this)" id="@id"/>
 	     </td>
 	     <script>
 	        filters['@id'] = {
-	           checked: @App.hasFacet(f,i),
-                   name: '@App.encode(f)',
-	           value: '@App.encode(f,i)'
+	           checked: @App.hasFacet(f.facet, i),
+                   name: '@App.encode(f.facet)',
+	           value: '@App.encode(f.facet, i)'
 	        };
 	     </script>
           }
-
-         <td>@f.getValues().get(i).getLabel()</td>
+          @if(f.raw) {
+            <td>@HtmlFormat.raw(f.label(i))</td>
+          } else {
+            <td>@f.label(i)</td>
+          }
 	 <td>
-           <span class="badge" style="float:right;">@f.getValues().get(i).getCount()</span>
+           @if(f.raw) {
+              <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))</span>
+           } else {
+              <span class="badge" style="float:right;">@f.value(i)</span>
+           }
 	 </td>
         </tr>
         }

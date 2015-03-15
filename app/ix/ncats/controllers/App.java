@@ -16,6 +16,7 @@ import play.mvc.Result;
 import play.mvc.Call;
 
 import ix.core.search.TextIndexer;
+import static ix.core.search.TextIndexer.*;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.controllers.search.SearchFactory;
 import ix.utils.Util;
@@ -33,6 +34,30 @@ public class App extends Controller {
 
     public static final TextIndexer indexer = 
         play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+
+    public static class FacetDecorator {
+        final public Facet facet;
+        final public int max;
+        final public boolean raw;
+
+        public FacetDecorator (Facet facet) {
+            this (facet, false, 6);
+        }
+        public FacetDecorator (Facet facet, boolean raw, int max) {
+            this.facet = facet;
+            this.raw = raw;
+            this.max = max;
+        }
+
+        public String name () { return facet.getName(); }
+        public int size () { return facet.getValues().size(); }
+        public String label (int i) {
+            return facet.getValues().get(i).getLabel();
+        }
+        public String value (int i) {
+            return facet.getValues().get(i).getCount().toString();
+        }
+    }
     
     public static int[] paging (int rowsPerPage, int page, int total) {
         int max = (total+ rowsPerPage-1)/rowsPerPage;
@@ -184,7 +209,7 @@ public class App extends Controller {
      * more specific version that only remove parameters based on 
      * given facets
      */
-    public static String url (TextIndexer.Facet[] facets, String... others) {
+    public static String url (FacetDecorator[] facets, String... others) {
         String url = "http"+ (request().secure() ? "s" : "") + "://"
             +request().host()
             +request().uri();
@@ -202,8 +227,8 @@ public class App extends Controller {
                     if (v != null) {
                         String s = decode (v);
                         boolean matched = false;
-                        for (TextIndexer.Facet f : facets) {
-                            if (s.startsWith(f.getName())) {
+                        for (FacetDecorator f : facets) {
+                            if (s.startsWith(f.name())) {
                                 matched = true;
                                 break;
                             }

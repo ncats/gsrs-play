@@ -1,11 +1,11 @@
 @import ix.tox21.models.QCSample
 @import ix.tox21.models.Sample
 @import ix.tox21.controllers.Tox21App
-@import ix.core.search.TextIndexer.Facet
+@import ix.ncats.controllers.App.FacetDecorator
 @import ix.utils.Util;
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-     facets: Array[Facet], samples: List[QCSample])
+     facets: Array[FacetDecorator], samples: List[QCSample])
 
 @label(x: Sample) = {
      @if(x.getName().length() > 30) {
@@ -54,7 +54,7 @@
 
 @ix.ncats.views.html.content("Samples", "ix.tox21.models.QCSample",
 ix.tox21.controllers.routes.Tox21App.samples().url,
-current, rows, total, pages, Tox21App.MAX_FACETS, facets){
+current, rows, total, pages, facets){
   @ix.ncats.views.html.header{
    <a class="navbar-brand" href="@ix.tox21.controllers.routes.Tox21App.index"
       style="padding: 0px 5px; margin-left: 0px;">
@@ -103,6 +103,7 @@ current, rows, total, pages, Tox21App.MAX_FACETS, facets){
 <script>
 $(function () {
   $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
 });
 
 $(document).ready(function () { 

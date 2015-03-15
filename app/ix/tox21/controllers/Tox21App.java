@@ -19,6 +19,7 @@ import com.avaje.ebean.*;
 import ix.utils.Global;
 import ix.utils.Util;
 import ix.core.search.TextIndexer;
+import static ix.core.search.TextIndexer.*;
 import ix.core.models.*;
 import ix.ncats.controllers.App;
 import ix.core.controllers.PayloadFactory;
@@ -29,7 +30,6 @@ import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
 
 public class Tox21App extends App {
-    public static final int MAX_FACETS = 14;
     static final PayloadPlugin Payload =
         Play.application().plugin(PayloadPlugin.class);
 
@@ -37,6 +37,59 @@ public class Tox21App extends App {
         "QC Grade",
         "Sample"
     };
+
+    static class Tox21GradeFacetDecorator extends FacetDecorator {
+        public Tox21GradeFacetDecorator (Facet facet) {
+            super (facet, true, 14);
+        }
+
+        @Override
+        public String label (int i) {
+            String label = super.label(i);
+            QCSample.Grade grade = QCSample.Grade.valueOf(label);
+            return "<span class=\"label label-"
+                +grade.label+"\" data-toggle=\"tooltip\" "
+                +"data-placement=\"right\" data-html=\"true\" title=\""
+                +grade.desc.replaceAll("\n","<p>")+"\">"
+                +label+"</span>";
+        }
+    }
+
+    static class Tox21FacetDecorator extends FacetDecorator {
+        public Tox21FacetDecorator (Facet facet) {
+            super (facet, true, 6);
+        }
+        
+        @Override
+        public String label (int i) {
+            String label = super.label(i);
+            if (label.length() > 20) {
+                label = "<span "
+                    +"data-toggle=\"tooltip\" data-placement=\"right\" "
+                    +"title=\""+label+"\">"+label.substring(0,20)
+                    +"...</span>";
+            }
+            return label;
+        }
+    }
+
+    static FacetDecorator[] decorate (Facet... facets) {
+        FacetDecorator[] decors = new FacetDecorator[facets.length];
+        for (int i = 0; i < facets.length; ++i) {
+            if (QC_FACETS[0].equals(facets[i].getName())) {
+                // use special decorator
+                decors[i] = new Tox21GradeFacetDecorator (facets[i]);
+            }
+            else if (QC_FACETS[1].equals(facets[i].getName())) {
+                decors[i] = new Tox21FacetDecorator (facets[i]);
+            }
+            else {
+                // use default decorator
+                decors[i] = new FacetDecorator (facets[i]);
+            }
+        }
+        return decors;
+    }
 
     public static Result load () {
         return ok (ix.tox21.views.html.load.render("Load Tox21 QC database"));
@@ -258,7 +311,7 @@ public class Tox21App extends App {
             
             return ok (ix.tox21.views.html.samples.render
                        (page, rows, result.count(),
-                        pages, facets, samples));
+                        pages, decorate (facets), samples));
         }
         else {
             String cache = QCSample.class.getName()+".facets";
@@ -281,7 +334,7 @@ public class Tox21App extends App {
                 samples = Tox21Factory.getQCSamples(rows, (page-1)*rows, null);
             }
             return ok (ix.tox21.views.html.samples.render
-                       (page, rows, total, pages, facets, samples));
+                       (page, rows, total, pages, decorate (facets), samples));
         }
     }
 
@@ -348,7 +401,7 @@ public class Tox21App extends App {
     }
     
     public static Result render (final Long id, final int size) {
-        Logger.debug("render "+id+"."+size);
+        //Logger.debug("render "+id+"."+size);
         try {
             String key = "render::sample::"+id+"::"+size;
             Result result = Cache.getOrElse

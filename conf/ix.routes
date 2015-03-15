@@ -11,10 +11,11 @@
 ->	/tox21		ix.tox21.Routes
 
 #
-# assets
+# assets; the prefix should be modified accordingly to localize
+# to a specific app
 #
-GET     /ix/assets/*file   controllers.Assets.at(path="/public", file)
-GET     /ix/webjars/*file          controllers.WebJarAssets.at(file)
+GET     /tox21/assets/*file   controllers.Assets.at(path="/public", file)
+GET     /tox21/webjars/*file          controllers.WebJarAssets.at(file)
 
 #
 # other routes
