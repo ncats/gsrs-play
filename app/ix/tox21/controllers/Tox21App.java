@@ -284,18 +284,26 @@ public class Tox21App extends App {
                        (page, rows, total, pages, facets, samples));
         }
     }
+
+    static Result _sample (final String id) {
+        List<QCSample> samples = Tox21Factory.finder.where()
+            .eq("sample.synonyms.term", id).setMaxRows(1).findList();
+        if (!samples.isEmpty()) {
+            return ok(ix.tox21.views.html.sampledetails.render
+                      (samples.iterator().next()));
+        }
+        return notFound (ix.ncats.views.html.error.render
+                         (400, "Unknown sample: "+id));
+    }
     
     public static Result sample (final String id) {
         try {
-            /*
             String sha1 = Util.sha1(request ());
             return Cache.getOrElse(sha1, new Callable<Result> () {
                     public Result call () throws Exception {
                         return _sample (id);
                     }
                 }, CACHE_TIMEOUT);
-            */
-            return ok ("Sample "+id);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -309,7 +317,7 @@ public class Tox21App extends App {
         return redirect (routes.Tox21App.samples(q, 25, 1));
     }
 
-    protected static Result _render (Long id) throws Exception {
+    protected static Result _render (Long id, final int size) throws Exception {
         Sample sample = Tox21Factory.getSample(id);
         if (sample != null) {
             String ncgc = sample.getSynonym(Sample.S_NCGC).term;
@@ -318,36 +326,42 @@ public class Tox21App extends App {
                 .setFollowRedirects(true)
                 .setQueryParameter("structure", ncgc)
                 .setQueryParameter("format", "svg")
-                .setQueryParameter("size", "150");
-            F.Promise<WSResponse> promise = ws.get();
+                .setQueryParameter("size", String.valueOf(size));
             try {
-                WSResponse res = promise.get(5000);
+                WSResponse res = ws.get().get(5000);
                 byte[] data = res.asByteArray();
-                //Logger.debug("rendering "+ncgc+": "+data.length);
-                //Logger.debug(new String (data));
-                response().setContentType("image/svg+xml");
-                return ok (data);
+                if (data.length > 0) {
+                    //Logger.debug("rendering "+ncgc+": "+data.length);
+                    //Logger.debug(new String (data));
+                    return ok (data);
+                }
+                Text smiles = (Text)sample.getProperty(Sample.P_SMILES_ISO);
+                Logger.debug("Can't render "+ncgc+"; SMILES="
+                             +(smiles != null ? smiles.text :""));
             }
             catch (Exception ex) {
+                ex.printStackTrace();
                 Logger.trace("Can't get response for request "+ws.getUrl(), ex);
             }
         }
         return null;
     }
     
-    public static Result render (final Long id) {
+    public static Result render (final Long id, final int size) {
+        Logger.debug("render "+id+"."+size);
         try {
-            String key = "render::sample::"+id;
+            String key = "render::sample::"+id+"::"+size;
             Result result = Cache.getOrElse
                 (key, new Callable<Result>() {
                         public Result call () throws Exception {
-                            return _render (id);
+                            return _render (id, size);
                         }
                     }, CACHE_TIMEOUT);
             if (result == null) {
                 // don't cache this..
                 Cache.remove(key);
             }
+            response().setContentType("image/svg+xml");
             return result;
         }
         catch (Exception ex) {

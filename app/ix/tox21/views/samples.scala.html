@@ -13,9 +13,9 @@
            tabindex="0"
            data-toggle="popover"
            data-animation="true"
-           data-placement="top"
+           data-placement="bottom"
            data-trigger="click hover focus"
-           data-title="@x.getName()"
+           data-title="@x.getName() (@x.getSynonym(Sample.S_NCGC).term)"
 	   data-html="true"
            data-content="<img src='@ix.tox21.controllers.routes.Tox21App.render(x.id)'>">@x.getName().substring(0, 30)...</a>
      } else {
@@ -23,9 +23,9 @@
            tabindex="0"
            data-toggle="popover"
            data-animation="true"
-           data-placement="top"
+           data-placement="bottom"
            data-trigger="click hover focus"
-           data-title="@x.getName()"
+           data-title="@x.getName() (@x.getSynonym(Sample.S_NCGC).term)"
 	   data-html="true"
            data-content="<img src='@ix.tox21.controllers.routes.Tox21App.render(x.id)'>">@x.getName()</a>
      }

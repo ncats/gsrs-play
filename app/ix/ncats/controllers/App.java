@@ -48,7 +48,10 @@ public class App extends Controller {
         }
         else if (page >= max-3) {
             pages = new int[10];
-            for (int i = pages.length; --i >= 0; )
+            pages[0] = 1;
+            pages[1] = 2;
+            pages[2] = 0;
+            for (int i = pages.length; --i > 2; )
                 pages[i] = max--;
         }
         else {
@@ -61,6 +64,9 @@ public class App extends Controller {
                 pages[--i] = page;
                 while (i-- > 0)
                     pages[i] = pages[i+1]-1;
+                pages[0] = 1;
+                pages[1] = 2;
+                pages[2] = 0;
             }
             pages[8] = max-1;
             pages[9] = max;
