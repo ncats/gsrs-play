@@ -126,7 +126,12 @@ public class IDGApp extends Controller {
         }
         return pages;
     }
-    
+
+    public static Result about() {
+        return ok (ix.idg.views.html.about.render
+                           ("Pharos: Illuminating the Druggable Genome"));
+    }
+
     public static Result index () {
         return ok (ix.idg.views.html.index2.render
                    ("Pharos: Illuminating the Druggable Genome",
