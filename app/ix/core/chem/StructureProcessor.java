@@ -216,11 +216,11 @@ public class StructureProcessor {
         //System.out.print(mol.toFormat("mol"));
         
         String[] hash = LyChIStandardizer.hashKeyArray(stdmol);
-        struc.properties.add(new Keyword (Structure.HASH_LyChI_L1, hash[0]));
-        struc.properties.add(new Keyword (Structure.HASH_LyChI_L2, hash[1]));
-        struc.properties.add(new Keyword (Structure.HASH_LyChI_L3, hash[2]));
-        struc.properties.add(new Keyword (Structure.HASH_LyChI_L4, hash[3]));
-        struc.properties.add(new Text (Structure.FORMAT_LyChI_SMILES,
+        struc.properties.add(new Keyword (Structure.H_LyChI_L1, hash[0]));
+        struc.properties.add(new Keyword (Structure.H_LyChI_L2, hash[1]));
+        struc.properties.add(new Keyword (Structure.H_LyChI_L3, hash[2]));
+        struc.properties.add(new Keyword (Structure.H_LyChI_L4, hash[3]));
+        struc.properties.add(new Text (Structure.F_LyChI_SMILES,
                                        ChemUtil.canonicalSMILES(stdmol)));
         struc.definedStereo = def;
         struc.stereoCenters = stereo;

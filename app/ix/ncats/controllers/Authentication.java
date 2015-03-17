@@ -29,7 +29,7 @@ public class Authentication extends Controller {
             session ("username", empl.username);
             return redirect (routes.Authentication.index());
         }
-        return ok (ix.ncats.views.html.error.render
+        return ok (ix.ncats.views.html.errordef.render
                    (401, "User \""+username+"\" not authorized!"));
     }
     

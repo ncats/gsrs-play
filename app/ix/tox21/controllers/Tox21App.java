@@ -24,15 +24,39 @@ import ix.core.models.*;
 import ix.ncats.controllers.App;
 import ix.core.controllers.PayloadFactory;
 import ix.core.plugins.PayloadPlugin;
+import ix.core.plugins.StructureProcessorPlugin;
+import ix.core.plugins.StructureReceiver;
 
 import ix.tox21.models.*;
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
 
 public class Tox21App extends App {
+    static final int ROWS_PER_PAGE = 20;
+    
     static final PayloadPlugin Payload =
         Play.application().plugin(PayloadPlugin.class);
 
+    static final StructureProcessorPlugin Processor =
+        Play.application().plugin(StructureProcessorPlugin.class);
+
+    static class Tox21StructureReceiver implements StructureReceiver {
+        QCSample sample;
+        Tox21StructureReceiver (QCSample sample) {
+            this.sample = sample;
+        }
+        
+        public void receive (Status status, String mesg, Structure struc) {
+            if (status == Status.OK) {
+                Logger.debug(status+": struc="
+                             +struc.id+" for sample "+sample.id);
+            }
+            else {
+                Logger.error(status+": sample="+sample.id+": "+mesg);
+            }
+        }
+    }
+        
     static final String[] QC_FACETS = new String[] {
         "QC Grade",
         "Sample"
@@ -140,7 +164,7 @@ public class Tox21App extends App {
         catch (Exception ex) {
             ex.printStackTrace();
             return internalServerError
-                (ix.ncats.views.html.error.render
+                (ix.tox21.views.html.error.render
                  (500, "Internal server error: "+ex));
         }
         finally {
@@ -228,12 +252,15 @@ public class Tox21App extends App {
             String struc = rset.getString("structure");
             String grade = rset.getString("tox21_t0");
             String toxid = rset.getString("tox21_id");
+            String inchi = rset.getString("inchi_hash");
             
             Sample sample = new Sample (name);
             sample.synonyms.add(new Keyword (Sample.S_TOX21, toxid));
             sample.synonyms.add(new Keyword (Sample.S_SID, sid));
             sample.synonyms.add(new Keyword (Sample.S_CASRN, cas));
             sample.synonyms.add(new Keyword (Sample.S_NCGC, ncgc));
+            if (inchi != null)
+                sample.synonyms.add(new Keyword (Sample.S_InChIKey, inchi));
             
             if (smiles != null)
                 sample.properties.add
@@ -253,6 +280,13 @@ public class Tox21App extends App {
                     qc.grade = QCSample.Grade.ND;
                 }
                 qc.save();
+
+                StructureReceiver receiver = new Tox21StructureReceiver (qc);
+                if (struc != null)
+                    Processor.submit(struc, receiver);
+                else if (smiles != null)
+                    Processor.submit(smiles, receiver);
+                
                 Logger.debug(String.format("%1$5d", count+1)
                              +" QC="+qc.id+" Sample="
                              +sample.id+" "+ncgc+" "+toxid+" T0="+grade);
@@ -266,7 +300,7 @@ public class Tox21App extends App {
     }
 
     public static Result index () {
-        return redirect (routes.Tox21App.samples(null, 25, 1));
+        return redirect (routes.Tox21App.samples(null, ROWS_PER_PAGE, 1));
     }
 
     public static Result samples (final String q,
@@ -282,7 +316,7 @@ public class Tox21App extends App {
         catch (Exception ex) {
             ex.printStackTrace();
             return internalServerError
-                (ix.ncats.views.html.error.render
+                (ix.tox21.views.html.error.render
                  (500, "Internal server error: "+ex));
         }
     }
@@ -345,7 +379,7 @@ public class Tox21App extends App {
             return ok(ix.tox21.views.html.sampledetails.render
                       (samples.iterator().next()));
         }
-        return notFound (ix.ncats.views.html.error.render
+        return notFound (ix.tox21.views.html.error.render
                          (400, "Unknown sample: "+id));
     }
     
@@ -361,13 +395,13 @@ public class Tox21App extends App {
         catch (Exception ex) {
             ex.printStackTrace();
             return internalServerError
-                (ix.ncats.views.html.error.render(400, "Invalid sample: "+id));
+                (ix.tox21.views.html.error.render(400, "Invalid sample: "+id));
         }
     }
 
     public static Result search () {
         String q = request().getQueryString("q");
-        return redirect (routes.Tox21App.samples(q, 25, 1));
+        return redirect (routes.Tox21App.samples(q, ROWS_PER_PAGE, 1));
     }
 
     protected static Result _render (Long id, final int size) throws Exception {
@@ -420,7 +454,7 @@ public class Tox21App extends App {
         catch (Exception ex) {
             ex.printStackTrace();
             return internalServerError
-                (ix.ncats.views.html.error.render
+                (ix.tox21.views.html.error.render
                  (500, "Internal server error: "+ex));
         }
     }
