@@ -42,7 +42,6 @@ import ix.utils.Util;
 public class StructureIndexerPlugin extends Plugin {
     private final Application app;
     private IxContext ctx;
-    private ActorSystem system;
     private StructureIndexer indexer;
 
     public StructureIndexerPlugin (Application app) {
@@ -56,15 +55,12 @@ public class StructureIndexerPlugin extends Plugin {
             throw new IllegalStateException
                 ("IxContext plugin is not loaded!");
         
-        system = ActorSystem.create("StructureIndexer");
-        Logger.info("Plugin "+getClass().getName()
-                    +" initialized; Akka version "+system.Version());
-
         try {
-            indexer = new StructureIndexer (ctx.structure());
+            indexer = StructureIndexer.open(ctx.structure());
         }
         catch (IOException ex) {
-            Logger.trace("Can't initialize structure indexer", ex);
+            throw new RuntimeException
+                ("Can't initialize structure indexer", ex);
         }
     }
 
@@ -72,10 +68,9 @@ public class StructureIndexerPlugin extends Plugin {
     public void onStop () {
         if (indexer != null)
             indexer.shutdown();
-        if (system != null)
-            system.shutdown();
         Logger.info("Plugin "+getClass().getName()+" stopped!");
     }
 
     public boolean enabled () { return true; }
+    public StructureIndexer getIndexer () { return indexer; }
 }

@@ -19,16 +19,16 @@ public class Structure extends IxModel {
     /**
      * Property labels
      */
-    public static final String FORMAT_InChI = "Format_InChI";
-    public static final String FORMAT_MDL = "Format_MDL";
-    public static final String FORMAT_SMILES = "Format_SMILES";
-    public static final String FORMAT_MRV = "Format_MRV";
-    public static final String FORMAT_LyChI_SMILES = "Format_LyChI_SMILES";
-    public static final String HASH_LyChI_L1 = "LyChI_L1";
-    public static final String HASH_LyChI_L2 = "LyChI_L2";
-    public static final String HASH_LyChI_L3 = "LyChI_L3";
-    public static final String HASH_LyChI_L4 = "LyChI_L4";    
-    public static final String HASH_InChI_Key = "InChI_Key";
+    public static final String F_InChI = "InChI";
+    public static final String F_MDL = "MDL";
+    public static final String F_SMILES = "SMILES";
+    public static final String F_MRV = "MRV";
+    public static final String F_LyChI_SMILES = "LyChI_SMILES";
+    public static final String H_LyChI_L1 = "LyChI_L1";
+    public static final String H_LyChI_L2 = "LyChI_L2";
+    public static final String H_LyChI_L3 = "LyChI_L3";
+    public static final String H_LyChI_L4 = "LyChI_L4";    
+    public static final String H_InChI_Key = "InChI_Key";
         
     // stereochemistry
     public enum Stereo {

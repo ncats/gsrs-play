@@ -42,6 +42,7 @@ import scala.collection.JavaConverters;
 
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
+import chemaxon.util.MolHandler;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
@@ -58,15 +59,23 @@ import ix.core.controllers.ProcessingJobFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
 
+import tripod.chem.indexer.StructureIndexer;
+
 public class StructureProcessorPlugin extends Plugin {
     private final Application app;
-    private StructureIndexerPlugin indexer;
+    private StructureIndexer indexer;
     private IxContext ctx;
     private ActorSystem system;
     private ActorRef processor;
     private Inbox inbox;
     static final Random rand = new Random ();
 
+    static String randomKey (int size) {
+        byte[] b = new byte[size];
+        rand.nextBytes(b);
+        return Util.toHex(b);
+    }
+    
     public static class PayloadProcessor implements Serializable {
         public final Payload payload;
         public final String id;
@@ -77,11 +86,87 @@ public class StructureProcessorPlugin extends Plugin {
             this.key = randomKey (10);
             this.id = payload.id + ":" +this.key;
         }
+    }
 
-        static String randomKey (int size) {
-            byte[] b = new byte[size];
-            rand.nextBytes(b);
-            return Util.toHex(b);
+    /**
+     * Instead of creating seperate classes for performing the different
+     * stages, we're going to do a bad thing by following the convention 
+     * that each actor knows which method to call. Effectively we have 
+     * the same instance that get passed through the actor pipeline. This
+     * goes against the recommendation that a message shouldn't have
+     * any state information!
+     */
+    public static class ReceiverProcessor implements Serializable {
+        enum Stage {
+            Routing,
+            Instrumentation,
+            Persisting,
+            Done
+        }
+        
+        final StructureReceiver receiver;
+        final Molecule mol;
+        final String key;
+        final StructureIndexer indexer;
+
+        Stage stage = Stage.Routing;
+        
+        Structure struc;
+        StructureReceiver.Status status = StructureReceiver.Status.OK;
+        String mesg;
+        
+        public ReceiverProcessor (Molecule mol, StructureReceiver receiver,
+                                  StructureIndexer indexer) {
+            this.mol = mol;
+            this.receiver = receiver;
+            this.indexer = indexer;
+            this.key = randomKey (10);
+        }
+
+        Stage stage () { return stage; }
+
+        void routes () {
+            assert stage == Stage.Routing
+                : "Not a valid stage ("+stage+") for routing!";
+            // next stage
+            stage = Stage.Instrumentation;
+        }
+        
+        void instruments () {
+            assert stage == Stage.Instrumentation
+                : "Not a valid stage ("+stage+") for instrumentation!";
+            
+            try {
+                struc = StructureProcessor.instrument(mol);
+                stage = Stage.Persisting;
+            }
+            catch (Exception ex) {
+                error (ex);
+            }
+        }
+
+        void persists () {
+            assert stage == Stage.Persisting
+                : "Not a valid stage ("+stage+") for persisting!";
+            try {
+                struc.save();
+                indexer.add(struc.id.toString(), mol);
+                stage = Stage.Done;
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                error (ex);
+            }
+        }
+
+        void done () {
+            receiver.receive(status, mesg, struc);
+        }
+
+        void error (Throwable t) {
+            status = StructureReceiver.Status.FAILED;
+            mesg = t.getMessage();
+            stage = Stage.Done;
         }
     }
 
@@ -92,13 +177,6 @@ public class StructureProcessorPlugin extends Plugin {
         public PayloadRecord (ProcessingJob job, Molecule mol) {
             this.job = job;
             this.mol = mol;
-        }
-    }
-
-    public static class PayloadProcessed implements Serializable {
-        public final ProcessingJob job;
-        public PayloadProcessed (ProcessingJob job) {
-            this.job = job;
         }
     }
 
@@ -113,7 +191,7 @@ public class StructureProcessorPlugin extends Plugin {
         }
 
         @Transactional
-        public void persist () {
+        public void persists () {
             try {
                 switch (oper) {
                 case SAVE: 
@@ -152,16 +230,23 @@ public class StructureProcessorPlugin extends Plugin {
     public static class PersistRecord implements Serializable {
         public final Structure struc;
         public final ProcessingRecord rec;
-        public PersistRecord (Structure struc, ProcessingRecord rec) {
+        final Molecule mol;
+        final StructureIndexer indexer;
+        
+        public PersistRecord (Structure struc, Molecule mol,
+                              ProcessingRecord rec, StructureIndexer indexer) {
             this.struc = struc;
             this.rec = rec;
+            this.mol = mol;
+            this.indexer = indexer;
         }
         
         @Transactional
-        public void persist () {
+        public void persists () {
             try {
                 if (struc != null) {
                     struc.save();
+                    indexer.add(struc.id.toString(), mol);
                     rec.xref = new XRef (struc);
                     rec.xref.save();
                 }
@@ -175,15 +260,35 @@ public class StructureProcessorPlugin extends Plugin {
         }
     }
 
+    /**
+     * This actor runs in a bounded queue to ensure we don't have issues
+     * with locking due to database persistence
+     */
     public static class Reporter extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
 
         public void onReceive (Object mesg) {
             if (mesg instanceof PersistModel) {
-                ((PersistModel)mesg).persist();
+                ((PersistModel)mesg).persists();
             }
             else if (mesg instanceof PersistRecord) {
-                ((PersistRecord)mesg).persist();
+                ((PersistRecord)mesg).persists();
+            }
+            else if (mesg instanceof ReceiverProcessor) {
+                ReceiverProcessor receiver = (ReceiverProcessor)mesg;           
+                switch (receiver.stage()) {
+                case Persisting:
+                    receiver.persists();
+                    // fall through
+                    
+                case Done:
+                    receiver.done();
+                    break;
+                    
+                default:
+                    assert false: "Stage "+receiver.stage()+" shouldn't be "
+                        +"run in "+getClass().getName()+"!";
+                }
             }
             else {
                 log.info("unhandled mesg: sender="+sender()+" mesg="+mesg);
@@ -195,6 +300,11 @@ public class StructureProcessorPlugin extends Plugin {
     public static class Processor extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
         ActorRef reporter = context().actorFor("/user/reporter");
+        StructureIndexer indexer;
+
+        public Processor (StructureIndexer indexer) {
+            this.indexer = indexer;
+        }
         
         public void onReceive (Object mesg) {
             if (mesg instanceof PayloadProcessor) {
@@ -228,7 +338,7 @@ public class StructureProcessorPlugin extends Plugin {
                 }
                 else {
                     child = context().actorOf
-                        (Props.create(Processor.class).withRouter
+                        (Props.create(Processor.class, indexer).withRouter
                          (new FromConfig().withFallback
                           (new SmallestMailboxRouter (2))), payload.id);
                     context().watch(child);
@@ -242,6 +352,42 @@ public class StructureProcessorPlugin extends Plugin {
                     }
                     child.tell(new Broadcast (PoisonPill.getInstance()),
                                self ());
+                }
+            }
+            else if (mesg instanceof ReceiverProcessor) {
+                ReceiverProcessor receiver = (ReceiverProcessor)mesg;
+                switch (receiver.stage()) {
+                case Routing:
+                    {
+                        ActorRef actor = context().actorOf
+                            (Props.create(Processor.class, indexer).withRouter
+                             (new FromConfig().withFallback
+                              (new SmallestMailboxRouter (1))), receiver.key);
+                        context().watch(actor);
+                        try {
+                            // submit for
+                            receiver.routes();
+                            actor.tell(mesg, self ()); // forward to next stage
+                        }
+                        catch (Exception ex) {
+                            ex.printStackTrace();
+                            // notify the receiver we can't process the input
+                            receiver.error(ex);
+                            reporter.tell(mesg, self ());
+                        }
+                        actor.tell(new Broadcast
+                                   (PoisonPill.getInstance()), self ());
+                    }
+                    break;
+                    
+                case Instrumentation:
+                    receiver.instruments();
+                    reporter.tell(mesg, self ()); 
+                    break;
+
+                default:
+                    assert false : "Stage "+receiver.stage()+" shouldn't "
+                        +"be running in "+getClass().getName()+"!";
                 }
             }
             else if (mesg instanceof PayloadRecord) {
@@ -264,7 +410,8 @@ public class StructureProcessorPlugin extends Plugin {
                     t.printStackTrace();
                 }
                 
-                reporter.tell(new PersistRecord (struc, rec), self ());
+                reporter.tell
+                    (new PersistRecord (struc, pr.mol, rec, indexer), self ());
             }
             else if (mesg instanceof Terminated) {
                 ActorRef actor = ((Terminated)mesg).actor();
@@ -293,7 +440,8 @@ public class StructureProcessorPlugin extends Plugin {
                     }
                 }
                 else {
-                    log.error("Invalid job id: "+id);
+                    // receiver job
+                    //log.error("Invalid job id: "+id);
                 }
                 context().unwatch(actor);               
             }
@@ -314,17 +462,19 @@ public class StructureProcessorPlugin extends Plugin {
             throw new IllegalStateException
                 ("IxContext plugin is not loaded!");
         
-        indexer = app.plugin(StructureIndexerPlugin.class);
-        if (indexer == null)
+        StructureIndexerPlugin plugin =
+            app.plugin(StructureIndexerPlugin.class);
+        if (plugin == null)
             throw new IllegalStateException
                 ("StructureIndexerPlugin is not loaded!");
+        indexer = plugin.getIndexer();
         
         system = ActorSystem.create("StructureProcessor");
         Logger.info("Plugin "+getClass().getName()
                     +" initialized; Akka version "+system.Version());
         RouterConfig config = new SmallestMailboxRouter (2);
         processor = system.actorOf
-            (Props.create(Processor.class).withRouter
+            (Props.create(Processor.class, indexer).withRouter
              (new FromConfig().withFallback(config)), "processor");
         system.actorOf(Props.create(Reporter.class), "reporter");
         inbox = Inbox.create(system);
@@ -345,6 +495,25 @@ public class StructureProcessorPlugin extends Plugin {
         return pp.key;
     }
 
+    public void submit (String struc, StructureReceiver receiver) {
+        try {
+            MolHandler mh = new MolHandler (struc);
+            submit (mh.getMolecule(), receiver);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            throw new IllegalArgumentException
+                ("Unable to parse input structure: "+struc);
+        }
+    }
+
+    public void submit (Molecule mol, StructureReceiver receiver) {
+        inbox.send(processor, new ReceiverProcessor (mol, receiver, indexer));
+    }
+
+    /**
+     * batch processing
+     */
     static ProcessingJob process (ActorRef reporter,
                                   ActorRef proc, ActorRef sender,
                                   PayloadProcessor pp) throws Exception {  

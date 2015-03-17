@@ -23,6 +23,7 @@ public class Sample extends EntityModel {
     public static final String S_SID = "SID";
     public static final String S_CID = "CID";
     public static final String S_UNII = "UNII";
+    public static final String S_InChIKey = "InChIKey";
     public static final String S_SYN = "SYNONYM"; // generic synonym
 
     public static final String P_SMILES_ISO = "SMILES_ISO";

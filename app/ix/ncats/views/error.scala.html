@@ -1,7 +1,5 @@
-@(code: Int, message: String)
-@main("Error", null){
-<div></div>
-}{
+@(code: Int, message: String)(header: Html)
+@main(message, null){ @header }{
 <div></div>
 }{
 <div class="container-fluid">
