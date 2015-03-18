@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.ncats.controllers.auth;
 
 import java.io.*;
 import java.util.*;
@@ -12,6 +12,7 @@ import play.mvc.*;
 import com.avaje.ebean.*;
 
 import ix.ncats.models.Employee;
+import ix.ncats.controllers.NIHLdapConnector;
 
 /**
  * A simple controller to authenticate via ldap

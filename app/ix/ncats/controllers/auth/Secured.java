@@ -1,4 +1,4 @@
-package ix.ncats.controllers;
+package ix.ncats.controllers.auth;
 
 import play.*;
 import play.mvc.*;

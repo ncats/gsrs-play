@@ -20,4 +20,7 @@ GET     /tox21/webjars/*file          controllers.WebJarAssets.at(file)
 #
 # other routes
 #
+GET	/ncats/marvin		ix.ncats.controllers.App.marvin
+POST	/ncats/smiles		ix.ncats.controllers.App.smiles
+
 ->      /       ix.ncats.apps.Routes

@@ -150,7 +150,7 @@ public class StructureProcessorPlugin extends Plugin {
                 : "Not a valid stage ("+stage+") for persisting!";
             try {
                 struc.save();
-                indexer.add(struc.id.toString(), mol);
+                indexer.add(receiver.getSource(), struc.id.toString(), mol);
                 stage = Stage.Done;
             }
             catch (Exception ex) {
@@ -246,7 +246,7 @@ public class StructureProcessorPlugin extends Plugin {
             try {
                 if (struc != null) {
                     struc.save();
-                    indexer.add(struc.id.toString(), mol);
+                    indexer.add(rec.job.jobkey, struc.id.toString(), mol);
                     rec.xref = new XRef (struc);
                     rec.xref.save();
                 }

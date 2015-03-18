@@ -20,12 +20,17 @@ import ix.utils.Global;
 import ix.utils.Util;
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
+
 import ix.core.models.*;
 import ix.ncats.controllers.App;
 import ix.core.controllers.PayloadFactory;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.StructureProcessorPlugin;
 import ix.core.plugins.StructureReceiver;
+
+import tripod.chem.indexer.StructureIndexer;
+import static tripod.chem.indexer.StructureIndexer.ResultEnumeration;
 
 import ix.tox21.models.*;
 import chemaxon.formats.MolImporter;
@@ -33,6 +38,13 @@ import chemaxon.struc.Molecule;
 
 public class Tox21App extends App {
     static final int ROWS_PER_PAGE = 20;
+    static final String RENDERER_URL =
+        Play.application()
+        .configuration().getString("ix.structure.renderer.url");
+    
+    static final String RENDERER_FORMAT =
+        Play.application()
+        .configuration().getString("ix.structure.renderer.format");
     
     static final PayloadPlugin Payload =
         Play.application().plugin(PayloadPlugin.class);
@@ -41,18 +53,35 @@ public class Tox21App extends App {
         Play.application().plugin(StructureProcessorPlugin.class);
 
     static class Tox21StructureReceiver implements StructureReceiver {
-        QCSample sample;
-        Tox21StructureReceiver (QCSample sample) {
-            this.sample = sample;
-        }
+        final QCSample qc;
+        final String source;
         
+        Tox21StructureReceiver (String source, QCSample qc) {
+            this.qc = qc;
+            this.source = source;
+        }
+
+        public String getSource () { return source; }
         public void receive (Status status, String mesg, Structure struc) {
             if (status == Status.OK) {
-                Logger.debug(status+": struc="
-                             +struc.id+" for sample "+sample.id);
+                qc.sample.structure = struc;
             }
             else {
-                Logger.error(status+": sample="+sample.id+": "+mesg);
+                Logger.error(status+": "
+                             +qc.sample.getSynonym(Sample.S_NCGC).term
+                             +": "+mesg);
+            }
+            
+            try {
+                qc.sample.save();
+                qc.save();
+                
+                Logger.debug(status+": QCsample "
+                             +qc.id+" sample "+qc.sample.id+" "
+                             +qc.sample.getName());
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
     }
@@ -194,7 +223,7 @@ public class Tox21App extends App {
                 }
                 else {
                     pstm.setString(1, id);
-                    if (load (pstm.executeQuery()) > 0) {
+                    if (load (payload.name, pstm.executeQuery()) > 0) {
                         ++count;
                     }
                 }
@@ -216,7 +245,7 @@ public class Tox21App extends App {
             int count = 0;
             for (String line; (line = br.readLine()) != null; ) {
                 pstm.setString(1, line.trim());
-                if (load (pstm.executeQuery()) > 0) {
+                if (load (payload.name, pstm.executeQuery()) > 0) {
                     ++count;
                 }
             }
@@ -233,7 +262,7 @@ public class Tox21App extends App {
         try {
             ResultSet rset = stm.executeQuery
                 ("select * from ncgc_sample where tox21_t0 is not null");
-            int count = load (rset);
+            int count = load ("ncgc_sample", rset);
             Logger.debug(count+" samples processed!");
         }
         finally {
@@ -241,7 +270,7 @@ public class Tox21App extends App {
         }
     }
 
-    static int load (ResultSet rset) throws SQLException {
+    static int load (String source, ResultSet rset) throws SQLException {
         int count = 0;
         while (rset.next()) {
             String name = rset.getString("sample_name");
@@ -269,7 +298,7 @@ public class Tox21App extends App {
             if (struc != null)
                 sample.properties.add(new Text (Sample.P_MOLFILE, struc));
             try {
-                sample.save();
+
                 QCSample qc = new QCSample ();
                 qc.sample = sample;
                 if (grade != null) {
@@ -279,17 +308,18 @@ public class Tox21App extends App {
                 else {
                     qc.grade = QCSample.Grade.ND;
                 }
-                qc.save();
 
-                StructureReceiver receiver = new Tox21StructureReceiver (qc);
+                StructureReceiver receiver =
+                    new Tox21StructureReceiver (source, qc);
                 if (struc != null)
                     Processor.submit(struc, receiver);
                 else if (smiles != null)
                     Processor.submit(smiles, receiver);
+                else {
+                    sample.save();
+                    qc.save();
+                }
                 
-                Logger.debug(String.format("%1$5d", count+1)
-                             +" QC="+qc.id+" Sample="
-                             +sample.id+" "+ncgc+" "+toxid+" T0="+grade);
                 ++count;
             }
             catch (Exception ex) {
@@ -307,11 +337,11 @@ public class Tox21App extends App {
                                   final int rows, final int page) {
         try {
             String sha1 = Util.sha1(request ());
-            return Cache.getOrElse(sha1, new Callable<Result>() {
+            return getOrElse (sha1, new Callable<Result>() {
                     public Result call () throws Exception {
                         return _samples (q, rows, page);
                     }
-                }, CACHE_TIMEOUT);
+                });
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -349,16 +379,13 @@ public class Tox21App extends App {
         }
         else {
             String cache = QCSample.class.getName()+".facets";
-            if (System.currentTimeMillis() - CACHE_TIMEOUT
-                <= indexer.lastModified())
-                Cache.remove(cache);
-            TextIndexer.Facet[] facets = Cache.getOrElse
+            TextIndexer.Facet[] facets = getOrElse
                 (cache, new Callable<TextIndexer.Facet[]>() {
                         public TextIndexer.Facet[] call () {
                             return filter
                             (getFacets (QCSample.class, FACET_DIM), QC_FACETS);
                         }
-                    }, CACHE_TIMEOUT);
+                    });
             
             rows = Math.min(total, Math.max(1, rows));
             int[] pages = {};
@@ -386,11 +413,11 @@ public class Tox21App extends App {
     public static Result sample (final String id) {
         try {
             String sha1 = Util.sha1(request ());
-            return Cache.getOrElse(sha1, new Callable<Result> () {
+            return getOrElse (sha1, new Callable<Result> () {
                     public Result call () throws Exception {
                         return _sample (id);
                     }
-                }, CACHE_TIMEOUT);
+                });
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -399,20 +426,44 @@ public class Tox21App extends App {
         }
     }
 
-    public static Result search () {
-        String q = request().getQueryString("q");
-        return redirect (routes.Tox21App.samples(q, ROWS_PER_PAGE, 1));
+    public static Result search (String q, int rows, int page) {
+        String type = request().getQueryString("type");
+        
+        if (type != null && (type.equalsIgnoreCase("substructure")
+                             || type.equalsIgnoreCase("similarity"))) {
+            // structure search
+            String cutoff = request().getQueryString("cutoff");
+            Logger.debug("Search: q="+q+" type="+type+" cutoff="+cutoff);
+            try {
+                if (type.equalsIgnoreCase("substructure")) {
+                    return substructure (q, rows, page);
+                }
+                else {
+                    return similarity
+                        (q, Double.parseDouble(cutoff), rows, page);
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            
+            return notFound (ix.tox21.views.html.error.render
+                             (400, "Invalid search parameters: type=\""+type
+                              +"\"; q=\""+q+"\" cutoff=\""+cutoff+"\"!"));
+        }
+        
+        //return redirect (routes.Tox21App.samples(q, rows, page));
+        return samples (q, rows, page);
     }
 
     protected static Result _render (Long id, final int size) throws Exception {
         Sample sample = Tox21Factory.getSample(id);
         if (sample != null) {
             String ncgc = sample.getSynonym(Sample.S_NCGC).term;
-            WSRequestHolder ws = WS.url
-                ("https://tripod.nih.gov/servlet/renderServletv13")
+            WSRequestHolder ws = WS.url(RENDERER_URL)
                 .setFollowRedirects(true)
                 .setQueryParameter("structure", ncgc)
-                .setQueryParameter("format", "svg")
+                .setQueryParameter("format", RENDERER_FORMAT)
                 .setQueryParameter("size", String.valueOf(size));
             try {
                 WSResponse res = ws.get().get(5000);
@@ -438,12 +489,12 @@ public class Tox21App extends App {
         //Logger.debug("render "+id+"."+size);
         try {
             String key = "render::sample::"+id+"::"+size;
-            Result result = Cache.getOrElse
+            Result result = getOrElse
                 (key, new Callable<Result>() {
                         public Result call () throws Exception {
                             return _render (id, size);
                         }
-                    }, CACHE_TIMEOUT);
+                    });
             if (result == null) {
                 // don't cache this..
                 Cache.remove(key);
@@ -457,5 +508,108 @@ public class Tox21App extends App {
                 (ix.tox21.views.html.error.render
                  (500, "Internal server error: "+ex));
         }
+    }
+
+    public static Result structureResult
+        (TextIndexer indexer, int rows, int page) throws Exception {
+        TextIndexer.SearchResult result = SearchFactory.search
+            (indexer, QCSample.class, null, indexer.size(), 0, FACET_DIM,
+             request().queryString());
+
+        TextIndexer.Facet[] facets = filter (result.getFacets(), QC_FACETS);
+        List<QCSample> samples = new ArrayList<QCSample>();
+        int[] pages = new int[0];
+        if (result.count() > 0) {
+            rows = Math.min(result.count(), Math.max(1, rows));
+            pages = paging (rows, page, result.count());
+            
+            for (int i = (page-1)*rows, j = 0; j < rows
+                     && i < result.count(); ++j, ++i) {
+                samples.add((QCSample)result.getMatches().get(i));
+            }
+        }
+        
+        return ok (ix.tox21.views.html.samples.render
+                   (page, rows, result.count(),
+                    pages, decorate (facets), samples));
+    }
+
+    static TextIndexer createIndexer (ResultEnumeration results)
+        throws Exception {
+        long start = System.currentTimeMillis();        
+        TextIndexer indexer = textIndexer.createEmptyInstance();
+        int count = 0;
+        while (results.hasMoreElements()) {
+            StructureIndexer.Result r = results.nextElement();
+            /*
+            Logger.debug(r.getId()+" "+r.getSource()+" "
+                         +r.getMol().toFormat("smiles"));
+            */
+            List<QCSample> samples = Tox21Factory.finder
+                .where().eq("sample.structure.id", r.getId()).findList();
+            for (QCSample qc : samples) {
+                indexer.add(qc);
+            }
+            ++count;
+        }
+        
+        double ellapsed = (System.currentTimeMillis() - start)*1e-3;
+        Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
+                                   +"%2$d structures...",
+                                   ellapsed, count));
+        return indexer;
+    }
+
+    public static Result similarity (final String query,
+                                     final double threshold,
+                                     int rows, int page) {
+        try {
+            String key = "similarity::"+Util.sha1(query)
+                +"::"+String.format("%1$d", (int)(1000*threshold+.5));
+            TextIndexer indexer = getOrElse
+                (strucIndexer.lastModified(),
+                 key, new Callable<TextIndexer> () {
+                         public TextIndexer call () throws Exception {
+                            ResultEnumeration results =
+                                 strucIndexer.similarity(query, threshold, 0);
+                            return createIndexer (results);
+                         }
+                     });
+            
+            return structureResult (indexer, rows, page);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        
+        return internalServerError
+            (ix.tox21.views.html.error.render
+             (500, "Unable to perform similarity search: "+query));
+    }
+    
+    public static Result substructure
+        (final String query, int rows, int page) {
+        Logger.debug("substructure: query="+query+" rows="+rows+" page="+page);
+        try {
+            String key = "substructure::"+Util.sha1(query);
+            TextIndexer indexer = getOrElse
+                (strucIndexer.lastModified(),
+                 key, new Callable<TextIndexer> () {
+                         public TextIndexer call () throws Exception {
+                            ResultEnumeration results =
+                                 strucIndexer.substructure(query, 0);
+                            return createIndexer (results);
+                         }
+                     });
+            
+            return structureResult (indexer, rows, page);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        
+        return internalServerError
+            (ix.tox21.views.html.error.render
+             (500, "Unable to perform substructure search: "+query));
     }
 }

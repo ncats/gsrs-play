@@ -19,7 +19,7 @@ public class Sample extends EntityModel {
     public static final String S_TOX21 = "Tox21";
     public static final String S_NCGC = "NCGC";
     public static final String S_CASRN = "CASRN";
-    public static final String S_DSSTOX = "DSSTOX";
+    public static final String S_DSSTOX = "DSSTox";
     public static final String S_SID = "SID";
     public static final String S_CID = "CID";
     public static final String S_UNII = "UNII";
@@ -31,6 +31,10 @@ public class Sample extends EntityModel {
 
     @Indexable(facet=true,suggest=true,name="Sample")
     public String name;
+
+    //@JsonView(BeanViews.Full.class)
+    @OneToOne    
+    public Structure structure;
     
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)

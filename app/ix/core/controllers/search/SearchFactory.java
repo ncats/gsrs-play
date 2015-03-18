@@ -25,6 +25,7 @@ import ix.utils.Global;
 import ix.utils.Util;
 import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
+import static ix.core.search.TextIndexer.*;
 import ix.core.search.SearchOptions;
 import ix.core.controllers.EntityFactory;
 
@@ -32,7 +33,7 @@ public class SearchFactory extends EntityFactory {
     static final Model.Finder<Long, ETag> etagDb = 
         new Model.Finder(Long.class, ETag.class);
 
-    static TextIndexer indexer =
+    static TextIndexer _indexer =
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
     public static SearchOptions parseSearchOptions
@@ -83,10 +84,17 @@ public class SearchFactory extends EntityFactory {
         }
         return options;
     }
-    
-    public static TextIndexer.SearchResult
+
+    public static SearchResult
         search (Class kind, String q, int top, int skip, int fdim,
                 Map<String, String[]> queryParams) throws IOException {
+        return search (_indexer, kind, q, top, skip, fdim, queryParams);
+    }
+    
+    public static SearchResult
+        search (TextIndexer indexer, Class kind, String q, int top,
+                int skip, int fdim, Map<String, String[]> queryParams)
+        throws IOException {
         SearchOptions options = new SearchOptions (kind, top, skip, fdim);
 
         StringBuilder filter = new StringBuilder ();
@@ -143,7 +151,7 @@ public class SearchFactory extends EntityFactory {
         }
 
         try {
-            TextIndexer.SearchResult result = search
+            SearchResult result = search
                 (kind, q, top, skip, fdim, request().queryString());
             SearchOptions options = result.getOptions();
             
@@ -201,14 +209,14 @@ public class SearchFactory extends EntityFactory {
             ObjectMapper mapper = new ObjectMapper ();
             if (field != null) {
                 List<TextIndexer.SuggestResult> results = 
-                    indexer.suggest(field, q, max);
+                    _indexer.suggest(field, q, max);
                 return ok (mapper.valueToTree(results));
             }
 
             ObjectNode node = mapper.createObjectNode();
-            for (String f : indexer.getSuggestFields()) {
+            for (String f : _indexer.getSuggestFields()) {
                 List<TextIndexer.SuggestResult> results = 
-                    indexer.suggest(f, q, max);
+                    _indexer.suggest(f, q, max);
                 if (!results.isEmpty())
                     node.put(f, mapper.valueToTree(results));
             }
@@ -222,6 +230,6 @@ public class SearchFactory extends EntityFactory {
 
     public static Result suggestFields () {
         ObjectMapper mapper = new ObjectMapper ();
-        return ok (mapper.valueToTree(indexer.getSuggestFields()));
+        return ok (mapper.valueToTree(_indexer.getSuggestFields()));
     }
 }

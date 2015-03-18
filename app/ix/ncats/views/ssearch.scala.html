@@ -1,0 +1,88 @@
+@import play.api.mvc.Call
+
+@(method: String, action: Call)
+<script>
+function setQuery (value) {
+  console.log(value);
+  $.ajax({
+    type: "POST",
+    url: '@ix.ncats.controllers.routes.App.smiles',
+    contentType: 'text/plain',
+    data: value,
+    success: function (data) {
+       console.log(' => '+data);
+       $('#structure').val(data);
+    },
+    error: function (xhr, status) {
+       console.error("Can't convert to smiles");
+    },
+    dataType: 'text'
+   });
+}
+</script>
+
+<div class="modal fade" id="strucModal" tabindex="-1"
+     role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close"
+		data-dismiss="modal" aria-label="Close">
+	  <span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabel">Structure Searching</h4>
+      </div>
+      <div class="modal-body">
+  	     <div class="embed-responsive embed-responsive-4by3">
+	       <iframe class="embed-responsive-item" id="sketcher"
+		  src="@ix.ncats.controllers.routes.App.marvin">
+	       </iframe>
+	     </div>
+      </div>
+      <div class="modal-footer">
+	<form class="form-inline" onchange="searchSelect()"
+	      method="@method" action="@action">
+	  <div class="form-group">
+	    <div class="pull-left">
+	      <select class="form-control" id="search-selection" name="type">
+		<option>Substructure</option>
+		<option>Similarity</option>
+	      </select>
+	      <input type="text" class="form-control" name="cutoff"
+		     id="tanimoto-cutoff" onkeyup="checkTanimoto(this)"
+		     placeholder="Tanimoto cutoff" disabled="true" value="0.8">
+	      <input type="hidden" id="structure" name="q" value="">
+	    </div>
+	  </div>
+	  <button type="submit"
+		  class="btn btn-primary" id="search-btn">Search</button>
+	</form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function searchSelect () {
+     var selection = document.getElementById("search-selection");
+     var text = document.getElementById("tanimoto-cutoff");
+     var search = document.getElementById("search-btn");
+     text.disabled = selection.value != 'Similarity';
+     if (!text.disabled) {
+        checkTanimoto (text);
+     } else {
+        search.disabled = false;
+     }
+  
+     console.log(selection.value);
+  }
+  function checkTanimoto (el) {
+      //console.log("tanimoto='"+el.value+"'");
+      var search = document.getElementById("search-btn");
+      try {
+        var x = el.value.trim();
+        search.disabled = x.length == 0 || isNaN(x) || x <= 0 || x > 1.;
+      } catch (e) {
+        search.disabled = true;
+      }
+  }
+</script>

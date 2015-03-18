@@ -5,26 +5,7 @@
 @(qc: QCSample)
 
 @ix.ncats.views.html.main(qc.sample.getName(), qc.getClass().getName()){
-  @ix.ncats.views.html.header{
-   <a class="navbar-brand" href="@ix.tox21.controllers.routes.Tox21App.index"
-      style="padding: 0px 5px; margin-left: 0px;">
-     <img height="50" alt="Tox21 Logo"
-	  src='@routes.Assets.at("ncats/images/Tox21_logo_128.png")'/>
-   </a>
-   }{
-   <ul class="nav navbar-nav navbar-right">
-     <form class="navbar-form navbar-right" role="search" method="GET"
-           action="@ix.tox21.controllers.routes.Tox21App.search">
-       <div class="form-group">
-         <input type="text" id="search-header-field" name="q"
-		class="typeahead form-control" placeholder="Search..."/>
-       </div>
-       <button type="submit" class="btn btn-default">
-         <span class="fa fa-search" aria-hidden="true"></span>
-       </button>
-     </form>
-   </ul> 
-  }
+@menu()
 }{
 <ol class="breadcrumb">
   <li><a href="@ix.tox21.controllers.routes.Tox21App.index"><span class="fa fa-home"></span> Home</a></li>
@@ -71,10 +52,15 @@
           </div>
           <div class="panel-body">
             <table class="table">
-              <tr><td>@qc.sample.getSynonym(Sample.S_TOX21).term</td></tr>
-              <tr><td>@qc.sample.getSynonym(Sample.S_NCGC).term</td></tr>
-	      <tr><td>@qc.sample.getSynonym(Sample.S_CASRN).term</td></tr>
-	      <tr><td><a href="https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?sid=@qc.sample.getSynonym(Sample.S_SID).term"</td>@qc.sample.getSynonym(Sample.S_SID).term</a></tr>
+              <tr><td>Tox21</td><td>@qc.sample.getSynonym(Sample.S_TOX21).term</td></tr>
+              <tr><td>NCATS</td><td>@qc.sample.getSynonym(Sample.S_NCGC).term</td></tr>
+	      <tr><td>CAS</td><td>@qc.sample.getSynonym(Sample.S_CASRN).term</td></tr>
+	      @if(qc.sample.getSynonym(Sample.S_InChIKey) != null) {
+  	         <tr><td>InChI Key</td><td>@qc.sample.getSynonym(Sample.S_InChIKey).term</td></tr>
+              } else {
+	         <tr><tr><td>InChI Key</td><td></td></tr>
+	      }
+	      <tr><td>PubChem</td><td><a href="https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?sid=@qc.sample.getSynonym(Sample.S_SID).term"</td>@qc.sample.getSynonym(Sample.S_SID).term</a></tr>
 	    </table>
 	  </div>
 	</div>
@@ -104,7 +90,6 @@
 </div>
 }
 
-@ix.ncats.views.html.typeahead(Array("Sample", "Tox21", "NCGC","CASRN","SID"))
 
 <script>
 $(document).ready(function () {

@@ -38,7 +38,9 @@ import org.apache.lucene.index.FieldInfo.IndexOptions;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.store.NoLockFactory;
+import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.util.BytesRef;
 
@@ -367,7 +369,8 @@ public class TextIndexer {
         }
     }
 
-    protected TextIndexer (File dir) throws IOException {
+    private TextIndexer () {}
+    public TextIndexer (File dir) throws IOException {
         if (!dir.isDirectory())
             throw new IllegalArgumentException ("Not a directory: "+dir);
 
@@ -434,12 +437,42 @@ public class TextIndexer {
         return false;
     }
 
-    Analyzer createIndexAnalyzer () {
+    static Analyzer createIndexAnalyzer () {
         Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
         fields.put("id", new KeywordAnalyzer ());
         fields.put(FIELD_KIND, new KeywordAnalyzer ());
         return  new PerFieldAnalyzerWrapper 
             (new StandardAnalyzer (LUCENE_VERSION), fields);
+    }
+
+    /**
+     * Create a empty RAM instance. This is useful for searching/filtering
+     * of a subset of the documents stored.
+     */
+    public TextIndexer createEmptyInstance () throws IOException {
+        TextIndexer indexer = new TextIndexer ();
+        indexer.indexDir = new RAMDirectory ();
+        indexer.taxonDir = new RAMDirectory ();
+        indexer.indexAnalyzer = createIndexAnalyzer ();
+        IndexWriterConfig conf = new IndexWriterConfig 
+            (LUCENE_VERSION, indexer.indexAnalyzer);
+        indexer.indexWriter = new IndexWriter (indexer.indexDir, conf);
+        indexer.taxonWriter = new DirectoryTaxonomyWriter (indexer.taxonDir);
+        indexer.facetsConfig = new FacetsConfig ();
+        for (Map.Entry<String, FacetsConfig.DimConfig> me
+                 : facetsConfig.getDimConfigs().entrySet()) {
+            String dim = me.getKey();
+            FacetsConfig.DimConfig dconf = me.getValue();
+            indexer.facetsConfig.setHierarchical(dim, dconf.hierarchical);
+            indexer.facetsConfig.setMultiValued(dim, dconf.multiValued);
+            indexer.facetsConfig.setRequireDimCount
+                (dim, dconf.requireDimCount);
+        }
+        // shouldn't be using for any 
+        indexer.lookups = new ConcurrentHashMap<String, SuggestLookup>();
+        indexer.sorters = new ConcurrentHashMap<String, SortField.Type>();
+        indexer.sorters.putAll(sorters);
+        return indexer;
     }
 
     public List<SuggestResult> suggest 
@@ -455,6 +488,10 @@ public class TextIndexer {
 
     public Collection<String> getSuggestFields () {
         return Collections.unmodifiableCollection(lookups.keySet());
+    }
+
+    public int size () {
+        return indexWriter.numDocs();
     }
 
     public SearchResult search (String text, int size) throws IOException {

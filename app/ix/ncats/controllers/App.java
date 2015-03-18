@@ -17,9 +17,19 @@ import play.mvc.Call;
 
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
+import tripod.chem.indexer.StructureIndexer;
+import static tripod.chem.indexer.StructureIndexer.*;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.controllers.search.SearchFactory;
 import ix.utils.Util;
+
+import chemaxon.formats.MolImporter;
+import chemaxon.struc.Molecule;
+import chemaxon.struc.MolAtom;
+import chemaxon.struc.MolBond;
+import chemaxon.util.MolHandler;
+
 
 /**
  * Basic plumbing for an App
@@ -32,8 +42,10 @@ public class App extends Controller {
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
-    public static final TextIndexer indexer = 
+    public static final TextIndexer textIndexer = 
         play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    public static final StructureIndexer strucIndexer =
+        play.Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
 
     public static class FacetDecorator {
         final public Facet facet;
@@ -99,7 +111,7 @@ public class App extends Controller {
         return pages;
     }
 
-    public static String sha1 (TextIndexer.Facet facet, int value) {
+    public static String sha1 (Facet facet, int value) {
         return Util.sha1(facet.getName(),
                          facet.getValues().get(value).getLabel());
     }
@@ -125,7 +137,7 @@ public class App extends Controller {
         return null;
     }
 
-    public static String encode (TextIndexer.Facet facet) {
+    public static String encode (Facet facet) {
         try {
             return URLEncoder.encode(facet.getName(), "utf8");
         }
@@ -135,7 +147,7 @@ public class App extends Controller {
         return null;
     }
     
-    public static String encode (TextIndexer.Facet facet, int i) {
+    public static String encode (Facet facet, int i) {
         String value = facet.getValues().get(i).getLabel();
         try {
             return URLEncoder.encode(value, "utf8");
@@ -283,7 +295,7 @@ public class App extends Controller {
         return q.toString();
     }
 
-    public static boolean hasFacet (TextIndexer.Facet facet, int i) {
+    public static boolean hasFacet (Facet facet, int i) {
         String[] facets = request().queryString().get("facet");
         if (facets != null) {
             for (String f : facets) {
@@ -314,31 +326,29 @@ public class App extends Controller {
         return false;
     }
 
-    public static List<TextIndexer.Facet> getFacets
-        (final Class kind, final int fdim) {
+    public static List<Facet> getFacets (final Class kind, final int fdim) {
         try {
-            TextIndexer.SearchResult result =
+            SearchResult result =
                 SearchFactory.search(kind, null, 0, 0, fdim, null);
             return result.getFacets();
         }
         catch (IOException ex) {
             Logger.trace("Can't retrieve facets for "+kind, ex);
         }
-        return new ArrayList<TextIndexer.Facet>();
+        return new ArrayList<Facet>();
     }
 
-    public static TextIndexer.Facet[] filter (List<TextIndexer.Facet> facets,
-                                              String... names) {
+    public static Facet[] filter (List<Facet> facets, String... names) {
         if (names == null || names.length == 0)
-            return facets.toArray(new TextIndexer.Facet[0]);
+            return facets.toArray(new Facet[0]);
         
-        List<TextIndexer.Facet> filtered = new ArrayList<TextIndexer.Facet>();
+        List<Facet> filtered = new ArrayList<Facet>();
         for (String n : names) {
-            for (TextIndexer.Facet f : facets)
+            for (Facet f : facets)
                 if (n.equals(f.getName()))
                     filtered.add(f);
         }
-        return filtered.toArray(new TextIndexer.Facet[0]);
+        return filtered.toArray(new Facet[0]);
     }
 
     public static String randvar (int size) {
@@ -354,8 +364,14 @@ public class App extends Controller {
         return randvar (5);
     }
 
-    public static TextIndexer.SearchResult getSearchResult
+    public static SearchResult getSearchResult
         (final Class kind, final String q, final int total) {
+        return getSearchResult (textIndexer, kind, q, total);
+    }
+    
+    public static SearchResult getSearchResult
+        (final TextIndexer indexer, final Class kind,
+         final String q, final int total) {
         
         final Map<String, String[]> query =  new HashMap<String, String[]>();
         query.putAll(request().queryString());
@@ -384,42 +400,45 @@ public class App extends Controller {
         // filtering
         try {
             long start = System.currentTimeMillis();
-            String sha1 = Util.sha1(args.toArray(new String[0]));
-            TextIndexer.SearchResult result = Cache.getOrElse
-                (sha1, new Callable<TextIndexer.SearchResult>() {
-                     public TextIndexer.SearchResult call () throws Exception {
-                         return SearchFactory.search
-                         (kind, hasFacets ? null : q,
-                          total, 0, FACET_DIM, query);
-                     }
-                 }, CACHE_TIMEOUT);
-            
+            SearchResult result;
+            if (indexer != textIndexer) {
+                // if it's an ad-hoc indexer, then we don't bother caching
+                //  the results
+                result = SearchFactory.search
+                    (indexer, kind, hasFacets ? null : q,
+                     total, 0, FACET_DIM, query);
+            }
+            else {
+                String sha1 = Util.sha1(args.toArray(new String[0]));
+                result = getOrElse
+                    (sha1, new Callable<SearchResult>() {
+                            public SearchResult call () throws Exception {
+                                return SearchFactory.search
+                                (kind, hasFacets ? null : q,
+                                 total, 0, FACET_DIM, query);
+                            }
+                        });
+                
+                if (hasFacets && result.count() == 0) {
+                    Logger.debug("No results found for facet; "
+                                 +"retry as just query: "+q);
+                    // empty result.. perhaps the query contains /'s
+                    Cache.remove(sha1); // clear cache
+                    result = getOrElse
+                        (sha1, new Callable<SearchResult>() {
+                                public SearchResult call ()
+                                    throws Exception {
+                                    return SearchFactory.search
+                                    (kind, q, total, 0, FACET_DIM,
+                                     request().queryString());
+                                }
+                            });
+                }
+            }
             double ellapsed = (System.currentTimeMillis() - start)*1e-3;
             Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
-                                       +"results for "
-                                       +sha1.substring(0, 8)+"...",
-                                       ellapsed));
-            
-            if (hasFacets && result.count() == 0) {
-                start = System.currentTimeMillis();
-                // empty result.. perhaps the query contains /'s
-                Cache.remove(sha1); // clear cache
-                result = Cache.getOrElse
-                    (sha1, new Callable<TextIndexer.SearchResult>() {
-                            public TextIndexer.SearchResult call ()
-                                throws Exception {
-                                return SearchFactory.search
-                                (kind, q, total, 0, FACET_DIM,
-                                 request().queryString());
-                            }
-                        }, CACHE_TIMEOUT);
-                ellapsed = (System.currentTimeMillis() - start)*1e-3;
-                Logger.debug(String.format("Retry as query; "
-                                           +"ellapsed %1$.3fs to retrieve "
-                                           +"results for "
-                                           +sha1.substring(0, 8)+"...",
-                                           ellapsed));
-            }
+                                       +"search %2$d results...",
+                                       ellapsed, result.size()));
             
             return result;
         }
@@ -428,5 +447,52 @@ public class App extends Controller {
             Logger.trace("Unable to perform search", ex);
         }
         return null;
+    }
+
+    public static <T> T getOrElse (String key, Callable<T> callable)
+        throws Exception {
+        return getOrElse (textIndexer.lastModified(), key, callable);
+    }
+    
+    public static <T> T getOrElse (long modified,
+                                   String key, Callable<T> callable)
+        throws Exception {
+        if (System.currentTimeMillis() <= (modified + CACHE_TIMEOUT))
+            Cache.remove(key);
+        return Cache.getOrElse(key, callable, CACHE_TIMEOUT);
+    }
+
+    public static Result marvin () {
+        return ok (ix.ncats.views.html.marvin.render());
+    }
+
+    public static Result smiles () {
+        String data = request().body().asText();
+        Molecule mol = null;
+        try {
+            MolHandler mh = new MolHandler (data, true);
+            mol = mh.getMolecule();
+            for (MolAtom a : mol.getAtomArray()) {
+                if (a.getAtno() == 114) {
+                    a.setAtno(MolAtom.ANY);
+                }
+            }
+            //String q = URLEncoder.encode(mol.toFormat("smarts"), "utf8");
+            return ok (mol.toFormat("smarts"));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.debug("** Unable to convert structure\n"+data);
+            if (mol != null) {
+                for (MolAtom a : mol.getAtomArray()) {
+                    Logger.debug(mol.indexOf(a)+": pseudo="+a.isPseudo()
+                                 +" query="+a.isQuery()
+                                 +" querylabel="+a.getQueryLabel()
+                                 +" querystr="+a.getQuerystr()
+                                 +" atno="+a.getAtno());
+                }
+            }
+            return badRequest (data);
+        }
     }
 }

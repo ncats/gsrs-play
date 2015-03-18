@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -99,6 +100,10 @@ public class Structure extends IxModel {
     
     @Transient
     private ObjectMapper mapper = new ObjectMapper ();
+    
+    @Transient
+    @JsonIgnore
+    public Object mol; // a transient mol object
     
     public Structure () {}
 

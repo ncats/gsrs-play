@@ -13,5 +13,6 @@ public interface StructureReceiver extends java.io.Serializable {
         FAILED
     }
     
+    String getSource ();
     void receive (Status status, String mesg, Structure struc);
 }
