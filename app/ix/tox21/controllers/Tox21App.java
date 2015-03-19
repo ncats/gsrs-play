@@ -129,14 +129,12 @@ public class Tox21App extends App {
             String label = super.label(i);
             if ("0:1".equals(label))
                 return "None";
-            if ("1:2".equals(label))
-                return "1";
-            if ("2:5".equals(label))
-                return "[2,5)";
-            if ("5:7".equals(label))
-                return "[5,7)";
-            if ("7:10".equals(label))
-                return "[7,10)";
+            else {
+                int pos = label.indexOf(':');
+                if (pos > 0) {
+                    return label.substring(0,pos);
+                }
+            }
             return label;
         }
     }
@@ -306,7 +304,7 @@ public class Tox21App extends App {
             sample.synonyms.add(new Keyword (Sample.S_SID, sid));
             sample.synonyms.add(new Keyword (Sample.S_CASRN, cas));
             sample.synonyms.add(new Keyword (Sample.S_NCGC, ncgc));
-            if (inchi != null)
+            if (inchi != null && (smiles != null || struc != null))
                 sample.synonyms.add(new Keyword (Sample.S_InChIKey, inchi));
             
             if (smiles != null)
@@ -478,11 +476,18 @@ public class Tox21App extends App {
 
     protected static Result _render (Long id, final int size) throws Exception {
         Sample sample = Tox21Factory.getSample(id);
+        Result r = null;
         if (sample != null) {
             String ncgc = sample.getSynonym(Sample.S_NCGC).term;
-            return render (ncgc, size);
+            r = render (ncgc, size);
+            if (r == null) {
+                // now try the smiles..
+                if (sample.structure.smiles != null) {
+                    r = render (sample.structure.smiles, size);
+                }
+            }
         }
-        return null;
+        return r;
     }
     
     public static Result render (final Long id, final int size) {
