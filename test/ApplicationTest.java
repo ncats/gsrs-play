@@ -1,30 +1,17 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ix.idg.controllers.DrugTargetOntology;
+import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.junit.*;
+import java.io.File;
+import java.io.IOException;
 
-import play.mvc.*;
-import play.test.*;
-import play.data.DynamicForm;
-import play.data.validation.ValidationError;
-import play.data.validation.Constraints.RequiredValidator;
-import play.i18n.Lang;
-import play.libs.F;
-import play.libs.F.*;
-
-import static play.test.Helpers.*;
-import static org.fest.assertions.Assertions.*;
+import static org.fest.assertions.Assertions.assertThat;
 
 
 /**
-*
-* Simple (JUnit) tests that can call all parts of a play app.
-* If you are interested in mocking a whole application, see the wiki for more details.
-*
-*/
+ * Simple (JUnit) tests that can call all parts of a play app.
+ * If you are interested in mocking a whole application, see the wiki for more details.
+ */
 public class ApplicationTest {
 
     @Test
@@ -35,10 +22,22 @@ public class ApplicationTest {
 
     @Test
     public void renderTemplate() {
-        Content html = views.html.index.render("Your new application is ready.");
-        assertThat(contentType(html)).isEqualTo("text/html");
-        assertThat(contentAsString(html)).contains("Your new application is ready.");
+//        Content html = views.html.index.render("Your new application is ready.");
+//        assertThat(contentType(html)).isEqualTo("text/html");
+//        assertThat(contentAsString(html)).contains("Your new application is ready.");
     }
 
+    @Test
+    public void dtoTest() throws IOException {
+        File f = new File("/Users/guhar/dto.json");
+        ObjectMapper mapper = new ObjectMapper();
+        DrugTargetOntology dto = new DrugTargetOntology();
+        dto.setRoot(mapper.readTree(f));
+        System.out.println("dto.rootTerm = " + dto.rootTerm);
+        for (DrugTargetOntology.DtoTerm child : dto.rootTerm.children) System.out.println("child = " + child);
+
+        DrugTargetOntology.DtoTerm term = dto.findTerm("holocarboxylase synthetase deficiency");
+        System.out.println("term = " + term);
+    }
 
 }

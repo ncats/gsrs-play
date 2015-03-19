@@ -246,6 +246,7 @@ public class IDGApp extends Controller {
             }
         }
         prune.addAll(uniprot); // append uniprot diseases
+
         List<Keyword> breadcrumb = new ArrayList<Keyword>();
         for (Value v : t.properties) {
             if (v.label.startsWith(TcrdRegistry.ChEMBL_PROTEIN_CLASS)) {

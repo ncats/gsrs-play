@@ -1,30 +1,61 @@
 package ix.idg.controllers;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.net.*;
-import javax.sql.DataSource;
-
-import play.*;
-import play.db.DB;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
-import com.avaje.ebean.*;
-
-import ix.utils.Global;
-import ix.core.models.*;
-import ix.idg.models.*;
-import ix.core.controllers.NamespaceFactory;
-import ix.core.controllers.KeywordFactory;
-import ix.core.controllers.PredicateFactory;
-import ix.core.plugins.*;
-import ix.core.search.TextIndexer;
-import ix.core.search.SearchOptions;
-
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Expr;
+import com.avaje.ebean.Transaction;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jolbox.bonecp.BoneCPDataSource;
+import ix.core.controllers.KeywordFactory;
+import ix.core.controllers.NamespaceFactory;
+import ix.core.controllers.PredicateFactory;
+import ix.core.models.Keyword;
+import ix.core.models.Namespace;
+import ix.core.models.Predicate;
+import ix.core.models.Publication;
+import ix.core.models.Text;
+import ix.core.models.VNum;
+import ix.core.models.XRef;
+import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.TextIndexer;
+import ix.idg.models.Disease;
+import ix.idg.models.Target;
+import play.Logger;
+import play.Play;
+import play.data.DynamicForm;
+import play.data.Form;
+import play.db.DB;
+import play.db.ebean.Model;
+import play.db.ebean.Transactional;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Result;
+
+import javax.sql.DataSource;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
     
 public class TcrdRegistry extends Controller {
     public static final String DISEASE = "IDG Disease";
@@ -50,6 +81,8 @@ public class TcrdRegistry extends Controller {
 
     static final ConcurrentMap<String, Disease> diseases =
         new ConcurrentHashMap<String, Disease>();
+
+    static final DrugTargetOntology dto = new DrugTargetOntology();
 
     public static final Namespace namespace = NamespaceFactory.registerIfAbsent
         ("TCRDv094", "https://pharos.nih.gov");
@@ -334,6 +367,9 @@ public class TcrdRegistry extends Controller {
             pstm4.setLong(1, t.protein);
             addGeneRIF (target, pstm4);
 
+            Logger.debug("...retrieving DTO links");
+            addDTO(target);
+
             chembl.instrument(target);
 
             Transaction tx = Ebean.beginTransaction();
@@ -408,7 +444,18 @@ public class TcrdRegistry extends Controller {
                 Logger.trace("Can't load obo file: "+file, ex);
             }
         }
-        
+
+        part = body.getFile("load-dto");
+        if (part != null) {
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                dto.setRoot(mapper.readTree(part.getFile()));
+                Logger.debug("Loaded DTO from "+part.getFilename());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         Map<String, String> uniprotMap = new HashMap<String, String>();
         part = body.getFile("uniprot-map");
         if (part != null) {
@@ -760,6 +807,11 @@ public class TcrdRegistry extends Controller {
         finally {
             rs.close();
         }
+    }
+
+    @Transactional
+    static void addDTO(Target target) {
+
     }
 
     @Transactional
