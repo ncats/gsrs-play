@@ -10,10 +10,11 @@ import java.util.concurrent.Callable;
 
 import play.Logger;
 import play.cache.Cache;
-import play.libs.ws.WS;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Call;
+import play.libs.ws.*;
+import play.libs.F;
 
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
@@ -38,6 +39,14 @@ public class App extends Controller {
     public static final int CACHE_TIMEOUT =
         play.Play.application()
         .configuration().getInt("ix.cache.time", 24*60*60); // 1 day
+
+    static final String RENDERER_URL =
+        play.Play.application()
+        .configuration().getString("ix.structure.renderer.url");
+    
+    static final String RENDERER_FORMAT =
+        play.Play.application()
+        .configuration().getString("ix.structure.renderer.format");
     
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
@@ -494,5 +503,36 @@ public class App extends Controller {
             }
             return badRequest (data);
         }
+    }
+
+    public static Result render (final String value, final int size) {
+        String key = Util.sha1(value)+"::"+size;
+        Result result = null;
+        try {
+            result = Cache.getOrElse(key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        WSRequestHolder ws = WS.url(RENDERER_URL)
+                        .setFollowRedirects(true)
+                        .setQueryParameter("structure", value)
+                        .setQueryParameter("format", RENDERER_FORMAT)
+                        .setQueryParameter("size", String.valueOf(size));
+                        WSResponse res = ws.get().get(5000);
+                        byte[] data = res.asByteArray();
+                        if (data.length > 0) {
+                            return ok (data);
+                        }
+                        return null;
+                    }
+                }, CACHE_TIMEOUT);
+            
+            if (result == null)
+                Cache.remove(key);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.trace("Can't render "+value, ex);
+        }
+        response().setContentType("image/svg+xml");
+        return result;
     }
 }

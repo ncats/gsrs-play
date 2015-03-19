@@ -53,7 +53,7 @@ function setQuery (value) {
 	      <input type="hidden" id="structure" name="q" value="">
 	    </div>
 	  </div>
-	  <button type="submit"
+	  <button type="submit" onclick="submitForm()" 
 		  class="btn btn-primary" id="search-btn">Search</button>
 	</form>
       </div>
@@ -61,7 +61,26 @@ function setQuery (value) {
   </div>
 </div>
 
+<div class="modal fade" tabindex="-1" role="dialog" id="spinModal"
+     aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
+    </div>
+  </div>
+</div>
+
 <script>
+  function submitForm (el) {
+    $('#strucModal').modal('hide');  
+    $('#spinModal').modal({
+      keyboard: false,
+      show: true,
+      backdrop: 'static'
+    });
+    $("#search-btn").submit();
+  }
+  
   function searchSelect () {
      var selection = document.getElementById("search-selection");
      var text = document.getElementById("tanimoto-cutoff");

@@ -29,7 +29,6 @@ public class Sample extends EntityModel {
     public static final String P_SMILES_ISO = "SMILES_ISO";
     public static final String P_MOLFILE = "MOLFILE";
 
-    @Indexable(facet=true,suggest=true,name="Sample")
     public String name;
 
     //@JsonView(BeanViews.Full.class)
@@ -63,7 +62,10 @@ public class Sample extends EntityModel {
     public Sample (String name) {
         this.name = name;
     }
+    
+    @Indexable(facet=true,suggest=true,name="Sample")    
     public String getName () { return name; }
+    
     public String getDescription () { return null; }
     public List<Keyword> getSynonyms () { return synonyms; }
     public List<Value> getProperties () { return properties; }

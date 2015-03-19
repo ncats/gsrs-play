@@ -38,13 +38,6 @@ import chemaxon.struc.Molecule;
 
 public class Tox21App extends App {
     static final int ROWS_PER_PAGE = 20;
-    static final String RENDERER_URL =
-        Play.application()
-        .configuration().getString("ix.structure.renderer.url");
-    
-    static final String RENDERER_FORMAT =
-        Play.application()
-        .configuration().getString("ix.structure.renderer.format");
     
     static final PayloadPlugin Payload =
         Play.application().plugin(PayloadPlugin.class);
@@ -88,7 +81,8 @@ public class Tox21App extends App {
         
     static final String[] QC_FACETS = new String[] {
         "QC Grade",
-        "Sample"
+        "Sample",
+        "Defined Stereocenters"
     };
 
     static class Tox21GradeFacetDecorator extends FacetDecorator {
@@ -126,6 +120,27 @@ public class Tox21App extends App {
         }
     }
 
+    static class StereocentersFacetDecorator extends FacetDecorator {
+        public StereocentersFacetDecorator (Facet facet) {
+            super (facet, true, 6);
+        }
+        @Override
+        public String label (int i) {
+            String label = super.label(i);
+            if ("0:1".equals(label))
+                return "None";
+            if ("1:2".equals(label))
+                return "1";
+            if ("2:5".equals(label))
+                return "[2,5)";
+            if ("5:7".equals(label))
+                return "[5,7)";
+            if ("7:10".equals(label))
+                return "[7,10)";
+            return label;
+        }
+    }
+
     static FacetDecorator[] decorate (Facet... facets) {
         FacetDecorator[] decors = new FacetDecorator[facets.length];
         for (int i = 0; i < facets.length; ++i) {
@@ -135,6 +150,9 @@ public class Tox21App extends App {
             }
             else if (QC_FACETS[1].equals(facets[i].getName())) {
                 decors[i] = new Tox21FacetDecorator (facets[i]);
+            }
+            else if ("Defined Stereocenters".equals(facets[i].getName())) {
+                decors[i] = new StereocentersFacetDecorator (facets[i]);
             }
             else {
                 // use default decorator
@@ -428,9 +446,11 @@ public class Tox21App extends App {
 
     public static Result search (String q, int rows, int page) {
         String type = request().getQueryString("type");
-        
-        if (type != null && (type.equalsIgnoreCase("substructure")
-                             || type.equalsIgnoreCase("similarity"))) {
+        if (q.equals("")) {
+            q = null;
+        }
+        else if (type != null && (type.equalsIgnoreCase("substructure")
+                                  || type.equalsIgnoreCase("similarity"))) {
             // structure search
             String cutoff = request().getQueryString("cutoff");
             Logger.debug("Search: q="+q+" type="+type+" cutoff="+cutoff);
@@ -460,27 +480,7 @@ public class Tox21App extends App {
         Sample sample = Tox21Factory.getSample(id);
         if (sample != null) {
             String ncgc = sample.getSynonym(Sample.S_NCGC).term;
-            WSRequestHolder ws = WS.url(RENDERER_URL)
-                .setFollowRedirects(true)
-                .setQueryParameter("structure", ncgc)
-                .setQueryParameter("format", RENDERER_FORMAT)
-                .setQueryParameter("size", String.valueOf(size));
-            try {
-                WSResponse res = ws.get().get(5000);
-                byte[] data = res.asByteArray();
-                if (data.length > 0) {
-                    //Logger.debug("rendering "+ncgc+": "+data.length);
-                    //Logger.debug(new String (data));
-                    return ok (data);
-                }
-                Text smiles = (Text)sample.getProperty(Sample.P_SMILES_ISO);
-                Logger.debug("Can't render "+ncgc+"; SMILES="
-                             +(smiles != null ? smiles.text :""));
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-                Logger.trace("Can't get response for request "+ws.getUrl(), ex);
-            }
+            return render (ncgc, size);
         }
         return null;
     }

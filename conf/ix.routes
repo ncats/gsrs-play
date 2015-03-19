@@ -22,5 +22,6 @@ GET     /tox21/webjars/*file          controllers.WebJarAssets.at(file)
 #
 GET	/ncats/marvin		ix.ncats.controllers.App.marvin
 POST	/ncats/smiles		ix.ncats.controllers.App.smiles
+GET	/ncats/render/:value	ix.ncats.controllers.App.render(value: String, size: Int ?= 150)
 
 ->      /       ix.ncats.apps.Routes

@@ -76,10 +76,10 @@ public class Structure extends IxModel {
     @Basic(fetch=FetchType.EAGER)
     public String stereoComments;
     
-    @Indexable(name="Stereocenters", ranges={0,1,2,5,7,10})
+    @Indexable(name="Stereocenters", ranges={0,1,2,3,4,5,6,7,8,9,10})
     public Integer stereoCenters; // count of possible stereocenters
     
-    @Indexable(name="Defined Stereocenters",ranges={0,1,2,5,7,10})
+    @Indexable(name="Defined Stereocenters",ranges={0,1,2,3,4,5,6,7,8,9,10})
     public Integer definedStereo; // count of defined stereocenters
     
     public Integer ezCenters; // counter of E/Z centers

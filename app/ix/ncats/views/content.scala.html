@@ -28,7 +28,33 @@
 		aria-label="Close">
 	  <span aria-hidden="true">&times;</span>
 	</button>
-	<span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code></h4></span>
+	@request().getQueryString("type") match {
+  	    case "Substructure" => {
+	      <span><h4>Substructure Query:&nbsp; <a  href="#"
+           tabindex="-1"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="bottom"
+           data-trigger="click hover focus"
+           data-title=""
+	   data-html="true"
+           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a></h4></span>
+	    }
+	      case "Similarity" => {
+	      <span><h4>Similarity Query:&nbsp; <a  href="#"
+           tabindex="-1"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="bottom"
+           data-trigger="click hover focus"
+           data-title=""
+	   data-html="true"
+           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4></span>
+	    }
+            case _ => {
+   	       <span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code></h4></span>
+	    }
+         }
       </div>
       }
       @pagination(current, rows, total, pages)
