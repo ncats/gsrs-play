@@ -23,6 +23,7 @@ import static tripod.chem.indexer.StructureIndexer.*;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.chem.StructureProcessor;
 import ix.utils.Util;
 
 import chemaxon.formats.MolImporter;
@@ -477,30 +478,13 @@ public class App extends Controller {
 
     public static Result smiles () {
         String data = request().body().asText();
-        Molecule mol = null;
         try {
-            MolHandler mh = new MolHandler (data, true);
-            mol = mh.getMolecule();
-            for (MolAtom a : mol.getAtomArray()) {
-                if (a.getAtno() == 114) {
-                    a.setAtno(MolAtom.ANY);
-                }
-            }
             //String q = URLEncoder.encode(mol.toFormat("smarts"), "utf8");
-            return ok (mol.toFormat("smarts"));
+            return ok (StructureProcessor.createQuery(data));
         }
         catch (Exception ex) {
             ex.printStackTrace();
             Logger.debug("** Unable to convert structure\n"+data);
-            if (mol != null) {
-                for (MolAtom a : mol.getAtomArray()) {
-                    Logger.debug(mol.indexOf(a)+": pseudo="+a.isPseudo()
-                                 +" query="+a.isQuery()
-                                 +" querylabel="+a.getQueryLabel()
-                                 +" querystr="+a.getQuerystr()
-                                 +" atno="+a.getAtno());
-                }
-            }
             return badRequest (data);
         }
     }

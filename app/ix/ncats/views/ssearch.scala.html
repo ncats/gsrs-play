@@ -42,17 +42,21 @@ function setQuery (value) {
 	<form class="form-inline" onchange="searchSelect()"
 	      method="@method" action="@action">
 	  <div class="form-group">
-	    <div class="pull-left">
 	      <select class="form-control" id="search-selection" name="type">
 		<option>Substructure</option>
 		<option>Similarity</option>
 	      </select>
 	      <input type="text" class="form-control" name="cutoff"
+	      	     style="width: 50px"
 		     id="tanimoto-cutoff" onkeyup="checkTanimoto(this)"
-		     placeholder="Tanimoto cutoff" disabled="true" value="0.8">
-	      <input type="hidden" id="structure" name="q" value="">
+		     data-toggle="tooltip"
+		     title="Tanimoto threshold"
+		     disabled="true" value="0.8">
+              <input type="text" class="form-control"
+	             data-toggle="tooltip"
+		     title="Query structure"
+	      	     style="width: 300px" name="q" id="structure">
 	    </div>
-	  </div>
 	  <button type="submit" onclick="submitForm()" 
 		  class="btn btn-primary" id="search-btn">Search</button>
 	</form>

@@ -258,4 +258,45 @@ public class StructureProcessor {
     public static String digest (Molecule mol) {
         return digest (mol.toFormat("mol"));
     }
+
+    public static String createQuery (String mol) {
+        try {
+            MolHandler mh = new MolHandler (mol);
+            return createQuery (mh.getMolecule());
+        }
+        catch (Exception ex) {
+            throw new IllegalArgumentException ("Can't parse molecule", ex);
+        }
+    }
+
+    public static String createQuery (Molecule mol) {
+        Map<Integer, Integer> amap = new HashMap<Integer, Integer>();
+        MolAtom[] atoms = mol.getAtomArray();
+        for (int i = 0; i < atoms.length; ++i) {
+            switch (atoms[i].getAtno()) {
+            case MolAtom.PSEUDO:
+            case MolAtom.RGROUP:
+            case MolAtom.SGROUP:
+            case MolAtom.ANY:
+            case MolAtom.NOTLIST:
+            case MolAtom.LIST:
+            case 114:
+                // this is what marvinjs specifies for atom *
+                amap.put(i, 114 == atoms[i].getAtno()
+                         ? MolAtom.ANY : atoms[i].getAtno());
+                atoms[i].setAtno(6); // force this to be carbon
+                break;
+            default:
+                // do nothing
+            }
+        }
+        
+        mol.aromatize();
+        // now restore the atom labels
+        for (Map.Entry<Integer, Integer> me : amap.entrySet()) {
+            atoms[me.getKey()].setAtno(me.getValue());
+        }
+        
+        return mol.toFormat("smarts");
+    }
 }
