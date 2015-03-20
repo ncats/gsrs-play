@@ -1,10 +1,10 @@
 @import ix.idg.models.Target
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.TcrdRegistry
-@import ix.core.search.TextIndexer.Facet
+@import ix.ncats.controllers.App.FacetDecorator
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-     facets: Array[Facet], targets: List[Target])
+     facets: Array[FacetDecorator], targets: List[Target])
 
 @tabrow(t: Target) = {
 <tr>
@@ -14,9 +14,11 @@
 </tr>
 }
 
-@content("Targets", "ix.idg.models.Target",
+@ix.ncats.views.html.content("Targets", "ix.idg.models.Target",
 ix.idg.controllers.routes.IDGApp.targets().url,
 current, rows, total, pages, facets){
+@menu("ix.idg.models.Target")
+}{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
   @defining(request().queryString.get("facet")) { facets =>

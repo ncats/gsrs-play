@@ -47,8 +47,9 @@
    }
 }
       
-
-@main(target.name, target.getClass().getName()) {
+@ix.ncats.views.html.main(target.name, target.getClass().getName()){
+@menu(target.getClass().getName())	 
+}{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
     <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>

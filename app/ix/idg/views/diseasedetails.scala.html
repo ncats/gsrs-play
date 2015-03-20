@@ -33,7 +33,9 @@
     </tr>
 }
 
-    @main(d.name, "ix.idg.models.Disease"){
+@ix.ncats.views.html.main(d.name, d.getClass().getName()){
+@menu(d.getClass().getName())    
+}{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
     <li><a href="@ix.idg.controllers.routes.IDGApp.diseases()">Diseases</a></li>

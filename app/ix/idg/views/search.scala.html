@@ -1,10 +1,12 @@
 @import ix.idg.models.Target
 @import ix.idg.models.Disease
 @import ix.idg.controllers.IDGApp
+@import ix.ncats.controllers.App
 @import ix.core.search.TextIndexer
 @import ix.core.search.TextIndexer._
+@import ix.ncats.controllers.App.FacetDecorator
 
-@(query: String, total: Int, facets: Array[Facet],
+@(query: String, total: Int, facets: Array[FacetDecorator],
 targets: List[Target], totalTargets: Int,
 diseases: List[Disease], totalDiseases: Int)
 
@@ -16,7 +18,9 @@ diseases: List[Disease], totalDiseases: Int)
 </tr>
 }
 
-@main("Search: "+query, null){
+@ix.ncats.views.html.main("Search: "+query, null){
+@menu(null)
+}{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
 </ol>
@@ -25,7 +29,7 @@ diseases: List[Disease], totalDiseases: Int)
   <div class="row">
     @if(facets.length > 0) {
     <div class="col-md-3">
-      @filters(facets)
+      @ix.ncats.views.html.filters(facets)
     </div> 
     <div class="col-md-9">
       } else {
@@ -64,7 +68,7 @@ diseases: List[Disease], totalDiseases: Int)
 	    }
 	</div>
 	<div class="panel-footer">
-	  <a href="@{ix.idg.controllers.routes.IDGApp.targets()+"?"+IDGApp.queryString(request().queryString())}">@totalTargets target(s)</a>
+	  <a href="@{ix.idg.controllers.routes.IDGApp.targets()+"?"+App.queryString(request().queryString())}">@totalTargets target(s)</a>
 	</div>
       </div>
       <div class="panel panel-default">
@@ -86,7 +90,7 @@ diseases: List[Disease], totalDiseases: Int)
 	    }
 	</div>
 	<div class="panel-footer">
-	  <a href="@{ix.idg.controllers.routes.IDGApp.diseases()+"?"+IDGApp.queryString(request().queryString())}">@totalDiseases disease(s)</a>
+	  <a href="@{ix.idg.controllers.routes.IDGApp.diseases()+"?"+App.queryString(request().queryString())}">@totalDiseases disease(s)</a>
 	</div>
     </div>
       </div>

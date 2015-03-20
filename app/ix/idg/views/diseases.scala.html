@@ -1,9 +1,9 @@
 @import ix.idg.controllers.DiseaseFactory
 @import ix.idg.models.Disease
-@import ix.core.search.TextIndexer.Facet
+@import ix.ncats.controllers.App.FacetDecorator
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-        facets: Array[Facet], diseases: List[Disease])
+        facets: Array[FacetDecorator], diseases: List[Disease])
 
 @getdoid(t: Disease) = {
     @* We only consider the first DOID, even if there are alternates *@
@@ -22,9 +22,11 @@
     </tr>
 }
 
-@content("Diseases", "ix.idg.models.Disease",
+@ix.ncats.views.html.content("Diseases", "ix.idg.models.Disease",
     ix.idg.controllers.routes.IDGApp.diseases().url,
     current, rows, total, pages, facets){
+    @menu("ix.idg.models.Disease")
+}{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
     <li class="active">Diseases</li>

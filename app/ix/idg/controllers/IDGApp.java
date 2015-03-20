@@ -9,10 +9,12 @@ import ix.core.models.Value;
 import ix.core.models.XRef;
 import ix.core.models.Predicate;
 import ix.core.search.TextIndexer;
+import static ix.core.search.TextIndexer.*;
 import ix.idg.models.Disease;
 import ix.idg.models.Target;
 import ix.utils.Util;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.ncats.controllers.App;
 
 import play.Logger;
 import play.cache.Cache;
@@ -39,13 +41,7 @@ import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class IDGApp extends Controller {
-    static public final int CACHE_TIMEOUT =
-        play.Play.application()
-        .configuration().getInt("ix.cache.time", 24*60*60); // 1 day
-    
-    static public final int MAX_FACETS = 6;
-    static final int FACET_DIM = 20;
+public class IDGApp extends App {
     static final int MAX_SEARCH_RESULTS = 1000;
 
     static final TextIndexer indexer = 
@@ -93,40 +89,15 @@ public class IDGApp extends Controller {
         TcrdRegistry.DRUG
     };
 
-    public static int[] paging (int rowsPerPage, int page, int total) {
-        int max = (total+ rowsPerPage-1)/rowsPerPage;
-        if (page < 0 || page > max) {
-            throw new IllegalArgumentException ("Bogus page "+page);
+    static FacetDecorator[] decorate (Facet... facets) {
+        FacetDecorator[] decors = new FacetDecorator[facets.length];
+        // override decorator as needed here
+        for (int i = 0; i < facets.length; ++i) {
+            decors[i] = new FacetDecorator (facets[i]);
         }
-        
-        int[] pages;
-        if (max <= 10) {
-            pages = new int[max];
-            for (int i = 0; i < pages.length; ++i)
-                pages[i] = i+1;
-        }
-        else if (page >= max-3) {
-            pages = new int[10];
-            for (int i = pages.length; --i >= 0; )
-                pages[i] = max--;
-        }
-        else {
-            pages = new int[10];
-            int i = 0;
-            for (; i < 7; ++i)
-                pages[i] = i+1;
-            if (page >= pages[i-1]) {
-                // now shift
-                pages[--i] = page;
-                while (i-- > 0)
-                    pages[i] = pages[i+1]-1;
-            }
-            pages[8] = max-1;
-            pages[9] = max;
-        }
-        return pages;
+        return decors;
     }
-
+    
     public static Result about() {
         return ok (ix.idg.views.html.about.render
                            ("Pharos: Illuminating the Druggable Genome"));
@@ -145,13 +116,15 @@ public class IDGApp extends Controller {
     }
 
     static void getLineage (Map<Long, Disease> lineage, Disease d) {
-        for (XRef ref : d.links) {
-            if (Disease.class.getName().equals(ref.kind)) {
-                for (Value prop : ref.properties) {
-                    if (prop.label.equals("is_a")) {
-                        Disease p = (Disease)ref.deRef();
-                        lineage.put(d.id, p);
-                        getLineage (lineage, p);
+        if (!lineage.containsKey(d.id)) {
+            for (XRef ref : d.links) {
+                if (Disease.class.getName().equals(ref.kind)) {
+                    for (Value prop : ref.properties) {
+                        if (prop.label.equals("is_a")) {
+                            Disease p = (Disease)ref.deRef();
+                            lineage.put(d.id, p);
+                            getLineage (lineage, p);
+                        }
                     }
                 }
             }
@@ -161,11 +134,11 @@ public class IDGApp extends Controller {
     public static Result target (final long id) {
         try {
             String sha1 = Util.sha1(request ());
-            return Cache.getOrElse(sha1, new Callable<Result> () {
+            return getOrElse (sha1, new Callable<Result> () {
                     public Result call () throws Exception {
                         return _target (id);
                     }
-                }, CACHE_TIMEOUT);
+                });
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -176,12 +149,12 @@ public class IDGApp extends Controller {
 
     static Result _target (final long id) throws Exception {
         long start = System.currentTimeMillis();
-        Target t = Cache.getOrElse
+        Target t = getOrElse
             (Target.class.getName()+":"+id, new Callable<Target> () {
                     public Target call () {
                         return TargetFactory.getTarget(id);
                     }
-                }, CACHE_TIMEOUT);
+                });
         double ellapsed = (System.currentTimeMillis()-start)*1e-3;
         Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
                      +" to retrieve target "+id);
@@ -191,6 +164,7 @@ public class IDGApp extends Controller {
         Map<Long, Disease> lineage = new HashMap<Long, Disease>();
         Map<Long, DiseaseRelevance> diseaseRel =
             new HashMap<Long, DiseaseRelevance>();
+        start = System.currentTimeMillis();
         for (XRef xref : t.links) {
             if (Disease.class.getName().equals(xref.kind)) {
                 DiseaseRelevance dr = new DiseaseRelevance ();
@@ -223,6 +197,9 @@ public class IDGApp extends Controller {
             }
         }
         Collections.sort(diseases);
+        ellapsed = (System.currentTimeMillis()-start)*1e-3;
+        Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
+                     +" to retrieve disease relevance for target "+id);
         
         Set<Long> hasChildren = new HashSet<Long>();
         for (Disease d : lineage.values())
@@ -269,322 +246,20 @@ public class IDGApp extends Controller {
                    .targetdetails.render(t, prune, breadcrumb));
     }
 
-    public static String sha1 (TextIndexer.Facet facet, int value) {
-        return Util.sha1(facet.getName(),
-                         facet.getValues().get(value).getLabel());
-    }
-
-    public static String decode (String s) {
-        try {
-            return URLDecoder.decode(s, "utf8");
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't encode string "+s, ex);
-        }
-        return null;
-    }
-
-    public static String encode (TextIndexer.Facet facet) {
-        try {
-            return URLEncoder.encode(facet.getName(), "utf8");
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't encode string "+facet.getName(), ex);
-        }
-        return null;
-    }
-    
-    public static String encode (TextIndexer.Facet facet, int i) {
-        String value = facet.getValues().get(i).getLabel();
-        try {
-            return URLEncoder.encode(value, "utf8");
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't encode string "+value, ex);
-        }
-        return null;
-    }
-
-    public static String page (int rows, int page) {
-        String url = "http"+ (request().secure() ? "s" : "") + "://"
-            +request().host()
-            +request().uri();
-        if (url.charAt(url.length() -1) == '?') {
-            url = url.substring(0, url.length()-1);
-        }
-        //Logger.debug(url);
-
-        Map<String, Collection<String>> params =
-            WS.url(url).getQueryParameters();
-        
-        // remove these
-        //params.remove("rows");
-        params.remove("page");
-        StringBuilder uri = new StringBuilder ("?page="+page);
-        for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
-            for (String v : me.getValue())
-                uri.append("&"+me.getKey()+"="+v);
-        }
-        
-        return uri.toString();
-    }
-
-    public static String url (String... remove) {
-        String url = "http"+ (request().secure() ? "s" : "") + "://"
-            +request().host()
-            +request().uri();
-        if (url.charAt(url.length()-1) == '?') {
-            url = url.substring(0, url.length()-1);
-        }
-        //Logger.debug(">> uri="+request().uri());
-
-        StringBuilder uri = new StringBuilder ("?");
-        Map<String, Collection<String>> params =
-            WS.url(url).getQueryParameters();
-        for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
-            boolean matched = false;
-            for (String s : remove)
-                if (s.equals(me.getKey())) {
-                    matched = true;
-                    break;
-                }
-            
-            if (!matched) {
-                for (String v : me.getValue())
-                    if (v != null)
-                        uri.append(me.getKey()+"="+v+"&");
-            }
-        }
-        //Logger.debug(">> "+uri);
-        return uri.substring(0, uri.length()-1);
-    }
-
-    /**
-     * more specific version that only remove parameters based on 
-     * given facets
-     */
-    public static String url (TextIndexer.Facet[] facets, String... others) {
-        String url = "http"+ (request().secure() ? "s" : "") + "://"
-            +request().host()
-            +request().uri();
-        if (url.charAt(url.length()-1) == '?') {
-            url = url.substring(0, url.length()-1);
-        }
-        //Logger.debug(">> uri="+request().uri());
-
-        StringBuilder uri = new StringBuilder ("?");
-        Map<String, Collection<String>> params =
-            WS.url(url).getQueryParameters();
-        for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
-            if (me.getKey().equals("facet")) {
-                for (String v : me.getValue())
-                    if (v != null) {
-                        String s = decode (v);
-                        boolean matched = false;
-                        for (TextIndexer.Facet f : facets) {
-                            if (s.startsWith(f.getName())) {
-                                matched = true;
-                                break;
-                            }
-                        }
-                        
-                        if (!matched)
-                            uri.append(me.getKey()+"="+v+"&");
-                    }
-            }
-            else {
-                boolean matched = false;
-                for (String s : others) {
-                    if (s.equals(me.getKey())) {
-                        matched = true;
-                        break;
-                    }
-                }
-                
-                if (!matched)
-                    for (String v : me.getValue())
-                        if (v != null)
-                            uri.append(me.getKey()+"="+v+"&");
-            }
-        }
-        
-        Logger.debug(">> "+uri);
-        return uri.substring(0, uri.length()-1);
-    }
-
-    public static String queryString (String... params) {
-        Map<String, String[]> query = new HashMap<String, String[]>();
-        for (String p : params) {
-            String[] values = request().queryString().get(p);
-            if (values != null)
-                query.put(p, values);
-        }
-        
-        return query.isEmpty() ? "" : "?"+queryString (query);
-    }
-    
-    public static String queryString (Map<String, String[]> queryString) {
-        //Logger.debug("QueryString: "+queryString);
-        StringBuilder q = new StringBuilder ();
-        for (Map.Entry<String, String[]> me : queryString.entrySet()) {
-            for (String s : me.getValue()) {
-                if (q.length() > 0)
-                    q.append('&');
-                q.append(me.getKey()+"="
-                         + ("q".equals(me.getKey()) ? quote (s) : s));
-            }
-        }
-        return q.toString();
-    }
-
-    public static boolean hasFacet (TextIndexer.Facet facet, int i) {
-        String[] facets = request().queryString().get("facet");
-        if (facets != null) {
-            for (String f : facets) {
-                String[] toks = f.split("/");
-                if (toks.length == 2) {
-                    try {
-                        String name = toks[0];
-                        String value = toks[1];
-                        /*
-                        Logger.debug("Searching facet "+name+"/"+value+"..."
-                                     +facet.getName()+"/"
-                                     +facet.getValues().get(i).getLabel());
-                        */
-                        boolean matched = name.equals(facet.getName())
-                            && value.equals(facet.getValues()
-                                            .get(i).getLabel());
-                        
-                        if (matched)
-                            return matched;
-                    }
-                    catch (Exception ex) {
-                        Logger.trace("Can't URL decode string", ex);
-                    }
-                }
-            }
-        }
-        
-        return false;
-    }
-
-    static List<TextIndexer.Facet> getFacets
-        (final Class kind, final int fdim) {
-        try {
-            TextIndexer.SearchResult result =
-                SearchFactory.search(kind, null, 0, 0, fdim, null);
-            return result.getFacets();
-        }
-        catch (IOException ex) {
-            Logger.trace("Can't retrieve facets for "+kind, ex);
-        }
-        return new ArrayList<TextIndexer.Facet>();
-    }
-
-    static TextIndexer.Facet[] filter (List<TextIndexer.Facet> facets,
-                                       String... names) {
-        if (names == null || names.length == 0)
-            return facets.toArray(new TextIndexer.Facet[0]);
-        
-        List<TextIndexer.Facet> filtered = new ArrayList<TextIndexer.Facet>();
-        for (String n : names) {
-            for (TextIndexer.Facet f : facets)
-                if (n.equals(f.getName()))
-                    filtered.add(f);
-        }
-        return filtered.toArray(new TextIndexer.Facet[0]);
-    }
-
-    static TextIndexer.SearchResult getSearchResult
-        (final Class kind, final String q, final int total) {
-        
-        final Map<String, String[]> query =  new HashMap<String, String[]>();
-        query.putAll(request().queryString());
-                
-        List<String> qfacets = new ArrayList<String>();
-        final boolean hasFacets = q != null && q.indexOf('/') > 0;
-        if (hasFacets) {
-            // treat this as facet
-            if (query.get("facet") != null) {
-                for (String f : query.get("facet"))
-                    qfacets.add(f);
-            }
-            qfacets.add("MeSH/"+q);
-            query.put("facet", qfacets.toArray(new String[0]));
-        }
-        //query.put("drill", new String[]{"down"});
-        
-        List<String> args = new ArrayList<String>();
-        args.add(request().uri());
-        if (q != null)
-            args.add(q);
-        for (String f : qfacets)
-            args.add(f);
-        Collections.sort(args);
-        
-        // filtering
-        try {
-            long start = System.currentTimeMillis();
-            String sha1 = Util.sha1(args.toArray(new String[0]));
-            TextIndexer.SearchResult result = Cache.getOrElse
-                (sha1, new Callable<TextIndexer.SearchResult>() {
-                     public TextIndexer.SearchResult call () throws Exception {
-                         return SearchFactory.search
-                         (kind, hasFacets ? null : q,
-                          total, 0, FACET_DIM, query);
-                     }
-                 }, CACHE_TIMEOUT);
-            
-            double ellapsed = (System.currentTimeMillis() - start)*1e-3;
-            Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
-                                       +"results for "
-                                       +sha1.substring(0, 8)+"...",
-                                       ellapsed));
-            
-            if (hasFacets && result.count() == 0) {
-                start = System.currentTimeMillis();
-                // empty result.. perhaps the query contains /'s
-                Cache.remove(sha1); // clear cache
-                result = Cache.getOrElse
-                    (sha1, new Callable<TextIndexer.SearchResult>() {
-                            public TextIndexer.SearchResult call ()
-                                throws Exception {
-                                return SearchFactory.search
-                                (kind, q, total, 0, FACET_DIM,
-                                 request().queryString());
-                            }
-                        }, CACHE_TIMEOUT);
-                ellapsed = (System.currentTimeMillis() - start)*1e-3;
-                Logger.debug(String.format("Retry as query; "
-                                           +"ellapsed %1$.3fs to retrieve "
-                                           +"results for "
-                                           +sha1.substring(0, 8)+"...",
-                                           ellapsed));
-            }
-            
-            return result;
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.trace("Unable to perform search", ex);
-        }
-        return null;
-    }
-
     public static Result targets (final String q,
                                   final int rows, final int page) {
         try {
             String sha1 = Util.sha1(request ());
-            return Cache.getOrElse(sha1, new Callable<Result>() {
+            return getOrElse (sha1, new Callable<Result>() {
                     public Result call () throws Exception {
                         return _targets (q, rows, page);
                     }
-                }, CACHE_TIMEOUT);
+                });
         }
         catch (Exception ex) {
             ex.printStackTrace();
             return badRequest (ix.idg.views.html.error.render
-                               (404, "Invalid page requested: "+page+ex));
+                               (404, "Invalid page requested: "+ex));
         }
     }
     
@@ -612,7 +287,7 @@ public class IDGApp extends Controller {
             
             return ok (ix.idg.views.html.targets.render
                        (page, rows, result.count(),
-                        pages, facets, targets));
+                        pages, decorate (facets), targets));
         }
         else {
             String cache = Target.class.getName()+".facets";
@@ -634,19 +309,19 @@ public class IDGApp extends Controller {
                 TargetFactory.getTargets(rows, (page-1)*rows, null);
             
             return ok (ix.idg.views.html.targets.render
-                       (page, rows, total, pages, facets, targets));
+                       (page, rows, total, pages, decorate (facets), targets));
         }
     }
 
     public static Keyword[] getAncestry (final String facet,
                                          final String predicate) {
         try {
-            return Cache.getOrElse
+            return getOrElse
                 (predicate+"/"+facet, new Callable<Keyword[]> () {
                         public Keyword[] call () throws Exception {
                             return _getAncestry (facet, predicate);
                         }
-                    }, CACHE_TIMEOUT);
+                    });
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -735,17 +410,6 @@ public class IDGApp extends Controller {
             }
         }
         return fv;
-    }
-
-    /**
-     * make sure if the argument doesn't have quote then add them
-     */
-    static Pattern regex = Pattern.compile("\"([^\"]+)");
-    static String quote (String s) {
-        Matcher m = regex.matcher(s);
-        if (m.find())
-            return s; // nothing to do.. already have quote
-        return "\""+s+"\"";
     }
 
     public static Result search (final int rows) {
@@ -843,7 +507,7 @@ public class IDGApp extends Controller {
             filter (Disease.class, result.getMatches(), max);
         
         return ok (ix.idg.views.html.search.render
-                   (query, total, facets,
+                   (query, total, decorate (facets),
                     targets, totalTargets, diseases, totalDiseases));
     }
 
@@ -937,7 +601,7 @@ public class IDGApp extends Controller {
             
             return ok(ix.idg.views.html.diseases.render
                       (page, rows, result.count(),
-                       pages, facets, diseases));
+                       pages, decorate (facets), diseases));
         }
         else {
             TextIndexer.Facet[] facets = Cache.getOrElse
@@ -955,7 +619,7 @@ public class IDGApp extends Controller {
                 DiseaseFactory.getDiseases(rows, (page - 1) * rows, null);
             
             return ok(ix.idg.views.html.diseases.render
-                      (page, rows, total, pages, facets, diseases));
+                      (page, rows, total, pages, decorate (facets), diseases));
         }
     }
 }

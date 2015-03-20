@@ -1,6 +1,8 @@
 @import ix.idg.controllers.LigandFactory
 
-@main("Ligands", "ix.idg.models.Ligand"){
+@ix.ncats.views.html.main("Ligands", "ix.idg.models.Ligand"){
+@menu("ix.idg.models.Ligand")
+}{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
   <li class="active">Ligands</li>

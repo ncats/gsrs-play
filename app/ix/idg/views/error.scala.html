@@ -1,18 +1,2 @@
 @(code: Int, message: String)
-@main("Error", null){
-<div>
-</div>
-}{
-<div class="container-fluid">
-    @if(code == 200) {
-    <div class="alert alert-success" role="alert">
-      <h1>Status @code: <code>@message</code></h1>
-    </div>
-    } else {
-    <div class="alert alert-danger" role="alert">
-      <h1>Status @code: <code>@message</code></h1>
-    </div>
-    }
-  </div>
-</div>
-}
+@ix.ncats.views.html.error(code, message) { @menu(null) }
