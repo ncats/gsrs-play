@@ -7,9 +7,11 @@
      facets: Array[FacetDecorator], targets: List[Target])
 
 @tabrow(t: Target) = {
+
 <tr>
-  <td><a href="@ix.idg.controllers.routes.IDGApp.target(t.id)">@t.name</a></td>
-  <td>@t.idgTDL</td>
+  <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getTargetId(t))">@t.name</a></td>
+  <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
+	    data-html="true" title="@t.idgTDL.desc">@t.idgTDL.name</span></td>
   <td>@t.idgFamily</td>
 </tr>
 }
@@ -49,3 +51,10 @@ current, rows, total, pages, facets){
    }
 </table>
 }
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>

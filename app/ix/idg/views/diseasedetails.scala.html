@@ -2,6 +2,8 @@
 @import ix.idg.models.Target
 @import ix.core.models.Keyword
 @import ix.core.models.Text
+@import ix.idg.controllers.IDGApp 
+
 
 @(d: Disease, targets: Array[Target])
 
@@ -27,7 +29,7 @@
 
 @tabrow(t: Target) = {
     <tr>
-        <td><a href="@ix.idg.controllers.routes.IDGApp.target(t.id)">@t.name</a></td>
+        <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getTargetId(t))">@t.name</a></td>
         <td>@t.idgTDL</td>
         <td>@t.idgFamily</td>
     </tr>

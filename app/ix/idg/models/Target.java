@@ -22,6 +22,46 @@ public class Target extends EntityModel {
     public static final String IDG_FAMILY = "IDG Target Family";
     public static final String IDG_DEVELOPMENT =
         "IDG Target Development";
+
+    public enum TDL {
+        Tclin_p("Tclin+",
+                "Targets have activities better than 1μM (10μM for ion channels) in DrugDB involving an approved drug WITH a known mechanism of action",
+                "success"),
+        Tclin ("Tclin",
+               "Targets have activities better than 1μM (10μM for ion channels) in DrugDB involving an approved drug",
+               "primary"),
+        Tchem ("Tchem",
+               "Targets have standardizable activities better than 1μM (10μM for ion channels) in ChEMBL involving non-drug small molecule(s)",
+               "info"),
+        Tmacro ("Tmacro",
+                "Targets do not have ChEMBL activities and are above the cutoffs for Tgray",
+                "warning"),
+        Tgray ("Tgray",
+               "Targets are above the cutoffs for Tdark and have at least 2 of the following:"
++"<ul>"
++"    <li>&le; 5 Gene RIFs</li>"
++"    <li>&le; 84 Antibodies available according to http://antibodypedia.com</li>"
++"    <li>A PubMed text-mining score from Jensen Lab of &le; 10.55</li>"
++"</ul>", "default"),
+        Tdark ("Tdark",
+               "Targets have at least 2 of the following:"
++"<ul>"
++"    <li>&le; 1 Gene RIFs</li>"
++"    <li>&le; 38 Antibodies available according to http://antibodypedia.com</li>"
++"    <li>A PubMed text-mining score from Jensen Lab of &le; 1.23</li>"
++"</ul>", "danger");
+
+        final public String name;
+        final public String desc;
+        final public String label;
+
+        TDL (String name, String desc, String label) {
+            this.name = name;
+            this.desc = desc;
+            this.label = label;
+        }
+        public String toString () { return name; }
+    }
         
     @Column(length=1024)
     @Indexable(suggest=true,name="Target")
@@ -41,7 +81,7 @@ public class Target extends EntityModel {
 
     @Column(length=10)
     @Indexable(facet=true,name=IDG_DEVELOPMENT)
-    public String idgTDL; // target development level
+    public TDL idgTDL; // target development level
 
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
@@ -79,5 +119,16 @@ public class Target extends EntityModel {
     @JsonProperty("_organism")
     public String getJsonOrganism () {
         return Global.getRef(organism);
+    }
+
+    /**
+     * return the first synonym that matches the given label
+     */
+    public Keyword getSynonym (String label) {
+        for (Keyword kw : synonyms) {
+            if (label.equals(kw.label))
+                return kw;
+        }
+        return null;
     }
 }

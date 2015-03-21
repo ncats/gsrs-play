@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.EnumSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -85,7 +86,7 @@ public class TcrdRegistry extends Controller {
     static final DrugTargetOntology dto = new DrugTargetOntology();
 
     public static final Namespace namespace = NamespaceFactory.registerIfAbsent
-        ("TCRDv094", "https://pharos.nih.gov");
+        ("TCRDv096", "https://pharos.nih.gov");
 
     static class TcrdTarget implements Comparable<TcrdTarget> {
         String acc;
@@ -343,7 +344,13 @@ public class TcrdRegistry extends Controller {
                          +": "+t.family+" "+t.tdl+" "+t.acc+" "+t.id);
             Target target = new Target ();
             target.idgFamily = t.family;
-            target.idgTDL = t.tdl;
+            for (Target.TDL tdl : EnumSet.allOf(Target.TDL.class)) {
+                if (t.tdl.equals(tdl.name)) 
+                    target.idgTDL = tdl;
+            }
+            assert target.idgTDL != null
+                : "Unknown TDL "+t.tdl;
+            
             target.synonyms.add
                 (new Keyword (TARGET, String.valueOf(t.id)));
             
@@ -612,7 +619,7 @@ public class TcrdRegistry extends Controller {
             Keyword family = KeywordFactory.registerIfAbsent
                 (Target.IDG_FAMILY, target.idgFamily, null);
             Keyword clazz = KeywordFactory.registerIfAbsent
-                (Target.IDG_DEVELOPMENT, target.idgTDL, null);
+                (Target.IDG_DEVELOPMENT, target.idgTDL.name, null);
 
             Keyword name = KeywordFactory.registerIfAbsent
                 (UniprotRegistry.TARGET, target.name, target.getSelf());

@@ -34,9 +34,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Vector;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -67,6 +69,34 @@ public class IDGApp extends App {
             return 0;
         }
     }
+
+    static class IDGFacetDecorator extends FacetDecorator {
+        IDGFacetDecorator (Facet facet) {
+            super (facet, true, 6);
+        }
+
+        @Override
+        public String name () {
+            return super.name().replaceAll("IDG", "").trim();
+        }
+        
+        @Override
+        public String label (int i) {
+            String label = super.label(i);
+            if (super.name().equals(Target.IDG_DEVELOPMENT)) {
+                for (Target.TDL tdl : EnumSet.allOf(Target.TDL.class)) {
+                    if (label.equalsIgnoreCase(tdl.name)) {
+                        return "<span class=\"label label-"+tdl.label+"\""
+                            +" data-toggle=\"tooltip\" data-placement=\"right\""
+                            +" data-html=\"true\" title=\""+tdl.desc+"\">"
+                            +tdl.name+"</span>";
+                    }
+                }
+                assert false: "Unknown TDL label: "+label;
+            }
+            return label;
+        }
+    }
     
     public static final String[] TARGET_FACETS = {
         TcrdRegistry.DEVELOPMENT,
@@ -93,7 +123,7 @@ public class IDGApp extends App {
         FacetDecorator[] decors = new FacetDecorator[facets.length];
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
-            decors[i] = new FacetDecorator (facets[i]);
+            decors[i] = new IDGFacetDecorator (facets[i]);
         }
         return decors;
     }
@@ -120,7 +150,7 @@ public class IDGApp extends App {
             for (XRef ref : d.links) {
                 if (Disease.class.getName().equals(ref.kind)) {
                     for (Value prop : ref.properties) {
-                        if (prop.label.equals("is_a")) {
+                        if (prop.label.equals(DiseaseOntologyRegistry.IS_A)) {
                             Disease p = (Disease)ref.deRef();
                             lineage.put(d.id, p);
                             getLineage (lineage, p);
@@ -131,46 +161,139 @@ public class IDGApp extends App {
         }
     }
 
-    public static Result target (final long id) {
+    static List<Disease> getLineage (Disease d) {
+        Vector<Disease> lineage = new Vector<Disease>();
+        for (XRef ref: d.links) {
+            if (Disease.class.getName().equals(ref.kind)) {
+                for (Value prop : ref.properties) {
+                    if (prop.label.startsWith
+                        (DiseaseOntologyRegistry.LINEAGE)) {
+                        int pos = prop.label.indexOf(':');
+                        if (pos > 0) {
+                            int index = Integer.parseInt
+                                (prop.label.substring(pos+1));
+                            Disease p = (Disease)ref.deRef();
+                            if (index >= lineage.size())
+                                lineage.setSize(index+1);
+                            lineage.setElementAt(p, index);
+                        }
+                    }
+                }
+            }
+        }
+        return lineage;
+    }
+
+    public static Result target (final String name) {
         try {
-            String sha1 = Util.sha1(request ());
-            return getOrElse (sha1, new Callable<Result> () {
-                    public Result call () throws Exception {
-                        return _target (id);
+            long start = System.currentTimeMillis();        
+            Target target = getOrElse (name, new Callable<Target> () {
+                    public Target call () throws Exception {
+                        List<Target> targets = TargetFactory.finder.where()
+                           .eq("synonyms.term", name).findList();
+                        if (!targets.isEmpty()) {
+                            if (targets.size() > 1) {
+                                Logger.warn("Request name \""+name+"\" maps "
+                                            +"to "+targets.size()+" targets; "
+                                            +"return the first one!");
+                            }
+                            return targets.iterator().next();
+                        }
+                        return null;
                     }
                 });
+            double ellapsed = (System.currentTimeMillis()-start)*1e-3;
+            Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
+                         +" to retrieve target "+name+" "+target);
+            
+            if (target == null) {
+                return notFound (ix.idg.views.html.error.render
+                                 (400, "Unknown target name: "+name));
+            }
+            return target (target);
         }
         catch (Exception ex) {
             ex.printStackTrace();
             return internalServerError
-                (ix.idg.views.html.error.render(400, "Invalid target id: "+id));
+                (ix.idg.views.html.error.render
+                 (500, "Internal server error: "+ex.getMessage()));
         }
     }
 
-    static Result _target (final long id) throws Exception {
-        long start = System.currentTimeMillis();
-        Target t = getOrElse
-            (Target.class.getName()+":"+id, new Callable<Target> () {
-                    public Target call () {
-                        return TargetFactory.getTarget(id);
-                    }
-                });
-        double ellapsed = (System.currentTimeMillis()-start)*1e-3;
-        Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
-                     +" to retrieve target "+id);
+    public static String getTargetId (Target t) {
+        Keyword kw = t.getSynonym(UniprotRegistry.ACCESSION);
+        return kw != null ? kw.term : null;
+    }
+    
+    static Result target (final Target t) throws Exception {
+        try {
+            Result result = getOrElse
+                (Util.sha1(request ()), new Callable<Result> () {
+                        public Result call () throws Exception {
+                            return getTargetResult (t);
+                        }
+                    });
+            return result;
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    static Result getTargetResult (final Target t) throws Exception {
+        List<DiseaseRelevance> diseases = getOrElse
+            ("/target/"+t.id+"/diseases",
+             new Callable<List<DiseaseRelevance>> () {
+                 public List<DiseaseRelevance> call () throws Exception {
+                     return getDiseaseRelevances (t);
+                 }
+             });
         
+        List<Keyword> breadcrumb = new ArrayList<Keyword>();
+        for (Value v : t.properties) {
+            if (v.label.startsWith(TcrdRegistry.ChEMBL_PROTEIN_CLASS)) {
+                Keyword kw = (Keyword)v;
+                String url = ix.idg.controllers
+                    .routes.IDGApp.targets(null, 30, 1).url();
+                kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
+                    +"facet="+kw.label+"/"+kw.term;
+                breadcrumb.add(kw);
+            }
+        }
+        // just make sure the order is correct
+        Collections.sort(breadcrumb, new Comparator<Keyword>() {
+                public int compare (Keyword kw1, Keyword kw2) {
+                    return kw1.label.compareTo(kw2.label);
+                }
+            });
+
+        return ok (ix.idg.views.html
+                   .targetdetails.render(t, diseases, breadcrumb));
+    }
+
+    static List<DiseaseRelevance>
+        getDiseaseRelevances (Target t) throws Exception {
         List<DiseaseRelevance> diseases = new ArrayList<DiseaseRelevance>();
         List<DiseaseRelevance> uniprot = new ArrayList<DiseaseRelevance>();
         Map<Long, Disease> lineage = new HashMap<Long, Disease>();
         Map<Long, DiseaseRelevance> diseaseRel =
             new HashMap<Long, DiseaseRelevance>();
-        start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         for (XRef xref : t.links) {
             if (Disease.class.getName().equals(xref.kind)) {
                 DiseaseRelevance dr = new DiseaseRelevance ();
                 dr.disease = (Disease)xref.deRef();
                 diseaseRel.put(dr.disease.id, dr);
                 getLineage (lineage, dr.disease);
+                /*
+                { Disease d = dr.disease;
+                    for (Disease parent : getLineage (d)) {
+                        lineage.put(d.id, parent);
+                        d = parent;
+                    }
+                }
+                */
                 for (Value p : xref.properties) {
                     if (TcrdRegistry.ZSCORE.equals(p.label))
                         dr.zscore = (Double)p.getValue();
@@ -197,15 +320,15 @@ public class IDGApp extends App {
             }
         }
         Collections.sort(diseases);
-        ellapsed = (System.currentTimeMillis()-start)*1e-3;
+        double ellapsed = (System.currentTimeMillis()-start)*1e-3;
         Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
-                     +" to retrieve disease relevance for target "+id);
-        
+                     +" to retrieve disease relevance for target "+t.id);
+
+        List<DiseaseRelevance> prune = new ArrayList<DiseaseRelevance>();       
         Set<Long> hasChildren = new HashSet<Long>();
         for (Disease d : lineage.values())
             hasChildren.add(d.id);
-        
-        List<DiseaseRelevance> prune = new ArrayList<DiseaseRelevance>();
+
         for (DiseaseRelevance dr : diseases) {
             if (!hasChildren.contains(dr.disease.id)) {
                 prune.add(dr);
@@ -224,26 +347,7 @@ public class IDGApp extends App {
         }
         prune.addAll(uniprot); // append uniprot diseases
 
-        List<Keyword> breadcrumb = new ArrayList<Keyword>();
-        for (Value v : t.properties) {
-            if (v.label.startsWith(TcrdRegistry.ChEMBL_PROTEIN_CLASS)) {
-                Keyword kw = (Keyword)v;
-                String url = ix.idg.controllers
-                    .routes.IDGApp.targets(null, 30, 1).url();
-                kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
-                    +"facet="+kw.label+"/"+kw.term;
-                breadcrumb.add(kw);
-            }
-        }
-        // just make sure the order is correct
-        Collections.sort(breadcrumb, new Comparator<Keyword>() {
-                public int compare (Keyword kw1, Keyword kw2) {
-                    return kw1.label.compareTo(kw2.label);
-                }
-            });
-        
-        return ok (ix.idg.views.html
-                   .targetdetails.render(t, prune, breadcrumb));
+        return prune;
     }
 
     public static Result targets (final String q,
@@ -415,11 +519,11 @@ public class IDGApp extends App {
     public static Result search (final int rows) {
         try {
             String sha1 = Util.sha1(request ());
-            return Cache.getOrElse(sha1, new Callable<Result> () {
+            return getOrElse(sha1, new Callable<Result> () {
                     public Result call () throws Exception {
                         return _search (rows);
                     }
-                }, CACHE_TIMEOUT);
+                });
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -448,7 +552,7 @@ public class IDGApp extends App {
             }
             queryString.put("facet", f.toArray(new String[0]));
             long start = System.currentTimeMillis();
-            result = Cache.getOrElse
+            result = getOrElse
                 (Util.sha1(queryString.get("facet")),
                  new Callable<TextIndexer.SearchResult>() {
                      public TextIndexer.SearchResult
@@ -457,7 +561,7 @@ public class IDGApp extends App {
                          (null, null, MAX_SEARCH_RESULTS,
                           0, FACET_DIM, queryString);
                      }
-                 }, CACHE_TIMEOUT);
+                 });
             double ellapsed = (System.currentTimeMillis()-start)*1e-3;
             Logger.debug
                 ("1. Ellapsed time "+String.format("%1$.3fs", ellapsed));
@@ -465,7 +569,7 @@ public class IDGApp extends App {
 
         if (result == null || result.count() == 0) {
             long start = System.currentTimeMillis();                
-            result = Cache.getOrElse
+            result = getOrElse
                 (Util.sha1(request(), "facet", "q"),
                  new Callable<TextIndexer.SearchResult>() {
                      public TextIndexer.SearchResult
@@ -474,7 +578,7 @@ public class IDGApp extends App {
                          (null, quote (query), MAX_SEARCH_RESULTS, 0,
                           FACET_DIM, request().queryString());
                      }
-                 }, CACHE_TIMEOUT);
+                 });
             double ellapsed = (System.currentTimeMillis()-start)*1e-3;
             Logger.debug
                 ("2. Ellapsed time "+String.format("%1$.3fs", ellapsed));
@@ -518,11 +622,11 @@ public class IDGApp extends App {
     public static Result disease (final long id) {
         try {
             String sha1 = Util.sha1(request ());
-            return Cache.getOrElse(sha1, new Callable<Result>() {
+            return getOrElse (sha1, new Callable<Result>() {
                     public Result call () throws Exception {
                         return _disease (id);
                     }
-                }, CACHE_TIMEOUT);
+                });
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -597,21 +701,21 @@ public class IDGApp extends App {
                          && i < result.count(); ++j, ++i) {
                     diseases.add((Disease) result.getMatches().get(i));
                 }
-                }
+            }
             
             return ok(ix.idg.views.html.diseases.render
                       (page, rows, result.count(),
                        pages, decorate (facets), diseases));
         }
         else {
-            TextIndexer.Facet[] facets = Cache.getOrElse
+            TextIndexer.Facet[] facets = getOrElse
                 (Disease.class.getName()+".facets",
                  new Callable<TextIndexer.Facet[]>() {
                      public TextIndexer.Facet[] call() {
                          return filter(getFacets(Disease.class, 30),
                                        DISEASE_FACETS);
                      }
-                 }, CACHE_TIMEOUT);
+                 });
             rows = Math.min(total, Math.max(1, rows));
             int[] pages = paging(rows, page, total);
             

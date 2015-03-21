@@ -101,8 +101,7 @@ public class XRef extends IxModel {
                 Field fid = getIdField (cls);
                 if (fid != null) {
                     Class type = fid.getType();
-                    Model.Finder finder = new Model.Finder
-                        (type, cls);
+                    Model.Finder finder = new Model.Finder(type, cls);
                     if (Long.class.isAssignableFrom(type))
                         _instance = finder.byId(Long.parseLong(refid));
                     else if (UUID.class.isAssignableFrom(type))

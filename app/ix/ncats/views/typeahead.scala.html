@@ -23,7 +23,7 @@ $(document).ready(function () {
          displayKey: 'key',
          source: @{xx}.ttAdapter(),
          templates: {
-           header: '<h4><span class="label label-warning">@f</span></h4>'
+           header: '<h4><span class="label label-warning">@f.replaceAll("[_]+", " ")</span></h4>'
          }
        };
       }

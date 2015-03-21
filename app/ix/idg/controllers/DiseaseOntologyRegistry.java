@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 import ix.core.search.TextIndexer;
@@ -21,9 +22,15 @@ import ix.core.plugins.TextIndexerPlugin;
 
 public class DiseaseOntologyRegistry {
     public static final String DOID = "DOID";
+    public static final String LINEAGE = "LINEAGE";
+    public static final String IS_A = "is_a";
     
     static Namespace namespace = NamespaceFactory.registerIfAbsent
         ("Disease Ontology", "http://www.disease-ontology.org");
+
+    
+    Map<String, String> parents  = new HashMap<String, String>();
+    Map<String, Disease> diseaseMap = new HashMap<String, Disease>();
     
     public DiseaseOntologyRegistry () {
     }
@@ -34,8 +41,6 @@ public class DiseaseOntologyRegistry {
     public Map<String, Disease> register (InputStream is) throws IOException {
         OboParser obo = new OboParser (is);
 
-        Map<String, String> parents  = new HashMap<String, String>();
-        Map<String, Disease> diseaseMap = new HashMap<String, Disease>();
         while (obo.next()) {
             if (obo.obsolete)
                 continue;
@@ -123,18 +128,52 @@ public class DiseaseOntologyRegistry {
                 }
                 else {
                     parent = diseases.iterator().next();
+                    
                 }
             }
 
             if (parent != null) {
                 XRef xref = createXRef (parent);
-                xref.properties.add(new Text ("is_a", parent.name));
+                xref.properties.add(new Text (IS_A, parent.name));
                 child.links.add(xref);
                 child.update();
             }
         }
+
+        for (Map.Entry<String, Disease> me : diseaseMap.entrySet()) {
+            instrumentLineage (me.getKey(), me.getValue());
+        }
+        
         Logger.debug(diseaseMap.size()+" disease(s) registered!");
         return diseaseMap;
+    }
+
+    void instrumentLineage (String id, Disease disease) {
+        List<Disease> lineage = getLineage (id);
+        Logger.debug(id+": "+disease.name+" has "+lineage.size()+" lineage");
+        for (int i = 0; i < lineage.size(); ++i) {
+            Disease d = lineage.get(i);
+            XRef xref = createXRef (d);
+            xref.properties.add(new Text (LINEAGE+":"+i, d.name));
+            disease.links.add(xref);
+        }
+        disease.update();
+    }
+
+    List<Disease> getLineage (String id) {
+        List<Disease> lineage = new ArrayList<Disease>();
+        String p = parents.get(id);
+        while (p != null) {
+            Disease d = diseaseMap.get(p);
+            if (d != null) {
+                lineage.add(d);
+            }
+            else {
+                Logger.warn("Unknown disease id: "+p);
+            }
+            p = parents.get(p);
+        }
+        return lineage;
     }
     
     public XRef createXRef (Object obj) {

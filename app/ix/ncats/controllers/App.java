@@ -250,7 +250,10 @@ public class App extends Controller {
                         String s = decode (v);
                         boolean matched = false;
                         for (FacetDecorator f : facets) {
-                            if (s.startsWith(f.name())) {
+                            // use the real name.. f.name() is a decoration
+                            // that might not be the same as the actual
+                            // facet name
+                            if (s.startsWith(f.facet.getName())) {
                                 matched = true;
                                 break;
                             }
