@@ -22,7 +22,8 @@ import ix.core.plugins.TextIndexerPlugin;
 
 public class DiseaseOntologyRegistry {
     public static final String DOID = "DOID";
-    public static final String LINEAGE = "LINEAGE";
+    public static final String CLASS = "Disease Class";
+    public static final String PATH = "Disease Path";
     public static final String IS_A = "is_a";
     
     static Namespace namespace = NamespaceFactory.registerIfAbsent
@@ -151,12 +152,16 @@ public class DiseaseOntologyRegistry {
     void instrumentLineage (String id, Disease disease) {
         List<Disease> lineage = getLineage (id);
         Logger.debug(id+": "+disease.name+" has "+lineage.size()+" lineage");
-        for (int i = 0; i < lineage.size(); ++i) {
+        StringBuilder path = new StringBuilder ();
+        for (int i = lineage.size(); --i >= 0;) {
             Disease d = lineage.get(i);
+            path.append("/"+d.name);
             XRef xref = createXRef (d);
-            xref.properties.add(new Text (LINEAGE+":"+i, d.name));
+            Keyword kw = new Keyword (CLASS, d.name);
+            xref.properties.add(kw);
             disease.links.add(xref);
         }
+        disease.properties.add(new Text (PATH, path.toString()));
         disease.update();
     }
 

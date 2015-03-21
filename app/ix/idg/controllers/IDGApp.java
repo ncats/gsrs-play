@@ -22,6 +22,7 @@ import play.libs.ws.WS;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Call;
+import play.db.ebean.Model;
 import com.avaje.ebean.Expr;
 
 import java.io.IOException;
@@ -97,6 +98,66 @@ public class IDGApp extends App {
             return label;
         }
     }
+
+    static abstract class GetResult<T> {
+        final Model.Finder<Long, T> finder;
+        final Class<T> cls;
+        GetResult (Class<T> cls, Model.Finder<Long, T> finder) {
+            this.cls = cls;
+            this.finder = finder;
+        }
+
+        public Result get (final String name) {
+            try {
+                long start = System.currentTimeMillis();        
+                T e = getOrElse (cls.getName()+"/"+name, new Callable<T> () {
+                        public T call () throws Exception {
+                            List<T> values = finder.where()
+                            .eq("synonyms.term", name).findList();
+                            if (!values.isEmpty()) {
+                                T first = values.iterator().next();
+                                if (values.size() > 1) {
+                                    Logger.warn
+                                        ("Request name \""+name+"\" maps "
+                                         +"to "+values.size()+" values; "
+                                         +"return the first one "+first);
+                                }
+                                return first;
+                            }
+                            return null;
+                        }
+                    });
+                double ellapsed = (System.currentTimeMillis()-start)*1e-3;
+                Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
+                             +" to retrieve "+name+" "+e);
+                
+                if (e == null) {
+                    return _notFound ("Unknown name: "+name);
+                }
+                return result (e);
+            }
+            catch (Exception ex) {
+                return _internalServerError (ex);
+            }
+        }
+        
+        public Result result (final T e) {
+            try {
+                Result result = getOrElse
+                    (Util.sha1(request ()), new Callable<Result> () {
+                            public Result call () throws Exception {
+                                return getResult (e);
+                            }
+                        });
+                return result;
+            }
+            catch (Exception ex) {
+                return _internalServerError (ex);
+            }
+        }
+
+        abstract Result getResult (T e) throws Exception;
+    }
     
     public static final String[] TARGET_FACETS = {
         TcrdRegistry.DEVELOPMENT,
@@ -145,6 +206,21 @@ public class IDGApp extends App {
         return ok (ix.idg.views.html.error.render(code, mesg));
     }
 
+    public static Result _notFound (String mesg) {
+        return notFound (ix.idg.views.html.error.render(404, mesg));
+    }
+
+    public static Result _badRequest (String mesg) {
+        return badRequest (ix.idg.views.html.error.render(400, mesg));
+    }
+
+    public static Result _internalServerError (Throwable t) {
+        t.printStackTrace();
+        return internalServerError
+            (ix.idg.views.html.error.render
+             (500, "Internal server error: "+t.getMessage()));
+    }
+
     static void getLineage (Map<Long, Disease> lineage, Disease d) {
         if (!lineage.containsKey(d.id)) {
             for (XRef ref : d.links) {
@@ -154,69 +230,11 @@ public class IDGApp extends App {
                             Disease p = (Disease)ref.deRef();
                             lineage.put(d.id, p);
                             getLineage (lineage, p);
+                            return;
                         }
                     }
                 }
             }
-        }
-    }
-
-    static List<Disease> getLineage (Disease d) {
-        Vector<Disease> lineage = new Vector<Disease>();
-        for (XRef ref: d.links) {
-            if (Disease.class.getName().equals(ref.kind)) {
-                for (Value prop : ref.properties) {
-                    if (prop.label.startsWith
-                        (DiseaseOntologyRegistry.LINEAGE)) {
-                        int pos = prop.label.indexOf(':');
-                        if (pos > 0) {
-                            int index = Integer.parseInt
-                                (prop.label.substring(pos+1));
-                            Disease p = (Disease)ref.deRef();
-                            if (index >= lineage.size())
-                                lineage.setSize(index+1);
-                            lineage.setElementAt(p, index);
-                        }
-                    }
-                }
-            }
-        }
-        return lineage;
-    }
-
-    public static Result target (final String name) {
-        try {
-            long start = System.currentTimeMillis();        
-            Target target = getOrElse (name, new Callable<Target> () {
-                    public Target call () throws Exception {
-                        List<Target> targets = TargetFactory.finder.where()
-                           .eq("synonyms.term", name).findList();
-                        if (!targets.isEmpty()) {
-                            if (targets.size() > 1) {
-                                Logger.warn("Request name \""+name+"\" maps "
-                                            +"to "+targets.size()+" targets; "
-                                            +"return the first one!");
-                            }
-                            return targets.iterator().next();
-                        }
-                        return null;
-                    }
-                });
-            double ellapsed = (System.currentTimeMillis()-start)*1e-3;
-            Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
-                         +" to retrieve target "+name+" "+target);
-            
-            if (target == null) {
-                return notFound (ix.idg.views.html.error.render
-                                 (400, "Unknown target name: "+name));
-            }
-            return target (target);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError
-                (ix.idg.views.html.error.render
-                 (500, "Internal server error: "+ex.getMessage()));
         }
     }
 
@@ -225,25 +243,20 @@ public class IDGApp extends App {
         return kw != null ? kw.term : null;
     }
     
-    static Result target (final Target t) throws Exception {
-        try {
-            Result result = getOrElse
-                (Util.sha1(request ()), new Callable<Result> () {
-                        public Result call () throws Exception {
-                            return getTargetResult (t);
-                        }
-                    });
-            return result;
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return null;
+    static final GetResult<Target> TargetResult =
+        new GetResult<Target>(Target.class, TargetFactory.finder) {
+            public Result getResult (final Target t) throws Exception {
+                return _getResult (t);
+            }
+        };
+    
+    public static Result target (final String name) {
+        return TargetResult.get(name);
     }
 
-    static Result getTargetResult (final Target t) throws Exception {
+    static Result _getResult (final Target t) throws Exception {
         List<DiseaseRelevance> diseases = getOrElse
-            ("/target/"+t.id+"/diseases",
+            ("/targets/"+t.id+"/diseases",
              new Callable<List<DiseaseRelevance>> () {
                  public List<DiseaseRelevance> call () throws Exception {
                      return getDiseaseRelevances (t);
@@ -285,7 +298,11 @@ public class IDGApp extends App {
                 DiseaseRelevance dr = new DiseaseRelevance ();
                 dr.disease = (Disease)xref.deRef();
                 diseaseRel.put(dr.disease.id, dr);
+                long s = System.currentTimeMillis();
                 getLineage (lineage, dr.disease);
+                Logger.debug("Retrieve lineage for disease "+dr.disease.id+"..."
+                             +String.format("%1$dms", (System.currentTimeMillis()-s)));
+                
                 /*
                 { Disease d = dr.disease;
                     for (Disease parent : getLineage (d)) {
@@ -361,9 +378,7 @@ public class IDGApp extends App {
                 });
         }
         catch (Exception ex) {
-            ex.printStackTrace();
-            return badRequest (ix.idg.views.html.error.render
-                               (404, "Invalid page requested: "+ex));
+            return _internalServerError (ex);
         }
     }
     
@@ -502,8 +517,7 @@ public class IDGApp extends App {
             Logger.debug("Can't resolve class: "+kind, ex);
         }
             
-        return badRequest (ix.idg.views.html.error.render
-                           (400, "Invalid request: "+request().uri()));
+        return _badRequest ("Invalid request: "+request().uri());
     }
 
     static <T> List<T> filter (Class<T> cls, List values, int max) {
@@ -526,9 +540,7 @@ public class IDGApp extends App {
                 });
         }
         catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError (ix.idg.views.html.error.render
-                                        (500, "Unable to fullfil request"));
+            return _internalServerError (ex);
         }
     }
 
@@ -619,66 +631,90 @@ public class IDGApp extends App {
         return ok (ix.idg.views.html.ligands.render());
     }
 
-    public static Result disease (final long id) {
-        try {
-            String sha1 = Util.sha1(request ());
-            return getOrElse (sha1, new Callable<Result>() {
-                    public Result call () throws Exception {
-                        return _disease (id);
+    public static String getDiseaseId (Disease d) {
+        Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID, "UniProt");
+        return kw != null ? kw.term : null;
+    }
+    
+    static final GetResult<Disease> DiseaseResult =
+        new GetResult<Disease>(Disease.class, DiseaseFactory.finder) {
+            public Result getResult (final Disease d) throws Exception {
+                return _getResult (d);
+            }
+        };
+
+    public static Result disease (final String name) {
+        return DiseaseResult.get(name);
+    }
+
+    static Result _getResult (final Disease d) throws Exception {
+        // resolve the targets for this disease
+        List<Target> targets = getOrElse
+            ("/diseases/"+d.id+"/targets", new Callable<List<Target>> () {
+                    public List<Target> call () throws Exception {
+                        List<Target> targets = new ArrayList<Target>();
+                        for (XRef ref : d.links) {
+                            if (Target.class.isAssignableFrom
+                                (Class.forName(ref.kind))) {
+                                Target t = (Target) ref.deRef();
+                                targets.add(t);
+                            }
+                        }
+                        return targets;
                     }
                 });
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError
-                (ix.idg.views.html.error.render(500, "Internal server error"));
-        }           
+
+        
+        return ok(ix.idg.views.html.diseasedetails.render
+                  (d, targets.toArray(new Target[]{}), getBreadcrumb (d)));
     }
 
-    static Result _disease (long id) throws Exception {
-        Disease d = DiseaseFactory.getDisease(id);
-        for (XRef xref : d.links) {
-            //Logger.debug(xref.refid + "/" + xref.kind + "/" + xref.deRef());
-            List<Value> props = xref.properties;
-            for (Value prop: props) {
-                //Logger.debug("prop = " + prop);
-                if (prop instanceof Text) {
-                    Text text = (Text) prop;
-                    //Logger.debug("\ttext = " + text.text +"/"+text.label);
-                } else if (prop instanceof Keyword) {
-                    Keyword kw = (Keyword) prop;
-                    //Logger.debug("\tkw = " + kw.term +"/"+kw.label);
+    public static List<Keyword> getBreadcrumb (Disease d) {
+        List<Keyword> breadcrumb = new ArrayList<Keyword>();
+        for (Value prop : d.properties) {
+            if (DiseaseOntologyRegistry.PATH.equals(prop.label)) {
+                String[] path = ((Text)prop).text.split("/");
+                for (String p : path) {
+                    if (p.length() > 0) {
+                        Keyword node = new Keyword (prop.label, p);
+                        String url = ix.idg.controllers
+                            .routes.IDGApp.diseases(null, 10, 1).url();
+                        node.href = url + (url.indexOf('?') > 0 ? "&":"?")
+                            +"facet="+DiseaseOntologyRegistry.CLASS+"/"+p;
+                        breadcrumb.add(node);
+                    }
                 }
             }
-            //System.out.println();
         }
-        
-        // resolve the targets for this disease
-        List<Target> targets = new ArrayList<Target>();
-        for (XRef ref : d.links) {
-            if (Target.class.isAssignableFrom(Class.forName(ref.kind))) {
-                Target t = (Target) ref.deRef();
-                targets.add(t);
-            }
-        }
-        return ok(ix.idg.views.html.diseasedetails.render
-                  (d, targets.toArray(new Target[]{})));
+        return breadcrumb;
     }
 
+    public static List<Keyword> getDiseaseAncestry (String name) {
+        List<Disease> diseases =
+            // probably should be more exact here?
+            DiseaseFactory.finder.where().eq("name", name).findList();
+        if (!diseases.isEmpty()) {
+            if (diseases.size() > 1) {
+                Logger.warn("Name \""+name+"\" maps to "+diseases.size()+
+                            "diseases!");
+            }
+            return getBreadcrumb (diseases.iterator().next());
+        }
+        return new ArrayList<Keyword>();
+    }
+    
     public static Result diseases (final String q,
                                    final int rows, final int page) {
         try {
             String sha1 = Util.sha1(request ());
-            return Cache.getOrElse(sha1, new Callable<Result>() {
+            return getOrElse(sha1, new Callable<Result>() {
                     public Result call () throws Exception {
                         return _diseases (q, rows, page);
                     }
-                }, CACHE_TIMEOUT);
+                });
         }
         catch (Exception ex) {
-            ex.printStackTrace();
-            return badRequest(ix.idg.views.html.error.render
-                              (404, "Invalid page requested: " + page));
+            return _internalServerError (ex);
         }
     }
     

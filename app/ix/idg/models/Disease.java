@@ -60,4 +60,11 @@ public class Disease extends EntityModel {
     public List<Value> getProperties () { return properties; }
     public List<XRef> getLinks () { return links; }
     public List<Publication> getPublications () { return publications; }
+    public Keyword getSynonym (String... labels) {
+        for (String l : labels) 
+            for (Keyword kw : synonyms)
+                if (l.equalsIgnoreCase(kw.label))
+                    return kw;
+        return null;
+    }
 }

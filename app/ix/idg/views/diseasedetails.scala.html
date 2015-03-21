@@ -5,7 +5,7 @@
 @import ix.idg.controllers.IDGApp 
 
 
-@(d: Disease, targets: Array[Target])
+@(d: Disease, targets: Array[Target], breadcrumb: List[Keyword])
 
 @getsyn(t: Disease, label: String) = {
     @* We only consider the first DOID, even if there are alternates *@
@@ -40,7 +40,11 @@
 }{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
-    <li><a href="@ix.idg.controllers.routes.IDGApp.diseases()">Diseases</a></li>
+  <li><a href="@ix.idg.controllers.routes.IDGApp.diseases()">Diseases</a></li>
+  @for(kw <- breadcrumb) {
+    <li><a href="@kw.href">@kw.term</a></li>
+    }
+
     <li class="active">@d.name</li>
 </ol>
     }{
@@ -52,7 +56,9 @@
         <div class="row">
           <div class="panel panel-default">
 	    <div class="panel-body">
-              <p>@if(d.description != null) {@d.description.replace("_", " ")} else {}</p>
+              <p>@if(d.getDescription() != null) {
+		@d.getDescription().replace("_", " ")
+		} else {}</p>
 	      @for(syn <- d.synonyms) {
 	         @if(syn.label.equals("DOID") && syn.href != null) {
 			  <p>View more details at <a href="@syn.href">

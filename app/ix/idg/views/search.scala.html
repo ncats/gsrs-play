@@ -80,7 +80,7 @@ diseases: List[Disease], totalDiseases: Int)
 	    </tr>
 	    @for(d <- diseases) {
 	    <tr>
-	      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(d.id)">@d.name</a></td>
+	      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getDiseaseId(d))">@d.name</a></td>
 	      <td>@d.description</td>
 	    </tr>
             }
