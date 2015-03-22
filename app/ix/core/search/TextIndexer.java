@@ -774,7 +774,7 @@ public class TextIndexer {
                                      +" not available in persistence store!");
                         }
 
-                        if (DEBUG (1)) {
+                        if (DEBUG (2)) {
                             Logger.debug("++ matched doc "
                                          +field+"="+id.stringValue());
                         }

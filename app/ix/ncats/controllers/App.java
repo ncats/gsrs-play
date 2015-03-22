@@ -390,20 +390,21 @@ public class App extends Controller {
         query.putAll(request().queryString());
                 
         List<String> qfacets = new ArrayList<String>();
+        if (query.get("facet") != null) {
+            for (String f : query.get("facet"))
+                qfacets.add(f);
+        }
+        
         final boolean hasFacets = q != null && q.indexOf('/') > 0;
         if (hasFacets) {
             // treat this as facet
-            if (query.get("facet") != null) {
-                for (String f : query.get("facet"))
-                    qfacets.add(f);
-            }
             qfacets.add("MeSH/"+q);
             query.put("facet", qfacets.toArray(new String[0]));
         }
         //query.put("drill", new String[]{"down"});
         
         List<String> args = new ArrayList<String>();
-        args.add(request().uri());
+        args.add(request().path());
         if (q != null)
             args.add(q);
         for (String f : qfacets)
@@ -423,6 +424,12 @@ public class App extends Controller {
             }
             else {
                 String sha1 = Util.sha1(args.toArray(new String[0]));
+                /*
+                Logger.debug("request sha1: "+sha1);
+                for (String a : args) {
+                    Logger.debug("** "+a);
+                }
+                */
                 result = getOrElse
                     (sha1, new Callable<SearchResult>() {
                             public SearchResult call () throws Exception {

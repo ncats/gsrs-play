@@ -69,7 +69,7 @@ public class DiseaseOntologyRegistry {
                 if (obo.parentId != null) {
                     parents.put(obo.id, obo.parentId);
                 }
-                disease.save();
+                //disease.save();
                 Disease d = diseaseMap.put(obo.id, disease);
                 if (d != null) {
                     Logger.warn(obo.id+" maps to "+disease.id+" ("+disease.name
@@ -115,6 +115,7 @@ public class DiseaseOntologyRegistry {
         }
 
         // now resolve references
+        /*
         for (Map.Entry<String, String> me : parents.entrySet()) {
             Disease child = diseaseMap.get(me.getKey());
             Disease parent = diseaseMap.get(me.getValue());
@@ -140,29 +141,33 @@ public class DiseaseOntologyRegistry {
                 child.update();
             }
         }
+        */
 
         for (Map.Entry<String, Disease> me : diseaseMap.entrySet()) {
-            instrumentLineage (me.getKey(), me.getValue());
+            List<Disease> lineage = getLineage (me.getKey());
+            Disease disease = me.getValue();
+            Logger.debug(me.getKey()+": "+disease.name
+                         +" has "+lineage.size()+" lineage");
+            StringBuilder path = new StringBuilder ();
+            for (int i = lineage.size(); --i >= 0;) {
+                Disease d = lineage.get(i);
+                path.append("/"+d.name);
+                Keyword kw = new Keyword (CLASS, d.name);
+                disease.properties.add(kw);
+            }
+            disease.properties.add(new Text (PATH, path.toString()));
+            if (!lineage.isEmpty()) {
+                Disease parent = lineage.get(0);
+                parent.save();
+                XRef xref = createXRef (parent);
+                xref.properties.add(new Text (IS_A, parent.name));
+                disease.links.add(xref);
+            }
+            disease.save();
         }
         
         Logger.debug(diseaseMap.size()+" disease(s) registered!");
         return diseaseMap;
-    }
-
-    void instrumentLineage (String id, Disease disease) {
-        List<Disease> lineage = getLineage (id);
-        Logger.debug(id+": "+disease.name+" has "+lineage.size()+" lineage");
-        StringBuilder path = new StringBuilder ();
-        for (int i = lineage.size(); --i >= 0;) {
-            Disease d = lineage.get(i);
-            path.append("/"+d.name);
-            XRef xref = createXRef (d);
-            Keyword kw = new Keyword (CLASS, d.name);
-            xref.properties.add(kw);
-            disease.links.add(xref);
-        }
-        disease.properties.add(new Text (PATH, path.toString()));
-        disease.update();
     }
 
     List<Disease> getLineage (String id) {
