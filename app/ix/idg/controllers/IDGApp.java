@@ -89,8 +89,8 @@ public class IDGApp extends App {
                     if (label.equalsIgnoreCase(tdl.name)) {
                         return "<span class=\"label label-"+tdl.label+"\""
                             +" data-toggle=\"tooltip\" data-placement=\"right\""
-                            +" data-html=\"true\" title=\""+tdl.desc+"\">"
-                            +tdl.name+"</span>";
+                            +" data-html=\"true\" title=\"<p align='left'>"
+                            +tdl.desc+"</p>\">"+tdl.name+"</span>";
                     }
                 }
                 assert false: "Unknown TDL label: "+label;

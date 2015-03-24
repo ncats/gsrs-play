@@ -137,7 +137,9 @@ public class StructureProcessorPlugin extends Plugin {
                 : "Not a valid stage ("+stage+") for instrumentation!";
             
             try {
-                struc = StructureProcessor.instrument(mol);
+                if (mol != null) {
+                    struc = StructureProcessor.instrument(mol);
+                }
                 stage = Stage.Persisting;
             }
             catch (Exception ex) {
@@ -149,8 +151,10 @@ public class StructureProcessorPlugin extends Plugin {
             assert stage == Stage.Persisting
                 : "Not a valid stage ("+stage+") for persisting!";
             try {
-                struc.save();
-                indexer.add(receiver.getSource(), struc.id.toString(), mol);
+                if (struc != null) {
+                    struc.save();
+                    indexer.add(receiver.getSource(), struc.id.toString(), mol);
+                }
                 stage = Stage.Done;
             }
             catch (Exception ex) {
@@ -509,6 +513,14 @@ public class StructureProcessorPlugin extends Plugin {
 
     public void submit (Molecule mol, StructureReceiver receiver) {
         inbox.send(processor, new ReceiverProcessor (mol, receiver, indexer));
+    }
+
+    /**
+     * This is so as to give the user access to the same persistence 
+     * queue as the processor to prevent deadlocks
+     */
+    public void submit (StructureReceiver receiver) {
+        inbox.send(processor, new ReceiverProcessor (null, receiver, indexer));
     }
 
     /**

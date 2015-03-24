@@ -69,7 +69,7 @@ public class DiseaseOntologyRegistry {
                 if (obo.parentId != null) {
                     parents.put(obo.id, obo.parentId);
                 }
-                //disease.save();
+                disease.save();
                 Disease d = diseaseMap.put(obo.id, disease);
                 if (d != null) {
                     Logger.warn(obo.id+" maps to "+disease.id+" ("+disease.name
@@ -158,7 +158,7 @@ public class DiseaseOntologyRegistry {
             disease.properties.add(new Text (PATH, path.toString()));
             if (!lineage.isEmpty()) {
                 Disease parent = lineage.get(0);
-                parent.save();
+                //parent.save();
                 XRef xref = createXRef (parent);
                 xref.properties.add(new Text (IS_A, parent.name));
                 disease.links.add(xref);

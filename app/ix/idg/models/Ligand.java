@@ -31,8 +31,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 @Table(name="ix_idg_ligand")
 public class Ligand extends EntityModel {
-    @Column(length=1024)
-    @Indexable(suggest=true,name="Ligand")
     public String name;
 
     @Lob
@@ -62,28 +60,17 @@ public class Ligand extends EntityModel {
     @JsonView(BeanViews.Full.class)
     public List<Publication> publications = new ArrayList<Publication>();
     
-    @JsonView(BeanViews.Full.class)
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_idg_ligand_structure")
-    public List<Structure> structures = new ArrayList<Structure>();
-        
     public Ligand () {}
+    public Ligand (String name) {
+        this.name = name;
+    }
+    
+    @Column(length=1024)
+    @Indexable(suggest=true,facet=true, name="Ligand")
     public String getName () { return name; }
     public String getDescription () { return description; }
     public List<Keyword> getSynonyms () { return synonyms; }
     public List<Value> getProperties () { return properties; }
     public List<XRef> getLinks () { return links; }
     public List<Publication> getPublications () { return publications; }
-
-    @JsonView(BeanViews.Compact.class)
-    @JsonProperty("_structures")
-    public JsonNode getJsonStructures () {
-        ObjectNode node = null;
-        if (!structures.isEmpty()) {
-            node = mapper.createObjectNode();
-            node.put("count", structures.size());
-            node.put("href", Global.getRef(getClass (), id)+"/structures");
-        }
-        return node;
-    }
 }

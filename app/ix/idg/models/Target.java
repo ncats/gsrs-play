@@ -39,16 +39,16 @@ public class Target extends EntityModel {
         Tgray ("Tgray",
                "Targets are above the cutoffs for Tdark and have at least 2 of the following:"
 +"<ul>"
-+"    <li>&le; 5 Gene RIFs</li>"
-+"    <li>&le; 84 Antibodies available according to http://antibodypedia.com</li>"
-+"    <li>A PubMed text-mining score from Jensen Lab of &le; 10.55</li>"
++"    <li><p align='left'>&le; 5 Gene RIFs</p></li>"
++"    <li><p align='left'>&le; 84 Antibodies available according to http://antibodypedia.com</p></li>"
++"    <li><p align='left'>A PubMed text-mining score from Jensen Lab of &le; 10.55</p></li>"
 +"</ul>", "default"),
         Tdark ("Tdark",
                "Targets have at least 2 of the following:"
 +"<ul>"
-+"    <li>&le; 1 Gene RIFs</li>"
-+"    <li>&le; 38 Antibodies available according to http://antibodypedia.com</li>"
-+"    <li>A PubMed text-mining score from Jensen Lab of &le; 1.23</li>"
++"    <li><p align='left'>&le; 1 Gene RIFs</p></li>"
++"    <li><p align='left'>&le; 38 Antibodies available according to http://antibodypedia.com</p></li>"
++"    <li><p align='left'>A PubMed text-mining score from Jensen Lab of &le; 1.23</p></li>"
 +"</ul>", "danger");
 
         final public String name;
