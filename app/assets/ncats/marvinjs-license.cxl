@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--PLEASE DO NOT MODIFY THIS FILE AND BE AWARE THAT THE FILE CONTAINS CONFIDENTIAL INFORMATION.-->
+<ChemAxon>
+<License>
+<Field Name="Software" Value="Marvin for JavaScript"/>
+<Field Name="License Term" Value="Free Web"/>
+<Field Name="Licensee" Value="National Center for Advancing Translational Sciences National Institutes of Health"/>
+<Field Name="Number of Users" Value="Unlimited"/>
+<Field Name="Expiration Date" Value="2017-03-26"/>
+<Field Name="Support Expiration Date" Value="2017-03-26"/>
+<Field Name="Comment" Value="&#13;&#10;we¹re developing a number of public facing websites that we¹d like to incorporate MarvinJS. We¹d like to apply for the free web license for MarvinJS. &#13;&#10;&#13;&#10;https://pharos.nih.gov&#13;&#10;https://tripod.nih.gov/tox21&#13;&#10;"/>
+<Restriction Name="Server Use" Value="Not Allowed"/>
+<Signature Value="MCwCFA86DdsBTPLTZob7Bu4AowA4sSdUAhRd7NmF9mXXujbLeV3H9V/k+JXYcg=="/>
+</License>
+</ChemAxon>

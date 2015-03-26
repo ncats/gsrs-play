@@ -120,15 +120,4 @@ public class Target extends EntityModel {
     public String getJsonOrganism () {
         return Global.getRef(organism);
     }
-
-    /**
-     * return the first synonym that matches the given label
-     */
-    public Keyword getSynonym (String label) {
-        for (Keyword kw : synonyms) {
-            if (label.equals(kw.label))
-                return kw;
-        }
-        return null;
-    }
 }

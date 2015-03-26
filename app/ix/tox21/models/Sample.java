@@ -71,18 +71,4 @@ public class Sample extends EntityModel {
     public List<Value> getProperties () { return properties; }
     public List<XRef> getLinks () { return links; }
     public List<Publication> getPublications () { return publications; }
-
-    public Keyword getSynonym (String label) {
-        for (Keyword kw : synonyms) {
-            if (label.equalsIgnoreCase(kw.label))
-                return kw;
-        }
-        return null;
-    }
-    public Value getProperty (String label) {
-        for (Value v : properties)
-            if (label.equalsIgnoreCase(v.label))
-                return v;
-        return null;
-    }
 }

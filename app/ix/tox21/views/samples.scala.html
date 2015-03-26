@@ -45,7 +45,7 @@
             <td><span class="label label-default">@{s.grade}</span>&nbsp;@HtmlFormat.raw(s.grade.desc.replaceAll("\n", "<br>"))</td>
      }
      case _ => {
-           <td><span class="label label-@{s.grade.label}">@s.grade</span>&nbsp;<a href="https://tripod.nih.gov/tox21/QC/@toxid">@HtmlFormat.raw(s.grade.desc.replaceAll("\n", "<br>"))</a></td>
+           <td><span class="label label-@{s.grade.label}">@s.grade</span>&nbsp;<a href="https://tripod.nih.gov/tox21/QC/@toxid">@HtmlFormat.raw(s.grade.desc)</a></td>
        }
     }
 </tr>

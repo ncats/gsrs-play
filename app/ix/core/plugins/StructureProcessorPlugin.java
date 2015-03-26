@@ -48,6 +48,7 @@ import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
 
 import ix.core.plugins.IxContext;
+import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.models.XRef;
 import ix.core.models.Payload;
@@ -64,6 +65,7 @@ import tripod.chem.indexer.StructureIndexer;
 public class StructureProcessorPlugin extends Plugin {
     private final Application app;
     private StructureIndexer indexer;
+    private PersistenceQueue PQ;
     private IxContext ctx;
     private ActorSystem system;
     private ActorRef processor;
@@ -270,35 +272,76 @@ public class StructureProcessorPlugin extends Plugin {
      */
     public static class Reporter extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
+        final PersistenceQueue PQ;
+
+        public Reporter (PersistenceQueue PQ) {
+            this.PQ = PQ;
+        }
 
         public void onReceive (Object mesg) {
             if (mesg instanceof PersistModel) {
-                ((PersistModel)mesg).persists();
+                PQ.submit(new PersistModelWorker ((PersistModel)mesg));
             }
             else if (mesg instanceof PersistRecord) {
-                ((PersistRecord)mesg).persists();
+                PQ.submit(new PersistRecordWorker ((PersistRecord)mesg));
             }
             else if (mesg instanceof ReceiverProcessor) {
-                ReceiverProcessor receiver = (ReceiverProcessor)mesg;           
-                switch (receiver.stage()) {
-                case Persisting:
-                    receiver.persists();
-                    // fall through
-                    
-                case Done:
-                    receiver.done();
-                    break;
-                    
-                default:
-                    assert false: "Stage "+receiver.stage()+" shouldn't be "
-                        +"run in "+getClass().getName()+"!";
-                }
+                PQ.submit
+                    (new ReceiverProcessorWorker ((ReceiverProcessor)mesg));
             }
             else {
                 log.info("unhandled mesg: sender="+sender()+" mesg="+mesg);
                 unhandled (mesg);
             }
         }
+    }
+
+    static class PersistModelWorker
+        implements PersistenceQueue.PersistenceContext {
+        PersistModel model;
+        PersistModelWorker (PersistModel model) {
+            this.model = model;
+        }
+        public void persists () throws Exception {
+            model.persists();
+        }
+        public Priority priority () { return Priority.MEDIUM; }
+    }
+    
+    static class PersistRecordWorker
+        implements PersistenceQueue.PersistenceContext {
+        PersistRecord record;
+        PersistRecordWorker (PersistRecord record) {
+            this.record = record;
+        }
+        public void persists () throws Exception {
+            record.persists();
+        }
+        public Priority priority () { return Priority.MEDIUM; }
+    }
+    
+    static class ReceiverProcessorWorker
+        implements PersistenceQueue.PersistenceContext {
+        ReceiverProcessor receiver;
+        ReceiverProcessorWorker (ReceiverProcessor receiver) {
+            this.receiver = receiver;
+        }
+        public void persists () throws Exception {
+            switch (receiver.stage()) {
+            case Persisting:
+                receiver.persists();
+                // fall through
+                
+            case Done:
+                receiver.done();
+                break;
+                
+            default:
+                assert false: "Stage "+receiver.stage()+" shouldn't be "
+                    +"run in "+getClass().getName()+"!";
+            }
+        }
+        public Priority priority () { return Priority.MEDIUM; }
     }
     
     public static class Processor extends UntypedActor {
@@ -472,6 +515,11 @@ public class StructureProcessorPlugin extends Plugin {
             throw new IllegalStateException
                 ("StructureIndexerPlugin is not loaded!");
         indexer = plugin.getIndexer();
+
+        PQ = app.plugin(PersistenceQueue.class);
+        if (PQ == null)
+            throw new IllegalStateException
+                ("Plugin PersistenceQueue is not laoded!");
         
         system = ActorSystem.create("StructureProcessor");
         Logger.info("Plugin "+getClass().getName()
@@ -480,7 +528,7 @@ public class StructureProcessorPlugin extends Plugin {
         processor = system.actorOf
             (Props.create(Processor.class, indexer).withRouter
              (new FromConfig().withFallback(config)), "processor");
-        system.actorOf(Props.create(Reporter.class), "reporter");
+        system.actorOf(Props.create(Reporter.class, PQ), "reporter");
         inbox = Inbox.create(system);
     }
 

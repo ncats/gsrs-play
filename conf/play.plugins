@@ -3,6 +3,7 @@
 # ~~~~~~~
 # this plugin must be first!
 2001:ix.core.plugins.IxContext
+2002:ix.core.plugins.PersistenceQueue
 2005:ix.core.plugins.TextIndexerPlugin
 2010:ix.core.plugins.EutilsPlugin
 2015:ix.core.plugins.PayloadPlugin

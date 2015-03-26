@@ -265,7 +265,7 @@ public class IDGApp extends App {
         
         List<Keyword> breadcrumb = new ArrayList<Keyword>();
         for (Value v : t.properties) {
-            if (v.label.startsWith(TcrdRegistry.ChEMBL_PROTEIN_CLASS)) {
+            if (v.label.startsWith(ChemblRegistry.ChEMBL_PROTEIN_CLASS)) {
                 Keyword kw = (Keyword)v;
                 String url = ix.idg.controllers
                     .routes.IDGApp.targets(null, 30, 1).url();
@@ -497,7 +497,7 @@ public class IDGApp extends App {
     }
 
     public static Keyword[] getProteinAncestry (String facet) {
-        return getAncestry (facet, TcrdRegistry.ChEMBL_PROTEIN_ANCESTRY);
+        return getAncestry (facet, ChemblRegistry.ChEMBL_PROTEIN_ANCESTRY);
     }
 
     public static Result search (String kind) {

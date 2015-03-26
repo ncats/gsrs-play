@@ -35,7 +35,7 @@
 	    <center>
 	      @if(qc.grade == QCSample.Grade.ND) {
 	      <div class="alert alert-@qc.grade.label">
-		@HtmlFormat.raw(qc.grade.desc.replaceAll("\n","<p>"))
+		@HtmlFormat.raw(qc.grade.desc)
 	      </div>
 	      } else {
   	      <a href="https://tripod.nih.gov/tox21/QC/@qc.sample.getSynonym(Sample.S_TOX21).term">@HtmlFormat.raw(qc.grade.desc.replaceAll("\n","<p>"))</a>

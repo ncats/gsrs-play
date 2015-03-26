@@ -16,28 +16,28 @@ import ix.core.models.*;
 public class QCSample extends Model {
     public enum Grade {
         A ("MW Confirmed, Purity > 90%", "success"),
-        Ac ("CAUTION, Low Concentration\n"
-            +"Concentration 5-30% of expected value", "danger"),
+        Ac ("<p align='left'>CAUTION, Low Concentration"
+            +"<p align='left'>Concentration 5-30% of expected value", "danger"),
         B ("MW Confirmed, Purity 75-90%", "success"),
-        Bc ("CAUTION, Low Concentration\n"
-            +"Concentration 5-30% of expected value", "danger"),
+        Bc ("<p align='left'>CAUTION, Low Concentration"
+            +"<p align='left'>Concentration 5-30% of expected value", "danger"),
         C ("MW Confirmed, Purity 50-75%", "success"),
-        Cc ("CAUTION, Low Concentration\n"
-            +"Concentration 5-30% of expected value", "danger"),
+        Cc ("<p align='left'>CAUTION, Low Concentration"
+            +"<p align='left'>Concentration 5-30% of expected value", "danger"),
         D ("CAUTION, Purity <50%", "warning"),
-        F ("CAUTION, Incorrect MW\n"
-           +"Biological Activity Unreliable", "danger"),
-        Fc ("CAUTION, Very Low Concentration\n"
-            +"Concentration <5% of expected value\n"
-            +"Biological Activity Unreliable", "danger"),
-        Fns ("CAUTION, No Sample Detected\n"
-             +"Biological Activity Unreliable", "danger"),
-        I ("ISOMERS\n"
-           +"Two or more isomers detected", "info"),
-        M ("DEFINED MIXTURE\n"
-           +"Two or more components", "info"),
-        ND ("Not Determined\n"
-            +"Analytical analysis is in progress", "default"),
+        F ("<p align='left'>CAUTION, Incorrect MW"
+           +"<p align='left'>Biological Activity Unreliable", "danger"),
+        Fc ("<p align='left'>CAUTION, Very Low Concentration"
+            +"<p align='left'>Concentration <5% of expected value"
+            +"<p align='left'>Biological Activity Unreliable", "danger"),
+        Fns ("<p align='left'>CAUTION, No Sample Detected"
+             +"<p align='left'>Biological Activity Unreliable", "danger"),
+        I ("<p align='left'>ISOMERS"
+           +"<p align='left'>Two or more isomers detected", "info"),
+        M ("<p align='left'>DEFINED MIXTURE"
+           +"<p align='left'>Two or more components", "info"),
+        ND ("<p align='left'>Not Determined"
+            +"<p align='left'>Analytical analysis is in progress", "default"),
         W ("Sample Withdrawn", "warning"),
         Z ("MW Confirmed, No Purity Info", "warning");
         

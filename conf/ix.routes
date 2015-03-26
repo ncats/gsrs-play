@@ -14,8 +14,8 @@
 # assets; the prefix should be modified accordingly to localize
 # to a specific app
 #
-GET     /tox21/assets/*file   controllers.Assets.at(path="/public", file)
-GET     /tox21/webjars/*file          controllers.WebJarAssets.at(file)
+GET     /assets/*file   controllers.Assets.at(path="/public", file)
+GET     /webjars/*file          controllers.WebJarAssets.at(file)
 
 #
 # other routes

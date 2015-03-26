@@ -108,4 +108,32 @@ public abstract class EntityModel extends IxModel {
     public String getSelf () {
         return Global.getRef(this)+"?view=full";
     }
+
+    public boolean addLinkIfAbsent (XRef xref) {
+        for (XRef xr : getLinks()) {
+            if (xr.refid.equals(xref.refid)
+                && xr.kind.equals(xref.kind))
+                return false;
+        }
+        getLinks().add(xref);
+        return true;
+    }
+
+    /**
+     * return the first synonym that matches the given label
+     */
+    public Keyword getSynonym (String label) {
+        for (Keyword kw : getSynonyms ()) {
+            if (label.equals(kw.label))
+                return kw;
+        }
+        return null;
+    }
+    
+    public Value getProperty (String label) {
+        for (Value v : getProperties ())
+            if (label.equalsIgnoreCase(v.label))
+                return v;
+        return null;
+    }
 }

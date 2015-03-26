@@ -26,6 +26,7 @@ import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.NamespaceFactory;
 import ix.core.controllers.EntityFactory;
+import ix.core.plugins.PersistenceQueue;
 import ix.idg.controllers.DiseaseFactory;
 
 import ix.idg.models.Gene;
@@ -51,7 +52,7 @@ public class UniprotRegistry extends DefaultHandler {
 
     static final int TIMEOUT = 5000; // 5s
     static public Namespace namespace = NamespaceFactory.registerIfAbsent
-        ("UniProt", "http://www.uniprot.org");    
+        ("UniProt", "http://www.uniprot.org");
 
     StringBuilder content = new StringBuilder ();
     Target target;
@@ -145,40 +146,23 @@ public class UniprotRegistry extends DefaultHandler {
 
     @Override
     public void endDocument () {
-        //Logger.debug("About to register target\n"+EntityFactory.getEntityMapper().toJson(target, true));
-        persist (target);
-        Logger.debug(Thread.currentThread().getName()
-                     +": Target "+target.id+" \""+target.name+"\" added!");
-    }
-
-    protected static void persist (Target target) {
-        Transaction tx = Ebean.beginTransaction();
-        try {
-            target.save();
-            // create the other direction
-            for (XRef ref : target.links) {
-                Model obj = (Model)ref.deRef();
-                if (obj instanceof EntityModel) {
-                    XRef xref = createXRef (target);
-                    for (Keyword kw : target.synonyms) {
-                        if (ACCESSION.equals(kw.label)) {
-                            Keyword uni = KeywordFactory.registerIfAbsent
-                                (TARGET, target.name, kw.href);
-                            xref.properties.add(uni);
-                            break; // just grab the first one
-                        }
+        target.save();
+        // create the other direction
+        for (XRef ref : target.links) {
+            Model obj = (Model)ref.deRef();
+            if (obj instanceof EntityModel) {
+                XRef xref = createXRef (target);
+                for (Keyword kw : target.synonyms) {
+                    if (ACCESSION.equals(kw.label)) {
+                        Keyword uni = KeywordFactory.registerIfAbsent
+                            (TARGET, target.name, kw.href);
+                        xref.properties.add(uni);
+                        break; // just grab the first one
                     }
-                    ((EntityModel)obj).getLinks().add(xref);
-                    obj.update();
                 }
+                ((EntityModel)obj).getLinks().add(xref);
+                obj.update();
             }
-            tx.commit();
-        }
-        catch (Exception ex) {
-            Logger.trace("Can't persist target: "+target.name, ex);
-        }
-        finally {
-            Ebean.endTransaction();
         }
     }
 
@@ -194,7 +178,7 @@ public class UniprotRegistry extends DefaultHandler {
             if ("pubmed".equalsIgnoreCase(type) /*&& ++npubs <= 80*/) {
                 String id = attrs.getValue("id");
                 try {
-                    long pmid = Long.parseLong(id);
+                    final long pmid = Long.parseLong(id);
                     Publication pub = pubs.get(pmid);
                     if (pub == null) {
                         pub = PublicationFactory.registerIfAbsent(pmid);

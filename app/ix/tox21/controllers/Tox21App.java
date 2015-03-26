@@ -97,7 +97,7 @@ public class Tox21App extends App {
             return "<span class=\"label label-"
                 +grade.label+"\" data-toggle=\"tooltip\" "
                 +"data-placement=\"right\" data-html=\"true\" title=\""
-                +grade.desc.replaceAll("\n","<p>")+"\">"
+                +grade.desc+"\">"
                 +label+"</span>";
         }
     }
