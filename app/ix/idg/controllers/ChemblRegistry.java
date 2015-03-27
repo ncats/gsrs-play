@@ -84,13 +84,16 @@ public class ChemblRegistry {
 
     DataSource chembl;
     Connection con;
-    PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6, pstm7;
-    Map<String, String> uniprotMap;
-    String version;
+    PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6, pstm7, pstm8;
+    Map<String, Set<String>> uniprotMap;
     Namespace namespace;
+    Set<Long> molregno = new HashSet<Long>();
     
-    public ChemblRegistry (Map<String, String> uniprotMap)
+    public ChemblRegistry (Map<String, Set<String>> uniprotMap)
         throws SQLException {
+        if (uniprotMap == null || uniprotMap.isEmpty())
+            throw new IllegalArgumentException ("No UniProt mapping provided!");
+        
         chembl = DB.getDataSource("chembl");
         if (chembl == null) {
             throw new IllegalStateException
@@ -102,53 +105,34 @@ public class ChemblRegistry {
             Statement stm = con.createStatement();
             ResultSet rset = stm.executeQuery("select * from version");
             if (rset.next()) {
-                version = rset.getString("name");
+                String version = rset.getString("name");
                 namespace = NamespaceFactory.registerIfAbsent
                     (version, "https://www.ebi.ac.uk/chembl");
             }
             rset.close();
-            Logger.debug("ChEBML version: "+version);
+            Logger.debug("ChEBML version: "+namespace.name);
         }
         catch (SQLException ex) {
             ex.printStackTrace();
         }
             
-        if (uniprotMap == null || uniprotMap.isEmpty()) {
-            pstm = con.prepareStatement
-                ("select distinct a.tid,e.* "+
-                 "from target_components a, "+
-                 "component_synonyms b, "+
-                 "component_class c, "+
-                 "protein_classification d, "+
-                 "protein_family_classification e "+
-                 "where component_synonym = ? "+
-                 "and syn_type = 'GENE_SYMBOL' "+
-                 "and a.component_id = b.component_id "+
-                 "and a.component_id = c.component_id "+
-                 "and c.protein_class_id = d.protein_class_id "+
-                 "and c.protein_class_id = e.protein_class_id "+
-                 "order by class_level desc, e.protein_class_id");
-            Logger.warn("No uniprot <-> chembl mapping provided!");
-        }
-        else {
-            pstm = con.prepareStatement
-                ("select distinct a.tid,e.* "+
-                 "from target_components a, "+
-                 "component_synonyms b, "+
-                 "component_class c, "+
-                 "protein_classification d, "+
-                 "protein_family_classification e , "+
-                 "chembl_id_lookup f "+
-                 "where f.entity_type = 'TARGET' "+
-                 "and f.chembl_id = ? "+
-                 "and f.entity_id = a.tid "+
-                 "and a.component_id = b.component_id "+
-                 "and a.component_id = c.component_id "+
-                 "and c.protein_class_id = d.protein_class_id "+
-                 "and c.protein_class_id = e.protein_class_id "+
-                 "order by class_level desc, e.protein_class_id"
-                 );
-        }
+        pstm = con.prepareStatement
+            ("select distinct e.* "+
+             "from target_components a, "+
+             "component_synonyms b, "+
+             "component_class c, "+
+             "protein_classification d, "+
+             "protein_family_classification e , "+
+             "chembl_id_lookup f "+
+             "where f.entity_type = 'TARGET' "+
+             "and f.chembl_id = ? "+
+             "and f.entity_id = a.tid "+
+             "and a.component_id = b.component_id "+
+             "and a.component_id = c.component_id "+
+             "and c.protein_class_id = d.protein_class_id "+
+             "and c.protein_class_id = e.protein_class_id "+
+             "order by class_level desc, e.protein_class_id"
+             );
         pstm2 = con.prepareStatement
             ("select * from chembl_id_lookup a right join "
              +"compound_structures b on b.molregno = a.entity_id "
@@ -159,7 +143,7 @@ public class ChemblRegistry {
         pstm3 = con.prepareStatement
             ("select * from molecule_synonyms where molregno = ?");
         pstm4 = con.prepareStatement
-            ("select * from drug_mechanism where molregno = ? and tid = ?");
+            ("select * from drug_mechanism where molregno = ?");
         pstm5 = con.prepareStatement
             ("select *  "
              +"from molecule_atc_classification a, atc_classification b "
@@ -168,7 +152,6 @@ public class ChemblRegistry {
             ("select * from activities a, "
              +"assays b, target_dictionary c, docs d "
              +"where a.molregno = ? "
-             +"and b.tid = ? "
              +"and b.relationship_type = 'D' "
              +"and a.assay_id = b.assay_id "
              +"and b.tid = c.tid "
@@ -180,6 +163,10 @@ public class ChemblRegistry {
              +"where a.entity_type = 'COMPOUND' "
              +"and c.synonyms = ? "
              );
+        pstm8 = con.prepareStatement
+            ("select * from chembl_id_lookup where entity_type = ? "
+             +"and chembl_id = ?");
+        
         this.uniprotMap = uniprotMap;           
     }
 
@@ -192,23 +179,24 @@ public class ChemblRegistry {
             pstm5.close();
             pstm6.close();
             pstm7.close();
+            pstm8.close();
         }
         finally {
             con.close();
         }
     }
 
-    public String version () { return version; }
     public Namespace getNamespace () { return namespace; }
-    
+
     public void instruments (Target target, List<Ligand> ligands)
         throws SQLException {
-        Long tid = target (target);
+        Set<Long> tids = target (target);
         for (Ligand ligand : ligands) 
-            ligand (tid, target, ligand);
+            ligand (tids, target, ligand);
     }
 
-    void ligand (final Long tid, final Target target, final Ligand ligand)
+    void ligand (final Set<Long> tids,
+                 final Target target, final Ligand ligand)
         throws SQLException {
         // see if this ligand has a chembl_id..
         String chembl = null, drug = null;
@@ -219,38 +207,25 @@ public class ChemblRegistry {
                 drug = kw.term;
         }
 
-        Logger.debug("Ligand: "+ligand.getName()+"; chembl="
-                     +chembl+" drug="+drug);
-        
-        Set<Long> molregno = new HashSet<Long>();
+        Set<Long> ids = null;
         if (chembl != null) {
-            List<Ligand> ligands = LigandFactory.finder
-                .where(Expr.and(Expr.eq("synonyms.label", ChEMBL_ID),
-                                Expr.eq("synonyms.term", chembl)))
-                .findList();
-            if (ligands.isEmpty()) {
-                pstm2.setString(1, chembl);
-                instrument (ligand, molregno, pstm2);
-            }
-            else {
-                Logger.debug(chembl+" is already registered!");
-                return;
-            }
+            pstm2.setString(1, chembl);
+            ids = instrument (ligand, pstm2);
         }
         else if (drug != null) {
-            List<Ligand> ligands = LigandFactory.finder
-                .where(Expr.and(Expr.eq("synonyms.label", ChEMBL_SYNONYM),
-                                Expr.eq("synonyms.term", drug)))
-                .findList();
-            if (ligands.isEmpty()) {
-                pstm7.setString(1, drug);
-                instrument (ligand, molregno, pstm7);
-            }
-            else {
-                Logger.debug(drug+" is already registered!");
-                return ; 
-            }
+            pstm7.setString(1, drug);
+            ids = instrument (ligand, pstm7);
         }
+        else {
+            Logger.warn("Neither chemblId nor drug name found!");
+            return;
+        }
+
+        if (ids == null || ids.isEmpty())
+            return;
+        
+        Logger.debug("Ligand: "+ligand.id+" "+ligand.getName()+"; chembl="
+                     +chembl+" drug="+drug);
 
         final XRef tref = new XRef (target);
         tref.namespace = namespace;
@@ -262,12 +237,12 @@ public class ChemblRegistry {
 
         Logger.debug("Registering information for ligand "
                      +ligand.id+" "+ligand.getName());
-        for (Long no : molregno) {
-            int rows = mechanism (tid, no, ligand, tref, lref);
+        for (Long no : ids) {
+            int rows = mechanism (tids, no, ligand, tref, lref);
             Logger.debug("...."+rows+" mechanisms");
             rows = atc (no, ligand);
             Logger.debug("...."+rows+" ATC");
-            rows = activity (tid, no, ligand, tref, lref);
+            rows = activity (tids, no, ligand, tref, lref);
             Logger.debug("...."+rows+" activities");
         }
 
@@ -279,30 +254,64 @@ public class ChemblRegistry {
                 public void persists () throws Exception {
                     try {
                         tref.save();
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't save Target XRef", ex);
+                        Logger.debug("Target XRef\n"+mapper.toJson(tref,true));
+                    }
+                    try {
                         lref.save();
                     }
                     catch (Exception ex) {
-                        Logger.error("Can't save XRef", ex);
-                        Logger.debug("Target XRef\n"+mapper.toJson(tref,true));
+                        Logger.error("Can't save Ligand XRef", ex);
                         Logger.debug("Ligand XRef\n"+mapper.toJson(lref,true));
                     }
-
                     try {
                         ligand.update();
-                        target.update();
                         INDEXER.update(ligand);
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't update ligand", ex);
+                        Logger.debug("Ligand\n"+mapper.toJson(ligand,true));
+                    }
+                    try {
+                        target.update();
                         INDEXER.update(target);
                     }
                     catch (Exception ex) {
-                        Logger.error("Can't update ligand or target", ex);
-                        Logger.debug("Ligand\n"+mapper.toJson(ligand,true));
+                        Logger.error("Can't update ligand", ex);
                         Logger.debug("Target\n"+mapper.toJson(target,true));
                     }
                 }
             });
     }
 
-    void instrument (Ligand ligand, Set<Long> molregno, PreparedStatement pstm)
+    Long resolve (String chemblId, String type) throws SQLException {
+        pstm8.setString(1, type);
+        pstm8.setString(2, chemblId);
+        ResultSet rset = null;
+        try {
+            rset = pstm8.executeQuery();
+            if (rset.next()) {
+                return rset.getLong("entity_id");
+            }
+            return null;
+        }
+        finally {
+            if (rset != null)
+                rset.close();
+        }
+    }
+
+    Long getMolRegno (String chemblId) throws SQLException {
+        return resolve (chemblId, "COMPOUND");
+    }
+    
+    Long getTID (String chemblId) throws SQLException {
+        return resolve (chemblId, "TARGET");
+    }
+
+    Set<Long> instrument (Ligand ligand, PreparedStatement pstm)
         throws SQLException {
         ResultSet rset = pstm.executeQuery();
         String molfile = null, inchi = null,
@@ -310,7 +319,14 @@ public class ChemblRegistry {
         String chemblId = null;
         
         Map<String, String> syns = new HashMap<String, String>();
+        Set<Long> newids = new HashSet<Long>();
         while (rset.next()) {
+            Long id = rset.getLong("molregno");
+            assert id != null: "molregno is null!";
+            if (molregno.contains(id))
+                continue;
+            newids.add(id);
+
             String syn = rset.getString("synonyms");
             if (syn != null) {
                 Keyword kw = new Keyword (ChEMBL_SYNONYM, syn);
@@ -327,62 +343,70 @@ public class ChemblRegistry {
                 inchiKey = rset.getString("standard_inchi_key");
                 smiles = smi;
             }
-            Long id = rset.getLong("molregno");
-            if (id != null)
-                molregno.add(id);
             
-            if (chemblId == null)
+            if (chemblId == null) {
                 chemblId = rset.getString("chembl_id");
-        }
-        rset.close();
-
-        // no synonym, so use the chembl_id as the name
-        ligand.name = chemblId;
-        for (String type : new String[]{
-                "INN","USAN","FDA","BAN","USP",
-                "TRADE_NAME","MERCK_INDEX",
-                "JAN","DCF","ATC",
-                "RESEARCH_CODE","SYSTEMATIC","OTHER"
-            }) {
-            String s = syns.get(type);
-            if (s != null) {
-                ligand.name = s;
-                break;
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (ChEMBL_ID, chemblId,
+                     "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId);
+                ligand.addIfAbsent(kw);
             }
         }
-
-        if (molfile != null) {
-            ligand.properties.add
-                (new Text (ChEMBL_MOLFILE, molfile));
-            ligand.properties.add(new Text (ChEMBL_INCHI, inchi));
-            ligand.properties.add
-                (new Text (ChEMBL_INCHI_KEY, inchiKey));
-            ligand.properties.add(new Text (ChEMBL_SMILES, smiles));
-            ligand.save();
-
-            // now standardize and index
-            Logger.debug("submitting "+chemblId+" for processing...");
-            StructureReceiver receiver = new LigandStructureReceiver
-                (namespace, ligand);
-            PROCESSOR.submit(molfile, receiver);
-        }
-        else {
-            Logger.warn("Ligand "+ligand.getName()+" ("+chembl
+        rset.close();
+        
+        if (!newids.isEmpty()) {
+            molregno.addAll(newids);
+            
+            // no synonym, so use the chembl_id as the name
+            ligand.name = chemblId;
+            for (String type : new String[]{
+                    "INN","USAN","FDA","BAN","USP",
+                    "TRADE_NAME","MERCK_INDEX",
+                    "JAN","DCF","ATC",
+                    "RESEARCH_CODE","SYSTEMATIC","OTHER"
+                }) {
+                String s = syns.get(type);
+                if (s != null) {
+                    ligand.name = s;
+                    break;
+                }
+            }
+            
+            if (molfile != null) {
+                ligand.properties.add
+                    (new Text (ChEMBL_MOLFILE, molfile));
+                ligand.properties.add(new Text (ChEMBL_INCHI, inchi));
+                ligand.properties.add
+                    (new Text (ChEMBL_INCHI_KEY, inchiKey));
+                ligand.properties.add(new Text (ChEMBL_SMILES, smiles));
+                ligand.save();
+                
+                // now standardize and index
+                Logger.debug("submitting "+chemblId+" for processing...");
+                StructureReceiver receiver = new LigandStructureReceiver
+                    (namespace, ligand);
+                PROCESSOR.submit(molfile, receiver);
+            }
+            else {
+                Logger.warn("Ligand "+ligand.getName()+" ("+chembl
                         +") has empty molfile!");
-            ligand.save();
+                ligand.save();
+            }
         }
+        
+        return newids;
     }
     
     // mechanism    
-    int mechanism (Long tid, Long molregno,
+    int mechanism (Set<Long> tids, Long molregno,
                    Ligand ligand, XRef tref, XRef lref) throws SQLException {
         pstm4.setLong(1, molregno);
-        pstm4.setLong(2, tid);
         int rows = 0;
         ResultSet rset = pstm4.executeQuery();
         while (rset.next()) {
             String action = rset.getString("mechanism_of_action");
-            if (action != null) {
+            Long tid = rset.getLong("tid");
+            if (action != null && tids.contains(tid)) {
                 Text tx = new Text (ChEMBL_MECHANISM, action);
                 tx.save();
                 tref.properties.add(tx);
@@ -408,48 +432,63 @@ public class ChemblRegistry {
                 String l = rset.getString("level"+i);
                 Keyword kw = KeywordFactory.registerIfAbsent
                     (WHO_ATC+" "+l, d, null);
-                path.add(kw);
-                ligand.properties.add(kw);
+                ligand.addIfAbsent(kw);
             }
             String d = rset.getString("level5");
             Keyword kw = new Keyword (WHO_ATC, d);
-            ligand.properties.add(kw);
+            ligand.addIfAbsent(kw);
             ++rows;
         }
         rset.close();
         return rows;
     }
 
-    int activity (Long tid, Long molregno, Ligand ligand,
+    int activity (Set<Long> tids, Long molregno, Ligand ligand,
                   XRef tref, XRef lref) throws SQLException {
         pstm6.setLong(1, molregno);
-        pstm6.setLong(2, tid);
         ResultSet rset = pstm6.executeQuery();
         int rows = 0;
         while (rset.next()) {
+            Long tid = rset.getLong("tid");
+            if (!tids.contains(tid)) {
+                continue;
+            }
+            
             String type = rset.getString("standard_type");
             Double value = rset.getDouble("standard_value");
+            String unit = rset.getString("standard_units");
             Value act = null;
             if (!rset.wasNull()) {
-                act = new VNum (type, value);
-                act.save();
-                lref.properties.add(act);
-                tref.properties.add(act);
+                VNum num = new VNum (type, value);
+                num.unit = unit;
+                num.save();
+                lref.properties.add(num);
+                tref.properties.add(num);
+                act = num;
             }
 
             Long pmid = rset.getLong("pubmed_id");
             if (!rset.wasNull()) {
                 Publication pub = PublicationFactory.registerIfAbsent(pmid);
                 if (pub != null) {
-                    XRef ref = new XRef (pub);
-                    ref.namespace = namespace;              
+                    XRef ref = ligand.getLink(pub);
+                    boolean isNew = false;
+                    if (ref == null) {
+                        ref = new XRef (pub);
+                        ref.namespace = namespace;
+                        isNew = true;
+                    }
                     if (act != null) {
                         ref.properties.add(act);
                     }
-                    ref.save();
-                    ligand.links.add(ref);
-                    // a bit redundent
-                    ligand.publications.add(pub);
+                    if (isNew) {
+                        ref.save();
+                        ligand.links.add(ref);
+                    }
+                    else {
+                        ref.update();
+                    }
+                    ligand.addIfAbsent(pub); // a bit redundent
                 }
             }
             ++rows;
@@ -458,57 +497,47 @@ public class ChemblRegistry {
         return rows;
     }
 
-    Long target (Target target) throws SQLException {
-        if (uniprotMap == null || uniprotMap.isEmpty()) {
-            String gene = null;
-            for (Keyword kw : target.synonyms) {
-                if (UniprotRegistry.GENE.equals(kw.label)) {
-                    gene = kw.term;
+    Set<Long> target (Target target) throws SQLException {
+        String acc = null;
+        Set<String> chemblIds = null;
+        for (Keyword kw : target.synonyms) {
+            if (UniprotRegistry.ACCESSION.equals(kw.label)) {
+                acc = kw.term;
+                chemblIds = uniprotMap.get(acc);
+                if (chemblIds != null) {
+                    // just pick one for now
                     break;
                 }
             }
-                
-            if (gene == null)
-                throw new IllegalArgumentException
-                    ("Target "+target.id+" ("+target.name
-                     +") has no gene synonym!");
-            pstm.setString(1, gene);
         }
-        else {
-            String acc = null, chemblId = null;
-            for (Keyword kw : target.synonyms) {
-                if (UniprotRegistry.ACCESSION.equals(kw.label)) {
-                    acc = kw.term;
-                    chemblId = uniprotMap.get(acc);
-                    if (chemblId != null) {
-                        break;
-                    }
-                }
-            }
-                
-            if (acc == null) {
-                Logger.warn
-                    ("Target "+target.id+" ("+target.name
-                     +") has no "+UniprotRegistry.ACCESSION+" synonym!");
-                return null;
-            }
-            else if (chemblId == null) {
-                Logger.warn
-                    ("Target "+target.id+" ("+target.name
-                     +") accession "+acc+" has no chembl_id mapping!");
-                return null;
-            }
-                
-            Logger.debug(acc +" => "+chemblId);
-            pstm.setString(1, chemblId);
+        
+        if (acc == null) {
+            Logger.warn
+                ("Target "+target.id+" ("+target.name
+                 +") has no "+UniprotRegistry.ACCESSION+" synonym!");
+            return null;
+        }
+        else if (chemblIds == null || chemblIds.isEmpty()) {
+            Logger.warn
+                ("Target "+target.id+" ("+target.name
+                 +") accession "+acc+" has no chembl_id mapping!");
+            return null;
         }
 
-        Long tid = null;
+        Set<Long> tids = new TreeSet<Long>();
+        String chemblId = null;
+        for (String id : chemblIds) {
+            Long tid = getTID (id);
+            if (tid != null)
+                tids.add(tid);
+            Logger.debug(acc +" => "+id+":"+tid);
+            chemblId = id;
+        }
+        // pick the last one for now...
+        pstm.setString(1, chemblId);
+
         ResultSet rset = pstm.executeQuery();
         if (rset.next()) {
-            tid = rset.getLong("tid");
-            assert !rset.wasNull(): "ChEMBL target id is null";
-            
             int i = 1;
             List<Keyword> path = new ArrayList<Keyword>();
             for (; i <= 8; ++i) {
@@ -559,6 +588,6 @@ public class ChemblRegistry {
         }
         rset.close();
         
-        return tid;
+        return tids;
     }
 }

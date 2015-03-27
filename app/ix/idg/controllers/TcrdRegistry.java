@@ -53,6 +53,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.EnumSet;
 import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -172,8 +173,7 @@ public class TcrdRegistry extends Controller {
 
         void persists (TcrdTarget t) throws Exception {
             Http.Context.current.set(ctx);
-            Logger.debug(Thread.currentThread().getName()
-                         +": "+t.family+" "+t.tdl+" "+t.acc+" "+t.id);
+            Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
             
             final Target target = new Target ();
             target.idgFamily = t.family;
@@ -392,7 +392,6 @@ public class TcrdRegistry extends Controller {
         final Target target;
         final PreparedStatement chembl;
         final PreparedStatement drug;
-        List<Ligand> ligands = new ArrayList<Ligand>();
 
         RegisterLigands (ChemblRegistry registry,
                          Target target, PreparedStatement chembl,
@@ -403,40 +402,78 @@ public class TcrdRegistry extends Controller {
             this.drug = drug;
         }
 
-        void loadChembl () throws SQLException {
+        List<Ligand> loadChembl () throws SQLException {
+            List<Ligand> ligands = new ArrayList<Ligand>();        
             ResultSet rs = chembl.executeQuery();
             while (rs.next()) {
                 String chemblId = rs.getString("cmpd_chemblid");
-                Keyword kw = KeywordFactory.registerIfAbsent
-                    (ChemblRegistry.ChEMBL_ID, chemblId,
-                     "https://www.ebi.ac.uk/chembl/compound/inspect/"
-                     +chemblId);
-                Ligand ligand = new Ligand
-                    (rs.getString("cmpd_name_in_ref"));
-                ligand.synonyms.add(kw);
-                ligands.add(ligand);
+                List<Ligand> ligs = LigandFactory.finder
+                    .where(Expr.and
+                           (Expr.eq("synonyms.label",
+                                    ChemblRegistry.ChEMBL_ID),
+                            Expr.eq("synonyms.term", chemblId)))
+                    .findList();
+                if (ligs.isEmpty()) {
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (ChemblRegistry.ChEMBL_ID, chemblId,
+                         "https://www.ebi.ac.uk/chembl/compound/inspect/"
+                         +chemblId);
+                    Ligand ligand = new Ligand
+                        (rs.getString("cmpd_name_in_ref"));
+                    ligand.synonyms.add(kw);
+                    ligands.add(ligand);
+                }
+                else {
+                    ligands.addAll(ligs);
+                }
             }
             rs.close();
+            return ligands;
         }
 
-        void loadDrugs () throws SQLException {
+        List<Ligand> loadDrugs () throws SQLException {
+            List<Ligand> ligands = new ArrayList<Ligand>();
             ResultSet rs = drug.executeQuery();
             while (rs.next()) {
                 String drug = rs.getString("drug");
                 String ref = rs.getString("reference");
-                Keyword kw = KeywordFactory.registerIfAbsent
-                    (DRUG, drug, ref != null
-                     && ref.startsWith("http") ? ref : null);
-                Ligand ligand = new Ligand (drug);
-                ligand.synonyms.add(kw);
-                ligands.add(ligand);            
+                List<Ligand> ligs;
+                if (ref != null && ref.indexOf("CHEMBL") > 0) {
+                    String chemblId = ref.substring(ref.indexOf("CHEMBL"));
+                    ligs = LigandFactory.finder
+                        .where(Expr.and
+                               (Expr.eq("synonyms.label",
+                                        ChemblRegistry.ChEMBL_ID),
+                                Expr.eq("synonyms.term", chemblId)))
+                        .findList();
+                }
+                else {
+                    ligs = LigandFactory.finder
+                        .where(Expr.and
+                               (Expr.eq("synonyms.label",
+                                        ChemblRegistry.ChEMBL_SYNONYM),
+                                Expr.eq("synonyms.term", drug)))
+                        .findList();
+                }
+                if (ligs.isEmpty()) {
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (DRUG, drug, ref != null
+                         && ref.startsWith("http") ? ref : null);
+                    Ligand ligand = new Ligand (drug);
+                    ligand.synonyms.add(kw);
+                    ligands.add(ligand);
+                }
+                else {
+                    ligands.addAll(ligs);
+                }
             }
             rs.close();
+            return ligands;
         }
 
         public void persists () throws Exception {
-            loadChembl ();
-            loadDrugs ();
+            List<Ligand> ligands = loadChembl ();
+            ligands.addAll(loadDrugs ());
             registry.instruments(target, ligands);
             Logger.debug("Target "+target.id+": "+target.name
                          +" has "+ligands.size()+" ligands!");
@@ -508,7 +545,8 @@ public class TcrdRegistry extends Controller {
             }
         }
 
-        Map<String, String> uniprotMap = new HashMap<String, String>();
+        Map<String, Set<String>> uniprotMap =
+            new HashMap<String, Set<String>>();
         part = body.getFile("uniprot-map");
         if (part != null) {
             String name = part.getFilename();
@@ -521,7 +559,12 @@ public class TcrdRegistry extends Controller {
                         continue;
                     String[] toks = line.split("[\\s\t]+");
                     if (2 == toks.length) {
-                        uniprotMap.put(toks[0], toks[1]);
+                        Set<String> set = uniprotMap.get(toks[0]);
+                        if (set == null) {
+                            uniprotMap.put
+                                (toks[0], set = new TreeSet<String>());
+                        }
+                        set.add(toks[1]);
                     }
                 }
                 br.close();
@@ -555,7 +598,7 @@ public class TcrdRegistry extends Controller {
     }
 
     static int load (DataSource ds, int threads, int rows,
-                     Map<String, String> uniprotMap) throws Exception {
+                     Map<String, Set<String>> uniprotMap) throws Exception {
 
         Set<TcrdTarget> targets = new HashSet<TcrdTarget>();    
 

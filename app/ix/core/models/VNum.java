@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @DiscriminatorValue("NUM")
 public class VNum extends Value {
     public Double numval;
+    public String unit;
 
     public VNum () {}
     public VNum (String label, Double value) {

@@ -109,7 +109,17 @@ public abstract class EntityModel extends IxModel {
         return Global.getRef(this)+"?view=full";
     }
 
-    public boolean addLinkIfAbsent (XRef xref) {
+    public boolean addIfAbsent (Keyword syn) {
+        for (Keyword kw : getSynonyms ()) {
+            if (kw.label.equals(syn.label)
+                && kw.term.equals(syn.term))
+                return false;
+        }
+        getSynonyms().add(syn);
+        return true;
+    }
+    
+    public boolean addIfAbsent (XRef xref) {
         for (XRef xr : getLinks()) {
             if (xr.refid.equals(xref.refid)
                 && xr.kind.equals(xref.kind))
@@ -119,6 +129,22 @@ public abstract class EntityModel extends IxModel {
         return true;
     }
 
+    public boolean addIfAbsent (Publication pub) {
+        for (Publication p : getPublications ())
+            if (p.pmid.equals(pub.pmid))
+                return false;
+        getPublications().add(pub);
+        return true;
+    }
+
+    public XRef getLink (Object inst) {
+        for (XRef xref : getLinks ()) {
+            if (xref.referenceOf(inst))
+                return xref;
+        }
+        return null;
+    }
+    
     /**
      * return the first synonym that matches the given label
      */
