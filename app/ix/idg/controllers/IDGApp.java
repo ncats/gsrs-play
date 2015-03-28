@@ -100,7 +100,7 @@ public class IDGApp extends App {
             else if (name.equals(ChemblRegistry.WHO_ATC)) {
                 String key = ChemblRegistry.WHO_ATC+":"+label;
                 try {
-                    Keyword kw = getOrElse (key, new Callable<Keyword>() {
+                    Keyword kw = getOrElse (0l, key, new Callable<Keyword>() {
                             public Keyword call () {
                                 List<Keyword> kws = KeywordFactory.finder
                                 .where().eq("label",name+" "+label)
@@ -134,38 +134,30 @@ public class IDGApp extends App {
         public Result get (final String name) {
             try {
                 long start = System.currentTimeMillis();        
-                T e = getOrElse (cls.getName()+"/"+name, new Callable<T> () {
-                        public T call () throws Exception {
+                List<T> e = getOrElse
+                    (cls.getName()+"/"+name, new Callable<List<T>> () {
+                        public List<T> call () throws Exception {
                             List<T> values = finder.where()
                             .eq("synonyms.term", name).findList();
-                            if (!values.isEmpty()) {
-                                T first = values.iterator().next();
-                                if (values.size() > 1) {
-                                    Logger.warn
-                                        ("Request name \""+name+"\" maps "
-                                         +"to "+values.size()+" values; "
-                                         +"return the first one "+first);
-                                }
-                                return first;
-                            }
-                            return null;
+                            return values;
                         }
                     });
                 double ellapsed = (System.currentTimeMillis()-start)*1e-3;
                 Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
-                             +" to retrieve "+name+" "+e);
+                             +" to retrieve "+e.size()+" matches for "+name);
                 
-                if (e == null) {
+                if (e.isEmpty()) {
                     return _notFound ("Unknown name: "+name);
                 }
                 return result (e);
             }
             catch (Exception ex) {
+                Logger.error("Unable to generate Result for \""+name+"\"", ex);
                 return _internalServerError (ex);
             }
         }
         
-        public Result result (final T e) {
+        public Result result (final List<T> e) {
             try {
                 Result result = getOrElse
                     (Util.sha1(request ()), new Callable<Result> () {
@@ -180,7 +172,7 @@ public class IDGApp extends App {
             }
         }
 
-        abstract Result getResult (T e) throws Exception;
+        abstract Result getResult (List<T> e) throws Exception;
     }
     
     public static final String[] TARGET_FACETS = {
@@ -285,8 +277,8 @@ public class IDGApp extends App {
     
     static final GetResult<Target> TargetResult =
         new GetResult<Target>(Target.class, TargetFactory.finder) {
-            public Result getResult (final Target t) throws Exception {
-                return _getResult (t);
+            public Result getResult (List<Target> targets) throws Exception {
+                return _getTargetResult (targets);
             }
         };
     
@@ -294,7 +286,9 @@ public class IDGApp extends App {
         return TargetResult.get(name);
     }
 
-    static Result _getResult (final Target t) throws Exception {
+    static Result _getTargetResult (final List<Target> targets)
+        throws Exception {
+        final Target t = targets.iterator().next(); // guarantee not empty
         List<DiseaseRelevance> diseases = getOrElse
             ("/targets/"+t.id+"/diseases",
              new Callable<List<DiseaseRelevance>> () {
@@ -534,10 +528,12 @@ public class IDGApp extends App {
         try {
             String q = request().getQueryString("q");
             if (kind != null && !"".equals(kind)) {
-                if (Target.class.isAssignableFrom(Class.forName(kind)))
+                if (Target.class.getName().equals(kind))
                     return redirect (routes.IDGApp.targets(q, 30, 1));
-                if (Disease.class.isAssignableFrom(Class.forName(kind)))
+                else if (Disease.class.getName().equals(kind))
                     return redirect (routes.IDGApp.diseases(q, 10, 1));
+                else if (Ligand.class.getName().equals(kind))
+                    return redirect (routes.IDGApp.ligands(q, 30, 1));
             }
             
             // generic entity search..
@@ -719,8 +715,46 @@ public class IDGApp extends App {
         }
     }
 
+    static final GetResult<Ligand> LigandResult =
+        new GetResult<Ligand>(Ligand.class, LigandFactory.finder) {
+            public Result getResult (List<Ligand> ligands) throws Exception {
+                return _getLigandResult (ligands);
+            }
+        };
+
+    static Result _getLigandResult (List<Ligand> ligands) throws Exception {
+        if (ligands.size() == 1) {
+            Ligand ligand = ligands.iterator().next();
+            
+            List<Keyword> breadcrumb = new ArrayList<Keyword>();
+            return ok (ix.idg.views.html
+                       .liganddetails.render(ligand, breadcrumb));
+        }
+        else {
+            TextIndexer indexer = textIndexer.createEmptyInstance();
+            for (Ligand lig : ligands)
+                indexer.add(lig);
+            
+            TextIndexer.SearchResult result = SearchFactory.search
+                (indexer, Ligand.class, null, indexer.size(), 0, FACET_DIM,
+                 request().queryString());
+            if (result.count() < ligands.size()) {
+                ligands.clear();
+                for (int i = 0; i < result.count(); ++i) {
+                    ligands.add((Ligand)result.getMatches().get(i));
+                }
+            }
+            TextIndexer.Facet[] facets = filter
+                (result.getFacets(), LIGAND_FACETS);
+        
+            return ok (ix.idg.views.html.ligands.render
+                       (1, result.count(), result.count(),
+                        new int[0], decorate (facets), ligands));
+        }
+    }
+    
     public static Result ligand (String name) {
-        return ok (name);
+        return LigandResult.get(name);
     }
 
     /**
@@ -738,8 +772,8 @@ public class IDGApp extends App {
     
     static final GetResult<Disease> DiseaseResult =
         new GetResult<Disease>(Disease.class, DiseaseFactory.finder) {
-            public Result getResult (final Disease d) throws Exception {
-                return _getResult (d);
+            public Result getResult (List<Disease> diseases) throws Exception {
+                return _getDiseaseResult (diseases);
             }
         };
 
@@ -747,7 +781,9 @@ public class IDGApp extends App {
         return DiseaseResult.get(name);
     }
 
-    static Result _getResult (final Disease d) throws Exception {
+    static Result _getDiseaseResult (final List<Disease> diseases)
+        throws Exception {
+        final Disease d = diseases.iterator().next();
         // resolve the targets for this disease
         List<Target> targets = getOrElse
             ("/diseases/"+d.id+"/targets", new Callable<List<Target>> () {
@@ -766,7 +802,7 @@ public class IDGApp extends App {
 
         
         return ok(ix.idg.views.html.diseasedetails.render
-                  (d, targets.toArray(new Target[]{}), getBreadcrumb (d)));
+                  (d, targets.toArray(new Target[0]), getBreadcrumb (d)));
     }
 
     public static List<Keyword> getBreadcrumb (Disease d) {

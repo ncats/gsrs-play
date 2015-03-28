@@ -27,6 +27,7 @@ import ix.idg.models.Target;
 import ix.idg.models.Ligand;
 import play.Logger;
 import play.Play;
+import play.cache.Cache;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.db.DB;
@@ -87,7 +88,7 @@ public class TcrdRegistry extends Controller {
     static final PersistenceQueue PQ =
         Play.application().plugin(PersistenceQueue.class);
 
-    static final ConcurrentMap<String, Disease> diseases =
+    static final ConcurrentMap<String, Disease> DISEASES =
         new ConcurrentHashMap<String, Disease>();
 
     static final DrugTargetOntology dto = new DrugTargetOntology();
@@ -193,7 +194,10 @@ public class TcrdRegistry extends Controller {
 
             Logger.debug("...disease linking");
             pstm.setLong(1, t.id);
+            long start = System.currentTimeMillis();
             new RegisterDiseaseRefs (target, namespace, pstm).persists();
+            long end = System.currentTimeMillis();
+            Logger.debug("..."+(end-start)+"ms to resolve diseases");
 
             Logger.debug("...gene RIF linking");
             pstm4.setLong(1, t.protein);
@@ -217,7 +221,7 @@ public class TcrdRegistry extends Controller {
         final PreparedStatement pstm;
 
         RegisterDiseaseRefs (Target target,
-                         Namespace namespace, PreparedStatement pstm) {
+                             Namespace namespace, PreparedStatement pstm) {
             this.target = target;
             this.namespace = namespace;
             this.pstm = pstm;
@@ -242,9 +246,11 @@ public class TcrdRegistry extends Controller {
 
                 int count = 0;
                 Map<Long, Disease> neighbors = new HashMap<Long, Disease>();
+                List<Disease> updates = new ArrayList<Disease>();
                 while (rs.next()) {
                     String doid = rs.getString("doid");
-                    Disease disease = diseases.get(doid);
+                    Disease disease = DISEASES.get(doid);
+                    long start = System.currentTimeMillis();
                     if (disease == null) {
                         List<Disease> dl = DiseaseFactory.finder
                             .where(Expr.and
@@ -266,7 +272,7 @@ public class TcrdRegistry extends Controller {
                             
                         }
                         disease = dl.iterator().next();
-                        diseases.putIfAbsent(doid, disease);
+                        DISEASES.putIfAbsent(doid, disease);
                     }
                     
                     double zscore = rs.getDouble("zscore");
@@ -296,8 +302,8 @@ public class TcrdRegistry extends Controller {
                         xref.properties.add(new VNum (CONF, conf));
                         xref.save();
                         target.links.add(xref);
-                        target.update();
-                        INDEXER.update(target);
+                        //target.update();
+                        //INDEXER.update(target);
                         
                         // now add all the unique parents of this disease node
                         getNeighbors (neighbors, disease.links);
@@ -305,8 +311,9 @@ public class TcrdRegistry extends Controller {
                         // link the other way
                         try {
                             disease.links.add(self);
-                            disease.update();
-                            INDEXER.update(disease);
+                            //disease.update();
+                            //INDEXER.update(disease);
+                            updates.add(disease);
                             ++count;
                         }
                         catch (Exception ex) {
@@ -317,8 +324,24 @@ public class TcrdRegistry extends Controller {
                                         +ex.getMessage());
                         }
                     }
+                    long end = System.currentTimeMillis();
+                    Logger.debug("......."+(end-start)+"ms linking target "
+                                 +target.id+" and disease "+disease.id
+                                 +" ("+doid+")");  
                 }
-                Logger.debug("...."+count+" disease xref(s) added!");
+                Logger.debug(".....updating "+updates.size()+" diseases");
+                for (Disease d : updates) {
+                    try {
+                        d.update();
+                        INDEXER.update(d);
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't update disease "
+                                     +d.id+" "+d.name, ex);
+                        ex.printStackTrace();
+                    }
+                }
+                Logger.debug("....."+count+" disease xref(s) added!");
             }
             finally {
                 rs.close();
@@ -328,10 +351,25 @@ public class TcrdRegistry extends Controller {
         void getNeighbors (Map<Long, Disease> neighbors, List<XRef> links) {
             for (XRef xr : links) {
                 if (Disease.class.getName().equals(xr.kind)) {
-                    Disease neighbor = (Disease)xr.deRef();
-                    neighbors.put(neighbor.id, neighbor);
-                    // recurse
-                    getNeighbors (neighbors, neighbor.links);
+                    final XRef ref = xr;
+                    try {
+                        Disease neighbor =
+                            Cache.getOrElse
+                            (Disease.class.getName()+"."+xr.refid,
+                             new Callable<Disease> () {
+                                 public Disease call () {
+                                     return (Disease)ref.deRef();
+                                 }
+                             }, Integer.MAX_VALUE);
+                        neighbors.put(neighbor.id, neighbor);
+                        // recurse
+                        getNeighbors (neighbors, neighbor.links);
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't retrieve neighbor for XRef "
+                                     +ref.kind+" "+ref.refid, ex);
+                        ex.printStackTrace();
+                    }
                 }
             }
         }
@@ -527,7 +565,7 @@ public class TcrdRegistry extends Controller {
             File file = part.getFile();
             DiseaseOntologyRegistry obo = new DiseaseOntologyRegistry ();
             try {
-                diseases.putAll(obo.register(new FileInputStream (file)));
+                DISEASES.putAll(obo.register(new FileInputStream (file)));
             }
             catch (IOException ex) {
                 Logger.trace("Can't load obo file: "+file, ex);
