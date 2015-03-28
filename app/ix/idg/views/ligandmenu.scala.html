@@ -1,5 +1,3 @@
-@(kind: String)
-
 @ix.ncats.views.html.header{
 <a class="navbar-brand" href="@ix.idg.controllers.routes.IDGApp.index"
    style="padding: 0px 5px; margin-left: 0px;">
@@ -8,18 +6,20 @@
 </a>
 }{
 <ul class="nav navbar-nav navbar-right">
+  <button type="button" class="btn navbar-btn btn-default" data-toggle="modal" data-target="#strucModal">Structure Search</button>  
   <form class="navbar-form navbar-right" role="search" method="GET"
         action="@ix.idg.controllers.routes.IDGApp.search(null)">
     <div class="form-group">
       <input type="text" id="search-header-field" name="q"
 	     class="typeahead form-control" placeholder="Search..."/>
-      <input type="hidden" name="kind" value="@kind">
+      <input type="hidden" name="kind" value="ix.idg.models.Ligand">
     </div>
     <button type="submit" class="btn btn-default">
       <span class="fa fa-search" aria-hidden="true"></span>
     </button>
   </form>
 </ul>
+@ix.ncats.views.html.ssearch("GET", ix.idg.controllers.routes.IDGApp.search("StructureSearch"))
 }
 
 @**

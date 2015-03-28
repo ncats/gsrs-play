@@ -1,18 +1,51 @@
 @import ix.idg.controllers.LigandFactory
+@import ix.idg.models.Ligand
+@import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.TcrdRegistry
+@import ix.idg.controllers.ChemblRegistry
+@import ix.ncats.controllers.App.FacetDecorator
 
-@ix.ncats.views.html.main("Ligands", "ix.idg.models.Ligand"){
-@menu("ix.idg.models.Ligand")
-}{
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+     facets: Array[FacetDecorator], ligands: List[Ligand])
+
+@tabrow(lig: Ligand) = {
+
+<tr>
+  <td><a href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getLigandId(lig))">@lig.getName()</a></td>
+  <td></td>
+  <td></td>
+</tr>
+}
+
+@ix.ncats.views.html.content("Ligands", "ix.idg.models.Ligand",
+ix.idg.controllers.routes.IDGApp.ligands().url,
+current, rows, total, pages, facets){ @ligandmenu() }{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
-  <li class="active">Ligands</li>
+  @defining(request().queryString.get("facet")) { facets =>
+     @if(facets != null) {
+      <li><a href="@ix.idg.controllers.routes.IDGApp.ligands()">Ligands</a></li>
+     } else {
+       <li class="active">Ligands</li>
+     }
+  }
 </ol>
 }{
-<div class="container-fluid">
-  <div class="col-md-12">
-    <div class="page-header">
-      <h1>Coming soon!</h1>
-    </div>
-  </div>
-</div>
+<table class="table table-striped">
+  <tr>
+    <th>Name</th>
+    <th>Best Developed Target</th>
+    <th>Target Family</th>
+  </tr>
+  @for(lig <- ligands) {
+     @tabrow(lig)
+   }
+</table>
 }
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>

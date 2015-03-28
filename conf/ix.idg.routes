@@ -19,5 +19,6 @@ GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 3
 GET	/targets/:name	ix.idg.controllers.IDGApp.target(name: String)
 GET	/diseases	ix.idg.controllers.IDGApp.diseases(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/diseases/:name	ix.idg.controllers.IDGApp.disease(name: String)
-GET	/ligands	ix.idg.controllers.IDGApp.ligands
+GET	/ligands	ix.idg.controllers.IDGApp.ligands(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
+GET	/ligands/:name	ix.idg.controllers.IDGApp.ligand(name: String)
 GET	/search		ix.idg.controllers.IDGApp.search(kind: String ?= null)

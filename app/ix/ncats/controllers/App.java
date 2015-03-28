@@ -364,6 +364,27 @@ public class App extends Controller {
         return filtered.toArray(new Facet[0]);
     }
 
+    public static TextIndexer.Facet[] getFacets (final Class<?> cls,
+                                                 final String... filters) {
+        StringBuilder key = new StringBuilder (cls.getName()+".facets");
+        for (String f : filters)
+            key.append("."+f);
+        try {
+            TextIndexer.Facet[] facets = getOrElse
+                (key.toString(), new Callable<TextIndexer.Facet[]>() {
+                        public TextIndexer.Facet[] call () {
+                            return filter (getFacets (cls, FACET_DIM), filters);
+                        }
+                    });
+            return facets;
+        }
+        catch (Exception ex) {
+            Logger.error("Can't get facets for "+cls, ex);
+            ex.printStackTrace();
+        }
+        return new TextIndexer.Facet[0];
+    }
+
     public static String randvar (int size) {
         Random rand = new Random ();
         char[] alpha = {'a','b','c','x','y','z'};

@@ -19,6 +19,11 @@ public class LigandFactory extends EntityFactory {
     public static Ligand getLigand (Long id) {
         return getEntity (id, finder);
     }
+    
+    public static List<Ligand> getLigands (int top, int skip, String filter) {
+        return filter (new FetchOptions (top, skip, filter), finder);
+    }
+    
     public static Result count () {
         return count (finder);
     }

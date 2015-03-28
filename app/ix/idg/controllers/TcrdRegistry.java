@@ -93,7 +93,7 @@ public class TcrdRegistry extends Controller {
     static final DrugTargetOntology dto = new DrugTargetOntology();
 
     public static final Namespace namespace = NamespaceFactory.registerIfAbsent
-        ("TCRDv096", "http://habanero.health.unm.edu");
+        ("TCRDv100", "http://habanero.health.unm.edu");
 
     static class TcrdTarget implements Comparable<TcrdTarget> {
         String acc;

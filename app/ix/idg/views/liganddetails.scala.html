@@ -1,0 +1,52 @@
+@import ix.core.models.Keyword
+@import ix.core.models.Publication
+@import ix.idg.models.Ligand
+@import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.IDGApp._
+
+@(ligand: Ligand, breadcrumb: List[Keyword])
+
+@ix.ncats.views.html.main(ligand.getName(), ligand.getClass().getName()){
+@ligandmenu()	 
+}{
+<ol class="breadcrumb">
+  <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
+    <li><a href="@ix.idg.controllers.routes.IDGApp.ligands()">Ligands</a></li>
+    @for(kw <- breadcrumb) {
+    <li><a href="@kw.href">@kw.term</a></li>
+    }
+    <li class="active">@ligand.getName()</li>
+</ol>
+}{
+<div class="container-fluid">
+  <div class="col-md-12">
+    <div class="page-header">
+      <h1>@ligand.getName()</h1>
+      @if(ligand.description != null) {
+	<div class="panel panel-default">
+	  <div class="panel-body">
+	    <p>@ligand.description
+	  </div>
+	</div>
+      }
+    </div>
+    <div class="row">
+    </div>
+  </div>
+</div>
+}
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+
+$(document).ready(function () { 
+  $('.tree').treegrid({
+   expanderExpandedClass: 'fa fa-angle-down',
+   expanderCollapsedClass: 'fa fa-angle-right',
+   initialState: 'collapsed'
+  });
+});
+</script>

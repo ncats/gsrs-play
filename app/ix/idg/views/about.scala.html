@@ -1,4 +1,20 @@
-@(title: String)
+@import ix.core.controllers.NamespaceFactory
+@import ix.core.models.Namespace
+@import ix.core.search.TextIndexer.Facet
+
+@(title: String, target: Facet, disease: Facet, ligand: Facet)
+
+@fcol(name: String, facet: Facet) = {
+<td>
+   @if(facet != null) {
+      @for(f <- facet.getValues()) {
+          @if(name.equals(f.getLabel())) {
+  	    @f.getCount()
+	  }
+       }
+   }
+</td>
+}
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -106,12 +122,29 @@
 		</div>
             </div>
 	    <div class="row">
-	      <div class="col-md-6">
+	      <div class="col-md-6 col-md-offset-3">
 		<div class="panel panel-default">
-		  <div class="panel-heading">
-		    <h3 class="panel-title">Data Feeds</h3>
-		  </div>
 		  <div class="panel-body">
+		    <table class="table table-striped">
+		      <tr>
+			<th>Source</th>
+			<th>Target</th>
+			<th>Disease</th>
+			<th>Ligand</th>
+		      </tr>
+		      @for(ns <- NamespaceFactory.all()) {
+		        <tr>
+			  @if(ns.location != null) {
+			    <td><a href="@ns.location">@ns.name</a></td>
+			  } else {
+			    <td>@ns.name</td>
+			  }
+			  @fcol(ns.name, target)
+			  @fcol(ns.name, disease)
+			  @fcol(ns.name, ligand)
+			</tr>
+	              }
+	            </table>
 		  </div>
 		</div>
 	      </div>

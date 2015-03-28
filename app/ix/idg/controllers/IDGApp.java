@@ -12,6 +12,7 @@ import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
 import ix.idg.models.Disease;
 import ix.idg.models.Target;
+import ix.idg.models.Ligand;
 import ix.utils.Util;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.ncats.controllers.App;
@@ -82,9 +83,10 @@ public class IDGApp extends App {
         }
         
         @Override
-        public String label (int i) {
-            String label = super.label(i);
-            if (super.name().equals(Target.IDG_DEVELOPMENT)) {
+        public String label (final int i) {
+            final String label = super.label(i);
+            final String name = super.name();
+            if (name.equals(Target.IDG_DEVELOPMENT)) {
                 for (Target.TDL tdl : EnumSet.allOf(Target.TDL.class)) {
                     if (label.equalsIgnoreCase(tdl.name)) {
                         return "<span class=\"label label-"+tdl.label+"\""
@@ -94,6 +96,28 @@ public class IDGApp extends App {
                     }
                 }
                 assert false: "Unknown TDL label: "+label;
+            }
+            else if (name.equals(ChemblRegistry.WHO_ATC)) {
+                String key = ChemblRegistry.WHO_ATC+":"+label;
+                try {
+                    Keyword kw = getOrElse (key, new Callable<Keyword>() {
+                            public Keyword call () {
+                                List<Keyword> kws = KeywordFactory.finder
+                                .where().eq("label",name+" "+label)
+                                .findList();
+                                if (!kws.isEmpty()) {
+                                    return kws.iterator().next();
+                                }
+                                return null;
+                            }
+                        });
+                    if (kw != null)
+                        return kw.term.toLowerCase()+" ("+label+")";
+                }
+                catch (Exception ex) {
+                    Logger.error("Can't retrieve key "+key+" from cache", ex);
+                    ex.printStackTrace();
+                }
             }
             return label;
         }
@@ -163,7 +187,8 @@ public class IDGApp extends App {
         TcrdRegistry.DEVELOPMENT,
         TcrdRegistry.FAMILY,
         TcrdRegistry.DISEASE,
-        TcrdRegistry.DRUG
+        "Ligand"
+        //TcrdRegistry.DRUG
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -172,12 +197,21 @@ public class IDGApp extends App {
         UniprotRegistry.TARGET
     };
 
+    public static final String[] LIGAND_FACETS = {
+        ChemblRegistry.WHO_ATC,
+        TcrdRegistry.DEVELOPMENT,
+        TcrdRegistry.FAMILY,
+        UniprotRegistry.TARGET,
+        "MeSH"
+    };
+
     public static final String[] ALL_FACETS = {
         TcrdRegistry.DEVELOPMENT,
         TcrdRegistry.FAMILY,
         TcrdRegistry.DISEASE,
         UniprotRegistry.TARGET,
-        TcrdRegistry.DRUG
+        "Ligand"
+        //TcrdRegistry.DRUG
     };
 
     static FacetDecorator[] decorate (Facet... facets) {
@@ -190,8 +224,14 @@ public class IDGApp extends App {
     }
     
     public static Result about() {
+        TextIndexer.Facet[] target = getFacets (Target.class, "Namespace");
+        TextIndexer.Facet[] disease = getFacets (Disease.class, "Namespace");
+        TextIndexer.Facet[] ligand = getFacets (Ligand.class, "Namespace");
         return ok (ix.idg.views.html.about.render
-                           ("Pharos: Illuminating the Druggable Genome"));
+                   ("Pharos: Illuminating the Druggable Genome",
+                    target.length > 0 ? target[0] : null,
+                    disease.length > 0 ? disease[0] : null,
+                    ligand.length > 0 ? ligand[0]: null));
     }
 
     public static Result index () {
@@ -409,18 +449,8 @@ public class IDGApp extends App {
                         pages, decorate (facets), targets));
         }
         else {
-            String cache = Target.class.getName()+".facets";
-            if (System.currentTimeMillis() - CACHE_TIMEOUT
-                <= indexer.lastModified())
-                Cache.remove(cache);
-            TextIndexer.Facet[] facets = Cache.getOrElse
-                (cache, new Callable<TextIndexer.Facet[]>() {
-                        public TextIndexer.Facet[] call () {
-                            return filter (getFacets (Target.class, FACET_DIM),
-                                           TARGET_FACETS);
-                        }
-                    }, CACHE_TIMEOUT);
-            
+            TextIndexer.Facet[] facets =
+                getFacets (Target.class, TARGET_FACETS);
             rows = Math.min(total, Math.max(1, rows));
             int[] pages = paging (rows, page, total);               
             
@@ -627,9 +657,79 @@ public class IDGApp extends App {
                     targets, totalTargets, diseases, totalDiseases));
     }
 
-    public static Result ligands () {
-        return ok (ix.idg.views.html.ligands.render());
+    public static Result ligands (final String q,
+                                  final int rows, final int page) {
+        try {
+            String sha1 = Util.sha1(request ());
+            return getOrElse (sha1, new Callable<Result>() {
+                    public Result call () throws Exception {
+                        return _ligands (q, rows, page);
+                    }
+                });
+        }
+        catch (Exception ex) {
+            return _internalServerError (ex);
+        }
     }
+    
+    static Result _ligands (final String q, int rows, final int page)
+        throws Exception {
+        Logger.debug("ligands: q="+q+" rows="+rows+" page="+page);
+        final int total = LigandFactory.finder.findRowCount();
+        if (request().queryString().containsKey("facet") || q != null) {
+            TextIndexer.SearchResult result =
+                getSearchResult (Ligand.class, q, total);
+            
+            TextIndexer.Facet[] facets = filter
+                (result.getFacets(), LIGAND_FACETS);
+            List<Ligand> ligands = new ArrayList<Ligand>();
+            int[] pages = new int[0];
+            if (result.count() > 0) {
+                rows = Math.min(result.count(), Math.max(1, rows));
+                pages = paging (rows, page, result.count());
+                
+                for (int i = (page-1)*rows, j = 0; j < rows
+                         && i < result.count(); ++j, ++i) {
+                    ligands.add((Ligand)result.getMatches().get(i));
+                }
+            }
+            
+            return ok (ix.idg.views.html.ligands.render
+                       (page, rows, result.count(),
+                        pages, decorate (facets), ligands));
+        }
+        else {
+            String cache = Ligand.class.getName()+".facets";
+            TextIndexer.Facet[] facets = getOrElse
+                (cache, new Callable<TextIndexer.Facet[]>() {
+                        public TextIndexer.Facet[] call () {
+                            return filter (getFacets (Ligand.class, FACET_DIM),
+                                           LIGAND_FACETS);
+                        }
+                    });
+            
+            rows = Math.min(total, Math.max(1, rows));
+            int[] pages = paging (rows, page, total);               
+            
+            List<Ligand> ligands =
+                LigandFactory.getLigands(rows, (page-1)*rows, null);
+            
+            return ok (ix.idg.views.html.ligands.render
+                       (page, rows, total, pages, decorate (facets), ligands));
+        }
+    }
+
+    public static Result ligand (String name) {
+        return ok (name);
+    }
+
+    /**
+     * return the canonical/default ligand id
+     */
+    public static String getLigandId (Ligand ligand) {
+        return ligand.getName();
+    }
+
 
     public static String getDiseaseId (Disease d) {
         Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID, "UniProt");

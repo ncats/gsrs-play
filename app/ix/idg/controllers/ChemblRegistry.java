@@ -28,6 +28,8 @@ public class ChemblRegistry {
     public static final String ChEMBL = "ChEMBL";
     public static final String ChEMBL_ID = "ChEMBL ID";
     public static final String ChEMBL_MECHANISM = "ChEMBL Mechanism";
+    public static final String ChEMBL_MOA_MODE = "ChEBML MOA Mode";
+    public static final String ChEMBL_MECHANISM_COMMENT = "ChEMBL Mechanism Comment";
     public static final String ChEMBL_SYNONYM = "ChEMBL Synonym";
     public static final String ChEMBL_MOLFILE = "ChEMBL Molfile";
     public static final String ChEMBL_INCHI = "ChEMBL InChI";
@@ -229,10 +231,19 @@ public class ChemblRegistry {
 
         final XRef tref = new XRef (target);
         tref.namespace = namespace;
+        tref.properties.add
+            (KeywordFactory.registerIfAbsent
+             (Target.IDG_FAMILY, target.idgFamily, null));
+        tref.properties.add
+            (KeywordFactory.registerIfAbsent
+             (Target.IDG_DEVELOPMENT, target.idgTDL.name, null));
         ligand.links.add(tref); // ligand -> target
         
         final XRef lref = new XRef (ligand);
         lref.namespace = namespace;
+        lref.properties.add
+            (KeywordFactory.registerIfAbsent
+             ("Ligand", ligand.getName(), null));
         target.links.add(lref); // target -> ligand
 
         Logger.debug("Registering information for ligand "
@@ -411,6 +422,21 @@ public class ChemblRegistry {
                 tx.save();
                 tref.properties.add(tx);
                 lref.properties.add(tx);
+
+                String comment = rset.getString("mechanism_comment");
+                if (comment != null) {
+                    tx = new Text (ChEMBL_MECHANISM_COMMENT, comment);
+                    tx.save();
+                    tref.properties.add(tx);
+                    lref.properties.add(tx);
+                }
+
+                String mode = rset.getString("action_type");
+                if (mode != null) {
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (ChEMBL_MOA_MODE, mode, null);
+                    lref.properties.add(kw);
+                }
             }
             ++rows;
         }
@@ -431,8 +457,10 @@ public class ChemblRegistry {
                        +i+" for molregno="+molregno);
                 String l = rset.getString("level"+i);
                 Keyword kw = KeywordFactory.registerIfAbsent
-                    (WHO_ATC+" "+l, d, null);
+                    (WHO_ATC, l, null);
                 ligand.addIfAbsent(kw);
+                // now create a lookup from this atc node to its definition
+                KeywordFactory.registerIfAbsent(WHO_ATC+" "+l, d, null);
             }
             String d = rset.getString("level5");
             Keyword kw = new Keyword (WHO_ATC, d);
