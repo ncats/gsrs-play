@@ -384,12 +384,20 @@ public class ChemblRegistry {
             }
             
             if (molfile != null) {
-                ligand.properties.add
-                    (new Text (ChEMBL_MOLFILE, molfile));
-                ligand.properties.add(new Text (ChEMBL_INCHI, inchi));
-                ligand.properties.add
-                    (new Text (ChEMBL_INCHI_KEY, inchiKey));
-                ligand.properties.add(new Text (ChEMBL_SMILES, smiles));
+                if (null == ligand.getProperty(ChEMBL_MOLFILE)) {
+                    ligand.properties.add
+                        (new Text (ChEMBL_MOLFILE, molfile));
+                }
+                if (null == ligand.getProperty(ChEMBL_INCHI)) {
+                    ligand.properties.add(new Text (ChEMBL_INCHI, inchi));
+                }
+                if (null == ligand.getProperty(ChEMBL_INCHI_KEY)) {
+                    ligand.properties.add
+                        (new Text (ChEMBL_INCHI_KEY, inchiKey));
+                }
+                if (null == ligand.getProperty(ChEMBL_SMILES)) {
+                    ligand.properties.add(new Text (ChEMBL_SMILES, smiles));
+                }
                 ligand.save();
                 
                 // now standardize and index
@@ -476,11 +484,17 @@ public class ChemblRegistry {
         pstm6.setLong(1, molregno);
         ResultSet rset = pstm6.executeQuery();
         int rows = 0;
+        Set<Long> acts = new HashSet<Long>();
         while (rset.next()) {
             Long tid = rset.getLong("tid");
             if (!tids.contains(tid)) {
                 continue;
             }
+            
+            Long actId = rset.getLong("activity_id");
+            if (acts.contains(actId))
+                continue;
+            acts.add(actId);
             
             String type = rset.getString("standard_type");
             Double value = rset.getDouble("standard_value");

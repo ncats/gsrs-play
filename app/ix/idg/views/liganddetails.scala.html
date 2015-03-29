@@ -1,10 +1,13 @@
 @import ix.core.models.Keyword
+@import ix.core.models.Text
 @import ix.core.models.Publication
 @import ix.idg.models.Ligand
+@import ix.idg.controllers.ChemblRegistry._
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
+@import java.net.URLEncoder
 
-@(ligand: Ligand, breadcrumb: List[Keyword])
+@(ligand: Ligand, activities: List[LigandActivity], breadcrumb: List[Keyword])
 
 @ix.ncats.views.html.main(ligand.getName(), ligand.getClass().getName()){
 @ligandmenu()	 
@@ -31,6 +34,124 @@
       }
     </div>
     <div class="row">
+      <div class="col-md-4">
+	<div class="panel panel-default">
+	  <div class="panel-body">
+	    <center>
+	      <img alt="Structure of @ligand.getName()"
+		   src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(ligand).id,"svg",150)'>
+	    </center>
+	  </div>
+	</div>
+	<div class="panel panel-default">
+          <div class="panel-body">
+            <table class="table table-striped">
+	      @for(syn <- ligand.getSynonyms()) {
+		    @syn.label match {
+		      case ChEMBL_ID => {
+		         <tr><td><a href="@syn.href">@syn.term</a></td></tr>
+		      }
+		      case WHO_ATC => {
+		         @if(syn.term.length() == 7) {
+			    <tr><td><a href="http://www.whocc.no/atc_ddd_index/?code=@syn.term">@syn.term</a></td></tr>
+			 }
+		      }
+		      case _ => {
+		        <tr>
+		        @if(syn.href.startsWith("http")) {
+			  <td><a href="@syn.href">@syn.term</a></td>
+			} else {
+		          <td>@syn.term [@syn.href]</td>
+			}
+			</tr>
+		      }
+		    }
+	      }
+	    </table>
+	  </div>
+	</div>
+      </div>
+      <div class="col-md-8">
+        <div class="panel panel-default">
+          <div class="panel-body">
+	    <table class="tree table">
+	      @for(act <- activities) {
+	         <tr class="treegrid-@act.target.id">
+		   <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(act.target))">@act.target.getName()</a></td>
+		   <td><span class="label label-@act.target.idgTDL.label"
+		          data-toggle="tooltip" data-html="true"
+			  title="<p align='left'>@act.target.idgTDL.desc</p>">@act.target.idgTDL</span></td>
+		 </tr>
+		 @for(a <- act.activities) {
+		   <tr class="treegrid-@a.id treegrid-parent-@act.target.id">
+		     <td>@a.label</td>
+		     <td>@a.numval @a.unit</td>
+		   </tr>
+		 }
+	      }
+	    </table>
+	  </div>
+         </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+	    <table class="table table-striped">
+	       @for(p <- ligand.getProperties()) {
+	         @p.label match {
+		   case ChEMBL_INCHI => {
+		     <tr>
+		       <td>InChI</td>
+		       <td><code>@p.asInstanceOf[Text].text</code></td>
+		     </tr>
+		   }
+		   case ChEMBL_INCHI_KEY => {
+		     <tr>
+		       <td>InChI Key</td>
+		       <td><code>@p.asInstanceOf[Text].text</code></td>
+		     </tr>
+		   }
+		   case ChEMBL_SMILES => {
+		     <tr>
+		       <td>Canonical SMILES</td>
+		       <td><code>@p.asInstanceOf[Text].text</code></td>
+		     </tr>
+		   }
+		   case _ => {
+		   }
+		 }
+	       }
+	    </table>
+          </div>
+        </div>
+       </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <div class="panel-body">
+                <table class="table table-striped">
+                  <tr>
+                    <th>PMID</th>
+                    <th>Title</th>
+                    <th>Topic</th>
+                  </tr>
+		  @for(pub <- ligand.getPublications()) {
+		     <tr>
+		        <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@pub.pmid">@pub.pmid</a></td>
+                        <td>@pub.title</td>
+			<td>
+			  @for(m <- pub.mesh) {
+			     <a class="label label-default" href='@{ix.idg.controllers.routes.IDGApp.ligands(null,8,1) + "?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
+			  }
+			</td>
+		     </tr>
+		  }
+    	        </table>
+	      </div>
+	    </div>
+	  </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -46,7 +167,7 @@ $(document).ready(function () {
   $('.tree').treegrid({
    expanderExpandedClass: 'fa fa-angle-down',
    expanderCollapsedClass: 'fa fa-angle-right',
-   initialState: 'collapsed'
+   initialState: 'expanded'
   });
 });
 </script>

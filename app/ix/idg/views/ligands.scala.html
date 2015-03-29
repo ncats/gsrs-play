@@ -4,6 +4,7 @@
 @import ix.idg.controllers.TcrdRegistry
 @import ix.idg.controllers.ChemblRegistry
 @import ix.ncats.controllers.App.FacetDecorator
+@import java.net.URLEncoder
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
      facets: Array[FacetDecorator], ligands: List[Ligand])
@@ -13,15 +14,37 @@
 <tr>
   <td>
     @defining(IDGApp.getStructure(lig)) { struc =>
-       @if(struc != null) {
+      @if(struc != null) {
+           <a  tabindex="-1"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="top"
+           data-trigger="click hover focus"
+           data-title="@lig.getName()"
+	   data-html="true"
+           data-content="<img src='@ix.ncats.controllers.routes.App.structure(struc.id,"svg",150)'>">
          <img alt="Structure of @IDGApp.getId(lig)"
-   	      src='@ix.ncats.controllers.routes.App.structure(struc.id,"svg",80)'>
+   	      src='@ix.ncats.controllers.routes.App.structure(struc.id,"svg",80)'></a>
        }
     }
   </td>
   <td class="valign-center"><a href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))">@lig.getName()</a></td>
-  <td></td>
-  <td></td>
+  <td class="valign-center">
+    @for(t <- IDGApp.getTDL(lig)) {
+      <span class="label label-@t.label" data-toggle="tooltip"
+          data-html="true" title="<p align='left'>@t.desc</p>">@t.name</span>
+    }
+  </td>
+  <td class="valign-center">
+  @defining(IDGApp.getMajorTopics(lig)) { mesh =>
+    @for(i <- 0 until Math.min(3,mesh.size())) {
+      <a class="label label-default" href='@{ix.idg.controllers.routes.IDGApp.ligands(null,8,1) + "?facet=MeSH/"}@URLEncoder.encode(mesh(i).heading,"utf8")'>@mesh(i).heading</a>
+    }
+    @if(mesh.size() > 3) {
+       <a class="label label-default" href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))">...</a>
+    }
+  }
+  </td>
 </tr>
 }
 
@@ -43,8 +66,8 @@ current, rows, total, pages, facets){ @ligandmenu() }{
   <tr>
     <th>Structure</th>
     <th>Name</th>
-    <th>Highest Developed Target</th>
-    <th>Target Family</th>
+    <th>Target Development</th>
+    <th>Topic</th>
   </tr>
   @for(lig <- ligands) {
      @tabrow(lig)

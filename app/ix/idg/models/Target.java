@@ -1,6 +1,7 @@
 package ix.idg.models;
 
 import java.util.List;
+import java.util.EnumSet;
 import java.util.ArrayList;
 
 import ix.core.models.Indexable;
@@ -61,6 +62,13 @@ public class Target extends EntityModel {
             this.label = label;
         }
         public String toString () { return name; }
+        public static TDL fromString (String s) {
+            for (TDL t : EnumSet.allOf(TDL.class)) {
+                if (t.name.equals(s))
+                    return t;
+            }
+            return null;
+        }
     }
         
     @Column(length=1024)

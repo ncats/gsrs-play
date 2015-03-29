@@ -15,7 +15,8 @@
       } else {
       <div class="col-md-12">
 	}
-      @if(request().getQueryString("q") != null) {
+	@if(request().getQueryString("q") != null
+	    || request().getQueryString("facet") != null) {
 	<div
 	   @if(total > 0) {
 	   class="alert alert-success alert-dismissible"
@@ -40,7 +41,7 @@
 	   data-html="true"
            data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a></h4></span>
 	    }
-	      case "Similarity" => {
+	     case "Similarity" => {
 	      <span><h4>Similarity Query:&nbsp; <a  href="#"
            tabindex="-1"
            data-toggle="popover"
@@ -52,7 +53,13 @@
            data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4></span>
 	    }
             case _ => {
-   	       <span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code></h4></span>
+	      @if(request().getQueryString("q") == null) {
+	         @for(f <- request().queryString().get("facet")) {
+	            <span><h4>@f.substring(0,f.indexOf('/')):&nbsp;<code>@f.substring(f.indexOf('/')+1)</code></h4></span>
+		 }
+	      } else {
+   	         <span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code></h4></span>
+	      }
 	    }
          }
       </div>

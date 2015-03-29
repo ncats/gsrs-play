@@ -6,9 +6,13 @@ import ix.core.controllers.PredicateFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Text;
 import ix.core.models.Value;
+import ix.core.models.VNum;
 import ix.core.models.XRef;
 import ix.core.models.Predicate;
 import ix.core.models.Structure;
+import ix.core.models.Mesh;
+import ix.core.models.EntityModel;
+import ix.core.models.Publication;
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
 import ix.idg.models.Disease;
@@ -73,6 +77,20 @@ public class IDGApp extends App {
         }
     }
 
+    public static class LigandActivity {
+        public final Target target;
+        public final List<VNum> activities = new ArrayList<VNum>();
+
+        LigandActivity (XRef ref) {
+            for (Value v : ref.properties) {
+                if (v instanceof VNum) {
+                    activities.add((VNum)v);
+                }
+            }
+            target = (Target)ref.deRef();           
+        }
+    }
+
     static class IDGFacetDecorator extends FacetDecorator {
         IDGFacetDecorator (Facet facet) {
             super (facet, true, 6);
@@ -88,13 +106,12 @@ public class IDGApp extends App {
             final String label = super.label(i);
             final String name = super.name();
             if (name.equals(Target.IDG_DEVELOPMENT)) {
-                for (Target.TDL tdl : EnumSet.allOf(Target.TDL.class)) {
-                    if (label.equalsIgnoreCase(tdl.name)) {
-                        return "<span class=\"label label-"+tdl.label+"\""
-                            +" data-toggle=\"tooltip\" data-placement=\"right\""
-                            +" data-html=\"true\" title=\"<p align='left'>"
-                            +tdl.desc+"</p>\">"+tdl.name+"</span>";
-                    }
+                Target.TDL tdl = Target.TDL.fromString(label);
+                if (tdl != null) {
+                    return "<span class=\"label label-"+tdl.label+"\""
+                        +" data-toggle=\"tooltip\" data-placement=\"right\""
+                        +" data-html=\"true\" title=\"<p align='left'>"
+                        +tdl.desc+"</p>\">"+tdl.name+"</span>";
                 }
                 assert false: "Unknown TDL label: "+label;
             }
@@ -757,6 +774,7 @@ public class IDGApp extends App {
                     breadcrumb.add(kw);
                 }
             }
+            
             if (!breadcrumb.isEmpty()) {
                 Collections.sort(breadcrumb, new Comparator<Keyword>() {
                         public int compare (Keyword kw1, Keyword kw2) {
@@ -777,8 +795,16 @@ public class IDGApp extends App {
                     }
                 }
             }
+            
+            List<LigandActivity> acts = new ArrayList<LigandActivity>();
+            for (XRef ref : ligand.getLinks()) {
+                if (ref.kind.equals(Target.class.getName())) {
+                    acts.add(new LigandActivity (ref));
+                }
+            }
+            
             return ok (ix.idg.views.html
-                       .liganddetails.render(ligand, breadcrumb));
+                       .liganddetails.render(ligand, acts, breadcrumb));
         }
         else {
             TextIndexer indexer = textIndexer.createEmptyInstance();
@@ -821,7 +847,31 @@ public class IDGApp extends App {
         }
         return null;
     }
+    
+    public static Set<Target.TDL> getTDL (EntityModel model) {
+        Set<Target.TDL> tdls = EnumSet.noneOf(Target.TDL.class);
+        for (XRef ref : model.getLinks()) {
+            if (ref.kind.equals(Target.class.getName())) {
+                for (Value v : ref.properties) {
+                    if (v.label.equals(Target.IDG_DEVELOPMENT)) {
+                        tdls.add(Target.TDL.fromString(((Keyword)v).term));
+                    }
+                }
+            }
+        }
+        return tdls;
+    }
 
+    public static List<Mesh> getMajorTopics (EntityModel model) {
+        List<Mesh> topics = new ArrayList<Mesh>();
+        for (Publication pub : model.getPublications()) {
+            for (Mesh m : pub.mesh) {
+                if (m.majorTopic)
+                    topics.add(m);
+            }
+        }
+        return topics;
+    }
 
     public static String getId (Disease d) {
         Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID, "UniProt");
