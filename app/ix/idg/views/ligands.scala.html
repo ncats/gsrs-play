@@ -11,7 +11,15 @@
 @tabrow(lig: Ligand) = {
 
 <tr>
-  <td><a href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getLigandId(lig))">@lig.getName()</a></td>
+  <td>
+    @defining(IDGApp.getStructure(lig)) { struc =>
+       @if(struc != null) {
+         <img alt="Structure of @IDGApp.getId(lig)"
+   	      src='@ix.ncats.controllers.routes.App.structure(struc.id,"svg",80)'>
+       }
+    }
+  </td>
+  <td class="valign-center"><a href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))">@lig.getName()</a></td>
   <td></td>
   <td></td>
 </tr>
@@ -33,6 +41,7 @@ current, rows, total, pages, facets){ @ligandmenu() }{
 }{
 <table class="table table-striped">
   <tr>
+    <th>Structure</th>
     <th>Name</th>
     <th>Highest Developed Target</th>
     <th>Target Family</th>

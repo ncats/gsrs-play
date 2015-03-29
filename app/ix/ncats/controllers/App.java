@@ -1,11 +1,11 @@
 package ix.ncats.controllers;
 
+import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.io.*;
 import java.util.concurrent.Callable;
 
 import play.Logger;
@@ -24,6 +24,8 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.chem.StructureProcessor;
+import ix.core.models.Structure;
+import ix.core.controllers.StructureFactory;
 import ix.utils.Util;
 
 import chemaxon.formats.MolImporter;
@@ -31,6 +33,19 @@ import chemaxon.struc.Molecule;
 import chemaxon.struc.MolAtom;
 import chemaxon.struc.MolBond;
 import chemaxon.util.MolHandler;
+
+import java.awt.Dimension;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import org.freehep.graphicsio.svg.SVGGraphics2D;
+
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalAtom;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncgc.chemical.ChemicalRenderer;
+import gov.nih.ncgc.chemical.DisplayParams;
+import gov.nih.ncgc.nchemical.NchemicalRenderer;
+import gov.nih.ncgc.jchemical.Jchemical;
 
 
 /**
@@ -520,7 +535,7 @@ public class App extends Controller {
         }
     }
 
-    public static Result render (final String value, final int size) {
+    public static Result renderOld (final String value, final int size) {
         String key = Util.sha1(value)+"::"+size;
         Result result = null;
         try {
@@ -549,5 +564,124 @@ public class App extends Controller {
         }
         response().setContentType("image/svg+xml");
         return result;
+    }
+
+    public static Result render (final String value, final int size) {
+        String key = Util.sha1(value)+"::"+size;
+        try {
+            return getOrElse (0l, key, new Callable<Result>() {
+                    public Result call () throws Exception {
+                        MolHandler mh = new MolHandler (value);
+                        Molecule mol = mh.getMolecule();
+                        if (mol.getDim() < 2) {
+                            mol.clean(2, null);
+                        }
+                        return ok (render (mol, "svg", size));
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Not a valid molecule:\n"+value, ex);
+            ex.printStackTrace();
+            return badRequest ("Not a valid molecule: "+value);
+        }
+    }
+
+    public static Result rendertest () {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream ();
+            int size = 400;
+            SVGGraphics2D svg = new SVGGraphics2D
+                (bos, new Dimension (size, size));
+            svg.startExport();
+            Chemical chem = new Jchemical ();
+            chem.load("c1ccncc1", Chemical.FORMAT_SMILES);
+            chem.clean2D();
+            
+            ChemicalRenderer cr = new NchemicalRenderer();
+
+            BufferedImage bi = cr.createImage(chem, 200);
+            //ImageIO.write(bi, "png", bos); 
+
+            cr.renderChem(svg, chem, size, size, false);
+            svg.endExport();
+            svg.dispose();
+            
+            response().setContentType("image/svg+xml");
+            //response().setContentType("image/png");
+            return ok(bos.toByteArray());
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
+    }
+
+    public static byte[] render (Molecule mol, String format, int size)
+        throws Exception {
+        Chemical chem = new Jchemical ();
+        chem.load(mol.toFormat("mol"), Chemical.FORMAT_SDF);
+        ChemicalAtom[] atoms = chem.getAtomArray();
+        for (int i = 0; i < Math.min(atoms.length, 10); ++i) {
+            atoms[i].setAtomMap(i+1);
+        }
+        
+        ChemicalRenderer render = new NchemicalRenderer
+            (/*new DisplayParams().withSubstructureHighlight()*/);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
+        if (format.equals("svg")) {
+            SVGGraphics2D svg = new SVGGraphics2D
+                (bos, new Dimension (size, size));
+            svg.startExport();
+            render.renderChem(svg, chem, size, size, false);
+            svg.endExport();
+            svg.dispose();
+        }
+        else {
+            BufferedImage bi = render.createImage(chem, size);
+            ImageIO.write(bi, "png", bos); 
+        }
+        
+        return bos.toByteArray();
+    }
+    
+    public static byte[] render (Structure struc, String format, int size)
+        throws Exception {
+        MolHandler mh = new MolHandler
+            (struc.molfile != null ? struc.molfile : struc.smiles);
+        Molecule mol = mh.getMolecule();
+        if (mol.getDim() < 2) {
+            mol.clean(2, null);
+        }
+        return render (mol, format, size);
+    }
+
+    public static Result structure (final long id,
+                                    final String format, final int size) {
+        String key = Structure.class.getName()+"."+id+"."+size+"."+format;
+        String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
+        try {
+            Result result = getOrElse (0l, key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        Structure struc = StructureFactory.getStructure(id);
+                        if (struc != null) {
+                            return ok (render (struc, format, size));
+                        }
+                        return null;
+                    }
+                });
+            if (result != null) {
+                response().setContentType(mime);
+                return result;
+            }
+            return notFound ("Not a valid structure "+id);
+        }
+        catch (Exception ex) {
+            Logger.error("Can't generate image for structure "
+                         +id+" format="+format+" size="+size, ex);
+            ex.printStackTrace();
+            return internalServerError
+                ("Unable to retrieve image for structure "+id);
+        }
     }
 }

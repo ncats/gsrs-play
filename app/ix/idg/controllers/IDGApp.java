@@ -8,6 +8,7 @@ import ix.core.models.Text;
 import ix.core.models.Value;
 import ix.core.models.XRef;
 import ix.core.models.Predicate;
+import ix.core.models.Structure;
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
 import ix.idg.models.Disease;
@@ -194,7 +195,7 @@ public class IDGApp extends App {
         TcrdRegistry.DEVELOPMENT,
         TcrdRegistry.FAMILY,
         UniprotRegistry.TARGET,
-        "MeSH"
+        //"MeSH"
     };
 
     public static final String[] ALL_FACETS = {
@@ -270,7 +271,7 @@ public class IDGApp extends App {
         }
     }
 
-    public static String getTargetId (Target t) {
+    public static String getId (Target t) {
         Keyword kw = t.getSynonym(UniprotRegistry.ACCESSION);
         return kw != null ? kw.term : null;
     }
@@ -520,6 +521,7 @@ public class IDGApp extends App {
         return ancestry.toArray(new Keyword[0]);
     }
 
+
     public static Keyword[] getProteinAncestry (String facet) {
         return getAncestry (facet, ChemblRegistry.ChEMBL_PROTEIN_ANCESTRY);
     }
@@ -533,7 +535,7 @@ public class IDGApp extends App {
                 else if (Disease.class.getName().equals(kind))
                     return redirect (routes.IDGApp.diseases(q, 10, 1));
                 else if (Ligand.class.getName().equals(kind))
-                    return redirect (routes.IDGApp.ligands(q, 30, 1));
+                    return redirect (routes.IDGApp.ligands(q, 8, 1));
             }
             
             // generic entity search..
@@ -647,12 +649,33 @@ public class IDGApp extends App {
             filter (Target.class, result.getMatches(), max);
         List<Disease> diseases =
             filter (Disease.class, result.getMatches(), max);
+        List<Ligand> ligands = filter (Ligand.class, result.getMatches(), max);
         
         return ok (ix.idg.views.html.search.render
                    (query, total, decorate (facets),
                     targets, totalTargets, diseases, totalDiseases));
     }
 
+    public static Keyword getATC (final Keyword kw) throws Exception {
+        final String key = kw.label+" "+kw.term;
+        return getOrElse (0l, key, new Callable<Keyword>() {
+                public Keyword call () {
+                    List<Keyword> kws = KeywordFactory.finder.where()
+                        .eq("label", key).findList();
+                    if (!kws.isEmpty()) {
+                        Keyword n = kws.iterator().next();
+                        String url = ix.idg.controllers
+                            .routes.IDGApp.ligands(null, 8, 1).url();
+                        n.term = n.term.toLowerCase();
+                        n.href = url + (url.indexOf('?') > 0?"&":"?")
+                            +"facet="+kw.label+"/"+kw.term;
+                        return n;
+                    }
+                    return null;
+                }
+            });
+    }
+    
     public static Result ligands (final String q,
                                   final int rows, final int page) {
         try {
@@ -727,6 +750,33 @@ public class IDGApp extends App {
             Ligand ligand = ligands.iterator().next();
             
             List<Keyword> breadcrumb = new ArrayList<Keyword>();
+            for (Keyword kw : ligand.synonyms) {
+                if (kw.label.equals(ChemblRegistry.WHO_ATC)
+                    // don't include the leaf node
+                    && kw.term.length() < 7) {
+                    breadcrumb.add(kw);
+                }
+            }
+            if (!breadcrumb.isEmpty()) {
+                Collections.sort(breadcrumb, new Comparator<Keyword>() {
+                        public int compare (Keyword kw1, Keyword kw2) {
+                            return kw1.term.compareTo(kw2.term);
+                        }
+                    });
+                for (Keyword kw : breadcrumb) {
+                    try {
+                        Keyword atc = getATC (kw);
+                        if (atc != null) {
+                            kw.term = atc.term;
+                            kw.href = atc.href;
+                        }
+                    }
+                    catch (Exception ex) {
+                        Logger.error("Can't retreive ATC "+kw.term, ex);
+                        ex.printStackTrace();
+                    }
+                }
+            }
             return ok (ix.idg.views.html
                        .liganddetails.render(ligand, breadcrumb));
         }
@@ -760,12 +810,20 @@ public class IDGApp extends App {
     /**
      * return the canonical/default ligand id
      */
-    public static String getLigandId (Ligand ligand) {
+    public static String getId (Ligand ligand) {
         return ligand.getName();
+    }
+    public static Structure getStructure (Ligand ligand) {
+        for (XRef xref : ligand.getLinks()) {
+            if (xref.kind.equals(Structure.class.getName())) {
+                return (Structure)xref.deRef();
+            }
+        }
+        return null;
     }
 
 
-    public static String getDiseaseId (Disease d) {
+    public static String getId (Disease d) {
         Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID, "UniProt");
         return kw != null ? kw.term : null;
     }

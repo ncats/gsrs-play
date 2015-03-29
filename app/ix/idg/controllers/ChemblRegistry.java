@@ -543,13 +543,13 @@ public class ChemblRegistry {
             Logger.warn
                 ("Target "+target.id+" ("+target.name
                  +") has no "+UniprotRegistry.ACCESSION+" synonym!");
-            return null;
+            return new HashSet<Long>();
         }
         else if (chemblIds == null || chemblIds.isEmpty()) {
             Logger.warn
                 ("Target "+target.id+" ("+target.name
                  +") accession "+acc+" has no chembl_id mapping!");
-            return null;
+            return new HashSet<Long>();
         }
 
         Set<Long> tids = new TreeSet<Long>();

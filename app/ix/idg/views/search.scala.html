@@ -12,7 +12,7 @@ diseases: List[Disease], totalDiseases: Int)
 
 @tabrow(t: Target) = {
 <tr>
-  <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getTargetId(t))">@t.name</a></td>
+  <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
   <td>@t.idgTDL</td>
   <td>@t.idgFamily</td>
 </tr>
@@ -80,7 +80,7 @@ diseases: List[Disease], totalDiseases: Int)
 	    </tr>
 	    @for(d <- diseases) {
 	    <tr>
-	      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getDiseaseId(d))">@d.name</a></td>
+	      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(d))">@d.name</a></td>
 	      <td>@d.description</td>
 	    </tr>
             }

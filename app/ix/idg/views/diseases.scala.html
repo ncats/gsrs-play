@@ -17,7 +17,7 @@
 @tabrow(t: Disease) = {
     <tr>
         <td>@getdoid(t)</td>
-        <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getDiseaseId(t))">@t.name.capitalize</a></td>
+        <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(t))">@t.name.capitalize</a></td>
         <td>@if(t.getDescription() != null){
             @t.getDescription().replace("_", " ")
         } else {}</td>

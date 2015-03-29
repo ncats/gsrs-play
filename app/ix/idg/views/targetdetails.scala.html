@@ -30,7 +30,7 @@
 @diseaserow(dr: DiseaseRelevance) = {
    @if(dr.zscore != null) {
      <tr class="treegrid-@dr.disease.id">
-       <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getDiseaseId(dr.disease))">@dr.disease.name</a></td>
+       <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
        <td>@dr.zscore</td>
        <td>@dr.conf</td>
      </tr>
@@ -38,7 +38,7 @@
      @for(i <- 0 until dr.lineage.size()) {
        @defining(dr.lineage(i)) { x =>	    
          <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
-            <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getDiseaseId(x.disease))">@x.disease.name</a></td>
+            <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(x.disease))">@x.disease.name</a></td>
             <td>@x.zscore</td>
             <td>@x.conf</td>
          </tr>
@@ -187,7 +187,7 @@
             <h3 class="panel-title">UniProt Disease Relevance</h3>
           </div>
           <div class="panel-body">
-            <table class="table table">
+            <table class="table table-striped">
               <tr>
                 <th>Disease</th>
                 <th>OMIM</th>
@@ -196,7 +196,7 @@
               @for(dr <- diseases) {
                 @if(dr.comment != null) {
                 <tr>
-                  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getDiseaseId(dr.disease))">@dr.disease.name</a></td>
+                  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
                   @if(dr.omim != null) {
                   <td><a href="@dr.omim.href">@dr.omim.term</a></td>
                   } else {

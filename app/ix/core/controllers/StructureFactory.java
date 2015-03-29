@@ -20,7 +20,10 @@ public class StructureFactory extends EntityFactory {
     
     public static final Model.Finder<Long, Structure> finder = 
         new Model.Finder(Long.class, Structure.class);
-    
+
+    public static Structure getStructure (Long id) {
+        return getEntity (id, finder);
+    }
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);

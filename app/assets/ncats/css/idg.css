@@ -14,3 +14,7 @@
 
 .twitter-typeahead {
 }
+
+.table tbody>tr>td.valign-center {
+    vertical-align: middle;
+}
