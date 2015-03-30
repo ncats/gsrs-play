@@ -39,11 +39,14 @@
 	  <div class="panel-body">
 	    <center>
 	      <img alt="Structure of @ligand.getName()"
-		   src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(ligand).id,"svg",150)'>
+		   src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(ligand).id,"svg",200)'>
 	    </center>
 	  </div>
 	</div>
 	<div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Synonyms</h3>
+          </div>
           <div class="panel-body">
             <table class="table table-striped">
 	      @for(syn <- ligand.getSynonyms()) {
@@ -73,6 +76,9 @@
       </div>
       <div class="col-md-8">
         <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Target Relevance</h3>
+          </div>
           <div class="panel-body">
 	    <table class="tree table">
 	      @for(act <- activities) {
@@ -93,6 +99,9 @@
 	  </div>
          </div>
         <div class="panel panel-default">
+          <div class="panel-heading">
+              <h3 class="panel-title">Molecular Definitions</h3>
+          </div>
           <div class="panel-body">
 	    <table class="table table-striped">
 	       @for(p <- ligand.getProperties()) {
@@ -127,6 +136,9 @@
       <div class="row">
         <div class="col-md-12">
           <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Publications</h3>
+            </div>
             <div class="panel-body">
               <div class="panel-body">
                 <table class="table table-striped">

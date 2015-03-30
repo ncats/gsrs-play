@@ -22,6 +22,9 @@ import ix.utils.Util;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.ncats.controllers.App;
 
+import tripod.chem.indexer.StructureIndexer;
+import static tripod.chem.indexer.StructureIndexer.ResultEnumeration;
+
 import play.Logger;
 import play.cache.Cache;
 import play.libs.ws.WS;
@@ -546,6 +549,7 @@ public class IDGApp extends App {
     public static Result search (String kind) {
         try {
             String q = request().getQueryString("q");
+            String t = request().getQueryString("type");
             if (kind != null && !"".equals(kind)) {
                 if (Target.class.getName().equals(kind))
                     return redirect (routes.IDGApp.targets(q, 30, 1));
@@ -553,6 +557,20 @@ public class IDGApp extends App {
                     return redirect (routes.IDGApp.diseases(q, 10, 1));
                 else if (Ligand.class.getName().equals(kind))
                     return redirect (routes.IDGApp.ligands(q, 8, 1));
+            }
+            else if ("substructure".equalsIgnoreCase(t)) {
+                String url = routes.IDGApp.ligands(q, 8, 1).url()
+                    +"&type="+t;
+                return redirect (url);
+            }
+            else if ("similarity".equalsIgnoreCase(t)) {
+                String cutoff = request().getQueryString("cutoff");
+                if (cutoff == null) {
+                    cutoff = "0.8";
+                }
+                String url = routes.IDGApp.ligands(q, 8, 1).url()
+                    +"&type="+t+"&cutoff="+cutoff;
+                return redirect (url);
             }
             
             // generic entity search..
@@ -710,7 +728,32 @@ public class IDGApp extends App {
     
     static Result _ligands (final String q, int rows, final int page)
         throws Exception {
-        Logger.debug("ligands: q="+q+" rows="+rows+" page="+page);
+        String type = request().getQueryString("type");
+        
+        Logger.debug("ligands: q="+q+" type="+type+" rows="+rows+" page="+page);
+        if (type != null && (type.equalsIgnoreCase("substructure")
+                             || type.equalsIgnoreCase("similarity"))) {
+            // structure search
+            String cutoff = request().getQueryString("cutoff");
+            Logger.debug("Search: q="+q+" type="+type+" cutoff="+cutoff);
+            try {
+                if (type.equalsIgnoreCase("substructure")) {
+                    return substructure (q, rows, page);
+                }
+                else {
+                    return similarity
+                        (q, Double.parseDouble(cutoff), rows, page);
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            
+            return notFound (ix.idg.views.html.error.render
+                             (400, "Invalid search parameters: type=\""+type
+                              +"\"; q=\""+q+"\" cutoff=\""+cutoff+"\"!"));
+        }
+
         final int total = LigandFactory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
             TextIndexer.SearchResult result =
@@ -873,6 +916,113 @@ public class IDGApp extends App {
         return topics;
     }
 
+    public static Result structureResult
+        (TextIndexer indexer, int rows, int page) throws Exception {
+        TextIndexer.SearchResult result = SearchFactory.search
+            (indexer, Ligand.class, null, indexer.size(), 0, FACET_DIM,
+             request().queryString());
+
+        TextIndexer.Facet[] facets = filter (result.getFacets(), LIGAND_FACETS);
+        List<Ligand> ligands = new ArrayList<Ligand>();
+        int[] pages = new int[0];
+        if (result.count() > 0) {
+            rows = Math.min(result.count(), Math.max(1, rows));
+            pages = paging (rows, page, result.count());
+            
+            for (int i = (page-1)*rows, j = 0; j < rows
+                     && i < result.count(); ++j, ++i) {
+                ligands.add((Ligand)result.getMatches().get(i));
+            }
+        }
+        
+        return ok (ix.idg.views.html.ligands.render
+                   (page, rows, result.count(),
+                    pages, decorate (facets), ligands));
+    }
+
+    static TextIndexer createIndexer (ResultEnumeration results)
+        throws Exception {
+        long start = System.currentTimeMillis();        
+        TextIndexer indexer = textIndexer.createEmptyInstance();
+        int count = 0;
+        while (results.hasMoreElements()) {
+            StructureIndexer.Result r = results.nextElement();
+            /*
+            Logger.debug(r.getId()+" "+r.getSource()+" "
+                         +r.getMol().toFormat("smiles"));
+            */
+            List<Ligand> ligands = LigandFactory.finder
+                .where(Expr.and(Expr.eq("links.kind",
+                                        Structure.class.getName()),
+                                Expr.eq("links.refid", r.getId())))
+                .findList();
+            for (Ligand ligand : ligands) {
+                indexer.add(ligand);
+            }
+            ++count;
+        }
+        
+        double ellapsed = (System.currentTimeMillis() - start)*1e-3;
+        Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
+                                   +"%2$d structures...",
+                                   ellapsed, count));
+        return indexer;
+    }
+
+    public static Result similarity (final String query,
+                                     final double threshold,
+                                     int rows, int page) {
+        try {
+            String key = "similarity::"+Util.sha1(query)
+                +"::"+String.format("%1$d", (int)(1000*threshold+.5));
+            TextIndexer indexer = getOrElse
+                (strucIndexer.lastModified(),
+                 key, new Callable<TextIndexer> () {
+                         public TextIndexer call () throws Exception {
+                            ResultEnumeration results =
+                                 strucIndexer.similarity(query, threshold, 0);
+                            return createIndexer (results);
+                         }
+                     });
+            
+            return structureResult (indexer, rows, page);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't execute similarity search", ex);
+        }
+        
+        return internalServerError
+            (ix.idg.views.html.error.render
+             (500, "Unable to perform similarity search: "+query));
+    }
+    
+    public static Result substructure
+        (final String query, int rows, int page) {
+        Logger.debug("substructure: query="+query+" rows="+rows+" page="+page);
+        try {
+            String key = "substructure::"+Util.sha1(query);
+            TextIndexer indexer = getOrElse
+                (strucIndexer.lastModified(),
+                 key, new Callable<TextIndexer> () {
+                         public TextIndexer call () throws Exception {
+                            ResultEnumeration results =
+                                 strucIndexer.substructure(query, 0);
+                            return createIndexer (results);
+                         }
+                     });
+            
+            return structureResult (indexer, rows, page);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        
+        return internalServerError
+            (ix.idg.views.html.error.render
+             (500, "Unable to perform substructure search: "+query));
+    }
+    
     public static String getId (Disease d) {
         Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID, "UniProt");
         return kw != null ? kw.term : null;

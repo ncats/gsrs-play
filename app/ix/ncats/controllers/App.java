@@ -569,6 +569,7 @@ public class App extends Controller {
     public static Result render (final String value, final int size) {
         String key = Util.sha1(value)+"::"+size;
         try {
+            response().setContentType("image/svg+xml");
             return getOrElse (0l, key, new Callable<Result>() {
                     public Result call () throws Exception {
                         MolHandler mh = new MolHandler (value);
