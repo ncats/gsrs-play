@@ -1,0 +1,50 @@
+<!-- Modal -->
+<div class="modal fade" id="addnamelist" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabelimport" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabelimport">Add a list of
+					names</h4>
+			</div>
+			<div class="modal-body">
+<!-- 				<form class="form-horizontal" role="form" method="POST" -->
+<!-- 					action="@ix.ginas.controllers.routes.GinasMain.namesList()" -->
+<!-- 					id="names-list" name ="nameList"> -->
+				<form class="horizontal" name="nameForm"
+						ng-controller="NameController as nameCtrl" ng-submit="nameForm.$valid && nameCtrl.addName(chemical)" novalidate>	
+
+					<div class="form-group">
+						<div class="col-md-3">
+							<label for="exampleInputFile">Load File</label> <input
+								type="button" value="Choose File"
+								onclick="window.FileContentsGrabber.append('list')"
+								id="exampleInputFile">
+							<p class="help-block">or</p>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-md-12">
+							<label for="description-det">Enter a list of
+								newline-separated names:</label>
+							<textarea class="form-control" rows="6" id="list" name="names"  ng-model="nameCtrl.name.name" ></textarea>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+						<button type="submit" class="btn btn-default">Import</button>
+					</div>
+				</form>
+				
+			
+           
+				
+				
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,22 +1,57 @@
 package ix.ginas.controllers;
 
-import java.io.*;
-import java.util.*;
+import ix.core.controllers.EntityFactory;
+import ix.core.models.Principal;
+import play.Logger;
+import play.db.ebean.Model;
+import play.mvc.Result;
 
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Transaction;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+public class GinasFactory extends EntityFactory {
+	public static final Model.Finder<Long, Principal> finder = 
+			new Model.Finder(Long.class, Principal.class);
 
-import ix.ginas.models.*;
+	public static Result index () {
+		return ok (ix.ginas.views.html.index.render());
+	}
 
-public class GinasFactory extends Controller {
-    public static Result index () {
-        return ok ("Welcome to GInAS!");
-    }
+	public static Result register () {
+		return ok (ix.ginas.views.html.register.render());
+	}
+
+	public static Result chemical () {
+		return ok (ix.ginas.views.html.chemical.render());
+	}
+	//    public static Result chemical (String smile, List<Structure> results) {
+	//        return ok (ix.ginas.views.html.chemical.render(smile,results));
+	//    }
+
+	public static Result sequence (String kind) {
+		return ok (ix.ginas.views.html.sequence.render(kind));
+	}
+
+	public static Result report () {
+		return ok (ix.ginas.views.html.report.render());
+	}
+	public static Result wizard (String kind) {
+		Logger.info(kind);
+		return ok (ix.ginas.views.html.wizard.render(kind));
+	}
+
+	public static Principal byUsername (String user) {
+		return finder.where().eq("username", user).findUnique();
+	} 
+
+	public static Principal registerIfAbsent (String user) {
+		Principal p = byUsername(user);
+		if (p == null) {
+			p = new Principal();
+			p.username = user;
+			p.save();
+		}
+		return p;
+	}
+
 }

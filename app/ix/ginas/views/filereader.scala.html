@@ -1,0 +1,65 @@
+<script>
+var FileContentsGrabber = {
+   getFileContents: function (callback){
+        var b=this;
+        this.grabFile(function(file){
+            b.importFile(file,callback);
+        });
+    },
+   grabFile: function (callback){
+	    //should always work, theoretically
+	   
+        var ip=document.createElement("INPUT");
+        ip.setAttribute("style","display:none");
+        ip.type="file";
+        ip.name="file";
+        ip.accept="chemical/*";
+        document.body.appendChild(ip);
+        ip.click();
+        ip.addEventListener('change', function(evt){
+               document.body.removeChild(ip); 
+               callback(evt.target.files[0]);
+        }, false);    
+  },
+  importFile : function(afile,callback) {
+	//This may only work if filereader is supported
+	
+	  
+    var reader = new FileReader();
+    reader.onerror = function(e){
+        alert("Error reading file");
+    };
+    reader.onprogress = function(e){
+    	
+    };
+    reader.onabort = function(e) {
+    	alert('File read cancelled');
+    };
+    reader.onloadstart = function(e) {
+    	
+    };
+    reader.onload = function(e) {
+      callback(e.target.result);
+    };
+    
+    reader.readAsText(afile);
+  },
+  append : function (target){
+	  	this.getFileContents(function(txt){
+	  		$('#' + target).append(txt);
+	  	});
+	  	
+// 		console.log(target);
+		
+// 	    var temp = $('#json-sequence');
+// 	    console.log(temp);
+// 	    $('#json-sequence').append(a);
+	    },
+  moldata : function(target){
+	  var mol = $('#' + target).append(txt);
+	  console.log(mol);
+  }
+};
+
+
+</script>
