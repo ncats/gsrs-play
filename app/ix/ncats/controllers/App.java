@@ -366,6 +366,26 @@ public class App extends Controller {
         return new ArrayList<Facet>();
     }
 
+    public static List<String> getUnspecifiedFacets
+        (final FacetDecorator[] decors) {
+        String[] facets = request().queryString().get("facet");
+        List<String> unspec = new ArrayList<String>();
+        if (facets != null && facets.length > 0) {
+            for (String f : facets) {
+                int matches = 0;
+                for (FacetDecorator d : decors) {
+                    //Logger.debug(f+" <=> "+d.facet.getName());              
+                    if (f.startsWith(d.facet.getName())) {
+                        ++matches;
+                    }
+                }
+                if (matches == 0)
+                    unspec.add(f);
+            }
+        }
+        return unspec;
+    }
+
     public static Facet[] filter (List<Facet> facets, String... names) {
         if (names == null || names.length == 0)
             return facets.toArray(new Facet[0]);
