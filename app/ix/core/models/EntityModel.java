@@ -162,4 +162,8 @@ public abstract class EntityModel extends IxModel {
                 return v;
         return null;
     }
+    
+    public boolean hasProperty (String label) {
+        return null != getProperty (label);
+    }
 }

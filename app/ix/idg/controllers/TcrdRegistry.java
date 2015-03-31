@@ -9,12 +9,14 @@ import com.jolbox.bonecp.BoneCPDataSource;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.NamespaceFactory;
 import ix.core.controllers.PredicateFactory;
+import ix.core.controllers.PublicationFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Namespace;
 import ix.core.models.Predicate;
 import ix.core.models.Publication;
 import ix.core.models.Text;
 import ix.core.models.VNum;
+import ix.core.models.VInt;
 import ix.core.models.XRef;
 import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
@@ -75,6 +77,9 @@ public class TcrdRegistry extends Controller {
     public static final String CONF = "IDG Confidence";
     public static final String GENERIF = "IDG GeneRIF";
     public static final String TARGET = "IDG Target";
+    public static final String TINX_NOVELTY = "TINX Novelty";
+    public static final String TINX_IMPORTANCE = "TINX Importance";
+    public static final String TINX_PUBLICATION = "TINX Publication";
 
     static final Model.Finder<Long, Target> targetDb = 
         new Model.Finder(Long.class, Target.class);
@@ -102,10 +107,11 @@ public class TcrdRegistry extends Controller {
         String tdl;
         Long id;
         Long protein;
+        Double novelty;
 
         TcrdTarget () {}
         TcrdTarget (String acc, String family, String tdl,
-                    Long id, Long protein) {
+                    Long id, Long protein, Double novelty) {
             this.acc = acc;
             if ("nr".equalsIgnoreCase(family))
                 this.family = "Nuclear Receptor";
@@ -116,6 +122,7 @@ public class TcrdRegistry extends Controller {
             this.tdl = tdl;
             this.id = id;
             this.protein = protein;
+            this.novelty = novelty;
         }
 
         public int hashCode () {
@@ -148,8 +155,16 @@ public class TcrdRegistry extends Controller {
             this.con = con;
             this.ctx = ctx;
             this.targets = targets;
+            /*
             pstm = con.prepareStatement
                 ("select * from target2disease where target_id = ?");
+            */
+            pstm = con.prepareStatement
+                ("select * from target2disease a, t2tc b, tinx_importance c "
+                 +"where a.target_id = ? "
+                 +"and a.target_id = b.target_id "
+                 +"and b.protein_id = c.protein_id "
+                 +"and a.doid = c.doid");
             pstm2 = con.prepareStatement
                 ("select * from chembl_activity where target_id = ?");
             pstm3 = con.prepareStatement
@@ -191,6 +206,11 @@ public class TcrdRegistry extends Controller {
             Logger.debug("...uniprot registration");
             UniprotRegistry uni = new UniprotRegistry ();
             uni.register(target, t.acc);
+            
+            if (t.novelty != null) {
+                VNum novelty = new VNum (TINX_NOVELTY, t.novelty);
+                target.properties.add(novelty);
+            }
 
             Logger.debug("...disease linking");
             pstm.setLong(1, t.id);
@@ -277,6 +297,8 @@ public class TcrdRegistry extends Controller {
                     
                     double zscore = rs.getDouble("zscore");
                     double conf = rs.getDouble("conf");
+                    double tinx = rs.getDouble("c.score");
+                    String pmids = rs.getString("pmids");
                     
                     XRef xref = null;
                     for (XRef ref : target.links) {
@@ -300,6 +322,25 @@ public class TcrdRegistry extends Controller {
                         xref.properties.add(kw);
                         xref.properties.add(new VNum (ZSCORE, zscore));
                         xref.properties.add(new VNum (CONF, conf));
+                        xref.properties.add(new VNum (TINX_IMPORTANCE, tinx));
+                        if (pmids != null) {
+                            for (String p : pmids.split("\\|")) {
+                                p = p.trim();
+                                try {
+                                    long pmid = Long.parseLong(p);
+                                    Publication pub = PublicationFactory
+                                        .registerIfAbsent(pmid);
+                                    VInt vi =
+                                        new VInt (TINX_PUBLICATION, pmid);
+                                    xref.properties.add(vi);
+                                }
+                                catch (Exception ex) {
+                                    Logger.error("Can't register PMID "+p,
+                                                 ex);
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }
                         xref.save();
                         target.links.add(xref);
                         //target.update();
@@ -645,9 +686,10 @@ public class TcrdRegistry extends Controller {
         int count = 0;
         try {
             ResultSet rset = stm.executeQuery
-                ("select * from t2tc a, target b, protein c\n"+
-                 "where a.target_id = b.id\n"+
-                 "and a.protein_id = c.id "
+                ("select * from t2tc a, target b, protein c, tinx_novelty d\n"
+                 +"where a.target_id = b.id\n"
+                 +"and a.protein_id = c.id "
+                 +"and a.protein_id = d.id "
                  +" order by c.id, c.uniprot "           
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
@@ -663,12 +705,15 @@ public class TcrdRegistry extends Controller {
                 String fam = rset.getString("idgfam");
                 String tdl = rset.getString("tdl");
                 String acc = rset.getString("uniprot");
+                Double novelty = rset.getDouble("d.score");
+                if (rset.wasNull())
+                    novelty = null;
                 List<Target> tlist = targetDb
                     .where().eq("synonyms.term", acc).findList();
                 
                 if (tlist.isEmpty()) {
                     TcrdTarget t =
-                        new TcrdTarget (acc, fam, tdl, id, protId);
+                        new TcrdTarget (acc, fam, tdl, id, protId, novelty);
                     targets.add(t);
                 }
             }

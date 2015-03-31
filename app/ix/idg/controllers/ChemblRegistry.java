@@ -57,12 +57,12 @@ public class ChemblRegistry {
 
         public String getSource () { return namespace.name; }
         public void receive (Status status, String mesg, Structure struc) {
-            //Logger.debug(status+": ligand "+ligand.getName());
+            //Logger.debug(status+": ligand "+ligand.getName()+" struc "+struc);
             if (status == Status.OK) {
                 try {
                     if (struc != null) {
                         struc.namespace = namespace;
-                        struc.update();
+                        //struc.save();
                         
                         XRef xref = new XRef (struc);
                         xref.namespace = namespace;
@@ -193,8 +193,10 @@ public class ChemblRegistry {
     public void instruments (Target target, List<Ligand> ligands)
         throws SQLException {
         Set<Long> tids = target (target);
-        for (Ligand ligand : ligands) 
-            ligand (tids, target, ligand);
+        if (tids != null) {
+            for (Ligand ligand : ligands) 
+                ligand (tids, target, ligand);
+        }
     }
 
     void ligand (final Set<Long> tids,
@@ -334,40 +336,39 @@ public class ChemblRegistry {
         while (rset.next()) {
             Long id = rset.getLong("molregno");
             assert id != null: "molregno is null!";
-            if (molregno.contains(id))
-                continue;
-            newids.add(id);
-
-            String syn = rset.getString("synonyms");
-            if (syn != null) {
-                Keyword kw = new Keyword (ChEMBL_SYNONYM, syn);
-                String type = rset.getString("syn_type");
-                kw.href = type;
-                ligand.synonyms.add(kw);
-                syns.put(type, syn);
-            }
-
-            String smi = rset.getString("canonical_smiles");
-            if (molfile == null || smiles.length() > smi.length()) {
-                molfile = rset.getString("molfile");
-                inchi = rset.getString("standard_inchi");
-                inchiKey = rset.getString("standard_inchi_key");
-                smiles = smi;
-            }
-            
-            if (chemblId == null) {
-                chemblId = rset.getString("chembl_id");
-                Keyword kw = KeywordFactory.registerIfAbsent
-                    (ChEMBL_ID, chemblId,
-                     "https://www.ebi.ac.uk/chembl/compound/inspect/"+chemblId);
-                ligand.addIfAbsent(kw);
+            if (!molregno.contains(id)) {
+                String syn = rset.getString("synonyms");
+                if (syn != null) {
+                    Keyword kw = new Keyword (ChEMBL_SYNONYM, syn);
+                    String type = rset.getString("syn_type");
+                    kw.href = type;
+                    ligand.synonyms.add(kw);
+                    syns.put(type, syn);
+                }
+                
+                String smi = rset.getString("canonical_smiles");
+                if (molfile == null || smiles.length() > smi.length()) {
+                    molfile = rset.getString("molfile");
+                    inchi = rset.getString("standard_inchi");
+                    inchiKey = rset.getString("standard_inchi_key");
+                    smiles = smi;
+                }
+                
+                if (chemblId == null) {
+                    chemblId = rset.getString("chembl_id");
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (ChEMBL_ID, chemblId,
+                         "https://www.ebi.ac.uk/chembl/compound/inspect/"
+                         +chemblId);
+                    ligand.addIfAbsent(kw);
+                }
+                newids.add(id);
+                molregno.add(id);
             }
         }
         rset.close();
         
         if (!newids.isEmpty()) {
-            molregno.addAll(newids);
-            
             // no synonym, so use the chembl_id as the name
             ligand.name = chemblId;
             for (String type : new String[]{
@@ -384,18 +385,18 @@ public class ChemblRegistry {
             }
             
             if (molfile != null) {
-                if (null == ligand.getProperty(ChEMBL_MOLFILE)) {
+                if (!ligand.hasProperty(ChEMBL_MOLFILE)) {
                     ligand.properties.add
                         (new Text (ChEMBL_MOLFILE, molfile));
                 }
-                if (null == ligand.getProperty(ChEMBL_INCHI)) {
+                if (!ligand.hasProperty(ChEMBL_INCHI)) {
                     ligand.properties.add(new Text (ChEMBL_INCHI, inchi));
                 }
-                if (null == ligand.getProperty(ChEMBL_INCHI_KEY)) {
+                if (!ligand.hasProperty(ChEMBL_INCHI_KEY)) {
                     ligand.properties.add
                         (new Text (ChEMBL_INCHI_KEY, inchiKey));
                 }
-                if (null == ligand.getProperty(ChEMBL_SMILES)) {
+                if (!ligand.hasProperty(ChEMBL_SMILES)) {
                     ligand.properties.add(new Text (ChEMBL_SMILES, smiles));
                 }
                 ligand.save();
@@ -557,13 +558,13 @@ public class ChemblRegistry {
             Logger.warn
                 ("Target "+target.id+" ("+target.name
                  +") has no "+UniprotRegistry.ACCESSION+" synonym!");
-            return new HashSet<Long>();
+            return null;
         }
         else if (chemblIds == null || chemblIds.isEmpty()) {
             Logger.warn
                 ("Target "+target.id+" ("+target.name
                  +") accession "+acc+" has no chembl_id mapping!");
-            return new HashSet<Long>();
+            return null;
         }
 
         Set<Long> tids = new TreeSet<Long>();
