@@ -81,7 +81,18 @@ public class UniprotRegistry extends DefaultHandler {
 
     File getCacheFile (String acc) {
         String name = acc.substring(0, 2);
-        return new File (new File (cacheDir, name), acc+".xml");
+        File file = new File (new File (cacheDir, name), acc+".xml");
+        if (!file.exists()) {
+            // now try to see if ix.uniprot.home is set
+            String uniprot = Play.application()
+                .configuration().getString("ix.uniprot.home");
+            if (uniprot != null) {
+                file = new File
+                    (new File (uniprot, name+"/"+acc.substring(2,4)),
+                     acc+".xml");
+            }
+        }
+        return file;
     }
 
     public void register (Target target, String acc) throws Exception {

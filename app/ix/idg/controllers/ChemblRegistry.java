@@ -194,8 +194,22 @@ public class ChemblRegistry {
         throws SQLException {
         Set<Long> tids = target (target);
         if (tids != null) {
-            for (Ligand ligand : ligands) 
-                ligand (tids, target, ligand);
+            for (Ligand ligand : ligands) {
+                try {
+                    ligand (tids, target, ligand);
+                }
+                catch (Exception ex) {
+                    Logger.error("Unable to process ligand "
+                                 +ligand.getName()
+                                 +" for target "+target.id, ex);
+                    ex.printStackTrace();
+                }
+            }
+        }
+        else if (!ligands.isEmpty()) {
+            Logger.warn("Target "+target.id+" ("+target.getName()+") has no "
+                        +"uniprot mapping but yet has "
+                        +ligands.size()+" associated ligands!");
         }
     }
 
@@ -336,16 +350,17 @@ public class ChemblRegistry {
         while (rset.next()) {
             Long id = rset.getLong("molregno");
             assert id != null: "molregno is null!";
+            
+            String syn = rset.getString("synonyms");
+            if (syn != null) {
+                Keyword kw = new Keyword (ChEMBL_SYNONYM, syn);
+                String type = rset.getString("syn_type");
+                kw.href = type;
+                ligand.synonyms.add(kw);
+                syns.put(type, syn);
+            }
+            
             if (!molregno.contains(id)) {
-                String syn = rset.getString("synonyms");
-                if (syn != null) {
-                    Keyword kw = new Keyword (ChEMBL_SYNONYM, syn);
-                    String type = rset.getString("syn_type");
-                    kw.href = type;
-                    ligand.synonyms.add(kw);
-                    syns.put(type, syn);
-                }
-                
                 String smi = rset.getString("canonical_smiles");
                 if (molfile == null || smiles.length() > smi.length()) {
                     molfile = rset.getString("molfile");
@@ -367,51 +382,51 @@ public class ChemblRegistry {
             }
         }
         rset.close();
-        
-        if (!newids.isEmpty()) {
-            // no synonym, so use the chembl_id as the name
-            ligand.name = chemblId;
-            for (String type : new String[]{
-                    "INN","USAN","FDA","BAN","USP",
-                    "TRADE_NAME","MERCK_INDEX",
-                    "JAN","DCF","ATC",
-                    "RESEARCH_CODE","SYSTEMATIC","OTHER"
-                }) {
-                String s = syns.get(type);
-                if (s != null) {
-                    ligand.name = s;
-                    break;
-                }
+
+        // no synonym, so use the chembl_id as the name
+        ligand.name = chemblId;
+        for (String type : new String[]{
+                "INN","USAN","FDA","BAN","USP",
+                "TRADE_NAME","MERCK_INDEX",
+                "JAN","DCF","ATC",
+                "RESEARCH_CODE","SYSTEMATIC","OTHER"
+            }) {
+            String s = syns.get(type);
+            if (s != null) {
+                ligand.name = s;
+                break;
             }
+        }
+
+        if (newids.isEmpty()) {
+        }
+        else if (molfile != null) {
+            if (!ligand.hasProperty(ChEMBL_MOLFILE)) {
+                ligand.properties.add
+                    (new Text (ChEMBL_MOLFILE, molfile));
+            }
+            if (!ligand.hasProperty(ChEMBL_INCHI)) {
+                ligand.properties.add(new Text (ChEMBL_INCHI, inchi));
+            }
+            if (!ligand.hasProperty(ChEMBL_INCHI_KEY)) {
+                ligand.properties.add
+                    (new Text (ChEMBL_INCHI_KEY, inchiKey));
+            }
+            if (!ligand.hasProperty(ChEMBL_SMILES)) {
+                ligand.properties.add(new Text (ChEMBL_SMILES, smiles));
+            }
+            ligand.save();
             
-            if (molfile != null) {
-                if (!ligand.hasProperty(ChEMBL_MOLFILE)) {
-                    ligand.properties.add
-                        (new Text (ChEMBL_MOLFILE, molfile));
-                }
-                if (!ligand.hasProperty(ChEMBL_INCHI)) {
-                    ligand.properties.add(new Text (ChEMBL_INCHI, inchi));
-                }
-                if (!ligand.hasProperty(ChEMBL_INCHI_KEY)) {
-                    ligand.properties.add
-                        (new Text (ChEMBL_INCHI_KEY, inchiKey));
-                }
-                if (!ligand.hasProperty(ChEMBL_SMILES)) {
-                    ligand.properties.add(new Text (ChEMBL_SMILES, smiles));
-                }
-                ligand.save();
-                
-                // now standardize and index
-                Logger.debug("submitting "+chemblId+" for processing...");
-                StructureReceiver receiver = new LigandStructureReceiver
-                    (namespace, ligand);
-                PROCESSOR.submit(molfile, receiver);
-            }
-            else {
-                Logger.warn("Ligand "+ligand.getName()+" ("+chembl
+            // now standardize and index
+            Logger.debug("submitting "+chemblId+" for processing...");
+            StructureReceiver receiver = new LigandStructureReceiver
+                (namespace, ligand);
+            PROCESSOR.submit(molfile, receiver);
+        }
+        else {
+            Logger.warn("Ligand "+ligand.getName()+" ("+chembl
                         +") has empty molfile!");
-                ligand.save();
-            }
+            ligand.save();
         }
         
         return newids;

@@ -324,12 +324,20 @@ public class TcrdRegistry extends Controller {
                         xref.properties.add(new VNum (CONF, conf));
                         xref.properties.add(new VNum (TINX_IMPORTANCE, tinx));
                         if (pmids != null) {
-                            for (String p : pmids.split("\\|")) {
+                            String[] pps = pmids.split("\\|");
+                            Logger.debug(".......registering "+pps.length
+                                         +" tinx publication for target \""
+                                         +target.getName()
+                                         +"\" and disease "+doid
+                                         +" ("+disease.getName()+")");
+                            for (String p : pps) {
                                 p = p.trim();
                                 try {
                                     long pmid = Long.parseLong(p);
+                                    /*
                                     Publication pub = PublicationFactory
                                         .registerIfAbsent(pmid);
+                                    */
                                     VInt vi =
                                         new VInt (TINX_PUBLICATION, pmid);
                                     xref.properties.add(vi);
