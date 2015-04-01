@@ -3,6 +3,7 @@
 #
 GET	/marvin		ix.ncats.controllers.App.marvin
 POST	/smiles		ix.ncats.controllers.App.smiles
+POST	/molconvert	ix.ncats.controllers.App.molconvert
 GET	/render/:value	ix.ncats.controllers.App.render(value: String, size: Int ?= 150)
 #GET	/rendertest	ix.ncats.controllers.App.rendertest
 GET	/structure/$id<[0-9]+>.$format<(svg|png)>	ix.ncats.controllers.App.structure(id: Long, format: String, size: Int ?= 150)

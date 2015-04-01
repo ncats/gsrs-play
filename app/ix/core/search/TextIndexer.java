@@ -142,7 +142,7 @@ public class TextIndexer {
         String name;
         List<FV> values = new ArrayList<FV>();
 
-        Facet (String name) { this.name = name; }
+        public Facet (String name) { this.name = name; }
         public String getName () { return name; }
         public List<FV> getValues () {
             return values; 

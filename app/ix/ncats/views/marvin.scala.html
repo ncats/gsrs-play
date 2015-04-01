@@ -25,7 +25,10 @@
             if(marvin.Sketch.isSupported()) {
   	       marvin.Sketch.license('@routes.Assets.at("ncats/marvinjs-license.cxl")');
                marvin.sketcherInstance = new marvin.Sketch("sketch");
-               marvin.sketcherInstance.on("molchange", function(){
+	       marvin.sketcherInstance.setServices({
+	          "molconvertws": '@ix.ncats.controllers.routes.App.molconvert'
+	       });
+               var molchange = function(){
 	           var mol = marvin.sketcherInstance.exportAsMol();
                    console.log('mol => '+mol);		   
 	           if (mol) {
@@ -37,8 +40,12 @@
 	            } else {
 	               alert ("Your browser doesn't seem to have proper support for Javascript. Please try another browser for sketching support or cut and paste your query directly into the text field below.");
 	            }
-	        });
-
+	        };
+		
+		marvin.sketcherInstance.on("molchange",molchange);
+		if (top.setMarvin) {
+		   top.setMarvin(marvin.sketcherInstance, molchange);
+		}
 	     } else {
 		alert("Cannot initiate sketcher. Current browser may not support HTML5 canvas or may run in Compatibility Mode.");
 	     }

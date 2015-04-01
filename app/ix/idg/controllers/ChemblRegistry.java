@@ -356,7 +356,7 @@ public class ChemblRegistry {
                 Keyword kw = new Keyword (ChEMBL_SYNONYM, syn);
                 String type = rset.getString("syn_type");
                 kw.href = type;
-                ligand.synonyms.add(kw);
+                ligand.addIfAbsent(kw);
                 syns.put(type, syn);
             }
             

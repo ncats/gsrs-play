@@ -47,6 +47,9 @@ import gov.nih.ncgc.chemical.DisplayParams;
 import gov.nih.ncgc.nchemical.NchemicalRenderer;
 import gov.nih.ncgc.jchemical.Jchemical;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Basic plumbing for an App
@@ -76,6 +79,7 @@ public class App extends Controller {
         final public Facet facet;
         final public int max;
         final public boolean raw;
+        public boolean hidden;
 
         public FacetDecorator (Facet facet) {
             this (facet, false, 6);
@@ -552,6 +556,48 @@ public class App extends Controller {
             ex.printStackTrace();
             Logger.debug("** Unable to convert structure\n"+data);
             return badRequest (data);
+        }
+    }
+
+    public static Result molconvert () {
+        JsonNode json = request().body().asJson();        
+        try {
+            final String format = json.get("parameters").asText();
+            final String mol = json.get("structure").asText();
+            
+            String sha1 = Util.sha1(mol);
+            Logger.debug("MOLCONVERT: format="+format+" mol="
+                         +mol+" sha1="+sha1);
+            
+            response().setContentType("application/json");
+            return getOrElse (0l, sha1, new Callable<Result>() {
+                    public Result call () {
+                        try {
+                            MolHandler mh = new MolHandler (mol);
+                            if (mh.getMolecule().getDim() < 2) {
+                                mh.getMolecule().clean(2, null);
+                            }
+                            String out = mh.getMolecule().toFormat(format);
+                            //Logger.debug("MOLCONVERT: output="+out);
+                            ObjectMapper mapper = new ObjectMapper ();
+                            ObjectNode node = mapper.createObjectNode();
+                            node.put("structure", out);
+                            node.put("format", format);
+                            node.put("contentUrl", "");
+                           
+                            return ok (node);
+                        }
+                        catch (Exception ex) {
+                            return badRequest ("Invalid molecule: "+mol);
+                        }
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't parse request", ex);
+            ex.printStackTrace();
+            
+            return internalServerError ("Unable to convert input molecule");
         }
     }
 

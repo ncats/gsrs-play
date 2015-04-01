@@ -13,6 +13,7 @@
   <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
   <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
 	    data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
+  <td>@IDGApp.novelty(t.getProperty(TcrdRegistry.TINX_NOVELTY))</td>
   <td>@t.idgFamily</td>
 </tr>
 }
@@ -20,7 +21,13 @@
 @ix.ncats.views.html.content("Targets", "ix.idg.models.Target",
 ix.idg.controllers.routes.IDGApp.targets().url,
 current, rows, total, pages, facets){
-@menu("ix.idg.models.Target")
+@menu("ix.idg.models.Target"){
+<ul class="nav navbar-nav navbar-left">
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null,10,1)">Diseases</a></li>
+  <li role="presentation" class="active"><a href="#">Targets</a></li>
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null,8,1)">Ligands</a></li>
+</ul>
+}
 }{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
@@ -45,6 +52,7 @@ current, rows, total, pages, facets){
   <tr>
     <th>Name</th>
     <th>Development Level</th>
+    <th>Novelty</th>
     <th>Target Family</th>
   </tr>
   @for(t <- targets) {

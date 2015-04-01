@@ -201,7 +201,6 @@ public class IDGApp extends App {
         TcrdRegistry.FAMILY,
         TcrdRegistry.DISEASE,
         "Ligand"
-        //TcrdRegistry.DRUG
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -214,8 +213,7 @@ public class IDGApp extends App {
         ChemblRegistry.WHO_ATC,
         TcrdRegistry.DEVELOPMENT,
         TcrdRegistry.FAMILY,
-        UniprotRegistry.TARGET,
-        //"MeSH"
+        UniprotRegistry.TARGET
     };
 
     public static final String[] ALL_FACETS = {
@@ -224,16 +222,25 @@ public class IDGApp extends App {
         TcrdRegistry.DISEASE,
         UniprotRegistry.TARGET,
         "Ligand"
-        //TcrdRegistry.DRUG
     };
 
     static FacetDecorator[] decorate (Facet... facets) {
-        FacetDecorator[] decors = new FacetDecorator[facets.length];
+        List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
-            decors[i] = new IDGFacetDecorator (facets[i]);
+            decors.add(new IDGFacetDecorator (facets[i]));
         }
-        return decors;
+        // now add hidden facet so as to not have them shown in the alert
+        // box
+        for (int i = 1; i <= 8; ++i) {
+            IDGFacetDecorator f = new IDGFacetDecorator
+                (new TextIndexer.Facet
+                 (ChemblRegistry.ChEMBL_PROTEIN_CLASS+" ("+i+")"));
+            f.hidden = true;
+            decors.add(f);
+        }
+        
+        return decors.toArray(new FacetDecorator[0]);
     }
     
     public static Result about() {
@@ -291,6 +298,18 @@ public class IDGApp extends App {
         }
     }
 
+    public static String novelty (Value value) {
+        if (value != null) {
+            VNum val = (VNum)value;
+            if (val.numval < 0.)
+                return String.format("%1$.5f", val.numval);
+            if (val.numval < 10.)
+                return String.format("%1$.3f", val.numval);
+            return String.format("%1$.1f", val.numval);
+        }
+        return "";
+    }
+    
     public static String getId (Target t) {
         Keyword kw = t.getSynonym(UniprotRegistry.ACCESSION);
         return kw != null ? kw.term : null;
@@ -945,19 +964,23 @@ public class IDGApp extends App {
         long start = System.currentTimeMillis();        
         TextIndexer indexer = textIndexer.createEmptyInstance();
         int count = 0;
+        Set<Long> unique = new HashSet<Long>();
         while (results.hasMoreElements()) {
             StructureIndexer.Result r = results.nextElement();
-            /*
+
             Logger.debug(r.getId()+" "+r.getSource()+" "
                          +r.getMol().toFormat("smiles"));
-            */
+
             List<Ligand> ligands = LigandFactory.finder
                 .where(Expr.and(Expr.eq("links.kind",
                                         Structure.class.getName()),
                                 Expr.eq("links.refid", r.getId())))
                 .findList();
             for (Ligand ligand : ligands) {
-                indexer.add(ligand);
+                if (!unique.contains(ligand.id)) {
+                    indexer.add(ligand);
+                    unique.add(ligand.id);
+                }
             }
             ++count;
         }
