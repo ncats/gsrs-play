@@ -1,4 +1,4 @@
-@(kind: String)
+@(kind: String)(nav: Html)
 
 @ix.ncats.views.html.header{
 <a class="navbar-brand" href="@ix.idg.controllers.routes.IDGApp.index"
@@ -7,6 +7,7 @@
        src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'/>
 </a>
 }{
+@nav
 <ul class="nav navbar-nav navbar-right">
   <form class="navbar-form navbar-right" role="search" method="GET"
         action="@ix.idg.controllers.routes.IDGApp.search(null)">

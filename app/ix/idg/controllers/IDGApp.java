@@ -160,6 +160,10 @@ public class IDGApp extends App {
                         public List<T> call () throws Exception {
                             List<T> values = finder.where()
                             .eq("synonyms.term", name).findList();
+                            if (values.size() > 1) {
+                                Logger.warn("\""+name+"\" yields "
+                                            +values.size()+" matches!");
+                            }
                             return values;
                         }
                     });
@@ -181,7 +185,8 @@ public class IDGApp extends App {
         public Result result (final List<T> e) {
             try {
                 Result result = getOrElse
-                    (Util.sha1(request ()), new Callable<Result> () {
+                    (cls.getName()+"/result/"+Util.sha1(request ()),
+                     new Callable<Result> () {
                             public Result call () throws Exception {
                                 return getResult (e);
                             }
@@ -201,7 +206,6 @@ public class IDGApp extends App {
         TcrdRegistry.FAMILY,
         TcrdRegistry.DISEASE,
         "Ligand"
-        //TcrdRegistry.DRUG
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -214,8 +218,7 @@ public class IDGApp extends App {
         ChemblRegistry.WHO_ATC,
         TcrdRegistry.DEVELOPMENT,
         TcrdRegistry.FAMILY,
-        UniprotRegistry.TARGET,
-        //"MeSH"
+        UniprotRegistry.TARGET
     };
 
     public static final String[] ALL_FACETS = {
@@ -224,16 +227,25 @@ public class IDGApp extends App {
         TcrdRegistry.DISEASE,
         UniprotRegistry.TARGET,
         "Ligand"
-        //TcrdRegistry.DRUG
     };
 
     static FacetDecorator[] decorate (Facet... facets) {
-        FacetDecorator[] decors = new FacetDecorator[facets.length];
+        List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
-            decors[i] = new IDGFacetDecorator (facets[i]);
+            decors.add(new IDGFacetDecorator (facets[i]));
         }
-        return decors;
+        // now add hidden facet so as to not have them shown in the alert
+        // box
+        for (int i = 1; i <= 8; ++i) {
+            IDGFacetDecorator f = new IDGFacetDecorator
+                (new TextIndexer.Facet
+                 (ChemblRegistry.ChEMBL_PROTEIN_CLASS+" ("+i+")"));
+            f.hidden = true;
+            decors.add(f);
+        }
+        
+        return decors.toArray(new FacetDecorator[0]);
     }
     
     public static Result about() {
@@ -291,6 +303,18 @@ public class IDGApp extends App {
         }
     }
 
+    public static String novelty (Value value) {
+        if (value != null) {
+            VNum val = (VNum)value;
+            if (val.numval < 0.)
+                return String.format("%1$.5f", val.numval);
+            if (val.numval < 10.)
+                return String.format("%1$.3f", val.numval);
+            return String.format("%1$.1f", val.numval);
+        }
+        return "";
+    }
+    
     public static String getId (Target t) {
         Keyword kw = t.getSynonym(UniprotRegistry.ACCESSION);
         return kw != null ? kw.term : null;
@@ -311,7 +335,7 @@ public class IDGApp extends App {
         throws Exception {
         final Target t = targets.iterator().next(); // guarantee not empty
         List<DiseaseRelevance> diseases = getOrElse
-            ("/targets/"+t.id+"/diseases",
+            ("targets/"+t.id+"/diseases",
              new Callable<List<DiseaseRelevance>> () {
                  public List<DiseaseRelevance> call () throws Exception {
                      return getDiseaseRelevances (t);
@@ -426,7 +450,7 @@ public class IDGApp extends App {
                                   final int rows, final int page) {
         try {
             String sha1 = Util.sha1(request ());
-            return getOrElse (sha1, new Callable<Result>() {
+            return getOrElse ("targets/"+sha1, new Callable<Result>() {
                     public Result call () throws Exception {
                         return _targets (q, rows, page);
                     }
@@ -596,7 +620,7 @@ public class IDGApp extends App {
     public static Result search (final int rows) {
         try {
             String sha1 = Util.sha1(request ());
-            return getOrElse(sha1, new Callable<Result> () {
+            return getOrElse("search/"+sha1, new Callable<Result> () {
                     public Result call () throws Exception {
                         return _search (rows);
                     }
@@ -628,7 +652,7 @@ public class IDGApp extends App {
             queryString.put("facet", f.toArray(new String[0]));
             long start = System.currentTimeMillis();
             result = getOrElse
-                (Util.sha1(queryString.get("facet")),
+                ("search/facet/"+Util.sha1(queryString.get("facet")),
                  new Callable<TextIndexer.SearchResult>() {
                      public TextIndexer.SearchResult
                          call ()  throws Exception {
@@ -645,7 +669,7 @@ public class IDGApp extends App {
         if (result == null || result.count() == 0) {
             long start = System.currentTimeMillis();                
             result = getOrElse
-                (Util.sha1(request(), "facet", "q"),
+                ("search/facet/q/"+Util.sha1(request(), "facet", "q"),
                  new Callable<TextIndexer.SearchResult>() {
                      public TextIndexer.SearchResult
                                 call () throws Exception {
@@ -663,7 +687,7 @@ public class IDGApp extends App {
             (result.getFacets(), ALL_FACETS);
         
         int max = Math.min(rows, Math.max(1,result.count()));
-        int total = 0, totalTargets = 0, totalDiseases = 0;
+        int total = 0, totalTargets = 0, totalDiseases = 0, totalLigands = 0;
         for (TextIndexer.Facet f : result.getFacets()) {
             if (f.getName().equals("ix.Class")) {
                 for (TextIndexer.FV fv : f.getValues()) {
@@ -675,6 +699,10 @@ public class IDGApp extends App {
                              .equals(fv.getLabel())) {
                         totalDiseases = fv.getCount();
                         total += totalDiseases;
+                    }
+                    else if (Ligand.class.getName().equals(fv.getLabel())) {
+                        totalLigands = fv.getCount();
+                        total += totalLigands;
                     }
                 }
             }
@@ -688,7 +716,9 @@ public class IDGApp extends App {
         
         return ok (ix.idg.views.html.search.render
                    (query, total, decorate (facets),
-                    targets, totalTargets, diseases, totalDiseases));
+                    targets, totalTargets,
+                    ligands, totalLigands,
+                    diseases, totalDiseases));
     }
 
     public static Keyword getATC (final Keyword kw) throws Exception {
@@ -715,7 +745,7 @@ public class IDGApp extends App {
                                   final int rows, final int page) {
         try {
             String sha1 = Util.sha1(request ());
-            return getOrElse (sha1, new Callable<Result>() {
+            return getOrElse ("ligands/"+sha1, new Callable<Result>() {
                     public Result call () throws Exception {
                         return _ligands (q, rows, page);
                     }
@@ -806,7 +836,9 @@ public class IDGApp extends App {
         };
 
     static Result _getLigandResult (List<Ligand> ligands) throws Exception {
-        if (ligands.size() == 1) {
+        // force it to show only one since it's possible that the provided
+        // name isn't unique
+        if (true || ligands.size() == 1) {
             Ligand ligand = ligands.iterator().next();
             
             List<Keyword> breadcrumb = new ArrayList<Keyword>();
@@ -945,19 +977,23 @@ public class IDGApp extends App {
         long start = System.currentTimeMillis();        
         TextIndexer indexer = textIndexer.createEmptyInstance();
         int count = 0;
+        Set<Long> unique = new HashSet<Long>();
         while (results.hasMoreElements()) {
             StructureIndexer.Result r = results.nextElement();
-            /*
+
             Logger.debug(r.getId()+" "+r.getSource()+" "
                          +r.getMol().toFormat("smiles"));
-            */
+
             List<Ligand> ligands = LigandFactory.finder
                 .where(Expr.and(Expr.eq("links.kind",
                                         Structure.class.getName()),
                                 Expr.eq("links.refid", r.getId())))
                 .findList();
             for (Ligand ligand : ligands) {
-                indexer.add(ligand);
+                if (!unique.contains(ligand.id)) {
+                    indexer.add(ligand);
+                    unique.add(ligand.id);
+                }
             }
             ++count;
         }
@@ -973,8 +1009,8 @@ public class IDGApp extends App {
                                      final double threshold,
                                      int rows, int page) {
         try {
-            String key = "similarity::"+Util.sha1(query)
-                +"::"+String.format("%1$d", (int)(1000*threshold+.5));
+            String key = "similarity/"+Util.sha1(query)
+                +"/"+String.format("%1$d", (int)(1000*threshold+.5));
             TextIndexer indexer = getOrElse
                 (strucIndexer.lastModified(),
                  key, new Callable<TextIndexer> () {
@@ -1001,7 +1037,7 @@ public class IDGApp extends App {
         (final String query, int rows, int page) {
         Logger.debug("substructure: query="+query+" rows="+rows+" page="+page);
         try {
-            String key = "substructure::"+Util.sha1(query);
+            String key = "substructure/"+Util.sha1(query);
             TextIndexer indexer = getOrElse
                 (strucIndexer.lastModified(),
                  key, new Callable<TextIndexer> () {
@@ -1044,7 +1080,7 @@ public class IDGApp extends App {
         final Disease d = diseases.iterator().next();
         // resolve the targets for this disease
         List<Target> targets = getOrElse
-            ("/diseases/"+d.id+"/targets", new Callable<List<Target>> () {
+            ("diseases/"+d.id+"/targets", new Callable<List<Target>> () {
                     public List<Target> call () throws Exception {
                         List<Target> targets = new ArrayList<Target>();
                         for (XRef ref : d.links) {
@@ -1101,7 +1137,7 @@ public class IDGApp extends App {
                                    final int rows, final int page) {
         try {
             String sha1 = Util.sha1(request ());
-            return getOrElse(sha1, new Callable<Result>() {
+            return getOrElse("diseases/"+sha1, new Callable<Result>() {
                     public Result call () throws Exception {
                         return _diseases (q, rows, page);
                     }

@@ -48,7 +48,13 @@
 }
       
 @ix.ncats.views.html.main(target.name, target.getClass().getName()){
-@menu(target.getClass().getName())	 
+@menu(target.getClass().getName()){
+<ul class="nav navbar-nav navbar-left">
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null,10,1)">Diseases</a></li>
+  <li role="presentation" class="active"><a href="#">Targets</a></li>
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null,8,1)">Ligands</a></li>
+</ul>
+}
 }{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>

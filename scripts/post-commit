@@ -1,0 +1,5 @@
+#!/bin/sh
+
+date=`date`
+build=`git log --oneline -1 HEAD|cut -d' ' -f1`
+exec echo "$date (commit: $build)" > app/ix/ncats/views/build.scala.txt

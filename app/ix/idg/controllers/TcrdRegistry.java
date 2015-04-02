@@ -324,12 +324,20 @@ public class TcrdRegistry extends Controller {
                         xref.properties.add(new VNum (CONF, conf));
                         xref.properties.add(new VNum (TINX_IMPORTANCE, tinx));
                         if (pmids != null) {
-                            for (String p : pmids.split("\\|")) {
+                            String[] pps = pmids.split("\\|");
+                            Logger.debug(".......registering "+pps.length
+                                         +" tinx publication for target \""
+                                         +target.getName()
+                                         +"\" and disease "+doid
+                                         +" ("+disease.getName()+")");
+                            for (String p : pps) {
                                 p = p.trim();
                                 try {
                                     long pmid = Long.parseLong(p);
+                                    /*
                                     Publication pub = PublicationFactory
                                         .registerIfAbsent(pmid);
+                                    */
                                     VInt vi =
                                         new VInt (TINX_PUBLICATION, pmid);
                                     xref.properties.add(vi);
@@ -686,6 +694,7 @@ public class TcrdRegistry extends Controller {
         int count = 0;
         try {
             ResultSet rset = stm.executeQuery
+                /*
                 ("select * from t2tc a, target b, protein c, tinx_novelty d\n"
                  +"where a.target_id = b.id\n"
                  +"and a.protein_id = c.id "
@@ -693,6 +702,17 @@ public class TcrdRegistry extends Controller {
                  +" order by c.id, c.uniprot "           
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
+                */
+                ("select *\n"
+                 +"from tcrd100.t2tc a "
+                 +"     join (tcrd100.target b, tcrd100.protein c)\n"
+                 +"on (a.target_id = b.id and a.protein_id = c.id)\n"
+                 +"left join tcrd100.tinx_novelty d\n"
+                 +"    on d.protein_id = a.protein_id \n"
+                 +"order by d.score desc, c.id\n"
+                 +(rows > 0 ? ("limit "+rows) : "")
+                 );
+                 
             while (rset.next()) {
                 long protId = rset.getLong("protein_id");
                 if (rset.wasNull()) {
@@ -712,9 +732,13 @@ public class TcrdRegistry extends Controller {
                     .where().eq("synonyms.term", acc).findList();
                 
                 if (tlist.isEmpty()) {
+                    //Logger.debug("Adding "+acc);
                     TcrdTarget t =
                         new TcrdTarget (acc, fam, tdl, id, protId, novelty);
                     targets.add(t);
+                }
+                else {
+                    Logger.debug("Skipping "+acc);
                 }
             }
             rset.close();
@@ -727,11 +751,13 @@ public class TcrdRegistry extends Controller {
             con.close();
         }
 
+        Logger.debug("Preparing to process "+targets.size()+" targets...");
         ChemblRegistry chembl = new ChemblRegistry (uniprotMap);
         PersistRegistration regis = new PersistRegistration
             (ds.getConnection(), Http.Context.current(),
              targets, chembl);
         PQ.submit(regis);
+        //regis.persists();
         
         return count;
     }

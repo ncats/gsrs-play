@@ -1,0 +1,135 @@
+ @(kind: String) 
+ 
+ @breadcrumb(kind: String)={
+<ul class="nav nav-tabs">
+	<li class="active"><a href="#">Names</a></li> 
+	@if(kind=="Chemical"){
+	<li><a href="#">Structure</a></li>
+	<li><a href="#">Details</a></li> 
+	} 
+	@if(kind=="Mixture"){
+	<li><a href="#">Select Components</a></li> 
+	} 
+	@if(kind=="Protein"){
+	<li><a href="#">Sequence</a></li> 
+	} 
+	@if(kind=="Polymer"){
+	<li><a href="#">Classification</a></li>
+	<li><a href="#">Monomers</a></li>
+	<li><a href="#">Polymer Structure</a></li>
+	<li><a href="#">Physical Properties</a></li> 
+	} 
+	@if(kind=="Structurally Diverse"){
+	<li><a href="#">Source Materials</a></li> 
+	} 
+	@if(kind=="Concept"){ }
+	<li><a href="#">Codes</a></li>
+	<li><a href="#">Review</a></li>
+</ul>
+
+} 
+
+@main("ginas Main") {
+
+<div class="row" id="breadcrumb">
+	<div class="col-md-12" id="trail">
+
+		@breadcrumb(kind)</div>
+</div>
+<div class="row">
+	<div class="col-md-12 " id="wizard">
+		<div class="row button-row">
+			<div class="col-md-6">
+				<a class="btn btn-default"
+					href="@ix.ginas.controllers.routes.GinasFactory.index()"
+					role="button">Cancel</a> 
+					<a class="btn btn-default" href="#"	role="button">Export</a>
+				<button type="button" class="btn btn-default" data-toggle="modal"
+					data-target="#fileimport" role="button">Import</button>
+			</div>
+		</div>
+		<div id="wizard-panel">
+							<div class= "row">
+							<div class="col-md-4"><label>Name</label></div>
+							<div class="col-md-2"><label>Name Type</label></div>
+							<div class="col-md-2"><label>Language</label></div>
+							<div class="col-md-2"><label>Access Control</label></div>
+							</div>
+					<div class= "row" ng-repeat="name in chemical.chemical.namesList"  ng-show="chemical.chemical.namesList.length">
+							<div class="col-md-4">{{name.name}}</div>
+							<div class="col-md-2">{{name.NameType}}</div>
+							<div class="col-md-2">{{name.language}}</div>
+							<div class="col-md-2">{{name.access}}</div>
+							</div>
+			<div class="row">
+				<div class="col-md-12">
+					<form class="inline" name="nameForm"
+						ng-controller="NameController as nameCtrl" ng-submit="nameForm.$valid && nameCtrl.addName(chemical)" novalidate>
+<!-- 						<div class="row"> -->
+<!-- 						<div class="col-md-4">{{nameCtrl.name.name}}</div> -->
+<!-- 							<div class="col-md-2">{{nameCtrl.name.NameType}}</div> -->
+<!-- 							<div class="col-md-2">{{nameCtrl.name.language}}</div> -->
+<!-- 							<div class="col-md-2">{{nameCtrl.name.access}}</div> -->
+							
+							
+<!-- 						</div> -->
+
+						<!--  Name Form -->
+						<fieldset class="form-group">
+							<div class="col-md-4">
+<!-- 							<label for="name">Name</label> -->
+								<input ng-model="nameCtrl.name.name" class="form-control"
+									placeholder="Name" title="Name" id="name" required></input>
+							</div>
+							<div class="col-md-2">
+<!-- 							<label for="type">Name Type</label> -->
+								<select ng-model="nameCtrl.name.NameType" class="form-control"
+									ng-options="nameType for nameType in ['Common Name','Official Name' ,'Systematic Name', 'Brand Name', 'Common Name', 'Code']"
+									title="Name Type" id ="type" required>
+								</select>
+							</div>
+							<div class="col-md-2">
+<!-- 							<label for="language">Language</label> -->
+								<input ng-model="nameCtrl.name.language" type="text"
+									class="form-control" placeholder="English" title="Language" id = "language"
+									required />
+							</div>
+							<div class="col-md-2">
+<!-- 							<label for="access">Access Control</label> -->
+								<select ng-model="nameCtrl.name.access" class="form-control"
+									ng-options="access for access in ['Protected','Public']"
+									title="Access Control" id="access">
+								</select>
+							</div>
+						<div class = "col-md-2 pull-right">
+							<input type="submit" class="btn btn-primary"
+								value="Add Name" />
+								</div>
+						</fieldset>
+					</form>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-2 pull-right">
+					<a data-toggle="modal" data-target="#addnamelist" id="add-name-list-modal">
+					<button class="btn btn-default">Add	Name List</button></a>
+					<!-- 					<a data-toggle="modal" data-target="#addname" id="add-name-modal"><button -->
+					<!-- 									class="btn btn-default">Add Name</button></a>  -->
+				</div>
+			</div> 
+			<div class="row button-row">
+			<div class="col-md-1 pull-right">
+				<a class="btn btn-default" href="#" role="button" ng-show="chemical.chemical.namesList.length">Next</a>
+			</div>
+		</div>
+	</div>
+	</div>
+
+		
+</div>
+<!--END panel panel-primary-->
+
+@fileimport() 
+@addnamelist() 
+@addname() 
+@addreference() }

@@ -2,6 +2,12 @@
 
 @(method: String, action: Call)
 <script>
+/*
+** global variables
+*/
+var sketcher; // sketcher
+var molchange; // molchange callback
+
 function setQuery (value) {
   console.log(value);
   $.ajax({
@@ -18,6 +24,32 @@ function setQuery (value) {
     },
     dataType: 'text'
    });
+}
+
+function setMarvin (sk, change) {
+   sketcher = sk;
+   molchange = change;
+}
+
+function setStructure (struc) {
+   console.log('current structure: '+struc);
+//   structure = struc;
+/*
+  $.ajax({
+    type: "POST",
+    url: '@ix.ncats.controllers.routes.App.molconvert',
+    contentType: 'application/json; charset=utf-8',
+    data: '{"format": "mrv","mol":"'+struc+'"}',
+    dataType: 'text',
+    success: function (data) {
+       console.log(' => '+data);
+       sketcher.importStructure('mrv', data);
+    },
+    error: function (xhr, status) {
+       console.error("Can't convert to mrv for input: "+struc);
+    }
+  });
+ */
 }
 </script>
 

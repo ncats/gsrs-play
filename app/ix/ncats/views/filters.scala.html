@@ -91,7 +91,9 @@
 
 <div class="panel-group">
   @for(f <- facets) {
-     @facet(f)
+    @if(!f.hidden) {
+      @facet(f)
+    }
   }
 </div>
 

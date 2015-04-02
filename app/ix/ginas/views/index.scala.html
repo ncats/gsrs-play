@@ -1,0 +1,24 @@
+ @main("ginas Main") {
+<div class="row" id="pub-history">
+	<div class="col-md-8 col-md-offset-2">
+		<div class="row" id="icons">
+			<a href="@ix.ginas.controllers.routes.GinasFactory.chemical()">
+				<div class="col-md-4">
+					<h2>Chemical Structure</h2>
+					<img src="@routes.Assets.at("ginas/images/sketcher.png")" class="img-responsive" id="" />
+				</div>
+			</a> <a href="@ix.ginas.controllers.routes.GinasFactory.sequence("Nucleic Acid")">
+				<div class="col-md-4">
+					<h2>Nucleic Acid Sequence</h2>
+					<img src="@routes.Assets.at("ginas/images/nucleicacid.png")" class="img-responsive" id="" />
+				</div>
+			</a> <a href="@ix.ginas.controllers.routes.GinasFactory.sequence("Amino Acid")">
+				<div class="col-md-4">
+					<h2>Amino Acid Sequence</h2>
+					<img src="@routes.Assets.at("ginas/images/aminoacid.png")" class="img-responsive" id="" />
+				</div>
+		</div>
+	</div>
+</div>
+<!--END panel panel-primary-->
+}

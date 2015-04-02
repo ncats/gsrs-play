@@ -1,0 +1,63 @@
+<!-- Modal -->
+<div class="modal fade" id="add-name" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal"
+					aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+				<h4 class="modal-title" id="myModalLabel">Add a name</h4>
+			</div>
+			<div class="modal-body">
+				<h5>This will need to be changed to post to submit the email</h5>
+
+				<form class="form-horizontal">
+					<div class="form-group">
+							<div class="col-md-4">
+								<label for="type">Type</label> <select class="form-control"
+									id="type">
+									<option>Bug</option>
+									<option>Feature Request</option>
+									<option>Comment</option>
+								</select>
+							</div>
+							<div class="col-md-8">
+								<label for="email">Email</label> <input type="email"
+									class="form-control" id="email"
+									placeholder="Enter Email Address">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-12">
+								<label for="description-short">Short Description</label> <input
+									type="text" class="form-control" id="description-short"
+									placeholder="Short Description">
+							</div>
+						</div>
+					<div class="form-group">
+						<div class="col-md-12">
+							<label for="description-det">Detailed Description</label>
+							<textarea class="form-control" rows="6" id="description-det"></textarea>
+						</div>
+					</div>
+					<div class="form-group">
+						<div class="col-md-4 ">
+
+							<label for="exampleInputFile" class = "file-button">Include Image?</label> 
+							  <input type='file' onchange="readURL(this);" class = "file-button" />
+    							<img id="thumb" src="#" alt="your image" />
+<!-- 							<input -->
+<!-- 								type="button" value="Choose File" -->
+<!-- 								onclick="window.FileContentsGrabber.append('json-sequence')" -->
+<!-- 								id="exampleInputFile"> -->
+						</div>
+					</div>
+					<button type="submit" class="btn btn-default">Submit</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+

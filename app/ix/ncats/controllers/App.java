@@ -47,6 +47,9 @@ import gov.nih.ncgc.chemical.DisplayParams;
 import gov.nih.ncgc.nchemical.NchemicalRenderer;
 import gov.nih.ncgc.jchemical.Jchemical;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Basic plumbing for an App
@@ -76,6 +79,7 @@ public class App extends Controller {
         final public Facet facet;
         final public int max;
         final public boolean raw;
+        public boolean hidden;
 
         public FacetDecorator (Facet facet) {
             this (facet, false, 6);
@@ -366,6 +370,26 @@ public class App extends Controller {
         return new ArrayList<Facet>();
     }
 
+    public static List<String> getUnspecifiedFacets
+        (final FacetDecorator[] decors) {
+        String[] facets = request().queryString().get("facet");
+        List<String> unspec = new ArrayList<String>();
+        if (facets != null && facets.length > 0) {
+            for (String f : facets) {
+                int matches = 0;
+                for (FacetDecorator d : decors) {
+                    //Logger.debug(f+" <=> "+d.facet.getName());              
+                    if (f.startsWith(d.facet.getName())) {
+                        ++matches;
+                    }
+                }
+                if (matches == 0)
+                    unspec.add(f);
+            }
+        }
+        return unspec;
+    }
+
     public static Facet[] filter (List<Facet> facets, String... names) {
         if (names == null || names.length == 0)
             return facets.toArray(new Facet[0]);
@@ -535,6 +559,48 @@ public class App extends Controller {
         }
     }
 
+    public static Result molconvert () {
+        JsonNode json = request().body().asJson();        
+        try {
+            final String format = json.get("parameters").asText();
+            final String mol = json.get("structure").asText();
+            
+            String sha1 = Util.sha1(mol);
+            Logger.debug("MOLCONVERT: format="+format+" mol="
+                         +mol+" sha1="+sha1);
+            
+            response().setContentType("application/json");
+            return getOrElse (0l, sha1, new Callable<Result>() {
+                    public Result call () {
+                        try {
+                            MolHandler mh = new MolHandler (mol);
+                            if (mh.getMolecule().getDim() < 2) {
+                                mh.getMolecule().clean(2, null);
+                            }
+                            String out = mh.getMolecule().toFormat(format);
+                            //Logger.debug("MOLCONVERT: output="+out);
+                            ObjectMapper mapper = new ObjectMapper ();
+                            ObjectNode node = mapper.createObjectNode();
+                            node.put("structure", out);
+                            node.put("format", format);
+                            node.put("contentUrl", "");
+                           
+                            return ok (node);
+                        }
+                        catch (Exception ex) {
+                            return badRequest ("Invalid molecule: "+mol);
+                        }
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't parse request", ex);
+            ex.printStackTrace();
+            
+            return internalServerError ("Unable to convert input molecule");
+        }
+    }
+
     public static Result renderOld (final String value, final int size) {
         String key = Util.sha1(value)+"::"+size;
         Result result = null;
@@ -659,30 +725,55 @@ public class App extends Controller {
 
     public static Result structure (final long id,
                                     final String format, final int size) {
-        String key = Structure.class.getName()+"."+id+"."+size+"."+format;
-        String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
-        try {
-            Result result = getOrElse (0l, key, new Callable<Result> () {
-                    public Result call () throws Exception {
-                        Structure struc = StructureFactory.getStructure(id);
-                        if (struc != null) {
-                            return ok (render (struc, format, size));
+        if (format.equals("svg") || format.equals("png")) {
+            String key = Structure.class.getName()+"."+id+"."+size+"."+format;
+            String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
+            try {
+                Result result = getOrElse (0l, key, new Callable<Result> () {
+                        public Result call () throws Exception {
+                            Structure struc = StructureFactory.getStructure(id);
+                            if (struc != null) {
+                                return ok (render (struc, format, size));
+                            }
+                            return null;
                         }
-                        return null;
-                    }
-                });
-            if (result != null) {
-                response().setContentType(mime);
-                return result;
+                    });
+                if (result != null) {
+                    response().setContentType(mime);
+                    return result;
+                }
             }
-            return notFound ("Not a valid structure "+id);
+            catch (Exception ex) {
+                Logger.error("Can't generate image for structure "
+                             +id+" format="+format+" size="+size, ex);
+                ex.printStackTrace();
+                return internalServerError
+                    ("Unable to retrieve image for structure "+id);
+            }
         }
-        catch (Exception ex) {
-            Logger.error("Can't generate image for structure "
-                         +id+" format="+format+" size="+size, ex);
-            ex.printStackTrace();
-            return internalServerError
-                ("Unable to retrieve image for structure "+id);
+        else {
+            Structure struc = StructureFactory.getStructure(id);
+            if (struc != null) {
+                response().setContentType("text/plain");
+                if (format.equals("mrv")) {
+                    try {
+                        MolHandler mh = new MolHandler (struc.molfile);
+                        if (mh.getMolecule().getDim() < 2) {
+                            mh.getMolecule().clean(2, null);
+                        }
+                        return ok (mh.getMolecule().toFormat("mrv"));
+                    }
+                    catch (Exception ex) {
+                        return internalServerError
+                            ("Structure "+id+" can't coverted to MRV format");
+                    }
+                }
+                else {
+                    return format.equals("mol") || format.equals("sdf")
+                        ?  ok (struc.molfile) : ok (struc.smiles);
+                }
+            }
         }
+        return notFound ("Not a valid structure "+id);
     }
 }

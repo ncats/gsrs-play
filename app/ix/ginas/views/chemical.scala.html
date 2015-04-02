@@ -1,0 +1,52 @@
+
+@main("ginas Chemical Structure search") {
+<div class="row">
+	<div class="col-md-10 col-md-offset-1" id="wizard">
+		<div class="row button-row">
+			<div class="col-md-6">
+								<a class="btn btn-default"
+					href="@ix.ginas.controllers.routes.GinasFactory.index()"
+					role="button">Cancel</a> <a
+					class="btn btn-default" href="#" role="button">Export</a>
+					<button type="button" class="btn btn-default" data-toggle="modal"
+					data-target="#structureimport" role="button">Import</button>
+			</div>
+		</div>
+		<div id = "chem-search">
+ <div class="jsdraw" id="chemSearch" ondatachange="molchange"></div>
+ <div class = "col-md-12">
+ 
+ RESULTS
+ </div>
+<!--  <iframe id="sketch" src='@routes.Assets.at("javascripts/marvin/editor.html")'  -->
+<!-- 	style="overflow: hidden; min-width: 500px; min-height: 450px; border: 1px solid darkgray;"  /> -->
+</div>
+<div class="row">
+<div class ="col-md-12">
+<form class="form-inline main-search" role="search" method="GET"
+				action="@ix.ginas.controllers.routes.GinasMain.search(null)" id = "search-bar">
+				<div class="input-group">
+					<input type="text" class="form-control structuretypeahead" id="search"
+						title="Search" placeholder="Search..." name="q"> <input
+						type="hidden" name="kind" value="ix.ginas.models.Structure" /> <span
+						class="input-group-btn">
+						<button class="btn btn-default" id="search" type="search"
+							value="submit">
+							<span class="fa fa-search"></span>
+						</button>
+					</span>
+				</div>
+			</form>
+</div>
+</div>
+		<div class="row button-row">
+			<div class="col-md-1 pull-right">
+				<a class="btn btn-default" href="#" role="button">Search</a>
+			</div>
+		</div>
+	</div>
+</div>
+<!--END panel panel-primary-->
+@molimport()
+}
+	

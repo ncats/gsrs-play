@@ -1,0 +1,112 @@
+
+@(sub: ix.ginas.models.v1.ChemicalSubstance)
+
+@import helper._ 
+
+@typeParse(t : String)={
+	@if(t =="of"){
+		Official Name
+	}
+	@if(t =="sys"){ 
+		Systematic Name
+	}
+	@if(t =="bn"){
+		Brand Name
+	}
+	@if(t =="cn"){
+		Common Name 
+	}
+	@if(t =="cd"){
+		Code 
+	}
+}
+
+
+
+
+
+@main("Substances") {
+<div class="row" id="breadcrumb">
+	<div class="col-md-12" id="trail">
+		<ul class="nav nav-pills" role="tablist">
+			<li role="presentation" class="active"><a href="#structure"
+				aria-controls="structure" role="tab" data-toggle="tab">Structure</a></li>
+			<li role="presentation"><a href="#moieties"
+				aria-controls="moieties" role="tab" data-toggle="tab">Moieties @sub.moieties.length</a></li>
+			<li role="presentation"><a href="#definitions"
+				aria-controls="definitions" role="tab" data-toggle="tab">Alternative Definitions</a></li>
+			<li role="presentation"><a href="#names" aria-controls="names"
+				role="tab" data-toggle="tab">Names @sub.names.length</a></li>
+			<li role="presentation"><a href="#references"
+				aria-controls="references" role="tab" data-toggle="tab">References @sub.references.length</a></li>
+		</ul>
+	</div>
+</div>
+<div class="row">
+	<div class="col-md-12 " id="wizard" role="tabpanel">
+		<!-- Nav tabs -->
+
+		<!-- Tab panes -->
+		<div class="tab-content">
+			<div role="tabpanel" class="tab-pane active" id="structure">
+				<div class="row">
+					<div class="col-md-4">Here be pictures</div>
+					<div class="col-md-8">
+						<table class="table table-striped" id="structureTable">
+							<thead>
+								<tr>
+									<th>StereoChemistry</th>
+									<th>Optical Activity</th>
+									<th>Additional Stereochemistry</th>
+								</tr>
+							</thead>
+							<tr>
+								<td><span class="badge">@sub.structure.stereoChemistry</span>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+				ADD STRUCTURE CONTENT
+
+
+			</div>
+
+			<div role="tabpanel" class="tab-pane" id="moeities">
+			
+			</div>
+
+
+			<div role="tabpanel" class="tab-pane" id="definitions">...</div>
+			<div role="tabpanel" class="tab-pane" id="names">
+				<div class="col-md-12">
+					<table class="table table-striped" id="namesTable">
+						<thead>
+							<tr>
+								<th>Name</th>
+								<th>Type</th>
+								<th>Language</th>
+								<th>Preferred</th>
+							</tr>
+						</thead>
+						@for(n <- sub.names) {
+						<tr>
+							<td>@n.name</td>
+							<td>@typeParse(n.`type`)</td>
+							<td>@if(n.languages(0).term =="en"){ English }else{ Not
+								English }</td>
+							<td>@if(n.preferred ==true){ Preferred }else{ }</td>
+						</tr>
+						}
+					</table>
+				</div>
+				<div role="tabpanel" class="tab-pane" id="references">...</div>
+
+			</div>
+
+		</div>
+	</div>
+</div>
+
+
+}
