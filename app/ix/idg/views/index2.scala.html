@@ -42,7 +42,7 @@
 <script	src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
 <script	src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
 <script	src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
-@ix.ncats.views.html.typeahead(Array("Target","Disease","Gene","IDG_Drug","MesH"))
+@ix.ncats.views.html.typeahead(Array("Target","Disease","Gene","Ligand","MesH"))
 </head>
 <body>
   <div class="container vertical-center" id="main-box">
@@ -89,7 +89,6 @@
 	      <div class="input-group">
 		<input type="text" class="form-control typeahead" id="search"
 		       title="Search" placeholder="Search..." name="q">
-		<input type="hidden" name="kind" value="" />
 		<span class="input-group-btn">
 		  <button class="btn btn-default" id="search" type="search"
 			  value="submit">

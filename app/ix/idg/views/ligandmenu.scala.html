@@ -11,7 +11,9 @@
   <li role="presentation" class="active"><a href="#">Ligands</a></li>
 </ul>
 <ul class="nav navbar-nav navbar-right">
-  <button type="button" class="btn navbar-btn btn-default" data-toggle="modal" data-target="#strucModal">Structure Search</button>  
+  <button type="button" class="btn navbar-btn btn-default"
+	  data-toggle="modal"
+	  data-target="#strucModal">Structure Search</button>  
   <form class="navbar-form navbar-right" role="search" method="GET"
         action="@ix.idg.controllers.routes.IDGApp.search(null)">
     <div class="form-group">
@@ -25,6 +27,19 @@
   </form>
 </ul>
 @ix.ncats.views.html.ssearch("GET", ix.idg.controllers.routes.IDGApp.search(null))
+
+<script>
+  $('#strucModal').on('show.bs.modal', function (ev) {
+     var button = $(ev.relatedTarget);
+     var url = button.data('molurl');
+     console.log('molurl: '+url);
+     if (url) {
+        $.get(url, function (mol) {
+           sketcher.importStructure('mol',mol);
+	 });
+     }
+  });
+</script>
 }
 
 @**

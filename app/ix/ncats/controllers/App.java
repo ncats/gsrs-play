@@ -725,30 +725,55 @@ public class App extends Controller {
 
     public static Result structure (final long id,
                                     final String format, final int size) {
-        String key = Structure.class.getName()+"."+id+"."+size+"."+format;
-        String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
-        try {
-            Result result = getOrElse (0l, key, new Callable<Result> () {
-                    public Result call () throws Exception {
-                        Structure struc = StructureFactory.getStructure(id);
-                        if (struc != null) {
-                            return ok (render (struc, format, size));
+        if (format.equals("svg") || format.equals("png")) {
+            String key = Structure.class.getName()+"."+id+"."+size+"."+format;
+            String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
+            try {
+                Result result = getOrElse (0l, key, new Callable<Result> () {
+                        public Result call () throws Exception {
+                            Structure struc = StructureFactory.getStructure(id);
+                            if (struc != null) {
+                                return ok (render (struc, format, size));
+                            }
+                            return null;
                         }
-                        return null;
-                    }
-                });
-            if (result != null) {
-                response().setContentType(mime);
-                return result;
+                    });
+                if (result != null) {
+                    response().setContentType(mime);
+                    return result;
+                }
             }
-            return notFound ("Not a valid structure "+id);
+            catch (Exception ex) {
+                Logger.error("Can't generate image for structure "
+                             +id+" format="+format+" size="+size, ex);
+                ex.printStackTrace();
+                return internalServerError
+                    ("Unable to retrieve image for structure "+id);
+            }
         }
-        catch (Exception ex) {
-            Logger.error("Can't generate image for structure "
-                         +id+" format="+format+" size="+size, ex);
-            ex.printStackTrace();
-            return internalServerError
-                ("Unable to retrieve image for structure "+id);
+        else {
+            Structure struc = StructureFactory.getStructure(id);
+            if (struc != null) {
+                response().setContentType("text/plain");
+                if (format.equals("mrv")) {
+                    try {
+                        MolHandler mh = new MolHandler (struc.molfile);
+                        if (mh.getMolecule().getDim() < 2) {
+                            mh.getMolecule().clean(2, null);
+                        }
+                        return ok (mh.getMolecule().toFormat("mrv"));
+                    }
+                    catch (Exception ex) {
+                        return internalServerError
+                            ("Structure "+id+" can't coverted to MRV format");
+                    }
+                }
+                else {
+                    return format.equals("mol") || format.equals("sdf")
+                        ?  ok (struc.molfile) : ok (struc.smiles);
+                }
+            }
         }
+        return notFound ("Not a valid structure "+id);
     }
 }
