@@ -743,8 +743,9 @@ public class IDGApp extends App {
     
     public static Result ligands (final String q,
                                   final int rows, final int page) {
+        String sha1 = Util.sha1(request ());
+        long start = System.currentTimeMillis();
         try {
-            String sha1 = Util.sha1(request ());
             return getOrElse ("ligands/"+sha1, new Callable<Result>() {
                     public Result call () throws Exception {
                         return _ligands (q, rows, page);
@@ -753,6 +754,11 @@ public class IDGApp extends App {
         }
         catch (Exception ex) {
             return _internalServerError (ex);
+        }
+        finally {
+            Logger.debug("ligands: q="+q+" rows="+rows+" page="+page
+                         +"..."+String.format
+                         ("%1$dms", System.currentTimeMillis()-start));
         }
     }
     
