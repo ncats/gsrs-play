@@ -32,6 +32,7 @@
 	           var mol = marvin.sketcherInstance.exportAsMol();
                    console.log('mol => '+mol);		   
 	           if (mol) {
+		       document.cookie = 'mol='+mol;
                        if (top.setQuery) {
  	                   top.setQuery(mol);
 	               } else if (parent.setQuery) {
