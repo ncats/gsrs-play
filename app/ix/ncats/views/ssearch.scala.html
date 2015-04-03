@@ -1,12 +1,12 @@
 @import play.api.mvc.Call
 
 @(method: String, action: Call)
+<script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script>
 <script>
 /*
 ** global variables
 */
 var sketcher; // sketcher
-var molchange; // molchange callback
 
 function setQuery (value) {
   console.log(value);
@@ -26,9 +26,8 @@ function setQuery (value) {
    });
 }
 
-function setMarvin (sk, change) {
+function setMarvin (sk) {
    sketcher = sk;
-   molchange = change;
 }
 
 function setStructure (struc) {

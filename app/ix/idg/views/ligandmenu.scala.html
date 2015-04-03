@@ -34,8 +34,10 @@
      var url = button.data('molurl');
      console.log('molurl: '+url);
      if (url) {
-        $.get(url, function (mol) {
-           sketcher.importStructure('mol',mol);
+       $.get(url, function (mol) {
+           sketcher.importStructure('mol',mol).catch(function(error) {
+	     	alert(error);
+	   });
 	 });
      }
   });

@@ -7,7 +7,6 @@
   <link type="text/css" rel="stylesheet" href='@routes.Assets.at("javascripts/marvin/gui/css/editor.min.css")' media="screen" />
   <script src='@routes.Assets.at("javascripts/marvin/gui/lib/es6-promise-2.0.1.min.js")'></script>
   <script src='@routes.Assets.at("javascripts/marvin/gui/gui.nocache.js")'></script>
-	
   <script>
 	window.addEventListener("message", function(event) {
 		try {
@@ -45,7 +44,9 @@
 		
 		marvin.sketcherInstance.on("molchange",molchange);
 		if (top.setMarvin) {
-		   top.setMarvin(marvin.sketcherInstance, molchange);
+		   top.setMarvin(marvin.sketcherInstance);
+		} else if (parent.setMarvin) {
+		   parent.setMarvin(marvin.sketcherInstance);
 		}
 	     } else {
 		alert("Cannot initiate sketcher. Current browser may not support HTML5 canvas or may run in Compatibility Mode.");

@@ -543,6 +543,7 @@ public class App extends Controller {
     }
 
     public static Result marvin () {
+        response().setHeader("X-Frame-Options", "SAMEORIGIN");
         return ok (ix.ncats.views.html.marvin.render());
     }
 
@@ -563,8 +564,11 @@ public class App extends Controller {
         JsonNode json = request().body().asJson();        
         try {
             final String format = json.get("parameters").asText();
-            final String mol = json.get("structure").asText();
-            
+            String struc = json.get("structure").asText();
+
+            final String mol = struc
+                .replaceAll("<cml>","<?xml version=\"1.0\"?>")
+                .replaceAll("</cml>", "");
             String sha1 = Util.sha1(mol);
             Logger.debug("MOLCONVERT: format="+format+" mol="
                          +mol+" sha1="+sha1);
