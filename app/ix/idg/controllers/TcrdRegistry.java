@@ -160,10 +160,10 @@ public class TcrdRegistry extends Controller {
                 ("select * from target2disease where target_id = ?");
             */
             pstm = con.prepareStatement
-                ("select * from target2disease a, t2tc b, tinx_importance c "
+                ("select * from target2disease a, t2tc b, tinx_importance c, tinx_novelty d "
                  +"where a.target_id = ? "
                  +"and a.target_id = b.target_id "
-                 +"and b.protein_id = c.protein_id "
+                 +"and b.protein_id = c.protein_id and c.protein_id = d.protein_id "
                  +"and a.doid = c.doid");
             pstm2 = con.prepareStatement
                 ("select * from chembl_activity where target_id = ?");
@@ -298,6 +298,8 @@ public class TcrdRegistry extends Controller {
                     double zscore = rs.getDouble("zscore");
                     double conf = rs.getDouble("conf");
                     double tinx = rs.getDouble("c.score");
+                    double tinxNovelty = rs.getDouble("d.score");
+
                     String pmids = rs.getString("pmids");
                     
                     XRef xref = null;
@@ -323,6 +325,8 @@ public class TcrdRegistry extends Controller {
                         xref.properties.add(new VNum (ZSCORE, zscore));
                         xref.properties.add(new VNum (CONF, conf));
                         xref.properties.add(new VNum (TINX_IMPORTANCE, tinx));
+                        xref.properties.add(new VNum (TINX_NOVELTY, tinxNovelty));
+
                         if (pmids != null) {
                             String[] pps = pmids.split("\\|");
                             Logger.debug(".......registering "+pps.length
