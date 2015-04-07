@@ -119,10 +119,11 @@ public class IDGApp extends App {
                 assert false: "Unknown TDL label: "+label;
             }
             else if (name.equals(ChemblRegistry.WHO_ATC)) {
-                String key = ChemblRegistry.WHO_ATC+":"+label;
+                final String key = ChemblRegistry.WHO_ATC+":"+label;
                 try {
                     Keyword kw = getOrElse (0l, key, new Callable<Keyword>() {
                             public Keyword call () {
+                                Logger.debug("Cache missed: "+key);
                                 List<Keyword> kws = KeywordFactory.finder
                                 .where().eq("label",name+" "+label)
                                 .findList();
@@ -154,10 +155,12 @@ public class IDGApp extends App {
 
         public Result get (final String name) {
             try {
-                long start = System.currentTimeMillis();        
+                long start = System.currentTimeMillis();
+                final String key = cls.getName()+"/"+name;
                 List<T> e = getOrElse
-                    (cls.getName()+"/"+name, new Callable<List<T>> () {
+                    (key, new Callable<List<T>> () {
                         public List<T> call () throws Exception {
+                            Logger.debug("Cache missed: "+key);
                             List<T> values = finder.where()
                             .eq("synonyms.term", name).findList();
                             if (values.size() > 1) {
@@ -184,11 +187,17 @@ public class IDGApp extends App {
         
         public Result result (final List<T> e) {
             try {
+                final String key = cls.getName()
+                    +"/result/"+Util.sha1(request ());
                 Result result = getOrElse
-                    (cls.getName()+"/result/"+Util.sha1(request ()),
-                     new Callable<Result> () {
+                    (key, new Callable<Result> () {
                             public Result call () throws Exception {
-                                return getResult (e);
+                                long start = System.currentTimeMillis();
+                                Result r = getResult (e);
+                                Logger.debug("Cache missed: "+key+"..."
+                                             +(System.currentTimeMillis()-start)
+                                             +"ms");
+                                return r;
                             }
                         });
                 return result;
@@ -334,10 +343,11 @@ public class IDGApp extends App {
     static Result _getTargetResult (final List<Target> targets)
         throws Exception {
         final Target t = targets.iterator().next(); // guarantee not empty
+        final String key = "targets/"+t.id+"/diseases";
         List<DiseaseRelevance> diseases = getOrElse
-            ("targets/"+t.id+"/diseases",
-             new Callable<List<DiseaseRelevance>> () {
+            (key, new Callable<List<DiseaseRelevance>> () {
                  public List<DiseaseRelevance> call () throws Exception {
+                     Logger.debug("Cache missed: "+key);
                      return getDiseaseRelevances (t);
                  }
              });
@@ -449,9 +459,10 @@ public class IDGApp extends App {
     public static Result targets (final String q,
                                   final int rows, final int page) {
         try {
-            String sha1 = Util.sha1(request ());
-            return getOrElse ("targets/"+sha1, new Callable<Result>() {
+            final String key = "targets/"+ Util.sha1(request ());
+            return getOrElse (key, new Callable<Result>() {
                     public Result call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
                         return _targets (q, rows, page);
                     }
                 });
@@ -504,9 +515,11 @@ public class IDGApp extends App {
     public static Keyword[] getAncestry (final String facet,
                                          final String predicate) {
         try {
+            final String key = predicate+"/"+facet;
             return getOrElse
-                (predicate+"/"+facet, new Callable<Keyword[]> () {
+                (key, new Callable<Keyword[]> () {
                         public Keyword[] call () throws Exception {
+                            Logger.debug("Cache missed: "+key);
                             return _getAncestry (facet, predicate);
                         }
                     });
@@ -619,9 +632,10 @@ public class IDGApp extends App {
 
     public static Result search (final int rows) {
         try {
-            String sha1 = Util.sha1(request ());
-            return getOrElse("search/"+sha1, new Callable<Result> () {
+            final String key = "search/"+Util.sha1(request ());
+            return getOrElse(key, new Callable<Result> () {
                     public Result call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
                         return _search (rows);
                     }
                 });
@@ -651,33 +665,37 @@ public class IDGApp extends App {
             }
             queryString.put("facet", f.toArray(new String[0]));
             long start = System.currentTimeMillis();
+            final String key =
+                "search/facet/"+Util.sha1(queryString.get("facet")); 
             result = getOrElse
-                ("search/facet/"+Util.sha1(queryString.get("facet")),
-                 new Callable<TextIndexer.SearchResult>() {
-                     public TextIndexer.SearchResult
-                         call ()  throws Exception {
-                         return SearchFactory.search
-                         (null, null, MAX_SEARCH_RESULTS,
-                          0, FACET_DIM, queryString);
-                     }
-                 });
+                (key, new Callable<TextIndexer.SearchResult>() {
+                        public TextIndexer.SearchResult
+                            call ()  throws Exception {
+                            Logger.debug("Cache missed: "+key);
+                            return SearchFactory.search
+                            (null, null, MAX_SEARCH_RESULTS,
+                             0, FACET_DIM, queryString);
+                        }
+                    });
             double ellapsed = (System.currentTimeMillis()-start)*1e-3;
             Logger.debug
                 ("1. Ellapsed time "+String.format("%1$.3fs", ellapsed));
         }
 
         if (result == null || result.count() == 0) {
-            long start = System.currentTimeMillis();                
+            long start = System.currentTimeMillis();
+            final String key =
+                "search/facet/q/"+Util.sha1(request(), "facet", "q");
             result = getOrElse
-                ("search/facet/q/"+Util.sha1(request(), "facet", "q"),
-                 new Callable<TextIndexer.SearchResult>() {
-                     public TextIndexer.SearchResult
-                                call () throws Exception {
-                         return SearchFactory.search
-                         (null, quote (query), MAX_SEARCH_RESULTS, 0,
-                          FACET_DIM, request().queryString());
-                     }
-                 });
+                (key, new Callable<TextIndexer.SearchResult>() {
+                        public TextIndexer.SearchResult
+                            call () throws Exception {
+                            Logger.debug("Cache missed: "+key);
+                            return SearchFactory.search
+                            (null, quote (query), MAX_SEARCH_RESULTS, 0,
+                             FACET_DIM, request().queryString());
+                        }
+                    });
             double ellapsed = (System.currentTimeMillis()-start)*1e-3;
             Logger.debug
                 ("2. Ellapsed time "+String.format("%1$.3fs", ellapsed));
@@ -725,6 +743,7 @@ public class IDGApp extends App {
         final String key = kw.label+" "+kw.term;
         return getOrElse (0l, key, new Callable<Keyword>() {
                 public Keyword call () {
+                    Logger.debug("Cache missed: "+key);
                     List<Keyword> kws = KeywordFactory.finder.where()
                         .eq("label", key).findList();
                     if (!kws.isEmpty()) {
@@ -743,11 +762,12 @@ public class IDGApp extends App {
     
     public static Result ligands (final String q,
                                   final int rows, final int page) {
-        String sha1 = Util.sha1(request ());
         long start = System.currentTimeMillis();
         try {
-            return getOrElse ("ligands/"+sha1, new Callable<Result>() {
+            final String key = "ligands/"+Util.sha1(request ());
+            return getOrElse (key, new Callable<Result>() {
                     public Result call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
                         return _ligands (q, rows, page);
                     }
                 });
@@ -814,10 +834,11 @@ public class IDGApp extends App {
                         pages, decorate (facets), ligands));
         }
         else {
-            String cache = Ligand.class.getName()+".facets";
+            final String key = Ligand.class.getName()+".facets";
             TextIndexer.Facet[] facets = getOrElse
-                (cache, new Callable<TextIndexer.Facet[]>() {
+                (key, new Callable<TextIndexer.Facet[]>() {
                         public TextIndexer.Facet[] call () {
+                            Logger.debug("Cache missed: "+key);
                             return filter (getFacets (Ligand.class, FACET_DIM),
                                            LIGAND_FACETS);
                         }
@@ -903,6 +924,7 @@ public class IDGApp extends App {
             }
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), LIGAND_FACETS);
+            indexer.shutdown();
         
             return ok (ix.idg.views.html.ligands.render
                        (1, result.count(), result.count(),
@@ -956,26 +978,32 @@ public class IDGApp extends App {
 
     public static Result structureResult
         (TextIndexer indexer, int rows, int page) throws Exception {
-        TextIndexer.SearchResult result = SearchFactory.search
-            (indexer, Ligand.class, null, indexer.size(), 0, FACET_DIM,
-             request().queryString());
-
-        TextIndexer.Facet[] facets = filter (result.getFacets(), LIGAND_FACETS);
-        List<Ligand> ligands = new ArrayList<Ligand>();
-        int[] pages = new int[0];
-        if (result.count() > 0) {
-            rows = Math.min(result.count(), Math.max(1, rows));
-            pages = paging (rows, page, result.count());
+        try {
+            TextIndexer.SearchResult result = SearchFactory.search
+                (indexer, Ligand.class, null, indexer.size(), 0, FACET_DIM,
+                 request().queryString());
             
-            for (int i = (page-1)*rows, j = 0; j < rows
-                     && i < result.count(); ++j, ++i) {
-                ligands.add((Ligand)result.getMatches().get(i));
+            TextIndexer.Facet[] facets =
+                filter (result.getFacets(), LIGAND_FACETS);
+            List<Ligand> ligands = new ArrayList<Ligand>();
+            int[] pages = new int[0];
+            if (result.count() > 0) {
+                rows = Math.min(result.count(), Math.max(1, rows));
+                pages = paging (rows, page, result.count());
+                
+                for (int i = (page-1)*rows, j = 0; j < rows
+                         && i < result.count(); ++j, ++i) {
+                    ligands.add((Ligand)result.getMatches().get(i));
+                }
             }
+            
+            return ok (ix.idg.views.html.ligands.render
+                       (page, rows, result.count(),
+                        pages, decorate (facets), ligands));
         }
-        
-        return ok (ix.idg.views.html.ligands.render
-                   (page, rows, result.count(),
-                    pages, decorate (facets), ligands));
+        finally {
+            //indexer.shutdown();
+        }
     }
 
     static TextIndexer createIndexer (ResultEnumeration results)
@@ -991,9 +1019,9 @@ public class IDGApp extends App {
                          +r.getMol().toFormat("smiles"));
 
             List<Ligand> ligands = LigandFactory.finder
-                .where(Expr.and(Expr.eq("links.kind",
-                                        Structure.class.getName()),
-                                Expr.eq("links.refid", r.getId())))
+                .where(Expr.and(Expr.eq("links.refid", r.getId()),
+                                Expr.eq("links.kind",
+                                        Structure.class.getName())))
                 .findList();
             for (Ligand ligand : ligands) {
                 if (!unique.contains(ligand.id)) {
@@ -1015,15 +1043,16 @@ public class IDGApp extends App {
                                      final double threshold,
                                      int rows, int page) {
         try {
-            String key = "similarity/"+Util.sha1(query)
+            final String key = "similarity/"+Util.sha1(query)
                 +"/"+String.format("%1$d", (int)(1000*threshold+.5));
             TextIndexer indexer = getOrElse
                 (strucIndexer.lastModified(),
                  key, new Callable<TextIndexer> () {
                          public TextIndexer call () throws Exception {
-                            ResultEnumeration results =
-                                 strucIndexer.similarity(query, threshold, 0);
-                            return createIndexer (results);
+                             Logger.debug("Cache missed: "+key);
+                             ResultEnumeration results =
+                             strucIndexer.similarity(query, threshold, 0);
+                             return createIndexer (results);
                          }
                      });
             
@@ -1043,14 +1072,15 @@ public class IDGApp extends App {
         (final String query, int rows, int page) {
         Logger.debug("substructure: query="+query+" rows="+rows+" page="+page);
         try {
-            String key = "substructure/"+Util.sha1(query);
+            final String key = "substructure/"+Util.sha1(query);
             TextIndexer indexer = getOrElse
                 (strucIndexer.lastModified(),
                  key, new Callable<TextIndexer> () {
                          public TextIndexer call () throws Exception {
-                            ResultEnumeration results =
-                                 strucIndexer.substructure(query, 0);
-                            return createIndexer (results);
+                             Logger.debug("Cache missed: "+key);
+                             ResultEnumeration results =
+                             strucIndexer.substructure(query, 0);
+                             return createIndexer (results);
                          }
                      });
             
@@ -1085,9 +1115,11 @@ public class IDGApp extends App {
         throws Exception {
         final Disease d = diseases.iterator().next();
         // resolve the targets for this disease
+        final String key = "diseases/"+d.id+"/targets";
         List<Target> targets = getOrElse
-            ("diseases/"+d.id+"/targets", new Callable<List<Target>> () {
+            (key, new Callable<List<Target>> () {
                     public List<Target> call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
                         List<Target> targets = new ArrayList<Target>();
                         for (XRef ref : d.links) {
                             if (Target.class.isAssignableFrom
@@ -1142,9 +1174,10 @@ public class IDGApp extends App {
     public static Result diseases (final String q,
                                    final int rows, final int page) {
         try {
-            String sha1 = Util.sha1(request ());
-            return getOrElse("diseases/"+sha1, new Callable<Result>() {
+            final String key = "diseases/"+Util.sha1(request ());
+            return getOrElse(key, new Callable<Result>() {
                     public Result call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
                         return _diseases (q, rows, page);
                     }
                 });
@@ -1180,10 +1213,11 @@ public class IDGApp extends App {
                        pages, decorate (facets), diseases));
         }
         else {
+            final String key = Disease.class.getName()+".facets";
             TextIndexer.Facet[] facets = getOrElse
-                (Disease.class.getName()+".facets",
-                 new Callable<TextIndexer.Facet[]>() {
+                (key, new Callable<TextIndexer.Facet[]>() {
                      public TextIndexer.Facet[] call() {
+                         Logger.debug("Cache missed: "+key);
                          return filter(getFacets(Disease.class, 30),
                                        DISEASE_FACETS);
                      }

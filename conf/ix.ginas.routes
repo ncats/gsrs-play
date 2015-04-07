@@ -1,18 +1,20 @@
 #
 # GINAS
 #
-GET		/			ix.ginas.controllers.GinasFactory.index
-GET		/register	ix.ginas.controllers.GinasFactory.register
-GET		/chemical	ix.ginas.controllers.GinasFactory.chemical
-GET		/sequence	ix.ginas.controllers.GinasFactory.sequence(kind: String ?= null)
-GET		/report		ix.ginas.controllers.GinasFactory.report
-GET		/wizard		ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
-GET		/results	ix.ginas.controllers.GinasMain.results(q: String ?= null, rows: Int ?= 12, page: Int ?= 1)
-GET		/substance/:id	ix.ginas.controllers.GinasMain.substance(id: Long)
-GET		/search		ix.ginas.controllers.GinasMain.search(kind: String)
+GET	/		ix.ginas.controllers.GinasFactory.index
+GET	/register	ix.ginas.controllers.GinasFactory.register
+GET	/chemical	ix.ginas.controllers.GinasFactory.chemical
+GET	/sequence	ix.ginas.controllers.GinasFactory.sequence(kind: String ?= null)
+GET	/report		ix.ginas.controllers.GinasFactory.report
+GET	/wizard		ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
+GET	/results	ix.ginas.controllers.GinasMain.results(q: String ?= null, rows: Int ?= 12, page: Int ?= 1)
+GET	/substance/:id	ix.ginas.controllers.GinasMain.substance(id: Long)
+GET	/search		ix.ginas.controllers.GinasMain.search(kind: String)
 #GET	/structureSearch		ix.ginas.controllers.GinasMain.structureSearch(q: String ?= null)
-GET		/login		ix.ginas.controllers.GinasMain.login
+GET	/login		ix.ginas.controllers.GinasMain.login
 POST	/submit		ix.ginas.controllers.GinasMain.authenticate
 POST	/register	ix.ginas.controllers.GinasMain.namesList
 GET     /import       ix.ginas.controllers.GinasMain.migration
 POST    /       ix.ginas.controllers.GinasMain.migrate
+POST	/load	ix.ginas.controllers.GinasApp.loadJSON
+GET	/load	ix.ginas.controllers.GinasApp.load

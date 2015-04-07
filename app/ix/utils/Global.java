@@ -14,6 +14,8 @@ import play.libs.Json;
 import play.mvc.Http;
 import play.mvc.Controller;
 import com.typesafe.config.*;
+import scala.collection.immutable.Iterable;
+import scala.collection.JavaConverters;
 
 import com.avaje.ebean.config.ServerConfig;
 import com.avaje.ebean.EbeanServer;
@@ -92,6 +94,7 @@ public class Global extends GlobalSettings {
             RouteFactory.register(res.name(), c);
         }
 
+        //Logger.debug("IDG routes: "+ix.idg.Routes.routes().getClass());
         /*
         EbeanPlugin eb = new EbeanPlugin (app);
         EbeanServer server = Ebean.getServer(eb.defaultServer());
@@ -109,6 +112,48 @@ public class Global extends GlobalSettings {
         */
     }
 
+    void dumpRoute () {
+        Collection list = JavaConverters.asJavaCollectionConverter
+            (play.api.Play.current().routes().toList()).asJavaCollection();
+        for (Object l : list) {
+            ix.Routes$ route = (ix.Routes$)l;
+            String prefix = route.prefix();
+            Logger.debug("PREFIX: "+prefix);
+            for (java.lang.reflect.Method m : route.getClass().getMethods()) {
+                if (m.getName().indexOf("_Routes") > 0) {
+                    try {
+                        Object obj = m.invoke(route);
+                        Logger.debug("++ "+m+" => "+obj+" ["+obj.getClass()+"]");
+                    }
+                    catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                //Logger.debug("+"+m);
+            }
+
+            if (prefix.length() > 0) {
+                // now check to see any of the paths matches with {prefix}, if
+                // so then we contract /{prefix}/{prefix}/{path}
+                // to /{prefix}/{path}
+
+                // method, url, action
+                List<scala.Tuple3<String,String,String>> seq =
+                    JavaConverters.seqAsJavaListConverter
+                    (route.documentation()).asJava();
+                //Logger.debug("route: "+seq);
+                for (scala.Tuple3 t : seq) {
+                    // skip the /{prefix} prefix
+                    Logger.debug(" .."+t._1()+" \""+t._2()+"\" "+t._3());
+                    String path = t._2().toString().substring(prefix.length());
+                    if (path.startsWith(prefix)) {
+                        Logger.debug(path+" => "+t._2());
+                    }
+                }
+            }
+        }
+    }
+    
     @Override
     public void onStop (Application app) {
         Logger.info("## stopping");
@@ -117,8 +162,13 @@ public class Global extends GlobalSettings {
     /*
     @Override
     public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
-        Logger.debug("route: path="+req.path()+" method="+req.method());
-        return super.onRouteRequest(req);
+          String p = req.path().substring("/idg".length()); 
+        if (p.startsWith("/idg")) {
+        //return ix.idg.Routes.routes().apply(req);
+        }
+        play.api.mvc.Handler h = super.onRouteRequest(req);
+        Logger.debug("route: path="+req.path()+" method="+req.method()+" handler="+h);
+        return h;
     }
     */
 

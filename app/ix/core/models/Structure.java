@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,12 +46,44 @@ public class Structure extends IxModel {
 
     // optical activity
     public enum Optical {
-        PLUS, // (+)
-        MINUS, // (-)
-        PLUS_MINUS, // (+/-)
-        UNSPECIFIED,
-        UNKNOWN
+        PLUS ("( + )"),
+        MINUS ("( - )"),
+        PLUS_MINUS ("( + / - )"),
+        UNSPECIFIED ("unspecified"),
+        UNKNOWN ("none")
         ;
+
+        final String value;
+        Optical (String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        public String toValue () {
+            return value;
+        }
+        
+        @JsonCreator
+        public static Optical forValue (String value) {
+            if (value.equals("( + )") || value.equals("(+)"))
+                return PLUS;
+            if (value.equals("( - )") || value.equals("(-)"))
+                return MINUS;
+            if (value.equals("( + / - )") || value.equals("(+/-)"))
+                return PLUS_MINUS;
+            if (value.equalsIgnoreCase("unspecified"))
+                return UNSPECIFIED;
+            if (value.equalsIgnoreCase("none")
+                || value.equalsIgnoreCase("unknown"))
+                return UNKNOWN;
+            return null;
+        }
+    }
+
+    public enum NYU {
+        No,
+        Yes,
+        Unknown
     }
     
     @Column(length=128)
@@ -70,7 +104,7 @@ public class Structure extends IxModel {
     @JsonProperty("stereochemistry")
     public Stereo stereoChemistry;
     public Optical opticalActivity;
-    public boolean atropisomerism;
+    public NYU atropisomerism;
     
     @Lob
     @Basic(fetch=FetchType.EAGER)

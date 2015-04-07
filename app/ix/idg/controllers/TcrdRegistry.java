@@ -355,8 +355,6 @@ public class TcrdRegistry extends Controller {
                         }
                         xref.save();
                         target.links.add(xref);
-                        //target.update();
-                        //INDEXER.update(target);
                         
                         // now add all the unique parents of this disease node
                         getNeighbors (neighbors, disease.links);
@@ -364,8 +362,6 @@ public class TcrdRegistry extends Controller {
                         // link the other way
                         try {
                             disease.links.add(self);
-                            //disease.update();
-                            //INDEXER.update(disease);
                             updates.add(disease);
                             ++count;
                         }
@@ -708,10 +704,10 @@ public class TcrdRegistry extends Controller {
                  );
                 */
                 ("select *\n"
-                 +"from tcrd100.t2tc a "
-                 +"     join (tcrd100.target b, tcrd100.protein c)\n"
+                 +"from t2tc a "
+                 +"     join (target b, protein c)\n"
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
-                 +"left join tcrd100.tinx_novelty d\n"
+                 +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
                  +"order by d.score desc, c.id\n"
                  +(rows > 0 ? ("limit "+rows) : "")

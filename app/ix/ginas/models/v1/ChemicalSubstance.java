@@ -13,6 +13,9 @@ import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
 
 @JSONEntity(name = "chemicalSubstance", title = "Chemical Substance")
+@Entity
+@Inheritance
+@DiscriminatorValue("CHE")
 public class ChemicalSubstance extends Substance {
     @JSONEntity(isRequired = true)
     @OneToOne
@@ -25,6 +28,6 @@ public class ChemicalSubstance extends Substance {
     public List<Moiety> moieties = new ArrayList<Moiety>();
 
     public ChemicalSubstance () {
-        super (SubstanceClass.Chemical);
+        super (SubstanceClass.chemical);
     }
 }

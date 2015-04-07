@@ -185,7 +185,7 @@ public class EntityFactory extends Controller {
             }
         }
         else {
-            query = query.orderBy("id asc");
+            //query = query.orderBy("id asc");
         }
 
         try {

@@ -24,19 +24,22 @@ import ix.ginas.models.Ginas;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends Ginas {
+    /**
+     * sigh.. can we be at least case-consistent?
+     */
     public enum SubstanceClass {
-        Chemical,
-        Protein,
-        NucleicAcid,
-        Polymer,
-        StructurallyDiverse,
-        Mixture,
-        SpecifiedSubstanceG1,
-        SpecifiedSubstanceG2,
-        SpecifiedSubstanceG3,
-        SpecifiedSubstanceG4,
-        UnspecifiedSubstance,
-        Virtual
+        chemical,
+        protein,
+        nucleicacid,
+        polymer,
+        structurallyDiverse,
+        mixture,
+        specifiedSubstanceG1,
+        specifiedSubstanceG2,
+        specifiedSubstanceG3,
+        specifiedSubstanceG4,
+        unspecifiedSubstance,   
+        VIRTUAL
     }
     
     @JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
@@ -81,7 +84,9 @@ public class Substance extends Ginas {
     @JoinTable(name="ix_ginas_substance_tag")
     public List<Keyword> tags = new ArrayList<Keyword>();
 
-    public Substance () {}
+    public Substance () {
+        this (SubstanceClass.VIRTUAL);
+    }
     public Substance (SubstanceClass subcls) {
         substanceClass = subcls;
     }
