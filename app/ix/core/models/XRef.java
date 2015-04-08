@@ -26,7 +26,7 @@ public class XRef extends IxModel {
      */
     @Column(nullable=false,length=40)
     public String refid; 
-    @Column(length=512,nullable=false)
+    @Column(length=255,nullable=false)
     public String kind;
     public boolean deprecated;
     

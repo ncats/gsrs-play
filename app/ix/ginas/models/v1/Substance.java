@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
@@ -45,6 +46,17 @@ public class Substance extends Ginas {
     
     @JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
     public SubstanceClass substanceClass;
+    public String status;
+    public String approvedBy;
+    
+    @JsonDeserialize(using=DateDeserializer.class)
+    public Date approved;
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ginas_substance_access")
+    @JsonSerialize(using = PrincipalListSerializer.class)
+    @JsonDeserialize(using = PrincipalListDeserializer.class)
+    public List<Principal> access = new ArrayList<Principal>();
     
     @JSONEntity(title = "Names", minItems = 1, isRequired = true)
     @ManyToMany(cascade=CascadeType.ALL)
@@ -61,18 +73,22 @@ public class Substance extends Ginas {
     public Modifications modifications;
     
     @JSONEntity(title = "Notes")
+    @ManyToMany(cascade=CascadeType.ALL)    
     @JoinTable(name="ix_ginas_substance_note")
     public List<Note> notes = new ArrayList<Note>();
     
     @JSONEntity(title = "Properties")
+    @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_substance_property")
     public List<Property> properties = new ArrayList<Property>();
     
     @JSONEntity(title = "Relationships")
+    @ManyToMany(cascade=CascadeType.ALL)    
     @JoinTable(name="ix_ginas_substance_relationship")
     public List<Relationship> relationships = new ArrayList<Relationship>();
     
     @JSONEntity(title = "References", minItems = 1, isRequired = true)
+    @ManyToMany(cascade=CascadeType.ALL)    
     @JoinTable(name="ix_ginas_substance_reference")
     public List<Reference> references = new ArrayList<Reference>();
     
@@ -82,6 +98,7 @@ public class Substance extends Ginas {
     
     // TODO in original schema, this field is missing its items: String
     @JSONEntity(title = "Tags", format = "table", isUniqueItems = true)
+    @ManyToMany(cascade=CascadeType.ALL)    
     @JoinTable(name="ix_ginas_substance_tag")
     @JsonSerialize(using=KeywordListSerializer.class)
     public List<Keyword> tags = new ArrayList<Keyword>();

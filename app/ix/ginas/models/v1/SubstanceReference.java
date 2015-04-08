@@ -11,7 +11,7 @@ import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.Ginas;
 
 @Entity
-@Table(name="ix_ginas_substance_reference")
+@Table(name="ix_ginas_substancereference")
 @JSONEntity(name = "substanceReference", isFinal = true)
 public class SubstanceReference extends Ginas {
     @JSONEntity(title = "Substance Name")

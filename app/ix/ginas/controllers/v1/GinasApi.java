@@ -32,24 +32,36 @@ import com.avaje.ebean.event.BeanPersistListener;
 import ix.core.controllers.EntityFactory;
 import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
+import ix.core.models.*;
 
 public class GinasApi extends EntityFactory {
     static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
 
-    static class ChemicalProblemHandler
+    static class GinasV1ProblemHandler
         extends  DeserializationProblemHandler {
-        ChemicalProblemHandler () {
+        GinasV1ProblemHandler () {
         }
         
         public boolean handleUnknownProperty
             (DeserializationContext ctx, JsonParser parser,
              JsonDeserializer deser, Object bean, String property) {
-            Logger.warn("Unknown property \""
-                        +property+"\" while parsing "+bean+"; skipping it..");
+
             try {
-                Logger.debug("Token: "+parser.getCurrentToken());
-                parser.skipChildren();
+                if ("hash".equals(property)) {
+                    Structure struc = (Structure)bean;
+                    //Logger.debug("value: "+parser.getText());
+                    struc.properties.add(new Keyword
+                                         (Structure.H_LyChI_L4,
+                                          parser.getText()));
+                }
+                else {
+                    Logger.warn("Unknown property \""
+                                +property+"\" while parsing "
+                                +bean+"; skipping it..");
+                    Logger.debug("Token: "+parser.getCurrentToken());
+                    parser.skipChildren();                  
+                }
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -61,7 +73,7 @@ public class GinasApi extends EntityFactory {
     public static <T extends Substance> T parseJSON
         (InputStream is, Class<T> cls) throws IOException {
         ObjectMapper mapper = new ObjectMapper ();
-        mapper.addHandler(new ChemicalProblemHandler ());
+        mapper.addHandler(new GinasV1ProblemHandler ());
         return mapper.readValue(is, cls);
     }
 

@@ -7,6 +7,7 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Structure;
 import ix.core.models.Indexable;
@@ -20,6 +21,7 @@ public class ChemicalSubstance extends Substance {
     @JSONEntity(isRequired = true)
     @OneToOne
     @Column(nullable=false)
+    @JsonSerialize(using=StructureSerializer.class)
     public Structure structure;
     
     @JSONEntity(title = "Chemical Moieties", isRequired = true, minItems = 1)

@@ -646,8 +646,10 @@ public class IDGApp extends App {
     static <T> List<T> filter (Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
         for (Object v : values) {
-            if (cls.isAssignableFrom(v.getClass()) && fv.size() < max) {
+            if (cls.isAssignableFrom(v.getClass())) {
                 fv.add((T)v);
+                if (fv.size() >= max)
+                    break;
             }
         }
         return fv;

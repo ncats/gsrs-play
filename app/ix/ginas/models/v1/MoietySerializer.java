@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.models.Structure;
+import ix.core.models.Keyword;
+import ix.core.models.Value;
 
 public class MoietySerializer extends JsonSerializer<Moiety> {
     ObjectMapper mapper = new ObjectMapper ();
@@ -26,6 +28,13 @@ public class MoietySerializer extends JsonSerializer<Moiety> {
         }
         else {
             node = mapper.createObjectNode();
+        }
+        for (Value val : moiety.structure.properties) {
+            if (Structure.H_LyChI_L4.equals(val.label)) {
+                Keyword kw = (Keyword)val;
+                node.put("hash", kw.term);
+                break;
+            }
         }
         node.put("count", moiety.count);
         provider.defaultSerializeValue(node, jgen);     
