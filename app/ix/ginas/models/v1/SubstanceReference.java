@@ -22,10 +22,10 @@ public class SubstanceReference extends Ginas {
     public String refuuid;
     
     @JSONEntity(values = "JSONConstants.ENUM_REFERENCE")
-    public Substance.SubstanceClass substanceClass;
+    public String substanceClass;
     
-    @Column(length=10)
-    public String unii;
+    @Column(length=32)
+    public String approvalID;
 
     public SubstanceReference () {}
 }

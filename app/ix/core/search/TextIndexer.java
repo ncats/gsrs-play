@@ -958,7 +958,10 @@ public class TextIndexer {
                     indexable = defaultIndexable;
                 }
 
-                if (!indexable.indexed()) {
+                int mods = f.getModifiers();
+                if (!indexable.indexed()
+                    || Modifier.isStatic(mods)
+                    || Modifier.isTransient(mods)) {
                     //Logger.debug("** skipping field "+f.getName()+"["+cls.getName()+"]");
                     continue;
                 }
@@ -1121,6 +1124,9 @@ public class TextIndexer {
                      org.apache.lucene.document.Field.Store store) {
         String name = path.iterator().next();
         String full = toPath (path);
+        String fname =
+            "".equals(indexable.name()) ? name : indexable.name();
+        
         boolean asText = true;
 
         if (value instanceof Long) {
@@ -1133,13 +1139,12 @@ public class TextIndexer {
             if (indexable.sortable())
                 sorters.put(full, SortField.Type.LONG);
 
-            FacetField ff = getRangeFacet 
-                ("".equals(indexable.name()) ? name : indexable.name(),
-                 indexable.ranges(), lval);
+            FacetField ff = getRangeFacet (fname, indexable.ranges(), lval);
             if (ff != null) {
-                facetsConfig.setMultiValued(ff.name(), true);
-                facetsConfig.setRequireDimCount(ff.name(), true);
+                facetsConfig.setMultiValued(fname, true);
+                facetsConfig.setRequireDimCount(fname, true);
                 fields.add(ff);
+                asText = false;
             }
         }
         else if (value instanceof Integer) {
@@ -1153,12 +1158,12 @@ public class TextIndexer {
                 sorters.put(full, SortField.Type.INT);
 
             FacetField ff = getRangeFacet 
-                ("".equals(indexable.name()) ? name : indexable.name(),
-                 indexable.ranges(), ival);
+                (fname, indexable.ranges(), ival);
             if (ff != null) {
-                facetsConfig.setMultiValued(ff.name(), true);
-                facetsConfig.setRequireDimCount(ff.name(), true);
+                facetsConfig.setMultiValued(fname, true);
+                facetsConfig.setRequireDimCount(fname, true);
                 fields.add(ff);
+                asText = false;
             }
         }
         else if (value instanceof Float) {
@@ -1171,11 +1176,10 @@ public class TextIndexer {
                 sorters.put(full, SortField.Type.FLOAT);
             
             FacetField ff = getRangeFacet 
-                ("".equals(indexable.name()) ? name : indexable.name(),
-                 indexable.dranges(), fval, indexable.format());
+                (fname, indexable.dranges(), fval, indexable.format());
             if (ff != null) {
-                facetsConfig.setMultiValued(ff.name(), true);
-                facetsConfig.setRequireDimCount(ff.name(), true);
+                facetsConfig.setMultiValued(fname, true);
+                facetsConfig.setRequireDimCount(fname, true);
                 fields.add(ff);
             }
             asText = false;
@@ -1190,11 +1194,10 @@ public class TextIndexer {
                 sorters.put(full, SortField.Type.DOUBLE);
 
             FacetField ff = getRangeFacet 
-                ("".equals(indexable.name()) ? name : indexable.name(),
-                 indexable.dranges(), dval, indexable.format());
+                (fname, indexable.dranges(), dval, indexable.format());
             if (ff != null) {
-                facetsConfig.setMultiValued(ff.name(), true);
-                facetsConfig.setRequireDimCount(ff.name(), true);
+                facetsConfig.setMultiValued(fname, true);
+                facetsConfig.setRequireDimCount(fname, true);
                 fields.add(ff);
             }
             asText = false;
@@ -1304,7 +1307,7 @@ public class TextIndexer {
     }
 
     static String toPath (Collection<String> path) {
-        return toPath (path, true/*false*/);
+        return toPath (path, /*false*/true);
     }
 
     static String toPath (Collection<String> path, boolean noindex) {

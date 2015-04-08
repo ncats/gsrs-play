@@ -10,6 +10,7 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
@@ -39,6 +40,7 @@ public class Reference extends Ginas {
     @JSONEntity(title = "Tags", format = "table", itemsTitle = "Tag", itemsFormat = JSONConstants.CV_DOCUMENT_COLLECTION, isUniqueItems = true)
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_reference_tag")
+    @JsonSerialize(using=KeywordListSerializer.class)    
     public List<Keyword> tags = new ArrayList<Keyword>();
     
     @JSONEntity(title = "Uploaded Document")

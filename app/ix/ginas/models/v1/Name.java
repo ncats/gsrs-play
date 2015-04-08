@@ -11,6 +11,7 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
@@ -35,6 +36,7 @@ public class Name extends Ginas {
                (name="ix_ginas_name_domain_uuid",
                referencedColumnName="uuid")
     )
+    @JsonSerialize(using=KeywordListSerializer.class)
     public List<Keyword> domains = new ArrayList<Keyword>();
     
     @JSONEntity(title = "Languages", format = "table", itemsTitle = "Language", itemsFormat = JSONConstants.CV_LANGUAGE)
@@ -44,6 +46,7 @@ public class Name extends Ginas {
                (name="ix_ginas_name_language_uuid",
                referencedColumnName="uuid")
     )
+    @JsonSerialize(using=KeywordListSerializer.class)    
     public List<Keyword> languages = new ArrayList<Keyword>();
     
     @JSONEntity(title = "Naming Jurisdictions", format = "table", itemsTitle = "Jurisdiction", itemsFormat = JSONConstants.CV_JURISDICTION)
@@ -53,6 +56,7 @@ public class Name extends Ginas {
                (name="ix_ginas_name_jurisdiction_uuid",
                referencedColumnName="uuid")
     )
+    @JsonSerialize(using=KeywordListSerializer.class)    
     public List<Keyword> nameJurisdiction = new ArrayList<Keyword>();
     
     @JSONEntity(title = "Naming Organizations", format = "table")

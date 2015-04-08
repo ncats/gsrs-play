@@ -21,7 +21,7 @@ public class Ginas extends Model {
     public Date lastModified;
     
     @OneToOne(cascade=CascadeType.ALL)
-    public Principal lastEditedby;
+    public Principal lastEditedBy;
     public boolean deprecated;
 
     public Ginas () {

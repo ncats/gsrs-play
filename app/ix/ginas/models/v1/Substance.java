@@ -10,6 +10,7 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
@@ -82,6 +83,7 @@ public class Substance extends Ginas {
     // TODO in original schema, this field is missing its items: String
     @JSONEntity(title = "Tags", format = "table", isUniqueItems = true)
     @JoinTable(name="ix_ginas_substance_tag")
+    @JsonSerialize(using=KeywordListSerializer.class)
     public List<Keyword> tags = new ArrayList<Keyword>();
 
     public Substance () {

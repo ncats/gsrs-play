@@ -137,7 +137,7 @@ public class Structure extends IxModel {
     
     @Transient
     @JsonIgnore
-    public Object mol; // a transient mol object
+    public transient Object mol; // a transient mol object
     
     public Structure () {}
 

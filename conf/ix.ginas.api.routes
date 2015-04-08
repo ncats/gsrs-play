@@ -1,0 +1,4 @@
+#
+# GINAS api
+#
+->	/v1	ix.ginas.api.v1.Routes

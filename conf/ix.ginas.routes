@@ -1,4 +1,9 @@
 #
+# GINAS api
+#
+->	/api	ix.ginas.api.Routes
+
+#
 # GINAS
 #
 GET	/		ix.ginas.controllers.GinasFactory.index
@@ -18,3 +23,4 @@ GET     /import       ix.ginas.controllers.GinasMain.migration
 POST    /       ix.ginas.controllers.GinasMain.migrate
 POST	/load	ix.ginas.controllers.GinasApp.loadJSON
 GET	/load	ix.ginas.controllers.GinasApp.load
+

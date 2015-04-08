@@ -2,6 +2,9 @@ package ix.ginas.models.v1;
 
 import java.lang.reflect.*;
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
+
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -10,24 +13,18 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ix.core.models.Structure;
 
-public class MoietySerializer extends JsonSerializer<Moiety> {
-    ObjectMapper mapper = new ObjectMapper ();
-    public MoietySerializer () {
-    }
+import ix.core.models.Keyword;
 
-    public void serialize (Moiety moiety, JsonGenerator jgen,
+public class KeywordListSerializer extends JsonSerializer<List<Keyword>> {
+    public KeywordListSerializer () {}
+    public void serialize (List<Keyword> keywords, JsonGenerator jgen,
                            SerializerProvider provider)
         throws IOException, JsonProcessingException {
-        ObjectNode node;
-        if (moiety.structure != null) {
-            node = (ObjectNode)mapper.valueToTree(moiety.structure);
+        jgen.writeStartArray();
+        for (Keyword kw : keywords) {
+            provider.defaultSerializeValue(kw.term, jgen);
         }
-        else {
-            node = mapper.createObjectNode();
-        }
-        node.put("count", moiety.count);
-        provider.defaultSerializeValue(node, jgen);     
+        jgen.writeEndArray();
     }
 }
