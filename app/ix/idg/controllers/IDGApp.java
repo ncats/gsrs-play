@@ -65,6 +65,7 @@ public class IDGApp extends App {
         public Disease disease;
         public Double zscore;
         public Double conf;
+        public Double tinxScore;
         public String comment;
         public Keyword omim;
         public Keyword uniprot;
@@ -253,19 +254,39 @@ public class IDGApp extends App {
             f.hidden = true;
             decors.add(f);
         }
+
+        IDGFacetDecorator f = new IDGFacetDecorator
+            (new TextIndexer.Facet(DiseaseOntologyRegistry.CLASS));
+        f.hidden = true;
+        decors.add(f);
         
         return decors.toArray(new FacetDecorator[0]);
     }
     
     public static Result about() {
-        TextIndexer.Facet[] target = getFacets (Target.class, "Namespace");
-        TextIndexer.Facet[] disease = getFacets (Disease.class, "Namespace");
-        TextIndexer.Facet[] ligand = getFacets (Ligand.class, "Namespace");
-        return ok (ix.idg.views.html.about.render
-                   ("Pharos: Illuminating the Druggable Genome",
-                    target.length > 0 ? target[0] : null,
-                    disease.length > 0 ? disease[0] : null,
-                    ligand.length > 0 ? ligand[0]: null));
+        final String key = "idg/about";
+        try {
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
+                        TextIndexer.Facet[] target =
+                            getFacets (Target.class, "Namespace");
+                        TextIndexer.Facet[] disease =
+                            getFacets (Disease.class, "Namespace");
+                        TextIndexer.Facet[] ligand =
+                            getFacets (Ligand.class, "Namespace");
+                        return ok (ix.idg.views.html.about.render
+                                   ("Pharos: Illuminating the Druggable Genome",
+                                    target.length > 0 ? target[0] : null,
+                                    disease.length > 0 ? disease[0] : null,
+                                    ligand.length > 0 ? ligand[0]: null));
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't get about page", ex);
+            return error (500, "Unable to fulfil request");
+        }
     }
 
     public static Result index () {
@@ -405,6 +426,8 @@ public class IDGApp extends App {
                         dr.zscore = (Double)p.getValue();
                     else if (TcrdRegistry.CONF.equals(p.label))
                         dr.conf = (Double)p.getValue();
+                    else if (TcrdRegistry.TINX_IMPORTANCE.equals(p.label))
+                        dr.tinxScore = (Double)p.getValue();
                     else if (UniprotRegistry
                              .DISEASE_RELEVANCE.equals(p.label)
                              || p.label.equals(dr.disease.name)) {

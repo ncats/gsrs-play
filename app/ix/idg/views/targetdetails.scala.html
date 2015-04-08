@@ -1,5 +1,6 @@
 
 @import ix.idg.models.Target
+@import ix.idg.models.Ligand
 @import ix.core.models.Value
 @import ix.core.models.Keyword
 @import ix.core.models.Publication
@@ -33,6 +34,11 @@
        <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
        <td>@dr.zscore</td>
        <td>@dr.conf</td>
+       @if(dr.tinxScore != null) {
+       <td>@{"%1$.3f".format(-Math.log(dr.tinxScore))}</td>
+       } else {
+       <td></td>
+       }
      </tr>
 
      @for(i <- 0 until dr.lineage.size()) {
@@ -41,6 +47,11 @@
             <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(x.disease))">@x.disease.name</a></td>
             <td>@x.zscore</td>
             <td>@x.conf</td>
+	    @if(x.tinxScore != null) {
+	    <td>@{"%1$.3f".format(-Math.log(x.tinxScore))}</td>
+	    } else {
+	    <td></td>
+	    }
          </tr>
        }
      }
@@ -148,7 +159,39 @@
             }
           </div>
         </div>
-      </div>
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Ligands</h3>
+          </div>
+          <div class="panel-body">
+           <table>
+	    @for(ref <- target.links) {
+	       @if(ref.kind.equalsIgnoreCase("ix.idg.models.Ligand")) {
+	           @defining(ref.deRef().asInstanceOf[Ligand]) { lig =>
+		     <tr>
+		       <td>
+		         <a tabindex="-1"
+			    data-toggle="popover"
+			    data-animation="true"
+                            data-placement="top"
+           		    data-trigger="click hover focus"
+           		    data-title="@lig.getName()"
+	   		    data-html="true"
+           		    data-content="<img src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(lig).id,"svg",150)'>">
+			   <img alt="Structure of @IDGApp.getId(lig)"
+			       src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(lig).id,"svg",80)'></a>
+		       </td>
+		       <td class="valign-center">
+		          <a href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
+		       </td>
+		     </tr>
+                  }
+               }
+	    }
+	    </table>
+	  </div>
+	</div>
+      </div>	
       <!--
         -- Disease Relevance
         -->
@@ -163,6 +206,7 @@
                 <th>Disease</th>
                 <th>Z-score</th>
                 <th>Confidence</th>
+		<th>TIN-X Importance</th>
               </tr>
 	      @defining(request().getQueryString("view")) { view =>
 	        @view match {
@@ -180,6 +224,7 @@
 		        <td><a href="@request().uri?view=full">More...</a></td>
 		        <td></td>
 		        <td></td>
+			<td></td>
 		      </tr>
 		    }
 		  }

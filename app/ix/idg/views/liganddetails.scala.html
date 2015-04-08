@@ -161,7 +161,12 @@
                         <td>@pub.title</td>
 			<td>
 			  @for(m <- pub.mesh) {
-			     <a class="label label-default" href='@{ix.idg.controllers.routes.IDGApp.ligands(null,8,1) + "?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
+			    <a @if(m.majorTopic) {
+			      class="label label-warning"
+			    } else {
+			      class="label label-default"
+			    }
+			    href='@{ix.idg.controllers.routes.IDGApp.ligands(null,8,1) + "?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
 			  }
 			</td>
 		     </tr>
