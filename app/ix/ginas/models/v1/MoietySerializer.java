@@ -15,28 +15,16 @@ import ix.core.models.Keyword;
 import ix.core.models.Value;
 
 public class MoietySerializer extends JsonSerializer<Moiety> {
-    ObjectMapper mapper = new ObjectMapper ();
+    StructureSerializer serializer = new StructureSerializer ();
     public MoietySerializer () {
     }
 
     public void serialize (Moiety moiety, JsonGenerator jgen,
                            SerializerProvider provider)
         throws IOException, JsonProcessingException {
-        ObjectNode node;
-        if (moiety.structure != null) {
-            node = (ObjectNode)mapper.valueToTree(moiety.structure);
-        }
-        else {
-            node = mapper.createObjectNode();
-        }
-        for (Value val : moiety.structure.properties) {
-            if (Structure.H_LyChI_L4.equals(val.label)) {
-                Keyword kw = (Keyword)val;
-                node.put("hash", kw.term);
-                break;
-            }
-        }
-        node.put("count", moiety.count);
-        provider.defaultSerializeValue(node, jgen);     
+        jgen.writeStartObject();
+        serializer.serializeValue(moiety.structure, jgen, provider);
+        provider.defaultSerializeField("count", moiety.count, jgen);
+        jgen.writeEndObject();
     }
 }

@@ -4,15 +4,20 @@ import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.JSONConstants;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.core.models.Indexable;
-import ix.ginas.models.Ginas;
+import ix.core.models.Principal;
+import ix.core.models.Keyword;
+import ix.ginas.models.*;
 
 @JSONEntity(title = "Code", isFinal = true)
 @Entity
@@ -38,6 +43,17 @@ public class Code extends Ginas {
     @Basic(fetch=FetchType.EAGER)
     public String url;
 
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ginas_code_access")
+    @JsonSerialize(using = PrincipalListSerializer.class)
+    @JsonDeserialize(using = PrincipalListDeserializer.class)
+    public List<Principal> access = new ArrayList<Principal>();
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ginas_code_reference")
+    @JsonSerialize(using=KeywordListSerializer.class)    
+    public List<Keyword> references = new ArrayList<Keyword>();
+    
     public Code () {}
     public Code (String code) {
         this.code = code;

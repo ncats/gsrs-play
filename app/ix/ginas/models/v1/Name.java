@@ -12,15 +12,23 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.core.models.Indexable;
+import ix.core.models.Principal;
 import ix.core.models.Keyword;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.*;
 
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
 @Table(name="ix_ginas_name")
 public class Name extends Ginas {
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ginas_name_access")
+    @JsonSerialize(using = PrincipalListSerializer.class)
+    @JsonDeserialize(using = PrincipalListDeserializer.class)
+    public List<Principal> access = new ArrayList<Principal>();
+    
     @JSONEntity(title = "Name", isRequired = true)
     @Column(nullable=false)
     @Indexable(name="Name", suggest=true)
@@ -58,6 +66,15 @@ public class Name extends Ginas {
     )
     @JsonSerialize(using=KeywordListSerializer.class)    
     public List<Keyword> nameJurisdiction = new ArrayList<Keyword>();
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ginas_name_reference",
+               joinColumns=@JoinColumn
+               (name="ix_ginas_name_reference_uuid",
+               referencedColumnName="uuid")
+    )
+    @JsonSerialize(using=KeywordListSerializer.class)    
+    public List<Keyword> references = new ArrayList<Keyword>();    
     
     @JSONEntity(title = "Naming Organizations", format = "table")
     @ManyToMany(cascade=CascadeType.ALL)

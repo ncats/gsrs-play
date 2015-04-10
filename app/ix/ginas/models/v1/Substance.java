@@ -18,7 +18,7 @@ import ix.core.models.Principal;
 import ix.core.models.Keyword;
 
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.*;
 
 @JSONEntity(name = "substance", title = "Substance")
 @Entity
@@ -66,6 +66,7 @@ public class Substance extends Ginas {
     // TOOD original schema has superfluous name = codes in the schema here and
     // in all of Code's properties
     @JSONEntity(title = "Codes")
+    @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_substance_code")
     public List<Code> codes = new ArrayList<Code>();
 
@@ -98,7 +99,7 @@ public class Substance extends Ginas {
     
     // TODO in original schema, this field is missing its items: String
     @JSONEntity(title = "Tags", format = "table", isUniqueItems = true)
-    @ManyToMany(cascade=CascadeType.ALL)    
+    @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_substance_tag")
     @JsonSerialize(using=KeywordListSerializer.class)
     public List<Keyword> tags = new ArrayList<Keyword>();

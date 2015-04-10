@@ -35,6 +35,7 @@ import ix.ginas.models.v1.*;
 import ix.core.models.*;
 
 public class GinasApi extends EntityFactory {
+    
     static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
 
@@ -48,6 +49,7 @@ public class GinasApi extends EntityFactory {
              JsonDeserializer deser, Object bean, String property) {
 
             try {
+                boolean parsed = true;
                 if ("hash".equals(property)) {
                     Structure struc = (Structure)bean;
                     //Logger.debug("value: "+parser.getText());
@@ -55,7 +57,29 @@ public class GinasApi extends EntityFactory {
                                          (Structure.H_LyChI_L4,
                                           parser.getText()));
                 }
+                else if ("references".equals(property)) {
+                    if (bean instanceof Structure) {
+                        Structure struc = (Structure)bean;
+                        if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
+                            while (JsonToken.END_ARRAY != parser.nextToken()) {
+                                String ref = parser.getValueAsString();
+                                struc.properties.add
+                                    (new Keyword (Ginas.REFERENCE, ref));
+                            }
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                    else {
+                        parsed = false;
+                    }
+                }
                 else {
+                    parsed = false;
+                }
+
+                if (!parsed) {
                     Logger.warn("Unknown property \""
                                 +property+"\" while parsing "
                                 +bean+"; skipping it..");

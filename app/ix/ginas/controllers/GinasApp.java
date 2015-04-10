@@ -76,7 +76,16 @@ public class GinasApp extends App {
             }
 
             if (type.equalsIgnoreCase("chemical")) {
-                sub = GinasApi.parseJSON(is, ChemicalSubstance.class);
+                ChemicalSubstance chem =
+                    GinasApi.parseJSON(is, ChemicalSubstance.class);
+                // there is some thing in how jackson's object creation
+                // doesn't get registered with ebean for it to realize that
+                // the bean's state has changed.
+                chem.structure.save();
+                for (Moiety m : chem.moieties)
+                    m.structure.save();
+                chem.save();
+                sub = chem;
             }
             else if (type.equalsIgnoreCase("protein")) {
             }
@@ -91,9 +100,6 @@ public class GinasApp extends App {
             else {
                 return badRequest ("Unknown substance type: "+type);
             }
-            
-            if (sub != null)
-                sub.save();
         }
         catch (Exception ex) {
             ex.printStackTrace();

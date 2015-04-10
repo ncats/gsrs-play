@@ -18,14 +18,18 @@ import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
 import ix.core.models.Keyword;
-
+import ix.ginas.models.Ginas;
 
 public class StructureSerializer extends JsonSerializer<Structure> {
     public StructureSerializer () {}
-    public void serialize (Structure struc, JsonGenerator jgen,
-                           SerializerProvider provider)
+    public void serializeValue (Structure struc, JsonGenerator jgen,
+                                SerializerProvider provider)
         throws IOException, JsonProcessingException {
-        jgen.writeStartObject();
+        if (struc == null) {
+            provider.defaultSerializeNull(jgen);
+            return;
+        }
+        
         provider.defaultSerializeField("created", struc.created, jgen);
         provider.defaultSerializeField("modified", struc.modified, jgen);
         provider.defaultSerializeField("deprecated", struc.deprecated, jgen);
@@ -48,13 +52,25 @@ public class StructureSerializer extends JsonSerializer<Structure> {
         provider.defaultSerializeField("ezCenters", struc.ezCenters, jgen);
         provider.defaultSerializeField("charge", struc.charge, jgen);
         provider.defaultSerializeField("mwt", struc.mwt, jgen);
+        List<String> refs = new ArrayList<String>();
         for (Value val : struc.properties) {
             if (Structure.H_LyChI_L4.equals(val.label)) {
                 Keyword kw = (Keyword)val;
                 provider.defaultSerializeField("hash", kw.term, jgen);
-                break;
+            }
+            else if (Ginas.REFERENCE.equals(val.label)) {
+                Keyword kw = (Keyword)val;
+                refs.add(kw.term);
             }
         }
+        provider.defaultSerializeField("references", refs, jgen);
+    }
+    
+    public void serialize (Structure struc, JsonGenerator jgen,
+                           SerializerProvider provider)
+        throws IOException, JsonProcessingException {
+        jgen.writeStartObject();
+        serializeValue (struc, jgen, provider);
         jgen.writeEndObject();
     }
 }
