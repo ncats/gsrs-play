@@ -1,4 +1,4 @@
-package ix.ginas.models.v1;
+package ix.ginas.models;
 
 import java.lang.reflect.*;
 import java.io.IOException;

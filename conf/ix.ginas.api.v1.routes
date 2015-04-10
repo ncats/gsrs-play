@@ -1,2 +1,4 @@
-GET	/substances	ix.ginas.controllers.v1.GinasApi.page(top: Int ?= 10, skip: Int ?= 0, filter: String ?= null)
-GET	/substances/$id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}>   ix.ginas.controllers.v1.GinasApi.get(id: String, expand: String ?= null)
+GET	/substances	ix.ginas.controllers.v1.SubstanceFactory.page(top: Int ?= 10, skip: Int ?= 0, filter: String ?= null)
+GET	/substances/$id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}> ix.ginas.controllers.v1.SubstanceFactory.get(id: String, expand: String ?= null)
+GET	/references	ix.ginas.controllers.v1.ReferenceFactory.page(top: Int ?= 10, skip: Int ?= 0, filter: String ?= null)
+GET	/references/$id<[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}> ix.ginas.controllers.v1.ReferenceFactory.get(id: String, expand: String ?= null)

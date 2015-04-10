@@ -29,7 +29,7 @@ public class StructureSerializer extends JsonSerializer<Structure> {
             provider.defaultSerializeNull(jgen);
             return;
         }
-        
+        provider.defaultSerializeField("id", struc.id, jgen);
         provider.defaultSerializeField("created", struc.created, jgen);
         provider.defaultSerializeField("modified", struc.modified, jgen);
         provider.defaultSerializeField("deprecated", struc.deprecated, jgen);
