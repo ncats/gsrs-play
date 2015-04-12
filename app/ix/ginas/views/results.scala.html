@@ -31,7 +31,6 @@ results: List[Substance])
  @main("Search Results") {
 
 <div class="row" id="pub-history">
-	<div class="col-md-3 col-xs-4">@filters(facets)</div>
 	<!--END panel panel-primary-->
 
 
@@ -47,7 +46,6 @@ results: List[Substance])
 								<ol class="breadcrumb" id="filters"></ol>
 							</div>
 				<div class="row pagination-list">
-					@pagination(current, 12, total, pages)
 				</div>
 				<div class="row" id="">
 					@for(s <- results) {
@@ -56,7 +54,6 @@ results: List[Substance])
 				</div>
 				<br/>
 				<div class="row pagination-list">
-					@pagination(current, 12, total, pages)
 
 				</div>
 			</div>

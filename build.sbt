@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
     ,"org.apache.lucene" % "lucene-facet" % "4.10.0"
     ,"org.apache.lucene" % "lucene-queryparser" % "4.10.0"
     ,"org.webjars" %% "webjars-play" % "2.3.0"
-    ,"org.webjars" % "bootstrap" % "3.2.0"
+    ,"org.webjars" % "bootstrap" % "3.3.4"
     ,"org.webjars" % "typeaheadjs" % "0.10.5-1"
     ,"org.webjars" % "handlebars" % "2.0.0-1"
     ,"org.webjars" % "jquery-ui" % "1.11.2"

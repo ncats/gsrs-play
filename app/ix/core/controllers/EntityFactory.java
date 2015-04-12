@@ -444,13 +444,19 @@ public class EntityFactory extends Controller {
 
     protected static <K,T> Result field (K id, String field, 
                                          Model.Finder<K, T> finder) {
-        
-        T inst = finder.byId(id);
+        try {
+            Logger.debug("id: "+id+" field: "+field);
+            T inst = finder.byId(id);
             //query.setId(id).findUnique();
-        if (inst == null) {
-            return notFound ("Bad request: "+request().uri());
+            if (inst == null) {
+                return notFound ("Bad request: "+request().uri());
+            }
+            return field (inst, field);
         }
-        return field (inst, field);
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
     }
     
     protected static <T> Result field (Object inst, String field) {
@@ -471,7 +477,6 @@ public class EntityFactory extends Controller {
             }
         }
         */
-
         String[] paths = field.split("/");
         Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
         StringBuilder uri = new StringBuilder ();
@@ -664,8 +669,8 @@ public class EntityFactory extends Controller {
         return notFound (request().uri()+": No edit history found!");
     }
 
-    protected static <T extends Model> Result update 
-        (Long id, String field, Class<T> type, Model.Finder<Long, T> finder) {
+    protected static <K, T extends Model> Result update 
+        (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
 
         if (!request().method().equalsIgnoreCase("PUT")) {
             return badRequest ("Only PUT is accepted!");
@@ -873,12 +878,19 @@ public class EntityFactory extends Controller {
                                      * Entity class
                                      */
                                     type = (Class<T>)ftype;
-                                    id = (Long)f.get(val);
+                                    id = (K)f.get(val);
                                 }
                                 catch (NoSuchFieldException ex) {
-                                    Logger.warn
-                                        (ftype.getName()
-                                         +": Entity doesn't have field id");
+                                    try {
+                                        f = ftype.getField("uuid");
+                                        type = (Class<T>)ftype;
+                                        id = (K)f.get(val);
+                                    }
+                                    catch (NoSuchFieldException exx) {
+                                        Logger.warn
+                                            (ftype.getName()
+                                             +": Entity doesn't have field id");
+                                    }
                                 }
                             }
                         }

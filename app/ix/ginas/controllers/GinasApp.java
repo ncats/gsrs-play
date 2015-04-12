@@ -263,4 +263,12 @@ public class GinasApp extends App {
         chem.save();
         return chem;
     }
+
+    public static Result search (String kind) {
+        return ok ("Coming soon!");
+    }
+
+    public static Result authenticate () {
+        return ok ("You're authenticated!");
+    }
 }

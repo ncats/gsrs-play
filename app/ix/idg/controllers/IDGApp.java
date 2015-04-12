@@ -32,6 +32,7 @@ import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Call;
 import play.db.ebean.Model;
+import play.Play;
 import com.avaje.ebean.Expr;
 
 import java.io.IOException;
@@ -44,6 +45,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.HashMap;
@@ -57,7 +59,7 @@ public class IDGApp extends App {
     static final int MAX_SEARCH_RESULTS = 1000;
 
     static final TextIndexer indexer = 
-        play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
 
     public static class DiseaseRelevance
@@ -140,6 +142,20 @@ public class IDGApp extends App {
                 catch (Exception ex) {
                     Logger.error("Can't retrieve key "+key+" from cache", ex);
                     ex.printStackTrace();
+                }
+            }
+            else if (name.equals(Target.IDG_FAMILY)) {
+                if (label.equalsIgnoreCase("gpcr")) {
+                    return "<a href=\"http://en.wikipedia.org/wiki/G_protein%E2%80%93coupled_receptor\">"+label+"</a>";
+                }
+                if (label.equalsIgnoreCase("kinase")) {
+                    return "<a href=\"http://en.wikipedia.org/wiki/Kinase\">"+label+"</a>";
+                }
+                if (label.equalsIgnoreCase("ion channel")) {
+                    return "<a href=\"http://en.wikipedia.org/wiki/Ion_channel\">"+label+"</a>";
+                }
+                if (label.equalsIgnoreCase("nuclear receptor")) {
+                    return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a>";
                 }
             }
             return label;
@@ -606,6 +622,46 @@ public class IDGApp extends App {
         return getAncestry (facet, ChemblRegistry.ChEMBL_PROTEIN_ANCESTRY);
     }
 
+    public static Keyword[] getATCAncestry (String facet) {
+        List<Keyword> ancestry = new ArrayList<Keyword>();
+        String[] toks = facet.split("/");
+        if (toks[0].equals(ChemblRegistry.WHO_ATC)) {
+            String atc = toks[1];
+            try {
+                int len = atc.length();
+                switch (len) {
+                case 1:
+                    break;
+                    
+                case 7:
+                    ancestry.add(getATC (atc.substring(0,5)));
+                    // fall through
+                case 5:
+                    ancestry.add(getATC (atc.substring(0,4)));
+                    // fall through
+                case 4:
+                    ancestry.add(getATC (atc.substring(0,3)));
+                    // fall through
+                case 3:
+                    ancestry.add(getATC (atc.substring(0,1)));
+                    Collections.sort(ancestry, new Comparator<Keyword>() {
+                            public int compare (Keyword kw1, Keyword kw2) {
+                                return kw1.label.compareTo(kw2.label);
+                            }
+                        });
+                    break;
+                default:
+                    Logger.warn("Not a valid ATC facet value: "+ atc);
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't get ATC", ex);
+            }
+        }
+        return ancestry.toArray(new Keyword[0]);
+    }
+
     public static Result search (String kind) {
         try {
             String q = request().getQueryString("q");
@@ -764,8 +820,8 @@ public class IDGApp extends App {
                     diseases, totalDiseases));
     }
 
-    public static Keyword getATC (final Keyword kw) throws Exception {
-        final String key = kw.label+" "+kw.term;
+    public static Keyword getATC (final String term) throws Exception {
+        final String key = ChemblRegistry.WHO_ATC+" "+term;
         return getOrElse (0l, key, new Callable<Keyword>() {
                 public Keyword call () {
                     Logger.debug("Cache missed: "+key);
@@ -773,16 +829,22 @@ public class IDGApp extends App {
                         .eq("label", key).findList();
                     if (!kws.isEmpty()) {
                         Keyword n = kws.iterator().next();
-                        String url = ix.idg.controllers
-                            .routes.IDGApp.ligands(null, 8, 1).url();
+                        String url = routes.IDGApp.ligands(null, 8, 1).url();
                         n.term = n.term.toLowerCase();
                         n.href = url + (url.indexOf('?') > 0?"&":"?")
-                            +"facet="+kw.label+"/"+kw.term;
+                            +"facet="+ChemblRegistry.WHO_ATC+"/"+term;
                         return n;
                     }
                     return null;
                 }
             });
+    }
+
+    public static Keyword getATC (final Keyword kw) throws Exception {
+        if (kw.label.equals(ChemblRegistry.WHO_ATC))
+            return getATC (kw.term);
+        Logger.warn("Not a valid ATC label: "+kw.label);
+        return null;
     }
     
     public static Result ligands (final String q,
@@ -854,7 +916,7 @@ public class IDGApp extends App {
                 }
             }
             
-            return ok (ix.idg.views.html.ligands.render
+            return ok (ix.idg.views.html.ligandsmedia.render
                        (page, rows, result.count(),
                         pages, decorate (facets), ligands));
         }
@@ -875,7 +937,7 @@ public class IDGApp extends App {
             List<Ligand> ligands =
                 LigandFactory.getLigands(rows, (page-1)*rows, null);
             
-            return ok (ix.idg.views.html.ligands.render
+            return ok (ix.idg.views.html.ligandsmedia.render
                        (page, rows, total, pages, decorate (facets), ligands));
         }
     }
@@ -990,6 +1052,19 @@ public class IDGApp extends App {
         return tdls;
     }
 
+    public static Set<String> getMechanisms (Ligand lig) {
+        Set<String> moa = new TreeSet<String>();
+        for (XRef ref : lig.links) {
+            if (ref.kind.equals(Target.class.getName())) {
+                for (Value v : ref.properties) {
+                    if (v.label.equals(ChemblRegistry.ChEMBL_MECHANISM))
+                        moa.add(((Text)v).text);
+                }
+            }
+        }
+        return moa;
+    }
+
     public static List<Mesh> getMajorTopics (EntityModel model) {
         List<Mesh> topics = new ArrayList<Mesh>();
         for (Publication pub : model.getPublications()) {
@@ -1022,7 +1097,7 @@ public class IDGApp extends App {
                 }
             }
             
-            return ok (ix.idg.views.html.ligands.render
+            return ok (ix.idg.views.html.ligandsmedia.render
                        (page, rows, result.count(),
                         pages, decorate (facets), ligands));
         }
@@ -1076,7 +1151,10 @@ public class IDGApp extends App {
                          public TextIndexer call () throws Exception {
                              Logger.debug("Cache missed: "+key);
                              ResultEnumeration results =
-                             strucIndexer.similarity(query, threshold, 0);
+                             strucIndexer.similarity
+                             (query, threshold,
+                              Play.application().configuration()
+                              .getInt("ix.structure.max", 100));
                              return createIndexer (results);
                          }
                      });
@@ -1095,16 +1173,19 @@ public class IDGApp extends App {
     
     public static Result substructure
         (final String query, int rows, int page) {
-        Logger.debug("substructure: query="+query+" rows="+rows+" page="+page);
         try {
             final String key = "substructure/"+Util.sha1(query);
+            Logger.debug("substructure: query="+query
+                         +" rows="+rows+" page="+page+" key="+key);
             TextIndexer indexer = getOrElse
                 (strucIndexer.lastModified(),
                  key, new Callable<TextIndexer> () {
                          public TextIndexer call () throws Exception {
                              Logger.debug("Cache missed: "+key);
                              ResultEnumeration results =
-                             strucIndexer.substructure(query, 0);
+                             strucIndexer.substructure
+                             (query, Play.application().configuration()
+                              .getInt("ix.structure.max", 100));
                              return createIndexer (results);
                          }
                      });

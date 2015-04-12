@@ -169,6 +169,20 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    public static Result editsUUID (String context, String id) {
+        try {
+            Method m = getMethod (context, "edits", UUID.class);
+            if (m != null)
+                return (Result)m.invoke(null, UUID.fromString(id));
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.debug("Unknown context: "+context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+    
     public static Result field (String context, Long id, String field) {
         try {
             Method m = getMethod (context, "field", Long.class, String.class);
@@ -183,6 +197,26 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    public static Result fieldUUID (String context, String uuid, String field) {
+        try {
+            Method m = getMethod (context, "field", UUID.class, String.class);
+            if (m != null) {
+                return (Result)m.invoke(null, UUID.fromString(uuid), field);
+            }
+            else {
+                Logger.error
+                    ("Context \""+context
+                     +"\" doesn't have method \"field(UUID, String)\"!");
+            }
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.debug("Unknown context: "+context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+    
     public static Result page (String context, int top,
                                int skip, String filter) {
         try {
@@ -218,6 +252,20 @@ public class RouteFactory extends Controller {
             Method m = getMethod (context, "update", Long.class, String.class);
             if (m != null)
                 return (Result)m.invoke(null, id, field);
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.debug("Unknown context: "+context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+
+    public static Result updateUUID (String context, String id, String field) {
+        try {
+            Method m = getMethod (context, "update", UUID.class, String.class);
+            if (m != null)
+                return (Result)m.invoke(null, UUID.fromString(id), field);
         }
         catch (Exception ex) {
             Logger.trace("["+context+"]", ex);

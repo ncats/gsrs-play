@@ -189,7 +189,7 @@ public class Global extends GlobalSettings {
         Global g = getInstance ();
         String name = g.names.get(cls.getName());
         
-        if (name != null) {
+        if (name == null) {
             // climb up the inheritance ladder to find the first matches
             for (Class c = cls.getSuperclass(); 
                  name == null; c = c.getSuperclass()) {

@@ -57,6 +57,14 @@ current, rows, total, pages, facets){ @ligandmenu() }{
   @defining(request().queryString.get("facet")) { facets =>
      @if(facets != null) {
       <li><a href="@ix.idg.controllers.routes.IDGApp.ligands()">Ligands</a></li>
+      @for(f <- facets) {
+         @if(f.startsWith(ChemblRegistry.WHO_ATC)) {
+            @for(a <- IDGApp.getATCAncestry(f)) {
+	       <li><a href="@a.href">@a.term</a></li>
+	    }
+	    <li class="active">@IDGApp.getATC(f.substring(f.indexOf('/')+1)).term</li>
+	 }
+       }
      } else {
        <li class="active">Ligands</li>
      }

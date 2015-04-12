@@ -15,18 +15,18 @@ import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
 
-@NamedResource(name="references",
-               type=Reference.class,
-               description="Resource for handling of GInAS references")
-public class ReferenceFactory extends EntityFactory {
-    static public final Model.Finder<UUID, Reference> finder =
-        new Model.Finder(UUID.class, Reference.class);
+@NamedResource(name="names",
+               type=Name.class,
+               description="Resource for handling of GInAS names")
+public class NameFactory extends EntityFactory {
+    static public final Model.Finder<UUID, Name> finder =
+        new Model.Finder(UUID.class, Name.class);
 
-    public static Reference getReference (String id) {
+    public static Name getName (String id) {
         return getEntity (UUID.fromString(id), finder);
     }
 
-    public static List<Reference> getReferences
+    public static List<Name> getNames
         (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);
     }
@@ -44,7 +44,7 @@ public class ReferenceFactory extends EntityFactory {
     }
 
     public static Result edits (String id) {
-        return edits (UUID.fromString(id), Reference.class);
+        return edits (UUID.fromString(id), Name.class);
     }
 
     public static Result get (String id, String expand) {
@@ -56,7 +56,7 @@ public class ReferenceFactory extends EntityFactory {
     }
 
     public static Result create () {
-        return create (Reference.class, finder);
+        return create (Name.class, finder);
     }
 
     public static Result delete (String id) {
@@ -64,6 +64,6 @@ public class ReferenceFactory extends EntityFactory {
     }
 
     public static Result update (String id, String field) {
-        return update (UUID.fromString(id), field, Reference.class, finder);
+        return update (UUID.fromString(id), field, Name.class, finder);
     }
 }
