@@ -1,0 +1,219 @@
+@CHARSET "UTF-8";
+#logo-banner {
+	height: 80px;
+	padding: 0px;
+}
+
+#logo {
+	max-height: 80px;
+}
+
+#version {
+	padding-top: 55px;
+	text-align: left;
+}
+
+#full {
+	padding: 0px;
+}
+
+#icons {
+	padding-top: 100px;
+	text-align: center;
+}
+
+#searching {
+	padding-top: 100px;
+}
+
+#bug-link{
+	cursor:pointer;
+}
+
+#login-button{
+	padding:0px;
+}
+
+#load-button{
+	padding:0px;
+	padding-right:15px;
+}
+
+/*Register tiles */
+.row.pad {
+padding-top: 25px;
+padding-bottom: 25px;
+}
+
+.box{
+        height:100%;
+        margin-bottom:0px;
+
+        
+}
+.box {
+	display: block;
+  position:relative;
+          height:165px;
+  margin:0 auto;
+}
+@-moz-document url-prefix() {
+.box{
+    margin-top: 4% !important;
+    margin-left: 3% !important;
+}
+@media ( max-width : 768px) {
+.box {
+    margin-left: 0 !important;
+    margin-top: 8% !important;
+}
+}
+.badge{
+	 margin-right: -3% !important;
+    margin-top: 100% !important;
+}
+}
+
+.box img {
+  position:absolute;
+  left:0;
+  -webkit-transition: opacity .3s ease-in-out;
+  -moz-transition: opacity .3s ease-in-out;
+  -o-transition: opacity .3s ease-in-out;
+  transition: opacity .3s ease-in-out;
+}
+
+.box img.off:hover {
+  opacity:0;
+}
+/*END Register tiles */
+
+#trail{
+	padding-left:0px;
+	padding-right:0px;	
+	padding-top:25px;
+	padding-bottom:0px;
+}
+
+#crumb-list {
+margin-bottom: 5px;
+margin-left: -15px;
+background: none;
+}
+
+#wizard {
+background-color: #e7e7e7;
+border: 1px solid rgb(136, 136, 136);
+border-radius:4px;
+height:630px;
+}
+
+.button-row {
+padding-top: 15px;
+padding-bottom:15px;
+}
+
+#wizard-panel{
+	padding-top: 25px;
+height: 500px;
+background-color: white;
+border: 1px solid rgb(136, 136, 136);
+border-radius: 4px;
+}
+
+#chem-search{
+height: 500px;
+background-color: white;
+border: 1px solid rgb(136, 136, 136);
+border-radius: 4px;
+}
+
+#search-bar, #menu-login{
+	padding-top:8px;
+}
+
+/*PAGINATION CSS */
+.pagination>li>a, .pagination>li>a:hover{
+color: #1f355c;
+}
+
+.pagination>.active>a, .pagination>.active>a:hover {
+        background-color: #1f355c;
+        border-color: #1f355c;
+}
+
+#pages-right{
+        float:right;
+}
+
+.pagination-list{
+        margin-right: 0px;
+        margin-left: 0px;
+        margin-top: -3%;
+margin-bottom: -1%;
+}
+.badge{
+        float:right;
+}
+
+/*END PAGINATION CSS */
+
+/* TYPEAHEAD CSS */
+.twitter-typeahead {
+    width: 100% !important;
+    height: 20px !important;
+}
+
+.tt-dropdown-menu {
+        width: 50%;
+    top: 220% !important;
+    background-color: rgba(255, 255, 255, .9);
+}
+
+.tt-suggestion {
+padding-top: 4%;
+padding-bottom: 1%;
+padding-left: 4%;
+}
+
+.header{
+padding-top: 4%;
+padding-left:2%;
+background-color: rgba(31,53,92,.9);
+color: white;
+padding-bottom: 4%;
+margin-bottom: 0%;
+margin-top: 0%;
+}
+
+
+.tt-suggestion:hover {
+background-color: rgba(31,53,92,.2);
+}
+
+#chartSelect-button {
+width: 51% !important;
+}
+
+.tt-cursor{
+background-color: rgba(31,53,92,.2);
+}
+/* END TYPEAHEAD CSS */
+
+/* WIZARD CSS */
+#labels{
+	height:235px;
+}
+
+.ng-invalid.ng-dirty{
+  border-color:red;
+}
+
+.ng-valid.ng-dirty{
+  border-color:green;
+}
+/* END WIZARD CSS */
+
+#canvas {
+background-color: none;
+}
