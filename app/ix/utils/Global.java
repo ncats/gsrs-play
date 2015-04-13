@@ -27,6 +27,7 @@ import com.avaje.ebean.SqlRow;
 import javax.sql.DataSource;
 import java.sql.DatabaseMetaData;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 import ix.core.plugins.IxContext;
 import ix.core.NamedResource;
@@ -236,13 +237,20 @@ public class Global extends GlobalSettings {
             }
             Object id = m.invoke(instance);
             */
-            Field f = cls.getField("id");
-            if (f == null) {
+            Field fid = null;
+            for (Field f : cls.getFields()) {
+                if (f.getAnnotation(Id.class) != null) {
+                    fid = f;
+                    break;
+                }
+            }
+            
+            if (fid == null) {
                 Logger.trace("Entity doesn't have id field: "+instance);
                 throw new IllegalArgumentException
                     ("Entity type does not have id field!");
             }
-            Object id = f.get(instance);
+            Object id = fid.get(instance);
             return getNamespace()+"/"+name+"("+id+")";
         }
         catch (Exception ex) {

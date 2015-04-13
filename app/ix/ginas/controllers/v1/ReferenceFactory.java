@@ -22,8 +22,8 @@ public class ReferenceFactory extends EntityFactory {
     static public final Model.Finder<UUID, Reference> finder =
         new Model.Finder(UUID.class, Reference.class);
 
-    public static Reference getReference (String id) {
-        return getEntity (UUID.fromString(id), finder);
+    public static Reference getReference (UUID uuid) {
+        return getEntity (uuid, finder);
     }
 
     public static List<Reference> getReferences
@@ -43,27 +43,23 @@ public class ReferenceFactory extends EntityFactory {
         return page (top, skip, filter, finder);
     }
 
-    public static Result edits (String id) {
-        return edits (UUID.fromString(id), Reference.class);
+    public static Result edits (UUID uuid) {
+        return edits (uuid, Reference.class);
     }
 
-    public static Result get (String id, String expand) {
-        return get (UUID.fromString(id), expand, finder);
-    }
-
-    public static Result field (String id, String path) {
-        return field (UUID.fromString(id), path, finder);
+    public static Result get (UUID uuid, String expand) {
+        return get (uuid, expand, finder);
     }
 
     public static Result create () {
         return create (Reference.class, finder);
     }
 
-    public static Result delete (String id) {
-        return delete (UUID.fromString(id), finder);
+    public static Result delete (UUID uuid) {
+        return delete (uuid, finder);
     }
 
-    public static Result update (String id, String field) {
-        return update (UUID.fromString(id), field, Reference.class, finder);
+    public static Result update (UUID uuid, String field) {
+        return update (uuid, field, Reference.class, finder);
     }
 }

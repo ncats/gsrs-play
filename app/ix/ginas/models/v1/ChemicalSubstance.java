@@ -39,7 +39,7 @@ public class ChemicalSubstance extends Substance {
     public ChemicalSubstance () {
         super (SubstanceClass.chemical);
     }
-
+    
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_moieties")
     public JsonNode getJsonMoieties () {

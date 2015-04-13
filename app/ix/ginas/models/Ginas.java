@@ -13,8 +13,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import play.db.ebean.Model;
+import play.Logger;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
+import ix.utils.Global;
 
 @MappedSuperclass
 public class Ginas extends Model {
@@ -39,5 +41,17 @@ public class Ginas extends Model {
     @PreUpdate
     public void modified () {
         this.lastModified = new Date ();
+    }
+
+    @Indexable(indexed=false)
+    public String getSelf () {
+        try {
+            return Global.getRef(this)+"?view=full";
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Not a valid persistence Entity", ex);
+        }
+        return null;
     }
 }

@@ -480,10 +480,12 @@ public class EntityFactory extends Controller {
         String[] paths = field.split("/");
         Pattern regex = Pattern.compile("([^\\(]+)\\((-?\\d+)\\)");
         StringBuilder uri = new StringBuilder ();
-        
+
+        boolean isRaw = paths[paths.length-1].charAt(0) == '$'; 
         int i = 0;
         Field f = null;
         Object obj = inst;
+        
         for (; i < paths.length && obj != null; ++i) {
             String pname = paths[i]; // field name
             Integer pindex = null; // field index if field is a list
@@ -497,7 +499,8 @@ public class EntityFactory extends Controller {
             if (pname.charAt(0) == '$')
                 pname = pname.substring(1);
 
-            Logger.debug("pname="+pname+" pindex="+pindex);
+            Logger.debug("obj="+obj+"["+obj.getClass()
+                         +"] pname="+pname+" pindex="+pindex);
             
             try {
                 uri.append("/"+paths[i]);
@@ -576,10 +579,39 @@ public class EntityFactory extends Controller {
                 }
 
                 if (old == obj) {
-                    Logger.error
-                        (uri.toString()
-                         +": No method or field matching requested path");
-                    return notFound ("Invalid field path: "+uri);
+                    // last resort.. serialize as json and iterate from there
+                    ObjectMapper mapper = new ObjectMapper ();
+                    JsonNode node = mapper.valueToTree(obj).get(pname);
+                    while (++i < paths.length && node != null) {
+                        if (pindex != null) {
+                            node = node.isArray() ? node.get(pindex) : null;
+                        }
+                        else {
+                            uri.append("/"+paths[i]);
+                            pname = paths[i]; // field name
+                            pindex = null; // field index if field is a list
+            
+                            matcher = regex.matcher(pname);
+                            if (matcher.find()) {
+                                pname = matcher.group(1);
+                                pindex = Integer.parseInt(matcher.group(2));
+                            }
+                            
+                            if (pname.charAt(0) == '$')
+                                pname = pname.substring(1);
+                            
+                            node = node.get(pname);
+                            if (node == null) {
+                                Logger.error(uri.toString()
+                                             +": No method or field matching "
+                                             +"requested path");
+                                return notFound ("Invalid field path: "+uri);
+                            }
+                        }
+                    }
+                    
+                    return isRaw && !node.isContainerNode()
+                        ? ok (node.asText()) : ok (node);
                 }
             }
             catch (Exception ex) {
@@ -592,7 +624,6 @@ public class EntityFactory extends Controller {
             return badRequest ("Path "+uri+" is null");
         }
 
-        boolean isRaw = paths[paths.length-1].charAt(0) == '$';
         if (obj == null) {
             return isRaw ? noContent () : ok ("null");
         }

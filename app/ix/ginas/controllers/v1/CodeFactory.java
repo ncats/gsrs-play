@@ -15,18 +15,18 @@ import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
 
-@NamedResource(name="names",
-               type=Name.class,
-               description="Resource for handling of GInAS names")
-public class NameFactory extends EntityFactory {
-    static public final Model.Finder<UUID, Name> finder =
-        new Model.Finder(UUID.class, Name.class);
+@NamedResource(name="codes",
+               type=Code.class,
+               description="Resource for handling of GInAS codes")
+public class CodeFactory extends EntityFactory {
+    static public final Model.Finder<UUID, Code> finder =
+        new Model.Finder(UUID.class, Code.class);
 
-    public static Name getName (UUID uuid) {
+    public static Code getCode (UUID uuid) {
         return getEntity (uuid, finder);
     }
 
-    public static List<Name> getNames
+    public static List<Code> getCodes
         (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);
     }
@@ -44,7 +44,7 @@ public class NameFactory extends EntityFactory {
     }
 
     public static Result edits (UUID uuid) {
-        return edits (uuid, Name.class);
+        return edits (uuid, Code.class);
     }
 
     public static Result get (UUID uuid, String expand) {
@@ -56,7 +56,7 @@ public class NameFactory extends EntityFactory {
     }
 
     public static Result create () {
-        return create (Name.class, finder);
+        return create (Code.class, finder);
     }
 
     public static Result delete (UUID uuid) {
@@ -64,6 +64,6 @@ public class NameFactory extends EntityFactory {
     }
 
     public static Result update (UUID uuid, String field) {
-        return update (uuid, field, Name.class, finder);
+        return update (uuid, field, Code.class, finder);
     }
 }
