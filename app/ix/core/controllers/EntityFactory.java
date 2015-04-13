@@ -582,9 +582,17 @@ public class EntityFactory extends Controller {
                     // last resort.. serialize as json and iterate from there
                     ObjectMapper mapper = new ObjectMapper ();
                     JsonNode node = mapper.valueToTree(obj).get(pname);
+                    if (node == null) {
+                        Logger.error(uri.toString()
+                                     +": No method or field matching "
+                                     +"requested path");
+                        return notFound ("Invalid field path: "+uri);
+                    }
+                    
                     while (++i < paths.length && node != null) {
                         if (pindex != null) {
-                            node = node.isArray() ? node.get(pindex) : null;
+                            node = node.isArray() && pindex < node.size()
+                                ? node.get(pindex) : null;
                         }
                         else {
                             uri.append("/"+paths[i]);
@@ -609,6 +617,9 @@ public class EntityFactory extends Controller {
                             }
                         }
                     }
+
+                    if (node == null)
+                        return isRaw ? noContent () : ok ("null");
                     
                     return isRaw && !node.isContainerNode()
                         ? ok (node.asText()) : ok (node);

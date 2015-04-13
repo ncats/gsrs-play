@@ -6,4 +6,4 @@ POST	/smiles		ix.ncats.controllers.App.smiles
 POST	/molconvert	ix.ncats.controllers.App.molconvert
 GET	/render/:value	ix.ncats.controllers.App.render(value: String, size: Int ?= 150)
 #GET	/rendertest	ix.ncats.controllers.App.rendertest
-GET	/structure/$id<[0-9]+>.$format<(svg|png|mol|sdf|smi|mrv)>	ix.ncats.controllers.App.structure(id: Long, format: String, size: Int ?= 150)
+GET	/structure/$id<[0-9]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>	ix.ncats.controllers.App.structure(id: Long, format: String, size: Int ?= 150)

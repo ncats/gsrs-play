@@ -769,9 +769,13 @@ public class App extends Controller {
                             ("Structure "+id+" can't coverted to MRV format");
                     }
                 }
+                else if (format.equals("mol") || format.equals("sdf")) {
+                    return struc.molfile != null
+                        ? ok (struc.molfile) : noContent ();
+                }
                 else {
-                    return format.equals("mol") || format.equals("sdf")
-                        ?  ok (struc.molfile) : ok (struc.smiles);
+                    return struc.smiles != null
+                        ?  ok (struc.smiles) : noContent ();
                 }
             }
         }

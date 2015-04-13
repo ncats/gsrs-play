@@ -1,4 +1,4 @@
-package ix.core.controllers.v1;
+package ix.core.controllers;
 
 import java.io.*;
 import java.util.*;
