@@ -8,6 +8,7 @@ import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
 import ix.utils.Util;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.models.*;
 import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
@@ -49,8 +50,10 @@ import com.fasterxml.jackson.core.JsonToken;
 
 
 public class GinasApp extends App {
-    static final TextIndexer INDEXER = 
+    static final TextIndexer TEXT_INDEXER = 
         play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    static final StructureIndexer STRUC_INDEXER =
+        play.Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
 
     static class GinasV1ProblemHandler
         extends  DeserializationProblemHandler {
@@ -258,6 +261,9 @@ public class GinasApp extends App {
     // the bean's state has changed.
     static Substance persist (ChemicalSubstance chem) throws Exception {
         chem.structure.save();
+        // now index the structure for searching
+        STRUC_INDEXER.add(String.valueOf(chem.structure.id),
+                          chem.structure.molfile);
         for (Moiety m : chem.moieties)
             m.structure.save();
         chem.save();
