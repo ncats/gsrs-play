@@ -27,6 +27,12 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonToken;
 
 import com.avaje.ebean.*;
 import com.avaje.ebean.annotation.Transactional;
@@ -671,8 +677,29 @@ public class EntityFactory extends Controller {
 
         try {
             ObjectMapper mapper = new ObjectMapper ();
+            mapper.addHandler(new DeserializationProblemHandler () {
+                    public boolean handleUnknownProperty
+                        (DeserializationContext ctx, JsonParser parser,
+                         JsonDeserializer deser, Object bean, String property) {
+                        try {
+                            Logger.warn("Unknown property \""
+                                        +property+"\" (token="
+                                        +parser.getCurrentToken()
+                                        +") while parsing "
+                                        +bean+"; skipping it..");
+                            parser.skipChildren();
+                        }
+                        catch (IOException ex) {
+                            ex.printStackTrace();
+                            Logger.error
+                                ("Unable to handle unknown property!", ex);
+                            return false;
+                        }
+                        return true;
+                    }
+                });
+            
             JsonNode node = request().body().asJson();
-
             T inst = mapper.treeToValue(node, type);
             inst.save();
 

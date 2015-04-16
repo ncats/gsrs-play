@@ -193,7 +193,7 @@ public class Global extends GlobalSettings {
         if (name == null) {
             // climb up the inheritance ladder to find the first matches
             for (Class c = cls.getSuperclass(); 
-                 name == null; c = c.getSuperclass()) {
+                 name == null && c != null; c = c.getSuperclass()) {
                 name = g.names.get(c.getName());
                 //Logger.debug(c.getName() +" => "+name);
             }

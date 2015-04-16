@@ -15,6 +15,24 @@ import play.mvc.Result;
 import play.mvc.Call;
 import play.libs.ws.*;
 import play.libs.F;
+import play.libs.Akka;
+
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.actor.PoisonPill;
+import akka.actor.Props;
+import akka.actor.Inbox;
+import akka.actor.Terminated;
+import akka.routing.Broadcast;
+import akka.routing.RouterConfig;
+import akka.routing.FromConfig;
+import akka.routing.RoundRobinRouter;
+import akka.routing.SmallestMailboxRouter;
+import akka.event.Logging;
+import akka.event.LoggingAdapter;
 
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
@@ -780,5 +798,137 @@ public class App extends Controller {
             }
         }
         return notFound ("Not a valid structure "+id);
+    }
+
+    /**
+     * Structure searching
+     */
+    public static abstract class SearchResultProcessor {
+        protected ResultEnumeration results;
+        final TextIndexer indexer;
+        
+        public SearchResultProcessor () throws IOException {
+            indexer = textIndexer.createEmptyInstance();
+        }
+
+        public void setResults (ResultEnumeration results) {
+            this.results = results;
+        }
+        public TextIndexer getIndexer () { return indexer; }
+
+        public int process () throws Exception {
+            return process (0);
+        }
+        
+        public abstract int process (int max) throws Exception;
+    }
+
+    static class SearchResultHandler extends UntypedActor {
+        @Override
+        public void onReceive (Object obj) {
+            if (obj instanceof SearchResultProcessor) {
+                SearchResultProcessor processor = (SearchResultProcessor)obj;
+                try {
+                    long start = System.currentTimeMillis();
+                    int count = processor.process();
+                    double ellapsed = (System.currentTimeMillis() - start)*1e-3;
+                    Logger.debug("Actor "+self()+" finished; "
+                                 +String.format("Ellapsed %1$.3fs to retrieve "
+                                                +"%2$d structures...",
+                                                ellapsed, count));
+                    context().stop(self ());
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Unable process search results", ex);
+                }
+            }
+            else if (obj instanceof Terminated) {
+                ActorRef actor = ((Terminated)obj).actor();
+                Logger.debug("Terminating actor "+actor);
+            }
+            else {
+                unhandled (obj);
+            }
+        }
+        
+        @Override
+        public void postStop () {
+            Logger.debug("Actor "+self ()+" is stopped!");
+        }
+    }
+
+    static protected TextIndexer submit
+        (final int rows, SearchResultProcessor processor)  throws Exception {
+        
+        long start = System.currentTimeMillis();        
+        // the idea is to generate enough results for 1.5 pages (enough
+        // to show pagination) and return immediately. as the user pages,
+        // the background job will fill in the rest of the results.
+        int count = processor.process(rows+rows/2);
+
+        // while we continue to fetch the rest of the results in the
+        // background
+        ActorRef handler = Akka.system().actorOf
+            (Props.create(SearchResultHandler.class));
+        handler.tell(processor, ActorRef.noSender());
+        
+        double ellapsed = (System.currentTimeMillis() - start)*1e-3;
+        Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
+                                   +"%2$d structures...",
+                                   ellapsed, count));
+        return processor.getIndexer();
+    }
+
+    public static TextIndexer substructure
+        (final String query, final int rows,
+         final int page, final SearchResultProcessor processor) {
+        try {
+            final String key = "substructure/"+Util.sha1(query);
+            Logger.debug("substructure: query="+query
+                         +" rows="+rows+" page="+page+" key="+key);
+            final int size = (page+1)*rows;
+            return getOrElse
+                (strucIndexer.lastModified(),
+                 key, new Callable<TextIndexer> () {
+                         public TextIndexer call () throws Exception {
+                             Logger.debug("Cache missed: "+key);
+                             processor.setResults
+                                 (strucIndexer.substructure(query, 0));
+                             return submit (size, processor);
+                         }
+                     });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform substructure search", ex);
+        }
+        return null;
+    }
+
+    public static TextIndexer similarity
+        (final String query, final double threshold,
+         final int rows, final int page,
+         final SearchResultProcessor processor) {
+        try {
+            final String key = "similarity/"+Util.sha1(query)
+                +"/"+String.format("%1$d", (int)(1000*threshold+.5));
+            final int size = (page+1)*rows;
+            return getOrElse
+                (strucIndexer.lastModified(),
+                 key, new Callable<TextIndexer> () {
+                         public TextIndexer call () throws Exception {
+                             Logger.debug("Cache missed: "+key);
+                             processor.setResults
+                                 (strucIndexer.similarity(query, threshold, 0));
+                             return submit (size, processor);
+                         }
+                     });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't execute similarity search", ex);
+        }
+        return null;
     }
 }

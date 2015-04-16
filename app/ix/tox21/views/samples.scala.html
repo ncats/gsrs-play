@@ -9,43 +9,65 @@
 
 @label(x: Sample) = {
      @if(x.getName().length() > 30) {
-       <a  href="#@Util.sha1(x.getName()).substring(0,6)"
-           tabindex="0"
+       <a  href="#"
+           tabindex="-1"
            data-toggle="popover"
            data-animation="true"
            data-placement="bottom"
            data-trigger="click hover focus"
            data-title="@x.getName() (@x.getSynonym(Sample.S_NCGC).term)"
 	   data-html="true"
-           data-content="<img src='@ix.tox21.controllers.routes.Tox21App.render(x.id)'>">@x.getName().substring(0, 30)...</a>
+           data-content="<img src='@ix.ncats.controllers.routes.App.structure(x.structure.id,"svg",150)'>">@x.getName().substring(0, 30)...</a>
      } else {
-       <a  href="#@Util.sha1(x.getName()).substring(0,6)"
-           tabindex="0"
+       <a  href="#"
+           tabindex="-1"
            data-toggle="popover"
            data-animation="true"
            data-placement="bottom"
            data-trigger="click hover focus"
            data-title="@x.getName() (@x.getSynonym(Sample.S_NCGC).term)"
 	   data-html="true"
-           data-content="<img src='@ix.tox21.controllers.routes.Tox21App.render(x.id)'>">@x.getName()</a>
-     }
+           data-content="<img src='@ix.ncats.controllers.routes.App.structure(x.structure.id,"svg",150)'>">@x.getName()</a>
+       }
 }
 
 @tabrow(s: QCSample) = {
-  @defining(s.sample.getSynonym(Sample.S_TOX21).term) { toxid => 
+  @defining(s.getSynonym(Sample.S_TOX21).term) { toxid => 
 <tr>
-  <td><a href="@ix.tox21.controllers.routes.Tox21App.sample(toxid)">@toxid</a></td>
-  <td>@label(s.sample)</td>
+  <td>
+      @if(s.structure != null) {
+           <a  tabindex="-1"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="top"
+           data-trigger="click hover focus"
+           data-title="@s.getName() (@s.getSynonym(Sample.S_NCGC).term)"
+	   data-html="true"
+           data-content="<img src='@ix.ncats.controllers.routes.App.structure(s.structure.id,"svg",200)'>">
+         <img alt="Structure of @s.getName()"
+   	      src='@ix.ncats.controllers.routes.App.structure(s.structure.id,"svg",80)'></a>
+       }
+  </td>
+    
+  <td class="valign-center">
+    <a href="@ix.tox21.controllers.routes.Tox21App.sample(toxid)">@toxid</a>
+  </td>
+  <td class="valign-center">@if(s.getName().length() > 30) {
+    @s.getName().substring(0,25)...
+    } else {
+    @s.getName()
+    }
+  </td>
 
   @s.grade match {
      case null => {
         <td></td>
 	}
      case QCSample.Grade.ND => {
-            <td><span class="label label-default">@{s.grade}</span>&nbsp;@HtmlFormat.raw(s.grade.desc.replaceAll("\n", "<br>"))</td>
+            <td class="valign-center"><span class="label label-default">@{s.grade}</span>&nbsp;@HtmlFormat.raw(s.grade.desc.replaceAll("\n", "<br>"))</td>
      }
      case _ => {
-           <td><span class="label label-@{s.grade.label}">@s.grade</span>&nbsp;<a href="https://tripod.nih.gov/tox21/QC/@toxid">@HtmlFormat.raw(s.grade.desc)</a></td>
+           <td class="valign-center"><span class="label label-@{s.grade.label}">@s.grade</span>&nbsp;<a href="https://tripod.nih.gov/tox21/QC/@toxid">@HtmlFormat.raw(s.grade.desc)</a></td>
        }
     }
 </tr>
@@ -62,6 +84,7 @@ current, rows, total, pages, facets){ @menu() }{
 }{
 <table class="table table-striped">
   <tr>
+    <th>Structure</th>
     <th>Tox21 ID</th>
     <th>Name</th>
     <th>QC Grade [T0]</th>

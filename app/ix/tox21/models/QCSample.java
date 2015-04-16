@@ -12,8 +12,9 @@ import ix.utils.Global;
 import ix.core.models.*;
 
 @Entity
-@Table(name="ix_tox21_qcsample")
-public class QCSample extends Model {
+@Inheritance
+@DiscriminatorValue("QCSMPL")
+public class QCSample extends Sample {
     public enum Grade {
         A ("MW Confirmed, Purity > 90%", "success"),
         Ac ("<p align='left'>CAUTION, Low Concentration"
@@ -48,20 +49,17 @@ public class QCSample extends Model {
             this.label = label;
         }
     }
-    
-    @Id
-    public Long id;
 
     @Lob
     @Basic(fetch=FetchType.EAGER)
     public String comments;
-    
-    @OneToOne
-    public Sample sample;
-    
+
     @Indexable(facet=true,name="QC Grade")
     public Grade grade;
 
     public QCSample () {
+    }
+    public QCSample (String name) {
+        super (name);
     }
 }

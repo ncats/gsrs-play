@@ -36,22 +36,6 @@ import play.Play;
 import play.libs.Akka;
 import com.avaje.ebean.Expr;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.actor.Props;
-import akka.actor.UntypedActor;
-import akka.actor.UntypedActorFactory;
-import akka.actor.PoisonPill;
-import akka.actor.Props;
-import akka.actor.Inbox;
-import akka.actor.Terminated;
-import akka.routing.Broadcast;
-import akka.routing.RouterConfig;
-import akka.routing.FromConfig;
-import akka.routing.RoundRobinRouter;
-import akka.routing.SmallestMailboxRouter;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -75,36 +59,19 @@ import java.util.regex.Matcher;
 
 public class IDGApp extends App {
     static final int MAX_SEARCH_RESULTS = 1000;
-    static final int MAX_STRUC_RESULTS =
-        Play.application().configuration().getInt("ix.structure.max", 100);
 
-    static final TextIndexer indexer = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
-
-
-    static class SearchResultProcessor {
-        final public String key;
-        final public ResultEnumeration results;
-        final public TextIndexer indexer;
+    static class IDGSearchResultProcessor extends SearchResultProcessor {
         final public Set<Long> processed = new HashSet<Long>();
         int count;
 
-        SearchResultProcessor (String key,
-                               ResultEnumeration results,
-                               TextIndexer indexer) {
-            this.key = key;
-            this.results = results;
-            this.indexer = indexer;
+        IDGSearchResultProcessor () throws IOException {
         }
-        
-        public int process () throws Exception {
-            return process (0);
-        }
-        
+
+        @Override
         public int process (int max) throws Exception {
             while (results.hasMoreElements() && (max == 0 || count < max)) {
                 StructureIndexer.Result r = results.nextElement();
-                Logger.debug(key+": id="+r.getId());
+                Logger.debug("structure: "+r.getId());
                     
                 List<Ligand> ligands = LigandFactory.finder
                     .where(Expr.and(Expr.eq("links.refid", r.getId()),
@@ -113,48 +80,13 @@ public class IDGApp extends App {
                     .findList();
                 for (Ligand ligand : ligands) {
                     if (!processed.contains(ligand.id)) {
-                        indexer.add(ligand);
+                        getIndexer().add(ligand);
                         processed.add(ligand.id);
                     }
                 }
                 ++count;
             }
             return count;
-        }
-    }
-
-    static class SearchResultHandler extends UntypedActor {
-        @Override
-        public void onReceive (Object obj) {
-            if (obj instanceof SearchResultProcessor) {
-                SearchResultProcessor processor = (SearchResultProcessor)obj;
-                try {
-                    long start = System.currentTimeMillis();
-                    int count = processor.process();
-                    double ellapsed = (System.currentTimeMillis() - start)*1e-3;
-                    Logger.debug("Actor "+self()+" finished; "
-                                 +String.format("Ellapsed %1$.3fs to retrieve "
-                                                +"%2$d structures...",
-                                                ellapsed, count));
-                    context().stop(self ());
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
-                    Logger.error("Unable process search results", ex);
-                }
-            }
-            else if (obj instanceof Terminated) {
-                ActorRef actor = ((Terminated)obj).actor();
-                Logger.debug("Terminating actor "+actor);
-            }
-            else {
-                unhandled (obj);
-            }
-        }
-        
-        @Override
-        public void postStop () {
-            Logger.debug("Actor "+self ()+" is stopped!");
         }
     }
 
@@ -1196,58 +1128,21 @@ public class IDGApp extends App {
         }
     }
 
-
-    static TextIndexer createIndexer
-        (final String key, final int rows,
-         ResultEnumeration results)  throws Exception {
-        
-        long start = System.currentTimeMillis();        
-        final TextIndexer indexer = textIndexer.createEmptyInstance();
-        SearchResultProcessor processor = new SearchResultProcessor
-            (key, results, indexer);
-        
-        // the idea is to generate enough results for 1.5 pages (enough
-        // to show pagination) and return immediately. as the use pages,
-        // the background job will fill in the rest of the results.
-        int count = processor.process((int)(1.5*rows+0.5));
-
-        // while we continue to fetch the rest of the results in the
-        // background
-        ActorRef handler = Akka.system().actorOf
-            (Props.create(SearchResultHandler.class));
-        handler.tell(processor, ActorRef.noSender());
-        
-        double ellapsed = (System.currentTimeMillis() - start)*1e-3;
-        Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
-                                   +"%2$d structures...",
-                                   ellapsed, count));
-        return indexer;
-    }
-
     public static Result similarity (final String query,
                                      final double threshold,
-                                     final int rows, int page) {
+                                     final int rows,
+                                     final int page) {
         try {
-            final String key = "similarity/"+Util.sha1(query)
-                +"/"+String.format("%1$d", (int)(1000*threshold+.5));
-            TextIndexer indexer = getOrElse
-                (strucIndexer.lastModified(),
-                 key, new Callable<TextIndexer> () {
-                         public TextIndexer call () throws Exception {
-                             Logger.debug("Cache missed: "+key);
-                             ResultEnumeration results =
-                             strucIndexer.similarity(query, threshold, 0);
-                             return createIndexer (key, 2*rows, results);
-                         }
-                     });
-            
-            return structureResult (indexer, rows, page);
+            TextIndexer indexer = similarity
+                (query, threshold, rows, page, new IDGSearchResultProcessor ());
+            if (indexer != null) {
+                return structureResult (indexer, rows, page);
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();
-            Logger.error("Can't execute similarity search", ex);
+            Logger.error("Can't perform similarity search", ex);
         }
-        
         return internalServerError
             (ix.idg.views.html.error.render
              (500, "Unable to perform similarity search: "+query));
@@ -1256,27 +1151,16 @@ public class IDGApp extends App {
     public static Result substructure
         (final String query, final int rows, int page) {
         try {
-            final String key = "substructure/"+Util.sha1(query);
-            Logger.debug("substructure: query="+query
-                         +" rows="+rows+" page="+page+" key="+key);
-            TextIndexer indexer = getOrElse
-                (strucIndexer.lastModified(),
-                 key, new Callable<TextIndexer> () {
-                         public TextIndexer call () throws Exception {
-                             Logger.debug("Cache missed: "+key);
-                             ResultEnumeration results =
-                             strucIndexer.substructure(query, 0);
-                             return createIndexer (key, 2*rows, results);
-                         }
-                     });
-            
-            return structureResult (indexer, rows, page);
+            TextIndexer indexer = substructure
+                (query, rows, page, new IDGSearchResultProcessor ());
+            if (indexer != null) {
+                return structureResult (indexer, rows, page);
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't perform substructure search", ex);
         }
-        
         return internalServerError
             (ix.idg.views.html.error.render
              (500, "Unable to perform substructure search: "+query));

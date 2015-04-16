@@ -37,7 +37,7 @@ import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
 
 public class Tox21App extends App {
-    static final int ROWS_PER_PAGE = 20;
+    static final int ROWS_PER_PAGE = 10;
     
     static final PayloadPlugin Payload =
         Play.application().plugin(PayloadPlugin.class);
@@ -45,6 +45,29 @@ public class Tox21App extends App {
     static final StructureProcessorPlugin Processor =
         Play.application().plugin(StructureProcessorPlugin.class);
 
+    static class Tox21SearchResultProcessor extends SearchResultProcessor {
+        int count;
+
+        Tox21SearchResultProcessor () throws IOException {
+        }
+
+        @Override
+        public int process (int max) throws Exception {
+            while (results.hasMoreElements() && (max == 0 || count < max)) {
+                StructureIndexer.Result r = results.nextElement();
+                Logger.debug("structure: "+r.getId());
+                
+                List<QCSample> samples = Tox21Factory.finder
+                    .where().eq("structure.id", r.getId()).findList();
+                for (QCSample qc : samples) {
+                    getIndexer().add(qc);
+                }
+                ++count;
+            }
+            return count;
+        }
+    }
+    
     static class Tox21StructureReceiver implements StructureReceiver {
         final QCSample qc;
         final String source;
@@ -57,21 +80,19 @@ public class Tox21App extends App {
         public String getSource () { return source; }
         public void receive (Status status, String mesg, Structure struc) {
             if (status == Status.OK) {
-                qc.sample.structure = struc;
+                qc.structure = struc;
             }
             else {
                 Logger.error(status+": "
-                             +qc.sample.getSynonym(Sample.S_NCGC).term
+                             +qc.getSynonym(Sample.S_NCGC).term
                              +": "+mesg);
             }
             
             try {
-                qc.sample.save();
                 qc.save();
                 
                 Logger.debug(status+": QCsample "
-                             +qc.id+" sample "+qc.sample.id+" "
-                             +qc.sample.getName());
+                             +qc.id+" sample "+qc.getName());
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -299,24 +320,22 @@ public class Tox21App extends App {
             String toxid = rset.getString("tox21_id");
             String inchi = rset.getString("inchi_hash");
             
-            Sample sample = new Sample (name);
-            sample.synonyms.add(new Keyword (Sample.S_TOX21, toxid));
-            sample.synonyms.add(new Keyword (Sample.S_SID, sid));
-            sample.synonyms.add(new Keyword (Sample.S_CASRN, cas));
-            sample.synonyms.add(new Keyword (Sample.S_NCGC, ncgc));
+            QCSample qc = new QCSample (name);
+            qc.synonyms.add(new Keyword (Sample.S_TOX21, toxid));
+            qc.synonyms.add(new Keyword (Sample.S_SID, sid));
+            qc.synonyms.add(new Keyword (Sample.S_CASRN, cas));
+            qc.synonyms.add(new Keyword (Sample.S_NCGC, ncgc));
             if (inchi != null && (smiles != null || struc != null))
-                sample.synonyms.add(new Keyword (Sample.S_InChIKey, inchi));
+                qc.synonyms.add(new Keyword (Sample.S_InChIKey, inchi));
             
             if (smiles != null)
-                sample.properties.add
+                qc.properties.add
                     (new Text (Sample.P_SMILES_ISO, smiles));
             
             if (struc != null)
-                sample.properties.add(new Text (Sample.P_MOLFILE, struc));
-            try {
+                qc.properties.add(new Text (Sample.P_MOLFILE, struc));
 
-                QCSample qc = new QCSample ();
-                qc.sample = sample;
+            try {
                 if (grade != null) {
                     qc.grade = QCSample.Grade.valueOf
                         (QCSample.Grade.class, grade);
@@ -332,7 +351,6 @@ public class Tox21App extends App {
                 else if (smiles != null)
                     Processor.submit(smiles, receiver);
                 else {
-                    sample.save();
                     qc.save();
                 }
                 
@@ -417,7 +435,7 @@ public class Tox21App extends App {
 
     static Result _sample (final String id) {
         List<QCSample> samples = Tox21Factory.finder.where()
-            .eq("sample.synonyms.term", id).setMaxRows(1).findList();
+            .eq("synonyms.term", id).setMaxRows(1).findList();
         if (!samples.isEmpty()) {
             return ok(ix.tox21.views.html.sampledetails.render
                       (samples.iterator().next()));
@@ -478,14 +496,7 @@ public class Tox21App extends App {
         Sample sample = Tox21Factory.getSample(id);
         Result r = null;
         if (sample != null) {
-            String ncgc = sample.getSynonym(Sample.S_NCGC).term;
-            r = render (ncgc, size);
-            if (r == null) {
-                // now try the smiles..
-                if (sample.structure.smiles != null) {
-                    r = render (sample.structure.smiles, size);
-                }
-            }
+            r = structure (sample.structure.id, "svg", size);
         }
         return r;
     }
@@ -539,80 +550,40 @@ public class Tox21App extends App {
                     pages, decorate (facets), samples));
     }
 
-    static TextIndexer createIndexer (ResultEnumeration results)
-        throws Exception {
-        long start = System.currentTimeMillis();        
-        TextIndexer indexer = textIndexer.createEmptyInstance();
-        int count = 0;
-        while (results.hasMoreElements()) {
-            StructureIndexer.Result r = results.nextElement();
-            /*
-            Logger.debug(r.getId()+" "+r.getSource()+" "
-                         +r.getMol().toFormat("smiles"));
-            */
-            List<QCSample> samples = Tox21Factory.finder
-                .where().eq("sample.structure.id", r.getId()).findList();
-            for (QCSample qc : samples) {
-                indexer.add(qc);
-            }
-            ++count;
-        }
-        
-        double ellapsed = (System.currentTimeMillis() - start)*1e-3;
-        Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
-                                   +"%2$d structures...",
-                                   ellapsed, count));
-        return indexer;
-    }
-
     public static Result similarity (final String query,
                                      final double threshold,
-                                     int rows, int page) {
+                                     final int rows,
+                                     final int page) {
         try {
-            String key = "similarity::"+Util.sha1(query)
-                +"::"+String.format("%1$d", (int)(1000*threshold+.5));
-            TextIndexer indexer = getOrElse
-                (strucIndexer.lastModified(),
-                 key, new Callable<TextIndexer> () {
-                         public TextIndexer call () throws Exception {
-                            ResultEnumeration results =
-                                 strucIndexer.similarity(query, threshold, 0);
-                            return createIndexer (results);
-                         }
-                     });
-            
-            return structureResult (indexer, rows, page);
+            TextIndexer indexer = similarity
+                (query, threshold, rows, page,
+                 new Tox21SearchResultProcessor ());
+            if (indexer != null) {
+                return structureResult (indexer, rows, page);
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            Logger.error("Can't perform similarity search", ex);
         }
-        
         return internalServerError
             (ix.tox21.views.html.error.render
              (500, "Unable to perform similarity search: "+query));
     }
     
     public static Result substructure
-        (final String query, int rows, int page) {
-        Logger.debug("substructure: query="+query+" rows="+rows+" page="+page);
+        (final String query, final int rows, int page) {
         try {
-            String key = "substructure::"+Util.sha1(query);
-            TextIndexer indexer = getOrElse
-                (strucIndexer.lastModified(),
-                 key, new Callable<TextIndexer> () {
-                         public TextIndexer call () throws Exception {
-                            ResultEnumeration results =
-                                 strucIndexer.substructure(query, 0);
-                            return createIndexer (results);
-                         }
-                     });
-            
-            return structureResult (indexer, rows, page);
+            TextIndexer indexer = substructure
+                (query, rows, page, new Tox21SearchResultProcessor ());
+            if (indexer != null) {
+                return structureResult (indexer, rows, page);
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();
+            Logger.error("Can't perform substructure search", ex);
         }
-        
         return internalServerError
             (ix.tox21.views.html.error.render
              (500, "Unable to perform substructure search: "+query));

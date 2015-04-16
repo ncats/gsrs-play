@@ -4,13 +4,13 @@
 
 @(qc: QCSample)
 
-@ix.ncats.views.html.main(qc.sample.getName(), qc.getClass().getName()){
+@ix.ncats.views.html.main(qc.getName(), qc.getClass().getName()){
 @menu()
 }{
 <ol class="breadcrumb">
   <li><a href="@ix.tox21.controllers.routes.Tox21App.index"><span class="fa fa-home"></span> Home</a></li>
     <li><a href="@ix.tox21.controllers.routes.Tox21App.samples()">Tox21 Samples</a></li>
-    <li class="active">@qc.sample.getSynonym(Sample.S_TOX21).term</li>
+    <li class="active">@qc.getSynonym(Sample.S_TOX21).term</li>
 </ol>
 }{
 <div class="container-fluid">
@@ -23,7 +23,7 @@
            <span class="label label-@qc.grade.label">@qc.grade</span>
          </td>
          <td style="padding:5px;"></td>
-         <td>@qc.sample.getName()</td>
+         <td>@qc.getName()</td>
         </tr>
         </table>
       </h1>
@@ -38,7 +38,7 @@
 		@HtmlFormat.raw(qc.grade.desc)
 	      </div>
 	      } else {
-  	      <a href="https://tripod.nih.gov/tox21/QC/@qc.sample.getSynonym(Sample.S_TOX21).term">@HtmlFormat.raw(qc.grade.desc.replaceAll("\n","<p>"))</a>
+  	      <a href="https://tripod.nih.gov/tox21/QC/@qc.getSynonym(Sample.S_TOX21).term">@HtmlFormat.raw(qc.grade.desc.replaceAll("\n","<p>"))</a>
 	      }
 	      <div id="loading"></div>
 	    </center>
@@ -52,15 +52,15 @@
           </div>
           <div class="panel-body">
             <table class="table">
-              <tr><td>Tox21</td><td>@qc.sample.getSynonym(Sample.S_TOX21).term</td></tr>
-              <tr><td>NCATS</td><td>@qc.sample.getSynonym(Sample.S_NCGC).term</td></tr>
-	      <tr><td>CAS</td><td>@qc.sample.getSynonym(Sample.S_CASRN).term</td></tr>
-	      @if(qc.sample.getSynonym(Sample.S_InChIKey) != null) {
-  	         <tr><td>InChI Key</td><td>@qc.sample.getSynonym(Sample.S_InChIKey).term</td></tr>
+              <tr><td>Tox21</td><td>@qc.getSynonym(Sample.S_TOX21).term</td></tr>
+              <tr><td>NCATS</td><td>@qc.getSynonym(Sample.S_NCGC).term</td></tr>
+	      <tr><td>CAS</td><td>@qc.getSynonym(Sample.S_CASRN).term</td></tr>
+	      @if(qc.getSynonym(Sample.S_InChIKey) != null) {
+  	         <tr><td>InChI Key</td><td>@qc.getSynonym(Sample.S_InChIKey).term</td></tr>
               } else {
 	         <tr><tr><td>InChI Key</td><td></td></tr>
 	      }
-	      <tr><td>PubChem</td><td><a href="https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?sid=@qc.sample.getSynonym(Sample.S_SID).term"</td>@qc.sample.getSynonym(Sample.S_SID).term</a></tr>
+	      <tr><td>PubChem</td><td><a href="https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?sid=@qc.getSynonym(Sample.S_SID).term"</td>@qc.getSynonym(Sample.S_SID).term</a></tr>
 	    </table>
 	  </div>
 	</div>
@@ -100,7 +100,7 @@ $(document).ready(function () {
         type: "GET",
         dataType: "html",
         contentType: "image/svg+xml",
-        url: "@ix.tox21.controllers.routes.Tox21App.render(qc.sample.id,300)",
+        url: '@ix.ncats.controllers.routes.App.structure(qc.structure.id,"svg",300)',
         success: function (d) {
             // replace div's content with returned data
             $('#loading').html(d);

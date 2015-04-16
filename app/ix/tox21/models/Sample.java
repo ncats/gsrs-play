@@ -12,6 +12,8 @@ import ix.core.models.*;
 
 @Entity
 @Table(name="ix_tox21_sample")
+@Inheritance
+@DiscriminatorValue("SAMPL")
 public class Sample extends EntityModel {
     /**
      * Synonym labels
@@ -32,7 +34,7 @@ public class Sample extends EntityModel {
     public String name;
 
     //@JsonView(BeanViews.Full.class)
-    @OneToOne    
+    @OneToOne(cascade=CascadeType.ALL)
     public Structure structure;
     
     @JsonView(BeanViews.Full.class)
