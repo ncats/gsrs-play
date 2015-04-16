@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.utils.Global;
 
 @Entity
-@Table(name="ix_core_processingrecord")
+@Table(name="ix_core_procrecord")
 public class ProcessingRecord extends Model {
     public enum Status {
         OK, FAILED, PENDING, UNKNOWN
@@ -17,7 +17,9 @@ public class ProcessingRecord extends Model {
 
     @Id
     public Long id;
+    @Column(name="rec_start")
     public Long start;
+    @Column(name="rec_stop")
     public Long stop;
 
     @Column(length=128)

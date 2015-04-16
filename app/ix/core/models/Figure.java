@@ -27,6 +27,7 @@ public class Figure extends Model {
     @Basic(fetch=FetchType.EAGER)
     public byte[] data;
 
+    @Column(name="data_size")
     public int size;
     @Column(length=140)
     public String sha1;

@@ -12,6 +12,7 @@ public class VBin extends Value {
     @Indexable(indexed=false)
     @Lob
     public byte[] data;
+    @Column(name="data_size")
     public int size;
 
     @Column(length=40)

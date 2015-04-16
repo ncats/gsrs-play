@@ -20,7 +20,9 @@ public class Event extends Model {
     @Column(length=1024)
     public String url;
 
+    @Column(name="event_start")
     public Date start;
+    @Column(name="event_end")
     public Date end;
     public boolean isDuration;
 

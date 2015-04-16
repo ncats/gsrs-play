@@ -32,6 +32,7 @@ public class Payload extends Model {
     
     @Column(length=128)
     public String mimeType; // mime type
+    @Column(name="capacity")
     public Long size;
 
     @ManyToMany(cascade=CascadeType.ALL)

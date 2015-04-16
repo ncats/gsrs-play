@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.utils.Global;
 
 @Entity
-@Table(name="ix_core_processingjob")
+@Table(name="ix_core_procjob")
 public class ProcessingJob extends Model {
     public enum Status {
         COMPLETE, RUNNING, NOT_RUN, FAILED, PENDING, STOPPED, UNKNOWN
@@ -23,7 +23,9 @@ public class ProcessingJob extends Model {
     public String invoker;
 
     public Status status = Status.PENDING;
+    @Column(name="job_start")
     public Long start;
+    @Column(name="job_stop")
     public Long stop;
 
     @Lob
