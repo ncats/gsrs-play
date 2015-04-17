@@ -20,6 +20,21 @@
 </ul>
 
 @ix.ncats.views.html.ssearch("GET", ix.tox21.controllers.routes.Tox21App.search(null,0,0))
+
+<script>
+  $('#strucModal').on('show.bs.modal', function (ev) {
+     var button = $(ev.relatedTarget);
+     var url = button.data('molurl');
+     console.log('molurl: '+url);
+     if (url) {
+       $.get(url, function (mol) {
+           sketcher.importStructure('mol',mol).catch(function(error) {
+	     	alert(error);
+	   });
+	 });
+     }
+  });
+</script>
 }
 
 @**

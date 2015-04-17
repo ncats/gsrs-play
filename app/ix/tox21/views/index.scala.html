@@ -20,28 +20,42 @@
 	</div>
 	<![endif]-->
 
-        <title>@title</title>
-        <link rel="stylesheet" media="screen" href="@routes.Assets.at("ncats/css/tox21.css")">
-        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
-        <link href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap.min.css"))' rel='stylesheet' >
-	<link rel="stylesheet" type="text/css"
-	href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>	
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript' ></script>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))' type='text/javascript' ></script>
-	<script src='@routes.WebJarAssets.at(WebJarAssets.locate("respond.js"))' type='text/javascript'></script>
-    </head>
+    <title>@title</title>
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("ncats/css/tox21.css")">
+    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+    <link href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap.min.css"))' rel='stylesheet' >
+    <link rel="stylesheet" type="text/css"
+	  href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript' ></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))' type='text/javascript' ></script>
+    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("respond.js"))' type='text/javascript'></script>
+    <script	src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
+    <script	src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
+    <script	src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
+    @ix.ncats.views.html.typeahead(Array("Sample","CASRN","Tox21","NCGC"))
+    <style type="text/css">
+      .twitter-typeahead {
+      position: relative;
+      display: -webkit-box !important;
+      direction: ltr;
+      }
+      @@-moz-document url-prefix() {
+        .twitter-typeahead { display: flex !important; }
+      }
+    </style>
+  </head>
   <body>
       <div class="site-wrapper">
 	<div class="site-wrapper-inner">
-	  <div class="cover-container">
+	  <div class="container">
 	    <div class="inner cover">
 	      <div class="row">
 		<div class="col-xs-4 col-md-4">
-		  <img height="200" alt="Tox21 Logo" 
+		  <img class="img-responsive pull-right" height="200" alt="Tox21 Logo" 
 		       src='@routes.Assets.at("ncats/images/Tox21_logo_128.png")'/>
 		</div>
                 <div class="col-xs-8 col-md-8">
-		  <h2 align='left'>Tox21 Data Browser</h2>
+		  <h2 align='left'>@title</h2>
 		  <ul class="nav nav-pills">
 		    <li role="presentation">
 		      <a class="btn btn-default"
@@ -57,7 +71,8 @@
 		  <form class="main-search" role="search" method="GET"
 			action="@ix.tox21.controllers.routes.Tox21App.search(null)">
 		    <div class="input-group">
-		      <input type="text" class="typeahead form-control" id="search"
+		      <input type="text" class="form-control typeahead"
+			     id="search"
 			     title="Search" placeholder="Search..." name="q"/>
 		      <input  type="hidden" name="kind" value="" />
 		      <span class="input-group-btn">
