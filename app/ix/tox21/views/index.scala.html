@@ -1,0 +1,81 @@
+@(title: String, assays: Int, samples: Int)
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <!--[if lte IE 9]>
+	<style type="text/css">
+#ie6msg{border:3px solid #c33; margin:8px 0; background:#fcc; color:#000;}
+#ie6msg h4{margin:8px; padding:0;}
+#ie6msg p{margin:8px; padding:0;}
+#ie6msg p a.getie7{font-weight:bold; color:#006;}
+#ie6msg p a.ie6expl{font-weight:bold; color:#006;}
+</style>
+	<div id="ie6msg">
+	  <h4>Did you know that your browser is out of date?</h4>
+	  <p>To get the best possible experience using this website it is recommended that you upgrade your browser to a newer version.
+	  <p>You could also try some other popular browsers like <a class="ie6expl" href="http://mozilla.com">FireFox</a> or
+	    <a class="ie6expl" href="https://www.google.com/chrome/S">Chrome</a>.</p>
+	</div>
+	<![endif]-->
+
+        <title>@title</title>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("ncats/css/tox21.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+        <link href='@routes.WebJarAssets.at(WebJarAssets.locate("css/bootstrap.min.css"))' rel='stylesheet' >
+	<link rel="stylesheet" type="text/css"
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>	
+        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript' ></script>
+        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))' type='text/javascript' ></script>
+	<script src='@routes.WebJarAssets.at(WebJarAssets.locate("respond.js"))' type='text/javascript'></script>
+    </head>
+  <body>
+      <div class="site-wrapper">
+	<div class="site-wrapper-inner">
+	  <div class="cover-container">
+	    <div class="inner cover">
+	      <div class="row">
+		<div class="col-xs-4 col-md-4">
+		  <img height="200" alt="Tox21 Logo" 
+		       src='@routes.Assets.at("ncats/images/Tox21_logo_128.png")'/>
+		</div>
+                <div class="col-xs-8 col-md-8">
+		  <h2 align='left'>Tox21 Data Browser</h2>
+		  <ul class="nav nav-pills">
+		    <li role="presentation">
+		      <a class="btn btn-default"
+			 href="@ix.tox21.controllers.routes.Tox21App.assays(null)">Assays <span class="badge">@assays</span></a>
+		    </li>
+		    <li role="presentation">
+		      <a class="btn btn-default"
+			 href="@ix.tox21.controllers.routes.Tox21App.samples(null)">
+			 Samples <span class="badge">@samples</span></a>
+		    </li>
+		  </ul>
+		  <p>
+		  <form class="main-search" role="search" method="GET"
+			action="@ix.tox21.controllers.routes.Tox21App.search(null)">
+		    <div class="input-group">
+		      <input type="text" class="typeahead form-control" id="search"
+			     title="Search" placeholder="Search..." name="q"/>
+		      <input  type="hidden" name="kind" value="" />
+		      <span class="input-group-btn">
+			<button class="btn btn-default" id="search" type="search"
+				value="submit">
+			  <span class="fa fa-search"></span>
+			</button>
+		      </span>
+		    </div>
+		  </form>
+		</div>
+              </div>
+            </div>
+	  </div>
+	</div>	
+      </div>
+      <div id="footer">
+	<pre>build: @ix.ncats.views.txt.build()</pre>
+      </div>
+    </body>
+</html>

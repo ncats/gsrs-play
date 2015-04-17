@@ -50,8 +50,7 @@ public class QCSample extends Sample {
         }
     }
 
-    @Lob
-    @Basic(fetch=FetchType.EAGER)
+    @Column(length=1024)
     public String comments;
 
     @Indexable(facet=true,name="QC Grade")

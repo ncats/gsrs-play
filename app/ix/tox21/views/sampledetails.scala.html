@@ -55,11 +55,13 @@
               <tr><td>Tox21</td><td>@qc.getSynonym(Sample.S_TOX21).term</td></tr>
               <tr><td>NCATS</td><td>@qc.getSynonym(Sample.S_NCGC).term</td></tr>
 	      <tr><td>CAS</td><td>@qc.getSynonym(Sample.S_CASRN).term</td></tr>
+	      @**
 	      @if(qc.getSynonym(Sample.S_InChIKey) != null) {
   	         <tr><td>InChI Key</td><td>@qc.getSynonym(Sample.S_InChIKey).term</td></tr>
               } else {
-	         <tr><tr><td>InChI Key</td><td></td></tr>
+	         <tr><td>InChI Key</td><td></td></tr>
 	      }
+	      **@
 	      <tr><td>PubChem</td><td><a href="https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?sid=@qc.getSynonym(Sample.S_SID).term"</td>@qc.getSynonym(Sample.S_SID).term</a></tr>
 	    </table>
 	  </div>
@@ -100,13 +102,17 @@ $(document).ready(function () {
         type: "GET",
         dataType: "html",
         contentType: "image/svg+xml",
-        url: '@ix.ncats.controllers.routes.App.structure(qc.structure.id,"svg",300)',
+	@if(qc.structure != null) {
+           url: '@ix.ncats.controllers.routes.App.structure(qc.structure.id,"svg",300)',
+	} else {
+	   url: '@ix.ncats.controllers.routes.App.structure(0,"svg")',
+	}
         success: function (d) {
             // replace div's content with returned data
             $('#loading').html(d);
         },
         error: function (xhr, status) {
-            $('#loading').html('<div class="alert alert-warning" role="alert">Unable to load structure</div>');
+            $('#loading').html('<div class="alert alert-warning" role="alert"><i class="fa fa-exclamation-triangle"></i> Unable to load structure</div>');
         }
     });
 });

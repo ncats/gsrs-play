@@ -11,6 +11,7 @@ import com.avaje.ebean.Expr;
 
 import ix.tox21.models.QCSample;
 import ix.tox21.models.Sample;
+import ix.tox21.models.Assay;
 import ix.core.controllers.EntityFactory;
 
 public class Tox21Factory extends EntityFactory {
@@ -18,6 +19,8 @@ public class Tox21Factory extends EntityFactory {
         new Model.Finder(Long.class, QCSample.class);
     static final public Model.Finder<Long, Sample> sampleFinder =
         new Model.Finder(Long.class, Sample.class);
+    static final public Model.Finder<Long, Assay> assayFinder =
+        new Model.Finder(Long.class, Assay.class);
 
     public static QCSample getQCSample (Long id) {
         return getEntity (id, finder);
@@ -26,6 +29,28 @@ public class Tox21Factory extends EntityFactory {
     public static List<QCSample> getQCSamples
         (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);
+    }
+
+    public static Integer getAssayCount () {
+        try {
+            return assayFinder.findRowCount();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't retrieve assay count", ex);
+        }
+        return null;
+    }
+    
+    public static Integer getSampleCount () {
+        try {
+            return finder.findRowCount();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't retrieve sample count", ex);
+        }
+        return null;
     }
     
     public static Sample getSample (Long id) {

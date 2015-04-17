@@ -325,8 +325,12 @@ public class Tox21App extends App {
             qc.synonyms.add(new Keyword (Sample.S_SID, sid));
             qc.synonyms.add(new Keyword (Sample.S_CASRN, cas));
             qc.synonyms.add(new Keyword (Sample.S_NCGC, ncgc));
+            /*
+            // this inchi is bogus.. it was generated not on the entire
+            // structure.. only on the largest component
             if (inchi != null && (smiles != null || struc != null))
                 qc.synonyms.add(new Keyword (Sample.S_InChIKey, inchi));
+            */
             
             if (smiles != null)
                 qc.properties.add
@@ -364,7 +368,10 @@ public class Tox21App extends App {
     }
 
     public static Result index () {
-        return redirect (routes.Tox21App.samples(null, ROWS_PER_PAGE, 1));
+        //return redirect (routes.Tox21App.samples(null, ROWS_PER_PAGE, 1));
+        return ok (ix.tox21.views.html.index.render
+                   ("Tox21 Data Browser", Tox21Factory.getAssayCount(),
+                    Tox21Factory.getSampleCount()));
     }
 
     public static Result samples (final String q,
@@ -430,6 +437,35 @@ public class Tox21App extends App {
             }
             return ok (ix.tox21.views.html.samples.render
                        (page, rows, total, pages, decorate (facets), samples));
+        }
+    }
+
+    static Result _assays (final String q, int rows, final int page)
+        throws Exception {
+        Logger.debug("Assays: q="+q+" rows="+rows+" page="+page);
+
+        return ok (ix.tox21.views.html.assays.render
+                   (page, rows, 0, new int[0],
+                    decorate (new TextIndexer.Facet[0]),
+                    new ArrayList<Assay>()));
+    }
+    
+    public static Result assays (final String q,
+                                 final int rows, final int page) {
+        try {
+            final String key = Util.sha1(request ());
+            return getOrElse (key, new Callable<Result>() {
+                    public Result call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
+                        return _assays (q, rows, page);
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError
+                (ix.tox21.views.html.error.render
+                 (500, "Internal server error: "+ex));
         }
     }
 
@@ -529,20 +565,18 @@ public class Tox21App extends App {
     public static Result structureResult
         (TextIndexer indexer, int rows, int page) throws Exception {
         TextIndexer.SearchResult result = SearchFactory.search
-            (indexer, QCSample.class, null, indexer.size(), 0, FACET_DIM,
-             request().queryString());
+            (indexer, QCSample.class, null, rows,
+             (page-1)*rows, FACET_DIM, request().queryString());
 
         TextIndexer.Facet[] facets = filter (result.getFacets(), QC_FACETS);
+        
         List<QCSample> samples = new ArrayList<QCSample>();
         int[] pages = new int[0];
         if (result.count() > 0) {
-            rows = Math.min(result.count(), Math.max(1, rows));
-            pages = paging (rows, page, result.count());
-            
-            for (int i = (page-1)*rows, j = 0; j < rows
-                     && i < result.count(); ++j, ++i) {
+            pages = paging (rows, page, result.count());            
+            rows = Math.min(result.size(), Math.max(1, rows));
+            for (int i = 0; i < rows; ++i)
                 samples.add((QCSample)result.getMatches().get(i));
-            }
         }
         
         return ok (ix.tox21.views.html.samples.render

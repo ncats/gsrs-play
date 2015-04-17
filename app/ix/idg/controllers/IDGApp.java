@@ -1102,21 +1102,20 @@ public class IDGApp extends App {
         (TextIndexer indexer, int rows, int page) throws Exception {
         try {
             TextIndexer.SearchResult result = SearchFactory.search
-                (indexer, Ligand.class, null, indexer.size(), 0, FACET_DIM,
-                 request().queryString());
+                (indexer, Ligand.class, null, rows, (page-1)*rows,
+                 FACET_DIM, request().queryString());
             
             TextIndexer.Facet[] facets =
                 filter (result.getFacets(), LIGAND_FACETS);
+            
             List<Ligand> ligands = new ArrayList<Ligand>();
             int[] pages = new int[0];
             if (result.count() > 0) {
-                rows = Math.min(result.count(), Math.max(1, rows));
-                pages = paging (rows, page, result.count());
+                pages = paging (rows, page, result.count());            
+                rows = Math.min(result.size(), Math.max(1, rows));
                 
-                for (int i = (page-1)*rows, j = 0; j < rows
-                         && i < result.count(); ++j, ++i) {
+                for (int i = 0; i < rows; ++i)
                     ligands.add((Ligand)result.getMatches().get(i));
-                }
             }
             
             return ok (ix.idg.views.html.ligandsmedia.render

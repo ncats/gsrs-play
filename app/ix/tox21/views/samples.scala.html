@@ -7,7 +7,7 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
      facets: Array[FacetDecorator], samples: List[QCSample])
 
-@label(x: Sample) = {
+@label(x: QCSample) = {
      @if(x.getName().length() > 30) {
        <a  href="#"
            tabindex="-1"
