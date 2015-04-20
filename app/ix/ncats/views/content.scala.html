@@ -40,7 +40,7 @@
            data-trigger="click hover focus"
            data-title=""
 	   data-html="true"
-           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a></h4></span>
+           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a></h4></span><div id="searching"></div>
 	    }
 	     case "Similarity" => {
 	      <span><h4>Similarity Query:&nbsp; <a  href="#"
@@ -51,7 +51,7 @@
            data-trigger="click hover focus"
            data-title=""
 	   data-html="true"
-           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4></span>
+           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4></span><div id="searching"></div>
 	    }
             case _ => {
 	      @if(request().getQueryString("q") != null) {
@@ -75,11 +75,35 @@
 	}
       </div>
    </div>
-</div>
-  
-<script>
-  function dismissQuery () {
-    location.assign('@resetAction');
-  }
-</script>
+</div>  
 }
+
+<script>
+function dismissQuery () {
+    location.assign('@resetAction');
+}
+
+$(document).ready(function () {
+    @defining(App.checkStatus()) { status =>
+      @if(status != null) {
+         $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
+         var delay = 2000; // 2s
+         var checkStatus;
+
+         checkStatus = window.setInterval(function () {
+      	     $.get('@status'+'@App.queryString("cutoff")', function(data) {
+	         if (data.status == 'Done' || data.status == 'Failed') {
+		    window.clearInterval(checkStatus);
+		    $('#searching').html('');
+		    location.reload(true);
+		 }
+		 else {
+	            //console.log('status '+data.count);
+		    $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
+		 }
+	     });
+         }, delay);
+      }
+    }
+});
+</script>

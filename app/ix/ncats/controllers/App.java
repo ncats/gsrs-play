@@ -711,9 +711,15 @@ public class App extends Controller {
         for (int i = 0; i < Math.min(atoms.length, 10); ++i) {
             atoms[i].setAtomMap(i+1);
         }
+
+        /*
+        DisplayParams displayParams = new DisplayParams ();
+        displayParams.changeProperty
+            (DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_ATOMS, true);
         
-        ChemicalRenderer render = new NchemicalRenderer
-            (/*new DisplayParams().withSubstructureHighlight()*/);
+        ChemicalRenderer render = new NchemicalRenderer (displayParams);
+        */
+        ChemicalRenderer render = new NchemicalRenderer ();
         ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
         if (format.equals("svg")) {
             SVGGraphics2D svg = new SVGGraphics2D
@@ -805,16 +811,18 @@ public class App extends Controller {
      */
     public static abstract class SearchResultProcessor {
         protected ResultEnumeration results;
-        final TextIndexer indexer;
+        final SearchResultContext context;
         
         public SearchResultProcessor () throws IOException {
-            indexer = textIndexer.createEmptyInstance();
+            context = new SearchResultContext
+                (textIndexer.createEmptyInstance());
         }
 
         public void setResults (ResultEnumeration results) {
             this.results = results;
         }
-        public TextIndexer getIndexer () { return indexer; }
+        public SearchResultContext getContext () { return context; }
+        public TextIndexer getIndexer () { return context.getIndexer(); }
 
         public int process () throws Exception {
             return process (0);
@@ -823,15 +831,48 @@ public class App extends Controller {
         public abstract int process (int max) throws Exception;
     }
 
+    public static class SearchResultContext {
+        public enum Status {
+            Running,
+            Done,
+            Failed
+        }
+
+        Status status;
+        String mesg;
+        Long start;
+        Long stop;
+        final TextIndexer indexer;
+
+        SearchResultContext (TextIndexer indexer) {
+            this.indexer = indexer;
+        }
+
+        public Status getStatus () { return status; }
+        public void setStatus (Status status) { this.status = status; }
+        public String getMessage () { return mesg; }
+        public void setMessage (String mesg) { this.mesg = mesg; }
+        public Integer getCount () { return indexer.size(); }
+        public Long getStart () { return start; }
+        public Long getStop () { return stop; }
+        
+        @com.fasterxml.jackson.annotation.JsonIgnore
+        public TextIndexer getIndexer () { return indexer; }
+    }
+
     static class SearchResultHandler extends UntypedActor {
         @Override
         public void onReceive (Object obj) {
             if (obj instanceof SearchResultProcessor) {
                 SearchResultProcessor processor = (SearchResultProcessor)obj;
+                SearchResultContext ctx = processor.getContext();               
                 try {
-                    long start = System.currentTimeMillis();
+                    ctx.start = System.currentTimeMillis();
+                    ctx.status = SearchResultContext.Status.Running;
                     int count = processor.process();
-                    double ellapsed = (System.currentTimeMillis() - start)*1e-3;
+                    ctx.stop = System.currentTimeMillis();
+                    ctx.status = SearchResultContext.Status.Done;
+                    double ellapsed = (ctx.stop - ctx.start)*1e-3;
                     Logger.debug("Actor "+self()+" finished; "
                                  +String.format("Ellapsed %1$.3fs to retrieve "
                                                 +"%2$d structures...",
@@ -839,6 +880,8 @@ public class App extends Controller {
                     context().stop(self ());
                 }
                 catch (Exception ex) {
+                    ctx.status = SearchResultContext.Status.Failed;
+                    ctx.setMessage(ex.getMessage());
                     ex.printStackTrace();
                     Logger.error("Unable process search results", ex);
                 }
@@ -858,7 +901,7 @@ public class App extends Controller {
         }
     }
 
-    static protected TextIndexer submit
+    static protected SearchResultContext submit
         (final int rows, SearchResultProcessor processor)  throws Exception {
         
         long start = System.currentTimeMillis();        
@@ -877,10 +920,81 @@ public class App extends Controller {
         Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
                                    +"%2$d structures...",
                                    ellapsed, count));
-        return processor.getIndexer();
+        return processor.getContext();
     }
 
-    public static TextIndexer substructure
+    /**
+     * This method will return a proper Call only if the query isn't already
+     * finished in one way or another
+     */
+    public static Call checkStatus () {
+        String query = request().getQueryString("q");
+        String type = request().getQueryString("type");
+        if (type != null && query != null) {
+            try {
+                String key = null;
+                if (type.equalsIgnoreCase("substructure")) {
+                    key = "substructure/"+Util.sha1(query);
+                }
+                else if (type.equalsIgnoreCase("similarity")) {
+                    String c = request().getQueryString("cutoff");
+                    key = "similarity/"+getKey (query, Double.parseDouble(c));
+                }
+                else {
+                }
+
+                Object value = Cache.get(key);
+                if (value != null) {
+                    SearchResultContext context = (SearchResultContext)value;
+                    switch (context.getStatus()) {
+                    case Done:
+                    case Failed:
+                        break;
+                        
+                    default:
+                        return routes.App.status(type.toLowerCase(), query);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public static Result status (String type, String query) {
+        String key = null;
+        if (type.equalsIgnoreCase("substructure")) {
+            key = "substructure/"+Util.sha1(query);
+        }
+        else if (type.equalsIgnoreCase("similarity")) {
+            String c = request().getQueryString("cutoff");
+            if (c == null)
+                return badRequest ("No \"cutoff\" parameter "
+                                   +"specified for query of type "+type);
+            try {
+                key = "similarity/"+getKey (query, Double.parseDouble(c));
+            }
+            catch (Exception ex) {
+                return badRequest ("Bogus cutoff value: "+c);
+            }
+        }
+        else {
+            return badRequest ("Unknown type: \""+type+"\"");
+        }
+
+        Object value = Cache.get(key);
+        if (value != null) {
+            SearchResultContext context = (SearchResultContext)value;
+            ObjectMapper mapper = new ObjectMapper ();
+            return ok (mapper.valueToTree(context));
+        }
+
+        return notFound ("No query "+query+" of type "+type+" found!");
+    }
+
+    public static SearchResultContext substructure
         (final String query, final int rows,
          final int page, final SearchResultProcessor processor) {
         try {
@@ -890,8 +1004,8 @@ public class App extends Controller {
             final int size = (page+1)*rows;
             return getOrElse
                 (strucIndexer.lastModified(),
-                 key, new Callable<TextIndexer> () {
-                         public TextIndexer call () throws Exception {
+                 key, new Callable<SearchResultContext> () {
+                         public SearchResultContext call () throws Exception {
                              Logger.debug("Cache missed: "+key);
                              processor.setResults
                                  (strucIndexer.substructure(query, 0));
@@ -906,18 +1020,21 @@ public class App extends Controller {
         return null;
     }
 
-    public static TextIndexer similarity
+    static String getKey (String q, double t) {
+        return Util.sha1(q) + "/"+String.format("%1$d", (int)(1000*t+.5));
+    }
+    
+    public static SearchResultContext similarity
         (final String query, final double threshold,
          final int rows, final int page,
          final SearchResultProcessor processor) {
         try {
-            final String key = "similarity/"+Util.sha1(query)
-                +"/"+String.format("%1$d", (int)(1000*threshold+.5));
+            final String key = "similarity/"+getKey (query, threshold);
             final int size = (page+1)*rows;
             return getOrElse
                 (strucIndexer.lastModified(),
-                 key, new Callable<TextIndexer> () {
-                         public TextIndexer call () throws Exception {
+                 key, new Callable<SearchResultContext> () {
+                         public SearchResultContext call () throws Exception {
                              Logger.debug("Cache missed: "+key);
                              processor.setResults
                                  (strucIndexer.similarity(query, threshold, 0));

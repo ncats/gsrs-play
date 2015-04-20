@@ -1132,10 +1132,10 @@ public class IDGApp extends App {
                                      final int rows,
                                      final int page) {
         try {
-            TextIndexer indexer = similarity
+            SearchResultContext context = similarity
                 (query, threshold, rows, page, new IDGSearchResultProcessor ());
-            if (indexer != null) {
-                return structureResult (indexer, rows, page);
+            if (context != null) {
+                return structureResult (context.getIndexer(), rows, page);
             }
         }
         catch (Exception ex) {
@@ -1150,10 +1150,10 @@ public class IDGApp extends App {
     public static Result substructure
         (final String query, final int rows, int page) {
         try {
-            TextIndexer indexer = substructure
+            SearchResultContext context = substructure
                 (query, rows, page, new IDGSearchResultProcessor ());
-            if (indexer != null) {
-                return structureResult (indexer, rows, page);
+            if (context != null) {
+                return structureResult (context.getIndexer(), rows, page);
             }
         }
         catch (Exception ex) {
