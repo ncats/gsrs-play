@@ -1,8 +1,10 @@
- @main("ginas Main") {
+ @ix.ncats.views.html.main("ginas", "null"){@menu()}{<h3></h3>}{
+ <div class = "container">
 <div class="row" id="pub-history">
 	<div class="col-md-8 col-md-offset-2">
 		<div class="row" id="icons">
-			<a href="@ix.ginas.controllers.routes.GinasFactory.chemical()">
+		
+			<a href="@ix.ginas.controllers.routes.GinasApp.chemicals()">
 				<div class="col-md-4">
 					<h2>Chemical Structure</h2>
 					<img src="@routes.Assets.at("ginas/images/sketcher.png")" class="img-responsive" id="" />
@@ -19,6 +21,7 @@
 				</div>
 		</div>
 	</div>
+</div>
 </div>
 <!--END panel panel-primary-->
 }

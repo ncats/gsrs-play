@@ -21,7 +21,9 @@ import ix.core.NamedResource;
 public class SubstanceFactory extends EntityFactory {
     static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
-
+    static public final Model.Finder<Long, ChemicalSubstance> chemfinder =
+            new Model.Finder(Long.class, ChemicalSubstance.class);
+    
     public static Substance getSubstance (String id) {
         return getSubstance (UUID.fromString(id));
     }
@@ -34,8 +36,12 @@ public class SubstanceFactory extends EntityFactory {
         (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);
     }
-
-    public static Integer getCount () {
+    
+    public static List<ChemicalSubstance> getChemicals
+    (int top, int skip, String filter) {
+    return filter (new FetchOptions (top, skip, filter), chemfinder);
+}
+     public static Integer getCount () {
         try {
             return getCount (finder);
         }

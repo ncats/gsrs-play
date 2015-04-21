@@ -1,39 +1,44 @@
- @(kind: String) 
+ @(kind: String) @ix.ncats.views.html.main("Load Data",
+"null"){@menu()}{
+<h3></h3>
+}{
 
-@main("ginas Search") {
-
+<div class="container">
 	<div class="row" id="pub-history">
 		<div class="col-md-8 col-md-offset-2">
 			<h1>@kind Search</h1>
-			
+
 			<form role="search" method="GET"
-				action="@ix.ginas.controllers.routes.GinasApp.search(null)" id = "search-bar">
+				action="@ix.ginas.controllers.routes.GinasApp.search(null)"
+				id="search-bar">
 				<div class="form-group">
-				<div class = "row">
-					<div class="col-md-3">
-						<div class="form-group">
-<!--     <label for="exampleInputFile">Load File</label> -->
-        <input type="button" value = "Choose File" onclick="window.FileContentsGrabber.append('nuc-sequence')" id="exampleInputFile">
-    
-<!--     <input type="file" id="exampleInputFile"> -->
-    <p class="help-block">or</p>
-  </div>
-				</div>
-				</div>
-				<div class = "row">	
-					<div class="col-md-12">
-						<label for="description-det">@kind Sequence:</label>
-						<textarea class="form-control" rows="6" id="nuc-sequence"
-						title="Search" name="q"></textarea><input
-						type="hidden" name="kind" value="ix.ncats.models.Project" />
+					<div class="row">
+						<div class="col-md-3">
+							<div class="form-group">
+								<!--     <label for="exampleInputFile">Load File</label> -->
+								<input type="button" value="Choose File"
+									onclick="window.FileContentsGrabber.append('nuc-sequence')"
+									id="exampleInputFile">
+
+								<!--     <input type="file" id="exampleInputFile"> -->
+								<p class="help-block">or</p>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-12">
+							<label for="description-det">@kind Sequence:</label>
+							<textarea class="form-control" rows="6" id="nuc-sequence"
+								title="Search" name="q"></textarea>
+							<input type="hidden" name="kind" value="ix.ncats.models.Project" />
 						</div>
 					</div>
 				</div>
-				
+
 				<button type="submit" class="btn btn-default">Search</button>
 			</form>
 		</div>
 	</div>
-
+</div>
 }
-	
+

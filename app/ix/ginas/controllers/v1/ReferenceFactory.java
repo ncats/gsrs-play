@@ -26,6 +26,11 @@ public class ReferenceFactory extends EntityFactory {
         return getEntity (uuid, finder);
     }
 
+    public static Reference getReference (String uuid) {
+    	 UUID ref = UUID.fromString(uuid);
+        return getEntity (ref, finder);
+    }
+    
     public static List<Reference> getReferences
         (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);

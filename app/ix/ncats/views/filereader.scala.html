@@ -62,4 +62,33 @@ var FileContentsGrabber = {
 };
 
 
+function readURL(input) {
+       if (input.files && input.files[0]) {
+           var reader = new FileReader();
+
+           reader.onload = function (e) {
+               $('#thumb')
+                   .attr('src', e.target.result)
+                   .width(150)
+                   .height(200);
+           };
+
+           reader.readAsDataURL(input.files[0]);
+       }
+   }
+function other(value){
+	 if (value=="Other"){
+		 $('#def-group').show();
+	 }
+	 else{
+			$('#def-group').hide();
+	 }
+}
+function molimport(moldata){
+		console.log(moldata);
+		mol.setMolfile(moldata); 
+	 } 
+
+</script>
+
 </script>

@@ -1,0 +1,71 @@
+@import ix.ginas.controllers.v1.SubstanceFactory
+@import ix.ginas.models.v1.ChemicalSubstance
+@import ix.core.models.Structure
+@import ix.ginas.models.v1.Name
+@import ix.ginas.controllers.GinasApp
+@import ix.ncats.controllers.App.FacetDecorator
+
+
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+        facets: Array[FacetDecorator], chemicals: List[ChemicalSubstance])
+
+@getName(n : Name) = {
+@if(n.preferred ==true){ @n.name }else{ }
+}
+
+@thumb(chem: ChemicalSubstance) = {
+@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL){
+<div class = "col-md-3 zoom thumb-col achiral">
+}else{
+@if(chem.structure.stereoChemistry== Structure.Stereo.RACEMIC){
+<div class = "col-md-3 zoom thumb-col racemic">
+}else{
+<div class = "col-md-3  zoom thumb-col ">
+}
+}
+<div class = "row">
+<div class = "col-md-12">
+Approval ID: @chem.unii
+</div>
+</div>
+<div class = "row">
+<div class = "col-md-12 struc-img">
+         <img class = "struc-thumb" alt="Structure of @chem.getName()"
+		   src='@ix.ncats.controllers.routes.App.structure(chem.structure.id,"svg",200)'>
+		  
+		   
+</div>
+</div>
+<div class = "row stereo">
+<div class = "col-md-12">
+ @chem.structure.stereoChemistry
+</div>
+</div>
+<div class = "row">
+<div class = "col-md-12">
+@for(n <- chem.names) {
+@getName(n)
+	}				
+</div>
+</div>
+</div>
+}
+
+
+
+@ix.ncats.views.html.content("Chemicals", "ix.ginas.models.v1.ChemicalSubstance",
+ "/ginas/chemicals",
+  current, rows, total, pages, facets){@menu()} { <h3></h3>} {
+  <div class = "row">
+  @for(chem <- chemicals) {
+  <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
+     @thumb(chem)
+   </a>
+   }
+   
+   </div>
+<!--END panel panel-primary-->
+@molimport()
+}
+	

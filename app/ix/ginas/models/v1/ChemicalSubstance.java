@@ -2,6 +2,7 @@ package ix.ginas.models.v1;
 
 import java.util.List;
 import java.util.ArrayList;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,9 +14,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import ix.core.models.Keyword;
+import ix.core.models.Publication;
 import ix.core.models.Structure;
 import ix.core.models.Indexable;
 import ix.core.models.BeanViews;
+import ix.core.models.Value;
+import ix.core.models.XRef;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 
@@ -60,4 +65,5 @@ public class ChemicalSubstance extends Substance {
         }
         return node;
     }
+
 }

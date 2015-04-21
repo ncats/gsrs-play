@@ -1,0 +1,58 @@
+@import ix.ginas.models.v1.Reference
+@import ix.ginas.controllers.v1.ReferenceFactory
+@import ix.core.models.Keyword
+
+
+@import helper._ 
+
+
+@(references: List[Keyword])
+
+<!-- Modal -->
+
+<div class="modal fade" id="reference-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabelimport" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabelimport">References</h4>
+      </div>
+      <div class="modal-body">
+			<table class="table table-striped" id="referenceTable">
+						<thead>
+							<tr>
+								<th>Citation</th>
+								<th>Doc Type</th>
+								<th>Date Accessed</th>
+								<th>References</th>
+								
+							</tr>
+						</thead>
+						@for(ref <- references){
+						    @defining(ReferenceFactory.getReference(ref.term)) { r =>
+						
+						<tr>
+							<td>
+							@r.citation
+							</td>
+								<td>
+							@r.docType
+							</td>
+								<td>
+							@r.documentDate
+							</td>
+						<td>
+							@r.url
+							</td>	
+						</tr>
+						
+						}
+						}
+					</table>
+				
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+
+      </div>
+    </div>
+  </div>
+</div>

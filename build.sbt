@@ -38,6 +38,7 @@ libraryDependencies ++= Seq(
     ,"org.webjars" % "respond" % "1.4.2"
       ,"org.webjars" % "highcharts" % "4.0.4"
     ,"org.webjars" % "highslide" % "4.1.13"
+        ,"org.webjars" % "html2canvas" % "0.4.1"
     ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
     ,"colt" % "colt" % "1.2.0"
     //,"net.sf.jni-inchi" % "jni-inchi" % "0.8"

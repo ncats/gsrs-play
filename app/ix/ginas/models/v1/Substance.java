@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +21,9 @@ import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.core.models.Keyword;
 import ix.core.models.BeanViews;
-
+import ix.core.models.Publication;
+import ix.core.models.Value;
+import ix.core.models.XRef;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.*;
 import ix.utils.Global;
@@ -50,8 +53,12 @@ public class Substance extends Ginas {
     }
     
     @JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
+    @Indexable(suggest=true,facet=true, name="Substance Class")
     public SubstanceClass substanceClass;
+    
+    @Indexable(suggest=true,facet=true, name="Status")
     public String status;
+    
     public String approvedBy;
     
     @JsonDeserialize(using=DateDeserializer.class)
@@ -227,4 +234,19 @@ public class Substance extends Ginas {
         }
         return node;
     }
+    
+    
+    @Column(length=1024)
+    @Indexable(suggest=true,facet=true, name="Ligand")
+    public String getName () {
+    	for (Name n : names){
+    		if(n.preferred){
+    			return n.name;
+    		}
+    	}
+		return names.get(0).name;
+ }
+    public List<Code> getSynonyms () { return codes; }
+    public List<Property> getProperties () { return properties; }
+    public List<Keyword> getLinks () { return tags; }
 }
