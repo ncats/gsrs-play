@@ -205,9 +205,12 @@
             <table class="tree table">
               <tr>
                 <th>Disease</th>
-                <th>Z-score</th>
-                <th>Confidence</th>
-		<th>TIN-X Importance</th>
+                <th data-toggle="tooltip" data-placement="top" data-html="true"
+                title="<p align='left'>A normalized version of the co-occurence (of the disease and this target) score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>">Z-score</th>
+                <th data-toggle="tooltip" data-placement="top" data-html="true"
+                title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>">Confidence</th>
+		        <th data-toggle="tooltip" data-placement="top" data-html="true"
+                title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature</p>">TIN-X Importance</th>
               </tr>
 	      @defining(request().getQueryString("view")) { view =>
 	        @view match {
