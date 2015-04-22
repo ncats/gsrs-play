@@ -6,6 +6,7 @@
 @import ix.core.models.Publication
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
+@import ix.idg.controllers.Commons._
 @import ix.idg.controllers.TcrdRegistry
 @import ix.idg.controllers.UniprotRegistry
 @import ix.utils.Util
@@ -312,10 +313,10 @@
                                case "/uniprot/entry/reference/scope" => {
                                  @label(p, "SCOPE", "default")
                                }
-                               case UniprotRegistry.TISSUE => {
+                               case UNIPROT_TISSUE => {
                                     <span class="label label-primary">@p.getValue()</span>
                                }
-                               case TcrdRegistry.GENERIF => {
+                               case IDG_GENERIF => {
                                   @label(p, "GeneRIF", "warning")
                                }
                                case _ => {

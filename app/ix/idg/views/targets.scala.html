@@ -2,6 +2,7 @@
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.TcrdRegistry
 @import ix.idg.controllers.ChemblRegistry
+@import ix.idg.controllers.Commons._
 @import ix.ncats.controllers.App.FacetDecorator
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
@@ -13,7 +14,7 @@
   <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
   <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
 	    data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
-  <td>@IDGApp.novelty(t.getProperty(TcrdRegistry.TINX_NOVELTY))</td>
+  <td>@IDGApp.novelty(t.getProperty(TINX_NOVELTY))</td>
   <td>@t.idgFamily</td>
 </tr>
 }
@@ -35,7 +36,7 @@ current, rows, total, pages, facets){
      @if(facets != null) {
       <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
        @for(f <- facets) {
-          @if(f.startsWith(ChemblRegistry.ChEMBL_PROTEIN_CLASS)) {
+          @if(f.startsWith(ChEMBL_PROTEIN_CLASS)) {
 	     @for(a <- IDGApp.getProteinAncestry(f)) {
 	        <li><a href="@a.href">@a.term</a></li>
              }

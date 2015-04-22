@@ -34,7 +34,7 @@ public class Target extends EntityModel {
         Tchem ("Tchem",
                "Targets have standardizable activities better than 1μM (10μM for ion channels) in ChEMBL involving non-drug small molecule(s)",
                "info"),
-        Tmacro ("Tmacro",
+        Tbio ("Tbio",
                 "Targets do not have ChEMBL activities and are above the cutoffs for Tgray",
                 "warning"),
         Tgray ("Tgray",

@@ -57,7 +57,7 @@ import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class IDGApp extends App {
+public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
 
     static class IDGSearchResultProcessor extends SearchResultProcessor {
@@ -139,7 +139,7 @@ public class IDGApp extends App {
         public String label (final int i) {
             final String label = super.label(i);
             final String name = super.name();
-            if (name.equals(Target.IDG_DEVELOPMENT)) {
+            if (name.equals(IDG_DEVELOPMENT)) {
                 Target.TDL tdl = Target.TDL.fromString(label);
                 if (tdl != null) {
                     return "<span class=\"label label-"+tdl.label+"\""
@@ -149,8 +149,8 @@ public class IDGApp extends App {
                 }
                 assert false: "Unknown TDL label: "+label;
             }
-            else if (name.equals(ChemblRegistry.WHO_ATC)) {
-                final String key = ChemblRegistry.WHO_ATC+":"+label;
+            else if (name.equals(WHO_ATC)) {
+                final String key = WHO_ATC+":"+label;
                 try {
                     Keyword kw = getOrElse (0l, key, new Callable<Keyword>() {
                             public Keyword call () {
@@ -256,30 +256,30 @@ public class IDGApp extends App {
     }
     
     public static final String[] TARGET_FACETS = {
-        TcrdRegistry.DEVELOPMENT,
-        TcrdRegistry.FAMILY,
-        TcrdRegistry.DISEASE,
+        IDG_DEVELOPMENT,
+        IDG_FAMILY,
+        IDG_DISEASE,
         "Ligand"
     };
 
     public static final String[] DISEASE_FACETS = {
-        TcrdRegistry.DEVELOPMENT,
-        TcrdRegistry.FAMILY,
-        UniprotRegistry.TARGET
+        IDG_DEVELOPMENT,
+        IDG_FAMILY,
+        UNIPROT_TARGET
     };
 
     public static final String[] LIGAND_FACETS = {
-        ChemblRegistry.WHO_ATC,
-        TcrdRegistry.DEVELOPMENT,
-        TcrdRegistry.FAMILY,
-        UniprotRegistry.TARGET
+        WHO_ATC,
+        IDG_DEVELOPMENT,
+        IDG_FAMILY,
+        UNIPROT_TARGET
     };
 
     public static final String[] ALL_FACETS = {
-        TcrdRegistry.DEVELOPMENT,
-        TcrdRegistry.FAMILY,
-        TcrdRegistry.DISEASE,
-        UniprotRegistry.TARGET,
+        IDG_DEVELOPMENT,
+        IDG_FAMILY,
+        IDG_DISEASE,
+        UNIPROT_TARGET,
         "Ligand"
     };
 
@@ -294,7 +294,7 @@ public class IDGApp extends App {
         for (int i = 1; i <= 8; ++i) {
             IDGFacetDecorator f = new IDGFacetDecorator
                 (new TextIndexer.Facet
-                 (ChemblRegistry.ChEMBL_PROTEIN_CLASS+" ("+i+")"));
+                 (ChEMBL_PROTEIN_CLASS+" ("+i+")"));
             f.hidden = true;
             decors.add(f);
         }
@@ -390,7 +390,7 @@ public class IDGApp extends App {
     }
     
     public static String getId (Target t) {
-        Keyword kw = t.getSynonym(UniprotRegistry.ACCESSION);
+        Keyword kw = t.getSynonym(UNIPROT_ACCESSION);
         return kw != null ? kw.term : null;
     }
     
@@ -419,7 +419,7 @@ public class IDGApp extends App {
         
         List<Keyword> breadcrumb = new ArrayList<Keyword>();
         for (Value v : t.properties) {
-            if (v.label.startsWith(ChemblRegistry.ChEMBL_PROTEIN_CLASS)) {
+            if (v.label.startsWith(ChEMBL_PROTEIN_CLASS)) {
                 Keyword kw = (Keyword)v;
                 String url = ix.idg.controllers
                     .routes.IDGApp.targets(null, 30, 1).url();
@@ -466,14 +466,13 @@ public class IDGApp extends App {
                 }
                 */
                 for (Value p : xref.properties) {
-                    if (TcrdRegistry.ZSCORE.equals(p.label))
+                    if (IDG_ZSCORE.equals(p.label))
                         dr.zscore = (Double)p.getValue();
-                    else if (TcrdRegistry.CONF.equals(p.label))
+                    else if (IDG_CONF.equals(p.label))
                         dr.conf = (Double)p.getValue();
-                    else if (TcrdRegistry.TINX_IMPORTANCE.equals(p.label))
+                    else if (TINX_IMPORTANCE.equals(p.label))
                         dr.tinxScore = (Double)p.getValue();
-                    else if (UniprotRegistry
-                             .DISEASE_RELEVANCE.equals(p.label)
+                    else if (UNIPROT_DISEASE_RELEVANCE.equals(p.label)
                              || p.label.equals(dr.disease.name)) {
                         dr.comment = ((Text)p).text;
                     }
@@ -849,7 +848,7 @@ public class IDGApp extends App {
     }
 
     public static Keyword getATC (final String term) throws Exception {
-        final String key = ChemblRegistry.WHO_ATC+" "+term;
+        final String key = WHO_ATC+" "+term;
         return getOrElse (0l, key, new Callable<Keyword>() {
                 public Keyword call () {
                     Logger.debug("Cache missed: "+key);
@@ -860,7 +859,7 @@ public class IDGApp extends App {
                         String url = routes.IDGApp.ligands(null, 8, 1).url();
                         n.term = n.term.toLowerCase();
                         n.href = url + (url.indexOf('?') > 0?"&":"?")
-                            +"facet="+ChemblRegistry.WHO_ATC+"/"+term;
+                            +"facet="+WHO_ATC+"/"+term;
                         return n;
                     }
                     return null;
@@ -869,7 +868,7 @@ public class IDGApp extends App {
     }
 
     public static Keyword getATC (final Keyword kw) throws Exception {
-        if (kw.label.equals(ChemblRegistry.WHO_ATC))
+        if (kw.label.equals(WHO_ATC))
             return getATC (kw.term);
         Logger.warn("Not a valid ATC label: "+kw.label);
         return null;
@@ -979,7 +978,7 @@ public class IDGApp extends App {
             
             List<Keyword> breadcrumb = new ArrayList<Keyword>();
             for (Keyword kw : ligand.synonyms) {
-                if (kw.label.equals(ChemblRegistry.WHO_ATC)
+                if (kw.label.equals(WHO_ATC)
                     // don't include the leaf node
                     && kw.term.length() < 7) {
                     breadcrumb.add(kw);
@@ -1065,7 +1064,7 @@ public class IDGApp extends App {
         for (XRef ref : model.getLinks()) {
             if (ref.kind.equals(Target.class.getName())) {
                 for (Value v : ref.properties) {
-                    if (v.label.equals(Target.IDG_DEVELOPMENT)) {
+                    if (v.label.equals(IDG_DEVELOPMENT)) {
                         tdls.add(Target.TDL.fromString(((Keyword)v).term));
                     }
                 }
@@ -1079,7 +1078,7 @@ public class IDGApp extends App {
         for (XRef ref : lig.links) {
             if (ref.kind.equals(Target.class.getName())) {
                 for (Value v : ref.properties) {
-                    if (v.label.equals(ChemblRegistry.ChEMBL_MECHANISM))
+                    if (v.label.equals(ChEMBL_MECHANISM))
                         moa.add(((Text)v).text);
                 }
             }

@@ -26,11 +26,10 @@
      var button = $(ev.relatedTarget);
      var url = button.data('molurl');
      console.log('molurl: '+url);
+     //console.log(sketcher);
      if (url) {
-       $.get(url, function (mol) {
-           sketcher.importStructure('mol',mol).catch(function(error) {
-	     	alert(error);
-	   });
+        $.get(url, function (mol) {
+ 	   sketcher.importAsMol(mol);
 	 });
      }
   });

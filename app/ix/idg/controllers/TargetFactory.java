@@ -14,7 +14,7 @@ import ix.idg.models.Target;
 import ix.core.controllers.EntityFactory;
 
 @NamedResource(name="targets",type=Target.class)
-public class TargetFactory extends EntityFactory {
+public class TargetFactory extends EntityFactory implements Commons {
     static final public Model.Finder<Long, Target> finder = 
         new Model.Finder(Long.class, Target.class);
 
@@ -63,7 +63,7 @@ public class TargetFactory extends EntityFactory {
     public static Target registerIfAbsent (String accession) {
         List<Target> targets =
             finder.where(Expr.and(Expr.eq("synonyms.label",
-                                          UniprotRegistry.ACCESSION),
+                                          UNIPROT_ACCESSION),
                                   Expr.eq("synonyms.term", accession)))
                 .findList();
         

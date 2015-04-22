@@ -131,7 +131,7 @@ public abstract class EntityModel extends IxModel {
 
     public boolean addIfAbsent (Publication pub) {
         for (Publication p : getPublications ())
-            if (p.pmid.equals(pub.pmid))
+            if (p.id.equals(pub.id) || p.pmid.equals(pub.pmid))
                 return false;
         getPublications().add(pub);
         return true;

@@ -37,22 +37,11 @@ import ix.core.plugins.IxContext;
 import ix.utils.Global;
 import ix.utils.Util;
 
-public class UniprotRegistry extends DefaultHandler {
-    public static final String ACCESSION = "UniProt Accession";
-    public static final String GENE = "UniProt Gene";
-    public static final String DISEASE = "UniProt Disease";
-    public static final String DISEASE_RELEVANCE = "UniProt Disease Relevance";
-    public static final String TARGET = "UniProt Target";    
-    public static final String KEYWORD = "UniProt Keyword";
-    public static final String ORGANISM = "UniProt Organism";
-    public static final String SHORTNAME = "UniProt Shortname";
-    public static final String FULLNAME = "UniProt Fullname";
-    public static final String NAME = "UniProt Name";
-    public static final String TISSUE = "UniProt Tissue";
+public class UniprotRegistry extends DefaultHandler implements Commons {
 
     static final int TIMEOUT = 5000; // 5s
-    static public Namespace namespace = NamespaceFactory.registerIfAbsent
-        ("UniProt", "http://www.uniprot.org");
+    static public Keyword Source = KeywordFactory.registerIfAbsent
+        (SOURCE, "UniProt", "http://www.uniprot.org");
 
     StringBuilder content = new StringBuilder ();
     Target target;
@@ -152,11 +141,11 @@ public class UniprotRegistry extends DefaultHandler {
         pubkeys.clear();
         values.clear();
         evidence.clear();
-        target.namespace = namespace;
     }
 
     @Override
     public void endDocument () {
+        target.properties.add(Source);
         target.save();
         // create the other direction
         for (XRef ref : target.links) {
@@ -164,9 +153,9 @@ public class UniprotRegistry extends DefaultHandler {
             if (obj instanceof EntityModel) {
                 XRef xref = createXRef (target);
                 for (Keyword kw : target.synonyms) {
-                    if (ACCESSION.equals(kw.label)) {
+                    if (UNIPROT_ACCESSION.equals(kw.label)) {
                         Keyword uni = KeywordFactory.registerIfAbsent
-                            (TARGET, target.name, kw.href);
+                            (UNIPROT_TARGET, target.name, kw.href);
                         xref.properties.add(uni);
                         break; // just grab the first one
                     }
@@ -233,14 +222,14 @@ public class UniprotRegistry extends DefaultHandler {
         else if (qName.equals("disease")) {
             String id = attrs.getValue("id");
             List<Disease> diseases = DiseaseFactory.finder.where
-                (Expr.and(Expr.eq("synonyms.label", namespace.name),
+                (Expr.and(Expr.eq("synonyms.label", UNIPROT_DISEASE),
                           Expr.eq("synonyms.term", id))).findList();
             if (diseases.isEmpty()) {
                 disease = new Disease ();
-                disease.namespace = namespace;
                 Logger.debug("New disease "+id);
                 Keyword kw = KeywordFactory.registerIfAbsent
-                    (namespace.name, id, "http://www.uniprot.org/diseases/"+id);
+                    (UNIPROT_DISEASE,
+                     id, "http://www.uniprot.org/diseases/"+id);
                 disease.synonyms.add(kw);
             }
             else {
@@ -252,7 +241,7 @@ public class UniprotRegistry extends DefaultHandler {
         }
         else if (qName.equals("keyword")) {
             keyword = new Keyword ();
-            keyword.label = KEYWORD;
+            keyword.label = UNIPROT_KEYWORD;
             keyword.href = "http://www.uniprot.org/keywords/"
                 +attrs.getValue("id");
         }
@@ -261,7 +250,7 @@ public class UniprotRegistry extends DefaultHandler {
                 String type = attrs.getValue("type");
                 if ("scientific".equals(type)) {
                     organism = new Keyword ();
-                    organism.label = ORGANISM;
+                    organism.label = UNIPROT_ORGANISM;
                 }
                 else {
                     organism = null;
@@ -271,7 +260,6 @@ public class UniprotRegistry extends DefaultHandler {
                 String type = attrs.getValue("type");
                 if ("primary".equals(type)) {
                     gene = new Gene ();
-                    gene.namespace = namespace;
                 }
             }
         }
@@ -291,13 +279,13 @@ public class UniprotRegistry extends DefaultHandler {
         
         if (qName.equals("accession")) {
             Keyword kw = new Keyword (value);
-            kw.label = ACCESSION;
+            kw.label = UNIPROT_ACCESSION;
             kw.href = "http://www.uniprot.org/uniprot/"+value;
             target.synonyms.add(kw);
         }
         else if (qName.equals("shortName")) {
             Keyword kw = new Keyword (value);
-            kw.label = SHORTNAME;
+            kw.label = UNIPROT_SHORTNAME;
             target.synonyms.add(kw);
         }
         else if (qName.equals("fullName")) {
@@ -305,14 +293,14 @@ public class UniprotRegistry extends DefaultHandler {
                 target.name = value;
             else {
                 Keyword kw = new Keyword (value);
-                kw.label = FULLNAME;
+                kw.label = UNIPROT_FULLNAME;
                 target.synonyms.add(kw);
             }
         }
         else if (qName.equals("name")) {
             if ("entry".equals(parent)) {
                 Keyword kw = new Keyword (value);
-                kw.label = NAME;
+                kw.label = UNIPROT_NAME;
                 target.synonyms.add(kw);
             }
             else if ("disease".equals(parent)) {
@@ -326,13 +314,13 @@ public class UniprotRegistry extends DefaultHandler {
                         target.links.add(createXRef (gene));
                     }
                     else {
-                        Keyword kw = new Keyword (GENE, value);
+                        Keyword kw = new Keyword (UNIPROT_GENE, value);
                         gene.synonyms.add(kw);
                         gene.update();
                     }
                 }
                 // also add gene as synonym
-                Keyword kw = new Keyword (GENE, value);
+                Keyword kw = new Keyword (UNIPROT_GENE, value);
                 target.synonyms.add(kw);
             }
             else if ("organism".equals(parent)) {
@@ -343,17 +331,17 @@ public class UniprotRegistry extends DefaultHandler {
                                   Expr.eq("term", organism.term)))
                         .findList();
                     if (org.isEmpty()) {
-                        Transaction tx = Ebean.beginTransaction();
+                        //Transaction tx = Ebean.beginTransaction();
                         try {
                             organism.save();
-                            tx.commit();
+                            //tx.commit();
                             target.organism = organism;
                         }
                         catch (Exception ex) {
                             Logger.trace("Can't persist Organism", ex);
                         }
                         finally {
-                            Ebean.endTransaction();
+                            //Ebean.endTransaction();
                         }
                     }
                     else {
@@ -378,33 +366,33 @@ public class UniprotRegistry extends DefaultHandler {
         else if (qName.equals("tissue")) {
             if (xref != null) {
                 Keyword tissue = KeywordFactory.registerIfAbsent
-                    (TISSUE, value, null);
+                    (UNIPROT_TISSUE, value, null);
                 xref.properties.add(tissue);
             }
         }
         else if (qName.equals("reference")) {
             if (xref != null) {
-                Transaction tx = Ebean.beginTransaction();
+                //Transaction tx = Ebean.beginTransaction();
                 try {
                     xref.save();
-                    tx.commit();
+                    //tx.commit();
                     target.links.add(xref);
                 }
                 catch (Exception ex) {
                     Logger.trace("Can't persist XRef", ex);
                 }
                 finally {
-                    Ebean.endTransaction();
+                    //Ebean.endTransaction();
                 }
             }
             refkey = null;
         }
         else if (qName.equals("disease")) {
             if (disease.id == null) {
-                Transaction tx = Ebean.beginTransaction();
+                //Transaction tx = Ebean.beginTransaction();
                 try {
                     disease.save();
-                    tx.commit();
+                    //tx.commit();
                     Logger.debug("New disease "
                                  +disease.id+" \""+disease.name+"\" added!");
                 }
@@ -412,7 +400,7 @@ public class UniprotRegistry extends DefaultHandler {
                     Logger.trace("Can't persist disease", ex);
                 }
                 finally {
-                    Ebean.endTransaction();
+                    //Ebean.endTransaction();
                 }
             }
         }
@@ -423,14 +411,14 @@ public class UniprotRegistry extends DefaultHandler {
                 for (Keyword kw : disease.synonyms) {
                     if ("UniProt".equals(kw.label)) {
                         Keyword uni = KeywordFactory.registerIfAbsent
-                            (DISEASE, disease.name, kw.href);
+                            (UNIPROT_DISEASE, disease.name, kw.href);
                         xref.properties.add(uni);
                     }
                 }
                 
                 if ("disease".equals(commentType)) {
                     xref.properties.add(new Text
-                                        (DISEASE_RELEVANCE, value));
+                                        (UNIPROT_DISEASE_RELEVANCE, value));
                 }
                 target.links.add(xref);
                 disease = null;
@@ -467,7 +455,7 @@ public class UniprotRegistry extends DefaultHandler {
 
     public static XRef createXRef (Object obj) {
         XRef xref = new XRef (obj);
-        xref.namespace = namespace;
+        xref.properties.add(Source);
         return xref;
     }
 

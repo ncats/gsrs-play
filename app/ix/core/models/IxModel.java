@@ -12,8 +12,8 @@ import ix.utils.Global;
 
 @MappedSuperclass
 public class IxModel extends Model {
-    @Id
-    public Long id;
+    @Id public Long id;
+    @Version public Long version;
 
     @ManyToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)

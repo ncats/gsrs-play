@@ -21,24 +21,7 @@ import com.avaje.ebean.Expr;
 import com.jolbox.bonecp.BoneCPDataSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class ChemblRegistry {
-    public static final String WHO_ATC = "WHO ATC";
-    public static final String ATC_ANCESTRY =  "ATC Ancestry";
-    
-    public static final String ChEMBL = "ChEMBL";
-    public static final String ChEMBL_ID = "ChEMBL ID";
-    public static final String ChEMBL_MECHANISM = "ChEMBL Mechanism";
-    public static final String ChEMBL_MOA_MODE = "ChEBML MOA Mode";
-    public static final String ChEMBL_MECHANISM_COMMENT = "ChEMBL Mechanism Comment";
-    public static final String ChEMBL_SYNONYM = "ChEMBL Synonym";
-    public static final String ChEMBL_MOLFILE = "ChEMBL Molfile";
-    public static final String ChEMBL_INCHI = "ChEMBL InChI";
-    public static final String ChEMBL_INCHI_KEY = "ChEMBL InChI Key";
-    public static final String ChEMBL_SMILES = "ChEMBL Canonical SMILES";
-    public static final String ChEMBL_PROTEIN_CLASS = "ChEMBL Protein Class";
-    public static final String ChEMBL_PROTEIN_ANCESTRY =
-        "ChEMBL Protein Ancestry";
-
+public class ChemblRegistry implements Commons {
     static final TextIndexer INDEXER = 
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
     static final StructureProcessorPlugin PROCESSOR =
@@ -46,49 +29,12 @@ public class ChemblRegistry {
     static final PersistenceQueue PQ =
         Play.application().plugin(PersistenceQueue.class);
     
-    static class LigandStructureReceiver implements StructureReceiver {
-        final Ligand ligand;
-        final Namespace namespace;
-        
-        LigandStructureReceiver (Namespace namespace, Ligand ligand) {
-            this.ligand = ligand;
-            this.namespace = namespace;
-        }
-
-        public String getSource () { return namespace.name; }
-        public void receive (Status status, String mesg, Structure struc) {
-            //Logger.debug(status+": ligand "+ligand.getName()+" struc "+struc);
-            if (status == Status.OK) {
-                try {
-                    if (struc != null) {
-                        struc.namespace = namespace;
-                        //struc.save();
-                        
-                        XRef xref = new XRef (struc);
-                        xref.namespace = namespace;
-                        xref.save();
-                        ligand.links.add(xref);
-                        ligand.update();
-                        INDEXER.update(ligand);
-                    }
-                    Logger.debug
-                        (status+": Ligand "+ligand.id+" "+ligand.getName());
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            else {
-                Logger.error(status+": "+ligand.getName()+": "+mesg);
-            }
-        }
-    }
 
     DataSource chembl;
     Connection con;
     PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6, pstm7, pstm8;
     Map<String, Set<String>> uniprotMap;
-    Namespace namespace;
+    Keyword source;
     Set<Long> molregno = new HashSet<Long>();
     
     public ChemblRegistry (Map<String, Set<String>> uniprotMap)
@@ -108,11 +54,11 @@ public class ChemblRegistry {
             ResultSet rset = stm.executeQuery("select * from version");
             if (rset.next()) {
                 String version = rset.getString("name");
-                namespace = NamespaceFactory.registerIfAbsent
-                    (version, "https://www.ebi.ac.uk/chembl");
+                source = KeywordFactory.registerIfAbsent
+                    (SOURCE, version, "https://www.ebi.ac.uk/chembl");
             }
             rset.close();
-            Logger.debug("ChEBML version: "+namespace.name);
+            Logger.debug("ChEBML version: "+source.term);
         }
         catch (SQLException ex) {
             ex.printStackTrace();
@@ -154,7 +100,8 @@ public class ChemblRegistry {
             ("select * from activities a, "
              +"assays b, target_dictionary c, docs d "
              +"where a.molregno = ? "
-             +"and b.relationship_type = 'D' "
+             // D - direct H - homolog.. ignore for now
+             //+"and b.relationship_type = 'D' "
              +"and a.assay_id = b.assay_id "
              +"and b.tid = c.tid "
              +"and a.doc_id = d.doc_id");
@@ -188,11 +135,13 @@ public class ChemblRegistry {
         }
     }
 
-    public Namespace getNamespace () { return namespace; }
+    public Set<Long> instruments (Target target)  throws SQLException {
+        return target (target);
+    }
 
-    public void instruments (Target target, List<Ligand> ligands)
+    public void instruments (Set<Long> tids,
+                             Target target, List<Ligand> ligands)
         throws SQLException {
-        Set<Long> tids = target (target);
         if (tids != null) {
             for (Ligand ligand : ligands) {
                 try {
@@ -221,7 +170,7 @@ public class ChemblRegistry {
         for (Keyword kw : ligand.synonyms) {
             if (ChEMBL_ID.equals(kw.label))
                 chembl = kw.term;
-            else if (TcrdRegistry.DRUG.equals(kw.label))
+            else if (IDG_DRUG.equals(kw.label))
                 drug = kw.term;
         }
 
@@ -239,78 +188,50 @@ public class ChemblRegistry {
             return;
         }
 
-        if (ids == null || ids.isEmpty())
+        if (ids == null || ids.isEmpty()) {
+            Logger.warn("Can't lookup ligand " +ligand.id+" in chembl!");
             return;
-        
+        }
         Logger.debug("Ligand: "+ligand.id+" "+ligand.getName()+"; chembl="
                      +chembl+" drug="+drug);
-
-        final XRef tref = new XRef (target);
-        tref.namespace = namespace;
-        tref.properties.add
-            (KeywordFactory.registerIfAbsent
-             (Target.IDG_FAMILY, target.idgFamily, null));
-        tref.properties.add
-            (KeywordFactory.registerIfAbsent
-             (Target.IDG_DEVELOPMENT, target.idgTDL.name, null));
-        ligand.links.add(tref); // ligand -> target
         
-        final XRef lref = new XRef (ligand);
-        lref.namespace = namespace;
-        lref.properties.add
-            (KeywordFactory.registerIfAbsent
-             ("Ligand", ligand.getName(), null));
-        target.links.add(lref); // target -> ligand
-
-        Logger.debug("Registering information for ligand "
-                     +ligand.id+" "+ligand.getName());
-        for (Long no : ids) {
-            int rows = mechanism (tids, no, ligand, tref, lref);
-            Logger.debug("...."+rows+" mechanisms");
-            rows = atc (no, ligand);
-            Logger.debug("...."+rows+" ATC");
-            rows = activity (tids, no, ligand, tref, lref);
-            Logger.debug("...."+rows+" activities");
+        try {        
+            final XRef tref = new XRef (target);
+            tref.properties.add(source);
+            tref.properties.add
+                (KeywordFactory.registerIfAbsent
+                 (Target.IDG_FAMILY, target.idgFamily, null));
+            tref.properties.add
+                (KeywordFactory.registerIfAbsent
+                 (Target.IDG_DEVELOPMENT, target.idgTDL.name, null));
+            
+            final XRef lref = new XRef (ligand);
+            lref.properties.add(source);
+            lref.properties.add
+                (KeywordFactory.registerIfAbsent
+                 ("Ligand", ligand.getName(), null));
+            
+            Logger.debug("Registering information for ligand "
+                         +ligand.id+" "+ligand.getName()
+                         +" <-> target "+target.id);
+            for (Long no : ids) {
+                int rows = mechanism (tids, no, ligand, tref, lref);
+                Logger.debug("...."+rows+" mechanisms");
+                rows = activity (tids, no, ligand, tref, lref);
+                Logger.debug("...."+rows+" activities");
+            }
+            
+            
+            tref.save();
+            ligand.links.add(tref); // ligand -> target
+            lref.save();
+            target.links.add(lref); // target -> ligand
         }
-
-        final EntityFactory.EntityMapper mapper =
-            new EntityFactory.EntityMapper(BeanViews.Full.class);
-        
-        // queue this for update
-        PQ.submit(new PersistenceQueue.AbstractPersistenceContext() {
-                public void persists () throws Exception {
-                    try {
-                        tref.save();
-                    }
-                    catch (Exception ex) {
-                        Logger.error("Can't save Target XRef", ex);
-                        Logger.debug("Target XRef\n"+mapper.toJson(tref,true));
-                    }
-                    try {
-                        lref.save();
-                    }
-                    catch (Exception ex) {
-                        Logger.error("Can't save Ligand XRef", ex);
-                        Logger.debug("Ligand XRef\n"+mapper.toJson(lref,true));
-                    }
-                    try {
-                        ligand.update();
-                        INDEXER.update(ligand);
-                    }
-                    catch (Exception ex) {
-                        Logger.error("Can't update ligand", ex);
-                        Logger.debug("Ligand\n"+mapper.toJson(ligand,true));
-                    }
-                    try {
-                        target.update();
-                        INDEXER.update(target);
-                    }
-                    catch (Exception ex) {
-                        Logger.error("Can't update ligand", ex);
-                        Logger.debug("Target\n"+mapper.toJson(target,true));
-                    }
-                }
-            });
+        catch (Exception ex) {
+            Logger.error("Can't create target ("+target.id+") <-> ligand ("
+                         +ligand.id+") relationship!", ex);
+            ex.printStackTrace();
+        }
     }
 
     Long resolve (String chemblId, String type) throws SQLException {
@@ -347,6 +268,7 @@ public class ChemblRegistry {
         
         Map<String, String> syns = new HashMap<String, String>();
         Set<Long> newids = new HashSet<Long>();
+        Set<Long> all = new HashSet<Long>();
         while (rset.next()) {
             Long id = rset.getLong("molregno");
             assert id != null: "molregno is null!";
@@ -377,28 +299,35 @@ public class ChemblRegistry {
                          +chemblId);
                     ligand.addIfAbsent(kw);
                 }
+                int rows = atc (id, ligand);
+                Logger.debug("...."+rows+" ATC");
+                
                 newids.add(id);
                 molregno.add(id);
             }
+            all.add(id);
         }
         rset.close();
 
         // no synonym, so use the chembl_id as the name
-        ligand.name = chemblId;
-        for (String type : new String[]{
-                "INN","USAN","FDA","BAN","USP",
-                "TRADE_NAME","MERCK_INDEX",
-                "JAN","DCF","ATC",
-                "RESEARCH_CODE","SYSTEMATIC","OTHER"
-            }) {
-            String s = syns.get(type);
-            if (s != null) {
-                ligand.name = s;
-                break;
+        if (chemblId != null) {
+            ligand.name = chemblId;
+            for (String type : new String[]{
+                    "INN","USAN","FDA","BAN","USP",
+                    "TRADE_NAME","MERCK_INDEX",
+                    "JAN","DCF","ATC",
+                    "RESEARCH_CODE","SYSTEMATIC","OTHER"
+                }) {
+                String s = syns.get(type);
+                if (s != null) {
+                    ligand.name = s;
+                    break;
+                }
             }
         }
-
+        
         if (newids.isEmpty()) {
+            Logger.debug("Ligand "+ligand.name+" is already registered!");
         }
         else if (molfile != null) {
             if (!ligand.hasProperty(ChEMBL_MOLFILE)) {
@@ -419,8 +348,8 @@ public class ChemblRegistry {
             
             // now standardize and index
             Logger.debug("submitting "+chemblId+" for processing...");
-            StructureReceiver receiver = new LigandStructureReceiver
-                (namespace, ligand);
+            StructureReceiver receiver =
+                new TcrdRegistry.LigandStructureReceiver(source, ligand);
             PROCESSOR.submit(molfile, receiver);
         }
         else {
@@ -429,7 +358,7 @@ public class ChemblRegistry {
             ligand.save();
         }
         
-        return newids;
+        return all;
     }
     
     // mechanism    
@@ -520,9 +449,11 @@ public class ChemblRegistry {
                 VNum num = new VNum (type, value);
                 num.unit = unit;
                 num.save();
+                Logger.debug("........activity "+num.id);
                 lref.properties.add(num);
                 tref.properties.add(num);
                 act = num;
+                ++rows;
             }
 
             Long pmid = rset.getLong("pubmed_id");
@@ -533,7 +464,7 @@ public class ChemblRegistry {
                     boolean isNew = false;
                     if (ref == null) {
                         ref = new XRef (pub);
-                        ref.namespace = namespace;
+                        ref.properties.add(source);
                         isNew = true;
                     }
                     if (act != null) {
@@ -549,7 +480,6 @@ public class ChemblRegistry {
                     ligand.addIfAbsent(pub); // a bit redundent
                 }
             }
-            ++rows;
         }
         rset.close();
         return rows;
@@ -557,14 +487,14 @@ public class ChemblRegistry {
 
     Set<Long> target (Target target) throws SQLException {
         String acc = null;
-        Set<String> chemblIds = null;
+        Set<String> chemblIds = new HashSet<String>();
         for (Keyword kw : target.synonyms) {
-            if (UniprotRegistry.ACCESSION.equals(kw.label)) {
-                acc = kw.term;
-                chemblIds = uniprotMap.get(acc);
-                if (chemblIds != null) {
-                    // just pick one for now
-                    break;
+            if (UNIPROT_ACCESSION.equals(kw.label)) {
+                if (acc == null)
+                    acc = kw.term;
+                Set<String> accs = uniprotMap.get(acc);
+                if (accs != null) {
+                    chemblIds.addAll(accs);
                 }
             }
         }
@@ -572,7 +502,7 @@ public class ChemblRegistry {
         if (acc == null) {
             Logger.warn
                 ("Target "+target.id+" ("+target.name
-                 +") has no "+UniprotRegistry.ACCESSION+" synonym!");
+                 +") has no "+UNIPROT_ACCESSION+" synonym!");
             return null;
         }
         else if (chemblIds == null || chemblIds.isEmpty()) {
@@ -589,7 +519,8 @@ public class ChemblRegistry {
             if (tid != null)
                 tids.add(tid);
             Logger.debug(acc +" => "+id+":"+tid);
-            chemblId = id;
+            if (chemblId == null)
+                chemblId = id;
         }
         // pick the last one for now...
         pstm.setString(1, chemblId);
