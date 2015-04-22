@@ -849,30 +849,29 @@ public class TcrdRegistry extends Controller implements Commons {
             rset.close();
             
             rset = stm.executeQuery
-                /*
-                ("select * from t2tc a, target b, protein c, tinx_novelty d\n"
-                 +"where a.target_id = b.id\n"
+                ("select * from t2tc a, target b, protein c, tinx_novelty d "
+                 +"where a.target_id = b.id "
                  +"and a.protein_id = c.id "
                  +"and a.protein_id = d.id "
-                 +" order by c.id, c.uniprot "           
+                 +" order by c.id, c.uniprot "
                  +(rows > 0 ? ("limit "+rows) : "")
                  );
-                */
-                ("select *\n"
-                 +"from t2tc a "
-                 +"     join (target b, protein c)\n"
-                 +"on (a.target_id = b.id and a.protein_id = c.id)\n"
-                 +"left join tinx_novelty d\n"
-                 +"    on d.protein_id = a.protein_id \n"
-                 //+"where b.tdl = 'Tclin'\n"
-                 +"where c.uniprot in ('P22612')\n"
-                 //+"where c.uniprot in ('Q00537','Q8WXA8')\n"
-                 //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
-                 //+"where c.uniprot in ('Q8WXA8')\n"
-                 //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
-                 +"order by d.score desc, c.id\n"
-                 +(rows > 0 ? ("limit "+rows) : "")
-                 );
+
+//                ("select *\n"
+//                 +"from t2tc a "
+//                 +"     join (target b, protein c)\n"
+//                 +"on (a.target_id = b.id and a.protein_id = c.id)\n"
+//                 +"left join tinx_novelty d\n"
+//                 +"    on d.protein_id = a.protein_id \n"
+//                 //+"where b.tdl = 'Tclin'\n"
+//                 +"where c.uniprot in ('P22612')\n"
+//                 //+"where c.uniprot in ('Q00537','Q8WXA8')\n"
+//                 //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
+//                 //+"where c.uniprot in ('Q8WXA8')\n"
+//                 //+"where c.uniprot in ('Q7RTX7','Q86YV6','P07333','P07949')\n"
+//                 +"order by d.score desc, c.id\n"
+//                 +(rows > 0 ? ("limit "+rows) : "")
+//                 );
                  
             while (rset.next()) {
                 long protId = rset.getLong("protein_id");
