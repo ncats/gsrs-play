@@ -693,6 +693,7 @@ public class IDGApp extends App implements Commons {
         try {
             String q = request().getQueryString("q");
             String t = request().getQueryString("type");
+            String a = request().getQueryString("action");
             if (kind != null && !"".equals(kind)) {
                 if (Target.class.getName().equals(kind))
                     return redirect (routes.IDGApp.targets(q, 30, 1));
@@ -723,7 +724,7 @@ public class IDGApp extends App implements Commons {
             Logger.debug("Can't resolve class: "+kind, ex);
         }
             
-        return _badRequest ("Invalid request: "+request().uri());
+        return _badRequest("Invalid request: " + request().uri());
     }
 
     static <T> List<T> filter (Class<T> cls, List values, int max) {

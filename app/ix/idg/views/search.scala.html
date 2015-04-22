@@ -55,9 +55,9 @@ diseases: List[Disease], totalDiseases: Int)
       </div>
       <div class="btn-group" role="group">
 	@if(total == 1) {
-	<h3><span class="label label-default">@total result found.</span></h3>
+	<h3><span class="label label-default">@total result found.</span> <a class="btn btn-default" href="@request.uri&action=download" role="button">Download</a> </h3>
 	} else {
-        <h3><span class="label label-default">@total results found.</span></h3>
+        <h3><span class="label label-default">@total results found.</span> <a class="btn btn-default" href="@request.uri&action=download" role="button">Download</a> </h3>
 	}
       </div>
       <div class="panel panel-default">
