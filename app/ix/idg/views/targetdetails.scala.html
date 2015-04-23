@@ -40,7 +40,7 @@
        } else {
        <td></td>
        }
-         <td><a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1="@IDGApp.getId(dr.disease)>DiseasesDB</a></td>
+         <td><a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1=@IDGApp.getId(dr.disease)">DiseasesDB</a></td>
      </tr>
 
      @for(i <- 0 until dr.lineage.size()) {
@@ -54,7 +54,7 @@
 	    } else {
 	    <td></td>
 	    }
-             <td><a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1="@IDGApp.getId(x.disease)>DiseasesDB</a></td>
+        <td><a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1=@IDGApp.getId(x.disease)">DiseasesDB</a></td>
          </tr>
        }
      }
@@ -212,7 +212,7 @@
                 <th data-toggle="tooltip" data-placement="top" data-html="true"
                 title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>">Confidence</th>
 		        <th data-toggle="tooltip" data-placement="top" data-html="true"
-                title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature</p>">TIN-X Importance</th>
+                title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature. Smaller values indicate increased importance.</p>">TIN-X Importance</th>
                 <th></th>
               </tr>
 	      @defining(request().getQueryString("view")) { view =>
@@ -240,33 +240,33 @@
             </table>
           </div>
         </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">UniProt Disease Relevance</h3>
-          </div>
-          <div class="panel-body">
-            <table class="table table-striped">
-              <tr>
-                <th>Disease</th>
-                <th>OMIM</th>
-                <th>Comment</th>
-              </tr>
-              @for(dr <- diseases) {
-                @if(dr.comment != null) {
-                <tr>
-                  <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
-                  @if(dr.omim != null) {
-                  <td><a href="@dr.omim.href">@dr.omim.term</a></td>
-                  } else {
-                  <td></td>
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h3 class="panel-title">UniProt Disease Relevance</h3>
+              </div>
+              <div class="panel-body">
+                <table class="table table-striped">
+                  <tr>
+                    <th>Disease</th>
+                    <th>OMIM</th>
+                    <th>Comment</th>
+                  </tr>
+                  @for(dr <- diseases) {
+                    @if(dr.comment != null) {
+                    <tr>
+                      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
+                      @if(dr.omim != null) {
+                      <td><a href="@dr.omim.href">@dr.omim.term</a></td>
+                      } else {
+                      <td></td>
+                      }
+                      <td>@dr.comment"  "</td>
+                    </tr>
+                    }
                   }
-                  <td>@dr.comment</td>
-                </tr>
-                }
-              }
-            </table>
-        </div>
-       </div>
+                </table>
+            </div>
+           </div>
       </div>
     </div> <!-- row -->
     <!--
