@@ -537,36 +537,91 @@ public class IDGApp extends App implements Commons {
             return _internalServerError (ex);
         }
     }
-    
+
+    static String targetToCsv(Target t) {
+        Object novelty = "";
+        Object function = "";
+
+        StringBuilder sb2 = new StringBuilder();
+        String delimiter = "";
+        for (Publication pub : t.getPublications()) {
+            sb2.append(delimiter).append(pub.pmid);
+            delimiter = "|";
+        }
+
+        List<Value> props = t.getProperties();
+        for (Value v : props) {
+            if (v.label.equals("TINX Novelty")) novelty = v.getValue();
+            else if (v.label.equals("function")) function = v.getValue();
+        }
+
+        List<XRef> links = t.getLinks();
+        for (XRef xref : links) {
+            System.out.println(xref.kind + " / " + xref.deRef().toString());
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(",").
+                append(t.getName()).append(",").
+                append(csvQuote(t.getDescription())).append(",").
+                append(t.idgTDL.toString()).append(",").
+                append(novelty).append(",").
+                append(t.idgFamily).append(",").
+                append(csvQuote(function.toString())).append(",").
+                append(sb2.toString());
+        return sb.toString();
+    }
+
+    static String csvQuote(String s) {
+        if (s.contains("\"")) s = s.replace("\"", "\\\"");
+        return "\""+s+"\"";
+    }
+
     static Result _targets (final String q, int rows, final int page)
         throws Exception {
         Logger.debug("Targets: q="+q+" rows="+rows+" page="+page);
         final int total = TargetFactory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
             TextIndexer.SearchResult result =
-                getSearchResult (Target.class, q, total);
+                getSearchResult(Target.class, q, total);
             
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), TARGET_FACETS);
             List<Target> targets = new ArrayList<Target>();
             int[] pages = new int[0];
+
+            String action = request().getQueryString("action");
+            if (action == null) action = "";
+
+            if (action.toLowerCase().equals("download")) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("URL,Name,Description,Development Level,Novelty,Target Family,Function,PMIDs\n");
+                if (result.count() > 0) {
+                    for (int i = 0; i < result.count(); i++) {
+                        Target t = (Target) result.getMatches().get(i);
+                        sb.append(targetToCsv(t)).append("\n");
+                    }
+                }
+                return ok(sb.toString().getBytes()).as("text/csv");
+            }
+
             if (result.count() > 0) {
                 rows = Math.min(result.count(), Math.max(1, rows));
-                pages = paging (rows, page, result.count());
-                
-                for (int i = (page-1)*rows, j = 0; j < rows
-                         && i < result.count(); ++j, ++i) {
-                    targets.add((Target)result.getMatches().get(i));
+                pages = paging(rows, page, result.count());
+
+                for (int i = (page - 1) * rows, j = 0; j < rows
+                        && i < result.count(); ++j, ++i) {
+                    targets.add((Target) result.getMatches().get(i));
                 }
             }
-            
-            return ok (ix.idg.views.html.targets.render
-                       (page, rows, result.count(),
-                        pages, decorate (facets), targets));
+            return ok(ix.idg.views.html.targets.render
+                    (page, rows, result.count(),
+                            pages, decorate(facets), targets));
+
         }
         else {
             TextIndexer.Facet[] facets =
-                getFacets (Target.class, TARGET_FACETS);
+                getFacets(Target.class, TARGET_FACETS);
             rows = Math.min(total, Math.max(1, rows));
             int[] pages = paging (rows, page, total);               
             
@@ -693,7 +748,7 @@ public class IDGApp extends App implements Commons {
         try {
             String q = request().getQueryString("q");
             String t = request().getQueryString("type");
-            String a = request().getQueryString("action");
+
             if (kind != null && !"".equals(kind)) {
                 if (Target.class.getName().equals(kind))
                     return redirect (routes.IDGApp.targets(q, 30, 1));
