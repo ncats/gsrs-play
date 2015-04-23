@@ -45,22 +45,9 @@
 		</div>
 		<!-- close input group  -->
 	</div>
-	@ix.ncats.views.html.typeahead(Array("Name","Substance_Class"))
-	@screenshot()
-	@report()
+	@@ix.ncats.views.html.typeahead(Array("Name","Substance_Class"))
+	@@screenshot()
+	@@report()
 
-<script>
-  $('#strucModal').on('show.bs.modal', function (ev) {
-     var button = $(ev.relatedTarget);
-     var url = button.data('molurl');
-     console.log('molurl: '+url);
-     if (url) {
-       $.get(url, function (mol) {
-           sketcher.importStructure('mol',mol).catch(function(error) {
-	     	alert(error);
-	   });
-	 });
-     }
-  });
-</script>
+
 </nav>

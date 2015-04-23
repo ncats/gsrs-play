@@ -237,7 +237,7 @@ public class Substance extends Ginas {
     
     
     @Column(length=1024)
-    @Indexable(suggest=true,facet=true, name="Ligand")
+    @Indexable(suggest=true,facet=true, name="Name")
     public String getName () {
     	for (Name n : names){
     		if(n.preferred){

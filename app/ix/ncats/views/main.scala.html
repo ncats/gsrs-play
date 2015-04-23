@@ -32,9 +32,12 @@
     <script src='@routes.Assets.at("javascripts/jquery.treegrid.js")'></script>
     <script src='@routes.Assets.at("javascripts/jquery.treegrid.bootstrap3.js")'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("html2canvas.js"))'></script>
-    @screengrab()
-    @filereader()
-    
+  <script src='@routes.Assets.at("javascripts/marvin/gui/lib/promise-0.1.1.min.js")'></script>
+    <script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script>
+
+    @@screengrab()
+    @@filereader()
+
   </head>
   <body  data-spy="scroll" data-target = "#breadcrumb" data-offset="215">
    	<div class="container-fluid" id = "logo-banner">
@@ -59,11 +62,40 @@
     </div>
 <script>
   $(document).ready(function(){
+	  var sketcher;
+	  MarvinJSUtil.getEditor("#sketcher").then(function(sketcherInstance) {
+	  	sketcher = sketcherInstance;
+	  	 console.log(sketcher.getSupportedFormats());
+	  }, function(error) {
+	  	alert("Loading of the sketcher failed"+error);
+	  });
+
+	  $('#strucModal').on('show.bs.modal', function (ev) {
+		  console.log("showing");
+	     var button = $(ev.relatedTarget);
+	     var url = button.data('molurl');
+	    // console.log('molurl: '+url);
+	     if (url) {
+	       $.get(url, function (mol) {
+	           sketcher.importAsMol(mol);
+	           console.log("imported)");
+	       console.log($('#canvas'));
+		 });
+	     }
+	  });
+	  
+	  
+	  
     $('.zoom').hover(function() {
         $(this).addClass('transition');
- 
+        $(this).find('#strucSearch').removeClass('hidden').addClass('normal');
+        $(this).find('#strucExportChem').removeClass('hidden').addClass('normal');
+        
+
     }, function() {
         $(this).removeClass('transition');
+        $(this).find('#strucSearch').addClass('hidden');
+        $(this).find('#strucExportChem').addClass('hidden');
     });
   });
 </script>

@@ -8,6 +8,7 @@
   <script src='@routes.Assets.at("javascripts/marvin/gui/lib/es6-promise-2.0.1.min.js")'></script>
   <script src='@routes.Assets.at("javascripts/marvin/gui/gui.nocache.js")'></script>
   <script>
+
 	window.addEventListener("message", function(event) {
 		try {
 			var externalCall = JSON.parse(event.data);
@@ -15,8 +16,7 @@
 				marvin.sketcherInstance[externalCall.method].apply(marvin.sketcherInstance, externalCall.args);
 			});
 		} catch (e) {
-			console.log(e);
-		}
+	}
 	}, false);
 
 		// called when Marvin JS loaded
@@ -27,32 +27,11 @@
 	       marvin.sketcherInstance.setServices({
 	          "molconvertws": '@ix.ncats.controllers.routes.App.molconvert'
 	       });
-               var molchange = function(){
-	           var mol = marvin.sketcherInstance.exportAsMol();
-                   console.log('mol => '+mol);		   
-	           if (mol) {
-		       document.cookie = 'mol='+mol;
-                       if (top.setQuery) {
- 	                   top.setQuery(mol);
-	               } else if (parent.setQuery) {
-                           parent.setQuery(res);
-                       }
-	            } else {
-	               alert ("Your browser doesn't seem to have proper support for Javascript. Please try another browser for sketching support or cut and paste your query directly into the text field below.");
-	            }
-	        };
-		
-		marvin.sketcherInstance.on("molchange",molchange);
-		if (top.setMarvin) {
-		   top.setMarvin(marvin.sketcherInstance);
-		} else if (parent.setMarvin) {
-		   parent.setMarvin(marvin.sketcherInstance);
-		}
+              
 	     } else {
 		alert("Cannot initiate sketcher. Current browser may not support HTML5 canvas or may run in Compatibility Mode.");
 	     }
 	}
-
   </script>
 </head>
 <body class="mjs-body">

@@ -6,8 +6,8 @@ body {
 }
 
 @
--moz-document url-prefix () {fieldset { display:table-cell;
-	
+-moz-document url-prefix () {fieldset {
+	display: table-cell;
 }
 
 }
@@ -38,10 +38,10 @@ body {
 }
 
 #pub-history {
-background-color: white;
-border: 1px solid #e8e8e8;
-border-radius: 8px;
-padding-bottom: 50px;
+	background-color: white;
+	border: 1px solid #e8e8e8;
+	border-radius: 8px;
+	padding-bottom: 50px;
 }
 
 .info {
@@ -110,7 +110,8 @@ padding-bottom: 50px;
 }
 
 @
--moz-document url-prefix () { .box { margin-top:4%!important;
+-moz-document url-prefix () { .box {
+	margin-top: 4% !important;
 	margin-left: 3% !important;
 }
 
@@ -281,23 +282,15 @@ padding-bottom: 50px;
 }
 
 .struc-img {
-	
+
 }
 
 .struc-thumb {
-	border: 1px solid #f8f8f8;
+	/* 	border: 1px solid #f8f8f8; */
 	border-radius: 4px;
 	background-color: #ffffff;
-}
-
-.racemic {
-	/* 	background-color:red; */
-	
-}
-
-.achiral {
-	/* 	background-color:blue; */
-	
+		display: block;
+	margin: auto;
 }
 
 #local-menu {
@@ -312,6 +305,16 @@ padding-bottom: 50px;
 
 .modal {
 	top: 17%;
+}
+
+.export {
+	top: 25%;
+}
+
+.row.stereo {
+position: relative;
+top: -190px;
+font-size: 18px;
 }
 
 .sub-table {
@@ -332,5 +335,52 @@ padding-bottom: 50px;
 	-moz-transform: scale(2);
 	-o-transform: scale(2);
 	transform: scale(2);
-	overflow: hidden;
+	overflow: visible;
+	font-size: 8px;
+}
+
+.normal {
+	z-index: 4;
+	-webkit-transform: scale(.55);
+	-moz-transform: scale(.55);
+	-o-transform: scale(.55);
+	transform: scale(.55);
+	overflow: visible;
+}
+
+/* #strucSearch { */
+/* position: relative; */
+/* bottom: -165px; */
+/* top: 350px; */
+/* left: -65px; */
+/* } */
+#strucExport {
+	margin-right: 15px;
+}
+
+#strucExportChem {
+	margin-right: -20px;
+	z-index: 6;
+	overflow: visible;
+}
+
+#exportSave {
+	display: flex;
+	list-style: none;
+}
+
+#strucThumbSearch {
+	z-index: 9;
+}
+
+/* #myCanvas { */
+/* width: 400px; */
+/* height: auto; */
+/* } */
+
+#canvas{
+	-webkit-transform: scale(20);
+	-moz-transform: scale(20);
+	-o-transform: scale(20);
+	transform: scale(20);
 }

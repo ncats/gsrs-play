@@ -24,6 +24,32 @@
 	}
 } 
 
+@molExport(mol: String)= {
+<div class="modal fade export" id="structureExport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelExport" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabelExport">Export Structure</h4>
+      </div>
+      <div class="modal-body">
+             		<div class = "row">	
+					<div class="col-md-12">
+					<div class = "well" id = "input">
+	@mol
+					</div>
+				</div>
+				</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button"  class="btn btn-primary" onclick="" data-dismiss="modal">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
 @structureImage(s: Structure, size : Integer) = {
 <img class="struc-thumb" alt="Structure of @sub.getName()"
 	src='@ix.ncats.controllers.routes.App.structure(s.id,"svg",size)'>
@@ -164,7 +190,25 @@
 	<h3>
 		<span class="label label-primary label-offset">Structure</span>
 	</h3>
-	<div class="col-md-5">@structureImage(sub.structure, 400)</div>
+	<div class="col-md-5">
+	<div class = "row">
+	@structureImage(sub.structure, 400)
+	</div>
+	<div class = "row">
+	<div class = "col-md-6 col-md-offset-6">
+	<ul class= "form-inline pull-right" id = "exportSave">
+	<li><button type="button" class="btn navbar-btn btn-default" id = "strucExport"
+					  data-toggle="modal"
+	  				data-target="#structureExport">Export</button></li>
+	<li><button type="button" class="btn navbar-btn btn-default" id = "strucSearch"
+					  data-toggle="modal"
+					  data-molurl='@ix.ncats.controllers.routes.App.structure(sub.structure.id,"mol")'
+	  				data-target="#strucModal"><span class="fa fa-search"></span></button>
+	  				</li>
+	  				</ul>
+	  			</div>
+	  			</div>
+	  				</div>
 	<div class="col-md-6">@makeTable(sub.structure, "structure")</div>
 </div>
 @if(sub.moieties.length > 1){
@@ -273,4 +317,5 @@
 	</div>
 
 </div>
+@molExport(sub.structure.molfile)
 }

@@ -1,56 +1,8 @@
 @import play.api.mvc.Call
 
 @(method: String, action: Call)
-<script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script>
-<script>
-/*
-** global variables
-*/
-var sketcher; // sketcher
 
-function setQuery (value) {
-  console.log(value);
-  $.ajax({
-    type: "POST",
-    url: '@ix.ncats.controllers.routes.App.smiles',
-    contentType: 'text/plain',
-    data: value,
-    success: function (data) {
-       console.log(' => '+data);
-       $('#structure').val(data);
-    },
-    error: function (xhr, status) {
-       console.error("Can't convert to smiles");
-    },
-    dataType: 'text'
-   });
-}
 
-function setMarvin (sk) {
-   sketcher = sk;
-}
-
-function setStructure (struc) {
-   console.log('current structure: '+struc);
-//   structure = struc;
-/*
-  $.ajax({
-    type: "POST",
-    url: '@ix.ncats.controllers.routes.App.molconvert',
-    contentType: 'application/json; charset=utf-8',
-    data: '{"format": "mrv","mol":"'+struc+'"}',
-    dataType: 'text',
-    success: function (data) {
-       console.log(' => '+data);
-       sketcher.importStructure('mrv', data);
-    },
-    error: function (xhr, status) {
-       console.error("Can't convert to mrv for input: "+struc);
-    }
-  });
- */
-}
-</script>
 
 <div class="modal fade" id="strucModal" tabindex="-1"
      role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -107,6 +59,7 @@ function setStructure (struc) {
 
 <script>
   function submitForm (el) {
+	  console.log(el);
     $('#strucModal').modal('hide');  
     $('#spinModal').modal({
       keyboard: false,

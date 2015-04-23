@@ -10,20 +10,32 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
         facets: Array[FacetDecorator], chemicals: List[ChemicalSubstance])
 
-@getName(n : Name) = {
-@if(n.preferred ==true){ @n.name }else{ }
+@molExport(mol: String, name : String)= {
+<div class="modal fade" id="structureExport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelExport" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabelExport">Export @name</h4>
+      </div>
+      <div class="modal-body">
+             		<div class = "row">	
+					<div class="col-md-12">
+					<div class = "well" id = "input">
+	@mol
+					</div>
+				</div>
+				</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button"  class="btn btn-primary" onclick="" data-dismiss="modal">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 }
-
 @thumb(chem: ChemicalSubstance) = {
-@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL){
-<div class = "col-md-3 zoom thumb-col achiral">
-}else{
-@if(chem.structure.stereoChemistry== Structure.Stereo.RACEMIC){
-<div class = "col-md-3 zoom thumb-col racemic">
-}else{
-<div class = "col-md-3  zoom thumb-col ">
-}
-}
 <div class = "row">
 <div class = "col-md-12">
 Approval ID: @chem.unii
@@ -39,17 +51,34 @@ Approval ID: @chem.unii
 </div>
 <div class = "row stereo">
 <div class = "col-md-12">
- @chem.structure.stereoChemistry
-</div>
+@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL){
+<span class="label label-primary label-offset">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.ABSOLUTE){
+<span class="label label-success label-offset">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.RACEMIC){
+<span class="label label-info label-offset">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.MIXED){
+<span class="label label-default label-offset">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.EPIMERIC){
+<span class="label label-warning label-offset">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.UNKNOWN){
+<span class="label label-danger label-offset">@chem.structure.stereoChemistry</span>
+}
+
+ </div>
 </div>
 <div class = "row">
 <div class = "col-md-12">
-@for(n <- chem.names) {
-@getName(n)
-	}				
+@chem.getName()
 </div>
 </div>
-</div>
+
+	
 }
 
 
@@ -59,9 +88,27 @@ Approval ID: @chem.unii
   current, rows, total, pages, facets){@menu()} { <h3></h3>} {
   <div class = "row">
   @for(chem <- chemicals) {
+  <div class = "col-md-3  zoom thumb-col ">
   <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
      @thumb(chem)
    </a>
+   	<div class = "row">
+	<div class = "col-md-6 col-md-offset-6">
+	<ul class= "form-inline pull-right" id = "exportSave">
+	<li>
+   <button type="button" class="btn navbar-btn btn-default hidden" id = "strucExportChem"
+					  data-toggle="modal"
+	  				data-target="#structureExport">Export</button></li>
+  	<li><button type="button" class="btn navbar-btn btn-default pull-right hidden" id = "strucSearch"
+					  data-toggle="modal"
+					  data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.id,"mol")'
+	  				data-target="#strucModal"><span class="fa fa-search"></span></button>
+	  				</li>
+	  				</ul>
+	  				</div>
+	  				</div>	
+	  				</div>
+	  				@molExport(chem.structure.molfile, chem.getName())
    }
    
    </div>
