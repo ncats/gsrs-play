@@ -268,8 +268,10 @@ public class TcrdRegistry extends Controller implements Commons {
             RegisterLigands reglig = new RegisterLigands
                 (chembl, target, pstm2, pstm3);
             reglig.persists();
-            for (Ligand lig : reglig.getLigands())
-                LIGANDS.put(lig.id, lig);
+            for (Ligand lig : reglig.getLigands()) {
+                if (lig.id != null) LIGANDS.put(lig.id, lig);
+                else Logger.info("NULL id for ligand "+lig.getName());
+            }
         }
     }
 
