@@ -1,46 +1,45 @@
 package ix.idg.controllers;
 
-import ix.core.controllers.search.SearchFactory;
+import akka.routing.Router;
+import com.avaje.ebean.Expr;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
-import ix.core.models.Keyword;
-import ix.core.models.Text;
-import ix.core.models.Value;
-import ix.core.models.VNum;
-import ix.core.models.XRef;
-import ix.core.models.Predicate;
-import ix.core.models.Structure;
-import ix.core.models.Mesh;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.models.EntityModel;
+import ix.core.models.Keyword;
+import ix.core.models.Mesh;
+import ix.core.models.Predicate;
 import ix.core.models.Publication;
+import ix.core.models.Structure;
+import ix.core.models.Text;
+import ix.core.models.VNum;
+import ix.core.models.Value;
+import ix.core.models.XRef;
 import ix.core.search.TextIndexer;
-import static ix.core.search.TextIndexer.*;
 import ix.idg.models.Disease;
-import ix.idg.models.Target;
 import ix.idg.models.Ligand;
-import ix.utils.Util;
+import ix.idg.models.Target;
 import ix.ncats.controllers.App;
-
+import ix.utils.Util;
+import play.Logger;
+import play.db.ebean.Model;
+import play.mvc.Result;
 import tripod.chem.indexer.StructureIndexer;
 
-import play.Logger;
-import play.mvc.Result;
-import play.db.ebean.Model;
-import com.avaje.ebean.Expr;
-
-
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.HashMap;
 import java.util.concurrent.Callable;
+
+import static ix.core.search.TextIndexer.Facet;
 
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
@@ -541,7 +540,7 @@ public class IDGApp extends App implements Commons {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(",").
+        sb.append(routes.IDGApp.target(getId(t))).
                 append(getId(t)).append(",").
                 append(t.getName()).append(",").
                 append(csvQuote(t.getDescription())).append(",").
@@ -974,7 +973,7 @@ public class IDGApp extends App implements Commons {
 
 
         StringBuilder sb = new StringBuilder();
-        sb.append(",").
+        sb.append(routes.IDGApp.ligand(getId(l))).
                 append(getId(l)).append(",").
                 append(csvQuote(l.getName())).append(",").
                 append(csvQuote(l.getDescription())).append(",").
@@ -1356,7 +1355,7 @@ public class IDGApp extends App implements Commons {
             }
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(",").
+        sb.append(routes.IDGApp.disease(getId(d))).
                 append(getId(d)).append(",").
                 append(csvQuote(d.getName())).append(",").
                 append(csvQuote(d.getDescription())).append(",").
