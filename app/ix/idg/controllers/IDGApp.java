@@ -19,31 +19,19 @@ import ix.idg.models.Disease;
 import ix.idg.models.Target;
 import ix.idg.models.Ligand;
 import ix.utils.Util;
-import ix.core.plugins.TextIndexerPlugin;
 import ix.ncats.controllers.App;
 
 import tripod.chem.indexer.StructureIndexer;
-import static tripod.chem.indexer.StructureIndexer.ResultEnumeration;
 
 import play.Logger;
-import play.cache.Cache;
-import play.libs.ws.WS;
-import play.mvc.Controller;
 import play.mvc.Result;
-import play.mvc.Call;
 import play.db.ebean.Model;
-import play.Play;
-import play.libs.Akka;
 import com.avaje.ebean.Expr;
 
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.net.URLDecoder;
-import java.security.Key;
 import java.util.Comparator;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -52,11 +40,7 @@ import java.util.TreeSet;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Vector;
 import java.util.concurrent.Callable;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
@@ -539,7 +523,7 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static String targetToCsv(Target t) {
+    static String csvFromTarget(Target t) {
         Object novelty = "";
         Object function = "";
 
@@ -554,11 +538,6 @@ public class IDGApp extends App implements Commons {
         for (Value v : props) {
             if (v.label.equals("TINX Novelty")) novelty = v.getValue();
             else if (v.label.equals("function")) function = v.getValue();
-        }
-
-        List<XRef> links = t.getLinks();
-        for (XRef xref : links) {
-//            System.out.println(xref.kind + " / " + xref.deRef().toString());
         }
 
         StringBuilder sb = new StringBuilder();
@@ -602,7 +581,7 @@ public class IDGApp extends App implements Commons {
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) {
                         Target t = (Target) result.getMatches().get(i);
-                        sb.append(targetToCsv(t)).append("\n");
+                        sb.append(csvFromTarget(t)).append("\n");
                     }
                 }
                 return ok(sb.toString().getBytes()).as("text/csv");
@@ -973,7 +952,7 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static String ligandToCsv(Ligand l) throws ClassNotFoundException {
+    static String csvFromLigand(Ligand l) throws ClassNotFoundException {
 
         String inchiKey = "";
         String canSmi = "";
@@ -992,6 +971,8 @@ public class IDGApp extends App implements Commons {
                 delimiter = "|";
             }
         }
+
+
         StringBuilder sb = new StringBuilder();
         sb.append(",").
                 append(getId(l)).append(",").
@@ -1025,7 +1006,7 @@ public class IDGApp extends App implements Commons {
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) {
                         Ligand d = (Ligand) result.getMatches().get(i);
-                        sb.append(ligandToCsv(d)).append("\n");
+                        sb.append(csvFromLigand(d)).append("\n");
                     }
                 }
                 return ok(sb.toString().getBytes()).as("text/csv");
@@ -1363,7 +1344,7 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static String diseaseToCsv(Disease d) throws ClassNotFoundException {
+    static String csvFromDisease(Disease d) throws ClassNotFoundException {
 
         StringBuilder sb2 = new StringBuilder();
         String delimiter = "";
@@ -1402,7 +1383,7 @@ public class IDGApp extends App implements Commons {
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) {
                         Disease d = (Disease) result.getMatches().get(i);
-                        sb.append(diseaseToCsv(d)).append("\n");
+                        sb.append(csvFromDisease(d)).append("\n");
                     }
                 }
                 return ok(sb.toString().getBytes()).as("text/csv");
