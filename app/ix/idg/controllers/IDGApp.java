@@ -972,7 +972,38 @@ public class IDGApp extends App implements Commons {
                          ("%1$dms", System.currentTimeMillis()-start));
         }
     }
-    
+
+    static String ligandToCsv(Ligand l) throws ClassNotFoundException {
+
+        String inchiKey = "";
+        String canSmi = "";
+
+        for (Value v : l.getProperties()) {
+            if (v.label.equals("ChEMBL InChI Key")) inchiKey = (String) v.getValue();
+            else if (v.label.equals("ChEMBL Canonical SMILES")) canSmi = (String) v.getValue();
+        }
+
+        StringBuilder sb2 = new StringBuilder();
+        String delimiter = "";
+        List<XRef> links = l.getLinks();
+        for (XRef xref : links) {
+            if (Target.class.isAssignableFrom(Class.forName(xref.kind))) {
+                sb2.append(delimiter).append(getId((Target) xref.deRef()));
+                delimiter = "|";
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(",").
+                append(getId(l)).append(",").
+                append(csvQuote(l.getName())).append(",").
+                append(csvQuote(l.getDescription())).append(",").
+                append(canSmi).append(",").
+                append(inchiKey).append(",").
+                append(sb2.toString());
+        return sb.toString();
+    }
+
+
     static Result _ligands (final String q, int rows, final int page)
         throws Exception {
         Logger.debug("ligands: q="+q+" rows="+rows+" page="+page);
@@ -984,6 +1015,23 @@ public class IDGApp extends App implements Commons {
             
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), LIGAND_FACETS);
+
+            String action = request().getQueryString("action");
+            if (action == null) action = "";
+
+            if (action.toLowerCase().equals("download")) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("URL,ID,Name,Description,SMILES,InChI Key,Targets\n");
+                if (result.count() > 0) {
+                    for (int i = 0; i < result.count(); i++) {
+                        Ligand d = (Ligand) result.getMatches().get(i);
+                        sb.append(ligandToCsv(d)).append("\n");
+                    }
+                }
+                return ok(sb.toString().getBytes()).as("text/csv");
+            }
+
+
             List<Ligand> ligands = new ArrayList<Ligand>();
             int[] pages = new int[0];
             if (result.count() > 0) {
