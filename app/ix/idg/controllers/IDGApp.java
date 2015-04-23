@@ -575,6 +575,7 @@ public class IDGApp extends App implements Commons {
     }
 
     static String csvQuote(String s) {
+        if (s == null) return s;
         if (s.contains("\"")) s = s.replace("\"", "\\\"");
         return "\""+s+"\"";
     }
@@ -1313,7 +1314,27 @@ public class IDGApp extends App implements Commons {
             return _internalServerError (ex);
         }
     }
-    
+
+    static String diseaseToCsv(Disease d) throws ClassNotFoundException {
+
+        StringBuilder sb2 = new StringBuilder();
+        String delimiter = "";
+        List<XRef> links = d.getLinks();
+        for (XRef xref : links) {
+            if (Target.class.isAssignableFrom(Class.forName(xref.kind))) {
+                sb2.append(delimiter).append(getId((Target) xref.deRef()));
+                delimiter = "|";
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(",").
+                append(getId(d)).append(",").
+                append(csvQuote(d.getName())).append(",").
+                append(csvQuote(d.getDescription())).append(",").
+                append(sb2.toString());
+        return sb.toString();
+    }
+
     static Result _diseases (String q, int rows, int page) throws Exception {
         Logger.debug("Diseases: rows=" + rows + " page=" + page);
         final int total = DiseaseFactory.finder.findRowCount();
@@ -1323,7 +1344,23 @@ public class IDGApp extends App implements Commons {
             
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), DISEASE_FACETS);
-            
+
+            String action = request().getQueryString("action");
+            if (action == null) action = "";
+
+            if (action.toLowerCase().equals("download")) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("URL,DOID,Name,Description,Targets\n");
+                if (result.count() > 0) {
+                    for (int i = 0; i < result.count(); i++) {
+                        Disease d = (Disease) result.getMatches().get(i);
+                        sb.append(diseaseToCsv(d)).append("\n");
+                    }
+                }
+                return ok(sb.toString().getBytes()).as("text/csv");
+            }
+
+
             List<Disease> diseases = new ArrayList<Disease>();
             int[] pages = new int[0];
             if (result.count() > 0) {
