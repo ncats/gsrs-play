@@ -40,6 +40,7 @@ import com.avaje.ebean.Expr;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.net.URLDecoder;
+import java.security.Key;
 import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -557,11 +558,12 @@ public class IDGApp extends App implements Commons {
 
         List<XRef> links = t.getLinks();
         for (XRef xref : links) {
-            System.out.println(xref.kind + " / " + xref.deRef().toString());
+//            System.out.println(xref.kind + " / " + xref.deRef().toString());
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append(",").
+                append(getId(t)).append(",").
                 append(t.getName()).append(",").
                 append(csvQuote(t.getDescription())).append(",").
                 append(t.idgTDL.toString()).append(",").
@@ -595,7 +597,7 @@ public class IDGApp extends App implements Commons {
 
             if (action.toLowerCase().equals("download")) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("URL,Name,Description,Development Level,Novelty,Target Family,Function,PMIDs\n");
+                sb.append("URL,Uniprot ID,Name,Description,Development Level,Novelty,Target Family,Function,PMIDs\n");
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) {
                         Target t = (Target) result.getMatches().get(i);
