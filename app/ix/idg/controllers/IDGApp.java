@@ -540,7 +540,7 @@ public class IDGApp extends App implements Commons {
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append(routes.IDGApp.target(getId(t))).
+        sb.append(routes.IDGApp.target(getId(t))).append(",").
                 append(getId(t)).append(",").
                 append(t.getName()).append(",").
                 append(csvQuote(t.getDescription())).append(",").
@@ -973,7 +973,7 @@ public class IDGApp extends App implements Commons {
 
 
         StringBuilder sb = new StringBuilder();
-        sb.append(routes.IDGApp.ligand(getId(l))).
+        sb.append(routes.IDGApp.ligand(getId(l))).append(",").
                 append(getId(l)).append(",").
                 append(csvQuote(l.getName())).append(",").
                 append(csvQuote(l.getDescription())).append(",").
@@ -1355,7 +1355,7 @@ public class IDGApp extends App implements Commons {
             }
         }
         StringBuilder sb = new StringBuilder();
-        sb.append(routes.IDGApp.disease(getId(d))).
+        sb.append(routes.IDGApp.disease(getId(d))).append(",").
                 append(getId(d)).append(",").
                 append(csvQuote(d.getName())).append(",").
                 append(csvQuote(d.getDescription())).append(",").
