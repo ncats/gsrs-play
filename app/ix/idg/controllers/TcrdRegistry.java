@@ -268,6 +268,7 @@ public class TcrdRegistry extends Controller implements Commons {
             RegisterLigands reglig = new RegisterLigands
                 (chembl, target, pstm2, pstm3);
             reglig.persists();
+
             for (Ligand lig : reglig.getLigands())
                 if (lig.id != null)
                     LIGANDS.put(lig.id, lig);
@@ -859,15 +860,6 @@ public class TcrdRegistry extends Controller implements Commons {
             rset.close();
             
             rset = stm.executeQuery
-                /*
-                ("select * from t2tc a, target b, protein c, tinx_novelty d\n"
-                 +"where a.target_id = b.id\n"
-                 +"and a.protein_id = c.id "
-                 +"and a.protein_id = d.id "
-                 +" order by c.id, c.uniprot "           
-                 +(rows > 0 ? ("limit "+rows) : "")
-                 );
-                */
                 ("select *\n"
                  +"from t2tc a "
                  +"     join (target b, protein c)\n"
