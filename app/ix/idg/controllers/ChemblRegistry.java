@@ -35,7 +35,7 @@ public class ChemblRegistry implements Commons {
     PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6, pstm7, pstm8;
     Map<String, Set<String>> uniprotMap;
     Keyword source;
-    Set<Long> molregno = new HashSet<Long>();
+    Map<Long, Ligand> molregno = new HashMap<Long, Ligand>();
     
     public ChemblRegistry (Map<String, Set<String>> uniprotMap)
         throws SQLException {
@@ -163,7 +163,7 @@ public class ChemblRegistry implements Commons {
     }
 
     void ligand (final Set<Long> tids,
-                 final Target target, final Ligand ligand)
+                 final Target target,  Ligand ligand)
         throws SQLException {
         // see if this ligand has a chembl_id..
         String chembl = null, drug = null;
@@ -182,6 +182,15 @@ public class ChemblRegistry implements Commons {
         else if (drug != null) {
             pstm7.setString(1, drug);
             ids = instrument (ligand, pstm7);
+            if (ids.size() > 1) {
+                Logger.warn("Drug \""+drug+"\" maps to "+ids.size()
+                            +" chembl compounds!");
+            }
+            
+            if (ligand.id == null) {
+                // map onto existing chembl ligands
+                ligand = molregno.get(ids.iterator().next());
+            }
         }
         else {
             Logger.warn("Neither chemblId nor drug name found!");
@@ -259,6 +268,20 @@ public class ChemblRegistry implements Commons {
         return resolve (chemblId, "TARGET");
     }
 
+    public boolean instrument (Ligand ligand) {
+        try {
+            pstm7.setString(1, ligand.name);
+            Set<Long> regno = instrument (ligand, pstm7);
+            return !regno.isEmpty();
+        }
+        catch (SQLException ex) {
+            Logger.error("Can't instrument ligand "+ligand.id
+                         +" ("+ligand.name+")", ex);
+            ex.printStackTrace();
+        }
+        return false;
+    }
+
     Set<Long> instrument (Ligand ligand, PreparedStatement pstm)
         throws SQLException {
         ResultSet rset = pstm.executeQuery();
@@ -269,6 +292,7 @@ public class ChemblRegistry implements Commons {
         Map<String, String> syns = new HashMap<String, String>();
         Set<Long> newids = new HashSet<Long>();
         Set<Long> all = new HashSet<Long>();
+        Logger.debug("Resolving ligand "+ligand.getName()+"...");
         while (rset.next()) {
             Long id = rset.getLong("molregno");
             assert id != null: "molregno is null!";
@@ -282,7 +306,8 @@ public class ChemblRegistry implements Commons {
                 syns.put(type, syn);
             }
             
-            if (!molregno.contains(id)) {
+            Logger.debug("....molregno="+id+" synonym="+syn);            
+            if (!molregno.containsKey(id)) {
                 String smi = rset.getString("canonical_smiles");
                 if (molfile == null || smiles.length() > smi.length()) {
                     molfile = rset.getString("molfile");
@@ -303,7 +328,10 @@ public class ChemblRegistry implements Commons {
                 Logger.debug("...."+rows+" ATC");
                 
                 newids.add(id);
-                molregno.add(id);
+                molregno.put(id, ligand);
+            }
+            else {
+                Logger.debug("....already resolved molregno="+id);
             }
             all.add(id);
         }
@@ -440,16 +468,16 @@ public class ChemblRegistry implements Commons {
             if (acts.contains(actId))
                 continue;
             acts.add(actId);
-            
-            String type = rset.getString("standard_type");
-            Double value = rset.getDouble("standard_value");
-            String unit = rset.getString("standard_units");
+
+            String type = rset.getString("published_type");
+            Double value = rset.getDouble("published_value");
+            String unit = rset.getString("published_units");
             Value act = null;
             if (!rset.wasNull()) {
                 VNum num = new VNum (type, value);
                 num.unit = unit;
                 num.save();
-                Logger.debug("........activity "+num.id);
+                Logger.debug("........activity "+actId+" -> "+num.id);
                 lref.properties.add(num);
                 tref.properties.add(num);
                 act = num;
@@ -479,6 +507,10 @@ public class ChemblRegistry implements Commons {
                     }
                     ligand.addIfAbsent(pub); // a bit redundent
                 }
+            }
+            else {
+                Logger.debug("........activity "
+                             +actId+" has no associated publication!");
             }
         }
         rset.close();

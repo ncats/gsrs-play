@@ -35,6 +35,8 @@ public interface Commons {
     public static final String ChEMBL_PROTEIN_CLASS = "ChEMBL Protein Class";
     public static final String ChEMBL_PROTEIN_ANCESTRY =
         "ChEMBL Protein Ancestry";
+    public static final String ChEMBL_ACTIVITY_ID = "ChEMBL Activity ID";
+    public static final String ChEMBL_MOLREGNO = "ChEMBL Molregno";
 
     public static final String UNIPROT_ACCESSION = "UniProt Accession";
     public static final String UNIPROT_GENE = "UniProt Gene";

@@ -269,7 +269,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 (chembl, target, pstm2, pstm3);
             reglig.persists();
             for (Ligand lig : reglig.getLigands())
-                LIGANDS.put(lig.id, lig);
+                if (lig.id != null)
+                    LIGANDS.put(lig.id, lig);
         }
     }
 
@@ -596,8 +597,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 String drug = rs.getString("drug");
                 String ref = rs.getString("reference");
                 if (ref != null && ref.indexOf("CHEMBL") > 0) {
-                    Logger.warn("You shouldn't be calling registerDrugLigands "
-                                +" with a chembl ligand "+drug+"!");
+                    Logger.warn("Skipping ChEMBL reference "+ref);
                     continue;
                 }
                 Keyword source = KeywordFactory.registerIfAbsent
@@ -618,15 +618,22 @@ public class TcrdRegistry extends Controller implements Commons {
                     ligand.synonyms.add(kw);
                     ligand.properties.add(source);
                     
-                    String smiles = rs.getString("smiles");
-                    if (smiles != null) {
-                        ligand.properties.add(new Text (IDG_SMILES, smiles));
-                        Logger.debug("submitting "+drug+" for processing...");
-                        StructureReceiver receiver =
-                            new LigandStructureReceiver (source, ligand);
-                        PROCESSOR.submit(smiles, receiver);
+                    if (!registry.instrument(ligand)) {
+                        // if can't resolve ligand via chembl, then use
+                        // whatever information available
+                        String smiles = rs.getString("smiles");
+                        if (smiles != null) {
+                            ligand.properties.add
+                                (new Text (IDG_SMILES, smiles));
+                            Logger.debug("submitting "+drug
+                                         +" for processing...");
+                            StructureReceiver receiver =
+                                new LigandStructureReceiver (source, ligand);
+                            PROCESSOR.submit(smiles, receiver);
+                        }
+                        ligand.save();
                     }
-                    ligand.save();
+                    
                     ligs.add(ligand);
                 }
                 else {
@@ -692,15 +699,18 @@ public class TcrdRegistry extends Controller implements Commons {
                 allligands.addAll(ligands);
             }
             else {
-                List<Ligand> ligands = loadDrugs ();
-                Logger.debug("Registering "+ligands.size()+" drug ligand(s) "
+                List<Ligand> ligands = loadChembl ();
+                Logger.debug("Registering "+ligands.size()+" Chembl ligand(s) "
                              +"for target "+target.id+": "+target.name);
                 registry.instruments(tids, target, ligands);
                 allligands.addAll(ligands);
-
-                ligands = loadChembl ();
-                Logger.debug("Registering "+ligands.size()+" Chembl ligand(s) "
+                
+                ligands = loadDrugs ();
+                Logger.debug("Registering "+ligands.size()+" drug ligand(s) "
                              +"for target "+target.id+": "+target.name);
+                /**
+                 * TODO: we need to merge non-chembl activities here!
+                 */
                 registry.instruments(tids, target, ligands);
                 allligands.addAll(ligands);
             }
@@ -864,8 +874,8 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
-                 //+"where b.tdl = 'Tclin'\n"
-                 +"where c.uniprot in ('P22612')\n"
+                 +"where b.tdl = 'Tclin'\n"
+                 //+"where c.uniprot in ('Q7RTX7')\n"
                  //+"where c.uniprot in ('Q00537','Q8WXA8')\n"
                  //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
                  //+"where c.uniprot in ('Q8WXA8')\n"
