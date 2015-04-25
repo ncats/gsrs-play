@@ -16,8 +16,6 @@
     </tr>
 }
 
-<script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
-
 @ix.ncats.views.html.content("Targets", "ix.idg.models.Target",
     ix.idg.controllers.routes.IDGApp.targets().url,
     current, rows, total, pages, facets) {
@@ -60,10 +58,34 @@
         }
     </table>
 
-    <div id="tinx-map">
-
-    </div>
 }
+
+<div id="tinx-map">
+
+</div>
+
+<head>
+    <style type="text/css">
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+
+    .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
+
+    .point:hover {
+        opacity: 0.5;
+      }
+
+    </style>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
+</head>
 
 <script>
 $ ( function() {
@@ -72,56 +94,13 @@ $ ( '[data-toggle="tooltip"]' ).tooltip () ;
 } ) ;
 
 $ (document).ready ( function() {
-var styleCurveBorder = {"stroke":"rgb(0, 0, 0)", "stroke-width":"1px"};
-    var width = 300, height = 300;
-    var radius = width * 0.85 / 100;
-    var padding = width *  0.1;
-    var tinxDataUrl = "/idg/tinx";
-    d3.json(tinxDataUrl, function(json) {
 
-        console.log(json);
-        console.log(json.length);
+    var accsInPage = [];
+    @for(t <- targets) {
+        accsInPage.push("@IDGApp.getId(t)");
+    }
 
-        var nFn = function(d) { return d.novelty; };
-        var iFn = function(d) { return d.importance; };
-
-        var y = d3.scale.log( ).domain(d3.extent(json, iFn) ).range([padding, height] ).nice();
-        var x = d3.scale.log( ).domain(d3.extent(json, nFn)).range([padding, width] ).nice();
-
-        var svg = d3.select("#tinx-map").append("svg:svg" ).
-            attr("width", 300 ).
-            attr("height", 300 ).
-            data(json ).
-            attr("cx", function(d) { return x(nFn(d)); } ).
-            attr("cy", function(d) { return y(iFn(d)); } ).
-            attr("r", 2 );
-
-    svg.append("svg:line")
-        .attr("x1", padding)
-        .attr("y1", 0)
-        .attr("x2", width)
-        .attr("y2", 0)
-        .style(styleCurveBorder);
-    svg.append("svg:line")
-        .attr("x1", width)
-        .attr("y1", 0)
-        .attr("x2", width)
-        .attr("y2", height - padding)
-        .style(styleCurveBorder);
-    svg.append("svg:line")
-        .attr("x1", width)
-        .attr("y1", height - padding)
-        .attr("x2", padding)
-        .attr("y2", height - padding)
-        .style(styleCurveBorder);
-    svg.append("svg:line")
-        .attr("x1", padding)
-        .attr("y1", height - padding)
-        .attr("x2", padding)
-        .attr("y2", 0)
-        .style(styleCurveBorder);
-
-    });
+    tinx_plot("tinx-map", accsInPage);
 
 } ) ;
 </script>

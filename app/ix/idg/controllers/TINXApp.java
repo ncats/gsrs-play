@@ -7,22 +7,15 @@ import ix.core.models.Keyword;
 import ix.core.models.Value;
 import ix.core.models.XRef;
 import ix.idg.models.Disease;
-<<<<<<< HEAD
 import ix.idg.models.TINX;
-=======
->>>>>>> 120149d7b1b27e951a595e10fa5d506fe43b479d
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.mvc.Result;
 
-<<<<<<< HEAD
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-=======
-import java.util.List;
->>>>>>> 120149d7b1b27e951a595e10fa5d506fe43b479d
 import java.util.concurrent.Callable;
 
 public class TINXApp extends App {
@@ -62,11 +55,7 @@ public class TINXApp extends App {
     }
 
     static String getId(Target t) {
-<<<<<<< HEAD
         Keyword kw = t.getSynonym(Commons.UNIPROT_ACCESSION);
-=======
-        Keyword kw = t.getSynonym(UniprotRegistry.ACCESSION);
->>>>>>> 120149d7b1b27e951a595e10fa5d506fe43b479d
         return kw != null ? kw.term : null;
     }
 
