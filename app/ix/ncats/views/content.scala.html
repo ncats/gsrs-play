@@ -3,7 +3,7 @@
 
 @(title: String, kind: String,
   resetAction: String, current: Int, rows: Int, total: Int,
-  pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)
+  pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)(plot: Html = Html(""))
 
 @main(title, kind){ @header }{ @breadcrumb }{
 <div class="container-fluid">
@@ -11,6 +11,7 @@
     @if(total > 0 && facets.length > 0) {
     <div class="col-md-3">
       @filters(facets)
+	  @plot
     </div>
     <div class="col-md-9">
       } else {
