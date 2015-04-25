@@ -1,6 +1,7 @@
 function tinx_plot(selector, accsInPage) {
     var styleCurveBorder = {"stroke": "rgb(128, 0, 0)", "stroke-width": "1px"};
-    var width = 300, height = 300;
+    var width = $(selector).width() / 1.2;
+    var height = width;
     var radius = width * 0.85 / 100;
     var padding = width * 0.2;
     var axisLabelFontSize = 1 * 1.1;
@@ -17,7 +18,7 @@ function tinx_plot(selector, accsInPage) {
         var y = d3.scale.log().domain(d3.extent(json, iFn).reverse()).range([padding, height]).nice();
         var x = d3.scale.log().domain(d3.extent(json, nFn)).range([padding, width]).nice();
 
-        var svg = d3.select("#tinx-map").append("svg:svg")
+        var svg = d3.select(selector).append("svg:svg")
                 .attr("width", width + padding)
                 .attr("height", height + padding)
                 .append("g");
@@ -60,12 +61,12 @@ function tinx_plot(selector, accsInPage) {
 
         // axis labels
         svg.append("text")
-                .attr("transform", "translate(" + (padding + (width - padding) / 2) + "," + (height+padding*0.7) + ")")
+                .attr("transform", "translate(" + (padding + (width - padding) / 2) + "," + (height+padding*0.8) + ")")
                 .attr("text-anchor", "middle")
                 .text("Novelty").style('font-size', axisLabelFontSize + 'em')
                 .style('font-family', 'sans-serif').style("fill", "#000000");
         svg.append("text")
-                .attr("transform", "translate(" + (padding*0.3) + "," + ((height+padding) / 2) + ")rotate(-90)")
+                .attr("transform", "translate(" + (padding*0.2) + "," + ((height+padding) / 2) + ")rotate(-90)")
                 .attr("text-anchor", "middle")
                 .text("Importance").style('font-size', axisLabelFontSize + 'em')
                 .style('font-family', 'sans-serif').style("fill", "#000000");
