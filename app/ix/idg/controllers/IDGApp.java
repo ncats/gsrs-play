@@ -132,7 +132,8 @@ public class IDGApp extends App implements Commons {
 
         @Override
         public String name () {
-            return super.name().replaceAll("IDG", "").trim();
+            return super.name().replaceAll("IDG", "")
+                .replaceAll("UniProt","").trim();
         }
         
         @Override
@@ -259,7 +260,8 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        "Ligand"
+        "Ligand",
+        UNIPROT_TISSUE
     };
 
     public static final String[] DISEASE_FACETS = {

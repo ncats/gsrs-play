@@ -59,8 +59,11 @@ current, rows, total, pages, facets){ @ligandmenu() }{
 	      	    data-toggle="tooltip"
           	    data-html="true" title="<p align='left'>@t.desc</p>">@t.name</span>
         }
-	@for(m <- IDGApp.getMechanisms(lig)) {
+	@**for(m <- IDGApp.getMechanisms(lig)) {
 	   <p>@m
+	}**@
+	@if(lig.description != null) {
+	   <p>@lig.description
 	}
 	<p>
 	@defining(IDGApp.getMajorTopics(lig)) { mesh =>

@@ -14,6 +14,9 @@ public interface Commons {
     public static final String IDG_GENERIF = "IDG GeneRIF";
     public static final String IDG_TARGET = "IDG Target";
     public static final String IDG_SMILES = "IDG SMILES";
+
+    public static final String DTO_PROTEIN_CLASS = "DTO Protein Class";
+    public static final String DTO_PROTEIN_ANCESTRY = "DTO Protein Ancestry";
     
     public static final String TINX_NOVELTY = "TINX Novelty";
     public static final String TINX_IMPORTANCE = "TINX Importance";

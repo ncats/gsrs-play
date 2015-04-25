@@ -177,7 +177,7 @@ public class TcrdRegistry extends Controller implements Commons {
         final Http.Context ctx;
         final ChemblRegistry chembl;
         final Collection<TcrdTarget> targets;
-        PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6;
+        PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5;
         
         PersistRegistration (Connection con, Http.Context ctx,
                              Collection<TcrdTarget> targets,
@@ -187,7 +187,7 @@ public class TcrdRegistry extends Controller implements Commons {
             this.ctx = ctx;
             this.targets = targets;
             pstm = con.prepareStatement
-                ("select a.*,c.score "
+                ("select a.*,c.score,b.protein_id "
                  +"from target2disease a, t2tc b, tinx_importance c, "
                  +"tinx_disease d "
                  +"where a.target_id = ? "
@@ -201,6 +201,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from drugdb_activity where target_id = ?");
             pstm4 = con.prepareStatement
                 ("select * from generif where protein_id = ?");
+            pstm5 = con.prepareStatement
+                ("select * from dto_classification "
+                 +"where protein_id = ? order by id");
             this.chembl = chembl;
         }
 
@@ -222,7 +225,50 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm2.close();
             pstm3.close();
             pstm4.close();
+            pstm5.close();
             chembl.shutdown();
+        }
+
+        void addDTO (Target target, long protein) throws Exception {
+            pstm5.setLong(1, protein);
+            ResultSet rset = pstm5.executeQuery();
+            List<Keyword> path = new ArrayList<Keyword>();
+            Keyword kw = KeywordFactory.registerIfAbsent
+                (DTO_PROTEIN_CLASS + " (0)", target.idgFamily, null);
+            path.add(kw);
+            while (rset.next()) {
+                String label = rset.getString("name");
+                String value = rset.getString("value");
+                kw = KeywordFactory.registerIfAbsent
+                    (DTO_PROTEIN_CLASS+" ("+path.size()+")", value, null);
+                target.properties.add(kw);
+                path.add(kw);
+            }
+            rset.close();
+            
+            for (int k = path.size(); --k >= 0; ) {
+                Keyword node = path.get(k);
+                List<Predicate> predicates = PredicateFactory.finder.where
+                    (Expr.and(Expr.eq("subject.refid", node.id),
+                              Expr.eq("predicate",
+                                      DTO_PROTEIN_ANCESTRY)))
+                    .findList();
+                if (predicates.isEmpty()) {
+                    try {
+                        Predicate pred = new Predicate
+                            (DTO_PROTEIN_ANCESTRY);
+                        pred.subject = new XRef (node);
+                        pred.subject.save();
+                        for (int j = k; --j >= 0; ) {
+                            pred.objects.add(new XRef (path.get(j)));
+                        }
+                        pred.save();
+                    }
+                    catch (Throwable t) {
+                        t.printStackTrace();
+                    }
+                }
+            }
         }
 
         void persists (TcrdTarget t) throws Exception {
@@ -244,6 +290,7 @@ public class TcrdRegistry extends Controller implements Commons {
             Logger.debug("...uniprot registration");
             UniprotRegistry uni = new UniprotRegistry ();
             uni.register(target, t.acc);
+            addDTO (target, t.protein);
             TARGETS.add(target);
             
             if (t.novelty != null) {
@@ -562,7 +609,13 @@ public class TcrdRegistry extends Controller implements Commons {
                         (IDG_DRUG, drug, ref != null
                          && ref.startsWith("http") ? ref : null);
                     Ligand ligand = new Ligand (drug);
-                    ligand.description = rs.getString("nlm_drug_info");
+                    String desc = rs.getString("nlm_drug_info");
+                    if (desc != null) {
+                        int pos = desc.lastIndexOf("Check for");
+                        if (pos > 0)
+                            desc = desc.substring(0, pos);
+                    }
+                    ligand.description = desc;
                     ligand.synonyms.add(kw);
                     kw = KeywordFactory.registerIfAbsent
                         (SOURCE, rs.getString("source"), ref);
@@ -597,10 +650,7 @@ public class TcrdRegistry extends Controller implements Commons {
             while (rs.next()) {
                 String drug = rs.getString("drug");
                 String ref = rs.getString("reference");
-                if (ref != null && ref.indexOf("CHEMBL") > 0) {
-                    Logger.warn("Skipping ChEMBL reference "+ref);
-                    continue;
-                }
+
                 Keyword source = KeywordFactory.registerIfAbsent
                     (SOURCE, rs.getString("source"), ref);
 
@@ -615,9 +665,24 @@ public class TcrdRegistry extends Controller implements Commons {
                         (IDG_DRUG, drug, ref != null
                          && ref.startsWith("http") ? ref : null);
                     Ligand ligand = new Ligand (drug);
-                    ligand.description = rs.getString("nlm_drug_info");
+                    String desc = rs.getString("nlm_drug_info");
+                    if (desc != null) {
+                        int pos = desc.lastIndexOf("Check for");
+                        if (pos > 0)
+                            desc = desc.substring(0, pos);
+                    }
+                    ligand.description = desc;
                     ligand.synonyms.add(kw);
                     ligand.properties.add(source);
+
+                    if (ref != null && ref.indexOf("CHEMBL") > 0) {
+                        String chemblId = ref.substring(ref.indexOf("CHEMBL"));
+                        kw = KeywordFactory.registerIfAbsent
+                            (ChEMBL_ID, chemblId,
+                             "https://www.ebi.ac.uk/chembl/compound/inspect/"
+                             +chemblId);
+                        ligand.synonyms.add(kw);
+                    }
                     
                     if (!registry.instrument(ligand)) {
                         // if can't resolve ligand via chembl, then use
@@ -652,36 +717,43 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                     ligs = temp;
                 }
-
-                String type = rs.getString("act_type");
-                Double value = rs.getDouble("act_value");
-                if (rs.wasNull())
-                    value = null;
                 
-                VNum act = new VNum (type, value);
-                act.save();
-                for (Ligand l : ligs) {
-                    XRef tref = new XRef (target);
-                    tref.properties.add(source);
-                    tref.properties.add
-                        (KeywordFactory.registerIfAbsent
-                         (Target.IDG_FAMILY, target.idgFamily, null));
-                    tref.properties.add
-                        (KeywordFactory.registerIfAbsent
-                         (Target.IDG_DEVELOPMENT, target.idgTDL.name, null));
-                    tref.properties.add(act);
-            
-                    XRef lref = new XRef (l);
-                    lref.properties.add(source);
-                    lref.properties.add
-                        (KeywordFactory.registerIfAbsent
-                         ("Ligand", l.getName(), null));
-                    lref.properties.add(act);
-
-                    tref.save();
-                    lref.save();
-                    l.links.add(tref);
-                    target.links.add(lref);
+                if (ref != null && ref.indexOf("CHEMBL") > 0) {
+                    Logger.warn("Skipping ChEMBL reference "
+                                +ref+" for drug "+drug);
+                }
+                else {
+                    String type = rs.getString("act_type");
+                    Double value = rs.getDouble("act_value");
+                    if (rs.wasNull())
+                        value = null;
+                    
+                    VNum act = new VNum (type, value);
+                    act.save();
+                    for (Ligand l : ligs) {
+                        XRef tref = new XRef (target);
+                        tref.properties.add(source);
+                        tref.properties.add
+                            (KeywordFactory.registerIfAbsent
+                             (Target.IDG_FAMILY, target.idgFamily, null));
+                        tref.properties.add
+                            (KeywordFactory.registerIfAbsent
+                             (Target.IDG_DEVELOPMENT,
+                              target.idgTDL.name, null));
+                        tref.properties.add(act);
+                        
+                        XRef lref = new XRef (l);
+                        lref.properties.add(source);
+                        lref.properties.add
+                            (KeywordFactory.registerIfAbsent
+                             ("Ligand", l.getName(), null));
+                        lref.properties.add(act);
+                        
+                        tref.save();
+                        lref.save();
+                        l.links.add(tref);
+                        target.links.add(lref);
+                    }
                 }
                 ligands.addAll(ligs);
             }
@@ -706,12 +778,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 registry.instruments(tids, target, ligands);
                 allligands.addAll(ligands);
                 
-                ligands = loadDrugs ();
+                //ligands = loadDrugs ();
+                ligands = registerDrugLigands ();
                 Logger.debug("Registering "+ligands.size()+" drug ligand(s) "
                              +"for target "+target.id+": "+target.name);
-                /**
-                 * TODO: we need to merge non-chembl activities here!
-                 */
                 registry.instruments(tids, target, ligands);
                 allligands.addAll(ligands);
             }

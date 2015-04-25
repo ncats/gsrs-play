@@ -1,6 +1,7 @@
 
 @import ix.idg.models.Target
 @import ix.idg.models.Ligand
+@import ix.idg.models.Disease
 @import ix.core.models.Value
 @import ix.core.models.Keyword
 @import ix.core.models.Publication
@@ -10,6 +11,7 @@
 @import ix.idg.controllers.TcrdRegistry
 @import ix.idg.controllers.UniprotRegistry
 @import ix.utils.Util
+@import java.net.URLEncoder
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
@@ -29,32 +31,34 @@
   }
 }
 
+@diseasedblink(d: Disease, x: Any) = {
+<a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1=@IDGApp.getId(d)">@x</a>
+}
+
 @diseaserow(dr: DiseaseRelevance) = {
    @if(dr.zscore != null) {
      <tr class="treegrid-@dr.disease.id">
        <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
-       <td>@dr.zscore</td>
-       <td>@dr.conf</td>
+       <td>@diseasedblink(dr.disease,dr.zscore)</td>
+       <td>@diseasedblink(dr.disease,dr.conf)</td>
        @if(dr.tinxScore != null) {
        <td>@{"%1$.3f".format(-Math.log(dr.tinxScore))}</td>
        } else {
        <td></td>
        }
-         <td><a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1=@IDGApp.getId(dr.disease)">DiseasesDB</a></td>
      </tr>
 
      @for(i <- 0 until dr.lineage.size()) {
        @defining(dr.lineage(i)) { x =>	    
          <tr class="treegrid-@x.disease.id treegrid-parent-@dr.disease.id">
             <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(x.disease))">@x.disease.name</a></td>
-            <td>@x.zscore</td>
-            <td>@x.conf</td>
+            <td>@diseasedblink(x.disease,x.zscore)</td>
+            <td>@diseasedblink(x.disease,x.conf)</td>
 	    @if(x.tinxScore != null) {
 	    <td>@{"%1$.3f".format(-Math.log(x.tinxScore))}</td>
 	    } else {
 	    <td></td>
 	    }
-        <td><a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1=@IDGApp.getId(x.disease)">DiseasesDB</a></td>
          </tr>
        }
      }
@@ -207,13 +211,15 @@
             <table class="tree table">
               <tr>
                 <th>Disease</th>
-                <th data-toggle="tooltip" data-placement="top" data-html="true"
-                title="<p align='left'>A normalized version of the co-occurence (of the disease and this target) score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>">Z-score</th>
-                <th data-toggle="tooltip" data-placement="top" data-html="true"
-                title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>">Confidence</th>
-		        <th data-toggle="tooltip" data-placement="top" data-html="true"
-                title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature. Smaller values indicate increased importance.</p>">TIN-X Importance</th>
-                <th></th>
+                <th>Z-score <i class="fa fa-info-circle"
+		data-toggle="tooltip" data-placement="top" data-html="true"
+                title="<p align='left'>A normalized version of the co-occurence (of the disease and this target) score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
+                <th>Confidence <i class="fa fa-info-circle"
+		data-toggle="tooltip" data-placement="top" data-html="true"
+                title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
+	        <th>Importance <i class="fa fa-info-circle"
+		data-toggle="tooltip" data-placement="top" data-html="true"
+                title="<p align='left'>A -log score characterizing the importance of the target, based on occurences in the published literature. Smaller values indicate increased importance.</p>"></i></th>
               </tr>
 	      @defining(request().getQueryString("view")) { view =>
 	        @view match {
@@ -320,7 +326,7 @@
                                  @label(p, "SCOPE", "default")
                                }
                                case UNIPROT_TISSUE => {
-                                    <span class="label label-primary">@p.getValue()</span>
+                                    <a class="label label-primary" href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+UNIPROT_TISSUE+"/"}@URLEncoder.encode(p.getValue().toString(), "utf8")'>@p.getValue()</a>
                                }
                                case IDG_GENERIF => {
                                   @label(p, "GeneRIF", "warning")

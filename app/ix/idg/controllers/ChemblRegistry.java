@@ -205,20 +205,42 @@ public class ChemblRegistry implements Commons {
                      +chembl+" drug="+drug);
         
         try {        
-            final XRef tref = new XRef (target);
-            tref.properties.add(source);
-            tref.properties.add
-                (KeywordFactory.registerIfAbsent
-                 (Target.IDG_FAMILY, target.idgFamily, null));
-            tref.properties.add
-                (KeywordFactory.registerIfAbsent
-                 (Target.IDG_DEVELOPMENT, target.idgTDL.name, null));
+            XRef tref = null;
+            for (XRef ref : ligand.getLinks()) 
+                if (ref.referenceOf(target)) {
+                    tref = ref;
+                    break;
+                }
+
+            boolean trefNew = false;
+            if (tref == null) {
+                tref = new XRef (target);
+                tref.properties.add(source);
+                tref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     (Target.IDG_FAMILY, target.idgFamily, null));
+                tref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     (Target.IDG_DEVELOPMENT, target.idgTDL.name, null));
+                trefNew = true;
+            }
             
-            final XRef lref = new XRef (ligand);
-            lref.properties.add(source);
-            lref.properties.add
-                (KeywordFactory.registerIfAbsent
-                 ("Ligand", ligand.getName(), null));
+            XRef lref = null;
+            for (XRef ref : target.getLinks())
+                if (ref.referenceOf(ligand)) {
+                    lref = ref;
+                    break;
+                }
+
+            boolean lrefNew = false;
+            if (lref == null) {
+                lref = new XRef (ligand);
+                lref.properties.add(source);
+                lref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     ("Ligand", ligand.getName(), null));
+                lrefNew = true;
+            }
             
             Logger.debug("Registering information for ligand "
                          +ligand.id+" "+ligand.getName()
@@ -229,12 +251,22 @@ public class ChemblRegistry implements Commons {
                 rows = activity (tids, no, ligand, tref, lref);
                 Logger.debug("...."+rows+" activities");
             }
+
+            if (trefNew) {
+                tref.save();
+                ligand.links.add(tref); // ligand -> target
+            }
+            else {
+                tref.update();
+            }
             
-            
-            tref.save();
-            ligand.links.add(tref); // ligand -> target
-            lref.save();
-            target.links.add(lref); // target -> ligand
+            if (lrefNew) {
+                lref.save();
+                target.links.add(lref); // target -> ligand
+            }
+            else {
+                lref.update();
+            }
         }
         catch (Exception ex) {
             Logger.error("Can't create target ("+target.id+") <-> ligand ("
@@ -270,8 +302,16 @@ public class ChemblRegistry implements Commons {
 
     public boolean instrument (Ligand ligand) {
         try {
-            pstm7.setString(1, ligand.name);
-            Set<Long> regno = instrument (ligand, pstm7);
+            Keyword kw = ligand.getSynonym(ChEMBL_ID);
+            Set<Long> regno;
+            if (kw != null) {
+                pstm2.setString(1, kw.term);
+                regno = instrument (ligand, pstm2);
+            }
+            else {
+                pstm7.setString(1, ligand.name);
+                regno = instrument (ligand, pstm7);
+            }
             return !regno.isEmpty();
         }
         catch (SQLException ex) {
@@ -471,11 +511,10 @@ public class ChemblRegistry implements Commons {
 
             String type = rset.getString("published_type");
             Double value = rset.getDouble("published_value");
-            String unit = rset.getString("published_units");
             Value act = null;
             if (!rset.wasNull()) {
                 VNum num = new VNum (type, value);
-                num.unit = unit;
+                num.unit = rset.getString("published_units");
                 num.save();
                 Logger.debug("........activity "+actId+" -> "+num.id);
                 lref.properties.add(num);
