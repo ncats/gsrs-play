@@ -1,70 +1,127 @@
 @import ix.idg.models.Target
 @import ix.idg.controllers.IDGApp
-@import ix.idg.controllers.TcrdRegistry
-@import ix.idg.controllers.ChemblRegistry
 @import ix.idg.controllers.Commons._
 @import ix.ncats.controllers.App.FacetDecorator
 
-@(current: Int, rows: Int, total: Int, pages: Array[Int],
-     facets: Array[FacetDecorator], targets: List[Target])
+@(current: Int, rows: Int, total: Int, pages: Array[Int], facets: Array[FacetDecorator], targets: List[Target])
 
 @tabrow(t: Target) = {
 
-<tr>
-  <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
-  <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
-	    data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
-  <td>@IDGApp.novelty(t.getProperty(TINX_NOVELTY))</td>
-  <td>@t.idgFamily</td>
-</tr>
+    <tr>
+        <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
+        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
+        data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
+        <td>@IDGApp.novelty(t.getProperty(TINX_NOVELTY))</td>
+        <td>@t.idgFamily</td>
+    </tr>
 }
 
+<script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
+
 @ix.ncats.views.html.content("Targets", "ix.idg.models.Target",
-ix.idg.controllers.routes.IDGApp.targets().url,
-current, rows, total, pages, facets){
-@menu("ix.idg.models.Target"){
-<ul class="nav navbar-nav navbar-left">
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null,10,1)">Diseases</a></li>
-  <li role="presentation" class="active"><a href="#">Targets</a></li>
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null,8,1)">Ligands</a></li>
-</ul>
-}
-}{
-<ol class="breadcrumb">
-  <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
-  @defining(request().queryString.get("facet")) { facets =>
-     @if(facets != null) {
-      <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
-       @for(f <- facets) {
-          @if(f.startsWith(ChEMBL_PROTEIN_CLASS)) {
-	     @for(a <- IDGApp.getProteinAncestry(f)) {
-	        <li><a href="@a.href">@a.term</a></li>
-             }
-	     <li class="active">@f.substring(f.indexOf('/')+1)</li>
-	  }
-       }
-     } else {
-       <li class="active">Targets</li>
-     }
-  }
-</ol>
-}{
-<table class="table table-striped">
-  <tr>
-    <th>Name</th>
-    <th>Development Level</th>
-    <th>Novelty</th>
-    <th>Target Family</th>
-  </tr>
-  @for(t <- targets) {
-     @tabrow(t)
-   }
-</table>
+    ix.idg.controllers.routes.IDGApp.targets().url,
+    current, rows, total, pages, facets) {
+    @menu("ix.idg.models.Target") {
+        <ul class="nav navbar-nav navbar-left">
+            <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null, 10, 1)">Diseases</a></li>
+            <li role="presentation" class="active"><a href="#">Targets</a></li>
+            <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 8, 1)">Ligands</a></li>
+        </ul>
+    }
+} {
+    <ol class="breadcrumb">
+        <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
+        @defining(request().queryString.get("facet")) { facets =>
+            @if(facets != null) {
+                <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
+                @for(f <- facets) {
+                    @if(f.startsWith(ChEMBL_PROTEIN_CLASS)) {
+                        @for(a <- IDGApp.getProteinAncestry(f)) {
+                            <li><a href="@a.href">@a.term</a></li>
+                        }
+                        <li class="active">@f.substring(f.indexOf('/') + 1)</li>
+                    }
+                }
+            } else {
+                <li class="active">Targets</li>
+            }
+        }
+    </ol>
+} {
+    <table class="table table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Development Level</th>
+            <th>Novelty</th>
+            <th>Target Family</th>
+        </tr>
+        @for(t <- targets) {
+            @tabrow(t)
+        }
+    </table>
+
+    <div id="tinx-map">
+
+    </div>
 }
 
 <script>
-$(function () {
-  $('[data-toggle="popover"]').popover();
-  $('[data-toggle="tooltip"]').tooltip();
-});
+$ ( function() {
+$ ( '[data-toggle="popover"]' ).popover () ;
+$ ( '[data-toggle="tooltip"]' ).tooltip () ;
+} ) ;
+
+$ (document).ready ( function() {
+var styleCurveBorder = {"stroke":"rgb(0, 0, 0)", "stroke-width":"1px"};
+    var width = 300, height = 300;
+    var radius = width * 0.85 / 100;
+    var padding = width *  0.1;
+    var tinxDataUrl = "/idg/tinx";
+    d3.json(tinxDataUrl, function(json) {
+
+        console.log(json);
+        console.log(json.length);
+
+        var nFn = function(d) { return d.novelty; };
+        var iFn = function(d) { return d.importance; };
+
+        var y = d3.scale.log( ).domain(d3.extent(json, iFn) ).range([padding, height] ).nice();
+        var x = d3.scale.log( ).domain(d3.extent(json, nFn)).range([padding, width] ).nice();
+
+        var svg = d3.select("#tinx-map").append("svg:svg" ).
+            attr("width", 300 ).
+            attr("height", 300 ).
+            data(json ).
+            attr("cx", function(d) { return x(nFn(d)); } ).
+            attr("cy", function(d) { return y(iFn(d)); } ).
+            attr("r", 2 );
+
+    svg.append("svg:line")
+        .attr("x1", padding)
+        .attr("y1", 0)
+        .attr("x2", width)
+        .attr("y2", 0)
+        .style(styleCurveBorder);
+    svg.append("svg:line")
+        .attr("x1", width)
+        .attr("y1", 0)
+        .attr("x2", width)
+        .attr("y2", height - padding)
+        .style(styleCurveBorder);
+    svg.append("svg:line")
+        .attr("x1", width)
+        .attr("y1", height - padding)
+        .attr("x2", padding)
+        .attr("y2", height - padding)
+        .style(styleCurveBorder);
+    svg.append("svg:line")
+        .attr("x1", padding)
+        .attr("y1", height - padding)
+        .attr("x2", padding)
+        .attr("y2", 0)
+        .style(styleCurveBorder);
+
+    });
+
+} ) ;
 </script>

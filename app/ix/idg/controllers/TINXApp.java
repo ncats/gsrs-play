@@ -7,12 +7,15 @@ import ix.core.models.Keyword;
 import ix.core.models.Value;
 import ix.core.models.XRef;
 import ix.idg.models.Disease;
+import ix.idg.models.TINX;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.mvc.Result;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 public class TINXApp extends App {
@@ -52,7 +55,7 @@ public class TINXApp extends App {
     }
 
     static String getId(Target t) {
-        Keyword kw = t.getSynonym(UniprotRegistry.ACCESSION);
+        Keyword kw = t.getSynonym(Commons.UNIPROT_ACCESSION);
         return kw != null ? kw.term : null;
     }
 
@@ -76,36 +79,45 @@ public class TINXApp extends App {
 
     // aggregate by target
     static Result _tinx() {
-        List<Target> all = TargetFactory.finder.all();
+        List<TINX> all = TINXFactory.finder.all();
         ArrayNode root = mapper.createArrayNode();
-        Double nov = -1.0;
-        for (Target t : all) {
-            nov = getNovelty(t);
 
-            List<XRef> xrefs = t.getLinks();
-            Double meanImportance = 0.0;
-            int n = 0;
-            if (nov != -1) {
-                for (XRef xref : xrefs) {
-                    if (xref.kind.equals(Disease.class.getName())) {
-                        for (Value v : xref.properties) {
-                            if (v.label.equals(TcrdRegistry.TINX_IMPORTANCE)) {
-                                meanImportance += (Double) v.getValue();
-                                n++;
-                            }
-                        }
-                    }
-                }
-                if (n > 0)
-                    meanImportance /= n;
-                else meanImportance = 1e-10;
-                ObjectNode node = mapper.createObjectNode();
-                node.put("pharos_id", t.id);
-                node.put("uniprot_id", getId(t));
-                node.put("importance", meanImportance);
-                node.put("novelty", nov);
-                root.add(node);
+        Map<String, Map<String, Double>> imap = new HashMap<>();
+        Map<String, TINX> nmap = new HashMap<>();
+        for (TINX t : all) {
+            nmap.put(t.getUniprotId(), t);
+            Map<String, Double> ivalue;
+            if (imap.containsKey(t.getUniprotId())) {
+                ivalue = imap.get(t.getUniprotId());
+                ivalue.put(t.getDoid(), t.getImportance());
+            } else {
+                ivalue = new HashMap<>();
+                ivalue.put(t.getDoid(), t.getImportance());
             }
+            imap.put(t.getUniprotId(), ivalue);
+        }
+
+        // compute a mean importance and construct json
+        for (String key : nmap.keySet()) {
+            ObjectNode node = mapper.createObjectNode();
+            node.put("id", nmap.get(key).id);
+            node.put("acc", nmap.get(key).getUniprotId());
+            node.put("novelty", nmap.get(key).getNovelty());
+            Map<String, Double> ivals = imap.get(key);
+            Double mi = 0.0;
+            for (Double v : ivals.values()) mi += v;
+            mi = mi / (double) ivals.size();
+            node.put("meanImportance", mi);
+            // construct array of per disease importance
+            ArrayNode inode = mapper.createArrayNode();
+            for (String doid : ivals.keySet()) {
+                ObjectNode node2 = mapper.createObjectNode();
+                node2.put("doid", doid);
+                node2.put("importance", ivals.get(doid));
+                inode.add(node2);
+            }
+            node.put("importance", inode);
+            root.add(node);
         }
         return ok(root);
     }
@@ -124,15 +136,15 @@ public class TINXApp extends App {
     }
 
     public static Result _tinxForTarget(final Long id) {
-        Target t = TargetFactory.getTarget(id);
-        if (t == null) return _notFound("Target, pharos id:" + id + " not found");
+        TINX t = TINXFactory.getTINX(id);
+        if (t == null) return _notFound("TINX, pharos id:" + id + " not found");
 
         ObjectNode root = mapper.createObjectNode();
         ArrayNode imps = mapper.createArrayNode();
 
-        root.put("pharos_id", t.id);
-        root.put("uniprot_id", getId(t));
-        root.put("novelty", getNovelty(t));
+        root.put("id", t.id);
+        root.put("acc", t.getUniprotId());
+        root.put("novelty", t.getNovelty());
 
         List<XRef> xrefs = t.getLinks();
         Double meanImportance = 0.0;

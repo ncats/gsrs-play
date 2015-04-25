@@ -1,32 +1,24 @@
 package ix.idg.controllers;
 
-import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Expr;
-import com.avaje.ebean.Transaction;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jolbox.bonecp.BoneCPDataSource;
 import ix.core.controllers.KeywordFactory;
-import ix.core.controllers.NamespaceFactory;
-import ix.core.controllers.PredicateFactory;
-import ix.core.controllers.PublicationFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Namespace;
-import ix.core.models.Predicate;
 import ix.core.models.Publication;
+import ix.core.models.Structure;
 import ix.core.models.Text;
 import ix.core.models.VNum;
-import ix.core.models.VInt;
 import ix.core.models.XRef;
-import ix.core.models.Structure;
-import ix.core.plugins.TextIndexerPlugin;
-import ix.core.plugins.StructureReceiver;
-import ix.core.plugins.StructureProcessorPlugin;
 import ix.core.plugins.PersistenceQueue;
+import ix.core.plugins.StructureProcessorPlugin;
+import ix.core.plugins.StructureReceiver;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
-import ix.idg.models.Target;
 import ix.idg.models.Ligand;
+import ix.idg.models.TINX;
+import ix.idg.models.Target;
 import play.Logger;
 import play.Play;
 import play.cache.Cache;
@@ -34,7 +26,6 @@ import play.data.DynamicForm;
 import play.data.Form;
 import play.db.DB;
 import play.db.ebean.Model;
-import play.db.ebean.Transactional;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
@@ -51,22 +42,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.EnumSet;
-import java.util.Collection;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
     
 public class TcrdRegistry extends Controller implements Commons {
 
@@ -254,7 +240,7 @@ public class TcrdRegistry extends Controller implements Commons {
             Logger.debug("...disease linking");
             pstm.setLong(1, t.id);
             long start = System.currentTimeMillis();
-            new RegisterDiseaseRefs (target, t.source, pstm).persists();
+            new RegisterDiseaseRefs (target, t, pstm).persists();
             long end = System.currentTimeMillis();
             Logger.debug("..."+(end-start)+"ms to resolve diseases");
 
@@ -278,14 +264,16 @@ public class TcrdRegistry extends Controller implements Commons {
     static class RegisterDiseaseRefs
         extends PersistenceQueue.AbstractPersistenceContext {
         final Target target;
+        final TcrdTarget tcrdTarget;
         final Keyword source;
         final PreparedStatement pstm;
 
-        RegisterDiseaseRefs (Target target, Keyword source,
+        RegisterDiseaseRefs (Target target, TcrdTarget tcrdTarget,
                              PreparedStatement pstm) {
             this.target = target;
-            this.source = source;
+            this.source = tcrdTarget.source;
             this.pstm = pstm;
+            this.tcrdTarget = tcrdTarget;
         }
 
         public void persists () throws Exception {
@@ -338,7 +326,10 @@ public class TcrdRegistry extends Controller implements Commons {
                     double zscore = rs.getDouble("zscore");
                     double conf = rs.getDouble("conf");
                     double tinx = rs.getDouble("score");
-                    
+
+                    TINX tinxe = new TINX(tcrdTarget.acc, doid, tcrdTarget.novelty, tinx);
+                    tinxe.save();
+
                     XRef xref = null;
                     for (XRef ref : target.links) {
                         if (ref.referenceOf(disease)) {
@@ -363,9 +354,9 @@ public class TcrdRegistry extends Controller implements Commons {
                         xref.properties.add(new VNum (TINX_IMPORTANCE, tinx));
                         xref.save();
                         target.links.add(xref);
-                        
+
                         // now add all the unique parents of this disease node
-                        getNeighbors (neighbors, disease.links);
+                        getNeighbors(neighbors, disease.links);
                     
                         // link the other way
                         try {
@@ -700,13 +691,13 @@ public class TcrdRegistry extends Controller implements Commons {
                 allligands.addAll(ligands);
             }
             else {
-                List<Ligand> ligands = loadChembl ();
+                List<Ligand> ligands = loadChembl();
                 Logger.debug("Registering "+ligands.size()+" Chembl ligand(s) "
                              +"for target "+target.id+": "+target.name);
                 registry.instruments(tids, target, ligands);
                 allligands.addAll(ligands);
                 
-                ligands = loadDrugs ();
+                ligands = loadDrugs();
                 Logger.debug("Registering "+ligands.size()+" drug ligand(s) "
                              +"for target "+target.id+": "+target.name);
                 /**
