@@ -1,8 +1,17 @@
-function tinx_plot(selector, accsInPage) {
+function highlightTargetTable(elem) {
+    var acc = $(elem).attr("id").split("-")[1];
+    $("#row-"+acc).addClass("active");
+}
+function unhighlightTargetTable(elem) {
+    var acc = $(elem).attr("id").split("-")[1];
+    $("#row-"+acc).removeClass("active");
+}
+
+function tinx_plot(selector, accsInPage, mouseOverFn, mouseOutFn) {
     var styleCurveBorder = {"stroke": "rgb(128, 0, 0)", "stroke-width": "1px"};
     var width = $(selector).width() / 1.2;
     var height = width;
-    var radius = width * 0.85 / 100;
+    var radius = 1.1 * width / 100;
     var padding = width * 0.2;
     var axisLabelFontSize = 1 * 1.1;
     console.log(axisLabelFontSize);
@@ -39,6 +48,8 @@ function tinx_plot(selector, accsInPage) {
                     return y(iFn(d));
                 })
                 .attr("r", radius)
+                .on("mouseover", function() { return mouseOverFn(this); })
+                .on("mouseout", function() { return mouseOutFn(this); })
                 .style("z-index", function (d) {
                     if ($.inArray(d.acc, accsInPage) != -1) {
                         return 100;
@@ -54,8 +65,8 @@ function tinx_plot(selector, accsInPage) {
                 });
 
         // axes
-        var xaxis = d3.svg.axis().scale(x).orient("bottom").ticks(5);
-        var yaxis = d3.svg.axis().scale(y).orient("left").ticks(5);
+        var xaxis = d3.svg.axis().scale(x).orient("bottom").ticks(0);
+        var yaxis = d3.svg.axis().scale(y).orient("left").ticks(0);
         svg.append("g").attr("class", "axis").attr("transform", "translate(0," + (height) + ")").call(xaxis);
         svg.append("g").attr("class", "axis").attr("transform", "translate(" + (padding) + ",0)").call(yaxis);
 
