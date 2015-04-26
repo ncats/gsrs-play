@@ -23,7 +23,11 @@ public class TargetFactory extends EntityFactory implements Commons {
     }
 
     public static List<Target> getTargets (int top, int skip, String filter) {
-        return filter (new FetchOptions (top, skip, filter), finder);
+        FetchOptions options = new FetchOptions (top, skip, filter);
+        if (request().getQueryString("order") == null) {
+            options.order.add("$novelty");
+        }
+        return filter (options, finder);
     }
 
     public static Result count () {

@@ -91,6 +91,9 @@ public class Target extends EntityModel {
     @Indexable(facet=true,name=IDG_DEVELOPMENT)
     public TDL idgTDL; // target development level
 
+    @Indexable(sortable=true,name="Novelty")
+    public Double novelty;
+
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_idg_target_synonym",

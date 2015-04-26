@@ -459,14 +459,26 @@ public class App extends Controller {
         (final Class kind, final String q, final int total) {
         return getSearchResult (textIndexer, kind, q, total);
     }
+
+    public static SearchResult getSearchResult
+        (final Class kind, final String q, final int total,
+         Map<String, String[]> query) {
+        return getSearchResult (textIndexer, kind, q, total, query);
+    }
     
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
          final String q, final int total) {
-        
-        final Map<String, String[]> query =  new HashMap<String, String[]>();
+
+        Map<String, String[]> query =  new HashMap<String, String[]>();
         query.putAll(request().queryString());
-                
+        return getSearchResult (indexer, kind, q, total, query);
+    }
+
+    public static SearchResult getSearchResult
+        (final TextIndexer indexer, final Class kind,
+         final String q, final int total, final Map<String, String[]> query) {
+        
         List<String> qfacets = new ArrayList<String>();
         if (query.get("facet") != null) {
             for (String f : query.get("facet"))

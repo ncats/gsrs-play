@@ -97,6 +97,12 @@
 		          data-toggle="tooltip" data-html="true"
 			  title="<p align='left'>@act.target.idgTDL.desc</p>">@act.target.idgTDL</span></td>
 		 </tr>
+		 @if(act.mechanism != null) {
+		   <tr class="treegrid-parent-@act.target.id">
+		      <td><em>@act.mechanism</em></td>
+		      <td><span class="label label-default">Mechanism</span></td>
+		   </tr>
+		 }
 		 @for(a <- act.activities) {
 		   <tr class="treegrid-@a.id treegrid-parent-@act.target.id">
 		     <td>@a.label</td>
@@ -193,7 +199,11 @@ $(document).ready(function () {
   $('.tree').treegrid({
    expanderExpandedClass: 'fa fa-angle-down',
    expanderCollapsedClass: 'fa fa-angle-right',
+@if(activities.length > 3) {
+   initialState: 'collapsed'
+} else {
    initialState: 'expanded'
+}
   });
 });
 </script>

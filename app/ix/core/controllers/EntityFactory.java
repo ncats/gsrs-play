@@ -330,7 +330,7 @@ public class EntityFactory extends Controller {
     }
     
     protected static <K,T> List<T> filter (String filter, 
-                                         Model.Finder<K, T> finder) {
+                                           Model.Finder<K, T> finder) {
         return finder.where(filter).findList();
     }
 
@@ -390,7 +390,7 @@ public class EntityFactory extends Controller {
         else {
             results = finder.where()
                 .allEq(cons)
-                .orderBy("id asc")
+                //.orderBy("id asc")
                 .setFirstRow(skip)
                 .setMaxRows(top)
                 .findList();

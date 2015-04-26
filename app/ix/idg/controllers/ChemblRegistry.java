@@ -509,22 +509,29 @@ public class ChemblRegistry implements Commons {
                 continue;
             acts.add(actId);
 
+            Long pmid = rset.getLong("pubmed_id");
+            if (rset.wasNull()) {
+                pmid = null;
+            }
+            
             String type = rset.getString("published_type");
-            Double value = rset.getDouble("published_value");
+            Double value = rset.getDouble("published_value");       
             Value act = null;
             if (!rset.wasNull()) {
                 VNum num = new VNum (type, value);
                 num.unit = rset.getString("published_units");
                 num.save();
-                Logger.debug("........activity "+actId+" -> "+num.id);
+                Logger.debug("........activity "+actId
+                             +"[tid="+tid+",assay="+rset.getLong("assay_id")
+                             +",pmid="+pmid
+                             +"] -> "+value+num.unit+" ["+num.id+"]");
                 lref.properties.add(num);
                 tref.properties.add(num);
                 act = num;
                 ++rows;
             }
-
-            Long pmid = rset.getLong("pubmed_id");
-            if (!rset.wasNull()) {
+            
+            if (pmid != null) {
                 Publication pub = PublicationFactory.registerIfAbsent(pmid);
                 if (pub != null) {
                     XRef ref = ligand.getLink(pub);

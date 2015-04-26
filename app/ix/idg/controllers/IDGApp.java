@@ -114,14 +114,18 @@ public class IDGApp extends App implements Commons {
     public static class LigandActivity {
         public final Target target;
         public final List<VNum> activities = new ArrayList<VNum>();
+        public String mechanism;
 
         LigandActivity (XRef ref) {
             for (Value v : ref.properties) {
-                if (v instanceof VNum) {
+                if (v.label.equals(ChEMBL_MECHANISM)) {
+                    mechanism = ((Text)v).text;
+                }
+                else if (v instanceof VNum) {
                     activities.add((VNum)v);
                 }
             }
-            target = (Target)ref.deRef();           
+            target = (Target)ref.deRef();
         }
     }
 
@@ -301,6 +305,15 @@ public class IDGApp extends App implements Commons {
             decors.add(f);
         }
 
+        // at most the dto is only 5 deep
+        for (int i = 0; i < 6; ++i) {
+            IDGFacetDecorator f = new IDGFacetDecorator
+                (new TextIndexer.Facet
+                 (DTO_PROTEIN_CLASS+" ("+i+")"));
+            f.hidden = true;
+            decors.add(f);
+        }
+
         IDGFacetDecorator f = new IDGFacetDecorator
             (new TextIndexer.Facet(DiseaseOntologyRegistry.CLASS));
         f.hidden = true;
@@ -390,6 +403,17 @@ public class IDGApp extends App implements Commons {
         }
         return "";
     }
+
+    public static String format (Double value) {
+        if (value != null) {
+            if (value < 0.)
+                return String.format("%1$.5f", value);
+            if (value < 10.)
+                return String.format("%1$.3f", value);
+            return String.format("%1$.1f", value);
+        }
+        return "";
+    }
     
     public static String getId (Target t) {
         Keyword kw = t.getSynonym(UNIPROT_ACCESSION);
@@ -418,16 +442,31 @@ public class IDGApp extends App implements Commons {
                      return getDiseaseRelevances (t);
                  }
              });
+
+        List<Keyword> breadcrumb = getBreadcrumb (t);
         
+        return ok (ix.idg.views.html
+                   .targetdetails.render(t, diseases, breadcrumb));
+    }
+
+    static List<Keyword> getBreadcrumb (Target t) {
         List<Keyword> breadcrumb = new ArrayList<Keyword>();
         for (Value v : t.properties) {
-            if (v.label.startsWith(ChEMBL_PROTEIN_CLASS)) {
-                Keyword kw = (Keyword)v;
-                String url = ix.idg.controllers
-                    .routes.IDGApp.targets(null, 30, 1).url();
-                kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
-                    +"facet="+kw.label+"/"+kw.term;
-                breadcrumb.add(kw);
+            if (v.label.startsWith(DTO_PROTEIN_CLASS)) {
+                try {
+                    Keyword kw = (Keyword)v;
+                    String url = ix.idg.controllers
+                        .routes.IDGApp.targets(null, 30, 1).url();
+                    kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
+                        +"facet="+kw.label+"/"
+                        +URLEncoder.encode(kw.term, "utf8");
+                    breadcrumb.add(kw);
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't generate breadcrumb for "
+                                 +getId (t), ex);
+                }
             }
         }
         // just make sure the order is correct
@@ -436,9 +475,7 @@ public class IDGApp extends App implements Commons {
                     return kw1.label.compareTo(kw2.label);
                 }
             });
-
-        return ok (ix.idg.views.html
-                   .targetdetails.render(t, diseases, breadcrumb));
+        return breadcrumb;
     }
 
     static List<DiseaseRelevance>
@@ -545,8 +582,14 @@ public class IDGApp extends App implements Commons {
         Logger.debug("Targets: q="+q+" rows="+rows+" page="+page);
         final int total = TargetFactory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
+            Map<String, String[]> query = new HashMap<String, String[]>();
+            query.putAll(request().queryString());
+            if (!query.containsKey("order")) {
+                query.put("order", new String[]{"$novelty"});
+            }
+            
             TextIndexer.SearchResult result =
-                getSearchResult (Target.class, q, total);
+                getSearchResult (Target.class, q, total, query);
             
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), TARGET_FACETS);
@@ -648,13 +691,16 @@ public class IDGApp extends App implements Commons {
 
 
     public static Keyword[] getProteinAncestry (String facet) {
-        return getAncestry (facet, ChemblRegistry.ChEMBL_PROTEIN_ANCESTRY);
+        return getAncestry (facet,
+                            //ChEMBL_PROTEIN_ANCESTRY
+                            DTO_PROTEIN_ANCESTRY
+                            );
     }
 
     public static Keyword[] getATCAncestry (String facet) {
         List<Keyword> ancestry = new ArrayList<Keyword>();
         String[] toks = facet.split("/");
-        if (toks[0].equals(ChemblRegistry.WHO_ATC)) {
+        if (toks[0].equals(WHO_ATC)) {
             String atc = toks[1];
             try {
                 int len = atc.length();

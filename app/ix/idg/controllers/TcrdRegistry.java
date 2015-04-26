@@ -235,10 +235,34 @@ public class TcrdRegistry extends Controller implements Commons {
             List<Keyword> path = new ArrayList<Keyword>();
             Keyword kw = KeywordFactory.registerIfAbsent
                 (DTO_PROTEIN_CLASS + " (0)", target.idgFamily, null);
+            target.properties.add(kw);
             path.add(kw);
+            Logger.debug("Target "+IDGApp.getId(target)+" "
+                         +target.idgFamily+" DTO");
             while (rset.next()) {
-                String label = rset.getString("name");
+                String label = rset.getString("name").trim();
+                if (target.idgFamily.equals("GPCR")) {
+                    if (label.equalsIgnoreCase("Ligand Type"))
+                        break; // we're done
+                }
+                else if (target.idgFamily.equals("Ion Channel")) {
+                    if (label.equalsIgnoreCase("Transporter Protein Type"))
+                        break;
+                }
+                else if (target.idgFamily.equals("Kinase")) {
+                    if (label.equalsIgnoreCase("Pseudokinase"))
+                        break;
+                }
+                else if (target.idgFamily.equals("NR")) {
+                    // nothing to check
+                }
+
                 String value = rset.getString("value");
+                if (value.equals(""))
+                    break; // we're done
+                value = value.replaceAll("/", "-");
+                Logger.debug("  name=\""+label+"\" value="+value);
+                
                 kw = KeywordFactory.registerIfAbsent
                     (DTO_PROTEIN_CLASS+" ("+path.size()+")", value, null);
                 target.properties.add(kw);
@@ -294,8 +318,11 @@ public class TcrdRegistry extends Controller implements Commons {
             TARGETS.add(target);
             
             if (t.novelty != null) {
+                /*
                 VNum novelty = new VNum (TINX_NOVELTY, t.novelty);
                 target.properties.add(novelty);
+                */
+                target.novelty = t.novelty;
             }
 
             Logger.debug("...disease linking");
@@ -937,6 +964,8 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
                  +"where b.tdl = 'Tclin'\n"
+                 //+"where c.uniprot in ('Q6PIU1')\n"
+                 //+"where c.uniprot in ('A5X5Y0')\n"
                  //+"where c.uniprot in ('Q7RTX7')\n"
                  //+"where c.uniprot in ('Q00537','Q8WXA8')\n"
                  //+"where c.uniprot in ('O94921','Q96Q40','Q00536','Q00537','Q00526','P50613','P49761','P20794')\n"
