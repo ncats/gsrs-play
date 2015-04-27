@@ -12,6 +12,7 @@ import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.mvc.Result;
+import play.Logger;
 
 import java.util.HashMap;
 import java.util.List;
@@ -122,12 +123,13 @@ public class TINXApp extends App {
         return ok(root);
     }
 
-    public static Result tinxForTarget(final Long id) {
+    public static Result tinxForTarget (final String acc) {
         try {
-            String sha1 = Util.sha1(request());
-            return getOrElse("tinx/q/" + sha1, new Callable<Result>() {
+            final String key = "tinx/"+acc+"/"+Util.sha1(request());
+            return getOrElse(key, new Callable<Result>() {
                 public Result call() throws Exception {
-                    return _tinxForTarget(id);
+                    Logger.debug("Cache missed: "+key);
+                    return _tinxForTarget (acc);
                 }
             });
         } catch (Exception e) {
@@ -135,41 +137,37 @@ public class TINXApp extends App {
         }
     }
 
-    public static Result _tinxForTarget(final Long id) {
-        TINX t = TINXFactory.getTINX(id);
-        if (t == null) return _notFound("TINX, pharos id:" + id + " not found");
+    public static Result _tinxForTarget(final String acc) {
+        List<TINX> tinx = TINXFactory.finder
+            .where().eq("uniprotId", acc).findList();
+        if (tinx.isEmpty()) {
+            return _notFound ("No TINX found for target \""+acc+"\"");
+        }
 
-        ObjectNode root = mapper.createObjectNode();
         ArrayNode imps = mapper.createArrayNode();
 
-        root.put("id", t.id);
-        root.put("acc", t.getUniprotId());
-        root.put("novelty", t.getNovelty());
-
-
-        List<XRef> xrefs = t.getLinks();
         Double meanImportance = 0.0;
-        int n = 0;
+        Double novelty = null;
 
-        for (XRef xref : xrefs) {
-            if (xref.kind.equals(Disease.class.getName())) {
-                Disease d = (Disease) xref.deRef();
-                for (Value v : xref.properties) {
-                    if (v.label.equals(TcrdRegistry.TINX_IMPORTANCE)) {
-                        meanImportance += (Double) v.getValue();
-                        n++;
-
-                        ObjectNode node = mapper.createObjectNode();
-                        node.put("doid", getId(d));
-                        node.put("imp", (Double) v.getValue());
-                        imps.add(node);
-                    }
-                }
+        for (TINX tx : tinx) {
+            if (novelty == null) {
+                // should be the same for all
+                novelty = tx.novelty;
             }
+            meanImportance += tx.importance;
+            ObjectNode node = mapper.createObjectNode();
+            node.put("doid", tx.doid);
+            node.put("imp", tx.importance);
+            imps.add(node);
         }
-        if (n > 0)
-            meanImportance /= n;
+        
+        if (tinx.size() > 0)
+            meanImportance /= tinx.size();
         else meanImportance = 1e-10;
+        
+        ObjectNode root = mapper.createObjectNode();
+        root.put("acc", acc);
+        root.put("novelty", novelty);
         root.put("meanImportance", meanImportance);
         root.put("importances", imps);
 

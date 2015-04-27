@@ -306,10 +306,6 @@ public class TcrdRegistry extends Controller implements Commons {
             TARGETS.add(target);
             
             if (t.novelty != null) {
-                /*
-                VNum novelty = new VNum (TINX_NOVELTY, t.novelty);
-                target.properties.add(novelty);
-                */
                 target.novelty = t.novelty;
             }
 

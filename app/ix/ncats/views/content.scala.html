@@ -3,15 +3,38 @@
 
 @(title: String, kind: String,
   resetAction: String, current: Int, rows: Int, total: Int,
-  pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)(plot: Html = Html(""))
+  pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)(viz: Html)
 
 @main(title, kind){ @header }{ @breadcrumb }{
 <div class="container-fluid">
   <div class="row">
     @if(total > 0 && facets.length > 0) {
     <div class="col-md-3">
-      @filters(facets)
-	  @plot
+      <p></p>
+      @if(viz.body.nonEmpty) {
+        <div role="tabpanel">
+	  <ul class="nav nav-pills" role="tablist" id="content-tab">
+	    <li role="presentation" class="active">
+	       <a href="#filter" aria-controls="filter"
+	          role="tab" data-toggle="tab">Filters</a></li>
+            <li role="presentation">
+	       <a href="#viz" aria-controls="viz"
+	          role="tab" data-toggle="tab">Visualizations</a>
+	    </li>
+	  </ul>
+	  <div class="tab-content">
+	    <div role="tabpanel" class="tab-pane active" id="filter">
+	       <p></p>
+               @filters(facets)
+	    </div>
+	    <div role="tabpanel" class="tab-pane" id="viz">
+               @viz
+	    </div>
+	  </div>
+	</div>
+      } else {
+         @filters(facets)
+      }
     </div>
     <div class="col-md-9">
       } else {
@@ -85,6 +108,11 @@ function dismissQuery () {
 }
 
 $(document).ready(function () {
+//   $('a[data-toggle="tab"]').on('show.bs.tab', function(e) {
+   //       console.log('tab shown: '+e.target);
+       //window.dispatchEvent(new Event('resize'));
+//    });
+    
     @defining(App.checkStatus()) { status =>
       @if(status != null) {
          $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');

@@ -91,13 +91,12 @@
 </head>
 
 <script>
-$ ( function() {
-$ ( '[data-toggle="popover"]' ).popover () ;
-$ ( '[data-toggle="tooltip"]' ).tooltip () ;
-} ) ;
+$(function() {
+   $('[data-toggle="popover"]').popover();
+   $('[data-toggle="tooltip"]').tooltip ();
+});
 
-$ (document).ready ( function() {
-
+var tinx = function() {
     var accsInPage = [];
     @for(t <- targets) {
         accsInPage.push("@IDGApp.getId(t)");
@@ -119,7 +118,26 @@ $ (document).ready ( function() {
         var acc = id.split ( "-" )[ 1 ] ;
         var pt = $ ( "#point-" + acc ) ;
         $ ( pt ).css ( "fill", $ ( pt ).attr ( "oldfill" ) ) ;
-    } ) ;
+    });
+}
 
-} ) ;
+$(document).ready(function () {
+   tinx();
+   @**
+   $('a[data-toggle="tab"]').on('shown.bs.tab', function(e) {
+       console.log('tab shown: '+e.target);
+       window.dispatchEvent(new Event('resize'));
+    });
+    **@
+   jQuery('#content-tab a[href="#viz"]').click(function (e) {
+      e.preventDefault()
+      jQuery(this).tab('show');
+      // Added this line to force NVD3 to redraw the chart
+      //jQuery(window).trigger('resize');
+      d3.select('svg').remove();
+      tinx();
+      //window.dispatchEvent(new Event('resize'));
+      console.log('tab shown: '+e.target);
+   });
+});
 </script>

@@ -23,4 +23,4 @@ GET	/ligands	ix.idg.controllers.IDGApp.ligands(q: String ?= null, rows: Int ?= 8
 GET	/ligands/:name	ix.idg.controllers.IDGApp.ligand(name: String)
 GET	/search		ix.idg.controllers.IDGApp.search(kind: String ?= null)
 GET	/tinx		ix.idg.controllers.TINXApp.tinx()
-GET	/tinx/target/:id		ix.idg.controllers.TINXApp.tinxForTarget(id: Long)
+GET	/tinx/target/:acc		ix.idg.controllers.TINXApp.tinxForTarget(acc: String)

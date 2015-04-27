@@ -1,61 +1,46 @@
 package ix.idg.controllers;
 
-import ix.core.controllers.search.SearchFactory;
+import akka.routing.Router;
+import com.avaje.ebean.Expr;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
-import ix.core.models.Keyword;
-import ix.core.models.Text;
-import ix.core.models.Value;
-import ix.core.models.VNum;
-import ix.core.models.XRef;
-import ix.core.models.Predicate;
-import ix.core.models.Structure;
-import ix.core.models.Mesh;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.models.EntityModel;
+import ix.core.models.Keyword;
+import ix.core.models.Mesh;
+import ix.core.models.Predicate;
 import ix.core.models.Publication;
+import ix.core.models.Structure;
+import ix.core.models.Text;
+import ix.core.models.VNum;
+import ix.core.models.Value;
+import ix.core.models.XRef;
 import ix.core.search.TextIndexer;
-import static ix.core.search.TextIndexer.*;
 import ix.idg.models.Disease;
-import ix.idg.models.Target;
 import ix.idg.models.Ligand;
-import ix.utils.Util;
-import ix.core.plugins.TextIndexerPlugin;
+import ix.idg.models.Target;
 import ix.ncats.controllers.App;
-
-import tripod.chem.indexer.StructureIndexer;
-import static tripod.chem.indexer.StructureIndexer.ResultEnumeration;
-
+import ix.utils.Util;
 import play.Logger;
-import play.cache.Cache;
-import play.libs.ws.WS;
-import play.mvc.Controller;
-import play.mvc.Result;
-import play.mvc.Call;
 import play.db.ebean.Model;
-import play.Play;
-import play.libs.Akka;
-import com.avaje.ebean.Expr;
-
+import play.mvc.Result;
+import tripod.chem.indexer.StructureIndexer;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.net.URLDecoder;
-import java.util.Comparator;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Vector;
 import java.util.concurrent.Callable;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.net.URLEncoder;
+
+import static ix.core.search.TextIndexer.Facet;
 
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
@@ -576,7 +561,43 @@ public class IDGApp extends App implements Commons {
             return _internalServerError (ex);
         }
     }
-    
+
+    static String csvFromTarget(Target t) {
+        Object novelty = "";
+        Object function = "";
+
+        StringBuilder sb2 = new StringBuilder();
+        String delimiter = "";
+        for (Publication pub : t.getPublications()) {
+            sb2.append(delimiter).append(pub.pmid);
+            delimiter = "|";
+        }
+
+        List<Value> props = t.getProperties();
+        for (Value v : props) {
+            if (v.label.equals("TINX Novelty")) novelty = v.getValue();
+            else if (v.label.equals("function")) function = v.getValue();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(routes.IDGApp.target(getId(t))).append(",").
+                append(getId(t)).append(",").
+                append(t.getName()).append(",").
+                append(csvQuote(t.getDescription())).append(",").
+                append(t.idgTDL.toString()).append(",").
+                append(novelty).append(",").
+                append(t.idgFamily).append(",").
+                append(csvQuote(function.toString())).append(",").
+                append(sb2.toString());
+        return sb.toString();
+    }
+
+    static String csvQuote(String s) {
+        if (s == null) return s;
+        if (s.contains("\"")) s = s.replace("\"", "\\\"");
+        return "\""+s+"\"";
+    }
+
     static Result _targets (final String q, int rows, final int page)
         throws Exception {
         Logger.debug("Targets: q="+q+" rows="+rows+" page="+page);
@@ -595,23 +616,39 @@ public class IDGApp extends App implements Commons {
                 (result.getFacets(), TARGET_FACETS);
             List<Target> targets = new ArrayList<Target>();
             int[] pages = new int[0];
+
+            String action = request().getQueryString("action");
+            if (action == null) action = "";
+
+            if (action.toLowerCase().equals("download")) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("URL,Uniprot ID,Name,Description,Development Level,Novelty,Target Family,Function,PMIDs\n");
+                if (result.count() > 0) {
+                    for (int i = 0; i < result.count(); i++) {
+                        Target t = (Target) result.getMatches().get(i);
+                        sb.append(csvFromTarget(t)).append("\n");
+                    }
+                }
+                return ok(sb.toString().getBytes()).as("text/csv");
+            }
+
             if (result.count() > 0) {
                 rows = Math.min(result.count(), Math.max(1, rows));
-                pages = paging (rows, page, result.count());
-                
-                for (int i = (page-1)*rows, j = 0; j < rows
-                         && i < result.count(); ++j, ++i) {
-                    targets.add((Target)result.getMatches().get(i));
+                pages = paging(rows, page, result.count());
+
+                for (int i = (page - 1) * rows, j = 0; j < rows
+                        && i < result.count(); ++j, ++i) {
+                    targets.add((Target) result.getMatches().get(i));
                 }
             }
-            
-            return ok (ix.idg.views.html.targets.render
-                       (page, rows, result.count(),
-                        pages, decorate (facets), targets));
+            return ok(ix.idg.views.html.targets.render
+                    (page, rows, result.count(),
+                            pages, decorate(facets), targets));
+
         }
         else {
             TextIndexer.Facet[] facets =
-                getFacets (Target.class, TARGET_FACETS);
+                getFacets(Target.class, TARGET_FACETS);
             rows = Math.min(total, Math.max(1, rows));
             int[] pages = paging (rows, page, total);               
             
@@ -741,7 +778,7 @@ public class IDGApp extends App implements Commons {
         try {
             String q = request().getQueryString("q");
             String t = request().getQueryString("type");
-            String a = request().getQueryString("action");
+
             if (kind != null && !"".equals(kind)) {
                 if (Target.class.getName().equals(kind))
                     return redirect (routes.IDGApp.targets(q, 30, 1));
@@ -962,7 +999,42 @@ public class IDGApp extends App implements Commons {
                          ("%1$dms", System.currentTimeMillis()-start));
         }
     }
-    
+
+    static String csvFromLigand(Ligand l) throws ClassNotFoundException {
+
+        String inchiKey = "";
+        String canSmi = "";
+
+        for (Value v : l.getProperties()) {
+            if (v.label.equals("ChEMBL InChI Key"))
+                inchiKey = (String) v.getValue();
+            else if (v.label.equals("ChEMBL Canonical SMILES"))
+                canSmi = (String) v.getValue();
+        }
+
+        StringBuilder sb2 = new StringBuilder();
+        String delimiter = "";
+        List<XRef> links = l.getLinks();
+        for (XRef xref : links) {
+            if (Target.class.isAssignableFrom(Class.forName(xref.kind))) {
+                sb2.append(delimiter).append(getId((Target) xref.deRef()));
+                delimiter = "|";
+            }
+        }
+
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(routes.IDGApp.ligand(getId(l))).append(",").
+                append(getId(l)).append(",").
+                append(csvQuote(l.getName())).append(",").
+                append(csvQuote(l.getDescription())).append(",").
+                append(canSmi).append(",").
+                append(inchiKey).append(",").
+                append(sb2.toString());
+        return sb.toString();
+    }
+
+
     static Result _ligands (final String q, int rows, final int page)
         throws Exception {
         Logger.debug("ligands: q="+q+" rows="+rows+" page="+page);
@@ -974,6 +1046,23 @@ public class IDGApp extends App implements Commons {
             
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), LIGAND_FACETS);
+
+            String action = request().getQueryString("action");
+            if (action == null) action = "";
+
+            if (action.toLowerCase().equals("download")) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("URL,ID,Name,Description,SMILES,InChI Key,Targets\n");
+                if (result.count() > 0) {
+                    for (int i = 0; i < result.count(); i++) {
+                        Ligand d = (Ligand) result.getMatches().get(i);
+                        sb.append(csvFromLigand(d)).append("\n");
+                    }
+                }
+                return ok(sb.toString().getBytes()).as("text/csv");
+            }
+
+
             List<Ligand> ligands = new ArrayList<Ligand>();
             int[] pages = new int[0];
             if (result.count() > 0) {
@@ -1304,7 +1393,27 @@ public class IDGApp extends App implements Commons {
             return _internalServerError (ex);
         }
     }
-    
+
+    static String csvFromDisease(Disease d) throws ClassNotFoundException {
+
+        StringBuilder sb2 = new StringBuilder();
+        String delimiter = "";
+        List<XRef> links = d.getLinks();
+        for (XRef xref : links) {
+            if (Target.class.isAssignableFrom(Class.forName(xref.kind))) {
+                sb2.append(delimiter).append(getId((Target) xref.deRef()));
+                delimiter = "|";
+            }
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(routes.IDGApp.disease(getId(d))).append(",").
+                append(getId(d)).append(",").
+                append(csvQuote(d.getName())).append(",").
+                append(csvQuote(d.getDescription())).append(",").
+                append(sb2.toString());
+        return sb.toString();
+    }
+
     static Result _diseases (String q, int rows, int page) throws Exception {
         Logger.debug("Diseases: rows=" + rows + " page=" + page);
         final int total = DiseaseFactory.finder.findRowCount();
@@ -1314,7 +1423,23 @@ public class IDGApp extends App implements Commons {
             
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), DISEASE_FACETS);
-            
+
+            String action = request().getQueryString("action");
+            if (action == null) action = "";
+
+            if (action.toLowerCase().equals("download")) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("URL,DOID,Name,Description,Targets\n");
+                if (result.count() > 0) {
+                    for (int i = 0; i < result.count(); i++) {
+                        Disease d = (Disease) result.getMatches().get(i);
+                        sb.append(csvFromDisease(d)).append("\n");
+                    }
+                }
+                return ok(sb.toString().getBytes()).as("text/csv");
+            }
+
+
             List<Disease> diseases = new ArrayList<Disease>();
             int[] pages = new int[0];
             if (result.count() > 0) {

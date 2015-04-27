@@ -59,8 +59,23 @@
          </li>
      }
   </ul>
+
     </div>
-    }      
+
+    }
+
+      <div class="btn-group pull-right" role="group">
+          <h3>
+          @if(request.uri.contains("?")) {
+              <a class="btn btn-default" href="@request.uri&action=download" role="button">
+                  <i class="fa fa-download fa-lg "></i></a>
+          } else {
+              <a class="btn btn-default" href="@request.uri?action=download" role="button">
+                  <i class="fa fa-download fa-lg "></i></a>
+          }
+          </h3>
+      </div>
+
   </div>
 </nav>
 
