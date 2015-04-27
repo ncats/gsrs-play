@@ -16,6 +16,7 @@ import ix.core.models.VNum;
 import ix.core.models.Value;
 import ix.core.models.XRef;
 import ix.core.search.TextIndexer;
+import ix.core.search.SearchOptions;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
@@ -111,6 +112,28 @@ public class IDGApp extends App implements Commons {
                 }
             }
             target = (Target)ref.deRef();
+        }
+    }
+
+    public static class DataSource {
+        final public String name;
+        public Integer targets;
+        public Integer diseases;
+        public Integer ligands;
+        public String href;
+
+        DataSource (String name) {
+            if (name.startsWith("ChEMBL"))
+                href = "https://www.ebi.ac.uk/chembl/";
+            else if (name.equalsIgnoreCase("iuphar"))
+                href = "http://www.guidetopharmacology.org/";
+            else if (name.startsWith("TCRD"))
+                href = "http://habanero.health.unm.edu";
+            else if (name.startsWith("DiseaseOntology"))
+                href = "http://www.disease-ontology.org";
+            else if (name.equalsIgnoreCase("uniprot"))
+                href = "http://www.uniprot.org";
+            this.name = name;
         }
     }
 
@@ -403,6 +426,66 @@ public class IDGApp extends App implements Commons {
     public static String getId (Target t) {
         Keyword kw = t.getSynonym(UNIPROT_ACCESSION);
         return kw != null ? kw.term : null;
+    }
+
+    /**
+     * return a list of all data sources
+     */
+    static DataSource[] _getDataSources () throws Exception {
+        SearchOptions opts = new SearchOptions (null, 1, 0, 100);           
+        TextIndexer.SearchResult results = textIndexer.search(opts, null);
+        Set<String> labels = new TreeSet<String>();
+        for (TextIndexer.Facet f : results.getFacets()) {
+            if (f.getName().equals(SOURCE)) {
+                for (TextIndexer.FV fv : f.getValues())
+                    labels.add(fv.getLabel());
+            }
+        }
+
+        Class[] entities = new Class[]{
+            Disease.class, Target.class, Ligand.class
+        };
+
+        List<DataSource> sources = new ArrayList<DataSource>();
+        for (String la : labels ) {
+            DataSource ds = new DataSource (la);
+            for (Class cls : entities) {
+                opts = new SearchOptions (cls, 1, 0, 100);
+                results = textIndexer.search(opts, null);
+                for (TextIndexer.Facet f : results.getFacets()) {
+                    if (f.getName().equals(SOURCE)) {
+                        for (TextIndexer.FV fv : f.getValues())
+                            if (la.equals(fv.getLabel())) {
+                                if (cls == Target.class)
+                                    ds.targets = fv.getCount();
+                                else if (cls == Disease.class)
+                                    ds.diseases = fv.getCount();
+                                else
+                                    ds.ligands = fv.getCount();
+                            }
+                    }
+                }
+            }
+            sources.add(ds);
+        }
+
+        return sources.toArray(new DataSource[0]);
+    }
+    
+    public static DataSource[] getDataSources () {
+        final String key = "IDGApp/datasources";
+        try {
+            return getOrElse (key, new Callable<DataSource[]> () {
+                    public DataSource[] call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
+                        return _getDataSources ();
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return new DataSource[0];
     }
     
     static final GetResult<Target> TargetResult =
@@ -1303,7 +1386,8 @@ public class IDGApp extends App implements Commons {
     }
     
     public static String getId (Disease d) {
-        Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID, "UniProt");
+        Keyword kw = d.getSynonym(DiseaseOntologyRegistry.DOID,
+                                  UNIPROT_DISEASE);
         return kw != null ? kw.term : null;
     }
     

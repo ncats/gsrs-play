@@ -1,6 +1,7 @@
-@import ix.core.controllers.NamespaceFactory
-@import ix.core.models.Namespace
 @import ix.core.search.TextIndexer.Facet
+@import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.Commons
+@import java.net.URLEncoder
 
 @(title: String, target: Facet, disease: Facet, ligand: Facet)
 
@@ -122,7 +123,6 @@
 		  </a>
 		</div>
             </div>
-	    @** the counts are wrong at the moment
 	    <div class="row">
 	      <div class="col-md-6 col-md-offset-3">
 		<div class="panel panel-default">
@@ -134,16 +134,16 @@
 			<th>Disease</th>
 			<th>Ligand</th>
 		      </tr>
-		      @for(ns <- NamespaceFactory.all()) {
+		      @for(source <- IDGApp.getDataSources()) {
 		        <tr>
-			  @if(ns.location != null) {
-			    <td><a href="@ns.location">@ns.name</a></td>
+			  @if(source.href != null) {	       
+			     <td><a href="@source.href">@source.name</a></td>
 			  } else {
-			    <td>@ns.name</td>
+			     <td>@source.name</td>
 			  }
-			  @fcol(ns.name, target)
-			  @fcol(ns.name, disease)
-			  @fcol(ns.name, ligand)
+			  <td><a href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(Commons.SOURCE,"utf8")+"/"+URLEncoder.encode(source.name,"utf8")}'>@source.targets</a></td>
+			  <td><a href='@{ix.idg.controllers.routes.IDGApp.diseases()+"?facet="+URLEncoder.encode(Commons.SOURCE,"utf8")+"/"+URLEncoder.encode(source.name,"utf8")}'>@source.diseases</a></td>
+			  <td><a href='@{ix.idg.controllers.routes.IDGApp.ligands()+"?facet="+URLEncoder.encode(Commons.SOURCE,"utf8")+"/"+URLEncoder.encode(source.name,"utf8")}'>@source.ligands</a></td>
 			</tr>
 	              }
 	            </table>
@@ -151,7 +151,6 @@
 		</div>
 	      </div>
 	    </div>
-	    **@
             <div class="row">
 	        <div class="col-md-6 col-md-offset-3">
 	          <pre>build: @ix.ncats.views.txt.build()</pre>

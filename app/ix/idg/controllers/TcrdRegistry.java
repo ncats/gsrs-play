@@ -10,6 +10,7 @@ import ix.core.models.Publication;
 import ix.core.models.Structure;
 import ix.core.models.Predicate;
 import ix.core.models.Text;
+import ix.core.models.Value;
 import ix.core.models.VNum;
 import ix.core.models.XRef;
 import ix.core.plugins.PersistenceQueue;
@@ -241,7 +242,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     if (label.equalsIgnoreCase("Pseudokinase"))
                         break;
                 }
-                else if (target.idgFamily.equals("NR")) {
+                else if (target.idgFamily.equals("Nuclear Receptor")) {
                     // nothing to check
                 }
 
@@ -324,7 +325,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm2.setLong(1, t.id);
             pstm3.setLong(1, t.id);
             RegisterLigands reglig = new RegisterLigands
-                (chembl, target, pstm2, pstm3);
+                (chembl, target, pstm2, pstm3, t.source);
             reglig.persists();
 
             for (Ligand lig : reglig.getLigands())
@@ -394,12 +395,29 @@ public class TcrdRegistry extends Controller implements Commons {
                         disease = dl.iterator().next();
                         DISEASES.putIfAbsent(doid, disease);
                     }
+
+                    { Value val = null;
+                        for (Value v : disease.properties)
+                            if (v == source) {
+                                val = v;
+                                break;
+                            }
+                        if (val == null) {
+                            disease.properties.add(source);
+                            disease.update();
+                        }
+                    }
                     
                     double zscore = rs.getDouble("zscore");
                     double conf = rs.getDouble("conf");
                     double tinx = rs.getDouble("score");
 
-                    TINX tinxe = new TINX(tcrdTarget.acc, doid, tcrdTarget.novelty, tinx);
+                    /**
+                     * TODO: tinx should reference disease and target 
+                     * directly instead of just the uniprot and doid!
+                     */
+                    TINX tinxe = new TINX
+                        (tcrdTarget.acc, doid, tcrdTarget.novelty, tinx);
                     tinxe.save();
 
                     XRef xref = null;
@@ -552,14 +570,17 @@ public class TcrdRegistry extends Controller implements Commons {
         final PreparedStatement chembl;
         final PreparedStatement drug;
         final List<Ligand> allligands = new ArrayList<Ligand>();
+        final Keyword source;
 
         RegisterLigands (ChemblRegistry registry,
                          Target target, PreparedStatement chembl,
-                         PreparedStatement drug) throws SQLException {
+                         PreparedStatement drug, Keyword source)
+            throws SQLException {
             this.registry = registry;
             this.target = target;
             this.chembl = chembl;
             this.drug = drug;
+            this.source = source;
         }
 
         List<Ligand> loadChembl () throws SQLException {
@@ -579,6 +600,7 @@ public class TcrdRegistry extends Controller implements Commons {
                          +chemblId);
                     Ligand ligand = new Ligand (chemblId);
                     ligand.synonyms.add(kw);
+                    ligand.properties.add(source);
                     ligands.add(ligand);
                 }
                 else {
@@ -633,9 +655,13 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                     ligand.description = desc;
                     ligand.synonyms.add(kw);
-                    kw = KeywordFactory.registerIfAbsent
-                        (SOURCE, rs.getString("source"), ref);
-                    ligand.properties.add(kw);
+                    String src = rs.getString("source");
+                    if (!src.equalsIgnoreCase("chembl")) {
+                        kw = KeywordFactory.registerIfAbsent
+                            (SOURCE, src, ref);
+                        ligand.properties.add(kw);
+                    }
+                    ligand.properties.add(source);
                     ligands.add(ligand);
                 }
                 else {
@@ -666,10 +692,8 @@ public class TcrdRegistry extends Controller implements Commons {
             while (rs.next()) {
                 String drug = rs.getString("drug");
                 String ref = rs.getString("reference");
-
-                Keyword source = KeywordFactory.registerIfAbsent
-                    (SOURCE, rs.getString("source"), ref);
-
+                String src = rs.getString("source");
+                
                 List<Ligand> ligs = LigandFactory.finder
                     .where(Expr.and
                            (Expr.eq("synonyms.label", ChEMBL_SYNONYM),
@@ -689,6 +713,16 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                     ligand.description = desc;
                     ligand.synonyms.add(kw);
+                    
+                    if (!src.equalsIgnoreCase("chembl")) {
+                        kw = KeywordFactory.registerIfAbsent(SOURCE, src, ref);
+                        ligand.properties.add(kw);
+                    }
+                    else if (src.equalsIgnoreCase("iuphar")) {
+                        kw = KeywordFactory.registerIfAbsent
+                            (SOURCE, src, "http://www.guidetopharmacology.org/");
+                        ligand.properties.add(kw);
+                    }
                     ligand.properties.add(source);
 
                     if (ref != null && ref.indexOf("CHEMBL") > 0) {

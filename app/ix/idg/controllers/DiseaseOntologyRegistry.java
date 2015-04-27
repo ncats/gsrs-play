@@ -2,6 +2,7 @@ package ix.idg.controllers;
 
 import com.avaje.ebean.Expr;
 import ix.core.controllers.NamespaceFactory;
+import ix.core.controllers.KeywordFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Namespace;
 import ix.core.models.Text;
@@ -29,19 +30,24 @@ public class DiseaseOntologyRegistry {
     static Namespace namespace = NamespaceFactory.registerIfAbsent
         ("Disease Ontology", "http://www.disease-ontology.org");
 
-    
+    Keyword source;
     Map<String, String> parents  = new HashMap<String, String>();
     Map<String, Disease> diseaseMap = new HashMap<String, Disease>();
     
     public DiseaseOntologyRegistry () {
     }
+    
+    public Keyword getSource () { return source; }
 
     /**
      * bulk registration from .obo file
      */
     public Map<String, Disease> register (InputStream is) throws IOException {
         OboParser obo = new OboParser (is);
-
+        source = KeywordFactory.registerIfAbsent
+            (Commons.SOURCE, "DiseaseOntology v"+obo.version,
+             "http://www.disease-ontology.org");
+        
         while (obo.next()) {
             if (obo.obsolete)
                 continue;
@@ -57,6 +63,7 @@ public class DiseaseOntologyRegistry {
                 Keyword kw = new Keyword (DOID, obo.id);
                 kw.href = "http://www.disease-ontology.org/term/"+obo.id;
                 disease.synonyms.add(kw);
+                disease.properties.add(source);
                 for (String id : obo.alts) {
                     kw = new Keyword (DOID, id);
                     //kw.href = "http://www.disease-ontology.org/api/metadata/"+id;

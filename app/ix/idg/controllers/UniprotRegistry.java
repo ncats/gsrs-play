@@ -231,6 +231,7 @@ public class UniprotRegistry extends DefaultHandler implements Commons {
                     (UNIPROT_DISEASE,
                      id, "http://www.uniprot.org/diseases/"+id);
                 disease.synonyms.add(kw);
+                disease.properties.add(Source);
             }
             else {
                 disease = diseases.iterator().next();
