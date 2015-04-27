@@ -1,9 +1,10 @@
-@(title: String, kind: String)(menu: Html)(breadcrumb: Html)(content: Html)
+@(title: String, kind: String)(menu: Html)(breadcrumb: Html)(content:
+Html)
 
 <!DOCTYPE html>
 <html>
-  <head>
-    <!--[if lte IE 9]>
+<head>
+<!--[if lte IE 9]>
 	<style type="text/css">
 #ie6msg{border:3px solid #c33; margin:8px 0; background:#fcc; color:#000;}
 #ie6msg h4{margin:8px; padding:0;}
@@ -18,54 +19,60 @@
 	    <a class="ie6expl" href="https://www.google.com/chrome/S">Chrome</a>.</p>
 	</div>
 	<![endif]-->
-    <title>@title</title>
-    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
-    <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
-    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/jquery.treegrid.css")'>
-    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/footer.css")'>
-    <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ginas.css")'>
-        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
-    <script src='@routes.Assets.at("javascripts/jquery.treegrid.js")'></script>
-    <script src='@routes.Assets.at("javascripts/jquery.treegrid.bootstrap3.js")'></script>
-    <script src='@routes.WebJarAssets.at(WebJarAssets.locate("html2canvas.js"))'></script>
-  <script src='@routes.Assets.at("javascripts/marvin/gui/lib/promise-0.1.1.min.js")'></script>
-    <script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script>
+<title>@title</title>
+<link rel="stylesheet"
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
+<link rel="stylesheet"
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+<link rel="stylesheet"
+	href='@routes.Assets.at("ncats/css/jquery.treegrid.css")'>
+<link rel="stylesheet" href='@routes.Assets.at("ncats/css/footer.css")'>
+<link rel="stylesheet" href='@routes.Assets.at("ginas/css/ginas.css")'>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'
+	type='text/javascript'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
+<script src='@routes.Assets.at("javascripts/jquery.treegrid.js")'></script>
+<script
+	src='@routes.Assets.at("javascripts/jquery.treegrid.bootstrap3.js")'></script>
+<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("html2canvas.js"))'></script>
+<script
+	src='@routes.Assets.at("javascripts/marvin/gui/lib/promise-0.1.1.min.js")'></script>
+<script
+	src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script>
 
-    @screengrab()
-    @filereader()
+@screengrab() 
+@filereader()
 
-  </head>
-  <body  data-spy="scroll" data-target = "#breadcrumb" data-offset="215">
-   	<div class="container-fluid" id = "logo-banner">
-	<div class = "row-fluid" id="main-banner">
-	<div class = "col-md-2">
-	<img src="@routes.Assets.at("ginas/images/logo.png")" class = "img-responsive" id = "logo" />
+</head>
+<body data-spy="scroll" data-target="#breadcrumb" data-offset="215">
+	<div class="container-fluid" id="logo-banner">
+		<div class="row-fluid" id="main-banner">
+			<div class="col-md-2">
+				<img src="@routes.Assets.at("ginas/images/logo.png")" class="img-responsive" id="logo" />
+			</div>
+			<div class="col-md-2" id="version">
+				<span>development 0.9513</span>
+			</div>
+		</div>
+		<div class="row-fluid" id="main-menu">@menu @ssearch("GET",
+			ix.ginas.controllers.routes.GinasApp.search(null))</div>
+		<div class="row-fluid" id="main-breadcrumb">@breadcrumb</div>
 	</div>
-	<div class ="col-md-2" id="version">
-	<span>development 0.9513</span>
-	</div>
-	</div>
-	<div class = "row-fluid" id ="main-menu">	
-  @menu
-  @ssearch("GET", ix.ginas.controllers.routes.GinasApp.search(null))
-  </div>
-  	<div class = "row-fluid" id ="main-breadcrumb">
-  	@breadcrumb	
-  </div>
-  </div> 
-    <div class="container" id = "content">
-    @content
-    </div>
-<script>
+	<div class="container" id="content">@content</div>
+	<script>
   $(document).ready(function(){
 	  var sketcher;
 	  MarvinJSUtil.getEditor("#sketcher").then(function(sketcherInstance) {
 	  	sketcher = sketcherInstance;
-	  	 console.log(sketcher.getSupportedFormats());
 	  }, function(error) {
 	  	alert("Loading of the sketcher failed"+error);
 	  });
@@ -79,13 +86,40 @@
 	       $.get(url, function (mol) {
 	           sketcher.importAsMol(mol);
 	           console.log("imported)");
-	       console.log($('#canvas'));
+	           $("div.gwt-PushButton[title^=Zoom]").click();
+	       console.log('clicked?');
 		 });
 	     }
 	  });
 	  
-	  
-	  
+	  $('#cccc').click(function() {
+	  console.log("codes");
+	  });
+	 
+	  function setQuery (value) {
+		  console.log(value);
+		  $.ajax({
+		    type: "POST",
+		    url: '@ix.ncats.controllers.routes.App.smiles',
+		    contentType: 'text/plain',
+		    data: value,
+		    success: function (data) {
+		    	
+		       console.log(' => '+data);
+		       $('#structure').val(data);
+		    },
+		    error: function (xhr, status) {
+		       console.error("Can't convert to smiles");
+		    },
+		    dataType: 'text'
+		   });
+		}
+
+		function setMarvin (sk) {
+		   //console.log(sk);
+		   sketcher = sk;
+		}
+
     $('.zoom').hover(function() {
         $(this).addClass('transition');
         $(this).find('#strucSearch').removeClass('hidden').addClass('normal');
@@ -99,6 +133,6 @@
     });
   });
 </script>
-  </body>
+</body>
 
 </html>
