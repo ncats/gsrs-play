@@ -1,70 +1,125 @@
 @import ix.idg.models.Target
 @import ix.idg.controllers.IDGApp
-@import ix.idg.controllers.TcrdRegistry
-@import ix.idg.controllers.ChemblRegistry
 @import ix.idg.controllers.Commons._
 @import ix.ncats.controllers.App.FacetDecorator
 
-@(current: Int, rows: Int, total: Int, pages: Array[Int],
-     facets: Array[FacetDecorator], targets: List[Target])
+@(current: Int, rows: Int, total: Int, pages: Array[Int], facets: Array[FacetDecorator], targets: List[Target])
 
 @tabrow(t: Target) = {
-
-<tr>
-  <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
-  <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
-	    data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
-  <td>@IDGApp.format(t.novelty)</td>
-  <td>@t.idgFamily</td>
-</tr>
+    <tr id="row-@IDGApp.getId(t)">
+        <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
+        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
+        data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
+        <td>@IDGApp.format(t.novelty)</td>
+        <td>@t.idgFamily</td>
+    </tr>
 }
 
 @ix.ncats.views.html.content("Targets", "ix.idg.models.Target",
-ix.idg.controllers.routes.IDGApp.targets().url,
-current, rows, total, pages, facets){
-@menu("ix.idg.models.Target"){
-<ul class="nav navbar-nav navbar-left">
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null,10,1)">Diseases</a></li>
-  <li role="presentation" class="active"><a href="#">Targets</a></li>
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null,8,1)">Ligands</a></li>
-</ul>
-}
-}{
-<ol class="breadcrumb">
-  <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
-  @defining(request().queryString.get("facet")) { facets =>
-     @if(facets != null) {
-      <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
-       @for(f <- facets) {
-          @if(f.startsWith(DTO_PROTEIN_CLASS)) {
-	     @for(a <- IDGApp.getProteinAncestry(f)) {
-	        <li><a href="@a.href">@a.term</a></li>
-             }
-	     <li class="active">@f.substring(f.indexOf('/')+1)</li>
-	  }
-       }
-     } else {
-       <li class="active">Targets</li>
-     }
-  }
-</ol>
-}{
-<table class="table table-striped">
-  <tr>
-    <th>Name</th>
-    <th>Development Level</th>
-    <th>Novelty</th>
-    <th>Target Family</th>
-  </tr>
-  @for(t <- targets) {
-     @tabrow(t)
-   }
-</table>
+    ix.idg.controllers.routes.IDGApp.targets().url,
+    current, rows, total, pages, facets) {
+    @menu("ix.idg.models.Target") {
+        <ul class="nav navbar-nav navbar-left">
+            <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null, 10, 1)">Diseases</a></li>
+            <li role="presentation" class="active"><a href="#">Targets</a></li>
+            <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 8, 1)">Ligands</a></li>
+        </ul>
+    }
+} {
+    <ol class="breadcrumb">
+        <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
+        @defining(request().queryString.get("facet")) { facets =>
+            @if(facets != null) {
+                <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
+                @for(f <- facets) {
+                    @if(f.startsWith(DTO_PROTEIN_CLASS)) {
+                        @for(a <- IDGApp.getProteinAncestry(f)) {
+                            <li><a href="@a.href">@a.term</a></li>
+                        }
+                        <li class="active">@f.substring(f.indexOf('/') + 1)</li>
+                    }
+                }
+            } else {
+                <li class="active">Targets</li>
+            }
+        }
+    </ol>
+} {
+    <table id="target-table" class="table table-hover">
+        <tr>
+            <th>Name</th>
+            <th>Development Level</th>
+            <th>Novelty</th>
+            <th>Target Family</th>
+        </tr>
+        @for(t <- targets) {
+            @tabrow(t)
+        }
+    </table>
+} {
+    <div id="tinx-map">
+    </div>
 }
 
+
+
+<head>
+    <style type="text/css">
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: black;
+        shape-rendering: crispEdges;
+    }
+
+    .axis text {
+        font-family: sans-serif;
+        font-size: 11px;
+    }
+
+    .point:hover {
+        opacity: 0.5;
+      }
+
+    .tick text {
+        visibility:inherit;
+    }
+
+    </style>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
+</head>
+
 <script>
-$(function () {
-  $('[data-toggle="popover"]').popover();
-  $('[data-toggle="tooltip"]').tooltip();
-});
+$ ( function() {
+$ ( '[data-toggle="popover"]' ).popover () ;
+$ ( '[data-toggle="tooltip"]' ).tooltip () ;
+} ) ;
+
+$ (document).ready ( function() {
+
+    var accsInPage = [];
+    @for(t <- targets) {
+        accsInPage.push("@IDGApp.getId(t)");
+    }
+
+    tinx_plot("#tinx-map", accsInPage, highlightTargetTable, unhighlightTargetTable);
+
+    $("#target-table tr" ).mouseover(function() {
+        var id = $(this ).attr("id");
+        if (id == undefined) return;
+        var acc = id.split("-")[1];
+        var pt = $("#point-"+acc);
+        $(pt).attr("oldfill", $(pt ).css("fill"));
+        $(pt).css("fill", "green");
+    });
+    $ ( "#target-table tr" ).mouseout ( function ( ) {
+        var id = $ ( this ).attr ( "id" ) ;
+        if ( id == undefined ) return ;
+        var acc = id.split ( "-" )[ 1 ] ;
+        var pt = $ ( "#point-" + acc ) ;
+        $ ( pt ).css ( "fill", $ ( pt ).attr ( "oldfill" ) ) ;
+    } ) ;
+
+} ) ;
 </script>
