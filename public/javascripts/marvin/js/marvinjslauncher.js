@@ -87,6 +87,10 @@
 			});
 		}
 	}
+
+	if (!("Promise" in win) && ("ES6Promise" in win) && ("polyfill" in win.ES6Promise)) {
+		win.ES6Promise.polyfill();
+	}
 	
 	win.MarvinJSUtil = {
 		"getEditor": function getEditor (elementId) {

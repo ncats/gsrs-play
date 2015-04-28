@@ -29,18 +29,29 @@
 @ix.ncats.views.html.ssearch("GET", ix.idg.controllers.routes.IDGApp.search(null))
 
 <script>
-  $('#strucModal').on('show.bs.modal', function (ev) {
-     var button = $(ev.relatedTarget);
-     var url = button.data('molurl');
-     console.log('molurl: '+url);
-     if (url) {
-       $.get(url, function (mol) {
-           sketcher.importStructure('mol',mol).catch(function(error) {
-	     	alert(error);
-	   });
-	 });
-     }
+  var marvinSketcherInstance;
+  $(document).ready(function (e) {
+     MarvinJSUtil.getEditor("#sketcher").then(function (marvin) {
+           marvinSketcherInstance = marvin;
+           initControls();
+        }, function (err) {
+           alert("Can't retrieve sketcher instance from iframe:"+err);
+        });
   });
+
+  function initControls () {
+     $('#strucModal').on('shown.bs.modal', function (ev) {
+        var button = $(ev.relatedTarget);
+        var url = button.data('molurl');
+        console.log('molurl: '+url);
+        if (url) {
+           $.get(url, function (mol) {
+              //console.log(mol);
+              marvinSketcherInstance.importStructure('mol', mol);
+	   });
+        }
+     });
+  }
 </script>
 }
 

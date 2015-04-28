@@ -432,7 +432,7 @@ public class IDGApp extends App implements Commons {
      * return a list of all data sources
      */
     static DataSource[] _getDataSources () throws Exception {
-        SearchOptions opts = new SearchOptions (null, 1, 0, 100);           
+        SearchOptions opts = new SearchOptions (null, 1, 0, 10);           
         TextIndexer.SearchResult results = textIndexer.search(opts, null);
         Set<String> labels = new TreeSet<String>();
         for (TextIndexer.Facet f : results.getFacets()) {
@@ -450,7 +450,7 @@ public class IDGApp extends App implements Commons {
         for (String la : labels ) {
             DataSource ds = new DataSource (la);
             for (Class cls : entities) {
-                opts = new SearchOptions (cls, 1, 0, 100);
+                opts = new SearchOptions (cls, 1, 0, 10);
                 results = textIndexer.search(opts, null);
                 for (TextIndexer.Facet f : results.getFacets()) {
                     if (f.getName().equals(SOURCE)) {
