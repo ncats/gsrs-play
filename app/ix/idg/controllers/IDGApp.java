@@ -104,7 +104,7 @@ public class IDGApp extends App implements Commons {
 
         LigandActivity (XRef ref) {
             for (Value v : ref.properties) {
-                if (v.label.equals(ChEMBL_MECHANISM)) {
+                if (ChEMBL_MECHANISM.equals(v.label)) {
                     mechanism = ((Text)v).text;
                 }
                 else if (v instanceof VNum) {
@@ -416,6 +416,8 @@ public class IDGApp extends App implements Commons {
         if (value != null) {
             if (value < 0.)
                 return String.format("%1$.5f", value);
+            if (value < 0.001)
+                return String.format("%1$.5f", value);
             if (value < 10.)
                 return String.format("%1$.3f", value);
             return String.format("%1$.1f", value);
@@ -520,7 +522,7 @@ public class IDGApp extends App implements Commons {
     static List<Keyword> getBreadcrumb (Target t) {
         List<Keyword> breadcrumb = new ArrayList<Keyword>();
         for (Value v : t.properties) {
-            if (v.label.startsWith(DTO_PROTEIN_CLASS)) {
+            if (v.label != null && v.label.startsWith(DTO_PROTEIN_CLASS)) {
                 try {
                     Keyword kw = (Keyword)v;
                     String url = ix.idg.controllers
@@ -1089,9 +1091,9 @@ public class IDGApp extends App implements Commons {
         String canSmi = "";
 
         for (Value v : l.getProperties()) {
-            if (v.label.equals("ChEMBL InChI Key"))
+            if (ChEMBL_INCHI_KEY.equals(v.label))
                 inchiKey = (String) v.getValue();
-            else if (v.label.equals("ChEMBL Canonical SMILES"))
+            else if (ChEMBL_SMILES.equals(v.label))
                 canSmi = (String) v.getValue();
         }
 
@@ -1285,7 +1287,7 @@ public class IDGApp extends App implements Commons {
         for (XRef ref : model.getLinks()) {
             if (ref.kind.equals(Target.class.getName())) {
                 for (Value v : ref.properties) {
-                    if (v.label.equals(IDG_DEVELOPMENT)) {
+                    if (IDG_DEVELOPMENT.equals(v.label)) {
                         tdls.add(Target.TDL.fromString(((Keyword)v).term));
                     }
                 }
@@ -1299,7 +1301,7 @@ public class IDGApp extends App implements Commons {
         for (XRef ref : lig.links) {
             if (ref.kind.equals(Target.class.getName())) {
                 for (Value v : ref.properties) {
-                    if (v.label.equals(ChEMBL_MECHANISM))
+                    if (ChEMBL_MECHANISM.equals(v.label))
                         moa.add(((Text)v).text);
                 }
             }

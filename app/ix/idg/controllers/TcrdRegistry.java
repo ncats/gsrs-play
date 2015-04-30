@@ -331,6 +331,7 @@ public class TcrdRegistry extends Controller implements Commons {
             for (Ligand lig : reglig.getLigands())
                 if (lig.id != null)
                     LIGANDS.put(lig.id, lig);
+            target.update();
         }
     }
 
@@ -397,11 +398,21 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
 
                     { Value val = null;
-                        for (Value v : disease.properties)
+                        for (Value v : disease.properties) {
                             if (v == source) {
                                 val = v;
                                 break;
                             }
+                            else if (v instanceof Keyword) {
+                                Keyword kw = (Keyword)v;
+                                if (kw.label.equals(source.label)
+                                    && kw.term.equals(source.term)) {
+                                    val = kw;
+                                    break;
+                                }
+                            }
+                        }
+                        
                         if (val == null) {
                             disease.properties.add(source);
                             disease.update();
@@ -986,7 +997,8 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
-                 +"where b.tdl = 'Tclin'\n"
+                 //+"where b.tdl = 'Tclin'\n"
+                 //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
                  //+"where c.uniprot in ('A5X5Y0')\n"
                  //+"where c.uniprot in ('Q7RTX7')\n"

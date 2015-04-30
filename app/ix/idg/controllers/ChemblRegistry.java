@@ -524,7 +524,11 @@ public class ChemblRegistry implements Commons {
                 Logger.debug("........activity "+actId
                              +"[tid="+tid+",assay="+rset.getLong("assay_id")
                              +",pmid="+pmid
-                             +"] -> "+value+num.unit+" ["+num.id+"]");
+                             +"] -> "+type+" "+value+num.unit+" ["+num.id+"]");
+                if (type == null) {
+                    Logger.warn("activity type is null!");
+                }
+
                 lref.properties.add(num);
                 tref.properties.add(num);
                 act = num;
