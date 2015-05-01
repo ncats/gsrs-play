@@ -57,8 +57,79 @@ margin-left: -1px !important;
 
 #ncatsRibbon {
 height: 30px;
-width: 100%;
 background-color: #642F6C;
 margin-bottom: 1%;
 color: #fff;
+}
+
+#ncatsRibbon a {
+margin-top: 4px;
+padding-left: 1%;
+color: #fff;
+}
+
+a:hover, a:focus {
+text-decoration: underline;
+}
+
+.panel-primary>.panel-heading {
+background-color: #642F6C !important;
+border-color: #642F6C !important;
+}
+
+#skipnav {
+height: 1px;
+left: -9000px;
+overflow: hidden;
+position: absolute;
+width: 1px;
+}
+
+#searchRight {
+float: right;
+}
+
+#searchRight input[type='submit'] {
+background-color: #fff;
+border: 1px solid #cccccc;
+-webkit-border-radius: 2px;
+-moz-border-radius: 2px;
+border-radius: 2px;
+font-size: 14px;
+color: #333333;
+height: 24px;
+}
+
+#ncatssearch {
+float: right;
+}
+
+#utilityLinks {
+float: right;
+}
+
+.nav.navbar-nav.list-inline.tb-megamenu-nav.nav.level-0.items-6 {
+width: 100%;
+}
+
+.tb-megamenu-item.level-1.mega.dropdown {
+padding: 0px;
+}
+
+.navbar.navbar-default {
+background: none;
+border: none;
+}
+
+#research {
+padding-right: 1px;
+}
+
+.icon {
+max-height: 100px;
+}
+
+.imagediv{
+	text-align:center;
+padding-top: 50px;
 }

@@ -1,0 +1,501 @@
+.navbar-header{
+display:none;}
+#navbar .container, .navbar-collapse.collapse{
+padding:0;
+}
+
+.nav-collapse.collapse.always-show{
+visibility:visible;
+display:block;
+font-family: 'Trebuchet MS';
+font-size: .938em;
+}
+
+.tb-megamenu{
+border-bottom: 3px solid #ccc;}
+
+.tb-megamenu-nav > .tb-megamenu-item {
+    text-align: center;
+    width: 20% !important;
+/*	font-size: 1.068em;*/
+font-size: 1.3em;
+}
+
+.tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child {
+     margin-left: -1%;
+    width: 102%;
+}
+.active .tb-megamenu-item.level-2.mega.dropdown-submenu{
+
+/*.active .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child{*/
+ margin-left: 0;
+ width:100% !important;
+}
+.tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow {
+    left: 105%;
+    top: 0;
+	box-shadow: none;
+	border: none;
+}
+.tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child{
+border-bottom:none;
+}
+
+.tb-megamenu .nav li.dropdown.open > .dropdown-toggle, .tb-megamenu .nav li.dropdown.active > .dropdown-toggle,
+.tb-megamenu .nav li.dropdown.open.active > .dropdown-toggle, 
+.tb-megamenu .dropdown-menu li > a:hover,
+.tb-megamenu .dropdown-menu li > a:focus,
+.tb-megamenu .dropdown-submenu:hover > a, 
+.tb-megamenu .nav-collapse .nav > li > a:hover,
+.tb-megamenu .nav-collapse .nav > li > a:focus , 
+.tb-megamenu .block-view-demo a:hover,
+.tb-megamenu .block-view-demo a:focus   {
+	/*color: yellow;*/
+}
+.tb-megamenu .dropdown-menu li > a:hover,
+.tb-megamenu .dropdown-menu li > a:focus,.tb-megamenu .dropdown-submenu:hover > a{
+color: #105ba8;}
+
+/*first level drop down*/
+.tb-megamenu-submenu.ncatsNav-sub.dropdown-menu.mega-dropdown-menu.nav-child, 
+.tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child{
+box-shadow: none;
+border-left: 3px solid #ccc;
+border-bottom: 3px solid #ccc;
+border-right: none;
+}
+.tb-megamenu-column-inner.mega-inner.clearfix{
+	
+	box-shadow: none;
+	}
+	
+	
+.tb-megamenu-column-inner.mega-inner.clearfix{
+    /*height: 470px;*/
+	height: 280px;
+}
+
+
+.tb-megamenu-item  .dropdown-submenu .secondNav{
+	border-right: 3px solid #ccc !important;
+	border-bottom: 3px solid #ccc !important;
+	 /*height: 473px;*/
+	 height: 282px;
+	 overflow: hidden;
+	 width: 330px !important;
+}
+
+	
+.tb-megamenu-subnav.mega-nav.level-2{
+/*background-color: orange !important;*/
+color: #3e7488;
+}
+
+.tb-megamenu-subnav.mega-nav.level-2.open,.tb-megamenu-subnav.mega-nav.level-2.animating, .tb-megamenu-item.level-3.mega.open, .tb-megamenu-item.level-3.mega.animating, .tb-megamenu-item.level-3.mega.open >a, .tb-megamenu-item.level-3.mega.animating > a{
+background-color: transparent !important;
+
+}
+.tb-megamenu-item.level-2.mega {
+
+    display: inline-block !important;
+    height: 44px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+
+.tb-megamenu-item  .dropdown-submenu .secondNav{
+  background-image: url("../images/menugradient.jpg");
+  background-size: 100% 10px;
+ /* background-color: #f0f0ee;*/
+  border-top: 3px solid #ccc !important;
+  }
+
+.tb-megamenu-item  .dropdown-submenu:nth-child(1) .secondNav{
+/*background-color: green !important;*/
+top: -7% !important;}
+
+
+/*.tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child*/
+
+.tb-megamenu-item  .dropdown-submenu:nth-child(2) .secondNav{
+/*background-color: yellow !important;*/
+top: -58px !important;}
+
+.tb-megamenu-item  .dropdown-submenu:nth-child(3) .secondNav{
+/*background-color: brown !important;*/
+top: -112px !important;}
+.tb-megamenu-item  .dropdown-submenu:nth-child(4) .secondNav{
+top: -166px !important;
+/*background-color: purple !important;*/}
+.tb-megamenu-item  .dropdown-submenu:nth-child(5) .secondNav{
+/*background-color: blue !important;*/
+top: -230px !important;
+}
+.tb-megamenu-item  .dropdown-submenu:nth-child(6) .secondNav{
+/*background-color: white !important;*/}
+.tb-megamenu-item  .dropdown-submenu:nth-child(7) .secondNav{
+/*background-color: black !important;*/}
+
+.tb-megamenu-item.level-1{
+	width: 100%;
+
+background: #497c8e; /* Old browsers */
+background: -moz-linear-gradient(top,  #497c8e 0%, #2b5b6d 42%, #2b5b6d 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#497c8e), color-stop(42%,#2b5b6d), color-stop(100%,#2b5b6d)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#497c8e', endColorstr='#2b5b6d',GradientType=0 );
+}
+
+.tb-megamenu-item.level-1:hover{
+border-top: 3px solid #ccc;
+border-right: 3px solid #ccc;
+border-left: 3px solid #ccc;
+/*margin: -3px 0 0 -3px;*/
+margin-top:-3px;
+-moz-border-radius: 10px 10px 0 0;
+border-radius: 10px 10px 0 0;
+background-color: #fff;
+}
+.tb-megamenu .nav > li > a:hover{
+-moz-border-radius: 10px 10px 0 0;
+border-radius: 10px 10px 0 0;
+}
+.tb-megamenu-item.level-1:hover > a{
+border-right: none;
+}
+
+.tb-megamenu-item.level-1.mega.dropdown.active > a , .tb-megamenu-item.level-1.mega.active > a, .tb-megamenu-item.level-1.mega.dropdown.active > a:hover, .tb-megamenu-item.level-1.mega.active > a:hover, .tb-megamenu-item.level-1.mega.dropdown.active.animating > a, .tb-megamenu-item.level-1.mega.dropdown.active.open > a{
+
+-moz-border-radius: 10px 10px 0 0;
+border-radius: 10px 10px 0 0;
+background-color: #fff !important;
+border-top: 3px solid #ccc;
+border-right: 3px solid #ccc;
+border-left: 3px solid #ccc;
+/*margin-top: -3px;*/
+}
+
+.tb-megamenu-item.level-1.mega.dropdown.active > a , .tb-megamenu-item.level-1.mega.active > a, .tb-megamenu-item.level-1.mega.dropdown.active.animating > a, .tb-megamenu-item.level-1.mega.dropdown.active.open > a{
+margin-top: -3px;
+}
+
+.tb-megamenu .nav .active>li, .tb-megamenu .nav > li > a:focus,
+.tb-megamenu .nav > li > a:hover, .tb-megamenu .nav li.dropdown.open > .dropdown-toggle, .tb-megamenu .nav > li:hover, .nav .open > a, .nav .open > a:hover, .nav .open > a:focus, .tb-megamenu .nav > li > a:focus,
+.tb-megamenu .nav > li > a:hover, .tb-megamenu .nav a.animating{
+/*background-color:purple;*/
+background-color: #fff !important; /*overrides grey background of megamenu*/
+color: #497c8f;
+}
+
+.tb-megamenu .tb-megamenu-item.level-1.open, .tb-megamenu-item.level-1.animating{
+
+background-color: #fff !important;
+color: #105ba8 !important; 
+}
+
+.nav .open > a, .nav .open > a:hover, .nav .open > a:focus, .tb-megamenu .nav > li > a:focus,
+.tb-megamenu .nav > li > a:hover, .tb-megamenu .nav a.animating{
+/*background-color: orange;*/}
+
+
+.tb-megamenu-item.level-1.mega.dropdown.active:hover,
+.tb-megamenu-item.level-1.mega.dropdown.active.animating{
+background-color: #fff !important; border: none;}
+
+
+.tb-megamenu .nav li.dropdown.active > .dropdown-toggle,
+.tb-megamenu .nav li.dropdown.open.active > .dropdown-toggle,
+.tb-megamenu .nav > li.dropdown.open.active > a:hover {
+  background-color: none; 
+/*  border-color: #444;*/
+border: 3px solid #ccc;
+border-bottom: none !important;
+	color: #497c8f;
+}
+
+.tb-megamenu-item.level-1.mega.dropdown.active.open, .tb-megamenu-item.level-1.mega.dropdown.active.animating{
+margin-top:0px;
+}
+.tb-megamenu .dropdown-menu li > a{
+border-top: none !important;}
+
+.tb-megamenu .dropdown-menu .active > a, .tb-megamenu .dropdown-menu .active {
+background-image: none !important;
+}
+
+.tb-megamenu .dropdown-menu .active > a, .tb-megamenu .dropdown-menu .active > a:hover{
+background-color: transparent;
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#000088cc', endColorstr='#000076b2', GradientType=0); /*for ie9*/
+background: none !important;
+background-image: none !important;
+color: #105ba8 !important;
+
+}
+
+.tb-megamenu .dropdown-submenu  .active > a:after, .tb-megamenu .dropdown-submenu  > a:hover:after, .tb-megamenu .dropdown-submenu:hover  > a:after, .tb-megamenu-item.active > a.dropdown-toggle:after{
+border-color: transparent transparent transparent #105ba8;}
+
+/**last two navs for left subnavigation**/
+.tb-megamenu-nav  > .tb-megamenu-item:nth-child(4) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav  > .tb-megamenu-item:nth-child(4) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow{
+
+left: -161%;
+border-right: none !important;
+border-left: 3px solid #ccc !important;
+ background-image: url("../images/menugradient-reverse.jpg");
+ /*background-color: #f0f0ee;*/
+}
+
+
+.tb-megamenu-nav   > .tb-megamenu-item:nth-child(4).active .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav  > .tb-megamenu-item:nth-child(4).active .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow{
+left: -154%;
+
+}
+
+.tb-megamenu-nav   > .tb-megamenu-item:nth-child(5).active .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav  > .tb-megamenu-item:nth-child(5).active .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow{
+
+
+left: -161%\9\0;
+left: -156%;
+border-right: none !important;
+border-left: 3px solid #ccc !important;
+background-image: url("../images/menugradient-reverse.jpg");
+/*background-color: #f0f0ee;*/
+}
+
+
+
+.tb-megamenu-nav   > .tb-megamenu-item:nth-child(5) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav  > .tb-megamenu-item:nth-child(5) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow{
+
+
+left: -161%\9\0;
+left: -156%;
+border-right: none !important;
+border-left: 3px solid #ccc !important;
+background-image: url("../images/menugradient-reverse.jpg");
+/*background-color: #f0f0ee;*/
+}
+
+/*
+.tb-megamenu-item.level-2.mega.dropdown-submenu:hover, .tb-megamenu .mega-nav .dropdown-submenu > a:hover, .tb-megamenu-item.level-2.mega.dropdown-submenu.open{
+background-color: #f0f0ee !important;
+}*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+.tb-megamenu-nav  > .tb-megamenu-item:nth-child(5) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav  > .tb-megamenu-item:nth-child(5) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow{
+
+left: -156%;
+border-right: none !important;
+border-left: 3px solid #ccc !important;
+ background-image: url("../images/menugradient-reverse.jpg");
+}
+
+
+.tb-megamenu-nav  > .tb-megamenu-item:nth-child(4)  .tb-megamenu-submenu.ncatsNav-sub.dropdown-menu.mega-dropdown-menu.nav-child,.tb-megamenu-nav  > .tb-megamenu-item:nth-child(4)  .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child, .tb-megamenu-nav  > .tb-megamenu-item:nth-child(5)  .tb-megamenu-submenu.ncatsNav-sub.dropdown-menu.mega-dropdown-menu.nav-child,.tb-megamenu-nav  > .tb-megamenu-item:nth-child(5)  .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child{
+border-right: 3px solid #ccc !important;
+border-left: none !important;
+}
+
+
+/*******LEFT ARROWS FOR LAST TWO DROP DOWN MENUS*******/
+.tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu .active > a::after, .tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu > a:hover::after, .tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu:hover > a::after, .tb-megamenu-item:nth-child(4).active > a.dropdown-toggle::after, .tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu > a::after, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu .active > a::after, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu > a:hover::after, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu:hover > a::after, .tb-megamenu-item:nth-child(5).active > a.dropdown-toggle::after, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu > a::after{
+display: none;
+}
+
+
+ .tb-megamenu-item:nth-child(5).active > a.dropdown-toggle::before, .tb-megamenu-item:nth-child(4).active > a.dropdown-toggle::before{}
+ 
+ 
+.tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu .active > a::before, .tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu > a:hover::before, .tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu:hover > a::before, .tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu > a::before, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu .active > a::before, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu > a:hover::before, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu:hover > a::before, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu > a::before{
+content: url(../images/leftGrey.png);
+height:42px;
+margin-top: 2px;
+float:left;
+display:block;
+padding-right:2%;
+}
+
+
+.tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu > a:hover::before, .tb-megamenu .tb-megamenu-item:nth-child(4) .dropdown-submenu:hover > a::before, .tb-megamenu-item:nth-child(5) .dropdown-submenu > a:hover::before, .tb-megamenu .tb-megamenu-item:nth-child(5) .dropdown-submenu:hover > a::before{
+content: url(../images/leftBlue.png);
+height:42px;
+margin-top: 2px;
+float:left;
+display:block;
+padding-right:2%;
+}
+
+@media (max-width: 1199px) and (min-width: 990px){
+
+.tb-megamenu-nav  > .tb-megamenu-item:nth-child(4) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav  > .tb-megamenu-item:nth-child(4) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow{
+
+left: -191%;
+border-right: none !important;
+border-left: 3px solid #ccc !important;
+ background-image: url("../images/menugradient-reverse.jpg");
+}
+
+
+.tb-megamenu-nav  > .tb-megamenu-item:nth-child(5) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav  > .tb-megamenu-item:nth-child(5) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow{
+
+left: -190%;
+border-right: none !important;
+border-left: 3px solid #ccc !important;
+ background-image: url("../images/menugradient-reverse.jpg");
+}
+
+
+
+} /**End media query 1198 to 990**/
+
+@media (min-width: 980px) and (max-width: 991px)
+{
+
+
+.tb-megamenu-nav > .tb-megamenu-item {
+    font-size: 0.95em;
+    text-align: center;
+}
+} /*end (min-width: 980px) and (max-width: 991px) */
+
+/*mobile menu*/
+@media (max-width:979px)
+{
+
+body{/*
+background-color: orange;*/}
+.tb-megamenu-item.level-1.mega.dropdown.active > a, .tb-megamenu-item.level-1.mega.active > a, .tb-megamenu-item.level-1.mega.dropdown.active > a:hover, .tb-megamenu-item.level-1.mega.active > a:hover, .tb-megamenu-item.level-1.mega.dropdown.active.animating > a, .tb-megamenu-item.level-1.mega.dropdown.active.open > a{
+border-radius: 0;
+border: none;
+background: #497c8e; /* Old browsers */
+background: -moz-linear-gradient(top,  #497c8e 0%, #2b5b6d 42%, #2b5b6d 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#497c8e), color-stop(42%,#2b5b6d), color-stop(100%,#2b5b6d)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#497c8e', endColorstr='#2b5b6d',GradientType=0 );
+}
+.tb-megamenu-item.level-1{
+width:100% !important;
+}
+.tb-megamenu-item.level-2.mega.dropdown-submenu{
+/*background-color: #fff;*/
+background-image: url("../images/menugradient.jpg");
+    background-size: 100% 10px;
+    border-top: 3px solid #ccc !important;
+color: #000;
+}
+
+.tb-megamenu-item .dropdown-submenu .secondNav{
+background-color: #fff;
+background-image: none;
+border: none !important;
+}
+.dropdown-submenu a {
+    color: #000 !important;
+
+}
+.tb-megamenu .nav-collapse, .tb-megamenu .nav-collapse.collapse{
+position:relative;
+z-index:0;
+top:0;
+}
+
+
+
+.tb-megamenu-column-inner.mega-inner.clearfix, .tb-megamenu-item .dropdown-submenu .secondNav{
+height: auto;
+}
+
+.tb-megamenu-submenu.ncatsNav-sub.dropdown-menu.mega-dropdown-menu.nav-child, .open .tb-megamenu-submenu.ncatsNav-sub.dropdown-menu.mega-dropdown-menu.nav-child, .tb-megamenu-item.level-1:hover{
+border: none !important;
+}
+.tb-megamenu-item.level-2.mega{
+height:auto;
+}
+
+.tb-megamenu-column-inner.mega-inner.clearfix{
+padding:0 !important;
+}
+
+.btn.btn-navbar.tb-megamenu-button:before{
+	content: 'Menu ';
+	font-family: 'Trebuchet MS';
+  font-size:17px;
+}
+
+
+.btn.btn-navbar.tb-megamenu-button{
+	 border: medium none;
+    float: right;
+    width: 17%;
+    border: none;
+    background: none;
+    margin-top:7px;
+}
+}
+@media (max-width:1095px) and (min-width:993px)
+{
+/*og 1077*/
+	.tb-megamenu-nav > .tb-megamenu-item:nth-child(4) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav > .tb-megamenu-item:nth-child(4) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow, .tb-megamenu-nav > .tb-megamenu-item:nth-child(5) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav, .tb-megamenu-nav > .tb-megamenu-item:nth-child(5) .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child.secondNav.no-shadow{
+	left: -190%;}
+}
+
+@media (max-width:769px){
+
+body
+{/*
+background-color: pink;*/}
+.navbar-collapse.collapse {
+    display: block;
+}
+
+.tb-megamenu .nav-collapse .dropdown-menu{
+background-color: #fff;}
+}
+
+.tb-megamenu-item.level-2.mega.dropdown-submenu{
+font-size:1.1em;}
+
+}
+

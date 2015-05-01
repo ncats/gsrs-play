@@ -2,57 +2,71 @@
 @import helper._ 
 
 @ncatsmain(pub.title, "NCATS Publications") {
+<div class = "container-fluid">
+<div class="row paragraph">
+<div class ="col-md-10 col-md-offset-1">
+<div class = "row">
+<div class="col-sm-2">
+<a href="@ix.publications.controllers.routes.ReachApp.publications()">
+		   <!--[if gte IE 10]><!-->
+	    	  	 		<img src="@routes.Assets.at("publications/images/buttons/home2.svg")" alt="Return to projects"
+			class="img icon"/>
+	    		<!--<![endif]-->
 
+<!--[if lte IE 9]>
+		<img src="@routes.Assets.at("publications/images/buttons/home2.png")" alt="Return to projects"
+			class="img icon"/>
+<![endif]-->
+</a>
+</div>
+<div class="col-sm-10">
 <div class="row">
-  <div class="col-md-1">
-    <a href="@ix.publications.controllers.routes.ReachApp.publications()"><span class="glyphicon glyphicon-home house"></span></a>
-  </div>
-  <div class="col-md-10">
-    <h1>@pub.title</h1>
-  </div>
+<div class = "col-md-12">
+		<h2>
+			<em>@pub.title</em>
+		</h2>
+		</div>
+		</div>
+		<div class="row">
+			@if(pub.keywords.size()!=0){ 
+				@for(k<- pub.keywords){
+					@if(k.label=="Category"){ 
+						@if(k.term =="Central Nervous System Disease"){
+							<div class="col-sm-2">
+								<div class="key-badge text-uppercase">CNS disease</div>
+							</div>
+						}else{
+							<div class="col-sm-2">
+								<div class="key-badge text-uppercase">@k.term</div>
+							</div>
+						} 
+					} 
+				} 
+			}
+		</div>
+		</div>
+</div>
+	</div>
 </div>
 
-<div class="row">
-	@if(pub.mesh.size()!=0){
-	<div class="col-md-2">
-		<div class="panel panel-primary">
-			<div class="panel-heading">
-				<h3 class="panel-title">Keywords:</h3>
-			</div>
-			<!--END panel-heading-->
-			<div class="panel-body"id ="detailKeywords">
-
-				<ul class="keywords" style="text-align: left;">
-					@for(a<-pub.mesh){
-					<li>@a.heading.replaceAll("/","/ ")</li> }
-				</ul>
-
-
+@if(pub.abstractText){
+<div class="row paragraph grey" id="objective">
+	<div class="col-md-6 col-md-offset-3">
+		<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">Abstract</h4>
 			</div>
 		</div>
+		<div class="row">
+			<div class="col-md-12 data">@pub.abstractText</div>
+		</div>
 	</div>
-	<div class="col-md-10">
-		}else{
-		<div class="col-md-12">
-			}
-			<div class="panel panel-primary">
-				<div class="panel-heading">
-					<h3 class="panel-title">Publication Details:</h3>
-				</div>
-				<!--END panel-heading-->
-				<div class="panel-body">
+</div>
+}
 
-					@if(pub.abstractText != null){
-					<div class="row">
-						<div class="col-md-2 category">Abstract:</div>
-						<div class="col-md-10 data">@pub.abstractText</div>
-					</div>
-					<br /> 
-					} 
-					@if(pub.figures.size()!=0){
-					<div class="row">
-						<div class="col-md-2 category">Images:</div>
-						<div class="col-md-10 data" id="pubImg">
+@if(pub.figures.size()!=0){
+	<div class="row paragraph">
+							<div class="col-md-12 imagediv" id="pubImg">
 							<a href="@ix.core.controllers.v1.routes.RouteFactory.get("figures", pub.figures(0).id)?format=image"
 								class="highslide" id="zoom" onclick="return hs.expand(this)">
 								<img src="@ix.core.controllers.v1.routes.RouteFactory.get("figures", pub.figures(0).id)?format=image"
@@ -62,23 +76,57 @@
 						</div>
 					
 						<br/>
+						</div>
 					}
 
 
-				</div>
-				<div class="row">
-					<div class="col-md-2 category">Authors:</div>
-					<div class="col-md-10 data" >
-						
-						@for(a <- pub.authors){ 
-						@a.author.getName(); }
-			
-					</div>
-				</div>
+<div class="row paragraph grey" id = "members">
+	<div class="col-md-8 col-md-offset-2">
 			<div class="row">
-				<div class="col-md-2 category">External Links:</div>
-				<div class="col-md-10 data">
-				
+			<div class="col-md-12 under">
+				<h4 class="head">Authors</h4>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-12 data">@for(a <- pub.authors){ 
+						@a.author.getName(); }</div>
+		</div>
+	
+		
+	</div>
+</div>
+
+
+	@if(pub.mesh.size()!=0){
+<div class="row">
+	<div class="col-md-8 col-md-offset-2">
+			<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">Keywords</h4>
+			</div>
+<div class="row">
+			<div class="col-md-12 data">
+				<ul class="list-inline ">
+					@for(a<-pub.mesh){
+					<li>@a.heading.replaceAll("/","/ ")</li> }
+				</ul>
+
+
+			</div>
+		</div>
+	</div>
+	</div>
+</div>
+}
+<div class="row">
+<div class="col-md-8 col-md-offset-2">
+			<div class="row">
+			<div class="col-md-12 under">
+				<h4 class="head">External Links</h4>
+			</div>
+			</div>
+<div class="row">
+			<div class="col-md-12 data">
 				<ul class="pubs-info">
 				 @if(pub.doi!= null){
 					<li>
@@ -95,11 +143,10 @@
 				</ul>
 				</div>
 				</div>
+
+				</div>
+
 				</div>
 			</div>
-		</div>
-
-	</div>
-</div>
 
 }

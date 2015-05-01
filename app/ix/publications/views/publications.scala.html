@@ -75,7 +75,7 @@
 }
 
 @ncatsmain("Publications", "NCATS Publications") {
-
+<div class = "container">
 <div class="row" id="searching">
 
 	<div class="col-md-6 col-md-offset-3">
@@ -83,7 +83,7 @@
 				action="@ix.publications.controllers.routes.ReachApp.search(null)">
 	      <div class="input-group">
 		<input type="text" class="form-control typeahead" id="search"
-		       title="Search" placeholder="Search..." name="q">
+		       title="Search" placeholder="publications search..." name="q">
 		<input type="hidden" name="kind" value="ix.core.models.Publication" />
 		<span class="input-group-btn">
 		  <button class="btn btn-default" id="search" type="search"
@@ -148,4 +148,5 @@
 			</div>
 		</div>
 		<!--END panel panel-primary-->
+</div>
 	}
