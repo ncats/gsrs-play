@@ -384,3 +384,7 @@ font-size: 18px;
 	-o-transform: scale(20);
 	transform: scale(20);
 }
+
+#strucModal{
+	position:absolute;
+}

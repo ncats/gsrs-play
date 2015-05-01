@@ -44,11 +44,11 @@ Html)
 	src='@routes.Assets.at("javascripts/jquery.treegrid.bootstrap3.js")'></script>
 <script
 	src='@routes.WebJarAssets.at(WebJarAssets.locate("html2canvas.js"))'></script>
+	<script
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("dojo/dojo.js"))'></script>
 <script
-	src='@routes.Assets.at("javascripts/marvin/gui/lib/promise-0.1.1.min.js")'></script>
-<script
-	src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script>
-
+	src='@routes.Assets.at("javascripts/JSDraw3.2.3/Scilligence.JSDraw2.Pro.js")'></script>
+	
 @screengrab() 
 @filereader()
 
@@ -63,62 +63,31 @@ Html)
 				<span>development 0.9513</span>
 			</div>
 		</div>
-		<div class="row-fluid" id="main-menu">@menu @ssearch("GET",
-			ix.ginas.controllers.routes.GinasApp.search(null))</div>
+		<div class="row-fluid" id="main-menu">@menu </div>
 		<div class="row-fluid" id="main-breadcrumb">@breadcrumb</div>
 	</div>
 	<div class="container" id="content">@content</div>
+	@ssearch("GET",ix.ginas.controllers.routes.GinasApp.search(null))
 	<script>
   $(document).ready(function(){
-	  var sketcher;
-	  MarvinJSUtil.getEditor("#sketcher").then(function(sketcherInstance) {
-	  	sketcher = sketcherInstance;
-	  }, function(error) {
-	  	alert("Loading of the sketcher failed"+error);
-	  });
-
-	  $('#strucModal').on('show.bs.modal', function (ev) {
-		  console.log("showing");
+  		var sketch = new JSDraw("sketcher");
+		   
+	  $('#strucModal').on('shown.bs.modal', function (ev) {
 	     var button = $(ev.relatedTarget);
 	     var url = button.data('molurl');
-	    // console.log('molurl: '+url);
 	     if (url) {
-	       $.get(url, function (mol) {
-	           sketcher.importAsMol(mol);
-	           console.log("imported)");
-	           $("div.gwt-PushButton[title^=Zoom]").click();
-	       console.log('clicked?');
+	       $.get(url, function (moldata) {
+			console.log("MOLFILE:" + moldata);
+ 			sketch.setMolfile(moldata);
 		 });
 	     }
 	  });
 	  
-	  $('#cccc').click(function() {
-	  console.log("codes");
-	  });
-	 
-	  function setQuery (value) {
-		  console.log(value);
-		  $.ajax({
-		    type: "POST",
-		    url: '@ix.ncats.controllers.routes.App.smiles',
-		    contentType: 'text/plain',
-		    data: value,
-		    success: function (data) {
-		    	
-		       console.log(' => '+data);
-		       $('#structure').val(data);
-		    },
-		    error: function (xhr, status) {
-		       console.error("Can't convert to smiles");
-		    },
-		    dataType: 'text'
-		   });
-		}
+	  $('#strucModal').on('hidden.bs.modal', function (e) {
+			sketch.setMolfile("");
+	       $('#structure').val("");
+		}); 
 
-		function setMarvin (sk) {
-		   //console.log(sk);
-		   sketcher = sk;
-		}
 
     $('.zoom').hover(function() {
         $(this).addClass('transition');
@@ -132,7 +101,29 @@ Html)
         $(this).find('#strucExportChem').addClass('hidden');
     });
   });
-</script>
+
+  function molchange(sketch){
+       $('#structure').typeahead('val', '"'+sketch.getSmiles()+'"');
+       $('#structure').val(sketch.getSmiles());
+       var smile = encodeURIComponent(sketch.getSmiles());
+//        var turl='@ix.core.controllers.search.routes.SearchFactory.suggestField("Structure", "$SMILES", 10)';
+//        console.log(turl);
+//        $.ajax({
+//       	 url: turl.replace("%24SMILES",smile), 
+//    	success : function(data, status, xhr) {
+//    		console.log(data);
+//    	}
+//        });
+       
+       
+//   	console.log("mol:" + sketch.getMolfile());
+//   	console.log("smi:" + sketch.getSmiles());
+  	var smile = encodeURIComponent(sketch.getSmiles());
+//   	console.log(smile);
+  };
+  </script>
+
+
 </body>
 
 </html>

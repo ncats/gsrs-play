@@ -41,6 +41,7 @@ libraryDependencies ++= Seq(
         ,"org.webjars" % "html2canvas" % "0.4.1"
     ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
     ,"colt" % "colt" % "1.2.0"
+    ,"org.webjars" % "dojo" % "1.10.0"
     //,"net.sf.jni-inchi" % "jni-inchi" % "0.8"
     ,"org.freehep" % "freehep-graphicsbase" % "2.4"
     ,"org.freehep" % "freehep-vectorgraphics" % "2.4"

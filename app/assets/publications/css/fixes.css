@@ -1,0 +1,64 @@
+.tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child {
+border: 0px;
+background-color: rgba(255,255,255,0.9);
+}
+
+.tb-megamenu .nav > li > a:hover {
+-moz-border-radius: 10px 10px 0 0;
+border-radius: 0px;
+}
+
+.tb-megamenu .nav .active>li, .tb-megamenu .nav > li > a:focus, .tb-megamenu .nav > li > a:hover, .tb-megamenu .nav li.dropdown.open > .dropdown-toggle, .tb-megamenu .nav > li:hover, .nav .open > a, .nav .open > a:hover, .nav .open > a:focus, .tb-megamenu .nav > li > a:focus, .tb-megamenu .nav > li > a:hover, .tb-megamenu .nav a.animating {
+background-color: purple;
+background-color: rgba(255,255,255,.2) !important;
+color: white;
+}
+
+.tb-megamenu-item.level-1.mega.dropdown.active > a, .tb-megamenu-item.level-1.mega.active > a, .tb-megamenu-item.level-1.mega.dropdown.active > a:hover, .tb-megamenu-item.level-1.mega.active > a:hover, .tb-megamenu-item.level-1.mega.dropdown.active.animating > a, .tb-megamenu-item.level-1.mega.dropdown.active.open > a {
+background-color: rgba(255,255,255,.3) !important;
+border: 0px;
+margin: 0px;
+border-radius: 0px;
+color: white;
+}
+
+.tb-megamenu-item.level-1:hover {
+border: 0px;
+margin: 0px;
+border-radius: 0px;
+}
+
+.tb-megamenu .nav > li > a {
+border-right: 1px solid rgba(255,255,255,.5);
+border-top: 0;
+color: #fff;
+font-weight: bold;
+padding: 15px 20px;
+text-shadow: none;
+}
+
+.tb-megamenu .nav li.dropdown.active > .dropdown-toggle, .tb-megamenu .nav li.dropdown.open.active > .dropdown-toggle, .tb-megamenu .nav > li.dropdown.open.active > a:hover {
+border: 0px !important;
+color: white !important;
+}
+
+.tb-megamenu-item .dropdown-submenu .secondNav {
+background-image: none;
+background-color: rgba(255,255,255,0.8);
+border-top: 0px !important;
+border: 0px !important;
+}
+
+.tb-megamenu-submenu.ncatsNav-sub.dropdown-menu.mega-dropdown-menu.nav-child, .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child {
+box-shadow: none;
+border: 0px;
+margin-left: -1px !important;
+}
+
+#ncatsRibbon {
+height: 30px;
+width: 100%;
+background-color: #642F6C;
+margin-bottom: 1%;
+color: #fff;
+}
