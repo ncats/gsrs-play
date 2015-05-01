@@ -42,7 +42,7 @@
        <td>@diseasedblink(dr.disease,dr.zscore)</td>
        <td>@diseasedblink(dr.disease,dr.conf)</td>
        @if(dr.tinxScore != null) {
-       <td>@{"%1$.3f".format(-Math.log(dr.tinxScore))}</td>
+       <td>@{"%1$.3f".format(dr.tinxScore)}</td>
        } else {
        <td></td>
        }
@@ -55,7 +55,7 @@
             <td>@diseasedblink(x.disease,x.zscore)</td>
             <td>@diseasedblink(x.disease,x.conf)</td>
 	    @if(x.tinxScore != null) {
-	    <td>@{"%1$.3f".format(-Math.log(x.tinxScore))}</td>
+	    <td>@{"%1$.3f".format(x.tinxScore)}</td>
 	    } else {
 	    <td></td>
 	    }
@@ -219,7 +219,7 @@
                 title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
 	        <th>Importance <i class="fa fa-info-circle"
 		data-toggle="tooltip" data-placement="top" data-html="true"
-                title="<p align='left'>A -log score characterizing the importance of the target, based on occurences in the published literature. Smaller values indicate increased importance.</p>"></i></th>
+                title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
               </tr>
 	      @defining(request().getQueryString("view")) { view =>
 	        @view match {

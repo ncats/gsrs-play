@@ -331,7 +331,14 @@ public class TcrdRegistry extends Controller implements Commons {
             for (Ligand lig : reglig.getLigands())
                 if (lig.id != null)
                     LIGANDS.put(lig.id, lig);
-            target.update();
+            try {
+                target.update();
+            }
+            catch (Exception ex) {
+                Logger.error("Can't update target "+target.id+" ("
+                             +IDGApp.getId(target)+")", ex);
+                ex.printStackTrace();
+            }
         }
     }
 
