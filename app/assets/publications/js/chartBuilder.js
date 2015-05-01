@@ -150,7 +150,7 @@ function drawChart(facets){
 		},
 		series: [{
 			name: 'Publications',
-			color: '#497c8e',
+			color: '#2b5b6d',
 			data: counts
 		}]
 	});
