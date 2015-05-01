@@ -136,7 +136,7 @@ padding-top: 50px;
 
 .footer.container {
   left: 0;
-  bottom: -200;
+  bottom: -200 !important;
   position: absolute;
   width: 100%;
   z-index: 5;
@@ -185,4 +185,23 @@ span.mailto {
   clip: rect(1px, 1px, 1px, 1px);
   overflow: hidden;
   height: 1px;
+}
+
+ul.nav.navbar-nav.list-inline.tb-megamenu-nav.nav.level-0.items-6 {
+  height: 100%;
+}
+
+li.tb-megamenu-item.level-1.mega.dropdown {
+  height: 100%;
+}
+
+@media (max-width: 1200px){
+li.tb-megamenu-item.level-1.mega.dropdown {
+  height: 70px;
+}	
+.tb-megamenu .nav .active>li, .tb-megamenu .nav > li > a:focus, .tb-megamenu .nav > li > a:hover, .tb-megamenu .nav li.dropdown.open > .dropdown-toggle, .tb-megamenu .nav > li:hover, .nav .open > a, .nav .open > a:hover, .nav .open > a:focus, .tb-megamenu .nav > li > a:focus, .tb-megamenu .nav > li > a:hover, .tb-megamenu .nav a.animating {
+  height: 70px;	
+}
+.tb-megamenu .nav > li > a {
+height:70px;
 }
