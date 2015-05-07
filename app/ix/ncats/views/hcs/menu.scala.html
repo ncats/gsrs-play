@@ -1,0 +1,26 @@
+@(nav: Html)
+
+@ix.ncats.views.html.header{
+<a class="navbar-brand" href="@ix.ncats.controllers.hcs.routes.ReagentSelectionApp.index">NCATS HCS Reagent Selection</a>
+}{
+@nav
+<ul class="nav navbar-nav navbar-right">
+  <form class="navbar-form navbar-right" role="search" method="GET"
+        action="@ix.ncats.controllers.hcs.routes.ReagentSelectionApp.reagents()">
+    <div class="form-group">
+      <input type="text" id="search-header-field" name="q"
+	     class="typeahead form-control" placeholder="Search..."/>
+    </div>
+    <button type="submit" class="btn btn-default">
+      <span class="fa fa-search" aria-hidden="true"></span>
+    </button>
+  </form>
+</ul>
+}
+
+@**
+** Specify all fields that you want to support autocomplete;
+** Look at /api/v1/suggest/@fields
+** for a list of fields that can be specified!
+**@
+@ix.ncats.views.html.typeahead(Array("Application","Application_Type","name","barcode"))

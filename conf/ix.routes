@@ -10,6 +10,7 @@
 ->	/ginas		ix.ginas.Routes
 ->	/idg		ix.idg.Routes
 ->	/tox21		ix.tox21.Routes
+->	/hcs		ix.ncats.hcs.Routes
 
 #
 # assets; the prefix should be modified accordingly to localize
