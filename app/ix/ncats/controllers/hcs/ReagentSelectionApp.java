@@ -118,7 +118,14 @@ public class ReagentSelectionApp extends App {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
-            decors.add(new FacetDecorator (facets[i]));
+            FacetDecorator d;
+            if (facets[i].getName().equals("Application")) {
+                d = new FacetDecorator (facets[i], false, 10);
+            }
+            else {
+                d = new FacetDecorator (facets[i]);
+            }
+            decors.add(d);
         }
         return decors.toArray(new FacetDecorator[0]);
     }
@@ -174,6 +181,8 @@ public class ReagentSelectionApp extends App {
     
     public static Result reagents (final String q,
                                    final int rows, final int page) {
+        String id = session ("reagent-cart");
+        
         try {
             final String key = "reagents/"+ Util.sha1(request ());
             return getOrElse (key, new Callable<Result>() {
@@ -186,5 +195,14 @@ public class ReagentSelectionApp extends App {
         catch (Exception ex) {
             return _internalServerError (ex);
         }
+    }
+
+    public static Result showcart () {
+        String id = session ("reagent-cart");
+        if (id != null) {
+            
+        }
+        return ok (ix.ncats.views.html.hcs.error.render
+                   (200, "No items in cart!"));
     }
 }

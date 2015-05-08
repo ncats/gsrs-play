@@ -1,4 +1,11 @@
 #
+# assets; the prefix should be modified accordingly to localize
+# to a specific app
+#
+GET     /assets/*file   controllers.Assets.at(path="/public", file)
+GET     /webjars/*file          controllers.WebJarAssets.at(file)
+
+#
 # top-level routing table
 #
 ->      /api       ix.core.api.Routes
@@ -11,13 +18,7 @@
 ->	/idg		ix.idg.Routes
 ->	/tox21		ix.tox21.Routes
 ->	/hcs		ix.ncats.hcs.Routes
-
-#
-# assets; the prefix should be modified accordingly to localize
-# to a specific app
-#
-GET     /assets/*file   controllers.Assets.at(path="/public", file)
-GET     /webjars/*file          controllers.WebJarAssets.at(file)
+->	/auth		securesocial.Routes
 
 #
 # other routes

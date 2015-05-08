@@ -7,6 +7,9 @@ import javax.persistence.*;
 @Inheritance
 @DiscriminatorValue("PRI")
 public class Principal extends IxModel {
+    // provider of this principal
+    public String provider; 
+    
     @Indexable(facet=true,name="Principal")
     public String username;
     public String email;

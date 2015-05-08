@@ -6,6 +6,7 @@ import javax.naming.*;
 import javax.naming.directory.*;
 import javax.naming.ldap.*;
 import java.text.*;
+import ix.core.models.Principal;
 import ix.ncats.models.Employee;
 
 public class NIHLdapConnector {
@@ -32,6 +33,7 @@ public class NIHLdapConnector {
         NIHLdapConnector ldap = new NIHLdapConnector (username, password);
         return ldap.authenticate();
     }
+    
     public static Employee getEmployee (String username, String password) {
         NIHLdapConnector ldap = new NIHLdapConnector (username, password);
         return ldap.getEmployee();
@@ -106,6 +108,28 @@ public class NIHLdapConnector {
         return employees;
     }
 
+    static void instrument (Employee e, Attributes attrs)
+        throws NamingException {
+        e.username = getAttr (attrs, "cn");
+        e.email = getAttr (attrs, "mail");
+        e.lastname = getAttr (attrs, "sn"); // last
+        e.forename = getAttr (attrs, "givenName"); // first 
+        e.affiliation = getAttr (attrs, "department");
+        e.dn = getAttr (attrs, "distinguishedName");
+        e.phone = getAttr (attrs, "telephoneNumber");
+        String suffix = getAttr (attrs, "personalTitle");
+        if (suffix != null) {
+            if (suffix.startsWith("Dr")) {
+                // can't figure out whether it's MD, DDS, DSc, or PhD
+                e.suffix = "Ph.D.";
+                if ("austin".equalsIgnoreCase(e.lastname)
+                    && "christopher".equalsIgnoreCase(e.forename)) {
+                    e.suffix = "M.D.";
+                }
+            }
+        }
+    }
+    
     protected static Employee createEmployee (LdapContext ldap)
         throws NamingException {
         Employee e = null;
@@ -113,26 +137,9 @@ public class NIHLdapConnector {
         Attributes attrs = ldap.getAttributes("");
         String id = getAttr (attrs, "employeeID");
         if (id != null) {
-            e = new Employee ();            
-            e.username = getAttr (attrs, "cn");
-            e.email = getAttr (attrs, "mail");
-            e.lastname = getAttr (attrs, "sn"); // last
-            e.forename = getAttr (attrs, "givenName"); // first 
-            e.affiliation = getAttr (attrs, "department");
-            e.dn = getAttr (attrs, "distinguishedName");
-            e.uid = Long.parseLong(id);
-            e.phone = getAttr (attrs, "telephoneNumber");
-            String suffix = getAttr (attrs, "personalTitle");
-            if (suffix != null) {
-                if (suffix.startsWith("Dr")) {
-                    // can't figure out whether it's MD, DDS, DSc, or PhD
-                    e.suffix = "Ph.D.";
-                    if ("austin".equalsIgnoreCase(e.lastname)
-                        && "christopher".equalsIgnoreCase(e.forename)) {
-                        e.suffix = "M.D.";
-                    }
-                }
-            }
+            e = new Employee ();
+            e.uid = Long.parseLong(id);     
+            instrument (e, attrs);
         }
         else {
             play.Logger.warn(getAttr (attrs, "sn")+", "

@@ -23,7 +23,3 @@ GET /mock/gaucher.php ix.publications.controllers.ReachApp.gaucher
 #
 # test
 #
-GET /login	ix.ncats.controllers.auth.Authentication.login
-GET /logout	ix.ncats.controllers.auth.Authentication.logout
-GET /auth	ix.ncats.controllers.auth.Authentication.index
-POST  /login	ix.ncats.controllers.auth.Authentication.authenticate

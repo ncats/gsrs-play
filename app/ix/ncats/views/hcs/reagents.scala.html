@@ -5,7 +5,25 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int], facets: Array[FacetDecorator], reagents: List[Reagent])
 
 @tabrow(r: Reagent) = {
-    <tr>
+<tr
+   @r.color match {
+     case "Blue" => {
+       class="info"
+     }
+     case "Red" => {
+       class="danger"
+     }
+     case "Green" => {
+       class="success"
+     }
+     case "Orange" => {
+       class="warning"
+     }
+     case _ => {
+       class="active"
+     }
+   }
+>
       <td>@r.celltype</td>
       <td>@r.apptype</td>
       <td>@r.color</td>

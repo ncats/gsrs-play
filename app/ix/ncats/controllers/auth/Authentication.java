@@ -11,6 +11,7 @@ import play.data.*;
 import play.mvc.*;
 import com.avaje.ebean.*;
 
+import ix.core.models.Principal;
 import ix.ncats.models.Employee;
 import ix.ncats.controllers.NIHLdapConnector;
 
@@ -18,34 +19,43 @@ import ix.ncats.controllers.NIHLdapConnector;
  * A simple controller to authenticate via ldap
  */
 public class Authentication extends Controller {
-    public static Result authenticate () {
+    public static Result authenticate (String url) {
         DynamicForm requestData = Form.form().bindFromRequest();
         String username = requestData.get("username");
         String password = requestData.get("password");
         Logger.debug("username: "+username);
 
-        Employee empl = NIHLdapConnector.getEmployee(username, password);
-        if (empl != null) {
+        /*
+        Principal cred = NIHLdapConnector.getEmployee(username, password);
+        if (cred != null) {
             session().clear();
-            session ("username", empl.username);
-            return redirect (routes.Authentication.index());
+            session ("username", cred.username);
+            if (url != null) {
+                return redirect (url);
+            }
+            return ok ("User \""+username+"\" is successfully authenticated!");
+            }*/
+        if (username.equalsIgnoreCase("caodac") && password.equalsIgnoreCase("foobar")) {
+            session().clear();
+            session ("username", username);
+            return redirect (routes.Authentication.logout());
         }
-        return ok (ix.ncats.views.html.errordef.render
-                   (401, "User \""+username+"\" not authorized!"));
+        flash ("message", "Invalid credential!");
+        return redirect (routes.Authentication.login(null));
     }
     
-    public static Result login () {
-        return ok (ix.ncats.views.html.login.render());
+    public static Result login (String url) {
+        return ok (ix.ncats.views.html.login.render(url, "MyApp"));
     }
 
     public static Result logout () {
+        flash ("message", session ("username")+", you've logged out!");
         session().clear();
-        flash ("logout", "You've been logged out!");
-        return redirect (routes.Authentication.login());
+        return redirect (routes.Authentication.login(null));
     }
 
     @Security.Authenticated(Secured.class)
     public static Result index () {
-        return ok ("You've reached a secure area!");
+        return ok (session ("username")+", you've reached a secure area!");
     }
 }

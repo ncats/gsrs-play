@@ -1,6 +1,6 @@
-name := "idg"
+name := "inxight"
 
-version := "1.2.1"
+version := "0.0.1"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
@@ -31,12 +31,12 @@ libraryDependencies ++= Seq(
     ,"org.webjars" % "jquery-ui" % "1.11.2"
     ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
     ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"
-    ,"org.webjars" % "metroui" % "2.0.23"
+    //,"org.webjars" % "metroui" % "2.0.23"
     ,"org.webjars" % "font-awesome" % "4.2.0"
     ,"org.webjars" % "html5shiv" % "3.7.2"
     ,"org.webjars" % "requirejs" % "2.1.15"
     ,"org.webjars" % "respond" % "1.4.2"
-      ,"org.webjars" % "highcharts" % "4.0.4"
+    ,"org.webjars" % "highcharts" % "4.0.4"
     ,"org.webjars" % "highslide" % "4.1.13"
     ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
     ,"colt" % "colt" % "1.2.0"
@@ -46,6 +46,7 @@ libraryDependencies ++= Seq(
     ,"org.freehep" % "freehep-graphicsio" % "2.4"
     ,"org.freehep" % "freehep-graphicsio-svg" % "2.4"
     ,"org.freehep" % "freehep-graphics2d" % "2.4"
+    ,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
 )
 
 scalacOptions ++= Seq(
@@ -57,3 +58,12 @@ scalacOptions ++= Seq(
   "-target:jvm-1.7",
   "-encoding", "UTF-8"
 )
+
+javacOptions ++= Seq(
+  "-source", "1.7",
+  "-target", "1.7",
+  "-encoding",
+  "UTF-8",  "-Xlint:-options"
+)
+
+resolvers += Resolver.sonatypeRepo("snapshots")

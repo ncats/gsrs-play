@@ -1,7 +1,5 @@
 @(code: Int, message: String)(header: Html)
-@main(message, null){ @header }{
-<div></div>
-}{
+@main(message, null){ @header }{@HtmlFormat.empty}{
 <div class="container-fluid">
     @if(code == 200) {
     <div class="alert alert-success" role="alert">

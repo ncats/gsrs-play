@@ -20,3 +20,11 @@ GET	/structure/$id<[0-9]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>	ix.ncats.co
 # return the status of a previous query
 ######
 GET	/status/:type/:query	ix.ncats.controllers.App.status(type: String, query: String)
+
+#
+# authentication
+#
+GET /login	ix.ncats.controllers.auth.Authentication.login(url: String ?= null)
+GET /logout	ix.ncats.controllers.auth.Authentication.logout
+POST  /login	ix.ncats.controllers.auth.Authentication.authenticate(url: String ?= null)
+GET /index	ix.ncats.controllers.auth.Authentication.index
