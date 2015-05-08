@@ -3,7 +3,8 @@
 #
 GET	/		ix.ginas.controllers.GinasFactory.index
 GET	/register	ix.ginas.controllers.GinasFactory.register
-GET	/chemical	ix.ginas.controllers.GinasFactory.chemical
+GET	/chemicals	ix.ginas.controllers.GinasApp.chemicals(q: String ?= null, rows: Int ?= 32, page: Int ?= 1)
+GET	/chemicals/:name	ix.ginas.controllers.GinasApp.chemical(name: String)
 GET	/sequence	ix.ginas.controllers.GinasFactory.sequence(kind: String ?= null)
 GET	/report		ix.ginas.controllers.GinasFactory.report
 GET	/wizard		ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
@@ -11,3 +12,4 @@ POST	/load	ix.ginas.controllers.GinasApp.loadJSON
 GET	/load	ix.ginas.controllers.GinasApp.load
 GET	/search		ix.ginas.controllers.GinasApp.search(kind: String ?= null)
 POST	/authenticate	ix.ginas.controllers.GinasApp.authenticate
+GET		/login		ix.ginas.controllers.GinasFactory.login

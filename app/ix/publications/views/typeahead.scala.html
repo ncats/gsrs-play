@@ -1,5 +1,5 @@
 <script>
-$(document).ready(function () {
+jQuery(document).ready(function ($) {
     var category = new Bloodhound({
         datumTokenizer: function(d) {
             return Bloodhound.tokenizers.whitespace(d.key);

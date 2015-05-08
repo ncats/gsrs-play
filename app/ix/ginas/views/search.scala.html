@@ -1,0 +1,161 @@
+@import ix.ginas.models.v1.ChemicalSubstance
+@import ix.idg.models.Disease
+@import ix.idg.models.Ligand
+@import ix.idg.controllers.IDGApp
+@import ix.ginas.controllers.GinasApp
+@import ix.ncats.controllers.App
+@import ix.core.search.TextIndexer
+@import ix.core.search.TextIndexer._
+@import ix.ncats.controllers.App.FacetDecorator
+@import java.net.URLEncoder
+
+@(query: String, total: Int, facets: Array[FacetDecorator],
+targets: List[ChemicalSubstance], totalTargets: Int,
+ligands: List[Ligand], totalLigands: Int,
+diseases: List[Disease], totalDiseases: Int)
+
+@tabrow(t: ChemicalSubstance) = {
+<tr>
+
+</tr>
+}
+@ix.ncats.views.html.main("Search: "+query, null){@menu()}{
+<ol class="breadcrumb">
+  <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
+</ol>
+}{
+<div class="container-fluid">
+  <div class="row">
+    @if(facets.length > 0) {
+    <div class="col-md-3">
+      @ix.ncats.views.html.filters(facets)
+    </div> 
+    <div class="col-md-9">
+      } else {
+      <div class="col-md-12">
+      }
+      <div 
+	 @if(total > 0) {
+	class="alert alert-success" 
+	} else {
+	class="alert alert-danger" 
+	}
+	role="alert">
+	<span><h4>Query:<code>@query</code></h4></span>
+      </div>
+      <div class="btn-group" role="group">
+	@if(total == 1) {
+	<h3><span class="label label-default">@total result found.</span></h3>
+	} else {
+        <h3><span class="label label-default">@total results found.</span></h3>
+	}
+      </div>
+      <div class="panel panel-default">
+	<div class="panel-body">
+	  <table class="table table-striped">
+	    <tr>
+	      <th>Name</th>
+	      <th>Development Level</th>
+	      <th>Target Family</th>
+	    </tr>
+	    @for(t <- targets) {
+	      @tabrow(t)
+		      }
+		      </table>
+	   @if(targets.length < totalTargets) {
+	    <span><i class="fa fa-ellipsis-h"></i></span>
+	    }
+	</div>
+	<div class="panel-footer">
+	  <a href="@{ix.idg.controllers.routes.IDGApp.targets()+"?"+App.queryString(request().queryString())}">@totalTargets target(s)</a>
+	</div>
+      </div>
+      <div class="panel panel-default">
+	<div class="panel-body">
+	  <table class="table table-striped">
+	    <tr>
+	      <th></th>
+	      <th>Name</th>
+	      <th>Development Level</th>
+	      <th>Topic</th>
+	    </tr>
+	    @for(lig <- ligands) {
+	      <tr>
+  <td>
+    @defining(IDGApp.getStructure(lig)) { struc =>
+      @if(struc != null) {
+           <a  tabindex="-1"
+           data-toggle="popover"
+           data-animation="true"
+           data-placement="top"
+           data-trigger="click hover focus"
+           data-title="@lig.getName()"
+	   data-html="true"
+           data-content="<img src='@ix.ncats.controllers.routes.App.structure(struc.id,"svg",150)'>">
+         <img alt="Structure of @IDGApp.getId(lig)"
+   	      src='@ix.ncats.controllers.routes.App.structure(struc.id,"svg",80)'></a>
+       }
+    }
+  </td>
+  <td class="valign-center"><a href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))">@lig.getName()</a></td>
+  <td class="valign-center">
+    @for(t <- IDGApp.getTDL(lig)) {
+      <span class="label label-@t.label" data-toggle="tooltip"
+          data-html="true" title="<p align='left'>@t.desc</p>">@t.name</span>
+    }
+  </td>
+  <td class="valign-center">
+  @defining(IDGApp.getMajorTopics(lig)) { mesh =>
+    @for(i <- 0 until Math.min(3,mesh.size())) {
+      <a class="label label-default" href='@{ix.idg.controllers.routes.IDGApp.ligands(null,8,1) + "?facet=MeSH/"}@URLEncoder.encode(mesh(i).heading,"utf8")'>@mesh(i).heading</a>
+    }
+    @if(mesh.size() > 3) {
+       <a class="label label-default" href="@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))">...</a>
+    }
+  }
+  </td>
+
+	      </tr>
+             }
+           </table>
+	   @if(ligands.length < totalLigands) {
+	    <span><i class="fa fa-ellipsis-h"></i></span>
+	    }
+	</div>
+	<div class="panel-footer">
+	  <a href="@{ix.idg.controllers.routes.IDGApp.ligands()+"?"+App.queryString(request().queryString())}">@totalLigands ligand(s)</a>
+	</div>
+      </div>
+      <div class="panel panel-default">
+	<div class="panel-body">
+	  <table class="table table-striped">
+	    <tr>
+	      <th>Name</th>
+	      <th>Description</th>
+	    </tr>
+	    @for(d <- diseases) {
+	    <tr>
+	      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(d))">@d.name</a></td>
+	      <td>@d.description</td>
+	    </tr>
+            }
+	  </table>
+	   @if(diseases.length < totalDiseases) {
+	    <span><i class="fa fa-ellipsis-h"></i></span>
+	    }
+	</div>
+	<div class="panel-footer">
+	  <a href="@{ix.idg.controllers.routes.IDGApp.diseases()+"?"+App.queryString(request().queryString())}">@totalDiseases disease(s)</a>
+	</div>
+    </div>
+      </div>
+    </div>
+</div>
+}
+
+<script>
+$(function () {
+  $('[data-toggle="popover"]').popover();
+  $('[data-toggle="tooltip"]').tooltip();
+});
+</script>

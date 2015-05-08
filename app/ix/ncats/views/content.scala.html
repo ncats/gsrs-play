@@ -91,9 +91,9 @@
         }
       }
       @pagination(current, rows, total, pages)
-	<div class="panel panel-default">
+      <div class="panel panel-default">
 	  @content
-	</div>
+      </div>
 	@if(pages.length > 1) {
 	  @pagination(current, rows, total, pages)
 	}

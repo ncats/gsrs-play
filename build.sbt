@@ -1,6 +1,6 @@
-name := "inxight"
+name := "reach"
 
-version := "0.0.1"
+version := "1.0.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
@@ -38,8 +38,10 @@ libraryDependencies ++= Seq(
     ,"org.webjars" % "respond" % "1.4.2"
     ,"org.webjars" % "highcharts" % "4.0.4"
     ,"org.webjars" % "highslide" % "4.1.13"
+        ,"org.webjars" % "html2canvas" % "0.4.1"
     ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
     ,"colt" % "colt" % "1.2.0"
+    ,"org.webjars" % "dojo" % "1.10.0"
     //,"net.sf.jni-inchi" % "jni-inchi" % "0.8"
     ,"org.freehep" % "freehep-graphicsbase" % "2.4"
     ,"org.freehep" % "freehep-vectorgraphics" % "2.4"

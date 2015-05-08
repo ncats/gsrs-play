@@ -1,9 +1,7 @@
-@(nav: Html)
 
 @ix.ncats.views.html.header{
 <a class="navbar-brand" href="@ix.ncats.controllers.hcs.routes.ReagentSelectionApp.index">NCATS HCS Reagent Selection</a>
 }{
-@nav
 <ul class="nav navbar-nav navbar-right">
   <form class="navbar-form navbar-right" role="search" method="GET"
         action="@ix.ncats.controllers.hcs.routes.ReagentSelectionApp.reagents()">

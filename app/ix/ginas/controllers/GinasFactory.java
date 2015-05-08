@@ -21,11 +21,7 @@ public class GinasFactory extends EntityFactory {
         return ok (ix.ginas.views.html.register.render());
     }
 
-    public static Result chemical () {
-        return ok (ix.ginas.views.html.chemical.render());
-    }
-
-    public static Result sequence (String kind) {
+   public static Result sequence (String kind) {
         return ok (ix.ginas.views.html.sequence.render(kind));
     }
 
@@ -37,6 +33,10 @@ public class GinasFactory extends EntityFactory {
         Logger.info(kind);
         return ok (ix.ginas.views.html.wizard.render(kind));
     }
+    
+	public static Result login () {
+		return ok (ix.ginas.views.html.login.render());
+	}
 
     public static Principal byUsername (String user) {
         return finder.where().eq("username", user).findUnique();

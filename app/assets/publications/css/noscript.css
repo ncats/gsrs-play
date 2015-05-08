@@ -1,0 +1,161 @@
+.noJS{
+display: block !important;
+}
+
+#navbar, #desk-content{
+display:none;}
+
+#noJS-menu, #mobile-content{
+display: block;}
+/***MENU TESTING****/
+#noJS-menu #nav-collapsed ul {
+		padding: 0;
+		margin: 0;
+		background: #fff;
+		float: left;
+		width:100%;
+	}
+	
+#noJS-menu	#nav-collapsed li {
+		float: left;
+		display: inline;
+		position: relative;
+		width: 20%;
+		text-align: center;
+		list-style: none;
+	}
+	
+#noJS-menu	#nav-collapsed ul ul {
+		position: absolute;
+		left: -3px;
+		top: 100%;
+		background: #fff;
+		display: none;
+		width:101%;
+		height:470px;
+
+	}
+	
+#noJS-menu #nav-collapsed ul ul ul {
+		left: 100%;
+		top: 0;
+		position:absolute;
+		background-image: url("../images/menugradient.jpg");
+		background-repeat: repeat-y;
+		background-size:100% 2px;
+	}
+	
+#noJS-menu	#nav-collapsed li:hover > ul {
+		display: block;
+		position:absolute;
+		z-index:10;
+	}
+#noJS-menu	.sub-menu{
+		min-height:300px;
+		border: none;
+	}
+#noJS-menu	.sub-menu,#noJS-menu #nav-collapsed .sub-menu > li{
+		width:100%;
+		text-align:left;
+	}
+	
+	
+
+/**stylilng from og menu**/
+#noJS-menu	#nav-collapsed li a{
+	display: inline-block;
+	width: 100% !important;
+color: #fff;
+text-decoration: none;
+font-family: 'Trebuchet MS';
+font-size: 1.3em;
+padding-top: 6%;
+border-right: 1px solid #222;
+}
+#noJS-menu	#nav-collapsed li{
+background: #497c8e; /* Old browsers */
+background: -moz-linear-gradient(top,  #497c8e 0%, #2b5b6d 42%, #2b5b6d 100%); /* FF3.6+ */
+background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#497c8e), color-stop(42%,#2b5b6d), color-stop(100%,#2b5b6d)); /* Chrome,Safari4+ */
+background: -webkit-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* Chrome10+,Safari5.1+ */
+background: -o-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* Opera 11.10+ */
+background: -ms-linear-gradient(top,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* IE10+ */
+background: linear-gradient(to bottom,  #497c8e 0%,#2b5b6d 42%,#2b5b6d 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#497c8e', endColorstr='#2b5b6d',GradientType=0 );
+
+height: 55px;
+}
+
+#noJS-menu	#nav-collapsed li:hover, #noJS-menu #nav-collapsed li a.active{
+border-top: 3px solid #ccc;
+border-right: 3px solid #ccc;
+border-left: 3px solid #ccc;
+/*margin: -3px 0 0 -3px;*/
+margin-top:-3px;
+-moz-border-radius: 10px 10px 0 0;
+border-radius: 10px 10px 0 0;
+background-color: #fff !important;
+background: #fff;
+filter: none;
+color: #105ba8 !important;
+}
+#noJS-menu #nav-collapsed li a.active{
+padding-bottom: 7%;
+}
+#noJS-menu	#nav-collapsed li:hover a{
+color: #105ba8 !important;
+border: none;
+}
+#noJS-menu #nav-collapsed .sub-menu  li{
+background-color: transparent !important;
+background-image: none;
+filter: none;
+border: none;
+ height: 54px;
+ font-size: .938em !important;
+}
+
+#noJS-menu #nav-collapsed .sub-menu li a{
+color: #3e7488;
+border: none;
+font-size: 1em !important
+}
+#noJS-menu #nav-collapsed .sub-menu li a:hover {
+	padding-bottom: none;
+}
+#noJS-menu #nav-collapsed .sub-menu{
+border-left: 3px solid #ccc;
+border-bottom: 3px solid #ccc;
+height:470px;
+}
+/**end styling og menu**/	
+	
+	
+	
+#noJS-menu #nav-collapsed  ul ul:nth-child(1) .sub-menu{
+/*background-color: green !important;*/
+top: -7% !important;}
+
+
+/*.tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child*/
+
+#noJS-menu #nav-collapsed ul ul:nth-child(2) .sub-menu{
+/*background-color: yellow !important;*/
+top: -58px !important;}
+
+#noJS-menu #nav-collapsed ul ul:nth-child(3) .sub-menu{
+/*background-color: brown !important;*/
+top: -112px !important;}
+#noJS-menu #nav-collapsed ul ul:nth-child(4) .sub-menu{
+top: -166px !important;
+/*background-color: purple !important;*/}
+#noJS-menu #nav-collapsed ul ul:nth-child(5) .sub-menu{
+/*background-color: blue !important;*/
+top: -220px !important;
+}
+#noJS-menu #nav-collapsed ul ul:nth-child(6) .sub-menu{
+/*background-color: white !important;*/}
+#noJS-menu #nav-collapsed ul ul:nth-child(7) .sub-menu{
+/*background-color: black !important;*/}
+
+
+/***MENU TESTING END ***/

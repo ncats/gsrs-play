@@ -1,4 +1,4 @@
-$(document).ready(function() {
+jQuery(document).ready(function ($) {
 	index ="Program";
 	$("#chartSelect").selectmenu();
 	var filters = parseFilters(filterList);
@@ -99,7 +99,7 @@ function drawChart(facets){
 				shadow: false,
 				states: {
 					hover: {
-						color: '#cf2b2e'
+						color: '#642F6C'
 					}
 				}
 			},
@@ -108,7 +108,7 @@ function drawChart(facets){
 				cursor: 'pointer',
 				states: {
 					select: {
-						color: '#cf2b2e'
+						color: '#642F6C'
 					}
 				},
 				point: {
@@ -150,7 +150,7 @@ function drawChart(facets){
 		},
 		series: [{
 			name: 'Publications',
-			color: '#1f355c',
+			color: '#2b5b6d',
 			data: counts
 		}]
 	});

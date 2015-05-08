@@ -1,112 +1,321 @@
+@import ix.core.models.Structure 
+@import ix.core.models.Keyword
+@import ix.ginas.controllers.v1.ReferenceFactory 
+@import ix.ginas.controllers.GinasApp
+@import helper._ 
 
 @(sub: ix.ginas.models.v1.ChemicalSubstance)
 
-@import helper._ 
-
-@typeParse(t : String)={
-	@if(t =="of"){
-		Official Name
+@typeParse(t : String)={ 
+@if(t=="of"){ 
+	Official Name 
+	} 
+@if(t =="sys"){ 
+	Systematic Name 
+	} 
+@if(t=="bn"){ 
+	Brand Name 
+	} 
+@if(t =="cn"){ 
+	Common Name 
+	} 
+@if(t =="cd"){ 
+	Code 
 	}
-	@if(t =="sys"){ 
-		Systematic Name
-	}
-	@if(t =="bn"){
-		Brand Name
-	}
-	@if(t =="cn"){
-		Common Name 
-	}
-	@if(t =="cd"){
-		Code 
-	}
-}
+} 
 
-
-
-
-
-@main("Substances") {
-<div class="row" id="breadcrumb">
-	<div class="col-md-12" id="trail">
-		<ul class="nav nav-pills" role="tablist">
-			<li role="presentation" class="active"><a href="#structure"
-				aria-controls="structure" role="tab" data-toggle="tab">Structure</a></li>
-			<li role="presentation"><a href="#moieties"
-				aria-controls="moieties" role="tab" data-toggle="tab">Moieties @sub.moieties.length</a></li>
-			<li role="presentation"><a href="#definitions"
-				aria-controls="definitions" role="tab" data-toggle="tab">Alternative Definitions</a></li>
-			<li role="presentation"><a href="#names" aria-controls="names"
-				role="tab" data-toggle="tab">Names @sub.names.length</a></li>
-			<li role="presentation"><a href="#references"
-				aria-controls="references" role="tab" data-toggle="tab">References @sub.references.length</a></li>
-		</ul>
-	</div>
-</div>
-<div class="row">
-	<div class="col-md-12 " id="wizard" role="tabpanel">
-		<!-- Nav tabs -->
-
-		<!-- Tab panes -->
-		<div class="tab-content">
-			<div role="tabpanel" class="tab-pane active" id="structure">
-				<div class="row">
-					<div class="col-md-4">Here be pictures</div>
-					<div class="col-md-8">
-						<table class="table table-striped" id="structureTable">
-							<thead>
-								<tr>
-									<th>StereoChemistry</th>
-									<th>Optical Activity</th>
-									<th>Additional Stereochemistry</th>
-								</tr>
-							</thead>
-							<tr>
-								<td><span class="badge">@sub.structure.stereoChemistry</span>
-								</td>
-							</tr>
-						</table>
+@molExport(mol: String)= {
+<div class="modal fade export" id="structureExport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelExport" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="myModalLabelExport">Export Structure</h4>
+      </div>
+      <div class="modal-body">
+             		<div class = "row">	
+					<div class="col-md-12">
+					<div class = "well" id = "input">
+	@mol
 					</div>
 				</div>
-				ADD STRUCTURE CONTENT
+				</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button"  class="btn btn-primary" onclick="" data-dismiss="modal">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
 
+@structureImage(s: Structure, size : Integer) = {
+<img class="struc-thumb" alt="Structure of @sub.getName()"
+	src='@ix.ncats.controllers.routes.App.structure(s.id,"svg",size)'>
+} 
 
-			</div>
-
-			<div role="tabpanel" class="tab-pane" id="moeities">
+@makeTable(s: Structure, stype : String) = {
+<table class="table @stype-Table">
+	<thead>
+		<tr>
+			@if(stype =="moiety"){
+			<th>Moiety Structure</th>
+			<th>Moiety Count</th>
+			<th>Moiety StereoChemistry</th>
+			<th>Moiety Optical Activity</th>
+			<th>Moiety Additional Stereochemistry</th> 
+			}
+			<th>Molecular Formula</th>
+			<th>Molecular Weight</th>
+			<th>Defined Stereocenters</th>
+			<th>EZ Centers</th>
+			<th>Charge</th>
+			<th>Reference</th>
 			
-			</div>
+		</tr>
+	</thead>
+	@fillTable(s, stype)
+</table>
+} 
 
+@fillTable(s: Structure, stype : String) = { 
+	@if(stype=="structure"){
+	<tr>
+		<td>@s.formula</td>
+		<td>@s.mwt</td>
+		<td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
+		<td><span class="badge">@s.atropisomerism</span></td>
+		<td><span class="badge">@s.charge</span></td>
+		@referenceTable(GinasApp.getStructureReferences(s), "hi", 6 )
+	</tr>
+	} 
+	@if(stype=="moiety"){ 
+		@for(m <- sub.moieties){
+		<tr>
+			<td>@structureImage(m.structure, 150)</td>
+			<td><span class="badge badge-primary">@m.count</span></td>
+			<td><span class="badge">@m.structure.stereoChemistry</span></td>
+			<td><span class="badge">@m.structure.opticalActivity</span></td>
+			<td><span class="badge">@m.structure.atropisomerism</span></td>
+			<td>@m.structure.formula</td>
+			<td>@m.structure.mwt</td>
+			<td><span class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></td>
+			<td><span class="badge">@m.structure.atropisomerism</span></td>
+			<td><span class="badge">@m.structure.charge</span></td>
+			@referenceTable(GinasApp.getStructureReferences(m.structure), "hi", 6 )
+		</tr>
+		} 
+	} 
+} 
 
-			<div role="tabpanel" class="tab-pane" id="definitions">...</div>
-			<div role="tabpanel" class="tab-pane" id="names">
-				<div class="col-md-12">
-					<table class="table table-striped" id="namesTable">
+@referenceTable(refs: List[Keyword], id : String, colspan : Integer) ={
+@if(refs.length >= 1){
+			<td>
+				<button class="btn btn-primary" type="button" data-toggle="collapse"
+					data-target="#@id-reference" aria-expanded="false"
+					aria-controls="collapseExample">@refs.length</button>
+			</td>
+			</tr>
+			<tr class="collapse" id="@id-reference">
+						<td colspan = "@colspan" class = "sub-table">
+
+				<table class="table table-striped" id="referenceTable">
 						<thead>
 							<tr>
-								<th>Name</th>
-								<th>Type</th>
-								<th>Language</th>
-								<th>Preferred</th>
+								<th>Citation</th>
+								<th>Doc Type</th>
+								<th>Date Accessed</th>
+								<th>References</th>
+								
 							</tr>
 						</thead>
-						@for(n <- sub.names) {
+						@for(ref <- refs){
+						    @defining(ReferenceFactory.getReference(ref.term)) { r =>
+						
 						<tr>
-							<td>@n.name</td>
-							<td>@typeParse(n.`type`)</td>
-							<td>@if(n.languages(0).term =="en"){ English }else{ Not
-								English }</td>
-							<td>@if(n.preferred ==true){ Preferred }else{ }</td>
+							<td>
+							@r.citation
+							</td>
+								<td>
+							@r.docType
+							</td>
+								<td>
+							@r.documentDate
+							</td>
+						<td>
+							@r.url
+							</td>	
 						</tr>
 						}
-					</table>
-				</div>
-				<div role="tabpanel" class="tab-pane" id="references">...</div>
+						}
+				</table>
+</td>
+				</tr>
+				}else{
+				<td>
+				<button class="btn btn-primary" type="button"  disabled="disabled">@refs.length</button>
+			</td>
+				}
+			</td>
 
+}
+
+@ix.ncats.views.html.main(sub.getName(),
+"ix.ginas.models.v1.ChemicalSubstance"){@menu()} {
+<nav class="navbar navbar-default" id="breadcrumb">
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div class="col-md-12">
+				<ul class="nav nav-pills" id="breadcrumb-list">
+					<li role="presentation" class="active"><a href="#structure">Structure</a></li>
+					@if(sub.moieties.length>1){
+					<li role="presentation"><a href="#moieties">Moieties
+							@sub.moieties.length</a></li> }
+					<li role="presentation"><a href="#names">Names
+							@sub.names.length</a></li>
+					<li role="presentation"><a href="#codes" id = "cccc">Codes
+							@sub.codes.length</a></li>
+					<li role="presentation"><a href="#refs">References
+							@sub.references.length</a></li>
+				</ul>
 			</div>
-
 		</div>
 	</div>
+</nav>
 </div>
+}{
+<div class="row info" id="structure">
 
+	<h3>
+		<span class="label label-primary label-offset">Structure</span>
+	</h3>
+	<div class="col-md-5">
+	<div class = "row">
+	@structureImage(sub.structure, 400)
+	</div>
+	<div class = "row">
+	<div class = "col-md-6 col-md-offset-6">
+	<ul class= "form-inline pull-right" id = "exportSave">
+	<li><button type="button" class="btn navbar-btn btn-default" id = "strucExport"
+					  data-toggle="modal"
+	  				data-target="#structureExport">Export</button></li>
+	<li><button type="button" class="btn navbar-btn btn-default" id = "strucSearch"
+					  data-toggle="modal"
+					  data-molurl='@ix.ncats.controllers.routes.App.structure(sub.structure.id,"mol")'
+	  				data-target="#strucModal"><span class="fa fa-search"></span></button>
+	  				</li>
+	  				</ul>
+	  			</div>
+	  			</div>
+	  				</div>
+	<div class="col-md-6">@makeTable(sub.structure, "structure")</div>
+</div>
+@if(sub.moieties.length > 1){
+<div class="row info" id="moieties">
+	<h3>
+		<span class="label label-primary label-offset">Moieties</span>
+	</h3>
+	<div class="col-md-12">@makeTable(sub.structure, "moiety")</div>
+</div>
+}
 
+<div class="row info" id="names">
+	<h3>
+		<span class="label label-primary label-offset">Names
+			(@sub.names.length)</span>
+	</h3>
+	<div class="col-md-12">
+		<table class="table table-striped" id="namesTable">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Language</th>
+					<th>Preferred</th>
+					<th>References</th>
+				</tr>
+			</thead>
+			@for(n <- sub.names) {
+			<tr>
+				<td>@n.name</td>
+				<td>@typeParse(n.`type`)</td>
+				<td>@if(n.languages(0).term =="en"){ English }else{ }</td>
+				<td>@if(n.preferred ==true){ Preferred }else{ }</td>
+				
+				@referenceTable(n.references, n.uuid.toString(), 5)
+			</tr>
+			}
+		</table>
+	</div>
+
+</div>
+@if(sub.codes.length >= 1){
+<div class="row info" id="codes">
+	<h3>
+		<span class="label label-primary label-offset">Codes
+			(@sub.codes.length)</span>
+	</h3>
+	<div class="col-md-12">
+		<table class="table table-striped" id="namesTable">
+			<thead>
+				<tr>
+					<th>Code</th>
+					<th>Type</th>
+					<th>Description</th>
+					<th>References</th>
+				</tr>
+			</thead>
+			@for(c <- sub.codes) {
+<tr>
+			<td><a href="@c.url">@c.code</a></td>
+			<td>@typeParse(c.`type`)</td>
+			<td>@c.comments</td>
+			@referenceTable(c.references, c.code, 4)
+
+			</tr>
+
+			}
+		</table>
+	</div>
+
+</div>
+} 
+<div class="row info" id="refs">
+	<h3>
+		<span class="label label-primary label-offset">References
+			(@sub.references.length)</span>
+	</h3>
+	<div class="col-md-12">
+	<table class="table table-striped" id="allReferencesTable">
+						<thead>
+							<tr>
+								<th>Citation</th>
+								<th>Doc Type</th>
+								<th>Date Accessed</th>
+								<th>References</th>
+								
+							</tr>
+						</thead>
+						@for(r <- sub.references){
+						<tr>
+							<td>
+							@r.citation
+							</td>
+								<td>
+							@r.docType
+							</td>
+								<td>
+							@r.documentDate
+							</td>
+						<td>
+							@r.url
+							</td>	
+						</tr>
+						}
+				</table>
+	</div>
+
+</div>
+@molExport(sub.structure.molfile)
 }

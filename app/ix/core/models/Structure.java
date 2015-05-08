@@ -99,10 +99,12 @@ public class Structure extends IxModel {
     @Indexable(indexed=false)
     public String smiles;
     
-    @Indexable(name="Molecular Formla", facet=true)
+    @Indexable(name="Molecular Formula", facet=true)
     public String formula;
+    
     @JsonProperty("stereochemistry")
     @Column(name="stereo")
+    @Indexable(name="StereoChemistry", facet=true)
     public Stereo stereoChemistry;
     @Column(name="optical")
     public Optical opticalActivity;

@@ -1,0 +1,215 @@
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  /* Margin bottom by footer height */
+  margin-bottom: 215px;
+}
+
+
+.tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child {
+border: 0px;
+background-color: rgba(255,255,255,0.9);
+}
+
+.tb-megamenu .nav > li > a:hover {
+-moz-border-radius: 10px 10px 0 0;
+border-radius: 0px;
+}
+
+.tb-megamenu .nav .active>li, .tb-megamenu .nav > li > a:focus, .tb-megamenu .nav > li > a:hover, .tb-megamenu .nav li.dropdown.open > .dropdown-toggle, .tb-megamenu .nav > li:hover, .nav .open > a, .nav .open > a:hover, .nav .open > a:focus, .tb-megamenu .nav > li > a:focus, .tb-megamenu .nav > li > a:hover, .tb-megamenu .nav a.animating {
+background-color: purple;
+background-color: rgba(255,255,255,.2) !important;
+color: white;
+}
+
+.tb-megamenu-item.level-1.mega.dropdown.active > a, .tb-megamenu-item.level-1.mega.active > a, .tb-megamenu-item.level-1.mega.dropdown.active > a:hover, .tb-megamenu-item.level-1.mega.active > a:hover, .tb-megamenu-item.level-1.mega.dropdown.active.animating > a, .tb-megamenu-item.level-1.mega.dropdown.active.open > a {
+background-color: rgba(255,255,255,.3) !important;
+border: 0px;
+margin: 0px;
+border-radius: 0px;
+color: white;
+}
+
+.tb-megamenu-item.level-1:hover {
+border: 0px;
+margin: 0px;
+border-radius: 0px;
+}
+
+.tb-megamenu .nav > li > a {
+border-right: 1px solid rgba(255,255,255,.5);
+border-top: 0;
+color: #fff;
+font-weight: bold;
+padding: 15px 20px;
+text-shadow: none;
+}
+
+.tb-megamenu .nav li.dropdown.active > .dropdown-toggle, .tb-megamenu .nav li.dropdown.open.active > .dropdown-toggle, .tb-megamenu .nav > li.dropdown.open.active > a:hover {
+border: 0px !important;
+color: white !important;
+}
+
+.tb-megamenu-item .dropdown-submenu .secondNav {
+background-image: none;
+background-color: rgba(255,255,255,0.8);
+border-top: 0px !important;
+border: 0px !important;
+}
+
+.tb-megamenu-submenu.ncatsNav-sub.dropdown-menu.mega-dropdown-menu.nav-child, .tb-megamenu-submenu.dropdown-menu.mega-dropdown-menu.nav-child {
+box-shadow: none;
+border: 0px;
+margin-left: -1px !important;
+}
+
+#ncatsRibbon {
+height: 30px;
+background-color: #642F6C;
+margin-bottom: 1%;
+color: #fff;
+}
+
+#ncatsRibbon a {
+margin-top: 4px;
+padding-left: 1%;
+color: #fff;
+}
+
+a:hover, a:focus {
+text-decoration: underline;
+}
+
+.panel-primary>.panel-heading {
+background-color: #642F6C !important;
+border-color: #642F6C !important;
+}
+
+#skipnav {
+height: 1px;
+left: -9000px;
+overflow: hidden;
+position: absolute;
+width: 1px;
+}
+
+#searchRight {
+float: right;
+}
+
+#searchRight input[type='submit'] {
+background-color: #fff;
+border: 1px solid #cccccc;
+-webkit-border-radius: 2px;
+-moz-border-radius: 2px;
+border-radius: 2px;
+font-size: 14px;
+color: #333333;
+height: 24px;
+}
+
+#ncatssearch {
+float: right;
+}
+
+#utilityLinks {
+float: right;
+}
+
+.nav.navbar-nav.list-inline.tb-megamenu-nav.nav.level-0.items-6 {
+width: 100%;
+}
+
+.tb-megamenu-item.level-1.mega.dropdown {
+padding: 0px;
+}
+
+.navbar.navbar-default {
+background: none;
+border: none;
+}
+
+#research {
+padding-right: 1px;
+}
+
+.icon {
+max-height: 100px;
+}
+
+.imagediv{
+	text-align:center;
+padding-top: 50px;
+}
+
+.footer {
+  position: absolute;
+  bottom: -215px;
+  left: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 215px;
+  background-color: #e8e7e3;
+}
+
+.whitebox {
+  background-color: #fff;
+  height: 30px;
+}
+
+ul#footer-links {
+  padding: 1% 0 0 0;
+  margin: 0 auto;
+  display: table;
+}
+
+#footer-links > li:after {
+  content: "|";
+  padding-left: 10px;
+  padding-right: 10px;
+  color: #c1c1c1;
+}
+span.ext {
+  background: url(http://ncats.nih.gov/modules/extlink/extlink_s.png) 2px center no-repeat;
+  width: 10px;
+  height: 10px;
+  padding-right: 12px;
+  text-decoration: none;
+}
+
+span.mailto {
+  background: url(http://ncats.nih.gov/modules/extlink/extlink_s.png) -20px center no-repeat;
+  width: 10px;
+  height: 10px;
+  padding-right: 12px;
+  text-decoration: none;
+}
+
+.element-invisible {
+  position: absolute !important;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  overflow: hidden;
+  height: 1px;
+}
+
+ul.nav.navbar-nav.list-inline.tb-megamenu-nav.nav.level-0.items-6 {
+  height: 100%;
+}
+
+li.tb-megamenu-item.level-1.mega.dropdown {
+  height: 100%;
+}
+
+@media (max-width: 1200px){
+li.tb-megamenu-item.level-1.mega.dropdown {
+  height: 70px;
+}	
+.tb-megamenu .nav .active>li, .tb-megamenu .nav > li > a:focus, .tb-megamenu .nav > li > a:hover, .tb-megamenu .nav li.dropdown.open > .dropdown-toggle, .tb-megamenu .nav > li:hover, .nav .open > a, .nav .open > a:hover, .nav .open > a:focus, .tb-megamenu .nav > li > a:focus, .tb-megamenu .nav > li > a:hover, .tb-megamenu .nav a.animating {
+  height: 70px;	
+}
+.tb-megamenu .nav > li > a {
+height:70px;
+}

@@ -579,6 +579,7 @@ public class App extends Controller {
 
     public static Result smiles () {
         String data = request().body().asText();
+        Logger.info(data);
         try {
             //String q = URLEncoder.encode(mol.toFormat("smarts"), "utf8");
             return ok (StructureProcessor.createQuery(data));

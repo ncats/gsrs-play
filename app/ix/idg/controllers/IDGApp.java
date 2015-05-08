@@ -247,8 +247,7 @@ public class IDGApp extends App implements Commons {
             try {
                 final String key = cls.getName()
                     +"/result/"+Util.sha1(request ());
-                Result result = getOrElse
-                    (key, new Callable<Result> () {
+                return getOrElse (key, new Callable<Result> () {
                             public Result call () throws Exception {
                                 long start = System.currentTimeMillis();
                                 Result r = getResult (e);
@@ -258,7 +257,6 @@ public class IDGApp extends App implements Commons {
                                 return r;
                             }
                         });
-                return result;
             }
             catch (Exception ex) {
                 return _internalServerError (ex);

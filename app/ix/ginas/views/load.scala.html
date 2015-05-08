@@ -1,9 +1,9 @@
-@ix.core.views.html.main("GInAS JSON Loader") {
-      <div class="site-wrapper">
-        <div class="site-wrapper-inner">
-          <div class="cover-container">
-            <div class="inner cover">
-              <h1 class="cover-heading">GInAS JSON Loader</h1>
+@ix.ncats.views.html.main("Load Data", "null"){@menu()}{<h3></h3>}{
+
+          <div class="container">
+            <div class="row">
+            <div class = "col-md-8 col-md-offset-2">
+              <h1 class="cover-heading">ginas JSON Loader</h1>
               <form class="form-horizontal" role="form" method="POST"
 		    enctype="multipart/form-data"
                     action="@ix.ginas.controllers.routes.GinasApp.loadJSON()">
@@ -60,6 +60,5 @@
               </form>
             </div>
           </div>
-        </div>
-      </div>
+</div>
 }

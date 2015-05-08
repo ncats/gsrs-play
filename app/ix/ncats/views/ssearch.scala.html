@@ -54,7 +54,7 @@ function setStructure (struc) {
 </script>
 
 <div class="modal fade" id="strucModal" tabindex="-1"
-     role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+     role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -64,11 +64,11 @@ function setStructure (struc) {
         <h4 class="modal-title" id="myModalLabel">Structure Searching</h4>
       </div>
       <div class="modal-body">
-  	     <div class="embed-responsive embed-responsive-4by3">
-	       <iframe class="embed-responsive-item" id="sketcher"
-		  src="@ix.ncats.controllers.routes.App.marvin">
-	       </iframe>
-	     </div>
+        <div class="embed-responsive embed-responsive-4by3">
+          <iframe class="embed-responsive-item" id="sketcher"
+                  src="@ix.ncats.controllers.routes.App.marvin">
+          </iframe>      
+	</div>
       </div>
       <div class="modal-footer">
 	<form class="form-inline" onchange="searchSelect()"
@@ -108,6 +108,7 @@ function setStructure (struc) {
 
 <script>
   function submitForm (el) {
+   // console.log(el);
     $('#strucModal').modal('hide');  
     $('#spinModal').modal({
       keyboard: false,
