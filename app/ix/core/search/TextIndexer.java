@@ -909,9 +909,10 @@ public class TextIndexer {
             }
             if (id != null) {
                 String field = entity.getClass().getName()+".id";
-                Logger.debug("Deleting document "+field+"...");
+                if (DEBUG (2))
+                    Logger.debug("Deleting document "+field+"="+id+"...");
                 indexWriter.deleteDocuments
-                    (new Term (field+".id", id.toString()));
+                    (new Term (field, id.toString()));
             }
             else {
                 Logger.warn("Entity "+cls+"'s Id field is null!");

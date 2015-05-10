@@ -1,5 +1,6 @@
 #
 # NCATS Projects
+#
 GET	/index		ix.publications.controllers.ReachApp.index
 GET	/projects	ix.publications.controllers.ReachApp.projects(q: String ?= null, rows: Int ?= 12, page: Int ?= 1)
 GET	/projects/:id	ix.publications.controllers.ReachApp.project(id: Long)
@@ -12,6 +13,17 @@ GET	/publications	ix.publications.controllers.ReachApp.publications(q: String ?=
 GET	/publications/:id	ix.publications.controllers.ReachApp.publication(id: Long)
 GET	/rss		ix.publications.controllers.ReachApp.rss(id: String, kind: String ?= null, count: Int ?= 5)
 GET	/pubrss		ix.publications.controllers.ReachApp.pubrss(q: String ?= null, facet: String ?= null, count: Int ?= 5)
+#
+# publication & project processor
+#
+GET	/daemon	ix.publications.controllers.PublicationProjectProcessor.status
+POST	/daemon	ix.publications.controllers.PublicationProjectProcessor.daemon
+GET     /processor       ix.publications.controllers.PublicationProjectProcessor.loader
+POST    /processor       ix.publications.controllers.PublicationProjectProcessor.load
+
+#
+# mockups
+#
 GET /mock/trnd.php	ix.publications.controllers.ReachApp.trnd
 GET /mock/holman.php	ix.publications.controllers.ReachApp.holman
 GET /mock/projectexample.php	ix.publications.controllers.ReachApp.projectexample
@@ -20,6 +32,3 @@ GET /mock/xrna.php	ix.publications.controllers.ReachApp.xrna
 GET /mock/ebola.php	ix.publications.controllers.ReachApp.ebola
 GET /mock	ix.publications.controllers.ReachApp.samples
 GET /mock/gaucher.php ix.publications.controllers.ReachApp.gaucher
-#
-# test
-#

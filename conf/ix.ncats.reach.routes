@@ -1,9 +1,6 @@
 #
 # NCATS Reach
 #
-GET     /       ix.ncats.controllers.reach.Migration.index
-GET     /index       ix.ncats.controllers.reach.Migration.index
-POST    /migrate       ix.ncats.controllers.reach.Migration.migrate
 GET     /employee/ldap ix.ncats.controllers.reach.EmployeeFactory.ldap
 POST    /employee/list ix.ncats.controllers.reach.EmployeeFactory.list
 GET     /project/index  ix.ncats.controllers.reach.ProjectForm.index

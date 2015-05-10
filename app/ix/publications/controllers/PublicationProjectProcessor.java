@@ -1,15 +1,31 @@
-package ix.ncats.controllers.reach;
+package ix.publications.controllers;
 
 import java.io.*;
 import java.security.*;
 import java.util.*;
 import java.sql.*;
 import java.net.*;
+import java.util.concurrent.TimeUnit;
+import javax.sql.DataSource;
+
+import play.libs.Akka;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.Cancellable;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+import akka.actor.PoisonPill;
+import akka.actor.Props;
+import akka.actor.Terminated;
+import scala.concurrent.duration.Duration;
 
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+import play.cache.Cache;
+import play.db.DB;
 import com.avaje.ebean.*;
 import org.apache.commons.codec.binary.Base64;
 
@@ -36,8 +52,11 @@ import ix.ncats.models.Program;
 
 import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.OrganizationFactory;
+import ix.ncats.controllers.reach.EmployeeFactory;
 
-public class Migration extends Controller {
+import ix.publications.views.html.*;
+
+public class PublicationProjectProcessor extends Controller {
     static final Model.Finder<Long, Project> projFinder = 
         new Model.Finder(Long.class, Project.class);
     static final Model.Finder<Long, Publication> pubFinder =
@@ -60,13 +79,328 @@ public class Migration extends Controller {
         }
     }
 
+    static ActorRef DaemonActorRef;
+
+    static class UpdateOp {
+        final long id;
+        final long pmid;        
+        final int oper;
+        final String rowid;
+        
+        UpdateOp (String rowid, long id, long pmid, int oper) {
+            this.rowid = rowid;
+            this.id = id;
+            this.pmid = pmid;
+            this.oper = oper;
+        }
+    }
+    
+    static class PublicationProcessorDaemon extends UntypedActor {
+        final Cancellable tick = context().system().scheduler()
+            .schedule(Duration.create(60, TimeUnit.SECONDS),
+                      Duration.create(60*60, TimeUnit.SECONDS),
+                      self (), "tick", context().dispatcher(), null);
+
+        @Override
+        public void preStart () {
+            Logger.debug("Daemon "+self().path().name()
+                         +" started: "+new java.util.Date());
+        }
+        
+        @Override
+        public void postStop () {
+            Logger.debug("Daemon "+self().path().name()+" stoped: "
+                         +new java.util.Date());
+            tick.cancel();
+            DaemonActorRef = null;
+        }
+        
+        @Override
+        public void onReceive (Object mesg) throws Exception {
+            if (mesg.equals("tick")) {
+                try {
+                    doUpdate ();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't do update", ex);
+                }
+            }
+            else if (mesg instanceof UpdateOp) {
+                UpdateOp op = (UpdateOp)mesg;
+                Logger.debug(new java.util.Date()
+                             +": Update status of "+op.rowid+" "
+                             +op.id+" "+op.pmid);
+                // clear cache..
+                Cache.remove(Publication.class.getName()+".facets");
+            }
+            else {
+                unhandled (mesg);
+            }
+        }
+
+        void doUpdate () throws Exception {
+            DataSource ds = DB.getDataSource("mgmt");
+            Connection con = ds.getConnection();
+            try {
+                Statement stm = con.createStatement();
+                ResultSet rset = stm.executeQuery
+                    ("select a.rowid,a.*,b.pmid "
+                     +"from update_queue a, publication b where "
+                     +"entity_type = 'publication' and "
+                     +"process is null and "
+                     +"a.entity_id = b.db_pub_id "
+                     +"order by a.created,a.entity_id,a.operation");
+                List<UpdateOp> ops = new ArrayList<UpdateOp>();
+                while (rset.next()) {
+                    int oper = rset.getInt("operation");
+                    long id = rset.getLong("entity_id");
+                    long pmid = rset.getLong("pmid");
+                    String rowid = rset.getString("rowid");
+                    ops.add(new UpdateOp (rowid, id, pmid, oper));
+                }
+                rset.close();
+                stm.close();
+                
+                Logger.debug(new java.util.Date()
+                             +": "+ops.size()+" update(s) in queue!");
+                if (!ops.isEmpty()) {
+                    Map<Long, UpdateOp> add = new HashMap<Long, UpdateOp>();
+                    for (UpdateOp op: ops) {
+                        if (op.oper == 0) {
+                            Logger.debug("Adding publication "+op.pmid+"...");
+                            Publication pub =
+                                PublicationFactory.byPMID(op.pmid);
+                            if (pub != null) {
+                                Logger.warn("Publication "+op.pmid
+                                            +" is already available!");
+                            }
+                            else {
+                                add.put(op.id, op);
+                            }
+                        }
+                        else if (op.oper == 1) {
+                            Publication pub =
+                                PublicationFactory.byPMID(op.pmid);
+                            if (pub != null) {
+                                // delete
+                                Logger.debug
+                                    ("Deleting publication "+op.pmid+"...");
+                                pub.delete();
+                            }
+                            else {
+                                Logger.warn("Can't find publication "+op.pmid
+                                            +"; no update performed!");
+                            }
+                            add.put(op.id, op); // then add 
+                        }
+                        else if (op.oper == 2) {
+                            Publication pub =
+                                PublicationFactory.byPMID(op.pmid);
+                            if (pub != null) {
+                                // delete
+                                Logger.debug
+                                    ("Deleting publication "+op.pmid+"...");
+                                pub.delete();
+                                self().tell(op, self ());
+                            }
+                            else {
+                                Logger.warn("Can't find publication "+op.pmid
+                                            +"; no delete performed!");
+                            }
+                        }
+                        else {
+                            Logger.warn("Unknown operation: "+op.oper);
+                        }
+                    }
+
+                    if (!add.isEmpty()) {
+                        PublicationProcessor processor =
+                            new PublicationProcessor (con);
+                        for (UpdateOp op : add.values()) {
+                            Publication pub = processor.process(op.id, op.pmid);
+                            if (pub != null) {
+                                Logger.debug
+                                    ("Publication \""+pub.title+"\" added!");
+                                self().tell(op, self ());
+                            }
+                            else {
+                                Logger.warn("Can't add publication: "
+                                            +op.pmid);
+                            }
+                        }
+                        processor.shutdown();
+                    }
+                }
+            }
+            finally {
+                con.close();
+            }
+        }
+    }
+
+    public static boolean isDaemonRunning () {
+        return DaemonActorRef != null;
+    }
+
+    public static Result status () {
+        return ok (daemon.render("NCATS Publication Daemon"));
+    }
+
+    public static Result daemon () {
+        DynamicForm requestData = Form.form().bindFromRequest();
+        String secret = requestData.get("secret-code");
+        if (secret == null || secret.length() == 0
+            || !secret.equals(Play.application()
+                              .configuration().getString("ix.secret"))) {
+            return unauthorized
+                ("You do not have permission to access resource!");
+        }
+        String action = requestData.get("action");
+        Logger.debug("Action: \""+action+"\"");
+        if ("start".equalsIgnoreCase(action)) {
+            if (DaemonActorRef != null) {
+                Logger.warn("Daemon is already running!");
+            }
+            else {
+                DaemonActorRef = Akka.system().actorOf
+                    (Props.create(PublicationProcessorDaemon.class));
+            }
+        }
+        else if ("stop".equalsIgnoreCase(action)) {
+            if (DaemonActorRef != null) {
+                DaemonActorRef.tell(PoisonPill.getInstance(),
+                                    DaemonActorRef.noSender());
+            }
+            else {
+                Logger.warn("Daemon is not running!");
+            }
+        }
+        else {
+            Logger.debug("Unknown action: \""+action+"\"");
+        }
+        
+        return ok (action);
+    }
+
+    static class PublicationProcessor {
+        PreparedStatement pstm, pstm2, pstm3, pstm4;
+
+        public PublicationProcessor (Connection con) throws SQLException {
+            pstm = con.prepareStatement
+                ("select * from pub_image "
+                 +"where db_pub_id = ? order by img_order");
+            pstm2 = con.prepareStatement
+                ("select * from pub_tag where db_pub_id = ?");
+            pstm3 = con.prepareStatement
+                ("select * from pub_program where db_pub_id = ?");
+            pstm4 = con.prepareStatement
+                ("select * from publication where db_pub_id = ?");
+        }
+
+        public void shutdown () {
+            try {
+                pstm.close();
+                pstm2.close();
+                pstm3.close();
+                pstm4.close();
+            }
+            catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        public Publication process (long id, long pmid) {
+            Publication pub = PublicationFactory.byPMID(pmid);
+            if (pub != null) {
+                Logger.warn("Publication "+pmid+" is already registered!");
+                return pub;
+            }
+            
+            pub = eutils.getPublication(pmid);
+            if (pub == null) {
+                Logger.warn("Can't locate PMID "+pmid);
+                return pub;
+            }
+            
+            for (PubAuthor p : pub.authors) {
+                p.author = instrument (p.author);
+            }
+                
+            // get image (if any)
+            List<Keyword> tags = new ArrayList<Keyword>();
+            try {
+                List<Figure> figs = createFigures (pstm, id);
+                for (Figure f : figs) {
+                    pub.figures.add(f);
+                }
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't retrieve images for pmid="+pmid, ex);
+            }
+            
+            try {
+                for (Keyword k : fetchPubCategories (pstm2, id)) {
+                    if ("web-tag".equalsIgnoreCase(k.label)) {
+                        tags.add(k);
+                    }
+                    pub.keywords.add(k);
+                }
+                
+                for (Keyword k : fetchPrograms (pstm3, id))
+                    pub.keywords.add(k);
+            }
+            catch (Exception ex) {
+                Logger.trace
+                    ("Can't retrieve categories for pmid="+pmid, ex);
+            }
+            
+            try {
+                pub.save();
+                Logger.debug("+ New publication added "+pub.id
+                             +": "+pub.title);
+                
+                // now create an xref with the tags
+                if (!tags.isEmpty()) {
+                    XRef ref = new XRef (pub);
+                    pstm4.setLong(1, id);
+                    ResultSet rs = pstm4.executeQuery();
+                    if (rs.next()) {
+                        String alias = rs.getString("web_alias");
+                        if (alias != null) {
+                            Logger.debug("++ web alias: "+alias);
+                        }
+                        else { // just use the title
+                            alias = pub.title;
+                        }
+                        Keyword k = new Keyword ("rss-content", alias);
+                        ref.properties.add(k);
+                    }
+                    rs.close();
+                    ref.properties.add
+                        (new Keyword("UUID", UUID.randomUUID().toString()));
+                    ref.properties.addAll(tags);
+                    ref.save();
+                    Logger.debug("+ XRef "+ref.id+" created "
+                                 +"for publication "+pub.id
+                                 +" with "+tags.size()
+                                 +" tags!");
+                }
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't save publication: " +pub.title, ex);
+            }
+            return pub;
+        }
+    }
+
     static TextIndexer getIndexer () {
         TextIndexerPlugin plugin = 
             Play.application().plugin(TextIndexerPlugin.class);
         return plugin.getIndexer();
     }
 
-    public static Result migrate () {
+    public static Result load () {
         DynamicForm requestData = Form.form().bindFromRequest();
         if (Play.isProd()) { // production..
             String secret = requestData.get("secret-code");
@@ -78,37 +412,39 @@ public class Migration extends Controller {
             }
         }
         
-        String jdbcUrl = requestData.get("jdbcUrl");
+        String jdbcUrl = requestData.get("jdbc-url");
         String jdbcUsername = requestData.get("jdbc-username");
         String jdbcPassword = requestData.get("jdbc-password");
-        Logger.debug("JDBC: "+jdbcUrl);
 
         String ldapUsername = requestData.get("ldap-username");
         String ldapPassword = requestData.get("ldap-password");
         Logger.debug("LDAP: "+ldapUsername);
 
-        if (jdbcUrl == null || jdbcUrl.equals("")) {
-            return badRequest ("No JDBC URL specified!");
-        }
-
         Connection con = null;
         try {
-            con = DriverManager.getConnection
-                (jdbcUrl, jdbcUsername, jdbcPassword);
+            if (jdbcUrl == null || jdbcUrl.equals("")) {
+                // now try to fetch from configuration
+                DataSource ds = DB.getDataSource("mgmt");
+                if (ds == null) {
+                    return badRequest ("No JDBC URL specified!");
+                }
+                Logger.debug("JDBC data source: "+ds);
+                con = ds.getConnection();
+            }
+            else {
+                Logger.debug("JDBC: "+jdbcUrl);
+                con = DriverManager.getConnection
+                    (jdbcUrl, jdbcUsername, jdbcPassword);
+            }
 
-            int projects = migrateProjects (con);
-            Logger.debug("Migrating projects..."+projects);
+            int projects = processProjects (con);
+            Logger.debug("Processing projects..."+projects);
 
             int count = EmployeeFactory.createIfEmpty
-                (ldapUsername, ldapPassword, new EmployeeFactory.Callback() {
-                        public boolean ok (Employee e) {
-                            updateProfile (e);
-                            return true;
-                        }
-                    });
+                (ldapUsername, ldapPassword);
             Logger.debug(count+ " employees retrieved!");
 
-            int pubs = migratePublications (con);
+            int pubs = processPublications (con);
 
             return redirect (ix.publications
                              .controllers.routes
@@ -125,7 +461,7 @@ public class Migration extends Controller {
         }
     }
 
-    public static int migrateProjects (Connection con) throws SQLException {
+    public static int processProjects (Connection con) throws SQLException {
         Statement stm = con.createStatement();
         PreparedStatement pstm = con.prepareStatement
             ("select * from project_tag where proj_id = ? order by proj_id");
@@ -270,7 +606,7 @@ public class Migration extends Controller {
         return count;
     }
 
-    public static int migratePubAuthors (Connection con) throws SQLException {
+    public static int processPubAuthors (Connection con) throws SQLException {
         Statement stm = con.createStatement();
         try {
             // migrate authors
@@ -316,9 +652,6 @@ public class Migration extends Controller {
                         Logger.trace("Text search failed", ex);
                     }
                 }
-                else {
-                    updateProfile (employees.iterator().next());
-                }
             }
             rset.close();
             Logger.debug("++ "+authors+" non-NCATS authors added!");
@@ -330,131 +663,39 @@ public class Migration extends Controller {
         }
     }
 
-    public static int migratePublications (Connection con) 
+    public static int processPublications (Connection con) 
         throws SQLException {
+        PublicationProcessor processor = new PublicationProcessor (con);
         Statement stm = con.createStatement();
-        PreparedStatement pstm = con.prepareStatement
-            ("select * from pub_image where db_pub_id = ? order by img_order");
-        PreparedStatement pstm2 = con.prepareStatement
-            ("select * from pub_tag where db_pub_id = ?");
-        PreparedStatement pstm3 = con.prepareStatement
-            ("select * from pub_program where db_pub_id = ?");
-        PreparedStatement pstm4 = con.prepareStatement
-            ("select * from publication where db_pub_id = ?");
 
         try {
             // now migrate publications
             ResultSet rset = stm.executeQuery
                 ("select * from publication "
-                 //+"where rownum <= 10"
+                 +"where rownum <= 100"
                  +"order by pmid, db_pub_id"
                 );
             int publications = 0;
             while (rset.next()) {
                 long pmid = rset.getLong("pmid");
+                long id = rset.getLong("db_pub_id");
                 if (rset.wasNull()) {
+                    Logger.warn(id+": pmid is null!");
                 }
                 else {
-                    Publication pub = PublicationFactory.byPMID(pmid);
-                    if (pub == null) {
-                        pub = eutils.getPublication(pmid);
-                        if (pub != null) {
-                            for (PubAuthor p : pub.authors) {
-                                p.author = instrument (p.author);
-                            }
-                            
-                            long id = rset.getLong("db_pub_id");
-                            // get image (if any)
-                            List<Keyword> tags = new ArrayList<Keyword>();
-                            try {
-                                List<Figure> figs = createFigures (pstm, id);
-                                for (Figure f : figs) {
-                                    pub.figures.add(f);
-                                }
-                            }
-                            catch (Exception ex) {
-                                Logger.trace
-                                    ("Can't retrieve images for pmid="+pmid, ex);
-                            }
-                            
-                            try {
-                                for (Keyword k :
-                                         fetchPubCategories (pstm2, id)) {
-                                    if ("web-tag".equalsIgnoreCase(k.label)) {
-                                        tags.add(k);
-                                    }
-                                    pub.keywords.add(k);
-                                }
-                                
-                                for (Keyword k : fetchPrograms (pstm3, id))
-                                    pub.keywords.add(k);
-                            }
-                            catch (Exception ex) {
-                                Logger.trace
-                                    ("Can't retrieve categories for pmid="+pmid,
-                                     ex);
-                            }
-                            
-                            try {
-                                pub.save();
-                                Logger.debug("+ New publication added "+pub.id
-                                             +": "+pub.title);
-                                
-                                // now create an xref with the tags
-                                if (!tags.isEmpty()) {
-                                    XRef ref = new XRef (pub);
-                                    pstm4.setLong(1, id);
-                                    ResultSet rs = pstm4.executeQuery();
-                                    if (rs.next()) {
-                                        String alias =
-                                        rs.getString("web_alias");
-                                        if (alias != null) {
-                                            Logger.debug
-                                                ("++ web alias: "+alias);
-                                        }
-                                        else { // just use the title
-                                            alias = pub.title;
-                                        }
-                                        Keyword k = new Keyword
-                                            ("rss-content", alias);
-                                        ref.properties.add(k);
-                                    }
-                                    rs.close();
-                                    ref.properties.add
-                                        (new Keyword
-                                         ("UUID", UUID.randomUUID().toString()));
-                                    ref.properties.addAll(tags);
-                                    ref.save();
-                                    Logger.debug("+ XRef "+ref.id+" created "
-                                                 +"for publication "+pub.id
-                                                 +" with "+tags.size()
-                                                 +" tags!");
-                                }
-                                ++publications;
-                            }
-                            catch (Exception ex) {
-                                Logger.trace("Can't save publication: "
-                                             +pub.title, ex);
-                            }
-                        }
-                        else {
-                            Logger.warn("Can't locate PMID "+pmid);
-                        }
-                    }
-                    else {
-                        Logger.warn
-                            ("Publication "+pmid+" is already registered!");
-                    }
+                    Publication pub = processor.process(id, pmid);
+                    if (pub != null)
+                        ++publications;
                 }
             }
             rset.close();
-            Logger.debug(publications+" new publications added!");
+            Logger.debug(publications+" publications processed!");
             
             return publications;
         }
         finally {
             stm.close();
-            pstm.close();
+            processor.shutdown();
         }
     }
 
@@ -710,71 +951,8 @@ public class Migration extends Controller {
         return author;
     }
 
-    public static Result index () {
-        /*
-        EbeanServer server = Ebean.getServer
-            (Play.application().plugin(EbeanPlugin.class).defaultServer());
-        SqlQuery query = 
-            server.createSqlQuery("select distinct term from ix_core_value");
-        List<SqlRow> rows = query.findList();
-        for (SqlRow r : rows) {
-            Logger.info(r.getString("term"));
-        }
-        */
-        
-        return ok (ix.ncats.views.html.migration.render
-                   ("Project/Publication Migration"));
-    }
-
-    public static void updateProfile (Employee empl) {
-        if (empl.lastname.equalsIgnoreCase("Carrillo-Carrasco")) {
-            empl.suffix = "M.D.";
-            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/carrillo-carrasco.html";
-            empl.biography = 
-"Nuria Carrillo-Carrasco leads the clinical team for the Therapeutics for Rare and Neglected Diseases (TRND) program. The group conducts natural history studies and early-phase clinical trials needed to advance promising therapies for rare diseases, develops biomarkers, and identifies appropriate endpoints for clinical trials. Before she joined TRND, Carrillo-Carrasco studied clinical and translational aspects of inborn errors of metabolism and gene therapy.\n"+
-"Carrillo-Carrasco's research focuses on therapeutic development for rare genetic diseases, including GNE myopathy, creatine transporter defect and other inborn errors of metabolism. She is a faculty member for the Medical Biochemical Genetics fellowship program at NIH. Carrillo-Carrasco earned her M.D. from the National Autonomous University of Mexico and completed her pediatrics residency at Georgetown University Hospital. She is board certified in pediatrics, medical genetics and biochemical genetics.";
-            empl.title = 
-"Leader, Clinical Group, Therapeutics for Rare and Neglected Diseases\n"+
-"Division of Pre-Clinical Innovation\n"+
-"National Center for Advancing Translational Sciences\n"+
-"National Institutes of Health";
-            empl.research = 
-"Carrillo-Carrasco is interested in addressing the challenges of developing therapeutics for rare diseases by improving drug development tools and the design of natural history studies and clinical trials for these diseases. Currently, she is the principal investigator of two studies of GNE myopathy: a natural history study and a clinical trial of ManNAc as a potential therapy for the disease. GNE myopathy is an extremely rare disorder that occurs in just one of every 1 million people and causes devastating progressive muscle weakness. No treatment exists for the disorder, which is caused by mutations in the GNE gene that lead to a defect in the sialic acid biosynthetic pathway. As part of the natural history study, Carrillo-Carrasco has characterized more than 40 patients on clinical, functional and molecular grounds and is evaluating appropriate outcome measures to be used in clinical trials, developing better diagnostic tools and discovering biomarkers for the disease.";
-        }
-        else if (empl.lastname.equalsIgnoreCase("Gee")) {
-            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/gee.html";
-            empl.suffix = "M.S.";
-            empl.title =
-"Research Scientist, Biology\n"+
-"Division of Pre-Clinical Innovation\n"+
-"National Center for Advancing Translational Sciences\n"+
-"National Institutes of Health";
-            empl.biography =
-"Amanda Wagner Gee joined NCATS in 2014. She works on assay development for cell-based high-content and high-throughput screening. Prior to joining NCATS, Gee worked in the laboratory of Lee Rubin, Ph.D., at the Harvard Stem Cell Institute, using directed differentiation, primary tissue isolation and image-based high content screening to study neural and muscular disease. She received her M.S. in cell biology at Duke University, where she studied BMP4 signaling and sensory neuron patterning in peripheral nervous system development in the laboratory of Fan Wang, Ph.D.";
-            empl.research = 
-"Gee has a particular interest in adult stem cells and degenerative diseases. She has studied the neural and muscular degeneration in spinal muscular atrophy, a childhood-onset disease. She also has researched muscle degeneration and weakness in sarcopenia, a phenomenon associated with aging. For that project, she designed and executed an image-based screen on primary adult muscle stem cells, the lead compound from which is currently under evaluation in animals as a potential treatment. Her experience also includes research on amyotrophic lateral sclerosis and Huntington's disease.\n"+
-"Gee has worked with adult and embryonic stem cells, and she appreciates their potential as well as their occasional quirks. At NCATS, she is collaborating on projects using induced pluripotent stem cell-derived patient cells, primary cells, biosensors for vesicle and receptor trafficking, and image-based screening techniques. Gee has been impressed by the diversity of expertise under one roof at NCATS, and she is excited by the opportunity to learn about and work on so many different topics.";
-        }
-        else if (empl.lastname.equalsIgnoreCase("gerhold")) {
-            empl.selfie = createFigure
-                ("http://www.ncats.nih.gov/about/org/profiles/images/GerholdD.jpg");
-            empl.suffix = "Ph.D.";
-            empl.uri = "http://www.ncats.nih.gov/about/org/profiles/gerhold.html";
-            empl.title = 
-"Leader, Genomic Toxicology\n"+
-"Division of Pre-Clinical Innovation\n"+
-"National Center for Advancing Translational Sciences\n"+
-"National Institutes of Health";
-            empl.biography =
-"David Gerhold is a staff genomic toxicologist at NCATS. He is developing in vitro methods to identify toxic compounds by introducing differentiating stem cell models and the gene expression technologies RNAseq and RASL-Seq. These new technologies support efforts to reach several goals:\n"+
-"Identify potentially toxic chemicals in the environment through the Toxicology in the 21st Century consortium;\n"+
-"Identify biomarkers of genetic susceptibility to tobacco; and\n"+
-"Facilitate drug development through the Therapeutics for Rare and Neglected Diseases program.\n"+
-"Previously, Gerhold pioneered gene expression microarray technology at Merck Research Laboratories, applying this expertise to identify kidney injury biomarkers. He subsequently co-led the Kidney Biomarker Working Group within the Predictive Safety Testing Consortium, collaborating across the pharmaceutical industry to qualify seven biomarkers with the Food and Drug Administration and publishing the findings in 2010. Gerhold also worked as a liaison with clinical nephrologists initiating translational studies to improve nephrology standard of care.";
-            empl.research = 
-"Gerhold's unifying vision is to develop a high-throughput, robust gene expression platform and core facility. NCATS researchers will use the RASL-Seq platform to gather thorough dose- and time-response data, as well as extensive reference data sets, to unlock the meaning behind these data. Such a platform can help show the toxic mechanisms of drugs and environmental contaminants alike.\n"+
-"Gerhold uses RASL-Seq to determine the toxic mechanisms by which environmental contaminants affect neurons, liver hepatocytes and other cell types. These studies demand adoption and production of improved cellular models for toxic responses and for diseases, such as models derived from immortalized cells and induced-pluripotent stem cells (iPSC). Gerhold also uses iPSC technology to generate \"disease-in-a-dish\" models. For example, both RASL-Seq and RNAseq help researchers understand the effects of tobacco components on vascular endothelial cells. By producing these cells using iPSC from smokers with and without vascular disease, Gerhold can determine whether some patients are genetically susceptible or resistant to the disease.";
-        }
+    public static Result loader () {
+        return ok (processor.render("Project/Publication Bulk Processor"));
     }
 
     static Figure createFigure (String url) {

@@ -1,0 +1,44 @@
+@import ix.publications.controllers.PublicationProjectProcessor;
+
+@(message: String)
+
+@ix.core.views.html.main(message) {
+      <div class="site-wrapper">
+        <div class="site-wrapper-inner">
+          <div class="cover-container">
+            <div class="inner cover">
+              <h1 class="cover-heading">NCATS Publication Daemon</h1>
+              <form class="form-horizontal" role="form" method="POST" 
+                    action="@ix.publications.controllers.routes.PublicationProjectProcessor.status">
+		<div class="form-group">
+                  <label for="secret-code" class="col-sm-2 control-label">Code</label>
+                  <div class="col-sm-10">
+                    <input type="text" class="form-control" name="secret-code" 
+			   id="secret-code">
+                  </div>
+		</div>
+		@if(!PublicationProjectProcessor.isDaemonRunning()) {
+		<div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-10">
+                    <button type="submit"
+			    name="action"
+			    value="start"
+			    class="btn btn-default">Start Daemon</button>
+                  </div>
+		</div>
+		} else {
+		<div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-10">
+                    <button type="submit"
+			    name="action"
+			    value="stop"
+			    class="btn btn-default">Stop Daemon</button>
+                  </div>
+		</div>
+		}
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+}

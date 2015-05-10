@@ -921,7 +921,7 @@ public class App extends Controller {
         // the idea is to generate enough results for 1.5 pages (enough
         // to show pagination) and return immediately. as the user pages,
         // the background job will fill in the rest of the results.
-        int count = processor.process(rows+rows/2);
+        int count = processor.process(rows+1);
 
         // while we continue to fetch the rest of the results in the
         // background
