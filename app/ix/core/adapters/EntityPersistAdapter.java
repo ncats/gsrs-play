@@ -195,7 +195,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                     }
                     else {
                         Logger.warn("Entity bean ["+cls.getName()+"]="+id
-                                    +" doesn't have id of type Long!");
+                                    +" doesn't have Id annotation!");
                     }
                 }
                 catch (Exception ex) {

@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
 import ix.core.models.Keyword;

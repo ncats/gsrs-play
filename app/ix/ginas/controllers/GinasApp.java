@@ -57,9 +57,9 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 
 public class GinasApp extends App {
     static final TextIndexer TEXT_INDEXER = 
-        play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
     static final StructureIndexer STRUC_INDEXER =
-        play.Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+        Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
     
     public static final String[] CHEMICAL_FACETS = {
         "Status",
@@ -68,21 +68,21 @@ public class GinasApp extends App {
     };
     
     public static Result error (int code, String mesg) {
-        return ok (ix.idg.views.html.error.render(code, mesg));
+        return ok (ix.ginas.views.html.error.render(code, mesg));
     }
     
     public static Result _notFound (String mesg) {
-        return notFound (ix.idg.views.html.error.render(404, mesg));
+        return notFound (ix.ginas.views.html.error.render(404, mesg));
     }
     
     public static Result _badRequest (String mesg) {
-        return badRequest (ix.idg.views.html.error.render(400, mesg));
+        return badRequest (ix.ginas.views.html.error.render(400, mesg));
     }
     
     public static Result _internalServerError (Throwable t) {
         t.printStackTrace();
         return internalServerError
-            (ix.idg.views.html.error.render
+            (ix.ginas.views.html.error.render
              (500, "Internal server error: "+t.getMessage()));
     }
     
@@ -130,66 +130,75 @@ public class GinasApp extends App {
     }
 
 
-        static class GinasV1ProblemHandler
-            extends  DeserializationProblemHandler {
-            GinasV1ProblemHandler () {
-            }
+    static class GinasV1ProblemHandler
+        extends  DeserializationProblemHandler {
+        GinasV1ProblemHandler () {
+        }
 
-            public boolean handleUnknownProperty
-                (DeserializationContext ctx, JsonParser parser,
-                 JsonDeserializer deser, Object bean, String property) {
+        public boolean handleUnknownProperty
+            (DeserializationContext ctx, JsonParser parser,
+             JsonDeserializer deser, Object bean, String property) {
 
-                try {
-                    boolean parsed = true;
-                    if ("hash".equals(property)) {
+            try {
+                boolean parsed = true;
+                if ("hash".equals(property)) {
+                    Structure struc = (Structure)bean;
+                    //Logger.debug("value: "+parser.getText());
+                    struc.properties.add(new Keyword
+                                         (Structure.H_LyChI_L4,
+                                          parser.getText()));
+                }
+                else if ("references".equals(property)) {
+                    Logger.debug(property+": "+bean.getClass());
+                    if (bean instanceof Structure) {
                         Structure struc = (Structure)bean;
-                        //Logger.debug("value: "+parser.getText());
-                        struc.properties.add(new Keyword
-                                             (Structure.H_LyChI_L4,
-                                              parser.getText()));
+                        parseReferences (parser, struc.properties);
                     }
-                    else if ("references".equals(property)) {
-                        if (bean instanceof Structure) {
-                            Structure struc = (Structure)bean;
-                            if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
-                                while (JsonToken.END_ARRAY != parser.nextToken()) {
-                                    String ref = parser.getValueAsString();
-                                    struc.properties.add
-                                        (new Keyword (Ginas.REFERENCE, ref));
-                                }
-                            }
-                            else {
-                                return false;
-                            }
-                        }
-                        else {
-                            parsed = false;
-                        }
-                    }
-                    else if ("count".equals(property)) {
-                        if (bean instanceof Structure) {
-                            // need to handle this.
-                            parser.skipChildren();
-                        }
+                    else if (bean instanceof Protein) {
+                        Protein prot = (Protein)bean;
+                        parseReferences (parser, prot.references);
                     }
                     else {
                         parsed = false;
                     }
-
-                    if (!parsed) {
-                        Logger.warn("Unknown property \""
-                                    +property+"\" while parsing "
-                                    +bean+"; skipping it..");
-                        Logger.debug("Token: "+parser.getCurrentToken());
-                        parser.skipChildren();                  
+                }
+                else if ("count".equals(property)) {
+                    if (bean instanceof Structure) {
+                        // need to handle this.
+                        parser.skipChildren();
                     }
                 }
-                catch (Exception ex) {
-                    ex.printStackTrace();
+                else {
+                    parsed = false;
                 }
-                return true;
+
+                if (!parsed) {
+                    Logger.warn("Unknown property \""
+                                +property+"\" while parsing "
+                                +bean+"; skipping it..");
+                    Logger.debug("Token: "+parser.getCurrentToken());
+                    parser.skipChildren();
+                }
             }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            return true;
         }
+
+        int parseReferences (JsonParser parser, List<Value> refs)
+            throws IOException {
+            int nrefs = 0;
+            if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
+                while (JsonToken.END_ARRAY != parser.nextToken()) {
+                    String ref = parser.getValueAsString();
+                    refs.add(new Keyword (Ginas.REFERENCE, ref));
+                    ++nrefs;
+                }
+            }
+            return nrefs;
+        }
+    }
 
     public static <T extends Substance> T parseJSON
         (InputStream is, Class<T> cls) throws IOException {
@@ -210,6 +219,17 @@ public class GinasApp extends App {
                                 +cls.getName());
                 }
                 break;
+                
+            case protein:
+                if (cls.isAssignableFrom(ProteinSubstance.class)) {
+                    return mapper.treeToValue(tree, cls);
+                }
+                else {
+                    Logger.warn(tree.get("uuid").asText()+" is not of type "
+                                +cls.getName());
+                }
+                break;
+                
             default:
                 Logger.warn("Skipping substance class "+type);
             }
@@ -220,10 +240,10 @@ public class GinasApp extends App {
         return null;
     }
 
-        public static Result load () {
-                return ok (ix.ginas.views.html.load.render());
-        }
-
+    public static Result load () {
+        return ok (ix.ginas.views.html.load.render());
+    }
+    
     public static Result loadJSON () {
         DynamicForm requestData = Form.form().bindFromRequest();
         String type = requestData.get("substance-type");
@@ -285,6 +305,9 @@ public class GinasApp extends App {
                 sub = persist (chem);
             }
             else if (type.equalsIgnoreCase("protein")) {
+                ProteinSubstance protein = parseJSON
+                    (is, ProteinSubstance.class);
+                sub = persist (protein);
             }
             else if (type.equalsIgnoreCase("nucleic acid")) {
             }
@@ -299,9 +322,7 @@ public class GinasApp extends App {
             }
         }
         catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError
-                ("Can't parse json: "+ex.getMessage());
+            return _internalServerError (ex);
         }
 
         ObjectMapper mapper = new ObjectMapper ();
@@ -443,7 +464,8 @@ public class GinasApp extends App {
             (result.getFacets(), CHEMICAL_FACETS);
 
         int max = Math.min(rows, Math.max(1,result.count()));
-        int total = 0, totalChemicalSubstances = 0, totalDiseases = 0, totalLigands = 0;
+        int total = 0, totalChemicalSubstances = 0,
+            totalDiseases = 0, totalLigands = 0;
         for (TextIndexer.Facet f : result.getFacets()) {
             if (f.getName().equals("ix.Class")) {
                 for (TextIndexer.FV fv : f.getValues()) {
@@ -476,7 +498,7 @@ public class GinasApp extends App {
             }
         }
         return fv;
-    }    
+    }
 
     public static Result authenticate () {
         return ok ("You're authenticated!");
@@ -519,11 +541,10 @@ public class GinasApp extends App {
                 ex.printStackTrace();
             }
 
-            return notFound (ix.idg.views.html.error.render
+            return notFound (ix.ginas.views.html.error.render
                              (400, "Invalid search parameters: type=\""+type
                               +"\"; q=\""+q+"\" cutoff=\""+cutoff+"\"!"));
         }
-
 
         final int total = SubstanceFactory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
@@ -533,14 +554,16 @@ public class GinasApp extends App {
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), CHEMICAL_FACETS);
 
-            List<ChemicalSubstance> chemicals = new ArrayList<ChemicalSubstance>();
+            List<ChemicalSubstance> chemicals =
+                new ArrayList<ChemicalSubstance>();
             int[] pages = new int[0];
             if (result.count() > 0) {
                 rows = Math.min(result.count(), Math.max(1, rows));
                 pages = paging (rows, page, result.count());
                 for (int i = (page - 1) * rows, j = 0; j < rows
                          && i < result.count(); ++j, ++i) {
-                    chemicals.add((ChemicalSubstance) result.getMatches().get(i));
+                    chemicals.add
+                        ((ChemicalSubstance) result.getMatches().get(i));
                 }
             }
 
@@ -592,13 +615,8 @@ public class GinasApp extends App {
             return structureResult (indexer, rows, page);
         }
         catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.error("Can't execute similarity search", ex);
+            return _internalServerError (ex);
         }
-
-        return internalServerError
-            (ix.idg.views.html.error.render
-             (500, "Unable to perform similarity search: "+query));
     }
 
     public static Result substructure
@@ -623,12 +641,8 @@ public class GinasApp extends App {
             return structureResult (indexer, rows, page);
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+            return _internalServerError (ex);
         }
-
-        return internalServerError
-            (ix.idg.views.html.error.render
-             (500, "Unable to perform substructure search: "+query));
     }
 
     public static Result structureResult
@@ -640,7 +654,8 @@ public class GinasApp extends App {
         
             TextIndexer.Facet[] facets =
                 filter (result.getFacets(), CHEMICAL_FACETS);
-            List<ChemicalSubstance> substances = new ArrayList<ChemicalSubstance>();
+            List<ChemicalSubstance> substances =
+                new ArrayList<ChemicalSubstance>();
             int[] pages = new int[0];
             if (result.count() > 0) {
                 rows = Math.min(result.count(), Math.max(1, rows));
@@ -705,14 +720,28 @@ public class GinasApp extends App {
         return chem;
     }
 
+    static Substance persist (ProteinSubstance sub) throws Exception {
+        Protein p = sub.protein;
+        if (p.glycosylation != null)
+            p.glycosylation.save();
+        if (p.modifications != null)
+            p.modifications.save();
+        p.save();
+        sub.save();
+        return sub;
+    }
+
     static final GetResult<ChemicalSubstance> ChemicalResult =
-        new GetResult<ChemicalSubstance>(ChemicalSubstance.class, SubstanceFactory.chemfinder) {
-            public Result getResult (List<ChemicalSubstance> chemicals) throws Exception {
+        new GetResult<ChemicalSubstance>(ChemicalSubstance.class,
+                                         SubstanceFactory.chemfinder) {
+            public Result getResult (List<ChemicalSubstance> chemicals)
+                throws Exception {
                 return _getChemicalResult (chemicals);
             }
         };
-        
-    static Result _getChemicalResult (List<ChemicalSubstance> chemicals) throws Exception {
+    
+    static Result _getChemicalResult (List<ChemicalSubstance> chemicals)
+        throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
         if (true || chemicals.size() == 1) {
@@ -726,8 +755,8 @@ public class GinasApp extends App {
                 indexer.add(chem);
 
             TextIndexer.SearchResult result = SearchFactory.search
-                (indexer, ChemicalSubstance.class, null, indexer.size(), 0, FACET_DIM,
-                 request().queryString());
+                (indexer, ChemicalSubstance.class, null,
+                 indexer.size(), 0, FACET_DIM, request().queryString());
             if (result.count() < chemicals.size()) {
                 chemicals.clear();
                 for (int i = 0; i < result.count(); ++i) {
@@ -748,9 +777,9 @@ public class GinasApp extends App {
         return ChemicalResult.get(name);
     }
 
-        /**
-         * return the canonical/default chemical id
-         */
+    /**
+     * return the canonical/default chemical id
+     */
     public static String getId (ChemicalSubstance chemical) {
         return chemical.getName();
     }
@@ -797,7 +826,8 @@ public class GinasApp extends App {
 
         public Result result (final List<T> e) {
             try {
-                final String key = cls.getName()+"/result/"+Util.sha1(request ());
+                final String key =
+                    cls.getName()+"/result/"+Util.sha1(request ());
                 return getOrElse(key, new Callable<Result> () {
                         public Result call () throws Exception {
                             long start = System.currentTimeMillis();

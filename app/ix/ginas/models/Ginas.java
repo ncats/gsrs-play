@@ -45,12 +45,16 @@ public class Ginas extends Model {
 
     @Indexable(indexed=false)
     public String getSelf () {
-        try {
-            return Global.getRef(this)+"?view=full";
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.error("Not a valid persistence Entity", ex);
+        if (uuid != null) {
+            try {
+                String ref = Global.getRef(this);
+                if (ref != null)
+                    return ref+"?view=full";
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Not a valid persistence Entity", ex);
+            }
         }
         return null;
     }

@@ -12,9 +12,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Table(name="ix_core_etag")
 @Indexable(indexed=false)
 public class ETag extends IxModel {
-    @Id
-    @JsonIgnore
-    public Long id;
 
     @Column(length=16,unique=true)
     public final String etag;
