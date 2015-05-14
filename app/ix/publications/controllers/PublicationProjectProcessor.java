@@ -186,7 +186,15 @@ public class PublicationProjectProcessor extends Controller {
                                 // delete
                                 Logger.debug
                                     ("Deleting publication "+op.pmid+"...");
-                                pub.delete();
+                                try {
+                                    pub.delete();
+                                }
+                                catch (Exception ex) {
+                                    ex.printStackTrace();
+                                    Logger.error("Can't delete publication "
+                                                 +pub.id+" (pmid="+pub.pmid
+                                                 +")", ex);
+                                }
                             }
                             else {
                                 Logger.warn("Can't find publication "+op.pmid
@@ -201,8 +209,17 @@ public class PublicationProjectProcessor extends Controller {
                                 // delete
                                 Logger.debug
                                     ("Deleting publication "+op.pmid+"...");
-                                pub.delete();
-                                self().tell(op, self ());
+                                try {
+                                    pub.delete();
+                                    add.remove(op.id);
+                                    self().tell(op, self ());
+                                }
+                                catch (Exception ex) {
+                                    ex.printStackTrace();
+                                    Logger.error("Can't delete publication "
+                                                 +pub.id+" (pmid="
+                                                 +pub.pmid+")", ex);
+                                }
                             }
                             else {
                                 Logger.warn("Can't find publication "+op.pmid
@@ -214,6 +231,7 @@ public class PublicationProjectProcessor extends Controller {
                         }
                     }
 
+                    Logger.debug("Processing "+add.size()+" publication(s)!");
                     if (!add.isEmpty()) {
                         PublicationProcessor processor =
                             new PublicationProcessor (con);
@@ -280,9 +298,29 @@ public class PublicationProjectProcessor extends Controller {
             Logger.debug("Unknown action: \""+action+"\"");
         }
         
-        return ok (action);
+        return redirect (routes.PublicationProjectProcessor.status());
     }
 
+    static public Result persistence () {
+        try {
+            DataSource ds = DB.getDataSource("mgmt");
+            Connection con = ds.getConnection();
+            PublicationProcessor processor =
+                new PublicationProcessor (con);
+            Publication pub = processor.process(1010, 25794298l);
+            Logger.debug("publication "+pub.id+" created!");
+            pub.delete();
+            Logger.debug("publication "+pub.id+" deleted!");
+            pub = processor.process(1010,25794298l);
+            Logger.debug("publication "+pub.id+" created!");
+            return ok ("OK");
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
+    }
+    
     static class PublicationProcessor {
         PreparedStatement pstm, pstm2, pstm3, pstm4;
 
@@ -337,6 +375,7 @@ public class PublicationProjectProcessor extends Controller {
             }
             catch (Exception ex) {
                 Logger.trace("Can't retrieve images for pmid="+pmid, ex);
+                ex.printStackTrace();
             }
             
             try {
@@ -351,6 +390,7 @@ public class PublicationProjectProcessor extends Controller {
                     pub.keywords.add(k);
             }
             catch (Exception ex) {
+                ex.printStackTrace();
                 Logger.trace
                     ("Can't retrieve categories for pmid="+pmid, ex);
             }
@@ -388,15 +428,16 @@ public class PublicationProjectProcessor extends Controller {
                 }
             }
             catch (Exception ex) {
+                ex.printStackTrace();
                 Logger.trace("Can't save publication: " +pub.title, ex);
             }
             return pub;
         }
     }
 
+    static TextIndexerPlugin plugin = 
+        Play.application().plugin(TextIndexerPlugin.class);
     static TextIndexer getIndexer () {
-        TextIndexerPlugin plugin = 
-            Play.application().plugin(TextIndexerPlugin.class);
         return plugin.getIndexer();
     }
 

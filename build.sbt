@@ -1,6 +1,6 @@
-name := "reach"
+name := "srs-app"
 
-version := "1.0.0"
+version := "0.0.1"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 

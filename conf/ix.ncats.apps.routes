@@ -16,6 +16,7 @@ GET	/pubrss		ix.publications.controllers.ReachApp.pubrss(q: String ?= null, face
 #
 # publication & project processor
 #
+GET	/foobar	ix.publications.controllers.PublicationProjectProcessor.persistence
 GET	/daemon	ix.publications.controllers.PublicationProjectProcessor.status
 POST	/daemon	ix.publications.controllers.PublicationProjectProcessor.daemon
 GET     /processor       ix.publications.controllers.PublicationProjectProcessor.loader

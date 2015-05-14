@@ -18,6 +18,7 @@ GET     /webjars/*file          controllers.WebJarAssets.at(file)
 ->	/idg		ix.idg.Routes
 ->	/tox21		ix.tox21.Routes
 ->	/hcs		ix.ncats.hcs.Routes
+->	/srs		ix.srs.Routes
 ->	/auth		securesocial.Routes
 
 #

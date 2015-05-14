@@ -1,0 +1,29 @@
+@import ix.srs.controllers.SRSApp
+@import ix.ncats.controllers.App.FacetDecorator
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int], facets: Array[FacetDecorator], applications: List[ix.srs.models.Application])
+
+@ix.ncats.views.html.content("Applications", "ix.srs.models.Application",
+   ix.srs.controllers.routes.SRSApp.applications().url,
+   current, rows, total, pages, facets){
+@menu()
+}{@HtmlFormat.empty}{
+    <table class="table table-striped table-hover">
+      <tr>
+	<th>Application Type</th>
+        <th>Application Number</th>
+        <th>Product</th>
+        <th>Ingredient</th>
+	<th>BDNUM</th>	    
+      </tr>
+      @for(r <- applications) {
+      <tr>
+        <td>@r.apptype</td>
+        <td>@r.appnumber</td>
+        <td>@r.product.name</td>
+        <td>@r.ingredient.name</td>
+        <td>@r.bdnum</td>
+      </tr>
+      }
+    </table>
+}{@HtmlFormat.empty}
