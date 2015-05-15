@@ -84,7 +84,7 @@ public class Substance extends Ginas {
     @JsonView(BeanViews.Full.class)
     public List<Code> codes = new ArrayList<Code>();
 
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Modifications modifications;
     
     @JSONEntity(title = "Notes")

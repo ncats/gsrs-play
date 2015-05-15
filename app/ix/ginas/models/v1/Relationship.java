@@ -36,7 +36,7 @@ public class Relationship extends Ginas {
     public List<Keyword> references = new ArrayList<Keyword>();
     
     @JSONEntity(title="Amount")
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Amount amount;
     
     @JSONEntity(title = "Comments")
@@ -51,7 +51,7 @@ public class Relationship extends Ginas {
     public String qualification;
     
     @JSONEntity(title = "Related Substance", isRequired = true)
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public SubstanceReference relatedSubstance;
     
     @JSONEntity(title = "Relationship Type", format = JSONConstants.CV_RELATIONSHIP_TYPE, isRequired = true)

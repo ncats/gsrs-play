@@ -30,7 +30,7 @@ import ix.utils.Global;
 @DiscriminatorValue("CHE")
 public class ChemicalSubstance extends Substance {
     @JSONEntity(isRequired = true)
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
     @JsonSerialize(using=StructureSerializer.class)
     public Structure structure;

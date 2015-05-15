@@ -9,7 +9,7 @@ import javax.persistence.*;
 @Inheritance
 @DiscriminatorValue("PRE")
 public class Predicate extends IxModel {
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
     public XRef subject;
 

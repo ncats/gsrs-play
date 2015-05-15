@@ -37,7 +37,7 @@ public class ProcessingRecord extends Model {
     @Basic(fetch=FetchType.EAGER)
     public String message;
 
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public XRef xref;
     
     @ManyToOne(cascade=CascadeType.ALL)

@@ -20,7 +20,7 @@ import ix.ginas.models.Ginas;
 @Entity
 @Table(name = "ix_ginas_moiety")
 public class Moiety extends Ginas {
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
     public Structure structure;
     

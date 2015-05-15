@@ -700,16 +700,11 @@ public class GinasApp extends App {
         return indexer;
     }
 
-    // there is some thing in how jackson's object creation
-    // doesn't get registered with ebean for it to realize that
-    // the bean's state has changed.
     static Substance persist (ChemicalSubstance chem) throws Exception {
-        chem.structure.save();
         // now index the structure for searching
+        chem.structure.save(); // we need the id
         STRUC_INDEXER.add(String.valueOf(chem.structure.id),
                           chem.structure.molfile);
-        for (Moiety m : chem.moieties)
-            m.structure.save();
         chem.save();
         return chem;
     }
@@ -717,15 +712,6 @@ public class GinasApp extends App {
     static Substance persist (ProteinSubstance sub) throws Exception {
         Transaction tx = Ebean.beginTransaction();
         try {
-            //tx.setPersistCascade(true);
-            /*
-            Protein p = sub.protein;
-            if (p.glycosylation != null)
-                p.glycosylation.save();
-            if (p.modifications != null)
-                p.modifications.save();
-            p.save();
-            */
             sub.save();
             tx.commit();
         }

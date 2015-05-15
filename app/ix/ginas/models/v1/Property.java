@@ -27,7 +27,7 @@ public class Property extends Ginas {
     public String type;
     
     @JSONEntity(title = "Property Value")
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Amount value;
     
     @JSONEntity(title = "Defining")

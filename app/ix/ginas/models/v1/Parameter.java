@@ -22,7 +22,7 @@ public class Parameter extends Ginas {
     public String type;
     
     @JSONEntity(title = "Parameter Value")
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Amount value;
 
     public Parameter () {}

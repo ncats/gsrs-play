@@ -80,7 +80,7 @@ public class Target extends EntityModel {
     public String description;
 
     @JsonView(BeanViews.Full.class)
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Keyword organism;
 
     @Column(length=128)

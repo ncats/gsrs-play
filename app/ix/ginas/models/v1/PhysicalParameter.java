@@ -17,7 +17,7 @@ public class PhysicalParameter extends Ginas {
     @JSONEntity(title = "Parameter Name", isRequired = true)
     public String parameterName;
     
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Amount amount;
 
     public PhysicalParameter () {}

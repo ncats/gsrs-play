@@ -87,6 +87,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import org.reflections.Reflections;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import play.Logger;
@@ -520,8 +521,14 @@ public class TextIndexer {
         if (query != null) {
             Filter f = null;
             if (options.kind != null) {
+                Set<String> kinds = new TreeSet<String>();
+                kinds.add(options.kind.getName());
+                Reflections reflections = new Reflections("ix");
+                for (Class c : reflections.getSubTypesOf(options.kind)) {
+                    kinds.add(c.getName());
+                }
                 f = new FieldCacheTermsFilter 
-                    (FIELD_KIND, options.kind.getName());
+                    (FIELD_KIND, kinds.toArray(new String[0]));
             }
             search (searchResult, options, query, f);
         }
