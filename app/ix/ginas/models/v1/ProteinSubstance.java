@@ -6,7 +6,7 @@ import javax.persistence.*;
 @Inheritance
 @DiscriminatorValue("PRO")
 public class ProteinSubstance extends Substance {
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Protein protein;
 
     public ProteinSubstance () {}

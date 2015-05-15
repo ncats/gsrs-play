@@ -219,7 +219,7 @@ public class Global extends GlobalSettings {
 
         String name = getResource (cls);
         if (name == null) {
-            Logger.warn("Class "+cls.getName()+" isn't a NamedResource!");
+            //Logger.warn("Class "+cls.getName()+" isn't a NamedResource!");
             /*
             throw new IllegalArgumentException
                 ("Class "+cls.getName()+" isn't a NamedResource!");
@@ -228,15 +228,6 @@ public class Global extends GlobalSettings {
         }
 
         try {
-            /*
-            Method m = cls.getMethod("getId");
-            if (m == null) {
-                Logger.error("Entity doesn't have getId: "+instance);
-                throw new IllegalArgumentException
-                    ("Entity type does not have getId method!");
-            }
-            Object id = m.invoke(instance);
-            */
             Field fid = null;
             for (Field f : cls.getFields()) {
                 if (f.getAnnotation(Id.class) != null) {

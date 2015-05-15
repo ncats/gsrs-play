@@ -24,10 +24,10 @@ public class AgentModification extends Ginas {
     public String agentModificationType;
     
     @JSONEntity(title = "Agent Material", isRequired = true)
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public SubstanceReference agentSubstance;
     
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Amount amount;
 
     public AgentModification () {}

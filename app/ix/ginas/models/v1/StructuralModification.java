@@ -27,12 +27,14 @@ public class StructuralModification extends Ginas {
     public String residueModified;
     
     @JSONEntity(title = "Modified Sites", format = "table", itemsTitle = "Site")
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_ginas_structural_modification_1")
     public List<Site> sites = new ArrayList<Site>();
     
     @JSONEntity(title = "Extent", values = "JSONConstants.ENUM_EXTENT", isRequired = true)
     public String extent;
 
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Amount extentAmount;
 
     public StructuralModification () {}

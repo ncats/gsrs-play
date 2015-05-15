@@ -42,10 +42,14 @@ import play.data.Form;
 import play.db.ebean.Model;
 import play.mvc.Http;
 import play.mvc.Result;
+
 import tripod.chem.indexer.StructureIndexer;
 import tripod.chem.indexer.StructureIndexer.ResultEnumeration;
 
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.Transaction;
+import com.avaje.ebean.Ebean;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -200,8 +204,8 @@ public class GinasApp extends App {
         }
     }
 
-    public static <T extends Substance> T parseJSON
-        (InputStream is, Class<T> cls) throws IOException {
+    public static Substance persistJSON
+        (InputStream is, Class<? extends Substance> cls) throws Exception {
         ObjectMapper mapper = new ObjectMapper ();
         mapper.addHandler(new GinasV1ProblemHandler ());
         JsonNode tree = mapper.readTree(is);
@@ -211,8 +215,15 @@ public class GinasApp extends App {
                 Substance.SubstanceClass.valueOf(subclass.asText());
             switch (type) {
             case chemical:
-                if (cls.isAssignableFrom(ChemicalSubstance.class)) {
-                    return mapper.treeToValue(tree, cls);
+                if (cls == null) {
+                    ChemicalSubstance sub =
+                        mapper.treeToValue(tree, ChemicalSubstance.class);
+                    return persist (sub);
+                }
+                else if (cls.isAssignableFrom(ChemicalSubstance.class)) {
+                    ChemicalSubstance sub =
+                        (ChemicalSubstance)mapper.treeToValue(tree, cls);
+                    return persist (sub);
                 }
                 else {
                     Logger.warn(tree.get("uuid").asText()+" is not of type "
@@ -221,8 +232,15 @@ public class GinasApp extends App {
                 break;
                 
             case protein:
-                if (cls.isAssignableFrom(ProteinSubstance.class)) {
-                    return mapper.treeToValue(tree, cls);
+                if (cls == null) {
+                    ProteinSubstance sub =
+                        mapper.treeToValue(tree, ProteinSubstance.class);
+                    return persist (sub);
+                }
+                else if (cls.isAssignableFrom(ProteinSubstance.class)) {
+                    ProteinSubstance sub =
+                        (ProteinSubstance)mapper.treeToValue(tree, cls);
+                    return persist (sub);
                 }
                 else {
                     Logger.warn(tree.get("uuid").asText()+" is not of type "
@@ -299,27 +317,7 @@ public class GinasApp extends App {
                 }
             }
 
-            if (type.equalsIgnoreCase("chemical")) {
-                ChemicalSubstance chem =
-                    parseJSON(is, ChemicalSubstance.class);
-                sub = persist (chem);
-            }
-            else if (type.equalsIgnoreCase("protein")) {
-                ProteinSubstance protein = parseJSON
-                    (is, ProteinSubstance.class);
-                sub = persist (protein);
-            }
-            else if (type.equalsIgnoreCase("nucleic acid")) {
-            }
-            else if (type.equalsIgnoreCase("polymer")) {
-            }
-            else if (type.equalsIgnoreCase("Structurally Diverse")) {
-            }
-            else if (type.equalsIgnoreCase("mixture")) {
-            }
-            else {
-                return badRequest ("Unknown substance type: "+type);
-            }
+            sub = persistJSON (is, null);
         }
         catch (Exception ex) {
             return _internalServerError (ex);
@@ -337,21 +335,17 @@ public class GinasApp extends App {
             Logger.debug("processing "+toks[0]+" "+toks[1]+"...");
             ByteArrayInputStream bis = new ByteArrayInputStream
                 (toks[2].getBytes("utf8"));
-            ChemicalSubstance chem = parseJSON (bis, ChemicalSubstance.class);
-            if (chem != null) {
-                try {
-                    persist (chem);
-                    ++count;
-                }
-                catch (Exception ex) {
-                    Logger.error("Can't persist record "+toks[1], ex);
-                }
+            Substance sub = persistJSON (bis, null);
+            if (sub == null) {
+                Logger.warn("Can't persist record "+toks[1]);
+            }
+            else {
+                ++count;
             }
         }
         br.close();
         return ok (count+" record(s) processed!");
     }
-
 
     public static Result search (String kind) {
         try {
@@ -721,14 +715,27 @@ public class GinasApp extends App {
     }
 
     static Substance persist (ProteinSubstance sub) throws Exception {
-        Protein p = sub.protein;
-        if (p.glycosylation != null)
-            p.glycosylation.save();
-        if (p.modifications != null)
-            p.modifications.save();
-        p.save();
-        sub.save();
-        return sub;
+        Transaction tx = Ebean.beginTransaction();
+        try {
+            //tx.setPersistCascade(true);
+            /*
+            Protein p = sub.protein;
+            if (p.glycosylation != null)
+                p.glycosylation.save();
+            if (p.modifications != null)
+                p.modifications.save();
+            p.save();
+            */
+            sub.save();
+            tx.commit();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        finally {
+            tx.end();
+        }
+        return sub;     
     }
 
     static final GetResult<ChemicalSubstance> ChemicalResult =

@@ -37,10 +37,10 @@ public class Protein extends Ginas {
     @JoinTable(name="ix_ginas_protein_disulfide")
     public List<DisulfideLink> disulfideLinks = new ArrayList<DisulfideLink>();
 
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Glycosylation glycosylation;
 
-    @OneToOne
+    @OneToOne(cascade=CascadeType.ALL)
     public Modifications modifications;
     
     @ManyToMany(cascade=CascadeType.ALL)

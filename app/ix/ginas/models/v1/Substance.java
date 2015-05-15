@@ -239,14 +239,11 @@ public class Substance extends Ginas {
     @Column(length=1024)
     @Indexable(suggest=true,facet=true, name="Name")
     public String getName () {
-    	for (Name n : names){
-    		if(n.preferred){
-    			return n.name;
-    		}
-    	}
-		return names.get(0).name;
- }
-    public List<Code> getSynonyms () { return codes; }
-    public List<Property> getProperties () { return properties; }
-    public List<Keyword> getLinks () { return tags; }
+        for (Name n : names){
+            if(n.preferred){
+                return n.name;
+            }
+        }
+        return names.get(0).name;
+    }
 }
