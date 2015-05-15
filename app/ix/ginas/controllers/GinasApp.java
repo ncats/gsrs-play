@@ -153,14 +153,10 @@ public class GinasApp extends App {
                                           parser.getText()));
                 }
                 else if ("references".equals(property)) {
-                    Logger.debug(property+": "+bean.getClass());
+                    //Logger.debug(property+": "+bean.getClass());
                     if (bean instanceof Structure) {
                         Structure struc = (Structure)bean;
                         parseReferences (parser, struc.properties);
-                    }
-                    else if (bean instanceof Protein) {
-                        Protein prot = (Protein)bean;
-                        parseReferences (parser, prot.references);
                     }
                     else {
                         parsed = false;
@@ -210,6 +206,7 @@ public class GinasApp extends App {
         mapper.addHandler(new GinasV1ProblemHandler ());
         JsonNode tree = mapper.readTree(is);
         JsonNode subclass = tree.get("substanceClass");
+        
         if (subclass != null && !subclass.isNull()) {
             Substance.SubstanceClass type =
                 Substance.SubstanceClass.valueOf(subclass.asText());
@@ -241,6 +238,66 @@ public class GinasApp extends App {
                     ProteinSubstance sub =
                         (ProteinSubstance)mapper.treeToValue(tree, cls);
                     return persist (sub);
+                }
+                else {
+                    Logger.warn(tree.get("uuid").asText()+" is not of type "
+                                +cls.getName());
+                }
+                break;
+
+            case mixture:
+                if (cls == null) {
+                    MixtureSubstance sub =
+                        mapper.treeToValue(tree, MixtureSubstance.class);
+                    sub.save();
+                    return sub;
+                }
+                else if (cls.isAssignableFrom(MixtureSubstance.class)) {
+                    MixtureSubstance sub =
+                        (MixtureSubstance)mapper.treeToValue(tree, cls);
+                    sub.save();
+                    return sub;
+                }
+                else {
+                    Logger.warn(tree.get("uuid").asText()+" is not of type "
+                                +cls.getName());
+                }
+                break;
+
+            case polymer:
+                if (cls == null) {
+                    PolymerSubstance sub =
+                        mapper.treeToValue(tree, PolymerSubstance.class);
+                    sub.save();
+                    return sub;
+                }
+                else if (cls.isAssignableFrom(PolymerSubstance.class)) {
+                    PolymerSubstance sub =
+                        (PolymerSubstance)mapper.treeToValue(tree, cls);
+                    sub.save();
+                    return sub;
+                }
+                else {
+                    Logger.warn(tree.get("uuid").asText()+" is not of type "
+                                +cls.getName());
+                }
+                break;
+
+            case structurallyDiverse:
+                if (cls == null) {
+                    StructurallyDiverseSubstance sub =
+                        mapper.treeToValue
+                        (tree, StructurallyDiverseSubstance.class);
+                    sub.save();
+                    return sub;
+                }
+                else if (cls.isAssignableFrom
+                         (StructurallyDiverseSubstance.class)) {
+                    StructurallyDiverseSubstance sub =
+                        (StructurallyDiverseSubstance)mapper
+                        .treeToValue(tree, cls);
+                    sub.save();
+                    return sub;
                 }
                 else {
                     Logger.warn(tree.get("uuid").asText()+" is not of type "
@@ -332,7 +389,7 @@ public class GinasApp extends App {
         int count = 0;
         for (String line; (line = br.readLine()) != null; ) {
             String[] toks = line.split("\t");
-            Logger.debug("processing "+toks[0]+" "+toks[1]+"...");
+            Logger.debug("processing "+toks[0]+" "+toks[1]+"..."+count);
             ByteArrayInputStream bis = new ByteArrayInputStream
                 (toks[2].getBytes("utf8"));
             Substance sub = persistJSON (bis, null);

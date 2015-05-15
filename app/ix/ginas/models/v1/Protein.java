@@ -52,7 +52,7 @@ public class Protein extends Ginas {
     public List<OtherLinks> otherLinks = new ArrayList<OtherLinks>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_protein_property")
+    @JoinTable(name="ix_ginas_protein_reference")
     @JsonSerialize(using=ReferenceListSerializer.class)
     @JsonDeserialize(using=ReferenceListDeserializer.class)
     public List<Value> references = new ArrayList<Value>();

@@ -1,4 +1,4 @@
-package ix.ginas.models.v1;
+package ix.ginas.models;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -11,29 +11,30 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
-import ix.ginas.models.Ginas;
-import ix.core.models.Keyword;
+import ix.core.models.VIntArray;
 
-public class KeywordListDeserializer extends JsonDeserializer<List<Keyword>> {
-    final String label;
-    public KeywordListDeserializer (String label) {
-        this.label = label;
-    }
+public class IntArrayDeserializer extends JsonDeserializer<VIntArray> {
+    public IntArrayDeserializer () { }
 
-    public List<Keyword> deserialize
+    public VIntArray deserialize
         (JsonParser parser, DeserializationContext ctx)
         throws IOException, JsonProcessingException {
-        List<Keyword> keywords = null;
+
+        VIntArray array = null;
         JsonToken token = parser.getCurrentToken();
         if (JsonToken.START_ARRAY == token) {
-            keywords = new ArrayList<Keyword>();
+            List<Integer> list = new ArrayList<Integer>();
             while ((token = parser.nextToken()) != JsonToken.END_ARRAY) {
-                if (token == JsonToken.VALUE_STRING) {
-                    keywords.add(new Keyword
-                                 (label, parser.getValueAsString()));
+                if (token == JsonToken.VALUE_NUMBER_INT) {
+                    list.add(parser.getIntValue());
                 }
             }
+            int[] ary = new int[list.size()];
+            for (int i = 0; i < ary.length; ++i)
+                ary[i] = list.get(i);
+            
+            array = new VIntArray (null, ary);
         }
-        return keywords;
+        return array;
     }
 }

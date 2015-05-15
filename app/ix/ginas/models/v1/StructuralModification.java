@@ -36,6 +36,8 @@ public class StructuralModification extends Ginas {
 
     @OneToOne(cascade=CascadeType.ALL)
     public Amount extentAmount;
+    @OneToOne(cascade=CascadeType.ALL)
+    public SubstanceReference molecularFragment;
 
     public StructuralModification () {}
 }

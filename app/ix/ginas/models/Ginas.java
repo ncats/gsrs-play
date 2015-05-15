@@ -21,6 +21,7 @@ import ix.utils.Global;
 @MappedSuperclass
 public class Ginas extends Model {
     static public final String REFERENCE = "GInAS Reference";
+    static public final String TAG = "GInAS Tag";
     
     @Id
     public UUID uuid;

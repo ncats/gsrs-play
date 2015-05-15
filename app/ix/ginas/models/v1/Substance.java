@@ -113,6 +113,7 @@ public class Substance extends Ginas {
     
     @JSONEntity(title = "Approval ID", isReadOnly = true)
     @Column(length=10)
+    @Indexable(facet=true,suggest=true,name="Approval ID")
     public String unii;
     
     // TODO in original schema, this field is missing its items: String
@@ -120,6 +121,7 @@ public class Substance extends Ginas {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_substance_tag")
     @JsonSerialize(using=KeywordListSerializer.class)
+    @JsonDeserialize(using=TagListDeserializer.class)
     public List<Keyword> tags = new ArrayList<Keyword>();
 
     @Transient
