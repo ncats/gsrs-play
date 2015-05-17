@@ -133,6 +133,15 @@ public class IDGApp extends App implements Commons {
                 href = "http://www.disease-ontology.org";
             else if (name.equalsIgnoreCase("uniprot"))
                 href = "http://www.uniprot.org";
+            else {
+                List<Keyword> sources = KeywordFactory.finder.where
+                    (Expr.and(Expr.eq("label", SOURCE),
+                              Expr.eq("term", name))).findList();
+                if (!sources.isEmpty()) {
+                    Keyword source = sources.iterator().next();
+                    href = source.href;
+                }
+            }
             this.name = name;
         }
     }

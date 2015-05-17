@@ -4,15 +4,8 @@ import com.avaje.ebean.Expr;
 import com.jolbox.bonecp.BoneCPDataSource;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
-import ix.core.models.Keyword;
-import ix.core.models.Namespace;
-import ix.core.models.Publication;
-import ix.core.models.Structure;
-import ix.core.models.Predicate;
-import ix.core.models.Text;
-import ix.core.models.Value;
-import ix.core.models.VNum;
-import ix.core.models.XRef;
+import ix.core.controllers.PublicationFactory;
+import ix.core.models.*;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.StructureProcessorPlugin;
 import ix.core.plugins.StructureReceiver;
@@ -166,7 +159,8 @@ public class TcrdRegistry extends Controller implements Commons {
         final Http.Context ctx;
         final ChemblRegistry chembl;
         final Collection<TcrdTarget> targets;
-        PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5;
+        PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6, pstm7;
+        Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
         
         PersistRegistration (Connection con, Http.Context ctx,
                              Collection<TcrdTarget> targets,
@@ -193,6 +187,10 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm5 = con.prepareStatement
                 ("select * from dto_classification "
                  +"where protein_id = ? order by id");
+            pstm6 = con.prepareStatement
+                ("select * from tdl_info where protein_id = ?");
+            pstm7 = con.prepareStatement
+                ("select * from phenotype where protein_id = ?");
             this.chembl = chembl;
         }
 
@@ -215,9 +213,133 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm3.close();
             pstm4.close();
             pstm5.close();
+            pstm6.close();
+            pstm7.close();
             chembl.shutdown();
         }
 
+        void addPhenotype (Target target, long protein) throws Exception {
+            pstm7.setLong(1, protein);
+            ResultSet rset = pstm7.executeQuery();
+            Set<String> terms = new TreeSet<String>();      
+            while (rset.next()) {
+                String type = rset.getString("ptype");
+                if ("impc".equalsIgnoreCase(type)) {
+                    Keyword source = phenotypeSource.get(type);
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type,
+                             "http://www.mousephenotype.org/data/secondaryproject/idg");
+                        phenotypeSource.put(type, source);
+                    }
+                    target.properties.add(source);
+                    String term = rset.getString("term_name");
+                    if (term != null) {
+                        for (String t : term.split(",")) {
+                            terms.add(t);
+                        }
+                    }
+                }
+                else if ("gwas catalog".equalsIgnoreCase(type)) {
+                    Keyword source = phenotypeSource.get(type);
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type,
+                             "https://www.genome.gov/26525384");
+                        phenotypeSource.put(type, source);
+                    }
+                    target.properties.add(source);
+                    long pmid = rset.getLong("pmid");
+                    if (!rset.wasNull()) {
+                        Publication pub =
+                            PublicationFactory.registerIfAbsent(pmid);
+                        if (pub != null) {
+                            XRef ref = target.getLink(pub);
+                            boolean isNew = false;
+                            if (ref == null) {
+                                ref = new XRef (pub);
+                                ref.properties.add(source);
+                                isNew = true;
+                            }
+                            String trait = rset.getString("trait");
+                            if (trait != null) {
+                                Keyword t = KeywordFactory.registerIfAbsent
+                                    (GWAS_TRAIT, trait, null);
+                                ref.properties.add(t);
+                            }
+                            if (isNew) {
+                                ref.save();
+                                target.links.add(ref);
+                            }
+                            else {
+                                ref.update();
+                            }
+                            target.addIfAbsent(pub);
+                        }
+                        else {
+                            Logger.warn("Can't retrieve publication "+pmid+
+                                        "for target "+target.id);
+                        }
+                    }
+                }
+                else {
+                    Logger.warn("Unknown phenotype \""+type
+                                +"\" for target "+target.id);
+                }
+            }
+            rset.close();
+
+            if (!terms.isEmpty()) {
+                for (String term : terms) {
+                    Keyword t = KeywordFactory.registerIfAbsent
+                        (IMPC_TERM, term, null);
+                    target.properties.add(t);
+                }
+                Logger.debug("Target "+target.id+" has "+terms.size()
+                             +" phenotype(s)!");
+            }
+        }
+        
+        void addTDL (Target target, long protein) throws Exception {
+            pstm6.setLong(1, protein);
+            ResultSet rset = pstm6.executeQuery();
+            while (rset.next()) {
+                String type = rset.getString("itype");
+                Value val = null;
+                for (String field : new String[]{"string_value",
+                                                 "number_value",
+                                                 "integer_value",
+                                                 "date_value",
+                                                 "boolean_value"}) {
+                    if (field.equals("string_value")) {
+                        String str = rset.getString(field);
+                        if (str != null)
+                            val = new Text (type, str);
+                    }
+                    else if (field.equals("number_value")) {
+                        double num = rset.getDouble(field);
+                        if (!rset.wasNull())
+                            val = new VNum (type, num);
+                    }
+                    else {
+                        long num = rset.getLong(field);
+                        if (!rset.wasNull())
+                            val = new VInt (type, num);
+                    }
+                }
+                
+                if (val != null) {
+                    Logger.debug("Target "+target.id+": "+type);
+                    target.properties.add(val);
+                }
+                else {
+                    Logger.warn("TDL info \""+type+"\" for target "+target.id
+                                +" is null!");
+                }
+            }
+            rset.close();
+        }
+        
         void addDTO (Target target, long protein) throws Exception {
             pstm5.setLong(1, protein);
             ResultSet rset = pstm5.executeQuery();
@@ -303,7 +425,11 @@ public class TcrdRegistry extends Controller implements Commons {
             Logger.debug("...uniprot registration");
             UniprotRegistry uni = new UniprotRegistry ();
             uni.register(target, t.acc);
+            
             addDTO (target, t.protein);
+            addTDL (target, t.protein);
+            addPhenotype (target, t.protein);
+            
             TARGETS.add(target);
             
             if (t.novelty != null) {
@@ -1004,7 +1130,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
-                 //+"where b.tdl = 'Tclin'\n"
+                 +"where b.tdl = 'Tclin'\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
                  //+"where c.uniprot in ('A5X5Y0')\n"
