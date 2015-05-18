@@ -14,10 +14,19 @@ public interface Commons {
     public static final String IDG_GENERIF = "IDG GeneRIF";
     public static final String IDG_TARGET = "IDG Target";
     public static final String IDG_SMILES = "IDG SMILES";
+    public static final String IDG_TISSUE = "IDG Tissue";
 
     public static final String GWAS_TRAIT = "GWAS Trait";
     public static final String IMPC_TERM = "IMPC Term";
 
+    public static final String GO_COMPONENT = "GO Component";
+    public static final String GO_PROCESS = "GO Process";
+    public static final String GO_FUNCTION = "GO Function";
+
+    public static final String PANTHER_PROTEIN_CLASS = "PANTHER Protein Class";
+    public static final String PANTHER_PROTEIN_ANCESTRY =
+        "PANTHER Protein Ancestry";
+    
     public static final String DTO_PROTEIN_CLASS = "DTO Protein Class";
     public static final String DTO_PROTEIN_ANCESTRY = "DTO Protein Ancestry";
     

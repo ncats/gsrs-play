@@ -37,15 +37,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -159,7 +151,8 @@ public class TcrdRegistry extends Controller implements Commons {
         final Http.Context ctx;
         final ChemblRegistry chembl;
         final Collection<TcrdTarget> targets;
-        PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6, pstm7;
+        PreparedStatement pstm, pstm2, pstm3, pstm4,
+            pstm5, pstm6, pstm7, pstm8, pstm9, pstm10, pstm11;
         Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
         
         PersistRegistration (Connection con, Http.Context ctx,
@@ -191,6 +184,16 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from tdl_info where protein_id = ?");
             pstm7 = con.prepareStatement
                 ("select * from phenotype where protein_id = ?");
+            pstm8 = con.prepareStatement
+                ("select * from expression where protein_id = ? "
+                 +"and evidence = 'CURATED'");
+            pstm9 = con.prepareStatement
+                ("select * from goa where protein_id = ?");
+            pstm10 = con.prepareStatement
+                ("select * from panther_class a, p2pc b "
+                 +"where a.id = b.panther_class_id and b.protein_id = ?");
+            pstm11 = con.prepareStatement
+                ("select * from target2pathway where target_id = ?");
             this.chembl = chembl;
         }
 
@@ -215,13 +218,89 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm5.close();
             pstm6.close();
             pstm7.close();
+            pstm8.close();
+            pstm9.close();
+            pstm10.close();
+            pstm11.close();
             chembl.shutdown();
         }
 
+        void addPathway (Target target, long tid) throws Exception {
+            pstm11.setLong(1, tid);
+            ResultSet rset = pstm11.executeQuery();
+            while (rset.next()) {
+                String source = rset.getString("source");
+                String name = rset.getString("name");
+                Keyword term = KeywordFactory.registerIfAbsent
+                    (source+" Pathway", name, null);
+                if (!target.properties.contains(term)) {
+                    target.properties.add(term);
+                    Logger.debug("Target "+target.id+" pathway: "+term);
+                }
+            }
+            rset.close();
+        }
+        
+        void addGO (Target target, long protein) throws Exception {
+            pstm9.setLong(1, protein);
+            ResultSet rset = pstm9.executeQuery();
+            while (rset.next()) {
+                String term = rset.getString("go_term");
+                String id = rset.getString("go_id");
+                
+                Keyword go = null;
+                char kind = term.charAt(0);
+                term = term.substring(term.indexOf(':')+1);
+                String href = "http://amigo.geneontology.org/amigo/term/"+id;
+                
+                switch (kind) {
+                case 'C': // component
+                    go = KeywordFactory.registerIfAbsent
+                        (GO_COMPONENT, term, href);
+                    break;
+                    
+                case 'F': // function
+                    go = KeywordFactory.registerIfAbsent
+                        (GO_FUNCTION, term, href);
+                    break;
+                    
+                case 'P': // process
+                    go = KeywordFactory.registerIfAbsent
+                        (GO_PROCESS, term, href);
+                    break;
+                    
+                default:
+                    Logger.warn("Unknown GO term \""+term+"\"!");
+                }
+
+                if (go != null && !target.properties.contains(go)) {
+                    target.properties.add(go);
+                    Logger.debug("Target "+target.id+" GO: "+term);
+                }
+            }
+            rset.close();
+        }
+        
+        void addTissue (Target target, long protein) throws Exception {
+            pstm8.setLong(1, protein);
+            ResultSet rset = pstm8.executeQuery();
+            while (rset.next()) {
+                String tissue = rset.getString("tissue");
+                Keyword t = KeywordFactory.registerIfAbsent
+                    (IDG_TISSUE, tissue, null);
+                if (!target.properties.contains(t)) {
+                    target.properties.add(t);
+                    Logger.debug("Target "+target.id+" tissue: "+tissue);
+                }
+            }
+            rset.close();
+        }
+        
         void addPhenotype (Target target, long protein) throws Exception {
             pstm7.setLong(1, protein);
             ResultSet rset = pstm7.executeQuery();
-            Set<String> terms = new TreeSet<String>();      
+            Set<String> terms = new TreeSet<String>();
+            Map<String, Keyword> sources = new TreeMap<String, Keyword>();
             while (rset.next()) {
                 String type = rset.getString("ptype");
                 if ("impc".equalsIgnoreCase(type)) {
@@ -232,7 +311,7 @@ public class TcrdRegistry extends Controller implements Commons {
                              "http://www.mousephenotype.org/data/secondaryproject/idg");
                         phenotypeSource.put(type, source);
                     }
-                    target.properties.add(source);
+                    sources.put(type, source);
                     String term = rset.getString("term_name");
                     if (term != null) {
                         for (String t : term.split(",")) {
@@ -248,37 +327,37 @@ public class TcrdRegistry extends Controller implements Commons {
                              "https://www.genome.gov/26525384");
                         phenotypeSource.put(type, source);
                     }
-                    target.properties.add(source);
-                    long pmid = rset.getLong("pmid");
-                    if (!rset.wasNull()) {
-                        Publication pub =
-                            PublicationFactory.registerIfAbsent(pmid);
-                        if (pub != null) {
-                            XRef ref = target.getLink(pub);
-                            boolean isNew = false;
-                            if (ref == null) {
-                                ref = new XRef (pub);
-                                ref.properties.add(source);
-                                isNew = true;
-                            }
-                            String trait = rset.getString("trait");
-                            if (trait != null) {
+                    sources.put(type, source);
+                    String trait = rset.getString("trait");
+                    if (trait != null) {
+                        long pmid = rset.getLong("pmid");
+                        if (!rset.wasNull()) {
+                            Publication pub =
+                                PublicationFactory.registerIfAbsent(pmid);
+                            if (pub != null) {
+                                XRef ref = target.getLink(pub);
                                 Keyword t = KeywordFactory.registerIfAbsent
                                     (GWAS_TRAIT, trait, null);
-                                ref.properties.add(t);
-                            }
-                            if (isNew) {
-                                ref.save();
-                                target.links.add(ref);
+                                if (ref == null) {
+                                    ref = new XRef (pub);
+                                    ref.properties.add(source);
+                                    ref.properties.add(t);
+                                    ref.save();
+                                    target.links.add(ref);
+                                }
+                                else {
+                                    boolean add = true;
+                                    if (!ref.properties.contains(t)) {
+                                        ref.properties.add(t);
+                                        ref.update();
+                                    }
+                                }
+                                target.addIfAbsent(pub);
                             }
                             else {
-                                ref.update();
+                                Logger.warn("Can't retrieve publication "+pmid+
+                                            "for target "+target.id);
                             }
-                            target.addIfAbsent(pub);
-                        }
-                        else {
-                            Logger.warn("Can't retrieve publication "+pmid+
-                                        "for target "+target.id);
                         }
                     }
                 }
@@ -297,6 +376,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 Logger.debug("Target "+target.id+" has "+terms.size()
                              +" phenotype(s)!");
+            }
+            
+            for (Keyword source: sources.values()) {
+                target.properties.add(source);
             }
         }
         
@@ -338,6 +421,73 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
             }
             rset.close();
+        }
+
+        void addPanther (Target target,long protein) throws Exception {
+            pstm10.setLong(1, protein);
+            Map<String, String> parents = new HashMap<String, String>();
+            Map<String, String> panther = new HashMap<String, String>();
+            ResultSet rset = pstm10.executeQuery();
+            while (rset.next()) {
+                String pcid = rset.getString("pcid");
+                String name = rset.getString("name");
+                String ancestor = rset.getString("parent_pcids");
+                for (String p : ancestor.split("\\|")) 
+                    if (!"PC00000".equals(p)) {
+                        String old = parents.put(pcid, p);
+                        if (old != null && !old.equals(p)) {
+                            Logger.warn("Target "+target.id
+                                        +" has two Panther parents: "
+                                        +p+" and "+old+"; keeping "+p+"!");
+                        }
+                    }
+                panther.put(pcid, name);
+            }
+            rset.close();
+
+            Keyword[] path = new Keyword[panther.size()];
+            for (Map.Entry<String, String> me : panther.entrySet()) {
+                int d = 0;
+                for (String p = parents.get(me.getKey()); p != null; ++d)
+                    p = parents.get(p);
+                //Logger.debug("PANTHER "+me.getKey()+" "+d);
+
+                if (path[d] != null) {
+                    // ignore this lineage!
+                }
+                else {
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (PANTHER_PROTEIN_CLASS + " ("+d+")",
+                         me.getValue(), null);
+                    target.properties.add(kw);
+                    path[d] = kw;
+                }
+            }
+            
+            for (int k = path.length; --k >= 0; ) {
+                Keyword node = path[k];
+                if (node != null) {
+                    List<Predicate> predicates = PredicateFactory.finder.where
+                        (Expr.and(Expr.eq("subject.refid", node.id),
+                                  Expr.eq("predicate",
+                                          PANTHER_PROTEIN_ANCESTRY)))
+                        .findList();
+                    if (predicates.isEmpty()) {
+                        try {
+                            Predicate pred = new Predicate
+                                (PANTHER_PROTEIN_ANCESTRY);
+                            pred.subject = new XRef (node);
+                            for (int j = k; --j >= 0; ) {
+                                pred.objects.add(new XRef (path[j]));
+                            }
+                            pred.save();
+                        }
+                        catch (Throwable t) {
+                            t.printStackTrace();
+                        }
+                    }
+                }
+            }
         }
         
         void addDTO (Target target, long protein) throws Exception {
@@ -393,7 +543,6 @@ public class TcrdRegistry extends Controller implements Commons {
                         Predicate pred = new Predicate
                             (DTO_PROTEIN_ANCESTRY);
                         pred.subject = new XRef (node);
-                        pred.subject.save();
                         for (int j = k; --j >= 0; ) {
                             pred.objects.add(new XRef (path.get(j)));
                         }
@@ -429,6 +578,10 @@ public class TcrdRegistry extends Controller implements Commons {
             addDTO (target, t.protein);
             addTDL (target, t.protein);
             addPhenotype (target, t.protein);
+            addTissue (target, t.protein);
+            addGO (target, t.protein);
+            addPathway (target, t.id);
+            addPanther (target, t.protein);
             
             TARGETS.add(target);
             

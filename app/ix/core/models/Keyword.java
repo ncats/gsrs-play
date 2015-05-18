@@ -25,4 +25,13 @@ public class Keyword extends Value {
 
     @Override
     public String getValue () { return term; }
+
+    public boolean equals (Object obj) {
+        if (obj instanceof Keyword) {
+            Keyword kw = (Keyword)obj;
+            if (label != null && term != null)
+                return label.equals(kw.label) && term.equals(kw.term);
+        }
+        return false;
+    }
 }
