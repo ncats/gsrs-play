@@ -824,6 +824,7 @@ public class TcrdRegistry extends Controller implements Commons {
             ResultSet rs = pstm.executeQuery();
             try {
                 int count = 0;
+                Map<Long, String> generifs = new HashMap<Long, String>();
                 while (rs.next()) {
                     long pmid = rs.getLong("pubmed_ids");
                     String text = rs.getString("text");
@@ -846,6 +847,34 @@ public class TcrdRegistry extends Controller implements Commons {
                     
                     if (updates > 0) {
                         ++count;
+                    }
+                    else {
+                        generifs.put(pmid, text);
+                    }
+                }
+
+                for (Map.Entry<Long, String> me : generifs.entrySet()) {
+                    long pmid = me.getKey();
+                    Publication pub = PublicationFactory.registerIfAbsent(pmid);
+                    if (pub != null) {
+                        try {
+                            target.publications.add(pub);
+                            XRef xref = new XRef (pub);
+                            xref.properties.add
+                                (new Text (IDG_GENERIF, me.getValue()));
+                            xref.save();
+                            target.links.add(xref);
+                            
+                            ++count;
+                        }
+                        catch (Exception ex) {
+                            ex.printStackTrace();
+                            Logger.error("Can't save XRef for publication "
+                                         +pub.id, ex);
+                        }
+                    }
+                    else {
+                        Logger.warn("Bogus PMID: "+pmid+"!");
                     }
                 }
                 
@@ -1283,7 +1312,8 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
-                 +"where b.tdl = 'Tclin'\n"
+                 //+"where b.tdl = 'Tclin'\n"
+                 +" where c.uniprot = 'P25089'\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
                  //+"where c.uniprot in ('A5X5Y0')\n"

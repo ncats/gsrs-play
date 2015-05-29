@@ -1,6 +1,6 @@
-name := "srs-app"
+name := "idg"
 
-version := "0.0.1"
+version := "1.2.2"
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava)
 
@@ -49,6 +49,7 @@ libraryDependencies ++= Seq(
     ,"org.freehep" % "freehep-graphicsio-svg" % "2.4"
     ,"org.freehep" % "freehep-graphics2d" % "2.4"
     ,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
+    ,"org.webjars" % "fabric.js" % "1.4.12"
 )
 
 scalacOptions ++= Seq(

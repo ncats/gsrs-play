@@ -1,0 +1,4 @@
+#
+# qHTS resources
+#
+GET	/test	ix.qhts.controllers.QhtsFactory.test

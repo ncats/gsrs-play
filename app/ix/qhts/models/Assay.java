@@ -1,4 +1,4 @@
-package ix.tox21.models;
+package ix.qhts.models;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ import ix.core.models.EntityModel;
 import ix.utils.Global;
 
 @Entity
-@Table(name="ix_tox21_assay")
+@Table(name="ix_qhts_assay")
 public class Assay extends EntityModel {
     public String name;
 
@@ -31,24 +31,24 @@ public class Assay extends EntityModel {
 
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_tox21_assay_synonym",
-               joinColumns=@JoinColumn(name="ix_tox21_assay_synonym_id",
+    @JoinTable(name="ix_qhts_assay_synonym",
+               joinColumns=@JoinColumn(name="ix_qhts_assay_synonym_id",
                                        referencedColumnName="id")
                )
     public List<Keyword> synonyms = new ArrayList<Keyword>();
 
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_tox21_assay_property")
+    @JoinTable(name="ix_qhts_assay_property")
     public List<Value> properties = new ArrayList<Value>();
 
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_tox21_assay_link")
+    @JoinTable(name="ix_qhts_assay_link")
     public List<XRef> links = new ArrayList<XRef>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_tox21_assay_publication")
+    @JoinTable(name="ix_qhts_assay_publication")
     @JsonView(BeanViews.Full.class)
     public List<Publication> publications = new ArrayList<Publication>();
     
@@ -58,7 +58,7 @@ public class Assay extends EntityModel {
     }
     
     @Column(length=1024)
-    @Indexable(suggest=true,facet=true, name="Assay")
+    @Indexable(suggest=true,facet=true, name="qHTS Assay")
     public String getName () { return name; }
     public String getDescription () { return description; }
     public List<Keyword> getSynonyms () { return synonyms; }

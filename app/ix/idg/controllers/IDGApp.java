@@ -25,6 +25,8 @@ import ix.utils.Util;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
+import play.cache.Cached;
+
 import tripod.chem.indexer.StructureIndexer;
 
 import java.io.IOException;
@@ -336,7 +338,8 @@ public class IDGApp extends App implements Commons {
         
         return decors.toArray(new FacetDecorator[0]);
     }
-    
+
+    @Cached(key="_about", duration = Integer.MAX_VALUE)
     public static Result about() {
         final String key = "idg/about";
         try {
@@ -363,12 +366,18 @@ public class IDGApp extends App implements Commons {
         }
     }
 
+    @Cached(key="_index", duration = Integer.MAX_VALUE)
     public static Result index () {
         return ok (ix.idg.views.html.index2.render
                    ("Pharos: Illuminating the Druggable Genome",
                     DiseaseFactory.finder.findRowCount(),
                     TargetFactory.finder.findRowCount(),
                     LigandFactory.finder.findRowCount()));
+    }
+
+    @Cached(key="_kinome", duration = Integer.MAX_VALUE)
+    public static Result kinome () {
+        return ok (ix.idg.views.html.kinome.render());
     }
 
     public static Result error (int code, String mesg) {
@@ -978,7 +987,7 @@ public class IDGApp extends App implements Commons {
                             call () throws Exception {
                             Logger.debug("Cache missed: "+key);
                             return SearchFactory.search
-                            (null, quote (query), MAX_SEARCH_RESULTS, 0,
+                            (null, query, MAX_SEARCH_RESULTS, 0,
                              FACET_DIM, request().queryString());
                         }
                     });

@@ -1,0 +1,27 @@
+
+@ix.ncats.views.html.main("The Human Kinome", null){
+    @menu("ix.idg.models.Target") {
+        <ul class="nav navbar-nav navbar-left">
+            <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null, 10, 1)">Diseases</a></li>
+            <li role="presentation" class="active"><a href="#">Targets</a></li>
+            <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 8, 1)">Ligands</a></li>
+        </ul>
+    }
+}(HtmlFormat.empty){
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-9">
+       <div class="panel panel-default">
+       	   <div class="panel-body">
+           	<canvas id="kinome-canvas" width="500" height="600"></canvas>
+           </div>
+       </div>
+    </div>
+  </div>
+</div>	  
+}
+
+<script src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>
+<script src='@routes.Assets.at("ncats/kinome/kinome.js")'></script>

@@ -1,4 +1,4 @@
-package ix.tox21.models;
+package ix.qhts.models;
 
 import javax.persistence.*;
 import java.util.List;
@@ -11,7 +11,7 @@ import ix.utils.Global;
 import ix.core.models.*;
 
 @Entity
-@Table(name="ix_tox21_sample")
+@Table(name="ix_qhts_sample")
 @Inheritance
 @DiscriminatorValue("SAMPL")
 public class Sample extends EntityModel {
@@ -39,7 +39,7 @@ public class Sample extends EntityModel {
     
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_tox21_sample_synonym",
+    @JoinTable(name="ix_qhts_sample_synonym",
                joinColumns=@JoinColumn(name="ix_tox21_sample_synonym_id",
                                        referencedColumnName="id")
                )
@@ -47,16 +47,16 @@ public class Sample extends EntityModel {
 
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_tox21_sample_property")
+    @JoinTable(name="ix_qhts_sample_property")
     public List<Value> properties = new ArrayList<Value>();
 
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_tox21_sample_link")
+    @JoinTable(name="ix_qhts_sample_link")
     public List<XRef> links = new ArrayList<XRef>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_tox21_sample_publication")
+    @JoinTable(name="ix_qhts_sample_publication")
     @JsonView(BeanViews.Full.class)
     public List<Publication> publications = new ArrayList<Publication>();
 
@@ -65,7 +65,7 @@ public class Sample extends EntityModel {
         this.name = name;
     }
     
-    @Indexable(facet=true,suggest=true,name="Sample")    
+    @Indexable(facet=true,suggest=true,name="qHTS Sample")
     public String getName () { return name; }
     
     public String getDescription () { return null; }

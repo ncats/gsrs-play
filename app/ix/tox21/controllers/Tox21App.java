@@ -33,6 +33,8 @@ import tripod.chem.indexer.StructureIndexer;
 import static tripod.chem.indexer.StructureIndexer.ResultEnumeration;
 
 import ix.tox21.models.*;
+import ix.qhts.models.Sample;
+import ix.qhts.models.Assay;
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
 

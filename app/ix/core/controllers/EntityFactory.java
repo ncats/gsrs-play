@@ -144,6 +144,9 @@ public class EntityFactory extends Controller {
                 _serializationConfig = _serializationConfig.withView(v);
             }
         }
+        
+        public EntityMapper () {
+        }
 
         public String toJson (Object obj) {
             return toJson (obj, false);

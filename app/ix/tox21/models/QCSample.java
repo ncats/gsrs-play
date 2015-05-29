@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import play.db.ebean.Model;
 import ix.utils.Global;
 import ix.core.models.*;
+import ix.qhts.models.Sample;
 
 @Entity
 @Inheritance

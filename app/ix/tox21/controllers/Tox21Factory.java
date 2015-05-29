@@ -10,8 +10,8 @@ import com.avaje.ebean.Query;
 import com.avaje.ebean.Expr;
 
 import ix.tox21.models.QCSample;
-import ix.tox21.models.Sample;
-import ix.tox21.models.Assay;
+import ix.qhts.models.Sample;
+import ix.qhts.models.Assay;
 import ix.core.controllers.EntityFactory;
 
 public class Tox21Factory extends EntityFactory {
