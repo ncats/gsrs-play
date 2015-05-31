@@ -187,8 +187,14 @@ public class UniprotRegistry extends DefaultHandler implements Commons {
                             pubs.put(pmid, pub);
                         }
                     }
-                    pubkeys.put(refkey, pub);
-                    xref = createXRef (pub);
+
+                    if (pub != null) {
+                        pubkeys.put(refkey, pub);
+                        xref = createXRef (pub);
+                    }
+                    else {
+                        Logger.warn("Can't retrieve publication "+pmid+"!");
+                    }
                     //xref.properties.add(new Text ("Title", pub.title));
                 }
                 catch (NumberFormatException ex) {

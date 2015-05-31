@@ -15,6 +15,29 @@
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
+@property(name: String, dir: Int) = {
+ @defining(IDGApp.getProperties(target, name, dir)) { props =>
+    @if(!props.isEmpty()) {
+       <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">@name</h3>
+          </div>
+	  <div class="panel-body">
+	    @for(p <- props) {
+	       @p match {
+	          case kw: Keyword => {
+		    <a class="label label-primary" href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@kw.term</a>
+		  }
+		  case _ => {
+		  }
+	       }
+	    }
+	  </div>
+       </div>
+     }
+  }
+}
+
 @label(x: Value, title: String, label: String) = {
   @if(x.getValue().toString().length() > 50) {
        <a class="label label-@label"
@@ -166,18 +189,18 @@
             }
           </div>
         </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Ligands</h3>
-          </div>
-          <div class="panel-body">
-           <table>
-	    @for(ref <- target.links) {
-	       @if(ref.kind.equalsIgnoreCase("ix.idg.models.Ligand")) {
-	           @defining(ref.deRef().asInstanceOf[Ligand]) { lig =>
-		     <tr>
-		       <td>
-		         <a tabindex="-1"
+	@defining(IDGApp.getLigands(target)) { ligands =>
+	      @if(!ligands.isEmpty()) {
+	         <div class="panel panel-default">
+		    <div class="panel-heading">
+		       <h3 class="panel-title">Ligands</h3>
+		    </div>
+		    <div class="panel-body">
+		       <table>
+		       @for(lig <- ligands) {
+		       <tr>
+		         <td>
+		          <a tabindex="-1"
 			    data-toggle="popover"
 			    data-animation="true"
                             data-placement="top"
@@ -187,22 +210,23 @@
            		    data-content="<img src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(lig).id,"svg",150)'>">
 			   <img alt="Structure of @IDGApp.getId(lig)"
 			       src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(lig).id,"svg",80)'></a>
-		       </td>
+		        </td>
 		       <td class="valign-center">
-		          <a href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
+		          <a class="label label-primary" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
 		       </td>
-		     </tr>
-                  }
-               }
-	    }
-	    </table>
-	  </div>
-	</div>
-      </div>	
+		      </tr>
+                      }
+		      </table>
+	           </div>
+   	        </div>
+             }
+	 }
+      </div>		 
       <!--
         -- Disease Relevance
         -->
-      <div class="col-md-8">
+      <div class="col-md-4">
+        @if(!diseases.isEmpty()) {
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">IDG Disease Relevance (@diseases.size())</h3>
@@ -246,11 +270,11 @@
             </table>
           </div>
         </div>
-            <div class="panel panel-default">
-              <div class="panel-heading">
+        <div class="panel panel-default">
+            <div class="panel-heading">
                 <h3 class="panel-title">UniProt Disease Relevance</h3>
-              </div>
-              <div class="panel-body">
+            </div>
+            <div class="panel-body">
                 <table class="table table-striped">
                   <tr>
                     <th>Disease</th>
@@ -272,30 +296,82 @@
                   }
                 </table>
             </div>
-           </div>
+        </div>
+	}
+	@property(IDG_TISSUE, 0)
+	@property(GO_FUNCTION, 0)	
+	@property(GO_COMPONENT, 0)
+	@property(GO_PROCESS, 0)
       </div>
+      <div class="col-md-4">
+        @property(PANTHER_PROTEIN_CLASS, -1)
+        @property(ChEMBL_PROTEIN_CLASS, -1)
+	@property("Pathway", 1)
+        @property(UNIPROT_KEYWORD, 0)
+       </div>
     </div> <!-- row -->
     <!--
-      -- Annotations
+      -- MeSH
       -->
-    <!--
-    <div class="row">
-      <div class="col-md-12">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Annotations</h3>
+    @defining(IDGApp.getMesh(target)) { mesh =>
+       @if(!mesh.isEmpty()) {
+         <div class="modal fade" id="mesh" tabindex="-1"
+       	    role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+	  <div class="modal-dialog modal-lg">
+	     <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close"
+		  	data-dismiss="modal" aria-label="Close">
+			<span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">Medical Subject Headings for @target.getName</h4>
+		</div>
+      		<div class="modal-body">
+	          @for(m <- mesh) {
+		    <a @if(m.majorTopic) {
+		      class="label label-warning"
+		    } else {
+		      class="label label-primary"
+		    }
+		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
+		  }
+		</div>
+             </div>
           </div>
-          <div class="panel-body">
-            <table class="table table-striped">
-              <tr>
-                <th>Type</th>
-                <th>Value</th>
-              </tr>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
+	 </div>
+         <div class="row">
+	   <div class="col-md-12">
+             <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">MeSH (@mesh.size)</h3>
+                </div>
+	        <div class="panel-body">
+		@if(mesh.size > 20) {
+	          @for(m <- mesh.subList(0, 20)) {
+		    <a @if(m.majorTopic) {
+		      class="label label-warning"
+		    } else {
+		      class="label label-primary"
+		    }
+		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
+		  }
+		  <a class="label label-danger"
+	            data-toggle="modal" data-target="#mesh">See all...</a>
+		} else {
+	          @for(m <- mesh) {
+		    <a @if(m.majorTopic) {
+		      class="label label-warning"
+		    } else {
+		      class="label label-primary"
+		    }
+		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
+		  }
+		}
+	        </div>
+ 	     </div>
+           </div>
+         </div>
+       }
+    }
     <!-- 
       -- Publications
       -->

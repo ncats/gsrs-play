@@ -208,6 +208,7 @@ public class TcrdRegistry extends Controller implements Commons {
             
             // the ligands are handled by the
             //  ChemblRegistry.LigandStructureReceiver callback
+            IDGApp.clearCache();            
         }
 
         public void shutdown () throws SQLException {
@@ -1313,7 +1314,8 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
                  //+"where b.tdl = 'Tclin'\n"
-                 +" where c.uniprot = 'P25089'\n"
+                 //+" where c.uniprot = 'P25089'\n"
+                 //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('P42685')\n"
                  //+"where c.uniprot in ('Q6PIU1')\n"
                  //+"where c.uniprot in ('A5X5Y0')\n"

@@ -26,15 +26,18 @@ import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
 import play.cache.Cached;
+import play.cache.Cache;
 
 import tripod.chem.indexer.StructureIndexer;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -222,12 +225,11 @@ public class IDGApp extends App implements Commons {
             this.finder = finder;
         }
 
-        public Result get (final String name) {
-            try {
-                long start = System.currentTimeMillis();
-                final String key = cls.getName()+"/"+name;
-                List<T> e = getOrElse
-                    (key, new Callable<List<T>> () {
+        public List<T> find (final String name) throws Exception {
+            long start = System.currentTimeMillis();
+            final String key = cls.getName()+"/"+name;
+            List<T> e = getOrElse
+                (key, new Callable<List<T>> () {
                         public List<T> call () throws Exception {
                             Logger.debug("Cache missed: "+key);
                             List<T> values = finder.where()
@@ -239,10 +241,15 @@ public class IDGApp extends App implements Commons {
                             return values;
                         }
                     });
-                double ellapsed = (System.currentTimeMillis()-start)*1e-3;
-                Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
-                             +" to retrieve "+e.size()+" matches for "+name);
-                
+            double ellapsed = (System.currentTimeMillis()-start)*1e-3;
+            Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
+                         +" to retrieve "+e.size()+" matches for "+name);
+            return e;
+        }
+        
+        public Result get (final String name) {
+            try {
+                List<T> e = find (name);
                 if (e.isEmpty()) {
                     return _notFound ("Unknown name: "+name);
                 }
@@ -331,6 +338,15 @@ public class IDGApp extends App implements Commons {
             decors.add(f);
         }
 
+        // panther
+        for (int i = 0; i < 6; ++i) {
+            IDGFacetDecorator f = new IDGFacetDecorator
+                (new TextIndexer.Facet
+                 (PANTHER_PROTEIN_CLASS+" ("+i+")"));
+            f.hidden = true;
+            decors.add(f);
+        }
+        
         IDGFacetDecorator f = new IDGFacetDecorator
             (new TextIndexer.Facet(DiseaseOntologyRegistry.CLASS));
         f.hidden = true;
@@ -380,6 +396,16 @@ public class IDGApp extends App implements Commons {
         return ok (ix.idg.views.html.kinome.render());
     }
 
+    public static void clearCache () {
+        String[] caches = new String[] {
+            "_about",
+            "_index",
+            "_kinome"
+        };
+        for (String c : caches)
+            Cache.remove(c);
+    }
+    
     public static Result error (int code, String mesg) {
         return ok (ix.idg.views.html.error.render(code, mesg));
     }
@@ -512,7 +538,7 @@ public class IDGApp extends App implements Commons {
                 return _getTargetResult (targets);
             }
         };
-    
+
     public static Result target (final String name) {
         return TargetResult.get(name);
     }
@@ -562,6 +588,66 @@ public class IDGApp extends App implements Commons {
                 }
             });
         return breadcrumb;
+    }
+
+    public static List<Ligand> getLigands (EntityModel e) {
+        List<Ligand> ligands = new ArrayList<Ligand>();
+        for (XRef xref : e.getLinks()) {
+            try {
+                Class cls = Class.forName(xref.kind);
+                if (Ligand.class.isAssignableFrom(cls))
+                    ligands.add((Ligand)xref.deRef());
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't resolve XRef "
+                             +xref.kind+":"+xref.refid, ex);
+            }
+        }
+        return ligands;
+    }
+
+    public static List<Value> getProperties (EntityModel e, String label) {
+        return getProperties (e, label, 0);
+    }
+
+    static Comparator<Value> CompareValues = new Comparator<Value>() {
+            public int compare (Value v1, Value v2) {
+                return v1.label.compareTo(v2.label);
+            }
+        };
+    public static List<Value> getProperties
+        (EntityModel e, String label, int dir) {
+        List<Value> props = new ArrayList<Value>();
+        
+        if (dir < 0) {
+            for (Value v : e.getProperties())
+                if (v.label.startsWith(label))
+                    props.add(v);
+            Collections.sort(props, CompareValues);
+        }
+        else if (dir > 0) {
+            for (Value v : e.getProperties())
+                if (v.label.endsWith(label))
+                    props.add(v);
+            Collections.sort(props, CompareValues);
+        }
+        else {
+            for (Value v : e.getProperties()) 
+                if (label.equalsIgnoreCase(v.label))
+                    props.add(v);
+        }
+        
+        return props;
+    }
+
+    public static List<Mesh> getMesh (EntityModel e) {
+        Map<String, Mesh> mesh = new TreeMap<String, Mesh>();
+        for (Publication p : e.getPublications()) {
+            for (Mesh m : p.mesh)
+                mesh.put(m.heading, m);
+        }
+        return new ArrayList<Mesh>(mesh.values());
     }
 
     static List<DiseaseRelevance>
