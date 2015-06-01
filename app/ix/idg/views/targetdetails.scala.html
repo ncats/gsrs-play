@@ -4,6 +4,7 @@
 @import ix.idg.models.Disease
 @import ix.core.models.Value
 @import ix.core.models.Keyword
+@import ix.core.models.VInt
 @import ix.core.models.Publication
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
@@ -15,18 +16,75 @@
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
-@property(name: String, dir: Int) = {
+@keyword(kw: Keyword, max: Int = 40) = {
+  @if(max > 0 && kw.term.length() > max) {
+    <a class="label label-primary"
+       data-toggle="tooltip"
+       data-html="true"
+       title="<p align='left'>@kw.term</p>"
+       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@{kw.term.substring(0, max)}...</a>&nbsp;
+  } else {
+    <a class="label label-primary" href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@kw.term</a>
+  }
+}
+
+@property(name: String, dir: Int = 0) = {
  @defining(IDGApp.getProperties(target, name, dir)) { props =>
     @if(!props.isEmpty()) {
+       @if(props.length > 10) {
+       <div class="modal fade" id="@Util.sha1(name).substring(0,5)"
+          tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+	  aria-hidden="true">
+	  <div class="modal-dialog">
+	     <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close"
+		  	data-dismiss="modal" aria-label="Close">
+			<span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">@name for @target.getName</h4>
+		</div>
+      		<div class="modal-body">
+		    @for(p <- props) {
+		        @p match {
+	          	   case kw: Keyword => {
+			       @keyword(kw, 0)
+			   }
+			   case _ => {
+		  	   }
+	       		}
+	    	     }
+		</div>
+             </div>
+          </div>	  
+       </div>
        <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">@name</h3>
+            <h3 class="panel-title">@name (@props.length)</h3>
+          </div>
+	  <div class="panel-body">
+	    @for(p <- props.subList(0,10)) {
+	       @p match {
+	          case kw: Keyword => {
+		    @keyword(kw)
+		  }
+		  case _ => {
+		  }
+	       }
+	    }
+   	    <a class="label label-danger"
+	        data-toggle="modal" data-target="#@Util.sha1(name).substring(0,5)">See all...</a>
+	  </div>
+       </div>
+       } else {
+       <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">@name (@props.length)</h3>
           </div>
 	  <div class="panel-body">
 	    @for(p <- props) {
 	       @p match {
 	          case kw: Keyword => {
-		    <a class="label label-primary" href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@kw.term</a>
+		    @keyword(kw)
 		  }
 		  case _ => {
 		  }
@@ -34,6 +92,7 @@
 	    }
 	  </div>
        </div>
+       }
      }
   }
 }
@@ -221,6 +280,53 @@
    	        </div>
              }
 	 }
+	 @defining(IDGApp.getProperties(target, "Count", 1)) { props =>
+	    @if(!props.isEmpty()) {
+               <div class="panel panel-default">
+		 <div class="panel-body">
+		   <table class="table table-striped">
+		   @for(p <- props) {
+		      <tr>
+		        @p match {
+			  case iv: VInt => {
+			     <td>
+			     @iv.label match {
+			        case "Ab Count" => {
+				  <span data-toggle="tooltip"
+				     data-html="true"
+				     title="<p align='left'>Antibody count from antibodypedia.com</p>">Antibody</span>
+				}
+				case "MAb Count" => {
+				  <span data-toggle="tooltip"
+				     data-html="true"
+				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>">Monoclonal Antibody</span>
+				}
+				case "PubMed Count" => {
+   				  <span data-toggle="tooltip"
+				     data-html="true"
+				     title="<p align='left'>Number of PubMed references for target and all its aliases</p>">PubMed</span>
+				}
+				case "TM Count" => {
+   				  <span data-toggle="tooltip"
+				     data-html="true"
+				     title="<p align='left'>Number of transmembrane helices according to Survey of the Human Transmembrane Proteome (https://modbase.compbio.ucsf.edu/projects/membrane/). At least 2 are required to be in their list.</p>">Transmembrane</span>
+				}
+				case _ => {
+				}
+			     }
+			     </td>
+			     <td>@iv.intval</td>
+			  }
+			  case _ => {
+			  }
+			}
+		      </tr>
+		   }
+	           </table>
+		 </div>
+	       </div>
+	    }
+	 }
       </div>		 
       <!--
         -- Disease Relevance
@@ -298,16 +404,18 @@
             </div>
         </div>
 	}
-	@property(IDG_TISSUE, 0)
-	@property(GO_FUNCTION, 0)	
-	@property(GO_COMPONENT, 0)
-	@property(GO_PROCESS, 0)
+	@property(IDG_TISSUE)
+	@property(GO_FUNCTION)	
+	@property(GO_COMPONENT)
+	@property(GO_PROCESS)
+	@property(GWAS_TRAIT)
       </div>
       <div class="col-md-4">
         @property(PANTHER_PROTEIN_CLASS, -1)
         @property(ChEMBL_PROTEIN_CLASS, -1)
+	@property(IMPC_TERM)
 	@property("Pathway", 1)
-        @property(UNIPROT_KEYWORD, 0)
+        @property(UNIPROT_KEYWORD)
        </div>
     </div> <!-- row -->
     <!--
@@ -405,7 +513,11 @@
                                     <a class="label label-primary" href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+UNIPROT_TISSUE+"/"}@URLEncoder.encode(p.getValue().toString(), "utf8")'>@p.getValue()</a>
                                }
                                case IDG_GENERIF => {
-                                  @label(p, "GeneRIF", "warning")
+                                  @**label(p, "GeneRIF", "warning")**@
+				  @if(xref.properties.length > 1) {
+				    <p>
+				  }
+				  <div class="alert alert-success">@p.getValue().toString()</div>
                                }
                                case _ => {
                                }
