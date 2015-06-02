@@ -1313,6 +1313,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
+                 +"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl = 'Tclin'\n"
                  //+" where c.uniprot = 'P25089'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"

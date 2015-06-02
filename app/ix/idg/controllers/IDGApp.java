@@ -70,6 +70,7 @@ public class IDGApp extends App implements Commons {
                                             Structure.class.getName())))
                     .findList();
                 for (Ligand ligand : ligands) {
+                    //Logger.debug("matched ligand: "+ligand.id+" "+r.getId());
                     if (!processed.contains(ligand.id)) {
                         getIndexer().add(ligand);
                         processed.add(ligand.id);
@@ -138,6 +139,10 @@ public class IDGApp extends App implements Commons {
                 href = "http://www.disease-ontology.org";
             else if (name.equalsIgnoreCase("uniprot"))
                 href = "http://www.uniprot.org";
+            else if (name.equalsIgnoreCase("scientific literature")
+                     || name.equalsIgnoreCase("drug label")) {
+                // do nothing for this
+            }
             else {
                 List<Keyword> sources = KeywordFactory.finder.where
                     (Expr.and(Expr.eq("label", SOURCE),
@@ -300,6 +305,7 @@ public class IDGApp extends App implements Commons {
 
     public static final String[] LIGAND_FACETS = {
         WHO_ATC,
+        IDG_DRUG,
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         UNIPROT_TARGET
@@ -620,16 +626,19 @@ public class IDGApp extends App implements Commons {
         (EntityModel e, String label, int dir) {
         List<Value> props = new ArrayList<Value>();
         
-        if (dir < 0) {
+        if (dir < 0) { // prefix
             for (Value v : e.getProperties())
                 if (v.label.startsWith(label))
                     props.add(v);
             Collections.sort(props, CompareValues);
         }
-        else if (dir > 0) {
+        else if (dir > 0) { // suffix
             for (Value v : e.getProperties())
-                if (v.label.endsWith(label))
-                    props.add(v);
+                if (v.label.endsWith(label)) {
+                    if (!v.label.equals("TM Count")) {
+                        props.add(v);
+                    }
+                }
             Collections.sort(props, CompareValues);
         }
         else {

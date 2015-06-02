@@ -7,7 +7,8 @@
 
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
-        <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
+        <td><a onclick="showLoadModal()"
+	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
         <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
         data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
         <td>@IDGApp.format(t.novelty)</td>
@@ -74,6 +75,14 @@
     <div id="word-cloud"></div>
 }
 
+<div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
+     aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
+    </div>
+  </div>
+</div>
 
 
 <head>
@@ -229,5 +238,17 @@ $(document).ready(function () {
       //window.dispatchEvent(new Event('resize'));
       console.log('tab shown: '+e.target);
    });
+});
+
+function showLoadModal () {
+  $('#loadmodal').modal({
+      keyboard: false,
+      show: true,
+      backdrop: 'static'
+    });
+}
+
+$(window).unload(function () {
+    $('#loadmodal').modal('hide');    
 });
 </script>

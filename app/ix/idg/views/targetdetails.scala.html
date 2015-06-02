@@ -18,13 +18,17 @@
 
 @keyword(kw: Keyword, max: Int = 40) = {
   @if(max > 0 && kw.term.length() > max) {
-    <a class="label label-primary"
-       data-toggle="tooltip"
+    <a id="keyword" class="label label-primary"
+       data-toggle="popover"
        data-html="true"
-       title="<p align='left'>@kw.term</p>"
+       data-trigger="hover"
+       data-placement="top"
+       title="@kw.label"
+       data-content="<p align='left'>@kw.term</p>"
        href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@{kw.term.substring(0, max)}...</a>&nbsp;
   } else {
-    <a class="label label-primary" href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@kw.term</a>
+    <a id="keyword" class="label label-primary"
+       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@kw.term</a>
   }
 }
 
@@ -72,7 +76,9 @@
 	       }
 	    }
    	    <a class="label label-danger"
-	        data-toggle="modal" data-target="#@Util.sha1(name).substring(0,5)">See all...</a>
+	        data-toggle="modal"
+		data-target="#@Util.sha1(name).substring(0,5)"
+		href="#">See all...</a>
 	  </div>
        </div>
        } else {
@@ -112,6 +118,7 @@
       <span class="label label-@label">@x.getValue()</span>
   }
 }
+
 
 @diseasedblink(d: Disease, x: Any) = {
 <a href="http://diseases.jensenlab.org/Entity?order=textmining,knowledge,experiments&textmining=10&knowledge=10&experiments=10&type1=-26&type2=9606&id1=@IDGApp.getId(d)">@x</a>
@@ -188,6 +195,15 @@
 	  </div>
 	</div>
       }
+      @defining(target.getProperty("NCBI Gene Summary")) { summary =>
+        @if(summary != null) {
+          <div class="panel panel-default">
+	    <div class="panel-body">
+	      <p>@summary.getValue
+	    </div>
+	  </div>
+        }
+      }
     </div>
     <div class="row">
       <!--
@@ -238,7 +254,7 @@
         -->
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Genes</h3>
+            <h3 class="panel-title">Gene</h3>
           </div>
           <div class="panel-body">
             @for(kw <- target.synonyms) {
@@ -327,12 +343,56 @@
 	       </div>
 	    }
 	 }
-      </div>		 
-      <!--
-        -- Disease Relevance
-        -->
+      </div>
+      <div class="col-md-4">      
+	@property(IDG_TISSUE)
+	@property(GO_FUNCTION)	
+	@property(GO_COMPONENT)
+	@property(GO_PROCESS)
+      </div>
       <div class="col-md-4">
-        @if(!diseases.isEmpty()) {
+        @property(PANTHER_PROTEIN_CLASS, -1)
+        @property(ChEMBL_PROTEIN_CLASS, -1)
+	@property(IMPC_TERM)
+	@property("Pathway", 1)
+        @property(UNIPROT_KEYWORD)
+       </div>
+    </div> <!-- row -->
+    <!--
+      -- Disease Relevance
+      -->
+    @if(!diseases.isEmpty()) {
+    <div class="row">
+      <div class="col-md-6">
+         <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">UniProt Disease Relevance</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-striped">
+                  <tr>
+                    <th>Disease</th>
+                    <th>OMIM</th>
+                    <th>Comment</th>
+                  </tr>
+                  @for(dr <- diseases) {
+                    @if(dr.comment != null) {
+                    <tr>
+                      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
+                      @if(dr.omim != null) {
+                      <td><a href="@dr.omim.href">@dr.omim.term</a></td>
+                      } else {
+                      <td></td>
+                      }
+                      <td>@dr.comment"  "</td>
+                    </tr>
+                    }
+                  }
+                </table>
+            </div>
+         </div>
+      </div>
+      <div class="col-md-6">   
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">IDG Disease Relevance (@diseases.size())</h3>
@@ -375,49 +435,11 @@
 	      }
             </table>
           </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">UniProt Disease Relevance</h3>
-            </div>
-            <div class="panel-body">
-                <table class="table table-striped">
-                  <tr>
-                    <th>Disease</th>
-                    <th>OMIM</th>
-                    <th>Comment</th>
-                  </tr>
-                  @for(dr <- diseases) {
-                    @if(dr.comment != null) {
-                    <tr>
-                      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
-                      @if(dr.omim != null) {
-                      <td><a href="@dr.omim.href">@dr.omim.term</a></td>
-                      } else {
-                      <td></td>
-                      }
-                      <td>@dr.comment"  "</td>
-                    </tr>
-                    }
-                  }
-                </table>
-            </div>
-        </div>
-	}
-	@property(IDG_TISSUE)
-	@property(GO_FUNCTION)	
-	@property(GO_COMPONENT)
-	@property(GO_PROCESS)
-	@property(GWAS_TRAIT)
-      </div>
-      <div class="col-md-4">
-        @property(PANTHER_PROTEIN_CLASS, -1)
-        @property(ChEMBL_PROTEIN_CLASS, -1)
-	@property(IMPC_TERM)
-	@property("Pathway", 1)
-        @property(UNIPROT_KEYWORD)
+         </div>
        </div>
-    </div> <!-- row -->
+      </div>
+     }
+    
     <!--
       -- MeSH
       -->
@@ -440,6 +462,7 @@
 		    } else {
 		      class="label label-primary"
 		    }
+		    onclick="showLoadModal()"
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
 		  }
 		</div>
@@ -460,10 +483,12 @@
 		    } else {
 		      class="label label-primary"
 		    }
+		    onclick="showLoadModal()"
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
 		  }
 		  <a class="label label-danger"
-	            data-toggle="modal" data-target="#mesh">See all...</a>
+	             data-toggle="modal"
+		     data-target="#mesh" href="#">See all...</a>
 		} else {
 	          @for(m <- mesh) {
 		    <a @if(m.majorTopic) {
@@ -471,6 +496,7 @@
 		    } else {
 		      class="label label-primary"
 		    }
+		    onclick="showLoadModal()"
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
 		  }
 		}
@@ -510,7 +536,7 @@
                                  @label(p, "SCOPE", "default")
                                }
                                case UNIPROT_TISSUE => {
-                                    <a class="label label-primary" href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+UNIPROT_TISSUE+"/"}@URLEncoder.encode(p.getValue().toString(), "utf8")'>@p.getValue()</a>
+			          @keyword(p.asInstanceOf[Keyword])
                                }
                                case IDG_GENERIF => {
                                   @**label(p, "GeneRIF", "warning")**@
@@ -519,6 +545,9 @@
 				  }
 				  <div class="alert alert-success">@p.getValue().toString()</div>
                                }
+			       case GWAS_TRAIT => {
+			          @keyword(p.asInstanceOf[Keyword])
+			       }
                                case _ => {
                                }
                             }
@@ -538,17 +567,41 @@
 </div>
 }
 
+<div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
+     aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
+    </div>
+  </div>
+</div>
+
 <script>
 $(function () {
   $('[data-toggle="popover"]').popover();
   $('[data-toggle="tooltip"]').tooltip();
 });
 
-$(document).ready(function () { 
+$(document).ready(function () {
   $('.tree').treegrid({
    expanderExpandedClass: 'fa fa-angle-down',
    expanderCollapsedClass: 'fa fa-angle-right',
    initialState: 'collapsed'
   });
+  $('#keyword').on('click touchstart', function () {
+     showLoadModal();
+  });
+});
+
+function showLoadModal () {
+  $('#loadmodal').modal({
+      keyboard: false,
+      show: true,
+      backdrop: 'static'
+    });
+}
+
+$(window).unload(function () {
+    $('#loadmodal').modal('hide');    
 });
 </script>
