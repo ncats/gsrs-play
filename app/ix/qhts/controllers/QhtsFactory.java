@@ -15,6 +15,7 @@ import ix.core.controllers.EntityFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class QhtsFactory extends Controller {
+    
     public static Result test () {
         Model.Finder<Long, Curve> curveFinder =
             new Model.Finder(Long.class, Curve.class);
@@ -36,7 +37,8 @@ public class QhtsFactory extends Controller {
         EntityFactory.EntityMapper mapper = new EntityFactory.EntityMapper();
         try {
             crc = new Curve ();
-            crc.setData(conc, resp);
+            crc.conc = new Data (Data.Unit.m, conc);
+            crc.response = new Data (Data.Unit.percent, resp);
             crc.save();
             
             Logger.debug("Curve "+crc.id+" saved!");
@@ -47,7 +49,6 @@ public class QhtsFactory extends Controller {
         catch (Exception ex) {
             return internalServerError (ex.getMessage());
         }
-
 
         return ok (mapper.valueToTree(crc));
     }

@@ -48,7 +48,7 @@ libraryDependencies ++= Seq(
     ,"org.freehep" % "freehep-graphicsio" % "2.4"
     ,"org.freehep" % "freehep-graphicsio-svg" % "2.4"
     ,"org.freehep" % "freehep-graphics2d" % "2.4"
-    ,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
+    //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
     ,"org.webjars" % "fabric.js" % "1.4.12"
     ,"org.webjars.bower" % "spin.js" % "2.0.2"
 )
