@@ -123,8 +123,10 @@ $(document).ready(function () {
       	     $.get('@status'+'@App.queryString("cutoff")', function(data) {
 	         if (data.status == 'Done' || data.status == 'Failed') {
 		    window.clearInterval(checkStatus);
-		    //$('#searching').html('');
-		    location.reload(true);
+                    $('#searching').html('');
+		    if(data.count > @total) {
+		       location.reload(true);
+		    }
 		 }
 		 else {
 	            //console.log('status '+data.count);

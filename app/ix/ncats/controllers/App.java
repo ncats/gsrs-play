@@ -833,25 +833,72 @@ public class App extends Controller {
 
         public void setResults (ResultEnumeration results) {
             this.results = results;
+            // the idea is to generate enough results for 1.5 pages (enough
+            // to show pagination) and return immediately. as the user pages,
+            // the background job will fill in the rest of the results.
+            //int count = process (rows+1);
+
+            // while we continue to fetch the rest of the results in the
+            // background
+            ActorRef handler = Akka.system().actorOf
+                (Props.create(SearchResultHandler.class));
+            handler.tell(this, ActorRef.noSender());
+            Logger.debug("## search results submitted: "+handler);
         }
+        
         public SearchResultContext getContext () { return context; }
         public TextIndexer getIndexer () { return context.getIndexer(); }
 
+        public boolean isDone () { return false; }
         public int process () throws Exception {
-            return process (0);
+            int count = 0;
+            ActorRef handler = Akka.system().actorOf
+                (Props.create(SearchResultIndexer.class, context.getIndexer()));
+            context.setStatus(SearchResultContext.Status.Running);
+            context.start = System.currentTimeMillis();
+            while (results.hasMoreElements() && !isDone ()) {
+                StructureIndexer.Result r = results.nextElement();
+                try {
+                    long start = System.currentTimeMillis();
+                    Object obj = instrument (r);
+                    if (obj != null) {
+                        handler.tell(obj, ActorRef.noSender());
+                        ++count;
+                        Logger.debug(String.format("%1$4d", count)
+                                     +": "+r.getId()+" instrumentation="
+                                     +(System.currentTimeMillis() - start)
+                                     +"ms");
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't process structure search result "
+                                 +r.getId(), ex);
+                }
+            }
+            context.setStatus(SearchResultContext.Status.Done);
+            context.stop = System.currentTimeMillis();
+            
+            // shutdown this actor
+            handler.tell(PoisonPill.getInstance(), handler.noSender());
+
+            return count;
         }
         
-        public abstract int process (int max) throws Exception;
+        //public abstract int process (int max) throws Exception;
+        protected abstract Object instrument (StructureIndexer.Result r)
+            throws Exception;
     }
 
     public static class SearchResultContext {
         public enum Status {
+            Pending,
             Running,
             Done,
             Failed
         }
 
-        Status status;
+        Status status = Status.Pending;
         String mesg;
         Long start;
         Long stop;
@@ -873,6 +920,32 @@ public class App extends Controller {
         public TextIndexer getIndexer () { return indexer; }
     }
 
+    static class SearchResultIndexer extends UntypedActor {
+        final TextIndexer indexer;
+        public SearchResultIndexer (TextIndexer indexer) {
+            this.indexer = indexer;
+        }
+
+        @Override
+        public void onReceive (Object obj) {
+            if (obj instanceof PoisonPill) {
+            }
+            else {
+                try {
+                    indexer.add(obj);
+                }
+                catch (IOException ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't index object "+obj, ex);
+                }
+            }
+        }
+        
+        @Override public void postStop () {
+            Logger.debug(getClass().getName()+" "+self ()+" stopped!");
+        }
+    }
+    
     static class SearchResultHandler extends UntypedActor {
         @Override
         public void onReceive (Object obj) {
@@ -880,11 +953,7 @@ public class App extends Controller {
                 SearchResultProcessor processor = (SearchResultProcessor)obj;
                 SearchResultContext ctx = processor.getContext();               
                 try {
-                    ctx.start = System.currentTimeMillis();
-                    ctx.status = SearchResultContext.Status.Running;
                     int count = processor.process();
-                    ctx.stop = System.currentTimeMillis();
-                    ctx.status = SearchResultContext.Status.Done;
                     double ellapsed = (ctx.stop - ctx.start)*1e-3;
                     Logger.debug("Actor "+self()+" finished; "
                                  +String.format("Ellapsed %1$.3fs to retrieve "
@@ -910,30 +979,8 @@ public class App extends Controller {
         
         @Override
         public void postStop () {
-            Logger.debug("Actor "+self ()+" is stopped!");
+            Logger.debug(getClass().getName()+" "+self ()+" stopped!");
         }
-    }
-
-    static protected SearchResultContext submit
-        (final int rows, SearchResultProcessor processor)  throws Exception {
-        
-        long start = System.currentTimeMillis();        
-        // the idea is to generate enough results for 1.5 pages (enough
-        // to show pagination) and return immediately. as the user pages,
-        // the background job will fill in the rest of the results.
-        int count = processor.process(rows+1);
-
-        // while we continue to fetch the rest of the results in the
-        // background
-        ActorRef handler = Akka.system().actorOf
-            (Props.create(SearchResultHandler.class));
-        handler.tell(processor, ActorRef.noSender());
-        
-        double ellapsed = (System.currentTimeMillis() - start)*1e-3;
-        Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
-                                   +"%2$d structures...",
-                                   ellapsed, count));
-        return processor.getContext();
     }
 
     /**
@@ -943,6 +990,7 @@ public class App extends Controller {
     public static Call checkStatus () {
         String query = request().getQueryString("q");
         String type = request().getQueryString("type");
+        Logger.debug("checkStatus: q="+query+" type="+type);
         if (type != null && query != null) {
             try {
                 String key = null;
@@ -959,6 +1007,9 @@ public class App extends Controller {
                 Object value = Cache.get(key);
                 if (value != null) {
                     SearchResultContext context = (SearchResultContext)value;
+                    Logger.debug("checkStatus: status="+context.getStatus()
+                                 +" count="+context.getCount());
+                    /*
                     switch (context.getStatus()) {
                     case Done:
                     case Failed:
@@ -967,6 +1018,8 @@ public class App extends Controller {
                     default:
                         return routes.App.status(type.toLowerCase(), query);
                     }
+                    */
+                    return routes.App.status(type.toLowerCase(), query);
                 }
             }
             catch (Exception ex) {
@@ -1022,7 +1075,7 @@ public class App extends Controller {
                              Logger.debug("Cache missed: "+key);
                              processor.setResults
                                  (strucIndexer.substructure(query, 0));
-                             return submit (size, processor);
+                             return processor.getContext();
                          }
                      });
         }
@@ -1051,7 +1104,7 @@ public class App extends Controller {
                              Logger.debug("Cache missed: "+key);
                              processor.setResults
                                  (strucIndexer.similarity(query, threshold, 0));
-                             return submit (size, processor);
+                             return processor.getContext();
                          }
                      });
         }

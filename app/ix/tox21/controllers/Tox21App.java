@@ -53,7 +53,6 @@ public class Tox21App extends App {
         Tox21SearchResultProcessor () throws IOException {
         }
 
-        @Override
         public int process (int max) throws Exception {
             while (results.hasMoreElements() && (max == 0 || count < max)) {
                 StructureIndexer.Result r = results.nextElement();
@@ -67,6 +66,13 @@ public class Tox21App extends App {
                 ++count;
             }
             return count;
+        }
+
+        protected Object instrument (StructureIndexer.Result r)
+            throws Exception {
+            List<QCSample> samples = Tox21Factory.finder
+                .where().eq("structure.id", r.getId()).findList();
+            return samples.isEmpty() ? null : samples.iterator().next();
         }
     }
     

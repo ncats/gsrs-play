@@ -454,6 +454,28 @@ public class TextIndexer {
         TextIndexer indexer = new TextIndexer ();
         indexer.indexDir = new RAMDirectory ();
         indexer.taxonDir = new RAMDirectory ();
+        return config (indexer);
+    }
+
+    public TextIndexer createEmptyInstance (File dir) throws IOException {
+        TextIndexer indexer = new TextIndexer ();
+
+        File index = new File (dir, "index");
+        if (!index.exists())
+            index.mkdirs();
+        indexer.indexDir = new NIOFSDirectory
+            (index, NoLockFactory.getNoLockFactory());
+        
+        File taxon = new File (dir, "facet");
+        if (!taxon.exists())
+            taxon.mkdirs();
+        indexer.taxonDir = new NIOFSDirectory
+            (taxon, NoLockFactory.getNoLockFactory());
+        
+        return config (indexer);
+    }
+
+    protected TextIndexer config (TextIndexer indexer) throws IOException {
         indexer.indexAnalyzer = createIndexAnalyzer ();
         IndexWriterConfig conf = new IndexWriterConfig 
             (LUCENE_VERSION, indexer.indexAnalyzer);

@@ -58,6 +58,7 @@ public class IDGApp extends App implements Commons {
         IDGSearchResultProcessor () throws IOException {
         }
 
+        /*
         @Override
         public int process (int max) throws Exception {
             while (results.hasMoreElements() && (max == 0 || count < max)) {
@@ -79,6 +80,25 @@ public class IDGApp extends App implements Commons {
                 ++count;
             }
             return count;
+        }
+        */
+        @Override
+        protected Object instrument (StructureIndexer.Result r)
+            throws Exception {
+            List<Ligand> ligands = LigandFactory.finder
+                .where(Expr.and(Expr.eq("links.refid", r.getId()),
+                                Expr.eq("links.kind",
+                                        Structure.class.getName())))
+                .findList();
+            if (!ligands.isEmpty()) {
+                Ligand lig = ligands.iterator().next();
+                //Logger.debug("matched ligand: "+ligand.id+" "+r.getId());
+                if (!processed.contains(lig.id)) {
+                    processed.add(lig.id);
+                    return lig;
+                }
+            }
+            return null;
         }
     }
 
@@ -293,8 +313,8 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        "Ligand",
-        UNIPROT_TISSUE
+        UNIPROT_TISSUE,
+        "Ligand"        
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -305,7 +325,7 @@ public class IDGApp extends App implements Commons {
 
     public static final String[] LIGAND_FACETS = {
         WHO_ATC,
-        IDG_DRUG,
+        //IDG_DRUG,
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         UNIPROT_TARGET
