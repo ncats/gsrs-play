@@ -1,0 +1,50 @@
+@import ix.core.models.Keyword
+@import ix.ginas.models.v1.Reference
+@import ix.ginas.controllers.v1.ReferenceFactory 
+@import helper._ 
+
+@(refs: List[Keyword], id : String, colspan : Integer)
+@if(refs.length >= 1){
+<td>
+   <button class="btn btn-primary" type="button" data-toggle="collapse"
+      data-target="#@id-reference" aria-expanded="false"
+      aria-controls="collapseExample">@refs.length</button>
+</td>
+</tr>
+<tr class="collapse" id="@id-reference">
+   <td colspan = "@colspan" class = "sub-table">
+      <table class="table table-striped" id="referenceTable">
+         <thead>
+            <tr>
+               <th>Citation</th>
+               <th>Doc Type</th>
+               <th>Date Accessed</th>
+            </tr>
+         </thead>
+         @for(ref <- refs){
+         @defining(ReferenceFactory.getReference(ref.term)) { r =>
+         <tr>
+           <td>
+	     @if(r.url != null) {
+	     <a href="@r.url">@r.citation</a>
+	     }else {
+             @r.citation
+	     }
+            </td>
+            <td>
+               @r.docType
+            </td>
+            <td>
+               @r.documentDate
+            </td>
+         </tr>
+         }
+         }
+      </table>
+   </td>
+</tr>
+}else{
+<td>
+   <button class="btn btn-primary" type="button"  disabled="disabled">@refs.length</button>
+</td>
+}

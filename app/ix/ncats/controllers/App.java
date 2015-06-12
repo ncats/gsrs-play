@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import play.Logger;
 import play.cache.Cache;
@@ -40,6 +41,7 @@ import tripod.chem.indexer.StructureIndexer;
 import static tripod.chem.indexer.StructureIndexer.*;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.IxContext;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
@@ -92,7 +94,23 @@ public class App extends Controller {
         play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
     public static final StructureIndexer strucIndexer =
         play.Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+    public static final IxContext IX =
+        play.Play.application().plugin(IxContext.class);
 
+    /**
+     * interface for rendering a result page
+     */
+    public interface ResultRenderer<T> {
+        Result render (int page, int rows, int total, int[] pages,
+                       List<TextIndexer.Facet> facets, List<T> results);
+        Integer getFacetDim ();
+    }
+
+    public static abstract class DefaultResultRenderer<T>
+        implements ResultRenderer<T> {
+        public Integer getFacetDim () { return null; }
+    }
+    
     public static class FacetDecorator {
         final public Facet facet;
         final public int max;
@@ -509,7 +527,7 @@ public class App extends Controller {
                 // if it's an ad-hoc indexer, then we don't bother caching
                 //  the results
                 result = SearchFactory.search
-                    (indexer, kind, hasFacets ? null : q,
+                    (indexer, kind, null, hasFacets ? null : q,
                      total, 0, FACET_DIM, query);
             }
             else {
@@ -675,6 +693,7 @@ public class App extends Controller {
                         if (mol.getDim() < 2) {
                             mol.clean(2, null);
                         }
+                        Logger.info("ok");
                         return ok (render (mol, "svg", size));
                     }
                 });
@@ -716,7 +735,8 @@ public class App extends Controller {
         }
     }
 
-    public static byte[] render (Molecule mol, String format, int size)
+
+     public static byte[] render (Molecule mol, String format, int size)
         throws Exception {
         Chemical chem = new Jchemical ();
         chem.load(mol.toFormat("mol"), Chemical.FORMAT_SDF);
@@ -824,20 +844,19 @@ public class App extends Controller {
      */
     public static abstract class SearchResultProcessor {
         protected ResultEnumeration results;
-        final SearchResultContext context;
+        final SearchResultContext context = new SearchResultContext ();
         
-        public SearchResultProcessor () throws IOException {
-            context = new SearchResultContext
-                (textIndexer.createEmptyInstance());
+        public SearchResultProcessor () {
         }
 
-        public void setResults (ResultEnumeration results) {
+        public void setResults (int rows, ResultEnumeration results)
+            throws Exception {
             this.results = results;
             // the idea is to generate enough results for 1.5 pages (enough
             // to show pagination) and return immediately. as the user pages,
             // the background job will fill in the rest of the results.
-            //int count = process (rows+1);
-
+            int count = process (rows+1);
+            
             // while we continue to fetch the rest of the results in the
             // background
             ActorRef handler = Akka.system().actorOf
@@ -847,27 +866,21 @@ public class App extends Controller {
         }
         
         public SearchResultContext getContext () { return context; }
-        public TextIndexer getIndexer () { return context.getIndexer(); }
-
         public boolean isDone () { return false; }
+
         public int process () throws Exception {
-            int count = 0;
-            ActorRef handler = Akka.system().actorOf
-                (Props.create(SearchResultIndexer.class, context.getIndexer()));
-            context.setStatus(SearchResultContext.Status.Running);
-            context.start = System.currentTimeMillis();
-            while (results.hasMoreElements() && !isDone ()) {
+            return process (0);
+        }
+        
+        public int process (int max) throws Exception {
+            while (results.hasMoreElements()
+                   && !isDone () && (max <= 0 || context.getCount() < max)) {
                 StructureIndexer.Result r = results.nextElement();
                 try {
                     long start = System.currentTimeMillis();
                     Object obj = instrument (r);
                     if (obj != null) {
-                        handler.tell(obj, ActorRef.noSender());
-                        ++count;
-                        Logger.debug(String.format("%1$4d", count)
-                                     +": "+r.getId()+" instrumentation="
-                                     +(System.currentTimeMillis() - start)
-                                     +"ms");
+                        context.add(obj);
                     }
                 }
                 catch (Exception ex) {
@@ -876,13 +889,7 @@ public class App extends Controller {
                                  +r.getId(), ex);
                 }
             }
-            context.setStatus(SearchResultContext.Status.Done);
-            context.stop = System.currentTimeMillis();
-            
-            // shutdown this actor
-            handler.tell(PoisonPill.getInstance(), handler.noSender());
-
-            return count;
+            return context.getCount();
         }
         
         //public abstract int process (int max) throws Exception;
@@ -902,48 +909,27 @@ public class App extends Controller {
         String mesg;
         Long start;
         Long stop;
-        final TextIndexer indexer;
+        final List results = new CopyOnWriteArrayList ();
+        final String id = randvar (10);
 
-        SearchResultContext (TextIndexer indexer) {
-            this.indexer = indexer;
+        SearchResultContext () {
         }
 
+        public String getId () { return id; }
         public Status getStatus () { return status; }
         public void setStatus (Status status) { this.status = status; }
         public String getMessage () { return mesg; }
         public void setMessage (String mesg) { this.mesg = mesg; }
-        public Integer getCount () { return indexer.size(); }
+        public Integer getCount () { return results.size(); }
         public Long getStart () { return start; }
         public Long getStop () { return stop; }
+        public boolean finished () {
+            return status == Status.Done || status == Status.Failed;
+        }
         
         @com.fasterxml.jackson.annotation.JsonIgnore
-        public TextIndexer getIndexer () { return indexer; }
-    }
-
-    static class SearchResultIndexer extends UntypedActor {
-        final TextIndexer indexer;
-        public SearchResultIndexer (TextIndexer indexer) {
-            this.indexer = indexer;
-        }
-
-        @Override
-        public void onReceive (Object obj) {
-            if (obj instanceof PoisonPill) {
-            }
-            else {
-                try {
-                    indexer.add(obj);
-                }
-                catch (IOException ex) {
-                    ex.printStackTrace();
-                    Logger.error("Can't index object "+obj, ex);
-                }
-            }
-        }
-        
-        @Override public void postStop () {
-            Logger.debug(getClass().getName()+" "+self ()+" stopped!");
-        }
+        public List getResults () { return results; }
+        protected void add (Object obj) { results.add(obj); }
     }
     
     static class SearchResultHandler extends UntypedActor {
@@ -953,19 +939,20 @@ public class App extends Controller {
                 SearchResultProcessor processor = (SearchResultProcessor)obj;
                 SearchResultContext ctx = processor.getContext();               
                 try {
+                    ctx.setStatus(SearchResultContext.Status.Running);
+                    ctx.start = System.currentTimeMillis();            
                     int count = processor.process();
-                    double ellapsed = (ctx.stop - ctx.start)*1e-3;
-                    Logger.debug("Actor "+self()+" finished; "
-                                 +String.format("Ellapsed %1$.3fs to retrieve "
-                                                +"%2$d structures...",
-                                                ellapsed, count));
+                    ctx.setStatus(SearchResultContext.Status.Done);
+                    ctx.stop = System.currentTimeMillis();
+                    Logger.debug("Actor "+self()+" finished; "+count
+                                 +" search result(s) instrumented!");
                     context().stop(self ());
                 }
                 catch (Exception ex) {
                     ctx.status = SearchResultContext.Status.Failed;
                     ctx.setMessage(ex.getMessage());
                     ex.printStackTrace();
-                    Logger.error("Unable process search results", ex);
+                    Logger.error("Unable to process search results", ex);
                 }
             }
             else if (obj instanceof Terminated) {
@@ -975,6 +962,9 @@ public class App extends Controller {
             else {
                 unhandled (obj);
             }
+        }
+
+        public void preStart () {
         }
         
         @Override
@@ -1009,7 +999,6 @@ public class App extends Controller {
                     SearchResultContext context = (SearchResultContext)value;
                     Logger.debug("checkStatus: status="+context.getStatus()
                                  +" count="+context.getCount());
-                    /*
                     switch (context.getStatus()) {
                     case Done:
                     case Failed:
@@ -1018,8 +1007,7 @@ public class App extends Controller {
                     default:
                         return routes.App.status(type.toLowerCase(), query);
                     }
-                    */
-                    return routes.App.status(type.toLowerCase(), query);
+                    //return routes.App.status(type.toLowerCase(), query);
                 }
             }
             catch (Exception ex) {
@@ -1067,14 +1055,13 @@ public class App extends Controller {
             final String key = "substructure/"+Util.sha1(query);
             Logger.debug("substructure: query="+query
                          +" rows="+rows+" page="+page+" key="+key);
-            final int size = (page+1)*rows;
             return getOrElse
                 (strucIndexer.lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
                              Logger.debug("Cache missed: "+key);
                              processor.setResults
-                                 (strucIndexer.substructure(query, 0));
+                                 (rows, strucIndexer.substructure(query, 0));
                              return processor.getContext();
                          }
                      });
@@ -1103,7 +1090,8 @@ public class App extends Controller {
                          public SearchResultContext call () throws Exception {
                              Logger.debug("Cache missed: "+key);
                              processor.setResults
-                                 (strucIndexer.similarity(query, threshold, 0));
+                                 (rows, strucIndexer.similarity
+                                  (query, threshold, 0));
                              return processor.getContext();
                          }
                      });
@@ -1113,5 +1101,55 @@ public class App extends Controller {
             Logger.error("Can't execute similarity search", ex);
         }
         return null;
+    }
+
+    public static <T> Result structureResult
+        (final SearchResultContext context, int rows,
+         int page, final ResultRenderer<T> renderer) throws Exception {
+
+        final String key = "structureResult/"+context.getId()
+            +"/"+Util.sha1(request (), "facet");
+        
+        TextIndexer.SearchResult result = getOrElse
+            (key, new Callable<TextIndexer.SearchResult> () {
+                    public TextIndexer.SearchResult call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
+                        List results = context.getResults();
+                        return results.isEmpty() ? null : SearchFactory.search
+                        (results, null, results.size(), 0,
+                         renderer.getFacetDim() != null
+                         ? renderer.getFacetDim() : FACET_DIM,
+                         request().queryString());
+                    }
+                });
+
+        TextIndexer.Facet[] facets = new TextIndexer.Facet[0];
+        List<T> results = new ArrayList<T>();
+        
+        int[] pages = new int[0];
+        int count = 0;
+        if (result != null) {
+            Long stop = context.getStop();
+            if (!context.finished() || 
+                (stop != null && stop >= result.getTimestamp()))
+                Cache.remove(key);
+            
+            count = result.count();
+            Logger.debug(key+": "+count);
+            
+            rows = Math.min(count, Math.max(1, rows));
+            int i = (page - 1) * rows;
+            if (i < 0 || i >= count) {
+                page = 1;
+                i = 0;
+            }
+            pages = paging (rows, page, count);
+
+            for (int j = 0; j < rows && i < count; ++j, ++i)
+                results.add((T)result.get(i));
+        }
+        
+        return renderer.render
+            (page, rows, count, pages, result.getFacets(), results);
     }
 }

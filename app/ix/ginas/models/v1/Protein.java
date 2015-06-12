@@ -1,23 +1,27 @@
 package ix.ginas.models.v1;
 
-import java.util.List;
-import java.util.ArrayList;
-import javax.persistence.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.Ginas;
 import ix.core.models.Indexable;
 import ix.core.models.Value;
+import ix.ginas.models.Ginas;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+@SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_protein")
 public class Protein extends Ginas {
@@ -44,6 +48,7 @@ public class Protein extends Ginas {
     public Modifications modifications;
     
     @ManyToMany(cascade=CascadeType.ALL)
+
     @JoinTable(name="ix_ginas_protein_subunit")
     public List<Subunit> subunits = new ArrayList<Subunit>();
 
@@ -58,4 +63,54 @@ public class Protein extends Ginas {
     public List<Value> references = new ArrayList<Value>();
 
     public Protein () {}
+
+    @JsonIgnore
+    private Map<String, String> _modifiedCache=null;
+    public Map<String, String> getModifiedSites(){
+    	
+    	if(_modifiedCache!=null){
+    		return _modifiedCache;
+    	}
+    	
+    	_modifiedCache =  new HashMap<String,String>();
+    	//disulfides
+    	for(DisulfideLink dsl: this.disulfideLinks){
+    		for(Site s:dsl.sites){
+    			_modifiedCache.put(s.toString(),"disulfide");
+    		}
+    	}
+    	//glycosylation
+    	for(Site s: this.glycosylation.NGlycosylationSites){
+    		_modifiedCache.put(s.toString(),"nglycosylation");
+    	}
+    	for(Site s: this.glycosylation.OGlycosylationSites){
+			_modifiedCache.put(s.toString(),"oglycosylation");
+    	}
+    	for(Site s: this.glycosylation.CGlycosylationSites){
+			_modifiedCache.put(s.toString(),"cglycosylation");
+    	}    	
+    	//modifications
+    	for(StructuralModification sm : this.modifications.structuralModifications){
+    		if(sm.sites!=null){
+    			for(Site s: sm.sites){
+    				_modifiedCache.put(s.toString(),"structuralModification");
+    	    	}
+    		}
+    	}
+    	
+    	//TODO: Need otherlinks as well
+    	return _modifiedCache;
+    }
+    
+    /**
+     * Returns a string to describe any modification that happens at the specified 
+     * site. Returns null if there is no modification.
+     * @param subunitIndex
+     * @param residueIndex
+     * @return
+     */
+    public String getSiteModificationIfExists(int subunitIndex, int residueIndex){
+    	return getModifiedSites().get(subunitIndex + "_" + residueIndex);    	
+    }
+    
 }

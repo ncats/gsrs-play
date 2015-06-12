@@ -63,6 +63,7 @@ import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.FieldCacheTermsFilter;
 
+import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -91,6 +92,7 @@ import org.reflections.Reflections;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import play.Logger;
+import play.cache.Cache;
 import play.db.ebean.Model;
 
 import ix.utils.Global;
@@ -112,6 +114,12 @@ public class TextIndexer {
     public static final String FIELD_KIND = "__kind";
 
     /**
+     * these default parameters should be configurable!
+     */
+    public static final int CACHE_TIMEOUT = 60*60*24; // 24 hours
+    public static final int FETCH_WORKERS = 4; // number of fetch workers
+
+    /**
      * Make sure to properly update the code when upgrading version
      */
     static final Version LUCENE_VERSION = Version.LATEST;
@@ -121,7 +129,9 @@ public class TextIndexer {
     static final String DIM_CLASS = "ix.Class";
 
     static final DateFormat YEAR_DATE_FORMAT = new SimpleDateFormat ("yyyy");
-
+    static final SearchResultPayload POISON_PAYLOAD = new SearchResultPayload ();
+    static final Object POISON_PILL = new Object ();
+    
     public static class FV {
         String label;
         Integer count;
@@ -190,9 +200,9 @@ public class TextIndexer {
         }
 
         @JsonIgnore
-        public ArrayList<String> getLabelString (){
+        public ArrayList<String> getLabelString () {
             ArrayList<String> strings = new ArrayList<String>();
-            for(int i = 0; i<values.size(); i++){
+            for (int i = 0; i<values.size(); i++) {
                 String label = values.get(i).getLabel();
                 strings.add(label);
             }
@@ -200,7 +210,7 @@ public class TextIndexer {
         }
         
         @JsonIgnore
-        public ArrayList <Integer> getLabelCount (){
+        public ArrayList <Integer> getLabelCount () {
             ArrayList<Integer> counts = new ArrayList<Integer>();
             for(int i = 0; i<values.size(); i++){
                 int count = values.get(i).getCount();
@@ -210,13 +220,16 @@ public class TextIndexer {
         }
     }
 
-    public static class SearchResult  {
+    public static class SearchResult {
         String query;
         List<Facet> facets = new ArrayList<Facet>();
-        List matches = new ArrayList ();
+        final List matches = new CopyOnWriteArrayList ();
         int count;
         SearchOptions options;
-        
+        final long timestamp = System.currentTimeMillis();
+        AtomicLong stop = new AtomicLong ();
+
+        SearchResult () {}
         SearchResult (SearchOptions options, String query) {
             this.options = options;
             this.query = query;
@@ -225,10 +238,22 @@ public class TextIndexer {
         public String getQuery () { return query; }
         public SearchOptions getOptions () { return options; }
         public List<Facet> getFacets () { return facets; }
-        public List getMatches () { return matches; }
         public int size () { return matches.size(); }
+        public Object get (int index) { return matches.get(index); }
+        public List getMatches () { return matches; }
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
+        public long getTimestamp () { return timestamp; }
+        public long ellapsed () { return stop.get() - timestamp; }
+        public boolean finished () { return stop.get() >= timestamp; }
+
+        protected void add (Object obj) {
+            matches.add(obj);
+        }
+        
+        protected void done () {
+            stop.set(System.currentTimeMillis());
+        }
     }
 
     public static class SuggestResult {
@@ -341,6 +366,148 @@ public class TextIndexer {
         }
     }
 
+    static class SearchResultPayload {
+        SearchResult result;
+        TopDocs hits;
+        IndexSearcher searcher;
+        Map<String, Model.Finder> finders =
+            new HashMap<String, Model.Finder>();
+        SearchOptions options;
+        int total;
+        
+        SearchResultPayload () {}
+        SearchResultPayload (SearchResult result, TopDocs hits,
+                             IndexSearcher searcher) {
+            this.result = result;
+            this.hits = hits;
+            this.searcher = searcher;
+            this.options = result.options;
+            result.count = hits.totalHits; 
+            total = Math.max(0, Math.min(options.max(), result.count));  
+        }
+
+        void fetch () throws IOException {
+            try {
+                fetch (total);
+            }
+            finally {
+                result.done();
+                searcher.getIndexReader().close();
+            }
+        }
+
+        Object findObject (IndexableField kind, IndexableField id)
+            throws Exception {
+            
+            Number n = id.numericValue();
+            Object value = null;
+            
+            Model.Finder finder = finders.get(kind.stringValue());
+            if (finder == null) {
+                Class c = n != null ? Long.class : String.class;
+                finder = new Model.Finder
+                    (c, Class.forName(kind.stringValue()));
+                finders.put(kind.stringValue(), finder);
+            }
+            
+            if (options.expand.isEmpty()) {
+                value = finder.byId(n != null
+                                    ? n.longValue() : id.stringValue());
+            }
+            else {
+                com.avaje.ebean.Query ebean = finder.setId
+                    (n != null ? n.longValue() : id.stringValue());
+                for (String path : options.expand)
+                    ebean = ebean.fetch(path);
+                value = ebean.findUnique();
+            }
+                    
+            if (value == null) {
+                Logger.warn
+                    (kind.stringValue()+":"+id
+                     +" not available in persistence store!");
+            }
+            
+            return value;
+        }
+        
+            
+        void fetch (int size)  throws IOException {
+            for (int i = result.size(); i < Math.min(total, size); ++i) {
+                Document doc = searcher.doc(hits.scoreDocs[i].doc);
+                final IndexableField kind = doc.getField(FIELD_KIND);
+                if (kind != null) {
+                    String field = kind.stringValue()+"._id";
+                    final IndexableField id = doc.getField(field);
+                    if (id != null) {
+                        if (DEBUG (2)) {
+                            Logger.debug("++ matched doc "
+                                         +field+"="+id.stringValue());
+                        }
+                        
+                        try {
+                            Object value = Cache.getOrElse
+                                (field+":"+id.stringValue(), new Callable () {
+                                        public Object call () throws Exception {
+                                            return findObject (kind, id);
+                                        }
+                                    }, CACHE_TIMEOUT);
+                            
+                            if (value != null)
+                                result.add(value);
+                        }
+                        catch (Exception ex) {
+                            Logger.trace("Can't locate class "
+                                         +kind.stringValue()
+                                         +" in classpath!", ex);
+                        }
+                    }
+                    else {
+                        Logger.error("Index corrupted; document "
+                                     +"doesn't have field "+field);
+                    }
+                }
+            }
+        }
+    }
+        
+    class FetchWorker implements Runnable {
+        FetchWorker () {
+        }
+
+        public void run () {
+            Logger.debug(Thread.currentThread()
+                         +": FetchWorker started at "+new Date ());
+            try {
+                for (SearchResultPayload payload; (payload = fetchQueue.take())
+                         != POISON_PAYLOAD
+                         && !Thread.currentThread().isInterrupted(); ) {
+                    try {
+                        long start = System.currentTimeMillis();
+                        Logger.debug(Thread.currentThread()
+                                     +": fetching for query: "
+                                     +payload.result.query);
+                        payload.fetch();
+                        Logger.debug(Thread.currentThread()+": ## fetched "
+                                     +payload.result.count
+                                     +" results in "+String.format
+                                     ("%1$dms", 
+                                      System.currentTimeMillis()-start));
+                    }
+                    catch (IOException ex) {
+                        Logger.error("Error in processing payload", ex);
+                    }
+                }
+                Logger.debug(Thread.currentThread()
+                             +": FetchWorker stopped at "+new Date());
+            }
+            catch (Exception ex) {
+                //ex.printStackTrace();
+                Logger.trace(Thread.currentThread()+" stopped", ex);
+            }
+        }
+    }
+    
     private File baseDir;
     private File suggestDir;
     private Directory indexDir;
@@ -352,6 +519,11 @@ public class TextIndexer {
     private ConcurrentMap<String, SuggestLookup> lookups;
     private ConcurrentMap<String, SortField.Type> sorters;
     private AtomicLong lastModified = new AtomicLong ();
+    
+    private ExecutorService threadPool = Executors.newCachedThreadPool();
+    private Future[] fetchWorkers;
+    private BlockingQueue<SearchResultPayload> fetchQueue =
+        new LinkedBlockingQueue<SearchResultPayload>();
         
     static ConcurrentMap<File, TextIndexer> indexers = 
         new ConcurrentHashMap<File, TextIndexer>();
@@ -370,7 +542,10 @@ public class TextIndexer {
         }
     }
 
-    private TextIndexer () {}
+    private TextIndexer () {
+        setFetchWorkers (FETCH_WORKERS);
+    }
+    
     public TextIndexer (File dir) throws IOException {
         if (!dir.isDirectory())
             throw new IllegalArgumentException ("Not a directory: "+dir);
@@ -429,7 +604,21 @@ public class TextIndexer {
         Logger.info("## "+sorters.size()+" sort fields defined!");
 
         this.baseDir = dir;
+        setFetchWorkers (FETCH_WORKERS);
     }
+
+    public void setFetchWorkers (int n) {
+        if (fetchWorkers != null) {
+            for (Future f : fetchWorkers)
+                if (f != null)
+                    f.cancel(true);
+        }
+        
+        fetchWorkers = new Future[n];
+        for (int i = 0; i < fetchWorkers.length; ++i)
+            fetchWorkers[i] = threadPool.submit(new FetchWorker ());
+    }
+    
 
     static boolean DEBUG (int level) {
         Global g = Global.getInstance();
@@ -523,6 +712,12 @@ public class TextIndexer {
 
     public SearchResult search 
         (SearchOptions options, String text) throws IOException {
+        return search (options, text, null);
+    }
+    
+    public SearchResult search 
+        (SearchOptions options, String text, Collection subset)
+        throws IOException {
         SearchResult searchResult = new SearchResult (options, text);
 
         Query query = null;
@@ -542,7 +737,13 @@ public class TextIndexer {
 
         if (query != null) {
             Filter f = null;
-            if (options.kind != null) {
+            if (subset != null) {
+                List<Term> terms = getTerms (subset);
+                //Logger.debug("Filter terms "+subset.size());
+                if (!terms.isEmpty())
+                    f = new TermsFilter (terms);
+            }
+            else if (options.kind != null) {
                 Set<String> kinds = new TreeSet<String>();
                 kinds.add(options.kind.getName());
                 Reflections reflections = new Reflections("ix");
@@ -552,41 +753,74 @@ public class TextIndexer {
                 f = new FieldCacheTermsFilter 
                     (FIELD_KIND, kinds.toArray(new String[0]));
             }
-            search (searchResult, options, query, f);
+            search (searchResult, query, f);
         }
         
         return searchResult;
     }
 
-    protected void search (SearchResult searchResult, 
-                           SearchOptions options, Query query,
-                           Filter filter) throws IOException {
-        IndexSearcher searcher = new IndexSearcher
-            (DirectoryReader.open(indexWriter, true));
-        try {
-            search (searcher, searchResult, options, query, filter);
+    public SearchResult filter (Collection subset)  throws IOException {
+        SearchOptions options = new SearchOptions
+            (null, subset.size(), 0, subset.size()/2);
+        return filter (options, subset);
+    }
+
+    protected List<Term> getTerms (Collection subset) {
+        List<Term> terms = new ArrayList<Term>();
+        for (Iterator it = subset.iterator(); it.hasNext(); ) {
+            Object obj = it.next();
+            Term term = getTerm (obj);
+            if (term != null) {
+                terms.add(term);
+            }
         }
-        finally {
-            searcher.getIndexReader().close();
-        }
+        return terms;
     }
     
-    protected void search (IndexSearcher searcher, SearchResult searchResult, 
-                           SearchOptions options, Query query, Filter filter)
+    protected TermsFilter getTermsFilter (Collection subset) {
+        return new TermsFilter (getTerms (subset));
+    }
+    
+    public SearchResult filter (SearchOptions options, Collection subset)
         throws IOException {
+        return filter (options, getTermsFilter (subset));
+    }
+    
+    protected SearchResult filter (SearchOptions options, Filter filter)
+        throws IOException {
+        IndexSearcher searcher = new IndexSearcher
+            (DirectoryReader.open(indexWriter, true));
+        return search (searcher, new SearchResult (options, null),
+                       new MatchAllDocsQuery (), filter);
+    }
+
+    protected SearchResult search (SearchResult searchResult, 
+                                   Query query, Filter filter)
+        throws IOException {
+        IndexSearcher searcher = new IndexSearcher
+            (DirectoryReader.open(indexWriter, true));
+        return search (searcher, searchResult, query, filter);
+    }
+    
+    protected SearchResult search (IndexSearcher searcher,
+                                   SearchResult searchResult, 
+                                   Query query, Filter filter)
+        throws IOException {
+        SearchOptions options = searchResult.getOptions();
+        
         if (DEBUG (1)) {
             Logger.debug("## Query: "
-                         +query+" Filter: "+filter+" Options:"+options);
+                         +query+" Filter: "
+                         +(filter!=null?filter.getClass():"none")
+                         +" Options:"+options);
         }
         
         long start = System.currentTimeMillis();
-        Map<String, Model.Finder> finders = 
-            new HashMap<String, Model.Finder>();
             
         FacetsCollector fc = new FacetsCollector ();
         TaxonomyReader taxon = new DirectoryTaxonomyReader (taxonWriter);
         TopDocs hits = null;
-
+        
         try {
             Sort sorter = null;
             if (!options.order.isEmpty()) {
@@ -756,81 +990,82 @@ public class TextIndexer {
             taxon.close();
         }
 
-        searchResult.count = hits.totalHits;
-        int size = Math.max(0, Math.min(options.max(), hits.totalHits));
-        for (int i = options.skip; i < size; ++i) {
-            Document doc = searcher.doc(hits.scoreDocs[i].doc);
-            IndexableField kind = doc.getField(FIELD_KIND);
-            if (kind != null) {
-                String field = kind.stringValue()+"._id";
-                IndexableField id = doc.getField(field);
-                if (id != null) {
-                    Number n = id.numericValue();
-                    try {
-                        Model.Finder finder = 
-                            finders.get(kind.stringValue());
-                        if (finder == null) {
-                            Class c = n != null 
-                                ? Long.class : String.class;
-                            finder = new Model.Finder
-                                (c, Class.forName(kind.stringValue()));
-                            finders.put(kind.stringValue(), finder);
-                        }
+        if (DEBUG (1)) {
+            Logger.debug("## Query executes in "
+                         +String.format
+                         ("%1$.3fs", 
+                          (System.currentTimeMillis()-start)*1e-3)
+                         +"..."+hits.totalHits+" hit(s) found!");
+        }
 
-                        if (options.expand.isEmpty()) {
-                            Object v = 
-                                (finder.byId
-                                 (n != null 
-                                  ? n.longValue() : id.stringValue()));
-                            if (v != null)
-                                searchResult.matches.add(v);
-                            else
-                                Logger.warn
-                                    (kind.stringValue()+":"+id
-                                     +" not available in persistence store!");
-                        }
-                        else {
-                            com.avaje.ebean.Query ebean = finder.setId
-                                (n != null ? n.longValue() : id.stringValue());
-                            for (String path : options.expand)
-                                ebean = ebean.fetch(path);
-                            Object v = ebean.findUnique();
-                            if (v != null)
-                                searchResult.matches.add(v);
-                            else
-                                Logger.warn
-                                    (kind.stringValue()+":"+id
-                                     +" not available in persistence store!");
-                        }
+        try {
+            SearchResultPayload payload = new SearchResultPayload
+                (searchResult, hits, searcher);
+            /*if (filter != null) {
+                payload.fetch(hits.totalHits);
+            }
+            else*/ {
+                // we first block until we have enough result to show
+                payload.fetch(50);
+            }
+            
+            // now queue the payload so the remainder is fetched in
+            // the background
+            fetchQueue.put(payload);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.trace("Can't queue fetch results!", ex);
+        }
+        
+        return searchResult;
+    }
 
-                        if (DEBUG (2)) {
-                            Logger.debug("++ matched doc "
-                                         +field+"="+id.stringValue());
-                        }
-                    }
-                    catch (ClassNotFoundException ex) {
-                        Logger.trace("Can't locate class "
-                                     +kind.stringValue()
-                                     +" in classpath!", ex);
-                    }
+
+    protected Term getTerm (Object entity) {
+        if (entity == null)
+            return null;
+
+        Class cls = entity.getClass();
+        Object id = null;
+        for (Field f : cls.getFields()) {
+            if (null != f.getAnnotation(Id.class)) {
+                try {
+                    id = f.get(entity);
+                    break;
                 }
-                else {
-                    Logger.error("Index corrupted; document "
-                                 +"doesn't have field "+field);
+                catch (Exception ex) {
+                    Logger.error("Can't retrieve entity Id", ex);
                 }
             }
         }
 
-        if (DEBUG (1)) {
-            Logger.debug("## Query finishes in "
-                         +String.format
-                         ("%1$.3fs", 
-                          (System.currentTimeMillis()-start)*1e-3)
-                         +"..."+hits.totalHits+" hit(s) found; returning "
-                         +searchResult.matches.size()+"!");
+        if (id == null) {
+            Logger.warn("Entity "+entity+"["
+                        +entity.getClass()+"] has no Id field!");
+            return null;
         }
-    }
 
+        return new Term (cls.getName()+".id", id.toString());
+    }
+    
+    public Document getDoc (Object entity) throws Exception {
+        Term term = getTerm (entity);
+        if (term != null) {
+            IndexSearcher searcher = new IndexSearcher
+                (DirectoryReader.open(indexWriter, true));
+            try {
+                TopDocs docs = searcher.search(new TermQuery (term), 1);
+                if (docs.totalHits > 0)
+                    return searcher.doc(docs.scoreDocs[0].doc);
+            }
+            finally {
+                searcher.getIndexReader().close();
+            }
+        }
+        return null;
+    }
+    
     /**
      * recursively index any object annotated with Entity
      */
@@ -874,16 +1109,17 @@ public class TextIndexer {
         }
         
         // now index
-        //indexWriter.addDocument(fields);
+        addDoc (doc);
+        if (DEBUG (2))
+            Logger.debug("<<< "+entity);
+    }
+
+    public void addDoc (Document doc) throws IOException {
         doc = facetsConfig.build(taxonWriter, doc);
         if (DEBUG (2))
             Logger.debug("++ adding document "+doc);
         
         indexWriter.addDocument(doc);
-        
-        if (DEBUG (2))
-            Logger.debug("<<< "+entity);
-
         lastModified.set(System.currentTimeMillis());
     }
 
@@ -1503,6 +1739,8 @@ public class TextIndexer {
 
     public void shutdown () {
         try {
+            fetchQueue.put(POISON_PAYLOAD);
+            
             for (SuggestLookup look : lookups.values()) {
                 look.close();
             }
@@ -1518,10 +1756,13 @@ public class TextIndexer {
                               facetsConfig);
             saveSorters (new File (baseDir, SORTER_CONFIG_FILE), sorters);
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             //ex.printStackTrace();
             Logger.trace("Closing index", ex);
         }
-        indexers.remove(baseDir);
+        finally {
+            indexers.remove(baseDir);
+            threadPool.shutdown();
+        }
     }
 }

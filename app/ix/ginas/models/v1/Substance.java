@@ -1,5 +1,6 @@
 package ix.ginas.models.v1;
 
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.Date;
 import java.util.List;
@@ -7,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import javax.persistence.*;
+
+import play.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -114,7 +117,7 @@ public class Substance extends Ginas {
     @JSONEntity(title = "Approval ID", isReadOnly = true)
     @Column(length=10)
     @Indexable(facet=true,suggest=true,name="Approval ID")
-    public String unii;
+    public String approvalID;
     
     // TODO in original schema, this field is missing its items: String
     @JSONEntity(title = "Tags", format = "table", isUniqueItems = true)
@@ -247,5 +250,26 @@ public class Substance extends Ginas {
             }
         }
         return names.get(0).name;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void tidy () {
+        // preform any validation prior to persistence
+        List<Relationship> remove = new ArrayList<Relationship>();
+        for (Relationship rel : relationships) {
+            SubstanceReference ref = rel.relatedSubstance;
+            if (ref != null && ref.refuuid == null) {
+                // remove this relationship
+                remove.add(rel);
+            }
+        }
+
+        if (!remove.isEmpty()) {
+            for (Relationship rel : remove)
+                relationships.remove(rel);
+            Logger.warn("Substance "+approvalID+" has "+remove.size()
+                        +" invalid relationship(s)!");
+        }
     }
 }

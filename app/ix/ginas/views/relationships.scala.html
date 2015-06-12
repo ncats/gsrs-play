@@ -1,0 +1,53 @@
+@import ix.ginas.models.v1.Relationship
+@import ix.ginas.controllers.v1.SubstanceFactory
+@import ix.ginas.controllers.GinasApp
+
+@import helper._ 
+
+
+@(relationships: List[Relationship])
+		<button class="btn btn-primary label-offset det">Relationships&nbsp;<span class="badge head"> @relationships.length</span></button>
+	<div class="col-md-12">
+	<table class="table">
+	<thead>
+	<tr>
+	<th></th>
+	<th>Name</th>
+	<th>Interaction Type</th>
+	<th>Qualification</th>
+	<th>Type</th>
+	<th>Comments</th>
+	<th>Amount</th>
+	<th>References</th>
+	</tr>
+	</thead>
+	@for(r <- relationships){
+	<tr>
+	@if(SubstanceFactory.getSubstanceByApprovalID(r.relatedSubstance.approvalID)!= null){
+	@defining(SubstanceFactory.getSubstanceByApprovalID(r.relatedSubstance.approvalID)){ rs =>
+	<td></td>
+	<td>
+	<a href="@ix.ginas.controllers.routes.GinasApp.chemical(r.relatedSubstance.approvalID)">@r.relatedSubstance.refPname</a>
+	</td>
+	}
+	}else{
+	<td><i>Substance not yet imported</i></td>
+	<td>
+	@r.relatedSubstance.refPname
+	</td>
+	}
+	
+	<td>@r.interactionType</td>
+	<td>@r.qualification</td>
+	<td>@GinasApp.getType(r)</td>
+	<td>@r.comments</td>
+	<td>@GinasApp.getType(r.amount) @r.amount.average @r.amount.units</td>
+	@referencetable(r.references, "refs" , 8)
+	</tr>
+	
+	}
+	
+	
+	</thead>
+	</table>
+</div>

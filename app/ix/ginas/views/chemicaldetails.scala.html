@@ -1,57 +1,15 @@
 @import ix.core.models.Structure 
 @import ix.core.models.Keyword
 @import ix.ginas.controllers.v1.ReferenceFactory 
+@import ix.ginas.controllers.v1.SubstanceFactory 
 @import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.ChemicalSubstance
 @import helper._ 
 
 @(sub: ix.ginas.models.v1.ChemicalSubstance)
 
-@typeParse(t : String)={ 
-@if(t=="of"){ 
-	Official Name 
-	} 
-@if(t =="sys"){ 
-	Systematic Name 
-	} 
-@if(t=="bn"){ 
-	Brand Name 
-	} 
-@if(t =="cn"){ 
-	Common Name 
-	} 
-@if(t =="cd"){ 
-	Code 
-	}
-} 
-
-@molExport(mol: String)= {
-<div class="modal fade export" id="structureExport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelExport" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabelExport">Export Structure</h4>
-      </div>
-      <div class="modal-body">
-             		<div class = "row">	
-					<div class="col-md-12">
-					<div class = "well" id = "input">
-	@mol
-					</div>
-				</div>
-				</div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button"  class="btn btn-primary" onclick="" data-dismiss="modal">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-}
-
 @structureImage(s: Structure, size : Integer) = {
-<img class="struc-thumb" alt="Structure of @sub.getName()"
+<img class="struc-thumb img-responsive" alt="Structure of @sub.getName()"
 	src='@ix.ncats.controllers.routes.App.structure(s.id,"svg",size)'>
 } 
 
@@ -87,7 +45,7 @@
 		<td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
 		<td><span class="badge">@s.atropisomerism</span></td>
 		<td><span class="badge">@s.charge</span></td>
-		@referenceTable(GinasApp.getStructureReferences(s), "hi", 6 )
+		@referencetable(GinasApp.getStructureReferences(s), "hi", 6 )
 	</tr>
 	} 
 	@if(stype=="moiety"){ 
@@ -96,70 +54,18 @@
 			<td>@structureImage(m.structure, 150)</td>
 			<td><span class="badge badge-primary">@m.count</span></td>
 			<td><span class="badge">@m.structure.stereoChemistry</span></td>
-			<td><span class="badge">@m.structure.opticalActivity</span></td>
+			<td><span class="badge">@m.structure.opticalActivity.toValue()</span></td>
 			<td><span class="badge">@m.structure.atropisomerism</span></td>
 			<td>@m.structure.formula</td>
 			<td>@m.structure.mwt</td>
 			<td><span class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></td>
 			<td><span class="badge">@m.structure.atropisomerism</span></td>
 			<td><span class="badge">@m.structure.charge</span></td>
-			@referenceTable(GinasApp.getStructureReferences(m.structure), "hi", 6 )
+			@referencetable(GinasApp.getStructureReferences(m.structure), "hi", 6 )
 		</tr>
 		} 
 	} 
 } 
-
-@referenceTable(refs: List[Keyword], id : String, colspan : Integer) ={
-@if(refs.length >= 1){
-			<td>
-				<button class="btn btn-primary" type="button" data-toggle="collapse"
-					data-target="#@id-reference" aria-expanded="false"
-					aria-controls="collapseExample">@refs.length</button>
-			</td>
-			</tr>
-			<tr class="collapse" id="@id-reference">
-						<td colspan = "@colspan" class = "sub-table">
-
-				<table class="table table-striped" id="referenceTable">
-						<thead>
-							<tr>
-								<th>Citation</th>
-								<th>Doc Type</th>
-								<th>Date Accessed</th>
-								<th>References</th>
-								
-							</tr>
-						</thead>
-						@for(ref <- refs){
-						    @defining(ReferenceFactory.getReference(ref.term)) { r =>
-						
-						<tr>
-							<td>
-							@r.citation
-							</td>
-								<td>
-							@r.docType
-							</td>
-								<td>
-							@r.documentDate
-							</td>
-						<td>
-							@r.url
-							</td>	
-						</tr>
-						}
-						}
-				</table>
-</td>
-				</tr>
-				}else{
-				<td>
-				<button class="btn btn-primary" type="button"  disabled="disabled">@refs.length</button>
-			</td>
-				}
-			</td>
-
-}
 
 @ix.ncats.views.html.main(sub.getName(),
 "ix.ginas.models.v1.ChemicalSubstance"){@menu()} {
@@ -168,27 +74,32 @@
 		<div class="row-fluid">
 			<div class="col-md-12">
 				<ul class="nav nav-pills" id="breadcrumb-list">
-					<li role="presentation" class="active"><a href="#structure">Structure</a></li>
-					@if(sub.moieties.length>1){
-					<li role="presentation"><a href="#moieties">Moieties
-							@sub.moieties.length</a></li> }
-					<li role="presentation"><a href="#names">Names
-							@sub.names.length</a></li>
-					<li role="presentation"><a href="#codes" id = "cccc">Codes
-							@sub.codes.length</a></li>
-					<li role="presentation"><a href="#refs">References
-							@sub.references.length</a></li>
+					<li role="presentation" class="active"><a href="#structureDetails">Structure</a></li>
+					@if(sub.moieties.length>0){
+					<li role="presentation"><a href="#moieties">Moieties <span class="badge">@sub.moieties.length</span></a></li> }
+					<li role="presentation"><a href="#names">Names <span class="badge">@sub.names.length</span></a></li>
+					<li role="presentation"><a href="#codes">Codes <span class="badge">@sub.codes.length</span></a></li>
+							@if(GinasApp.resolveRelationships(sub.uuid.toString()).length>0){
+					<li role="presentation"><a href="#relationships" id = "relation">Relationships <span class="badge">@sub.relationships.length</span></a></li>}
+					<li role="presentation"><a href="#refs">References <span class="badge">@sub.references.length</span></a></li>
 				</ul>
 			</div>
 		</div>
 	</div>
 </nav>
-</div>
 }{
-<div class="row info" id="structure">
+<div class = "row">
+<div class = "col-md-9">
+<h1>@sub.getName()</h1>
+</div>
+<div class = "col-md-3">
+<h2 class= "pull-right"> @sub.approvalID</h2>
+</div>
+</div>
+<div class="row info" id="structureDetails">
 
 	<h3>
-		<span class="label label-primary label-offset">Structure</span>
+		<span class="label label-primary label-offset det">Structure</span>
 	</h3>
 	<div class="col-md-5">
 	<div class = "row">
@@ -196,11 +107,13 @@
 	</div>
 	<div class = "row">
 	<div class = "col-md-6 col-md-offset-6">
-	<ul class= "form-inline pull-right" id = "exportSave">
-	<li><button type="button" class="btn navbar-btn btn-default" id = "strucExport"
+	<ul class= "form-inline pull-right list-unstyled" id = "exportSave">
+	<li><button type="button" class="btn navbar-btn btn-primary" id = "strucExport"
 					  data-toggle="modal"
 	  				data-target="#structureExport">Export</button></li>
-	<li><button type="button" class="btn navbar-btn btn-default" id = "strucSearch"
+	<li>
+	
+	<button type="button" class="btn navbar-btn btn-primary" id = "strucSearch"
 					  data-toggle="modal"
 					  data-molurl='@ix.ncats.controllers.routes.App.structure(sub.structure.id,"mol")'
 	  				data-target="#strucModal"><span class="fa fa-search"></span></button>
@@ -211,111 +124,33 @@
 	  				</div>
 	<div class="col-md-6">@makeTable(sub.structure, "structure")</div>
 </div>
-@if(sub.moieties.length > 1){
+@if(sub.moieties.length > 0){
 <div class="row info" id="moieties">
-	<h3>
-		<span class="label label-primary label-offset">Moieties</span>
-	</h3>
+		<button class="btn btn-primary label-offset det">Moieties&nbsp;<span class="badge head"> @sub.moieties.length</span></button>
 	<div class="col-md-12">@makeTable(sub.structure, "moiety")</div>
 </div>
 }
 
 <div class="row info" id="names">
-	<h3>
-		<span class="label label-primary label-offset">Names
-			(@sub.names.length)</span>
-	</h3>
-	<div class="col-md-12">
-		<table class="table table-striped" id="namesTable">
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Type</th>
-					<th>Language</th>
-					<th>Preferred</th>
-					<th>References</th>
-				</tr>
-			</thead>
-			@for(n <- sub.names) {
-			<tr>
-				<td>@n.name</td>
-				<td>@typeParse(n.`type`)</td>
-				<td>@if(n.languages(0).term =="en"){ English }else{ }</td>
-				<td>@if(n.preferred ==true){ Preferred }else{ }</td>
-				
-				@referenceTable(n.references, n.uuid.toString(), 5)
-			</tr>
-			}
-		</table>
-	</div>
-
+@names(sub.names)
 </div>
-@if(sub.codes.length >= 1){
+
+@if(sub.codes.length > 0){
 <div class="row info" id="codes">
-	<h3>
-		<span class="label label-primary label-offset">Codes
-			(@sub.codes.length)</span>
-	</h3>
-	<div class="col-md-12">
-		<table class="table table-striped" id="namesTable">
-			<thead>
-				<tr>
-					<th>Code</th>
-					<th>Type</th>
-					<th>Description</th>
-					<th>References</th>
-				</tr>
-			</thead>
-			@for(c <- sub.codes) {
-<tr>
-			<td><a href="@c.url">@c.code</a></td>
-			<td>@typeParse(c.`type`)</td>
-			<td>@c.comments</td>
-			@referenceTable(c.references, c.code, 4)
-
-			</tr>
-
-			}
-		</table>
-	</div>
-
+@codes(sub.codes)
 </div>
 } 
-<div class="row info" id="refs">
-	<h3>
-		<span class="label label-primary label-offset">References
-			(@sub.references.length)</span>
-	</h3>
-	<div class="col-md-12">
-	<table class="table table-striped" id="allReferencesTable">
-						<thead>
-							<tr>
-								<th>Citation</th>
-								<th>Doc Type</th>
-								<th>Date Accessed</th>
-								<th>References</th>
-								
-							</tr>
-						</thead>
-						@for(r <- sub.references){
-						<tr>
-							<td>
-							@r.citation
-							</td>
-								<td>
-							@r.docType
-							</td>
-								<td>
-							@r.documentDate
-							</td>
-						<td>
-							@r.url
-							</td>	
-						</tr>
-						}
-				</table>
-	</div>
-
+@if(GinasApp.resolveRelationships(sub.uuid.toString()).length > 0){
+<div class="row info" id="relationships">
+@relationships(sub.relationships)
 </div>
-@molExport(sub.structure.molfile)
+}
+
+
+
+<div class="row info" id="refs">
+@references(sub.references)
+</div>
+@molExport(sub.structure.molfile, sub.getName(), sub.approvalID)
+
 }

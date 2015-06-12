@@ -33,6 +33,63 @@
 <script
 	src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
 
+<script>
+console.log("dgsdgsghdfhdhdh");
+
+$(document).ready(function () {
+	console.log("KKKKKGHKGJHGJGHJG");
+	$('#numbers').click(function() {
+		console.log("clicked");
+	});
+	$('#def-group').hide();
+});
+</script>
+
+@structuretypeahead()
+
+
+</head>
+
+<body>
+	<div class="container-fluid" id = "logo-banner">
+	<div class = "row-fluid" >
+	<div class = "col-md-2">
+	<img src="@routes.Assets.at("ginas/images/logo.png")" class = "img-responsive" id = "logo" />
+	</div>
+	<div class ="col-md-2" id="version">
+	  <code><small><code>version 0.0.1; build @ix.ncats.views.txt.build()</small></code>
+	</div>
+	</div>
+	</div>
+
+	<div class="container">@content</div>
+
+
+
+<script>
+function molchange(mol){
+	console.log("molchange");
+	//typea(mol.getSmiles());
+	// $('.structuretypeahead').val(mol.getSmiles());
+     $('.structuretypeahead').typeahead('val', '"'+mol.getSmiles()+'"');
+     var smile = encodeURIComponent(mol.getSmiles());
+     var turl='@ix.core.controllers.search.routes.SearchFactory.suggestField("Structure", "$SMILES", 10)';
+     console.log(turl);
+     $.ajax({
+    	 url: turl.replace("%24SMILES",smile), 
+ 	success : function(data, status, xhr) {
+ 		console.log(data);
+ 	}
+     });
+     
+     
+	console.log("mol:" + mol.getMolfile());
+	console.log("smi:" + mol.getSmiles());
+	var smile = encodeURIComponent(mol.getSmiles());
+	console.log(smile);
+};
+</script>
+
 
 
 <script>
@@ -65,67 +122,5 @@
     	 } 
 
 </script>
-
-@structuretypeahead()
-
-
-</head>
-
-<body ng-controller="ChemicalController as chemical">
-	<div class="container-fluid" id = "logo-banner">
-	<div class = "row-fluid" >
-	<div class = "col-md-2">
-	<img src="@routes.Assets.at("ginas/images/logo.png")" class = "img-responsive" id = "logo" />
-	</div>
-	<div class ="col-md-2" id="version">
-	<span>development 0.9513</span>
-	</div>
-	</div>
-	</div>
-
-	<div class="container">@content</div>
 </body>
-
-<script
-	src='@routes.WebJarAssets.at(WebJarAssets.locate("angular.js"))'
-	type='text/javascript'></script>
-
-<script
-	src='@routes.Assets.at("ginas/js/controllers.js")'
-	type='text/javascript'></script>
-
-<script>
-function molchange(mol){
-	//typea(mol.getSmiles());
-	// $('.structuretypeahead').val(mol.getSmiles());
-     $('.structuretypeahead').typeahead('val', '"'+mol.getSmiles()+'"');
-     var smile = encodeURIComponent(mol.getSmiles());
-     var turl='@ix.core.controllers.search.routes.SearchFactory.suggestField("Structure", "$SMILES", 10)';
-     console.log(turl);
-     $.ajax({
-    	 url: turl.replace("%24SMILES",smile), 
- 	success : function(data, status, xhr) {
- 		console.log(data);
- 	}
-     });
-     
-     
-	console.log("mol:" + mol.getMolfile());
-	console.log("smi:" + mol.getSmiles());
-	var smile = encodeURIComponent(mol.getSmiles());
-	console.log(smile);
-};
-</script>
-<script>
-
-$(document).ready(function () {
-	
-		var mol = new JSDraw("chemSearch");
-	     
-	$('#def-group').hide();
-$('.datepicker').datepicker();
-
-
-});
-</script>
 </html>

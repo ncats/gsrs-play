@@ -1083,7 +1083,7 @@ public class IDGApp extends App implements Commons {
                             call ()  throws Exception {
                             Logger.debug("Cache missed: "+key);
                             return SearchFactory.search
-                            (null, null, MAX_SEARCH_RESULTS,
+                            (null, null, null, MAX_SEARCH_RESULTS,
                              0, FACET_DIM, queryString);
                         }
                     });
@@ -1102,7 +1102,7 @@ public class IDGApp extends App implements Commons {
                             call () throws Exception {
                             Logger.debug("Cache missed: "+key);
                             return SearchFactory.search
-                            (null, query, MAX_SEARCH_RESULTS, 0,
+                            (null, null, query, MAX_SEARCH_RESULTS, 0,
                              FACET_DIM, request().queryString());
                         }
                     });
@@ -1452,32 +1452,21 @@ public class IDGApp extends App implements Commons {
     }
 
     public static Result structureResult
-        (TextIndexer indexer, int rows, int page) throws Exception {
-        try {
-            TextIndexer.SearchResult result = SearchFactory.search
-                (indexer, Ligand.class, null, rows, (page-1)*rows,
-                 FACET_DIM, request().queryString());
-            
-            TextIndexer.Facet[] facets =
-                filter (result.getFacets(), LIGAND_FACETS);
-            
-            List<Ligand> ligands = new ArrayList<Ligand>();
-            int[] pages = new int[0];
-            if (result.count() > 0) {
-                pages = paging (rows, page, result.count());            
-                rows = Math.min(result.size(), Math.max(1, rows));
-                
-                for (int i = 0; i < rows; ++i)
-                    ligands.add((Ligand)result.getMatches().get(i));
-            }
-            
-            return ok (ix.idg.views.html.ligandsmedia.render
-                       (page, rows, result.count(),
-                        pages, decorate (facets), ligands));
-        }
-        finally {
-            //indexer.shutdown();
-        }
+        (final SearchResultContext context, int rows, int page)
+        throws Exception {
+        return structureResult
+            (context, rows, page, new DefaultResultRenderer<Ligand> () {
+                    public Result render (int page, int rows,
+                                          int total, int[] pages,
+                                          List<TextIndexer.Facet> facets,
+                                          List<Ligand> ligands) {
+                        return ok (ix.idg.views.html.ligandsmedia.render
+                                   (page, rows, total,
+                                    pages, decorate (filter
+                                                     (facets, LIGAND_FACETS)),
+                                    ligands));
+                    }
+            });
     }
 
     public static Result similarity (final String query,
@@ -1488,7 +1477,7 @@ public class IDGApp extends App implements Commons {
             SearchResultContext context = similarity
                 (query, threshold, rows, page, new IDGSearchResultProcessor ());
             if (context != null) {
-                return structureResult (context.getIndexer(), rows, page);
+                return structureResult (context, rows, page);
             }
         }
         catch (Exception ex) {
@@ -1506,7 +1495,7 @@ public class IDGApp extends App implements Commons {
             SearchResultContext context = substructure
                 (query, rows, page, new IDGSearchResultProcessor ());
             if (context != null) {
-                return structureResult (context.getIndexer(), rows, page);
+                return structureResult (context, rows, page);
             }
         }
         catch (Exception ex) {

@@ -6,23 +6,7 @@
               <h1 class="cover-heading">ginas JSON Loader</h1>
               <form class="form-horizontal" role="form" method="POST"
 		    enctype="multipart/form-data"
-                    action="@ix.ginas.controllers.routes.GinasApp.loadJSON()">
-                <div class="form-group">
-                  <label for="substance-type"
-			 class="col-sm-2 control-label">Substance Type</label>
-                  <div class="col-sm-10">
-		    <select class="form-control"
-			    id="substance-type" name="substance-type">
-		      <option>Chemical</option>
-		      <option>Protein</option>
-		      <option>Nucleic Acid</option>
-		      <option>Polymer</option>
-		      <option>Structurally Diverse</option>
-		      <option>Mixture</option>
-		      <option>Other</option>
-		    </select>
-                  </div>
-		</div>
+                    action="@ix.ginas.controllers.routes.GinasLoad.loadJSON()">
 		<div class="form-group">
                   <label for="json-url"
 			 class="col-sm-2 control-label">JSON URL</label>

@@ -44,7 +44,7 @@ public class Amount extends Ginas {
     
     @JSONEntity(title = "Referenced Material")
     @Column(length=10)
-    public String unii;
+    public String approvalID;
 
     public Amount () {}
 }

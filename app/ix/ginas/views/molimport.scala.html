@@ -1,34 +1,34 @@
 <!-- Modal -->
-<div class="modal fade" id="structureimport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelimport" aria-hidden="true">
+<div class="modal fade" id="structureimport" tabindex="-1" role="dialog" aria-la
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Clo
         <h4 class="modal-title" id="myModalLabelimport">Structure Import</h4>
       </div>
       <div class="modal-body">
              <form class="form" role="import" method="GET"
-				action="" id = "filereader">
-				<div class="form-group">
-				<div class = "row">
-					<div class="col-md-3">
-						<div class="form-group">
+                               action="" id = "filereader">
+                               <div class="form-group">
+                               <div class = "row">
+                                       <div class="col-md-3">
+                                               <div class="form-group">
     <label for="exampleInputFile">Load File</label>
-    <input type="button" value="Choose File" onclick="window.FileContentsGrabber.append('mol-sequence')" id="exampleInputFile">
+    <input type="button" value="Choose File" onclick="window.FileContentsGrabber
     <p class="help-block">or</p>
   </div>
-				</div>
-				</div>
-				<div class = "row">	
-					<div class="col-md-12">
-						<label for="description-det">Enter molfile, smiles or systematic name:</label>
-						<textarea class="form-control" rows="6" id="mol-sequence"></textarea>
-					</div>
-				</div>
-				</div>
+                               </div>
+                               </div>
+                               <div class = "row">     
+                                       <div class="col-md-12">
+                                               <label for="description-det">Ente
+                                               <textarea class="form-control" ro
+                                       </div>
+                               </div>
+                               </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button"  class="btn btn-primary" onclick="molimport($('#mol-sequence').val())" data-dismiss="modal">Import</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close
+        <button type="button"  class="btn btn-primary" onclick="molimport($('#mo
         </div>
         </form>
       </div>

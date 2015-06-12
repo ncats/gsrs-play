@@ -1,18 +1,24 @@
 package ix.ginas.models.v1;
 
-import java.util.List;
-import java.util.ArrayList;
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.Ginas;
+import ix.ginas.models.utils.JSONEntity;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+
+@SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_glycosylation")
+@JSONEntity(name = "glycosylation", title = "Glycosylation", isFinal = true)
 public class Glycosylation extends Ginas {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_glycosylation_csite",
@@ -39,4 +45,5 @@ public class Glycosylation extends Ginas {
     public String glycosylationType;
 
     public Glycosylation () {}
+
 }

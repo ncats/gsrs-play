@@ -21,4 +21,8 @@ public class Site extends Ginas {
     public Integer residueIndex;
 
     public Site () {}
+    
+    public String toString(){
+    	return this.subunitIndex + "_" + this.residueIndex;
+    }
 }

@@ -1,0 +1,344 @@
+@import ix.core.models.Structure 
+@import ix.core.models.Keyword
+@import ix.ginas.controllers.v1.ReferenceFactory 
+@import ix.ginas.controllers.v1.SubstanceFactory 
+@import ix.ginas.controllers.GinasApp
+@import helper._ 
+@(sub: ix.ginas.models.v1.ProteinSubstance)
+
+@structureImage(s: Structure, size : Integer) = {
+<img class="struc-thumb" alt="Structure of @sub.getName()"
+   src='@ix.ncats.controllers.routes.App.structure(s.id,"svg",size)'>
+}
+
+
+@ix.ncats.views.html.main(sub.getName(),
+"ix.ginas.models.v1.ProteinSubstance"){@menu()} {
+<nav class="navbar navbar-default" id="breadcrumb">
+   <div class="container-fluid">
+      <div class="row-fluid">
+         <div class="col-md-12">
+            <ul class="nav nav-pills" id="breadcrumb-list">
+               <li role="presentation" class="active"><a href="#subunits">Subunits
+                  <span class= "badge">@sub.protein.subunits.length</span></a>
+               </li>
+               @defining(sub.protein.disulfideLinks.length) { count =>
+               @if(count > 0 ){
+               <li role="presentation"><a href="#disulfide">Disulfide Links
+                 <span class= "badge">@count</span></a>
+               </li>
+               }
+               }
+               @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
+               @if(count > 0 ){
+               <li role="presentation"><a href="#glyco">Glycosylation
+                  <span class= "badge">@count</span></a>
+               </li>
+               }
+               }
+	@defining(sub.protein.modifications.getLength()) { gcount =>
+	@if(gcount > 0 ){
+               <li role="presentation"><a href="#mods">Modifications
+                  <span class= "badge">@gcount</span></a>
+               </li>
+               }
+               }
+               <li role="presentation"><a href="#names">Names
+                  <span class= "badge">@sub.names.length</span></a>
+               </li>
+               <li role="presentation"><a href="#codesDiv">Codes
+                  <span class= "badge">@sub.codes.length</span></a>
+               </li>
+		@if(GinasApp.resolveRelationships(sub.uuid.toString()).length>0){
+		<li role="presentation"><a href="#relationships" id = "relation">Relationships
+		<span class= "badge">@sub.relationships.length</span></a></li>}
+               <li role="presentation"><a href="#refs">References
+                  <span class= "badge">@sub.references.length</span></a>
+               </li>
+            </ul>
+         </div>
+      </div>
+   </div>
+</nav>
+
+}{
+<div class = "row">
+<div class = "col-md-9">
+<h1>@sub.getName()</h1>
+</div>
+<div class = "col-md-3">
+<h2 class= "pull-right"> @sub.approvalID</h2>
+</div>
+</div>
+<div class="row info" id="subunits">
+   <div class = "row">
+      <div class="col-md-4">
+		<button class="btn btn-primary label-offset det">Subunits&nbsp;<span class="badge head"> @sub.protein.subunits.size()</span></button>
+      </div>
+      <div class = "col-md-2 pull-right">
+         <div class="switch">
+            <div class= "pull-left" id="num">NUMBERING</div>
+            <input id="numbers" class="cmn-toggle cmn-toggle-round" type="checkbox" checked>
+            <label for="numbers"></label>
+         </div>
+      </div>
+   </div>
+   <div class = "col-md-12">
+   @for(i <- 0 until sub.protein.subunits.size()) {
+   @for(s <- sub.protein.subunits){
+   @if(s.subunitIndex== i+1){
+    <div class="panel panel-default">
+      <div class="panel-heading">
+         <h3 class="panel-title">Subunit @s.subunitIndex</h3>
+      </div>
+      <div class="panel-body">
+         <div class = "row">
+         @defining(s.sequence.toArray) { sequence =>
+	@defining(s.sequence.length) { length =>
+            @for(j <- 0 until (length/10)) {
+            <div class = "col-md-2 aaBlock">
+               <div class = "row">
+                  <div class = "col-md-12 text-right">
+                     <span class = "count">@((j+1)*10)</span>
+                  </div>
+               </div>
+               <div class = "row">
+                  <div class = "col-md-12 string">
+                     @defining(s.sequence.subSequence((j*10),((j+1)*10))) { subArr => 
+                     @for(k <- 0 until subArr.length){
+                     @defining(k+(j*10)+1){ index =>
+                        <span class = "highlight @GinasApp.siteCheck(sub.protein, s.subunitIndex, index)" data-toggle="tooltip" data-placement="top" title="@s.subunitIndex-@index @subArr.charAt(k):@GinasApp.getAAName(subArr.charAt(k))">@subArr.charAt(k)</span>
+ }
+ }
+ }
+    </div>
+   </div>
+   </div>
+ }
+
+    <div class = "col-md-2 aaBlock">
+               <div class = "row">
+                  <div class = "col-md-12 text-right">
+                     <span class = "count">@length</span>
+                  </div>
+               </div>
+               <div class = "row">
+                  <div class = "col-md-12 string">
+                     @defining(s.sequence.subSequence((length-length%10),(length))) { subArr => 
+                     @for(k <- 0 until subArr.length){
+                     @defining(length-length%10){ index =>
+                                             <span class = "highlight @GinasApp.siteCheck(sub.protein, s.subunitIndex, (index+k+1))" data-toggle="tooltip" data-placement="top"  title="@s.subunitIndex-@(index+k+1) @subArr.charAt(k):@GinasApp.getAAName(subArr.charAt(k))">@subArr.charAt(k)</span>
+
+                     }
+                     }
+                     </div>
+                     }
+                  
+               </div>
+   </div>
+
+      </div>
+</div>
+</div>
+
+   }
+   }
+   }
+
+}
+}
+</div>
+</div>
+
+@defining(sub.protein.disulfideLinks.length) { count =>	
+@if(count > 0 ){
+<div class="row info" id="disulfide">
+		<button class="btn btn-primary label-offset det">Disulfide Links&nbsp;<span class="badge head"> @count</span></button>
+   <div class="col-md-12">
+        <table class="table table-striped" id="disulfide-Table">
+         <thead>
+            <tr>
+               <th>Residue Index</th>
+            </tr>
+         </thead>
+         @for(disLink <- sub.protein.disulfideLinks) {
+          <tr>
+         @for(s<- disLink.sites){
+        
+            <td>@s.subunitIndex _ @s.residueIndex</td>
+            <td></td>
+         }
+         </tr>
+         }
+         
+</table>
+</div>
+</div>
+}
+}
+
+
+@defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>	
+@if(count > 0 ){
+<div class="row info" id="glyco">
+		<button class="btn btn-primary label-offset det">Glycosylation&nbsp;<span class="badge head"> @count</span></button>
+   <div class="col-md-12">
+      @if(sub.protein.glycosylation.glycosylationType != null){
+      Glycosylation Type: @sub.protein.glycosylation.glycosylationType
+      }
+      <table class="table table-striped" id="glycoC-Table">
+         <thead>
+            <tr>
+               <th>Linkage Type</th>
+               <th>Subunit Index</th>
+               <th>Residue Index</th>
+            </tr>
+         </thead>
+         @for(s <- sub.protein.glycosylation.CGlycosylationSites) {
+         <tr>
+            <td>C</td>
+            <td>@s.subunitIndex</td>
+            <td>@s.residueIndex</td>
+         </tr>
+         }
+         @for(s <- sub.protein.glycosylation.NGlycosylationSites) {
+         <tr>
+            <td>N</td>
+            <td>@s.subunitIndex</td>
+            <td>@s.residueIndex</td>
+         </tr>
+         }
+         @for(s <- sub.protein.glycosylation.OGlycosylationSites) {
+         <tr>
+            <td>O</td>
+            <td>@s.subunitIndex</td>
+            <td>@s.residueIndex</td>
+         </tr>
+         }
+      </table>
+   </div>
+</div>
+}
+}
+@defining(GinasApp.getCount(sub.protein.modifications)) { count =>
+@if(count > 0 ){
+<div class="row info" id="mods">
+		<button class="btn btn-primary label-offset det ">Modifications&nbsp;<span class="badge head"> @count</span></button>
+   <div class="col-md-12">
+      @if(sub.protein.modifications.agentModifications.length>0){
+      <div class = "row">
+         <div class="col-md-12">
+            Agent Modifications
+            <table class="table table-striped" id="agent-Table">
+               <thead>
+                  <tr>
+                     <th>Modification Process</th>
+                     <th>Location Role</th>
+                     <th>Modification Type</th>
+                     <th>Amount</th>
+                     <th>Fragment Name</th>
+                     <th>Fragment Class</th>
+                     <th>Fragment Approval</th>
+                  </tr>
+                  @for(m <- sub.protein.modifications.agentModifications) {
+                  <tr>
+                     <td>@m.agentModificationProcess</td>
+                     <td>@m.agentModificationRole</td>
+                     <td>@m.agentModificationType</td>
+                     <td>amount</td>
+                     <td>@m.agentSubstance.refPname</td>
+                     <td>@m.agentSubstance.substanceClass</td>
+                     <td>
+                        <a href="@ix.ginas.controllers.routes.GinasApp.chemical(m.agentSubstance.approvalID)">@m.agentSubstance.approvalID</a>
+                     </td>
+                  </tr>
+                  }
+               </thead>
+            </table>
+         </div>
+      </div>
+      }
+      @if(sub.protein.modifications.physicalModifications.length>0){
+      <div class = "row">
+         <div class="col-md-12">
+            Physical Modifications
+            <table class="table table-striped" id="physical-Table">
+               <thead>
+                  <tr>
+                     <th>Modification Role</th>
+                     <th>Parameter Count</th>
+                     <th>Parameters</th>
+                  </tr>
+               </thead>
+               @for(m <- sub.protein.modifications.physicalModifications) {
+               <tr>
+                  <td>@m.physicalModificationRole</td>
+                  <td>@m.parameters.length</td>
+                  <td></td>
+               </tr>
+            </table>
+         </div>
+      </div>
+      }
+      }
+      @if(sub.protein.modifications.structuralModifications.length>0){
+      <div class = "row">
+         <div class="col-md-12">
+            Structural Modifications
+            <table class="table table-striped" id="structural-Table">
+               <thead>
+                  <tr>
+                     <th>Modification Type</th>
+                     <th>Location Site</th>
+                     <th>Location Type</th>
+                     <th>Residue Modified</th>
+                     <th>Extent</th>
+                     <th>Fragment Name</th>
+                     <th>Fragment Class</th>
+                     <th>Fragment Approval</th>
+                  </tr>
+               </thead>
+               @for(m <- sub.protein.modifications.structuralModifications) {
+               <tr>
+                  <td>@m.structuralModificationType</td>
+                  <td>@for(s <- m.sites){
+                     [@{s.subunitIndex}_@s.residueIndex]
+                     }
+                  </td>
+                  <td>@m.locationType</td>
+                  <td>@m.residueModified</td>
+                  <td>@m.extent</td>
+                  <td>@m.molecularFragment.refPname</td>
+                  <td>@m.molecularFragment.substanceClass</td>
+                  <td><a href="@ix.ginas.controllers.routes.GinasApp.chemical(m.molecularFragment.approvalID)">@m.molecularFragment.approvalID</a></td>
+               </tr>
+               }
+            </table>
+         </div>
+      </div>
+      }
+   </div>
+</div>
+}
+}
+<div class="row info" id="names">
+@names(sub.names)
+</div>
+
+@if(sub.codes.length > 0){
+<div class="row info" id="codesDiv">
+@codes(sub.codes)
+</div>
+} 
+@if(GinasApp.resolveRelationships(sub.uuid.toString()).length > 0){
+<div class="row info" id="relationships">
+relationships(sub.relationships)
+</div>
+}
+
+
+
+<div class="row info" id="refs">
+@references(sub.references)
+</div>
+}

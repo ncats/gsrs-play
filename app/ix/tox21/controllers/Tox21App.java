@@ -53,21 +53,6 @@ public class Tox21App extends App {
         Tox21SearchResultProcessor () throws IOException {
         }
 
-        public int process (int max) throws Exception {
-            while (results.hasMoreElements() && (max == 0 || count < max)) {
-                StructureIndexer.Result r = results.nextElement();
-                Logger.debug("structure: "+r.getId());
-                
-                List<QCSample> samples = Tox21Factory.finder
-                    .where().eq("structure.id", r.getId()).findList();
-                for (QCSample qc : samples) {
-                    getIndexer().add(qc);
-                }
-                ++count;
-            }
-            return count;
-        }
-
         protected Object instrument (StructureIndexer.Result r)
             throws Exception {
             List<QCSample> samples = Tox21Factory.finder
@@ -571,25 +556,20 @@ public class Tox21App extends App {
     }
 
     public static Result structureResult
-        (TextIndexer indexer, int rows, int page) throws Exception {
-        TextIndexer.SearchResult result = SearchFactory.search
-            (indexer, QCSample.class, null, rows,
-             (page-1)*rows, FACET_DIM, request().queryString());
-
-        TextIndexer.Facet[] facets = filter (result.getFacets(), QC_FACETS);
-        
-        List<QCSample> samples = new ArrayList<QCSample>();
-        int[] pages = new int[0];
-        if (result.count() > 0) {
-            pages = paging (rows, page, result.count());            
-            rows = Math.min(result.size(), Math.max(1, rows));
-            for (int i = 0; i < rows; ++i)
-                samples.add((QCSample)result.getMatches().get(i));
-        }
-        
-        return ok (ix.tox21.views.html.samples.render
-                   (page, rows, result.count(),
-                    pages, decorate (facets), samples));
+        (final SearchResultContext context, int rows, int page)
+        throws Exception {
+        return structureResult
+            (context, rows, page, new DefaultResultRenderer<QCSample> () {
+                    public Result render (int page, int rows,
+                                          int total, int[] pages,
+                                          List<TextIndexer.Facet> facets,
+                                          List<QCSample> samples) {
+                        return ok (ix.tox21.views.html.samples.render
+                                   (page, rows, total,
+                                    pages, decorate
+                                    (filter (facets, QC_FACETS)), samples));
+                    }
+                });
     }
 
     public static Result similarity (final String query,
@@ -601,7 +581,7 @@ public class Tox21App extends App {
                 (query, threshold, rows, page,
                  new Tox21SearchResultProcessor ());
             if (context != null) {
-                return structureResult (context.getIndexer(), rows, page);
+                return structureResult (context, rows, page);
             }
         }
         catch (Exception ex) {
@@ -619,7 +599,7 @@ public class Tox21App extends App {
             SearchResultContext context = substructure
                 (query, rows, page, new Tox21SearchResultProcessor ());
             if (context != null) {
-                return structureResult (context.getIndexer(), rows, page);
+                return structureResult (context, rows, page);
             }
         }
         catch (Exception ex) {

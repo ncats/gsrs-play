@@ -1,27 +1,48 @@
- @ix.ncats.views.html.main("ginas", "null"){@menu()}{<h3></h3>}{
- <div class = "container">
-<div class="row" id="pub-history">
-	<div class="col-md-8 col-md-offset-2">
-		<div class="row" id="icons">
-		
-			<a href="@ix.ginas.controllers.routes.GinasApp.chemicals()">
-				<div class="col-md-4">
-					<h2>Chemical Structure</h2>
-					<img src="@routes.Assets.at("ginas/images/sketcher.png")" class="img-responsive" id="" />
+ @ix.ncats.views.html.main("ginas", "null"){@menu()}{
+<h3></h3>
+}{
+<div class="container">
+	<div class="row" id="pub-history">
+		<div class="col-md-8 col-md-offset-2">
+			<div class="row" id="icons">
+
+
+				<a data-toggle="collapse" data-target="#substance-classes">
+					<div class="col-md-4">
+						<h2>Browse</h2>
+						<img src="@routes.Assets.at("ginas/images/sketcher.png")" class="img-responsive" id="" />
+						<div class="row collapse " id="substance-classes">
+				<div class="col-xs-6 col-sm-6 box">
+					<a href="@ix.ginas.controllers.routes.GinasApp.chemicals()">
+						<div class="rounded" id="chemical">
+							<img src="@routes.Assets.at("ginas/images/chemicals_active.png")" alt="Register a chemical"
+								class="img-responsive on" /> <img src="@routes.Assets.at("ginas/images/chemicals.png")" alt="Register a chemical"
+								class="img-responsive off" />
+						</div>
+					</a>
 				</div>
-			</a> <a href="@ix.ginas.controllers.routes.GinasFactory.sequence("Nucleic Acid")">
-				<div class="col-md-4">
-					<h2>Nucleic Acid Sequence</h2>
-					<img src="@routes.Assets.at("ginas/images/nucleicacid.png")" class="img-responsive" id="" />
+				<div class="col-xs-6 col-sm-6 box">
+					<a href="@ix.ginas.controllers.routes.GinasApp.proteins()">
+						<div class="rounded" id="protein">
+							<img src="@routes.Assets.at("ginas/images/proteins_active.png")" alt="Register a protein"
+								class="img-responsive on" /> <img src="@routes.Assets.at("ginas/images/proteins.png")" alt="Register a protein"
+								class="img-responsive off" />
+						</div>
+					</a>
 				</div>
-			</a> <a href="@ix.ginas.controllers.routes.GinasFactory.sequence("Amino Acid")">
-				<div class="col-md-4">
-					<h2>Amino Acid Sequence</h2>
-					<img src="@routes.Assets.at("ginas/images/aminoacid.png")" class="img-responsive" id="" />
-				</div>
+			</div>
+					</div>
+				</a> <a href="@ix.ginas.controllers.routes.GinasFactory.register()">
+
+					<div class="col-md-4 col-md-offset-4">
+						<h2>Register a Substance</h2>
+						<img src="@routes.Assets.at("ginas/images/aminoacid.png")" class="img-responsive" id="" />
+					</div>
+				</a>
+			</div>
+			
 		</div>
 	</div>
-</div>
 </div>
 <!--END panel panel-primary-->
 }

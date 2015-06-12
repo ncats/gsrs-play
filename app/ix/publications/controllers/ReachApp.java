@@ -578,7 +578,7 @@ public class ReachApp extends Controller {
                             queryString.put("facet", f.toArray(new String[0]));
                             
                             return SearchFactory.search
-                            (null, null, 500, 0, 20, queryString);
+                            (null, null, null, 500, 0, 20, queryString);
                         }
                     }, CACHE_TIMEOUT);
             }
@@ -588,7 +588,7 @@ public class ReachApp extends Controller {
                             public SearchResult
                                 call () throws Exception {
                                 return SearchFactory.search
-                                (null, query, 500, 0, 20, queryString);
+                                (null, null, query, 500, 0, 20, queryString);
                             }
                         }, CACHE_TIMEOUT);
             }

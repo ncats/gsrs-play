@@ -1,29 +1,33 @@
 package ix.ginas.models.v1;
 
-import java.util.List;
-import java.util.ArrayList;
-
-import javax.persistence.*;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import ix.core.models.Keyword;
-import ix.core.models.Publication;
-import ix.core.models.Structure;
-import ix.core.models.Indexable;
 import ix.core.models.BeanViews;
-import ix.core.models.Value;
-import ix.core.models.XRef;
+import ix.core.models.Structure;
 import ix.ginas.models.utils.JSONEntity;
+import ix.ncats.controllers.App;
 import ix.utils.Global;
+import ix.core.chem.Chem;
+import ix.core.models.Indexable;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+@SuppressWarnings("serial")
 @JSONEntity(name = "chemicalSubstance", title = "Chemical Substance")
 @Entity
 @Inheritance
@@ -66,4 +70,26 @@ public class ChemicalSubstance extends Substance {
         return node;
     }
 
+    @Indexable(name="SubstanceStereoChemistry", facet=true)
+    public Structure.Stereo getStereoChemistry () {
+        return structure != null ? structure.stereoChemistry : null;
+    }
+
+    @Override
+    public void save () {
+        // now index the structure for searching
+        try {
+            Chem.setFormula(structure);
+            structure.save();
+            // it's bad to reference App from here!!!!
+            App.strucIndexer.add(String.valueOf(structure.id),
+                                 structure.molfile);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        for (Moiety m : moieties)
+            m.structure.save();
+        super.save();
+    }
 }

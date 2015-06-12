@@ -23,6 +23,8 @@ public class SubstanceFactory extends EntityFactory {
         new Model.Finder(UUID.class, Substance.class);
     static public final Model.Finder<Long, ChemicalSubstance> chemfinder =
             new Model.Finder(Long.class, ChemicalSubstance.class);
+    static public final Model.Finder<Long, ProteinSubstance> protfinder =
+            new Model.Finder(Long.class, ProteinSubstance.class);
     
     public static Substance getSubstance (String id) {
         return getSubstance (UUID.fromString(id));
@@ -30,6 +32,10 @@ public class SubstanceFactory extends EntityFactory {
 
     public static Substance getSubstance (UUID uuid) {
         return getEntity (uuid, finder);
+    }
+    
+    public static Substance getSubstanceByApprovalID (String approvalID) {
+        return finder.where().eq("approvalID", approvalID).findUnique();
     }
 
     public static List<Substance> getSubstances
@@ -41,6 +47,11 @@ public class SubstanceFactory extends EntityFactory {
     (int top, int skip, String filter) {
     return filter (new FetchOptions (top, skip, filter), chemfinder);
 }
+    public static List<ProteinSubstance> getProteins
+    (int top, int skip, String filter) {
+    return filter (new FetchOptions (top, skip, filter), protfinder);
+}
+    
      public static Integer getCount () {
         try {
             return getCount (finder);

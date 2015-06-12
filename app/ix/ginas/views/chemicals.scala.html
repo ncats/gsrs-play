@@ -10,47 +10,28 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
         facets: Array[FacetDecorator], chemicals: List[ChemicalSubstance])
 
-@molExport(mol: String, name : String)= {
-<div class="modal fade" id="structureExport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelExport" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabelExport">Export @name</h4>
-      </div>
-      <div class="modal-body">
-             		<div class = "row">	
-					<div class="col-md-12">
-					<div class = "well" id = "input">
-	@mol
-					</div>
-				</div>
-				</div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button"  class="btn btn-primary" onclick="" data-dismiss="modal">Save</button>
-        </div>
-      </div>
-    </div>
+@ix.ncats.views.html.content("Chemicals", "ix.ginas.models.v1.ChemicalSubstance", ix.ginas.controllers.routes.GinasApp.chemicals().url,
+  current, rows, total, pages, facets){@menu()}{<div></div>}{
+
+<div class= "panel-body">
+  <div class = "row collapse hidden-xs" id ="grid"> 
+  @for(chem <- chemicals) {
+
+  <div class = "col-md-3 thumb-col">
+  <div class="panel panel-default">
+  <div class="panel-heading">
+  
+    <p class="text-right" data-toggle="tooltip" title="Approval ID"> 
+    <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
+  <code>@chem.approvalID</code></a></p>
   </div>
-</div>
-}
-@thumb(chem: ChemicalSubstance) = {
-<div class = "row">
-<div class = "col-md-12">
-Approval ID: @chem.unii
-</div>
-</div>
-<div class = "row">
-<div class = "col-md-12 struc-img">
-         <img class = "struc-thumb" alt="Structure of @chem.getName()"
+  <div class="panel-body struc-img">
+<a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
+         <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
 		   src='@ix.ncats.controllers.routes.App.structure(chem.structure.id,"svg",200)'>
-		  
-		   
-</div>
-</div>
+</a>
 <div class = "row stereo">
-<div class = "col-md-12">
+<div class = "col-md-10">
 @if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL){
 <span class="label label-primary label-offset">@chem.structure.stereoChemistry</span>
 }
@@ -71,48 +52,135 @@ Approval ID: @chem.unii
 }
 
  </div>
+ 
 </div>
+</div>
+<div class = "panel-footer nameDiv"  data-toggle="tooltip" title="@chem.getName()">
+<a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
+@GinasApp.truncate(chem.getName())
+</a>
 <div class = "row">
 <div class = "col-md-12">
-@chem.getName()
-</div>
-</div>
-
-	
-}
-
-
-
-@ix.ncats.views.html.content("Chemicals", "ix.ginas.models.v1.ChemicalSubstance",
- "/ginas/chemicals",
-  current, rows, total, pages, facets){@menu()} { <h3></h3>} {
-  <div class = "row">
-  @for(chem <- chemicals) {
-  <div class = "col-md-3  zoom thumb-col ">
-  <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
-     @thumb(chem)
-   </a>
-   	<div class = "row">
-	<div class = "col-md-6 col-md-offset-6">
-	<ul class= "form-inline pull-right" id = "exportSave">
+	<ul class= "list-inline pull-right list-unstyled">
 	<li>
-   <button type="button" class="btn navbar-btn btn-default hidden" id = "strucExportChem"
+   <button type="button" class="btn btn-default btn-sm"
 					  data-toggle="modal"
-	  				data-target="#structureExport">Export</button></li>
-  	<li><button type="button" class="btn navbar-btn btn-default pull-right hidden" id = "strucSearch"
-					  data-toggle="modal"
+	  				data-target="#@chem.approvalID-mol"><i class="fa fa-external-link chem-button"></i></button></li>
+	  				@molExport(chem.structure.molfile, chem.getName(), chem.approvalID)
+  	<li><button type="button" class="btn btn-default btn-sm" data-toggle="modal"
 					  data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.id,"mol")'
-	  				data-target="#strucModal"><span class="fa fa-search"></span></button>
+	  				data-target="#strucModal"><span class="fa fa-search chem-button"></span></button>
 	  				</li>
 	  				</ul>
 	  				</div>
-	  				</div>	
+  	</div>
+
 	  				</div>
-	  				@molExport(chem.structure.molfile, chem.getName())
+	  	</div>			
+	  </div>				
    }
-   
-   </div>
 <!--END panel panel-primary-->
 @molimport()
+</div>
+<div class = "row collapse in" id ="list">
+ @for(chem <- chemicals) {
+ <div class="panel panel-default prot-list">
+  <div class="panel-heading prot-title">
+  <div class = "row">
+  <div class = "col-md-10">
+  <h3>   <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">@chem.getName()</a></h3>
+  </div>
+  <div class = "col-md-2 prot-approvID">
+    <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))"><code>@chem.approvalID</code></a></h4>
+  </div>
+  </div>
+  </div>
+ <div class= "panel-body list-item">
+ <div class = "row">
+<div class = "col-md-3">
+@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL){
+<span class="label label-primary label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.ABSOLUTE){
+<span class="label label-success label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.RACEMIC){
+<span class="label label-info label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.MIXED){
+<span class="label label-default label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.EPIMERIC){
+<span class="label label-warning label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+}
+@if(chem.structure.stereoChemistry== Structure.Stereo.UNKNOWN){
+<span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+}
+
+  <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+		   src='@ix.ncats.controllers.routes.App.structure(chem.structure.id,"svg",150)'>
+		   </div>
+<div class = "col-md-6">
+<h3>@chem.getName()</h3>
+  <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
+  <h4><code>@chem.approvalID</code></h4></a>
+  <div class = "row">
+  <div class = "col-md-2">
+  <h5>Other Names:</h5>
+  </div>
+  <div class = "col-md-10">
+  <h5>@ix.ginas.controllers.GinasApp.namesList(chem.names)</h5>
+  </div>
+  </div>
+  <div class = "row">
+  <div class = "col-md-2">
+  <h5>Codes:</h5>
+  </div>
+  <div class = "col-md-10">
+  <h5>@ix.ginas.controllers.GinasApp.codesList(chem.codes)</h5>
+  </div>
+  </div>
+  <h5>@chem.structure.formula</h5>
+  </div>
+
+<div class = "col-md-2">
+<div class = "row">
+<div class = "col-md-12">
+Moieties: <span class = "badge">@chem.moieties.length</span>
+</div>
+</div>
+<div class = "row">
+<div class = "col-md-12">
+Date approved: <h6>@chem.approved</h6>
+</div>
+</div>
+<div class = "row">
+<div class = "col-md-12">
+Last modified: <h6>@chem.approved</h6>
+</div>
+</div>
+<div class = "row">
+<div class = "col-md-12">
+	<ul class= "list-inline pull-right list-unstyled">
+	<li>
+   <button type="button" class="btn btn-default btn-sm"
+					  data-toggle="modal"
+	  				data-target="#@chem.approvalID-mol"><i class="fa fa-external-link chem-button"></i></button></li>
+	  				@molExport(chem.structure.molfile, chem.getName(), chem.approvalID)
+  	<li><button type="button" class="btn btn-default btn-sm" data-toggle="modal"
+					  data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.id,"mol")'
+	  				data-target="#strucModal"><span class="fa fa-search chem-button"></span></button>
+	  				</li>
+	  				</ul>
+	  				</div>
+  	</div>
+
+	  				</div>
+</div>	  
+</div>	
+</div>			
+}
+</div>
+</div>
 }{@HtmlFormat.empty}
 

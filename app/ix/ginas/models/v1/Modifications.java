@@ -5,7 +5,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+
 import javax.persistence.*;
+
+import play.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -38,4 +41,11 @@ public class Modifications extends Ginas {
         new ArrayList<StructuralModification>();
 
     public Modifications () {}
+    
+    public int getLength(){
+    	Logger.info("agent " + this.agentModifications.size());
+    	Logger.info("phy " + this.physicalModifications.size());
+    	Logger.info("struc " + this.structuralModifications.size());
+    	return this.agentModifications.size() + this.physicalModifications.size() + this.structuralModifications.size();
+    }
 }

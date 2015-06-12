@@ -30,12 +30,13 @@ public class Name extends Ginas {
     public List<Principal> access = new ArrayList<Principal>();
     
     @JSONEntity(title = "Name", isRequired = true)
-    @Column(nullable=false,length=512)
+    @Column(nullable=false)
     @Indexable(name="Name", suggest=true)
-    // note that 255 is the maximum that mysql will allow you to
-    //  create an index; in theory a name can be long (especially systematic
-    //  name).
-    public String name; 
+    public String name;
+
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
+    public String fullName;
     
     @JSONEntity(title = "Name Type", format = JSONConstants.CV_NAME_TYPE, values = "JSONConstants.ENUM_NAMETYPE")
     @Column(length=32)
@@ -89,5 +90,19 @@ public class Name extends Ginas {
     public boolean preferred;
 
     public Name () {}
-    public Name (String name) { this.name = name; }
+    public Name (String name) {
+    }
+
+    public String getName () {
+        return fullName != null ? fullName : name;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void checkName () {
+        if (name.length() > 255)
+            fullName = name;
+        else
+            this.name = name;
+    }    
 }
