@@ -99,10 +99,10 @@ public class Name extends Ginas {
 
     @PrePersist
     @PreUpdate
-    public void checkName () {
-        if (name.length() > 255)
+    public void tidyName () {
+        if (name.length() > 255) {
             fullName = name;
-        else
-            this.name = name;
-    }    
+            name = name.substring(0,254);
+        }
+    }
 }

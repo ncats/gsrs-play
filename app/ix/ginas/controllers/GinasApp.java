@@ -189,31 +189,31 @@ public class GinasApp extends App {
     }
     
     public static <T> String namesList(List<Name> list){
-    	int size = list.size();
-    	if(size >= 6){
-    		size=6;
-    	}
-    	String[] arr = new String [size];
-    	for(int i=0; i<size; i++){
-    		Name n = list.get(i);
-    		String name = n.name;
-    		arr[i]= name;
-    	}
-    	return StringUtils.arrayToDelimitedString(arr, "; ");
-    	
+        int size = list.size();
+        if(size >= 6){
+                size=6;
+        }
+        String[] arr = new String [size];
+        for(int i=0; i<size; i++){
+                Name n = list.get(i);
+                String name = n.name;
+                arr[i]= name;
+        }
+        return StringUtils.arrayToDelimitedString(arr, "; ");
+        
     }
     
     public static <T> String codesList(List<Code> list){
-    	int size = list.size();
-    	if(size>=6){
-    		size=6;
-    	}
-    	String[] arr = new String [size];
-    	for(int i=0; i<size; i++){
-    		String name = list.get(i).code;
-    		arr[i]= name;
-    	}
-    	return StringUtils.arrayToDelimitedString(arr, "; ");
+        int size = list.size();
+        if(size>=6){
+                size=6;
+        }
+        String[] arr = new String [size];
+        for(int i=0; i<size; i++){
+                String name = list.get(i).code;
+                arr[i]= name;
+        }
+        return StringUtils.arrayToDelimitedString(arr, "; ");
      }
     
     public static Result chemicals (final String q,
@@ -362,50 +362,19 @@ public class GinasApp extends App {
     public static Result structureResult
         (final SearchResultContext context, int rows, int page)
         throws Exception {
-
-        final String key = "structureResult/"+context.getId()
-            +"/"+Util.sha1(request (), "facet");
-        
-        TextIndexer.SearchResult result = getOrElse
-            (key, new Callable<TextIndexer.SearchResult> () {
-                    public TextIndexer.SearchResult call () throws Exception {
-                        Logger.debug("Cache missed: "+key);
-                        List results = context.getResults();
-                        return results.isEmpty() ? null : SearchFactory.search
-                        (results, null, results.size(), 0,
-                         FACET_DIM, request().queryString());
-                    }
-                });
-
-        TextIndexer.Facet[] facets = new TextIndexer.Facet[0];
-        List<ChemicalSubstance> substances =
-            new ArrayList<ChemicalSubstance>();
-        int[] pages = new int[0];
-        int count = 0;
-        if (result != null) {
-            Long stop = context.getStop();
-            if (!context.finished() || 
-                (stop != null && stop >= result.getTimestamp()))
-                Cache.remove(key);
-            
-            count = result.count();
-            Logger.debug(key+": "+count);
-            
-            rows = Math.min(count, Math.max(1, rows));
-            int i = (page - 1) * rows;
-            if (i < 0 || i >= count) {
-                page = 1;
-                i = 0;
-            }
-            pages = paging (rows, page, count);
-            facets = filter (result.getFacets(), CHEMICAL_FACETS);
-
-            for (int j = 0; j < rows && i < count; ++j, ++i)
-                substances.add((ChemicalSubstance)result.get(i));
-        }
-        
-        return ok (ix.ginas.views.html.chemicals.render
-                   (page, rows, count, pages, decorate (facets), substances));
+        return structureResult
+            (context, rows, page,
+             new DefaultResultRenderer<ChemicalSubstance>() {
+                 public Result render (int page, int rows,
+                                       int total, int[] pages,
+                                       List<TextIndexer.Facet> facets,
+                                       List<ChemicalSubstance> substances) {
+                     return ok (ix.ginas.views.html.chemicals.render
+                                (page, rows, total, pages,
+                                 decorate (filter (facets, CHEMICAL_FACETS)),
+                                 substances));
+                 }
+             });
     }
 
     static final GetResult<ChemicalSubstance> ChemicalResult =
@@ -421,7 +390,6 @@ public class GinasApp extends App {
         throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
-        Logger.info("7");
         if (true || chemicals.size() == 1) {
             ChemicalSubstance chemical = chemicals.iterator().next();
             return ok (ix.ginas.views.html

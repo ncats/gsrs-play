@@ -10,7 +10,7 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
         facets: Array[FacetDecorator], chemicals: List[ChemicalSubstance])
 
-@ix.ncats.views.html.content("Chemicals", "ix.ginas.models.v1.ChemicalSubstance", ix.ginas.controllers.routes.GinasApp.chemicals().url,
+@content("Chemicals", "ix.ginas.models.v1.ChemicalSubstance", ix.ginas.controllers.routes.GinasApp.chemicals().url,
   current, rows, total, pages, facets){@menu()}{<div></div>}{
 
 <div class= "panel-body">
@@ -182,5 +182,5 @@ Last modified: <h6>@chem.approved</h6>
 }
 </div>
 </div>
-}{@HtmlFormat.empty}
+}
 
