@@ -118,6 +118,8 @@ public class TextIndexer {
      */
     public static final int CACHE_TIMEOUT = 60*60*24; // 24 hours
     public static final int FETCH_WORKERS = 4; // number of fetch workers
+    // default number of elements to fetch while blocking
+    public static final int DEFAULT_FETCH_SIZE = 50;
 
     /**
      * Make sure to properly update the code when upgrading version
@@ -485,8 +487,9 @@ public class TextIndexer {
                     try {
                         long start = System.currentTimeMillis();
                         Logger.debug(Thread.currentThread()
-                                     +": fetching for query: "
-                                     +payload.result.query);
+                                     +": fetching payload "
+                                     +payload.hits.totalHits);
+
                         payload.fetch();
                         Logger.debug(Thread.currentThread()+": ## fetched "
                                      +payload.result.count
@@ -1006,12 +1009,14 @@ public class TextIndexer {
             }
             else*/ {
                 // we first block until we have enough result to show
-                payload.fetch(50);
+                payload.fetch(DEFAULT_FETCH_SIZE);
             }
-            
-            // now queue the payload so the remainder is fetched in
-            // the background
-            fetchQueue.put(payload);
+
+            if (hits.totalHits > DEFAULT_FETCH_SIZE) {
+                // now queue the payload so the remainder is fetched in
+                // the background
+                fetchQueue.put(payload);
+            }
         }
         catch (Exception ex) {
             ex.printStackTrace();

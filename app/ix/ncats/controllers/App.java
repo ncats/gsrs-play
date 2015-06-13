@@ -103,12 +103,12 @@ public class App extends Controller {
     public interface ResultRenderer<T> {
         Result render (int page, int rows, int total, int[] pages,
                        List<TextIndexer.Facet> facets, List<T> results);
-        Integer getFacetDim ();
+        int getFacetDim ();
     }
 
     public static abstract class DefaultResultRenderer<T>
         implements ResultRenderer<T> {
-        public Integer getFacetDim () { return null; }
+        public int getFacetDim () { return FACET_DIM; }
     }
     
     public static class FacetDecorator {
@@ -1110,21 +1110,19 @@ public class App extends Controller {
         final String key = "structureResult/"+context.getId()
             +"/"+Util.sha1(request (), "facet");
         
-        TextIndexer.SearchResult result = getOrElse
+        final TextIndexer.SearchResult result = getOrElse
             (key, new Callable<TextIndexer.SearchResult> () {
                     public TextIndexer.SearchResult call () throws Exception {
                         Logger.debug("Cache missed: "+key);
                         List results = context.getResults();
                         return results.isEmpty() ? null : SearchFactory.search
                         (results, null, results.size(), 0,
-                         renderer.getFacetDim() != null
-                         ? renderer.getFacetDim() : FACET_DIM,
+                         renderer.getFacetDim(),
                          request().queryString());
                     }
                 });
 
-        TextIndexer.Facet[] facets = new TextIndexer.Facet[0];
-        List<T> results = new ArrayList<T>();
+        final List<T> results = new ArrayList<T>();
         
         int[] pages = new int[0];
         int count = 0;
@@ -1135,7 +1133,8 @@ public class App extends Controller {
                 Cache.remove(key);
             
             count = result.count();
-            Logger.debug(key+": "+count);
+            Logger.debug(key+": "+count+" finished? "+context.finished()
+                         +" stop="+stop);
             
             rows = Math.min(count, Math.max(1, rows));
             int i = (page - 1) * rows;
@@ -1147,6 +1146,25 @@ public class App extends Controller {
 
             for (int j = 0; j < rows && i < count; ++j, ++i)
                 results.add((T)result.get(i));
+        }
+
+        if (Cache.get(key) != null) {
+            final String k = "structureResult/"
+                +context.getId()+"/"+Util.sha1(request());
+            final int _page = page;
+            final int _rows = rows;
+            final int _count = count;
+            final int[] _pages = pages;
+            
+            // result is cached
+            return getOrElse (k, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        Logger.debug("Cache missed: "+k);
+                        return renderer.render
+                            (_page, _rows, _count, _pages,
+                             result.getFacets(), results);
+                    }
+                });
         }
         
         return renderer.render
