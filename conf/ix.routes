@@ -21,6 +21,7 @@ GET     /webjars/*file          controllers.WebJarAssets.at(file)
 ->	/srs		ix.srs.Routes
 ->	/qhts		ix.qhts.Routes
 #->	/auth		securesocial.Routes
+->	/test		test.Routes
 
 #
 # other routes
