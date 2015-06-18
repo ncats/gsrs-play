@@ -94,7 +94,7 @@ object ApplicationBuild extends Build {
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=granite.conf"
-  ).dependsOn(core, ncats).aggregate(core, ncats)
+  ).dependsOn(ncats).aggregate(ncats)
 
   val idg = Project("idg", file("modules/idg"))
     .enablePlugins(PlayJava).settings(
@@ -102,7 +102,7 @@ object ApplicationBuild extends Build {
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
-  ).dependsOn(core, ncats).aggregate(core, ncats)
+  ).dependsOn(ncats).aggregate(ncats)
 
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(
@@ -110,35 +110,35 @@ object ApplicationBuild extends Build {
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       javacOptions ++= javaBuildOptions
-  ).dependsOn(core, ncats).aggregate(core, ncats)
+  ).dependsOn(ncats).aggregate(ncats)
 
   val hcs = Project("hcs", file("modules/hcs"))
     .enablePlugins(PlayJava).settings(
     version := appVersion,
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  ).dependsOn(core, ncats).aggregate(core, ncats)
+  ).dependsOn(ncats).aggregate(ncats)
 
   val srs = Project("srs", file("modules/srs"))
     .enablePlugins(PlayJava).settings(
     version := appVersion,
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  ).dependsOn(core, ncats).aggregate(core, ncats)
+  ).dependsOn(ncats).aggregate(ncats)
 
   val reach = Project("reach", file("modules/reach"))
     .enablePlugins(PlayJava).settings(
     version := appVersion,
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  ).dependsOn(core, ncats).aggregate(core, ncats)
+  ).dependsOn(ncats).aggregate(ncats)
 
   val qhts = Project("qhts", file("modules/qhts"))
     .enablePlugins(PlayJava).settings(
     version := appVersion,
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  ).dependsOn(core, ncats).aggregate(core, ncats)
+  ).dependsOn(ncats).aggregate(ncats)
 
   val tox21 = Project("tox21", file("modules/tox21"))
     .enablePlugins(PlayJava).settings(
