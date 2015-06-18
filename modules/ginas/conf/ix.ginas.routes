@@ -1,0 +1,21 @@
+#
+# GINAS
+#
+GET	/		ix.ginas.controllers.GinasFactory.index
+GET	/register	ix.ginas.controllers.GinasFactory.register
+GET	/chemicals	ix.ginas.controllers.GinasApp.chemicals(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
+GET	/chemicals/:name	ix.ginas.controllers.GinasApp.chemical(name: String)
+GET	/proteins	ix.ginas.controllers.GinasApp.proteins(q: String ?= null, rows: Int ?= 32, page: Int ?= 1)
+GET	/proteins/:name	ix.ginas.controllers.GinasApp.protein(name: String)
+GET	/sequence	ix.ginas.controllers.GinasFactory.sequence(kind: String ?= null)
+GET	/report		ix.ginas.controllers.GinasFactory.report
+GET	/wizard		ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
+POST	/load	ix.ginas.controllers.GinasLoad.loadJSON
+GET	/load	ix.ginas.controllers.GinasLoad.load
+GET	/search		ix.ginas.controllers.GinasApp.search(kind: String ?= null)
+POST	/authenticate	ix.ginas.controllers.GinasApp.authenticate
+GET		/login		ix.ginas.controllers.GinasFactory.login
+GET	/relationships/:uuid	ix.ginas.controllers.GinasApp.relationships(uuid: String)
+
+->	/	ix.ncats.Routes
+->	/	ix.Routes

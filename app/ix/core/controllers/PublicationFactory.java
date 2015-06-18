@@ -21,7 +21,6 @@ import ix.core.models.Publication;
 import ix.core.models.Author;
 import ix.core.models.PubAuthor;
 import ix.core.NamedResource;
-import ix.ncats.models.Project;
 import ix.utils.Eutils;
 import ix.core.plugins.EutilsPlugin;
 

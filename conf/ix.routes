@@ -5,25 +5,5 @@
 GET     /assets/*file   controllers.Assets.at(path="/public", file)
 GET     /webjars/*file          controllers.WebJarAssets.at(file)
 
-#
-# top-level routing table
-#
 ->      /api       ix.core.api.Routes
 ->      /admin  ix.core.admin.Routes
-->	/ncats	ix.ncats.Routes
-->      /granite        ix.ncats.granite.Routes
-->      /reach  ix.ncats.reach.Routes
-->      /clinical       ix.ncats.clinical.Routes
-->	/ginas		ix.ginas.Routes
-->	/idg		ix.idg.Routes
-->	/tox21		ix.tox21.Routes
-->	/hcs		ix.ncats.hcs.Routes
-->	/srs		ix.srs.Routes
-->	/qhts		ix.qhts.Routes
-#->	/auth		securesocial.Routes
-->	/test		test.Routes
-
-#
-# other routes
-#
-->      /       ix.ncats.apps.Routes

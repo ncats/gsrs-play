@@ -3,7 +3,6 @@ package ix.ginas.models.v1;
 import ix.core.models.BeanViews;
 import ix.core.models.Structure;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ncats.controllers.App;
 import ix.utils.Global;
 import ix.core.chem.Chem;
 import ix.core.models.Indexable;
@@ -73,23 +72,5 @@ public class ChemicalSubstance extends Substance {
     @Indexable(name="SubstanceStereoChemistry", facet=true)
     public Structure.Stereo getStereoChemistry () {
         return structure != null ? structure.stereoChemistry : null;
-    }
-
-    @Override
-    public void save () {
-        // now index the structure for searching
-        try {
-            Chem.setFormula(structure);
-            structure.save();
-            // it's bad to reference App from here!!!!
-            App.strucIndexer.add(String.valueOf(structure.id),
-                                 structure.molfile);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        for (Moiety m : moieties)
-            m.structure.save();
-        super.save();
     }
 }

@@ -1,7 +1,0 @@
-#
-# HCS resources
-#
-GET	/	ix.ncats.controllers.hcs.ReagentSelectionApp.index
-GET	/load	ix.ncats.controllers.hcs.ReagentSelectionApp.loader
-POST	/load	ix.ncats.controllers.hcs.ReagentSelectionApp.load
-GET	/reagents	ix.ncats.controllers.hcs.ReagentSelectionApp.reagents(q: String ?= null, rows: Int ?= 20, page: Int ?= 1)
