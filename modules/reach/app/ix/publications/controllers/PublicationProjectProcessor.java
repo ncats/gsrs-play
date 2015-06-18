@@ -461,6 +461,11 @@ public class PublicationProjectProcessor extends Controller {
         String ldapPassword = requestData.get("ldap-password");
         Logger.debug("LDAP: "+ldapUsername);
 
+        String maxrows = requestData.get("maxrows");
+        if (maxrows != null && maxrows.length() > 0) {
+            Logger.debug("Max number of publications: "+maxrows);
+        }
+        
         Connection con = null;
         try {
             if (jdbcUrl == null || jdbcUrl.equals("")) {
@@ -485,7 +490,9 @@ public class PublicationProjectProcessor extends Controller {
                 (ldapUsername, ldapPassword);
             Logger.debug(count+ " employees retrieved!");
 
-            int pubs = processPublications (con);
+            int pubs = processPublications
+                (con, maxrows != null && maxrows.length() > 0
+                 ? Integer.parseInt(maxrows) : 0);
 
             return redirect (ix.publications
                              .controllers.routes
@@ -704,7 +711,7 @@ public class PublicationProjectProcessor extends Controller {
         }
     }
 
-    public static int processPublications (Connection con) 
+    public static int processPublications (Connection con, int maxrows) 
         throws SQLException {
         PublicationProcessor processor = new PublicationProcessor (con);
         Statement stm = con.createStatement();
@@ -713,11 +720,11 @@ public class PublicationProjectProcessor extends Controller {
             // now migrate publications
             ResultSet rset = stm.executeQuery
                 ("select * from publication "
-                 +"where rownum <= 100"
+                 //+"where rownum <= 100"
                  +"order by pmid, db_pub_id"
                 );
             int publications = 0;
-            while (rset.next()) {
+            while (rset.next() && (maxrows == 0 || publications < maxrows)) {
                 long pmid = rset.getLong("pmid");
                 long id = rset.getLong("db_pub_id");
                 if (rset.wasNull()) {
