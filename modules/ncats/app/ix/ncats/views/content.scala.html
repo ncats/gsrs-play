@@ -90,12 +90,23 @@
         </div>
         }
       }
-      @pagination(current, rows, total, pages)
+      @pagination(current, rows, total, pages){
+          <h3>
+          @if(request.uri.contains("?")) {
+              <a class="btn btn-default" href="@request.uri&action=download" role="button">
+                  <i class="fa fa-download fa-lg "></i></a>
+          } else {
+              <a class="btn btn-default" href="@request.uri?action=download" role="button">
+                  <i class="fa fa-download fa-lg "></i></a>
+          }
+          </h3>
+      }
+
       <div class="panel panel-default">
 	  @content
       </div>
 	@if(pages.length > 1) {
-	  @pagination(current, rows, total, pages)
+	  @pagination(current, rows, total, pages)(HtmlFormat.empty)
 	}
       </div>
    </div>

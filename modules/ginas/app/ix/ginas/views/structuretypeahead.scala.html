@@ -7,40 +7,41 @@ $(document).ready(function () {
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Structure", "QUERY",10)'
-        }
-/*
-remote: '/api/suggest/Target?q=%QUERY',
-*/
-    });
-        
-    structure.initialize();
-;
-    
-    $('.structuretypeahead').typeahead({
-        hint: true,
-        highlight: true,
-        minLength: 2
-    }, {
-        name: 'Structure',
-        displayKey: 'key',
-        source: structure.ttAdapter(),
-        templates: {
-        	 header: '<h4 class = "header">Structure</h4>'
-        }       
-    });
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Structure", "QUERY", 10)
+    '
+            }
+    /*
+    remote: '/api/suggest/Target?q=%QUERY',
+    */
+        });
 
-    $('.structuretypeahead').on("structuretypeahead:selected", function (evt, val, d) {
-        console.log('structuretypeahead selected: '+val+' type: '+d);
+        structure.initialize();
+    ;
 
-        for (var f in val) {
-            console.log(f+' '+val[f]);
-        }
-            $('.structuretypeahead').typeahead('val', '"'+mol.getSmiles()+'"');
+        $('.structuretypeahead').typeahead({
+            hint: true,
+            highlight: true,
+            minLength: 2
+        }, {
+            name: 'Structure',
+            displayKey: 'key',
+            source: structure.ttAdapter(),
+            templates: {
+                 header: '<h4 class = "header">Structure</h4>'
+            }
+        });
+
+        $('.structuretypeahead').on("structuretypeahead:selected", function (evt, val, d) {
+            console.log('structuretypeahead selected: '+val+' type: '+d);
+
+            for (var f in val) {
+                console.log(f+' '+val[f]);
+            }
+                $('.structuretypeahead').typeahead('val', '"'+mol.getSmiles()+'"');
+        });
+
+        $('.structuretypeahead').on("structuretypeahead:closed", function (evt) {
+            console.log('structuretypeahead closed!');
+        });
     });
-    
-    $('.structuretypeahead').on("structuretypeahead:closed", function (evt) {
-        console.log('structuretypeahead closed!');
-    });
-});
-</script>
+    </script>

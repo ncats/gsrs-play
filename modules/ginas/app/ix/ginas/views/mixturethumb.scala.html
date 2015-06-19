@@ -1,0 +1,40 @@
+@import ix.core.models.Structure
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.ChemicalSubstance
+
+
+@import ix.ginas.models.v1.ProteinSubstance
+@import ix.ginas.models.v1.MixtureSubstance
+@(sub: MixtureSubstance)
+
+<div class = "col-md-3 thumb-col">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+
+            <p class="text-right" data-toggle="tooltip" title="Approval ID">
+                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+                    <code> @sub.approvalID</code></a></p>
+        </div>
+        <div class="panel-body struc-img">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+                <div class = "row">
+                    <div class = "col-md-1 pour">
+                        <i class="fa fa-flask fa-4x fa-rotate-90"></i>
+                    </div>
+                    </div>
+                <div class ="row">
+                    <div class = "col-md-1 col-md-offset-1">
+                    <i class="fa fa-flask fa-4x"></i>
+                        </div>
+                </div>
+
+            </a>
+        </div>
+        <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@sub.getName()">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+            @GinasApp.truncate(sub.getName())
+            </a>
+        </div>
+    </div>
+</div>
+<!--END panel panel-primary-->

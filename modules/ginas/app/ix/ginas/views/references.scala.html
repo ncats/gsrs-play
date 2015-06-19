@@ -1,36 +1,35 @@
 @import ix.ginas.models.v1.Reference
-@import helper._ 
 
 
 @(references: List[Reference])
-<button class="btn btn-primary label-offset det">References&nbsp;<span class="badge head"> @references.length</span></button>
-	<div class="col-md-12">
-	<table class="table table-striped" id="allReferencesTable">
-						<thead>
-							<tr>
-								<th>Citation</th>
-								<th>Doc Type</th>
-								<th>Date Accessed</th>
-								
-							</tr>
-						</thead>
-						@for(r <- references){
-						<tr>
-						  <td>
-						    @if(r.url != null) {
-						    <a href="@r.url">@r.citation</a>
-						    } else {
-						    @r.citation
-						    }
-							</td>
-								<td>
-							@r.docType
-							</td>
-								<td>
-							@r.documentDate
-							</td>
-						</tr>
-						}
-				</table>
-	</div>
+<button class="btn btn-primary label-offset det">References&nbsp;<span class="badge"> @references.length</span></button>
+<div class="col-md-12">
+    <table class="table table-striped" id="allReferencesTable">
+        <thead>
+            <tr>
+                <th>Citation</th>
+                <th>Doc Type</th>
+                <th>Date Accessed</th>
+
+            </tr>
+        </thead>
+        @for(r <- references) {
+            <tr>
+                <td>
+                @if(r.url != null) {
+                    <a href="@r.url">@r.citation</a>
+                } else {
+                    @r.citation
+                }
+                </td>
+                <td>
+                @r.docType
+                </td>
+                <td>
+                @r.documentDate
+                </td>
+            </tr>
+        }
+    </table>
+</div>
 

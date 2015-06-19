@@ -540,6 +540,18 @@ create table ix_ginas_site (
   constraint pk_ix_ginas_site primary key (uuid))
 ;
 
+create table ix_ginas_specifiedsubstancecomponent (
+  uuid                      varchar(40) not null,
+  created                   timestamp,
+  last_modified             timestamp,
+  last_edited_by_id         bigint,
+  deprecated                boolean,
+  type                      varchar(255),
+  substance_uuid            varchar(40),
+  role                      varchar(255),
+  constraint pk_ix_ginas_specifiedsubstanceco primary key (uuid))
+;
+
 create table ix_core_stitch (
   id                        bigint not null,
   name                      varchar(255),
@@ -1228,46 +1240,50 @@ alter table ix_core_role add constraint fk_ix_core_role_principal_59 foreign key
 create index ix_ix_core_role_principal_59 on ix_core_role (principal_id);
 alter table ix_ginas_site add constraint fk_ix_ginas_site_lastEditedBy_60 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
 create index ix_ix_ginas_site_lastEditedBy_60 on ix_ginas_site (last_edited_by_id);
-alter table ix_ginas_structural_modification add constraint fk_ix_ginas_structural_modifi_61 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_ginas_structural_modifi_61 on ix_ginas_structural_modification (last_edited_by_id);
-alter table ix_ginas_structural_modification add constraint fk_ix_ginas_structural_modifi_62 foreign key (extent_amount_uuid) references ix_ginas_amount (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_structural_modifi_62 on ix_ginas_structural_modification (extent_amount_uuid);
-alter table ix_ginas_structural_modification add constraint fk_ix_ginas_structural_modifi_63 foreign key (molecular_fragment_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_structural_modifi_63 on ix_ginas_structural_modification (molecular_fragment_uuid);
-alter table ix_ginas_strucdiv add constraint fk_ix_ginas_strucdiv_lastEdit_64 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_ginas_strucdiv_lastEdit_64 on ix_ginas_strucdiv (last_edited_by_id);
-alter table ix_ginas_strucdiv add constraint fk_ix_ginas_strucdiv_hybridSp_65 foreign key (hybrid_species_paternal_organism_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_strucdiv_hybridSp_65 on ix_ginas_strucdiv (hybrid_species_paternal_organism_uuid);
-alter table ix_ginas_strucdiv add constraint fk_ix_ginas_strucdiv_hybridSp_66 foreign key (hybrid_species_maternal_organism_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_strucdiv_hybridSp_66 on ix_ginas_strucdiv (hybrid_species_maternal_organism_uuid);
-alter table ix_ginas_strucdiv add constraint fk_ix_ginas_strucdiv_parentSu_67 foreign key (parent_substance_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_strucdiv_parentSu_67 on ix_ginas_strucdiv (parent_substance_uuid);
-alter table ix_core_structure add constraint fk_ix_core_structure_namespac_68 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_structure_namespac_68 on ix_core_structure (namespace_id);
-alter table ix_ginas_substance add constraint fk_ix_ginas_substance_lastEdi_69 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_ginas_substance_lastEdi_69 on ix_ginas_substance (last_edited_by_id);
-alter table ix_ginas_substance add constraint fk_ix_ginas_substance_modific_70 foreign key (modifications_uuid) references ix_ginas_modifications (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_substance_modific_70 on ix_ginas_substance (modifications_uuid);
-alter table ix_ginas_substance add constraint fk_ix_ginas_substance_protein_71 foreign key (protein_uuid) references ix_ginas_protein (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_substance_protein_71 on ix_ginas_substance (protein_uuid);
-alter table ix_ginas_substance add constraint fk_ix_ginas_substance_structu_72 foreign key (structure_id) references ix_core_structure (id) on delete restrict on update restrict;
-create index ix_ix_ginas_substance_structu_72 on ix_ginas_substance (structure_id);
-alter table ix_ginas_substance add constraint fk_ix_ginas_substance_polymer_73 foreign key (polymer_uuid) references ix_ginas_polymer (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_substance_polymer_73 on ix_ginas_substance (polymer_uuid);
-alter table ix_ginas_substance add constraint fk_ix_ginas_substance_structu_74 foreign key (structurally_diverse_uuid) references ix_ginas_strucdiv (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_substance_structu_74 on ix_ginas_substance (structurally_diverse_uuid);
-alter table ix_ginas_substancereference add constraint fk_ix_ginas_substancereferenc_75 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_ginas_substancereferenc_75 on ix_ginas_substancereference (last_edited_by_id);
-alter table ix_ginas_subunit add constraint fk_ix_ginas_subunit_lastEdite_76 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_ginas_subunit_lastEdite_76 on ix_ginas_subunit (last_edited_by_id);
-alter table ix_ginas_unit add constraint fk_ix_ginas_unit_lastEditedBy_77 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_ginas_unit_lastEditedBy_77 on ix_ginas_unit (last_edited_by_id);
-alter table ix_ginas_unit add constraint fk_ix_ginas_unit_amap_78 foreign key (amap_id) references ix_core_value (id) on delete restrict on update restrict;
-create index ix_ix_ginas_unit_amap_78 on ix_ginas_unit (amap_id);
-alter table ix_ginas_unit add constraint fk_ix_ginas_unit_amount_79 foreign key (amount_uuid) references ix_ginas_amount (uuid) on delete restrict on update restrict;
-create index ix_ix_ginas_unit_amount_79 on ix_ginas_unit (amount_uuid);
-alter table ix_core_xref add constraint fk_ix_core_xref_namespace_80 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_xref_namespace_80 on ix_core_xref (namespace_id);
+alter table ix_ginas_specifiedsubstancecomponent add constraint fk_ix_ginas_specifiedsubstanc_61 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_ginas_specifiedsubstanc_61 on ix_ginas_specifiedsubstancecomponent (last_edited_by_id);
+alter table ix_ginas_specifiedsubstancecomponent add constraint fk_ix_ginas_specifiedsubstanc_62 foreign key (substance_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_specifiedsubstanc_62 on ix_ginas_specifiedsubstancecomponent (substance_uuid);
+alter table ix_ginas_structural_modification add constraint fk_ix_ginas_structural_modifi_63 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_ginas_structural_modifi_63 on ix_ginas_structural_modification (last_edited_by_id);
+alter table ix_ginas_structural_modification add constraint fk_ix_ginas_structural_modifi_64 foreign key (extent_amount_uuid) references ix_ginas_amount (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_structural_modifi_64 on ix_ginas_structural_modification (extent_amount_uuid);
+alter table ix_ginas_structural_modification add constraint fk_ix_ginas_structural_modifi_65 foreign key (molecular_fragment_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_structural_modifi_65 on ix_ginas_structural_modification (molecular_fragment_uuid);
+alter table ix_ginas_strucdiv add constraint fk_ix_ginas_strucdiv_lastEdit_66 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_ginas_strucdiv_lastEdit_66 on ix_ginas_strucdiv (last_edited_by_id);
+alter table ix_ginas_strucdiv add constraint fk_ix_ginas_strucdiv_hybridSp_67 foreign key (hybrid_species_paternal_organism_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_strucdiv_hybridSp_67 on ix_ginas_strucdiv (hybrid_species_paternal_organism_uuid);
+alter table ix_ginas_strucdiv add constraint fk_ix_ginas_strucdiv_hybridSp_68 foreign key (hybrid_species_maternal_organism_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_strucdiv_hybridSp_68 on ix_ginas_strucdiv (hybrid_species_maternal_organism_uuid);
+alter table ix_ginas_strucdiv add constraint fk_ix_ginas_strucdiv_parentSu_69 foreign key (parent_substance_uuid) references ix_ginas_substancereference (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_strucdiv_parentSu_69 on ix_ginas_strucdiv (parent_substance_uuid);
+alter table ix_core_structure add constraint fk_ix_core_structure_namespac_70 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_structure_namespac_70 on ix_core_structure (namespace_id);
+alter table ix_ginas_substance add constraint fk_ix_ginas_substance_lastEdi_71 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_ginas_substance_lastEdi_71 on ix_ginas_substance (last_edited_by_id);
+alter table ix_ginas_substance add constraint fk_ix_ginas_substance_modific_72 foreign key (modifications_uuid) references ix_ginas_modifications (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_substance_modific_72 on ix_ginas_substance (modifications_uuid);
+alter table ix_ginas_substance add constraint fk_ix_ginas_substance_protein_73 foreign key (protein_uuid) references ix_ginas_protein (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_substance_protein_73 on ix_ginas_substance (protein_uuid);
+alter table ix_ginas_substance add constraint fk_ix_ginas_substance_structu_74 foreign key (structure_id) references ix_core_structure (id) on delete restrict on update restrict;
+create index ix_ix_ginas_substance_structu_74 on ix_ginas_substance (structure_id);
+alter table ix_ginas_substance add constraint fk_ix_ginas_substance_polymer_75 foreign key (polymer_uuid) references ix_ginas_polymer (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_substance_polymer_75 on ix_ginas_substance (polymer_uuid);
+alter table ix_ginas_substance add constraint fk_ix_ginas_substance_structu_76 foreign key (structurally_diverse_uuid) references ix_ginas_strucdiv (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_substance_structu_76 on ix_ginas_substance (structurally_diverse_uuid);
+alter table ix_ginas_substancereference add constraint fk_ix_ginas_substancereferenc_77 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_ginas_substancereferenc_77 on ix_ginas_substancereference (last_edited_by_id);
+alter table ix_ginas_subunit add constraint fk_ix_ginas_subunit_lastEdite_78 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_ginas_subunit_lastEdite_78 on ix_ginas_subunit (last_edited_by_id);
+alter table ix_ginas_unit add constraint fk_ix_ginas_unit_lastEditedBy_79 foreign key (last_edited_by_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_ginas_unit_lastEditedBy_79 on ix_ginas_unit (last_edited_by_id);
+alter table ix_ginas_unit add constraint fk_ix_ginas_unit_amap_80 foreign key (amap_id) references ix_core_value (id) on delete restrict on update restrict;
+create index ix_ix_ginas_unit_amap_80 on ix_ginas_unit (amap_id);
+alter table ix_ginas_unit add constraint fk_ix_ginas_unit_amount_81 foreign key (amount_uuid) references ix_ginas_amount (uuid) on delete restrict on update restrict;
+create index ix_ix_ginas_unit_amount_81 on ix_ginas_unit (amount_uuid);
+alter table ix_core_xref add constraint fk_ix_core_xref_namespace_82 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_xref_namespace_82 on ix_core_xref (namespace_id);
 
 
 
@@ -1684,6 +1700,8 @@ drop table if exists ix_ginas_relationship_reference;
 drop table if exists ix_core_role;
 
 drop table if exists ix_ginas_site;
+
+drop table if exists ix_ginas_specifiedsubstancecomponent;
 
 drop table if exists ix_core_stitch;
 

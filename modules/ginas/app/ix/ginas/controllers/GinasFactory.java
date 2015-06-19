@@ -14,6 +14,10 @@ public class GinasFactory extends EntityFactory {
         new Model.Finder(Long.class, Principal.class);
 
     public static Result index () {
+        return redirect (routes.GinasFactory.app());
+    }
+    
+    public static Result app () {
         return ok (ix.ginas.views.html.index.render());
     }
 
@@ -25,6 +29,9 @@ public class GinasFactory extends EntityFactory {
         return ok (ix.ginas.views.html.sequence.render(kind));
     }
 
+    public static Result structuresearch () {
+        return ok (ix.ginas.views.html.structuresearch.render());
+    }
     public static Result report () {
         return ok (ix.ginas.views.html.report.render());
     }
@@ -34,9 +41,9 @@ public class GinasFactory extends EntityFactory {
         return ok (ix.ginas.views.html.wizard.render(kind));
     }
     
-	public static Result login () {
-		return ok (ix.ginas.views.html.login.render());
-	}
+        public static Result login () {
+                return ok (ix.ginas.views.html.login.render());
+        }
 
     public static Principal byUsername (String user) {
         return finder.where().eq("username", user).findUnique();

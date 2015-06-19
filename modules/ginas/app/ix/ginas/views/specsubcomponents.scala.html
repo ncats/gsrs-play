@@ -1,0 +1,25 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.v1.SubstanceFactory
+@import ix.ginas.models.v1.{MixtureSubstance, ChemicalSubstance, Component}
+
+@import ix.ginas.models.v1.SpecifiedSubstanceComponent
+@(components: List[SpecifiedSubstanceComponent])
+<button class="btn btn-primary label-offset det">
+    Components&nbsp;<span class="badge head"> @components.length</span></button>
+<div class="col-md-12">
+        @for(c <- components) {
+            <div class="col-md-3 text-center thumb-col">
+                <div class="panel panel-default">
+                    <div class = "panel-body">
+            @if(SubstanceFactory.getSubstanceByApprovalID(c.substance.approvalID) != null) {
+                @subref(c.substance)
+            } else {
+                <i>Substance not yet imported</i> <br />
+                @c.substance.refPname
+
+            }
+</div>
+</div>
+                </div>
+        }
+</div>

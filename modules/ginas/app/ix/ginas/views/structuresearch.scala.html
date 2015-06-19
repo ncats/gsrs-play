@@ -1,0 +1,140 @@
+@import play.api.mvc.Call
+
+@ginas("Structure Search: ", null) {  @menu()
+} {
+    <h1></h1>
+}{
+    <script
+    src='@routes.WebJarAssets.at(WebJarAssets.locate("dojo/dojo.js"))'></script>
+    <script
+    src='@routes.Assets.at("javascripts/JSDraw3.2.3/Scilligence.JSDraw2.Pro.js")'></script>
+@*<!-- <script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script> -->*@
+<script>
+/*
+** global variables
+*/
+var sketcher; // sketcher
+
+function setQuery (value) {
+  console.log(value);
+  $.ajax({
+    type: "POST",
+    url: '@ix.ncats.controllers.routes.App.smiles',
+    contentType: 'text/plain',
+    data: value,
+    success: function (data) {
+       console.log(' => '+data);
+       $('#structure').val(data);
+    },
+    error: function (xhr, status) {
+       console.error("Can't convert to smiles");
+    },
+    dataType: 'text'
+   });
+}
+
+function setMarvin (sk) {
+   //console.log(sk);
+   sketcher = sk;
+}
+function setStructure (struc) {
+   console.log('current structure: '+struc);
+//   structure = struc;
+/*
+  $.ajax({
+    type: "POST",
+    url: '@ix.ncats.controllers.routes.App.molconvert',
+    contentType: 'application/json; charset=utf-8',
+    data: '{"format": "mrv","mol":"'+struc+'"}',
+    dataType: 'text',
+    success: function (data) {
+       console.log(' => '+data);
+       sketcher.importStructure('mrv', data);
+    },
+    error: function (xhr, status) {
+       console.error("Can't convert to mrv for input: "+struc);
+    }
+  });
+ */
+}
+</script>
+<div class = "panel-default">
+    <div class= "panel-body">
+          <div class="" id="sketcher" dataformat='molfile' ondatachange='molchange(this)'>
+	</div>
+      </div>
+      <div class="panel-footer">
+	<form class="form-inline" onchange="searchSelect()"
+	      method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances()">
+	  <div class="form-group">
+	      <select class="form-control" id="search-selection" name="type">
+		<option>Substructure</option>
+		<option>Similarity</option>
+	      </select>
+	      <input type="text" class="form-control" name="cutoff"
+	      	     style="width: 50px"
+		     id="tanimoto-cutoff" onkeyup="checkTanimoto(this)"
+		     data-toggle="tooltip"
+		     title="Tanimoto threshold"
+		     disabled="true" value="0.8">
+              <input type="text" class="form-control"
+	             data-toggle="tooltip"
+		     title="Query structure"
+	      	     style="width: 300px" name="q" id="structure">
+	      	       </div>
+	  <button type="submit" onclick="submitForm()" 
+		  class="btn btn-primary" id="search-btn">Search</button>
+	</form>
+      </div>
+</div>
+<div class="modal fade" tabindex="-1" role="dialog" id="spinModal"
+     aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
+    </div>
+  </div>
+</div>
+
+<script>
+  function submitForm () {
+   // console.log(el);
+    $('#strucModal').modal('hide');  
+    $('#loading').modal("show");
+    $("#search-btn").submit();
+  }
+  
+  function searchSelect () {
+	console.log("search select");
+     var selection = document.getElementById("search-selection");
+     var text = document.getElementById("tanimoto-cutoff");
+     var search = document.getElementById("search-btn");
+     text.disabled = selection.value != 'Similarity';
+     if (!text.disabled) {
+        checkTanimoto (text);
+     } else {
+        search.disabled = false;
+     }
+  
+     console.log(selection.value);
+  }
+  function checkTanimoto (el) {
+      //console.log("tanimoto='"+el.value+"'");
+      var search = document.getElementById("search-btn");
+      try {
+        var x = el.value.trim();
+        search.disabled = x.length == 0 || isNaN(x) || x <= 0 || x > 1.;
+      } catch (e) {
+        search.disabled = true;
+      }
+  }
+  
+  function molchange(sketch){
+	  console.log("molchange");
+	  console.log(sketch.getSmiles());
+       $('#structure').typeahead('val', '"'+sketch.getSmiles()+'"');
+//        $('#structure').val(sketch.getSmiles());
+       setQuery(sketch.getSmiles());
+  };
+</script>
+}

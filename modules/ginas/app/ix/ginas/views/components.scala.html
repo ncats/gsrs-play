@@ -1,0 +1,68 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.v1.SubstanceFactory
+@import ix.ginas.models.v1.Component
+
+@(components: List[Component])
+<button class="btn btn-primary label-offset det">
+    Components&nbsp;<span class="badge head"> @components.length</span></button>
+<div class="col-md-12">
+@defining(GinasApp.getComponentsByType(components, "MAY_BE_PRESENT_ANY_OF")) { comp =>
+    @if(comp.length > 0) {
+        <div class="row">
+            <h5>Any of these components may be present:</h5>
+            @for(c <- comp) {
+                        @if(SubstanceFactory.getSubstanceByApprovalID(c.substance.approvalID) != null) {
+                            @subref(c.substance)
+                        }else{
+                            <div class="col-md-3 text-center thumb-col">
+                                <div class="panel panel-default">
+                                    <div class = "panel-body">
+                            <i>Substance not yet imported</i> <br />
+                        </div>
+                    <div class = "panel-footer">
+                    @c.substance.refPname
+                    </div>
+                                    </div>
+                                </div>
+                    }
+
+}
+</div>
+}
+}
+@defining(GinasApp.getComponentsByType(components, "MAY_BE_PRESENT_ONE_OF")) { comp =>
+    @if(comp.length > 0) {
+        <div class="row">
+            <h5>One of these components may be present:</h5>
+            @for(c <- comp) {
+                <div class="col-md-3">
+                @if(SubstanceFactory.getSubstanceByApprovalID(c.substance.approvalID) != null) {
+                    @subref(c.substance)
+                } else {
+                    <i>Substance not yet imported</i> <br />
+                    @c.substance.refPname
+
+                }
+                </div>
+            }
+        </div>
+    }
+}@defining(GinasApp.getComponentsByType(components, "MUST_BE_PRESENT")) { comp =>
+    @if(comp.length > 0) {
+        <div class="row">
+            <h5>Necessary:</h5>
+            @for(c <- comp) {
+                <div class="col-md-3">
+                @if(SubstanceFactory.getSubstanceByApprovalID(c.substance.approvalID) != null) {
+                    @subref(c.substance)
+                } else {
+                    <i>Substance not yet imported</i> <br />
+                    @c.substance.refPname
+
+                }
+                </div>
+            }
+        </div>
+    }
+}
+</div>

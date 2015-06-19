@@ -1,0 +1,102 @@
+@import ix.core.models.Structure
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.ChemicalSubstance
+
+
+
+@(chem: ChemicalSubstance)
+
+<div class="panel panel-default prot-list">
+    <div class="panel-heading prot-title">
+        <div class = "row">
+            <div class = "col-md-10">
+                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">@chem.getName()</a></h3>
+            </div>
+            <div class = "col-md-2 prot-approvID">
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))"><code>@chem.approvalID</code></a></h4>
+            </div>
+        </div>
+    </div>
+    <div class= "panel-body list-item">
+        <div class = "row">
+            <div class = "col-md-3">
+                @if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL) {
+                    <span class="label label-primary label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+                }
+                @if(chem.structure.stereoChemistry == Structure.Stereo.ABSOLUTE) {
+                    <span class="label label-success label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+                }
+                @if(chem.structure.stereoChemistry == Structure.Stereo.RACEMIC) {
+                    <span class="label label-info label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+                }
+                @if(chem.structure.stereoChemistry == Structure.Stereo.MIXED) {
+                    <span class="label label-default label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+                }
+                @if(chem.structure.stereoChemistry == Structure.Stereo.EPIMERIC) {
+                    <span class="label label-warning label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+                }
+                @if(chem.structure.stereoChemistry == Structure.Stereo.UNKNOWN) {
+                    <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
+                }
+
+                <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+                src='@ix.ncats.controllers.routes.App.structure(chem.structure.id, "svg", 150)'>
+            </div>
+            <div class = "col-md-6">
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5>Other Names:</h5>
+                    </div>
+                    <div class = "col-md-10">
+                        <h5>@ix.ginas.controllers.GinasApp.namesList(chem.names)</h5>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5>Codes:</h5>
+                    </div>
+                    <div class = "col-md-10">
+                        <h5>@ix.ginas.controllers.GinasApp.codesList(chem.codes)</h5>
+                    </div>
+                </div>
+                <h5>@chem.structure.formula</h5>
+                <h5>Relationships: @chem.relationships.size()</h5>
+
+            </div>
+
+            <div class = "col-md-2">
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Moieties: <span class = "badge">@chem.moieties.length</span>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date approved: <h6>@chem.approved</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Last modified: <h6>@chem.approved</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        <ul class= "list-inline pull-right list-unstyled">
+                            <li>
+                                <button type="button" class="btn btn-default btn-sm"
+                                data-toggle="modal"
+                                data-target="#@chem.approvalID-list-mol"><i class="fa fa-external-link chem-button"></i></button></li>
+                            @molexport(chem.structure.molfile, chem.getName(), chem.approvalID+"-list")
+                            <li><button type="button" class="btn btn-default btn-sm" data-toggle="modal"
+                            data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.id, "mol")'
+                            data-target="#strucModal"><span class="fa fa-search chem-button"></span></button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div><!--END panel panel-primary-->

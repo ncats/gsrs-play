@@ -1,0 +1,66 @@
+@import ix.core.models.Structure
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.ChemicalSubstance
+
+
+@import ix.ginas.models.v1.ProteinSubstance
+@(prot: ProteinSubstance)
+
+<div class="panel panel-default prot-list">
+    <div class="panel-heading prot-title">
+        <div class = "row">
+            <div class = "col-md-10">
+                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.protein(GinasApp.getId(prot))">@prot.getName()</a></h3>
+            </div>
+            <div class = "col-md-2 prot-approvID">
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.protein(GinasApp.getId(prot))">
+                    <code>@prot.approvalID</code></a>
+                </h4>
+            </div>
+        </div>
+    </div>
+    <div class= "panel-body list-item">
+        <div class = "row">
+            <div class = "col-md-3">
+                <img src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="img-responsive" id="" />
+            </div>
+            <div class = "col-md-6">
+
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5>Other Names:</h5>
+                    </div>
+                    <div class = "col-md-10">
+                        <h5>@ix.ginas.controllers.GinasApp.namesList(prot.names)</h5>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5>Codes:</h5>
+                    </div>
+                    <div class = "col-md-10">
+                        <h5>@ix.ginas.controllers.GinasApp.codesList(prot.codes)</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class = "col-md-2">
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Subunits: <span class = "badge">@prot.protein.subunits.length</span>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date approved: <h6>@prot.approved</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Last modified: <h6>@prot.approved</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

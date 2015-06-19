@@ -2,138 +2,170 @@
 @import ix.ncats.controllers.App.FacetDecorator
 
 @(title: String, kind: String,
-  resetAction: String, current: Int, rows: Int, total: Int,
-  pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)
+        resetAction: String, current: Int, rows: Int, total: Int,
+        pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)
 
-@ginas(title, kind){ @header }{ @breadcrumb }{
-  <div class="row">
-    @if(total > 0 && facets.length > 0) {
-    <div class="col-md-3" id = "facet-col">
-         @ix.ncats.views.html.filters(facets)
-    </div>
-    <div class="col-md-9">
-      } else {
-      <div class="col-md-12">
-      }
-      @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
-         @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
-	  <div
-	    @if(total > 0) {
-	      class="alert alert-success alert-dismissible"
-	    } else {
-	      class="alert alert-danger alert-dismissible"
-	    }
-	  role="alert">
-	<button type="button" class="close" data-dismiss="alert"
-		onclick="dismissQuery()"
-		aria-label="Close">
-	  <span aria-hidden="true">&times;</span>
-	</button>
-	@request().getQueryString("type") match {
-  	    case "Substructure" => {
-	      <span><h4>Substructure Query:&nbsp; <a  href="#"
-           tabindex="-1"
-           data-toggle="popover"
-           data-animation="true"
-           data-placement="bottom"
-           data-trigger="click hover focus"
-           data-title=""
-	   data-html="true"
-           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a></h4></span><div id="searching"></div>
-	    }
-	     case "Similarity" => {
-	      <span><h4>Similarity Query:&nbsp; <a  href="#"
-           tabindex="-1"
-           data-toggle="popover"
-           data-animation="true"
-           data-placement="bottom"
-           data-trigger="click hover focus"
-           data-title=""
-	   data-html="true"
-           data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4></span><div id="searching"></div>
-	    }
-            case _ => {
-	      @if(request().getQueryString("q") != null) {
-   	         <span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code></h4></span>
-	      } else {
-	         @for(f <- unspecf) {
-	              <span><h4>@f.substring(0,f.indexOf('/')):&nbsp;<code>@f.substring(f.indexOf('/')+1)</code></h4></span>
-	         }
-	      }
-	    }
-          }
+    @ginas(title, kind) {
+        @header
+    } {
+        @breadcrumb
+    } {
+        <div class="row">
+            @if(total > 0 && facets.length > 0) {
+                <div class="col-md-3" id = "facet-col">
+                @ix.ncats.views.html.filters(facets)
+                </div>
+                <div class="col-md-9">
+                } else {
+                <div class="col-md-12">
+                }
+            @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
+                @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
+                    <div
+                        @if(total > 0) {
+                            class="alert alert-success alert-dismissible"
+                        } else {
+                            class="alert alert-danger alert-dismissible"
+                        }
+                    role="alert">
+                        <button type="button" class="close" data-dismiss="alert"
+                        onclick="location.assign('@ix.ginas.controllers.routes.GinasApp.substances().url')"
+                        aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        @request().getQueryString("type") match {
+                            case "Substructure" => {
+                                <span><h4>Substructure Query:&nbsp; <a href="#"
+                                tabindex="-1"
+                                data-toggle="popover"
+                                data-animation="true"
+                                data-placement="bottom"
+                                data-trigger="click hover focus"
+                                data-title=""
+                                data-html="true"
+                                data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"), 150)'>"><code>@request().getQueryString("q")</code></a></h4>
+                                </span> <div id="searching"></div>
+                            }
+                            case "Similarity" => {
+                                <span><h4>Similarity Query:&nbsp; <a href="#"
+                                tabindex="-1"
+                                data-toggle="popover"
+                                data-animation="true"
+                                data-placement="bottom"
+                                data-trigger="click hover focus"
+                                data-title=""
+                                data-html="true"
+                                data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"), 150)'>"><code>@request().getQueryString("q")</code></a> &ge; @request().getQueryString("cutoff")</h4>
+                                </span> <div id="searching"></div>
+                            }
+                            case _ => {
+                                @if(request().getQueryString("q") != null) {
+                                    <span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code></h4></span>
+                                } else {
+                                    @for(f <- unspecf) {
+                                        <span><h4>@f.substring(0, f.indexOf('/'))
+                                            :&nbsp;<code>@f.substring(f.indexOf('/') + 1)</code></h4>
+                                        </span>
+                                    }
+                                }
+                            }
+                        }
+                    </div>
+                }
+            }
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <div class="row">
+                        <div class = "col-md-9">
+                        @ix.ncats.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
+                        </div>
+                        <div class= "col-md-3 text-right hidden-xs">
+                            <ul class= "list-inline list-unstyled">
+                                <li>
+                                    <i class="fa fa-th fa-2x" id="grid-view"></i>
+                                </li>
+                                <li>
+                                    <input id="view-select" class="cmn-toggle cmn-toggle-round" type="checkbox" checked>
+                                    <label for="view-select" id = "view-label"></label>
+                                </li>
+                                <li>
+                                   <i class="fa fa-th-list fa-2x" id="list-view"></i>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                @content
+
+
+
+                <div class="panel-footer">
+                @if(pages.length > 1) {
+                    @ix.ncats.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
+                }
+                </div>
+            </div>
         </div>
+        </div>
+            <div class="modal export" id="loading">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-body">
+                            <div class = "row text-center">
+                                <i class="fa fa-spinner fa-spin fa-4x"></i><br/>
+                                Loading...
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
         }
-      }
 
-      <div class="panel panel-default">
-            <div class="panel-heading">
-  <div class="row">
-  <div class = "col-md-8">
-        @ix.ncats.views.html.pagination(current, rows, total, pages)
-    </div>
-        <div class= "col-md-2 col-md-offset-2 hidden-xs">
-        <ul class= "list-inline list-unstyled">
-        <li>
-         <i class="fa fa-th fa-2x" id="grid-view"></i>
-      </li>
-      <li>
-      <input id="view-select" class="cmn-toggle cmn-toggle-round" type="checkbox" checked>
-      <label for="view-select" id = "view-label"></label>
-      </li>
-      <li>
-      <i class="fa fa-th-list fa-2x" id="list-view"></i>
-    </li>
-    </ul>
-    </div>
-  </div>
-</div>
-	  @content
-      <div class="panel-footer">
-	@if(pages.length > 1) {
-	  @ix.ncats.views.html.pagination(current, rows, total, pages)
-	}
-</div>
-      </div>
-   </div>
-</div>  
-}
-
-<script>
+    <script>
 function dismissQuery () {
     location.assign('@resetAction');
-}
+                }
 
-$(document).ready(function () {
-//   $('a[data-toggle="tab"]').on('show.bs.tab', function(e) {
-   //       console.log('tab shown: '+e.target);
-       //window.dispatchEvent(new Event('resize'));
-//    });
-    
-    @defining(App.checkStatus()) { status =>
-      @if(status != null) {
+                $(document).ready(function () {
+                //   $('a[data-toggle="tab"]').on('show.bs.tab', function(e) {
+                   //       console.log('tab shown: '+e.target);
+                       //window.dispatchEvent(new Event('resize'));
+                //    });
+
+                    @defining(App.checkStatus()) { status =>
+            @if(status != null) {
          $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
          var delay = 2000; // 2s
          var checkStatus;
 
          checkStatus = window.setInterval(function () {
-        	 
-      	     $.get('@status'+'@App.queryString("cutoff")', function(data) {
-	         if (data.status == 'Done' || data.status == 'Failed') {
-		    window.clearInterval(checkStatus);
-                    $('#searching').html('');
-		    if(data.count > @total) {
-		       location.reload(true);
-		    }
-		 }
-		 else {
-        	 console.log(data.status);
-	            console.log('status '+data.count);
-		    $('#searching').html('<i class="fa fa-spinner fa-spin"></i>searching... '+data.count+' matches');
-		 }
-	     });
-         }, delay);
-      }
-    }
-});
-</script>
+
+      	     $.get('@status
+
+                                '+'@App.queryString("cutoff")
+                ', function(data) {
+                             if (data.status == 'Done' || data.status == 'Failed') {
+                            window.clearInterval(checkStatus);
+                                    $('#searching').html('');
+                            if(data.count > @total
+
+                                ) {
+                                               location.reload(true);
+                                            }
+                                         }
+                                         else {
+                                             console.log(data.status);
+                                                console.log('status '+data.count);
+                                            $('#searching').html('<i class="fa fa-spinner fa-spin"></i>searching... '+data.count+' matches');
+                                         }
+                                         });
+                                         }, delay);
+                                      }
+        }
+
+
+                });
+                </script>

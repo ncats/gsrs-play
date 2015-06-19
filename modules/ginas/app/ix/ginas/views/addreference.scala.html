@@ -1,114 +1,111 @@
-
-
 <!-- Modal -->
 <div class="modal fade" id="addReference" tabindex="-1" role="dialog"
-	aria-labelledby="myModalLabel" aria-hidden="true">
-	<div class="modal-dialog">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal"
-					aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-				</button>
-				<h4 class="modal-title" id="myModalLabel">Add/Edit Reference</h4>
-			</div>
-			<div class="modal-body">
-				<h5>This will need to be changed to post to submit</h5>
+aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabel">Add/Edit Reference</h4>
+            </div>
+            <div class="modal-body">
+                <h5>This will need to be changed to post to submit</h5>
 
-				<form class="form-horizontal">
-					<div class="form-group">
-							<div class="col-md-6">
-								<label for="type">Reference Type</label> <select class="form-control"
-									id="reference-type" onchange="other(this.value);">
-									<option>Wikipedia</option>
-									<option>Index Name Nominum</option>
-									<option>IND</option>
-									<option>NDA</option>
-									<option>USP Dictionary</option>
-									<option>USP /NF</option>
-									<option>USAN COUN</option>
-									<option>Journal Article</option>
-									<option>ITIS</option>
-									<option>European Pharmacopoeia</option>
-									<option>INN List</option>
-									<option>FDA_SRS</option>
-									<option>Other</option>
-									
-								</select>
-							</div>
-							</div>
-							<div class ="form-group">
-							<div class="col-md-12" id = "def-group">
-								<label for="def">Other Definition</label> <input type="text"
-									class="form-control" id="def" placeholder="Definition">
-							</div>
-							</div>
-							<div class ="form-group">
-							<div class="col-md-12">
-								<label for="citation">Reference/Citation</label> <input type="text"
-									class="form-control" id="citation"
-									placeholder="Citation">
-							</div>
-						</div>
-						<div class="form-group">
-							<div class="col-md-12">
-								<label for="url">URL</label> <input
-									type="text" class="form-control" id="durl"
-									placeholder="url">
-							</div>
-						</div>
-					<div class="form-group">
-					<div class="col-md-6">
-							<label for="labels">Labels</label> <select multiple class="form-control"
-									id="labels">
-									<option>Structure Elucidation</option>
-									<option>Structure Purity</option>
-									<option>Spectra</option>
-									<option>Work-up Process</option>
-									<option>Synthesis</option>
-									<option>Nomenclature</option>
-									<option>Clinical</option>
-									<option>Taxonomic</option>
-									<option>Potency</option>
-									<option>NMR</option>
-									<option>Database Entry</option>
-									<option>FDA_SRS</option>
-									<option>Other</option>
-									
-								</select>
-						</div>
-						<div class="col-md-4">
-							<label for="access-control">Access Control</label>
-							<select class="form-control" id="access-control">
-									<option>protected</option>
-									<option>none</option>
-									</select>
-						</div>
-						
-						
-					</div>
-					<div class ="form-group">
-							<div class="col-md-4">
-							<label for="date-accessed">Date Accessed</label>
-							<input class="datepicker" data-date-format="mm/dd/yyyy">
-						</div>
-						</div>
-					<div class="form-group">
-						<div class="col-md-3">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <div class="col-md-6">
+                            <label for="type">Reference Type</label> <select class="form-control"
+                        id="reference-type" onchange="other(this.value);">
+                            <option>Wikipedia</option>
+                            <option>Index Name Nominum</option>
+                            <option>IND</option>
+                            <option>NDA</option>
+                            <option>USP Dictionary</option>
+                            <option>USP /NF</option>
+                            <option>USAN COUN</option>
+                            <option>Journal Article</option>
+                            <option>ITIS</option>
+                            <option>European Pharmacopoeia</option>
+                            <option>INN List</option>
+                            <option>FDA_SRS</option>
+                            <option>Other</option>
 
-							<label for="exampleInputFile" class = "file-button">Upload Document</label> 
-							  <input type='file' onchange="" class = "file-button" />
-    							<img id="thumb" src="#" alt="upload document" />
-<!-- 							<input -->
-<!-- 								type="button" value="Choose File" -->
-<!-- 								onclick="window.FileContentsGrabber.append('json-sequence')" -->
-<!-- 								id="exampleInputFile"> -->
-						</div>
-					</div>
-					<button type="submit" class="btn btn-default">Submit</button>
-				</form>
-			</div>
-		</div>
-	</div>
+                        </select>
+                        </div>
+                    </div>
+                    <div class ="form-group">
+                        <div class="col-md-12" id = "def-group">
+                            <label for="def">Other Definition</label> <input type="text"
+                        class="form-control" id="def" placeholder="Definition">
+                        </div>
+                    </div>
+                    <div class ="form-group">
+                        <div class="col-md-12">
+                            <label for="citation">Reference/Citation</label> <input type="text"
+                        class="form-control" id="citation"
+                        placeholder="Citation">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <label for="url">URL</label> <input
+                        type="text" class="form-control" id="durl"
+                        placeholder="url">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-6">
+                            <label for="labels">Labels</label> <select multiple class="form-control"
+                        id="labels">
+                            <option>Structure Elucidation</option>
+                            <option>Structure Purity</option>
+                            <option>Spectra</option>
+                            <option>Work-up Process</option>
+                            <option>Synthesis</option>
+                            <option>Nomenclature</option>
+                            <option>Clinical</option>
+                            <option>Taxonomic</option>
+                            <option>Potency</option>
+                            <option>NMR</option>
+                            <option>Database Entry</option>
+                            <option>FDA_SRS</option>
+                            <option>Other</option>
+
+                        </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="access-control">Access Control</label>
+                            <select class="form-control" id="access-control">
+                                <option>protected</option>
+                                <option>none</option>
+                            </select>
+                        </div>
+
+                    </div>
+                    <div class ="form-group">
+                        <div class="col-md-4">
+                            <label for="date-accessed">Date Accessed</label>
+                            <input class="datepicker" data-date-format="mm/dd/yyyy">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-3">
+
+                            <label for="exampleInputFile" class = "file-button">Upload Document</label>
+                            <input type='file' onchange="" class = "file-button" />
+                            <img id="thumb" src="#" alt="upload document" />
+                                <!-- 							<input -->
+                                <!-- 								type="button" value="Choose File" -->
+                                <!-- 								onclick="window.FileContentsGrabber.append('json-sequence')" -->
+                                <!-- 								id="exampleInputFile"> -->
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 

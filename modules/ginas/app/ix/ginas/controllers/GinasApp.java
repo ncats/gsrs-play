@@ -9,19 +9,7 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Code;
-import ix.ginas.models.v1.DisulfideLink;
-import ix.ginas.models.v1.Glycosylation;
-import ix.ginas.models.v1.Modifications;
-import ix.ginas.models.v1.Polymer;
-import ix.ginas.models.v1.Protein;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.Relationship;
-import ix.ginas.models.v1.Site;
-import ix.ginas.models.v1.Name;
-import ix.ginas.models.v1.StructuralModification;
-import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 
@@ -78,6 +66,21 @@ public class GinasApp extends App {
         "Status"
     };
 
+    public static final String[] ALL_FACETS = {
+            "Status",
+            "Substance Class",
+            "SubstanceStereoChemistry",
+            "Molecular Weight",
+            "GInAS Tag",
+            "Sequence Type",
+            "Material Class",
+            "Material State",
+            "Material Type",
+            "Family",
+            "Genus",
+            "Species"
+    };
+
     static <T> List<T> filter (Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
         for (Object v : values) {
@@ -91,7 +94,7 @@ public class GinasApp extends App {
     }
 
     /**
-     * return a field named type to get around scala's template reserved 
+     * return a field named type to get around scala's template reserved
      * keyword
      */
     public static String getType (Object obj) {
@@ -107,26 +110,26 @@ public class GinasApp extends App {
         }
         return type;
     }
-    
+
     public static Result error (int code, String mesg) {
         return ok (ix.ginas.views.html.error.render(code, mesg));
     }
-    
+
     public static Result _notFound (String mesg) {
         return notFound (ix.ginas.views.html.error.render(404, mesg));
     }
-    
+
     public static Result _badRequest (String mesg) {
         return badRequest (ix.ginas.views.html.error.render(400, mesg));
     }
-    
+
     public static Result _internalServerError (Throwable t) {
         t.printStackTrace();
         return internalServerError
             (ix.ginas.views.html.error.render
              (500, "Internal server error: "+t.getMessage()));
     }
-    
+
     public static Result authenticate () {
         return ok ("You're authenticated!");
     }
@@ -151,7 +154,7 @@ public class GinasApp extends App {
         //Logger.info("trunc " + trunc);
         return trunc.substring(0, 17)+ "...";
     }
-        
+
     static FacetDecorator[] decorate (Facet... facets) {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
@@ -171,7 +174,7 @@ public class GinasApp extends App {
         GinasFacetDecorator (Facet facet) {
             super (facet, true, 6);
         }
-        
+
         @Override
         public String name () {
             String n = super.name();
@@ -179,7 +182,7 @@ public class GinasApp extends App {
                 return "Stereo Chemistry";
             return n.trim();
         }
-        
+
         @Override
         public String label (final int i) {
             final String label = super.label(i);
@@ -187,7 +190,7 @@ public class GinasApp extends App {
             return label;
         }
     }
-    
+
     public static <T> String namesList(List<Name> list){
         int size = list.size();
         if(size >= 6){
@@ -200,9 +203,9 @@ public class GinasApp extends App {
                 arr[i]= name;
         }
         return StringUtils.arrayToDelimitedString(arr, "; ");
-        
+
     }
-    
+
     public static <T> String codesList(List<Code> list){
         int size = list.size();
         if(size>=6){
@@ -215,7 +218,179 @@ public class GinasApp extends App {
         }
         return StringUtils.arrayToDelimitedString(arr, "; ");
      }
-    
+
+    public static Result substances (final String q, final int rows, final int page){
+        String type = request().getQueryString("type");
+        Logger.debug("Substances: rows=" + rows + " page=" + page);
+        try {
+            if (type != null && (type.equalsIgnoreCase("substructure")
+                    || type.equalsIgnoreCase("similarity"))) {
+                // structure search
+                String cutoff = request().getQueryString("cutoff");
+                Logger.debug("Search: q="+q+" type="+type+" cutoff="+cutoff);
+                try {
+                    if (type.equalsIgnoreCase("substructure")) {
+                        return substructure (q, rows, page);
+                    }
+                    else {
+                        return similarity
+                                (q, Double.parseDouble(cutoff), rows, page);
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                return notFound (ix.ginas.views.html.error.render
+                        (400, "Invalid search parameters: type=\""+type
+                                +"\"; q=\""+q+"\" cutoff=\""+cutoff+"\"!"));
+            }
+            else {
+                return _substances(q, rows, page);
+            }
+        }
+        catch (Exception ex) {
+            return _internalServerError (ex);
+        }
+    }
+
+    static Result _substances (final String q, final int rows, final int page)
+            throws Exception {
+        final int total = SubstanceFactory.finder.findRowCount();
+        final String key = "substances/"+Util.sha1(request ());
+
+        if (request().queryString().containsKey("facet") || q != null) {
+            final TextIndexer.SearchResult result = getOrElse
+                    (key, new Callable<TextIndexer.SearchResult> () {
+                        public TextIndexer.SearchResult call ()
+                                throws Exception {
+                            Logger.debug("Cache missed: "+key);
+                            return getSearchResult
+                                    (Substance.class, q, total);
+                        }
+                    });
+
+            if (result.finished()) {
+                return getOrElse
+                        (key+"/result", new Callable<Result> () {
+                            public Result call () throws Exception {
+                                return createSubstanceResult
+                                        (result, rows, page);
+                            }
+                        });
+            }
+
+            return createSubstanceResult (result, rows, page);
+        }
+        else {
+            return getOrElse (key, new Callable<Result> () {
+                public Result call () throws Exception {
+                    Logger.debug("Cache missed: "+key);
+                    TextIndexer.Facet[] facets =
+                            filter(getFacets(Substance.class, 30),
+                                    ALL_FACETS);
+                    int nrows = Math.min(total, Math.max(1, rows));
+                    int[] pages = paging(nrows, page, total);
+
+                    List<Substance> substances =
+                            SubstanceFactory.getSubstances(nrows, (page - 1) * rows, null);
+
+                    return ok(ix.ginas.views.html.substances.render
+                            (page, nrows, total, pages,
+                                    decorate(facets), substances));
+                }
+            });
+        }
+    }
+    static Result createSubstanceResult
+            (TextIndexer.SearchResult result, int rows, int page) {
+        TextIndexer.Facet[] facets = filter
+                (result.getFacets(), ALL_FACETS);
+
+        List<Substance> substances = new ArrayList<Substance>();
+        int[] pages = new int[0];
+        if (result.count() > 0) {
+            rows = Math.min(result.count(), Math.max(1, rows));
+            pages = paging (rows, page, result.count());
+            for (int i = (page - 1) * rows, j = 0; j < rows
+                    && i < result.size(); ++j, ++i) {
+                substances.add((Substance) result.get(i));
+            }
+        }
+
+        return ok(ix.ginas.views.html.substances.render
+                (page, rows, result.count(),
+                        pages, decorate (facets), substances));
+
+    }
+
+    static final GetResult<Substance> SubstanceResult =
+            new GetResult<Substance>(Substance.class,
+                    SubstanceFactory.subfinder) {
+                public Result getResult (List<Substance> substances)
+                        throws Exception {
+                    return _getSubstanceResult(substances);
+                }
+            };
+
+    static Result _getSubstanceResult (List<Substance> substances)
+            throws Exception {
+        // force it to show only one since it's possible that the provided
+        // name isn't unique
+        if (true || substances.size() == 1) {
+            Substance substance = substances.iterator().next();
+            String type = substance.substanceClass.toString();
+            switch (type) {
+                case "chemical":
+                    return ok(ix.ginas.views.html
+                            .chemicaldetails.render((ChemicalSubstance) substance));
+                case "protein":
+                    return ok(ix.ginas.views.html
+                            .proteindetails.render((ProteinSubstance) substance));
+                case "mixture":
+                    return ok(ix.ginas.views.html
+                            .mixturedetails.render((MixtureSubstance) substance));
+                case "polymer":
+                    return ok(ix.ginas.views.html
+                            .polymerdetails.render((PolymerSubstance) substance));
+                case "structurallyDiverse":
+                    return ok(ix.ginas.views.html
+                            .diversedetails.render((StructurallyDiverseSubstance) substance));
+                case "specifiedSubstanceG1":
+                    return ok(ix.ginas.views.html
+                            .group1details.render((SpecifiedSubstanceGroup1) substance));
+                default: return _badRequest("type not found");
+            }
+        }else {
+            TextIndexer indexer = textIndexer.createEmptyInstance();
+            for (Substance sub : substances)
+                indexer.add(sub);
+
+            TextIndexer.SearchResult result = SearchFactory.search
+                    (indexer, Substance.class, null, null,
+                            indexer.size(), 0, FACET_DIM, request().queryString());
+            if (result.count() < substances.size()) {
+                substances.clear();
+                for (int i = 0; i < result.count(); ++i) {
+                    substances.add((Substance) result.get(i));
+                }
+            }
+            TextIndexer.Facet[] facets = filter
+                    (result.getFacets(), ALL_FACETS);
+            indexer.shutdown();
+
+            return ok(ix.ginas.views.html.substances.render
+                    (1, result.count(), result.count(),
+                            new int[0], decorate(facets), substances));
+        }
+    }
+
+    public static Result substance (String name) {
+        return SubstanceResult.get(name);
+    }
+
+
+
     public static Result chemicals (final String q,
                                     final int rows, final int page) {
         String type = request().getQueryString("type");
@@ -238,7 +413,7 @@ public class GinasApp extends App {
                 catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                
+
                 return notFound (ix.ginas.views.html.error.render
                                  (400, "Invalid search parameters: type=\""+type
                                   +"\"; q=\""+q+"\" cutoff=\""+cutoff+"\"!"));
@@ -256,7 +431,7 @@ public class GinasApp extends App {
         (TextIndexer.SearchResult result, int rows, int page) {
         TextIndexer.Facet[] facets = filter
             (result.getFacets(), CHEMICAL_FACETS);
-        
+
         List<ChemicalSubstance> chemicals = new ArrayList<ChemicalSubstance>();
         int[] pages = new int[0];
         if (result.count() > 0) {
@@ -271,14 +446,14 @@ public class GinasApp extends App {
         return ok(ix.ginas.views.html.chemicals.render
                   (page, rows, result.count(),
                    pages, decorate (facets), chemicals));
-        
+
     }
 
     static Result _chemicals (final String q, final int rows, final int page)
         throws Exception {
         final int total = SubstanceFactory.finder.findRowCount();
         final String key = "chemicals/"+Util.sha1(request ());
-        
+
         if (request().queryString().containsKey("facet") || q != null) {
             final TextIndexer.SearchResult result = getOrElse
                 (key, new Callable<TextIndexer.SearchResult> () {
@@ -299,19 +474,19 @@ public class GinasApp extends App {
                             }
                         });
             }
-            
+
             return createChemicalResult (result, rows, page);
         }
         else {
             return getOrElse (key, new Callable<Result> () {
                     public Result call () throws Exception {
-                        Logger.debug("Cache missed: "+key);                     
-                        TextIndexer.Facet[] facets = 
+                        Logger.debug("Cache missed: "+key);
+                        TextIndexer.Facet[] facets =
                             filter(getFacets(ChemicalSubstance.class, 30),
                                    CHEMICAL_FACETS);
                         int nrows = Math.min(total, Math.max(1, rows));
                         int[] pages = paging(nrows, page, total);
-                        
+
                         List<ChemicalSubstance> chemicals =
                             SubstanceFactory.getChemicals
                             (nrows, (page - 1) * rows, null);
@@ -440,7 +615,7 @@ public class GinasApp extends App {
             else if ("Official Name".equalsIgnoreCase(n.type))
                 official = n.name;
         }
-        
+
         return official != null ? official
             : substance.uuid.toString().substring(0, 8);
     }
@@ -452,7 +627,7 @@ public class GinasApp extends App {
             this.cls = cls;
             this.finder = finder;
         }
-        
+
         public Result get (final String name) {
             try {
                 long start = System.currentTimeMillis();
@@ -505,11 +680,11 @@ public class GinasApp extends App {
 
     static <T extends Substance> List<T> resolve
         (Model.Finder<Long, T> finder, String name) {
-        List<T> values = new ArrayList<T>();    
+        List<T> values = new ArrayList<T>();
         if (name.length() == 8) { // might be uuid
             values = finder.where().istartsWith("uuid", name).findList();
         }
-        
+
         if (values.isEmpty()) {
             values = finder.where()
                 .ieq("approvalID", name).findList();
@@ -521,14 +696,14 @@ public class GinasApp extends App {
                         .ieq("codes.code", name).findList();
             }
         }
-        
+
         if (values.size() > 1) {
             Logger.warn("\""+name+"\" yields "
                         +values.size()+" matches!");
         }
         return values;
     }
-    
+
     public static List<Keyword> getStructureReferences(Structure s){
         List<Keyword> references = new ArrayList<Keyword>();
         for(Value v : s.properties){
@@ -542,9 +717,9 @@ public class GinasApp extends App {
 
         return references;
     }
-        
+
     /******************* PROTEINS *************************************************/
-        
+
     public static Result proteins (final String q,
                                    final int rows, final int page) {
         try {
@@ -638,7 +813,7 @@ public class GinasApp extends App {
                 return _getProteinResult (proteins);
             }
         };
-    
+
     static Result _getProteinResult (List<ProteinSubstance> proteins) throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
@@ -660,6 +835,7 @@ public class GinasApp extends App {
                 proteins.clear();
                 for (int i = 0; i < result.count(); ++i) {
                     proteins.add((ProteinSubstance)result.get(i));
+
                 }
             }
             TextIndexer.Facet[] facets = filter
@@ -675,34 +851,34 @@ public class GinasApp extends App {
     public static Result protein (String name) {
         return ProteinResult.get(name);
     }
-    
+
     /**
      * return the canonical/default chemical id
      */
 
-    
+
     public static String siteCheck(Protein prot, int subunit, int index){
         String desc=prot.getSiteModificationIfExists(subunit, index);
         if(desc==null)return "";
         return desc;
     }
-    
-    
+
+
     public static List<Integer> getSites (Modifications mod, int index){
         ArrayList<Integer> subunit= new ArrayList<Integer>();
         for(StructuralModification sm: mod.structuralModifications){
             subunit = siteIter(sm.sites, index);
         }
-        return subunit; 
+        return subunit;
     }
-    
-    
+
+
     public static List<Integer> getSites (Glycosylation mod, int index){
         ArrayList<Integer> subunit= new ArrayList<Integer>();
         subunit.addAll(siteIter(mod.CGlycosylationSites, index));
         subunit.addAll(siteIter(mod.NGlycosylationSites, index));
         subunit.addAll(siteIter(mod.OGlycosylationSites, index));
-        return subunit; 
+        return subunit;
     }
 
     public static List<Integer> getSites (List<DisulfideLink> disulfides, int index){
@@ -710,9 +886,9 @@ public class GinasApp extends App {
         for(DisulfideLink sm: disulfides){
             subunit.addAll( siteIter(sm.sites, index));
         }
-        return subunit; 
+        return subunit;
     }
-        
+
     public static ArrayList<Integer> siteIter (List<Site> sites, int index){
         ArrayList<Integer> subunit= new ArrayList<Integer>();
         for(Site s : sites){
@@ -722,7 +898,7 @@ public class GinasApp extends App {
         }
         return subunit;
     }
-        
+
     public static String getAAName (char aa) {
 
         String amino;
@@ -772,7 +948,7 @@ public class GinasApp extends App {
             break;
             //              case 'Z': amino = "Glutamine/Glutamic acid";
             //              break;
-        default: 
+        default:
             amino = "Tim forgot one";
             break;
         }
@@ -801,7 +977,7 @@ public class GinasApp extends App {
         }
         Logger.info("final count = " + count);
         return count;
-   
+
     }
 
     public static class GinasSearchResultProcessor
@@ -820,7 +996,7 @@ public class GinasApp extends App {
             return chemicals.isEmpty() ? null : chemicals.iterator().next();
         }
     }
-    
+
     public static Result search (String kind) {
         try {
             String q = request().getQueryString("q");
@@ -848,7 +1024,7 @@ public class GinasApp extends App {
                 }
             }
             // generic entity search..
-            return search (8);
+            return search(8);
         }
         catch (Exception ex) {
             Logger.debug("Can't resolve class: "+kind, ex);
@@ -878,12 +1054,12 @@ public class GinasApp extends App {
         final String query = request().getQueryString("q");
         Logger.debug("Query: \""+query+"\"");
 
-        TextIndexer.SearchResult result = null;            
+        TextIndexer.SearchResult result = null;
         if (query.indexOf('/') > 0) { // use mesh facet
             final Map<String, String[]> queryString =
                 new HashMap<String, String[]>();
             queryString.putAll(request().queryString());
-            // append this facet to the list 
+            // append this facet to the list
             List<String> f = new ArrayList<String>();
             f.add("MeSH/"+query);
             String[] ff = queryString.get("facet");
@@ -895,7 +1071,7 @@ public class GinasApp extends App {
             queryString.put("facet", f.toArray(new String[0]));
             long start = System.currentTimeMillis();
             final String key =
-                "search/facet/"+Util.sha1(queryString.get("facet")); 
+                "search/facet/"+Util.sha1(queryString.get("facet"));
             result = getOrElse
                 (key, new Callable<TextIndexer.SearchResult>() {
                         public TextIndexer.SearchResult
@@ -943,7 +1119,7 @@ public class GinasApp extends App {
                     }
                     else if (ProteinSubstance.class.getName()
                              .equals(fv.getLabel())) {
-                        totalProteinSubstances = fv.getCount();  
+                        totalProteinSubstances = fv.getCount();
                         total += totalProteinSubstances;
                     }
                     else if (Polymer.class.getName().equals(fv.getLabel())) {
@@ -963,12 +1139,12 @@ public class GinasApp extends App {
         return ok (ix.ginas.views.html.search.render
                    (query, total, GinasApp.decorate (facets),
                     chemicalSubstances, totalChemicalSubstances,
-                    proteinSubstances, totalLigands,
+                    proteinSubstances, totalProteinSubstances,
                     null, totalProteinSubstances));
     }
 
     static public Substance resolve (Relationship rel) {
-        Substance relsub = null;        
+        Substance relsub = null;
         try {
             relsub = SUBFINDER.where()
                 .eq("approvalID", rel.relatedSubstance.approvalID)
@@ -980,7 +1156,7 @@ public class GinasApp extends App {
         }
         return relsub;
     }
-    
+
     static public List<Relationship> resolveRelationships (String uuid) {
         List<Relationship> resolved = new ArrayList<Relationship>();
         try {
@@ -1007,5 +1183,23 @@ public class GinasApp extends App {
         ObjectMapper mapper = new ObjectMapper ();
         return ok (mapper.valueToTree(rels));
     }
+
+
+    /******************* MIXTURES *************************************************/
+
+public static List<Component> getComponentsByType (List<Component> components, String type){
+    List<Component> comp = new ArrayList<Component>();
+    for(Component c: components){
+        if(c.type.equals(type)){
+            comp.add(c);
+        }
+    }
+return comp;
+}
+
+
+
+
+
 }
 

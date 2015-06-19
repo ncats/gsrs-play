@@ -1,204 +1,106 @@
-@import ix.ginas.models.v1.ChemicalSubstance
-@import ix.ginas.models.v1.ProteinSubstance
-@import ix.core.models.Structure
+@import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance}
 @import ix.idg.models.Disease
-@import ix.ginas.controllers.GinasApp
-@import ix.ginas.controllers.GinasFactory
 @import ix.ncats.controllers.App
-@import ix.core.search.TextIndexer
-@import ix.core.search.TextIndexer._
 @import ix.ncats.controllers.App.FacetDecorator
-@import java.net.URLEncoder
 
 @(query: String, total: Int, facets: Array[FacetDecorator],
-chemicals: List[ChemicalSubstance], totalChemicals: Int,
-proteins: List[ProteinSubstance], totalProteins: Int,
-diseases: List[Disease], totalDiseases: Int)
+        chemicals: List[ChemicalSubstance], totalChemicals: Int,
+        proteins: List[ProteinSubstance], totalProteins: Int,
+        diseases: List[Disease], totalDiseases: Int)
 
-@molExport(mol: String, name : String)= {
-<div class="modal fade" id="structureExport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelExport" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="myModalLabelExport">Export @name</h4>
-      </div>
-      <div class="modal-body">
-             		<div class = "row">	
-					<div class="col-md-12">
-					<div class = "well" id = "input">
-	@mol
-					</div>
-				</div>
-				</div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button"  class="btn btn-primary" onclick="" data-dismiss="modal">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-}
+@ix.ncats.views.html.main("Search: " + query, null) {
+    @menu()
+} {
+    <h1></h1>
+} {
+    <div class="container-fluid">
+        <div class="row">
+            @if(facets.length > 0) {
+                <div class="col-md-3">
+                @ix.ncats.views.html.filters(facets)
+                </div>
+                <div class="col-md-9">
+                } else {
+                <div class="col-md-12">
+                }
+            <div
+                @if(total > 0) {
+                    class="alert alert-success"
+                } else {
+                    class="alert alert-danger"
+                }
+            role="alert">
+                <span><h4>Query:<code>@query</code></h4></span>
+            </div>
+            <div class="btn-group" role="group">
+            @if(total == 1) {
+                <h3><span class="label label-default">@total result found.</span></h3>
+            } else {
+                <h3><span class="label label-default">@total results found.</span></h3>
+            }
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div class = "row">
+                        @chemicals.length
+                        @total
+                        @for(chem <- chemicals) {
+                            hi
+                            @chemthumb(chem)
+                        }
 
+                    </div>
+                    @if(chemicals.length < totalChemicals) {
+                        <span><i class="fa fa-ellipsis-h"></i></span>
+                    }
+                </div>
+                <div class="panel-footer">
+                    <a href="@{
+                        ix.ginas.controllers.routes.GinasApp.chemicals() + "?" + App.queryString(request().queryString())
+                    }">@totalChemicals chemical(s)</a>
+                </div>
+            </div>
 
-@thumb(chem: ChemicalSubstance) = {
-<div class = "row">
-<div class = "col-md-12">
-<p align="right" data-toggle="tooltip" title="Approval ID"><code>@chem.approvalID</code></p>  
-</div>
-</div>
-<div class = "row">
-<div class = "col-md-12 struc-img">
-         <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-		   src='@ix.ncats.controllers.routes.App.structure(chem.structure.id,"svg",185)'>
-		  
-		   
-</div>
-</div>
-<div class = "row stereo">
-<div class = "col-md-12">
-@if(chem.structure.stereoChemistry == Structure.Stereo.ACHIRAL){
-<span class="label label-primary label-offset">@chem.structure.stereoChemistry</span>
-}
-@if(chem.structure.stereoChemistry== Structure.Stereo.ABSOLUTE){
-<span class="label label-success label-offset">@chem.structure.stereoChemistry</span>
-}
-@if(chem.structure.stereoChemistry== Structure.Stereo.RACEMIC){
-<span class="label label-info label-offset">@chem.structure.stereoChemistry</span>
-}
-@if(chem.structure.stereoChemistry== Structure.Stereo.MIXED){
-<span class="label label-default label-offset">@chem.structure.stereoChemistry</span>
-}
-@if(chem.structure.stereoChemistry== Structure.Stereo.EPIMERIC){
-<span class="label label-warning label-offset">@chem.structure.stereoChemistry</span>
-}
-@if(chem.structure.stereoChemistry== Structure.Stereo.UNKNOWN){
-<span class="label label-danger label-offset">@chem.structure.stereoChemistry</span>
-}
-
- </div>
-</div>
-<div class = "row">
-<div class = "col-md-12">
-@chem.getName()
-</div>
-</div>
-
-	
-}
-
-
-
-
-
-
-@tabrow(t: ChemicalSubstance) = {
-<tr>
-
-</tr>
-}
-@ix.ncats.views.html.main("Search: "+query, null){@menu()}{<h1></h1>}{
-<div class="container-fluid">
-  <div class="row">
-    @if(facets.length > 0) {
-    <div class="col-md-3">
-      @ix.ncats.views.html.filters(facets)
-    </div> 
-    <div class="col-md-9">
-      } else {
-      <div class="col-md-12">
-      }
-      <div 
-	 @if(total > 0) {
-	class="alert alert-success" 
-	} else {
-	class="alert alert-danger" 
-	}
-	role="alert">
-	<span><h4>Query:<code>@query</code></h4></span>
-      </div>
-      <div class="btn-group" role="group">
-	@if(total == 1) {
-	<h3><span class="label label-default">@total result found.</span></h3>
-	} else {
-        <h3><span class="label label-default">@total results found.</span></h3>
-	}
-      </div>
-      <div class="panel panel-default">
-	<div class="panel-body">
-  <div class = "row">
-  @for(chem <- chemicals) {
-  <div class = "col-md-3  zoom thumb-col ">
-  <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
-     @thumb(chem)
-   </a>
-   	<div class = "row">
-	<div class = "col-md-6 col-md-offset-6">
-	<ul class= "form-inline pull-right" id = "exportSave">
-	<li>
-   <button type="button" class="btn navbar-btn btn-default hidden" id = "strucExportChem"
-					  data-toggle="modal"
-	  				data-target="#structureExport">Export</button></li>
-  	<li><button type="button" class="btn navbar-btn btn-default pull-right hidden" id = "strucSearch"
-					  data-toggle="modal"
-					  data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.id,"mol")'
-	  				data-target="#strucModal"><span class="fa fa-search"></span></button>
-	  				</li>
-	  				</ul>
-	  				</div>
-	  				</div>	
-	  				</div>
-	  				@molExport(chem.structure.molfile, chem.getName())
-   }
-   
-   </div>
-	   @if(chemicals.length < totalChemicals) {
-	    <span><i class="fa fa-ellipsis-h"></i></span>
-	    }
-	</div>
-	<div class="panel-footer">
-	  <a href="@{ix.ginas.controllers.routes.GinasApp.chemicals()+"?"+App.queryString(request().queryString())}">@totalChemicals chemical(s)</a>
-	</div>
-      </div>
-      <div class="panel panel-default">
-	<div class="panel-body">
-	  <table class="table table-striped">
-	    <tr>
-	      <th></th>
-	      <th>Name</th>
-	      <th>Development Level</th>
-	      <th>Topic</th>
-	    </tr>
-	    @for(lig <- proteins) {
-	      <tr>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <tr>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Development Level</th>
+                            <th>Topic</th>
+                        </tr>
+                        @for(lig <- proteins) {
+                            <tr>
  	      </tr>
-             }
-           </table>
-	   @if(proteins.length < totalProteins) {
-	    <span><i class="fa fa-ellipsis-h"></i></span>
-	    }
-	</div>
-	<div class="panel-footer">
-	  <a href="@{ix.ginas.controllers.routes.GinasApp.proteins()+"?"+App.queryString(request().queryString())}">@totalProteins protein(s)</a>
-	</div>
-      </div>
-      <div class="panel panel-default">
-	<div class="panel-body">
-	  <table class="table table-striped">
-	    <tr>
-	      <th>Name</th>
-	      <th>Description</th>
-	    </tr>
-	   
-	  </table>
-	  
-	</div>
-    </div>
-      </div>
-    </div>
-</div>
-}
+                        }
+                    </table>
+                    @if(proteins.length < totalProteins) {
+                        <span><i class="fa fa-ellipsis-h"></i></span>
+                    }
+                </div>
+                <div class="panel-footer">
+                    <a href="@{
+                        ix.ginas.controllers.routes.GinasApp.proteins() + "?" + App.queryString(request().queryString())
+                    }">@totalProteins protein(s)</a>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <table class="table table-striped">
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                        </tr>
+
+                    </table>
+
+                </div>
+            </div>
+        </div>
+        </div>
+        </div>
+        }
 
 <script>
 $(function () {

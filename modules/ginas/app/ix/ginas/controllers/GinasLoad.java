@@ -3,20 +3,12 @@ package ix.ginas.controllers;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
-import ix.core.chem.Chem;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
 import ix.ginas.models.Ginas;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.MixtureSubstance;
-import ix.ginas.models.v1.PolymerSubstance;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.StructurallyDiverseSubstance;
-import ix.ginas.models.v1.Substance;
-import ix.ginas.models.v1.Relationship;
-import ix.ginas.models.v1.Moiety;
+import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
 
 import java.io.BufferedReader;
@@ -201,12 +193,14 @@ public class GinasLoad extends App {
                 if (cls == null) {
                     ChemicalSubstance sub =
                         mapper.treeToValue(tree, ChemicalSubstance.class);
-                    return persist (sub);
+                    sub.save();
+                    return sub;
                 }
                 else if (cls.isAssignableFrom(ChemicalSubstance.class)) {
                     ChemicalSubstance sub =
                         (ChemicalSubstance)mapper.treeToValue(tree, cls);
-                    return persist (sub);
+                    sub.save();
+                    return sub;
                 }
                 else {
                     Logger.warn(tree.get("uuid").asText()+" is not of type "
@@ -290,6 +284,28 @@ public class GinasLoad extends App {
                                 +cls.getName());
                 }
                 break;
+
+                case specifiedSubstanceG1:
+                    if (cls == null) {
+                       SpecifiedSubstanceGroup1 sub =
+                                mapper.treeToValue
+                                        (tree, SpecifiedSubstanceGroup1.class);
+                        sub.save();
+                        return sub;
+                    }
+                    else if (cls.isAssignableFrom
+                            (SpecifiedSubstanceGroup1.class)) {
+                        SpecifiedSubstanceGroup1 sub =
+                                (SpecifiedSubstanceGroup1)mapper
+                                        .treeToValue(tree, cls);
+                        sub.save();
+                        return sub;
+                    }
+                    else {
+                        Logger.warn(tree.get("uuid").asText()+" is not of type "
+                                +cls.getName());
+                    }
+                    break;
 
             default:
                 Logger.warn("Skipping substance class "+type);
@@ -400,25 +416,6 @@ public class GinasLoad extends App {
         }
         br.close();
         return ok (count+" record(s) processed!");
-    }
-
-    static Substance persist (ChemicalSubstance chem) throws Exception {
-        // now index the structure for searching
-        try {
-            Chem.setFormula(chem.structure);
-            chem.structure.save();
-            // it's bad to reference App from here!!!!
-            strucIndexer.add(String.valueOf(chem.structure.id),
-                             chem.structure.molfile);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        for (Moiety m : chem.moieties)
-            m.structure.save();
-        chem.save();
-        
-        return chem;
     }
     
     static Substance persist (ProteinSubstance sub) throws Exception {

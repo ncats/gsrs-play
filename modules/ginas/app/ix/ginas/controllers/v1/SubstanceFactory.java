@@ -21,6 +21,8 @@ import ix.core.NamedResource;
 public class SubstanceFactory extends EntityFactory {
     static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
+    static public final Model.Finder<Long, Substance> subfinder =
+            new Model.Finder(Long.class, Substance.class);
     static public final Model.Finder<Long, ChemicalSubstance> chemfinder =
             new Model.Finder(Long.class, ChemicalSubstance.class);
     static public final Model.Finder<Long, ProteinSubstance> protfinder =

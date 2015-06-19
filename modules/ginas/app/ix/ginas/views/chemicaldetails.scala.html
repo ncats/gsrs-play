@@ -1,156 +1,163 @@
-@import ix.core.models.Structure 
-@import ix.core.models.Keyword
-@import ix.ginas.controllers.v1.ReferenceFactory 
-@import ix.ginas.controllers.v1.SubstanceFactory 
+@import ix.core.models.Structure
 @import ix.ginas.controllers.GinasApp
-@import ix.ginas.models.v1.ChemicalSubstance
-@import helper._ 
 
 @(sub: ix.ginas.models.v1.ChemicalSubstance)
 
-@structureImage(s: Structure, size : Integer) = {
-<img class="struc-thumb img-responsive" alt="Structure of @sub.getName()"
-	src='@ix.ncats.controllers.routes.App.structure(s.id,"svg",size)'>
-} 
-
-@makeTable(s: Structure, stype : String) = {
-<table class="table @stype-Table">
-	<thead>
-		<tr>
-			@if(stype =="moiety"){
-			<th>Moiety Structure</th>
-			<th>Moiety Count</th>
-			<th>Moiety StereoChemistry</th>
-			<th>Moiety Optical Activity</th>
-			<th>Moiety Additional Stereochemistry</th> 
-			}
-			<th>Molecular Formula</th>
-			<th>Molecular Weight</th>
-			<th>Defined Stereocenters</th>
-			<th>EZ Centers</th>
-			<th>Charge</th>
-			<th>Reference</th>
-			
-		</tr>
-	</thead>
-	@fillTable(s, stype)
-</table>
-} 
-
-@fillTable(s: Structure, stype : String) = { 
-	@if(stype=="structure"){
-	<tr>
-		<td>@s.formula</td>
-		<td>@s.mwt</td>
-		<td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
-		<td><span class="badge">@s.atropisomerism</span></td>
-		<td><span class="badge">@s.charge</span></td>
-		@referencetable(GinasApp.getStructureReferences(s), "hi", 6 )
-	</tr>
-	} 
-	@if(stype=="moiety"){ 
-		@for(m <- sub.moieties){
-		<tr>
-			<td>@structureImage(m.structure, 150)</td>
-			<td><span class="badge badge-primary">@m.count</span></td>
-			<td><span class="badge">@m.structure.stereoChemistry</span></td>
-			<td><span class="badge">@m.structure.opticalActivity.toValue()</span></td>
-			<td><span class="badge">@m.structure.atropisomerism</span></td>
-			<td>@m.structure.formula</td>
-			<td>@m.structure.mwt</td>
-			<td><span class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></td>
-			<td><span class="badge">@m.structure.atropisomerism</span></td>
-			<td><span class="badge">@m.structure.charge</span></td>
-			@referencetable(GinasApp.getStructureReferences(m.structure), "hi", 6 )
-		</tr>
-		} 
-	} 
-} 
-
-@ginas(sub.getName(),
-"ix.ginas.models.v1.ChemicalSubstance"){@menu()} {
-<nav class="navbar navbar-default" id="breadcrumb">
-	<div class="container-fluid">
-		<div class="row-fluid">
-			<div class="col-md-12">
-				<ul class="nav nav-pills" id="breadcrumb-list">
-					<li role="presentation" class="active"><a href="#structureDetails">Structure</a></li>
-					@if(sub.moieties.length>0){
-					<li role="presentation"><a href="#moieties">Moieties <span class="badge">@sub.moieties.length</span></a></li> }
-					<li role="presentation"><a href="#names">Names <span class="badge">@sub.names.length</span></a></li>
-					<li role="presentation"><a href="#codes">Codes <span class="badge">@sub.codes.length</span></a></li>
-							@if(GinasApp.resolveRelationships(sub.uuid.toString()).length>0){
-					<li role="presentation"><a href="#relationships" id = "relation">Relationships <span class="badge">@sub.relationships.length</span></a></li>}
-					<li role="presentation"><a href="#refs">References <span class="badge">@sub.references.length</span></a></li>
-				</ul>
-			</div>
-		</div>
-	</div>
-</nav>
-}{
-<div class = "row">
-<div class = "col-md-9">
-<h1>@sub.getName()</h1>
-</div>
-<div class = "col-md-3">
-<h2 class= "pull-right"> @sub.approvalID</h2>
-</div>
-</div>
-<div class="row info" id="structureDetails">
-
-	<h3>
-		<span class="label label-primary label-offset det">Structure</span>
-	</h3>
-	<div class="col-md-5">
-	<div class = "row">
-	@structureImage(sub.structure, 400)
-	</div>
-	<div class = "row">
-	<div class = "col-md-6 col-md-offset-6">
-	<ul class= "form-inline pull-right list-unstyled" id = "exportSave">
-	<li><button type="button" class="btn navbar-btn btn-primary" id = "strucExport"
-					  data-toggle="modal"
-	  				data-target="#structureExport">Export</button></li>
-	<li>
-	
-	<button type="button" class="btn navbar-btn btn-primary" id = "strucSearch"
-					  data-toggle="modal"
-					  data-molurl='@ix.ncats.controllers.routes.App.structure(sub.structure.id,"mol")'
-	  				data-target="#strucModal"><span class="fa fa-search"></span></button>
-	  				</li>
-	  				</ul>
-	  			</div>
-	  			</div>
-	  				</div>
-	<div class="col-md-6">@makeTable(sub.structure, "structure")</div>
-</div>
-@if(sub.moieties.length > 0){
-<div class="row info" id="moieties">
-		<button class="btn btn-primary label-offset det">Moieties&nbsp;<span class="badge head"> @sub.moieties.length</span></button>
-	<div class="col-md-12">@makeTable(sub.structure, "moiety")</div>
-</div>
+@structureImage(s: Structure, size: Integer) = {
+    <img class="struc-thumb img-responsive" alt="Structure of @sub.getName"
+    src='@ix.ncats.controllers.routes.App.structure(s.id, "svg", size)'>
 }
 
-<div class="row info" id="names">
-@names(sub.names)
-</div>
+@makeTable(s: Structure, stype: String) = {
+    <table class="table @stype-Table">
+        <thead>
+            <tr>
+                @if(stype == "moiety") {
+                    <th>Moiety Structure</th>
+                    <th>Moiety Count</th>
+                    <th>Moiety StereoChemistry</th>
+                    <th>Moiety Optical Activity</th>
+                    <th>Moiety Additional Stereochemistry</th>
+                }
+                <th>Molecular Formula</th>
+                <th>Molecular Weight</th>
+                <th>Defined Stereocenters</th>
+                <th>EZ Centers</th>
+                <th>Charge</th>
+                <th>Reference</th>
 
-@if(sub.codes.length > 0){
-<div class="row info" id="codes">
-@codes(sub.codes)
-</div>
-} 
-@if(GinasApp.resolveRelationships(sub.uuid.toString()).length > 0){
-<div class="row info" id="relationships">
-@relationships(sub.relationships)
-</div>
+            </tr>
+        </thead>
+        @fillTable(s, stype)
+    </table>
 }
 
+@fillTable(s: Structure, stype: String) = {
+@if(stype == "structure") {
+    <tr>
+        <td>@s.formula</td>
+        <td>@s.mwt</td>
+        <td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
+        <td><span class="badge">@s.atropisomerism</span></td>
+        <td><span class="badge">@s.charge</span></td>
+        @referencetable(GinasApp.getStructureReferences(s), "hi", 6)
+    </tr>
+}
+@if(stype == "moiety") {
+    @for(m <- sub.moieties) {
+        <tr>
+            <td>@structureImage(m.structure, 150)</td>
+            <td><span class="badge badge-primary">@m.count</span></td>
+            <td><span class="badge">@m.structure.stereoChemistry</span></td>
+            <td><span class="badge">@m.structure.opticalActivity.toValue()</span></td>
+            <td><span class="badge">@m.structure.atropisomerism</span></td>
+            <td>@m.structure.formula</td>
+            <td>@m.structure.mwt</td>
+            <td><span class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></td>
+            <td><span class="badge">@m.structure.atropisomerism</span></td>
+            <td><span class="badge">@m.structure.charge</span></td>
+            @referencetable(GinasApp.getStructureReferences(m.structure), "hi", 6)
+        </tr>
+    }
+}
+}
+
+@ginas(sub.getName, "ix.ginas.models.v1.ChemicalSubstance") {
+    @menu()
+} {
+    <nav class="navbar navbar-default" id="breadcrumb">
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="col-md-12">
+                    <ul class="nav nav-pills" id="breadcrumb-list">
+                        <li role="presentation" class="active"><a href="#structureDetails">Structure</a></li>
+                        @if(sub.moieties.length > 0) {
+                            <li role="presentation"><a href="#moieties">
+                                Moieties <span class="badge">@sub.moieties.length</span></a></li>
+                        }
+                        <li role="presentation"><a href="#names">
+                            Names <span class="badge">@sub.names.length</span></a></li>
+                        @if(sub.codes.length > 0) {
+                            <li role="presentation"><a href="#codes">
+                                Codes <span class="badge">@sub.codes.length</span></a></li>
+                        }
+                        @if(GinasApp.resolveRelationships(sub.uuid.toString()).length > 0) {
+                            <li role="presentation"><a href="#relationships" id = "relation">
+                                Relationships <span class="badge">@sub.relationships.length</span></a></li>
+                        }
+                        <li role="presentation"><a href="#refs">
+                            References <span class="badge">@sub.references.length</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+} {
+    <div class = "row">
+        <div class = "col-md-9">
+            <h1>@sub.getName()</h1>
+        </div>
+        <div class = "col-md-3">
+            <h2 class= "pull-right"> @sub.approvalID</h2>
+        </div>
+    </div>
+    <div class="row info" id="structureDetails">
+
+        <h3>
+            <span class="label label-primary label-offset" id = "struc-label">Structure</span>
+        </h3>
+        <div class="col-md-5">
+            <div class = "row">
+            @structureImage(sub.structure, 400)
+            </div>
+            <div class = "row">
+                <div class = "col-md-6 col-md-offset-6">
+                    <ul class= "form-inline pull-right list-unstyled" id = "exportSave">
+                        <li><button type="button" class="btn navbar-btn btn-primary" id = "strucExport"
+                        data-toggle="modal"
+                        data-target="#structureExport">Export</button></li>
+                        <li>
+
+                            <button type="button" class="btn navbar-btn btn-primary" id = "strucSearch"
+                            data-toggle="modal"
+                            data-molurl='@ix.ncats.controllers.routes.App.structure(sub.structure.id, "mol")'
+                            data-target="#strucModal"><span class="fa fa-search"></span></button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">@makeTable(sub.structure, "structure")</div>
+    </div>
+    @if(sub.moieties.length > 0) {
+        <div class="row info" id="moieties">
+            <button class="btn btn-primary label-offset det">
+                Moieties&nbsp;<span class="badge"> @sub.moieties.length</span></button>
+            <div class="col-md-12">@makeTable(sub.structure, "moiety")</div>
+        </div>
+    }
+
+    <div class="row info" id="names">
+    @names(sub.names)
+    </div>
+
+    @if(sub.codes.length > 0) {
+        <div class="row info" id="codes">
+        @codes(sub.codes)
+        </div>
+    }
+    @if(GinasApp.resolveRelationships(sub.uuid.toString()).length > 0) {
+        <div class="row info" id="relationships">
+        @relationships(sub.relationships)
+        </div>
+    }
 
 
-<div class="row info" id="refs">
-@references(sub.references)
-</div>
-@molExport(sub.structure.molfile, sub.getName(), sub.approvalID)
+
+    <div class="row info" id="refs">
+    @references(sub.references)
+    </div>
+    @molexport(sub.structure.molfile, sub.getName(), sub.approvalID)
+
 
 }

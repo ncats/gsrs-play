@@ -1,0 +1,69 @@
+@import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance, MixtureSubstance, Substance}
+@import ix.ncats.controllers.App.FacetDecorator
+
+
+@import ix.ginas.models.v1.StructurallyDiverseSubstance
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+        facets: Array[FacetDecorator], substancesList: List[Substance])
+
+@content("Substances", "ix.ginas.models.v1.Substance", ix.ginas.controllers.routes.GinasApp.substances().url,
+    current, rows, total, pages, facets) {
+    @menu()
+} {
+    <div></div>
+} {
+
+    <div class= "panel-body">
+        <div class = "row collapse hidden-xs" id ="grid">
+        @for(sub <- substancesList) {
+            @sub match {
+                case chem: ChemicalSubstance => {
+                    @chemthumb(chem)
+                }
+                case prot: ProteinSubstance => {
+                    @proteinthumb(prot)
+
+                }
+                case mix: MixtureSubstance => {
+                    @mixturethumb(mix)
+
+                }
+                case _ => {
+
+                }
+            }
+
+
+        }
+        </div>
+
+        <div class = "row collapse in" id ="list">
+        @for(sub <- substancesList) {
+            @sub match {
+                case chem: ChemicalSubstance => {
+                    @chemlist(chem)
+                }
+                case prot: ProteinSubstance => {
+                    @proteinlist(prot)
+
+                }
+                case mix: MixtureSubstance => {
+                    @mixlist(mix)
+
+                }
+                case diverse: StructurallyDiverseSubstance => {
+                    @diverselist(diverse)
+
+                }
+                case _ => {
+
+                }
+            }
+
+
+        }
+
+        </div>
+    </div>
+}
+

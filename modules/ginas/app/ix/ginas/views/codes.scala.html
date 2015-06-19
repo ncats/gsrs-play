@@ -1,28 +1,27 @@
-@import ix.ginas.models.v1.Code
-@import ix.ginas.controllers.GinasApp
 
-@import helper._ 
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.Code
 
 
 @(codes: List[Code])
-		<button class="btn btn-primary label-offset det">Codes&nbsp;<span class="badge head"> @codes.length</span></button>
-   <div class="col-md-12">
-      <table class="table table-striped" id="namesTable">
-         <thead>
+<button class="btn btn-primary label-offset det">Codes&nbsp;<span class="badge"> @codes.length</span></button>
+<div class="col-md-12">
+    <table class="table table-striped" id="namesTable">
+        <thead>
             <tr>
-               <th>Code</th>
-               <th>Type</th>
-               <th>Description</th>
-               <th>References</th>
+                <th>Code</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>References</th>
             </tr>
-         </thead>
-         @for(c <- codes) {
-         <tr>
-            <td><a href="@c.url">@c.code</a></td>
-            <td>@GinasApp.getType(c)</td>
-            <td>@c.comments</td>
-            @referencetable(c.references, c.code, 4)
-         </tr>
-         }
-      </table>
-   </div>
+        </thead>
+        @for(c <- codes) {
+            <tr>
+                <td><a href="@c.url">@c.code</a></td>
+                <td>@GinasApp.getType(c)</td>
+                <td>@c.comments</td>
+                @referencetable(c.references, c.code, 4)
+            </tr>
+        }
+    </table>
+</div>

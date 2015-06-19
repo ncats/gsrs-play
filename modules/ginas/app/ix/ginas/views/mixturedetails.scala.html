@@ -1,0 +1,71 @@
+@import ix.core.models.Structure
+@import ix.ginas.controllers.GinasApp
+
+@(sub: ix.ginas.models.v1.MixtureSubstance)
+
+
+@ginas(sub.getName, "ix.ginas.models.v1.MixtureSubstance") {
+    @menu()
+} {
+    <nav class="navbar navbar-default" id="breadcrumb">
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="col-md-12">
+                    <ul class="nav nav-pills" id="breadcrumb-list">
+                        @if(sub.mixture.size() > 0) {
+                            <li role="presentation"><a href="#components">
+                                Mixture Components <span class="badge">@sub.mixture.size()</span></a></li>
+                        }
+                        <li role="presentation"><a href="#names">
+                            Names <span class="badge">@sub.names.size()</span></a></li>
+                        @if(sub.codes.size() > 0) {
+                            <li role="presentation"><a href="#codes">
+                                Codes <span class="badge">@sub.codes.size()</span></a></li>
+                        }
+                        @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
+                            <li role="presentation"><a href="#relationships" id = "relation">
+                                Relationships <span class="badge">@sub.relationships.size()</span></a></li>
+                        }
+                        <li role="presentation"><a href="#refs">
+                            References <span class="badge">@sub.references.size()</span></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+} {
+    <div class = "row">
+        <div class = "col-md-9">
+            <h1>@sub.getName()</h1>
+        </div>
+        <div class = "col-md-3">
+            <h2 class= "pull-right"> @sub.approvalID</h2>
+        </div>
+    </div>
+    <div class="row info" id="components">
+    @components(sub.mixture)
+    </div>
+
+    <div class="row info" id="names">
+    @names(sub.names)
+    </div>
+
+    @if(sub.codes.size() > 0) {
+        <div class="row info" id="codes">
+        @codes(sub.codes)
+        </div>
+    }
+    @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
+        <div class="row info" id="relationships">
+        @relationships(sub.relationships)
+        </div>
+    }
+
+
+
+    <div class="row info" id="refs">
+    @references(sub.references)
+    </div>
+
+
+}

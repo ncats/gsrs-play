@@ -1,55 +1,55 @@
-
 <!-- BANNER AND MENU -->
 <nav class="navbar navbar-default">
-	<div class="container-fluid" id="full">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle collapsed"
-				data-toggle="collapse" data-target="#menubar">
-				<span class="sr-only">Toggle Navigation</span> <i class="fa fa-bars"
-					id="menuicon"></i>
-			</button>
-		</div>
+    <div class="container-fluid" id="full">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed"
+            data-toggle="collapse" data-target="#menubar">
+                <span class="sr-only">Toggle Navigation</span> <i class="fa fa-bars"
+            id="menuicon"></i>
+            </button>
+        </div>
 
-
-		<div class="collapse navbar-collapse navbar-default" id="menubar">
-			<ul class="nav navbar-nav pull-left">
-				<li><a href="@ix.ginas.controllers.routes.GinasFactory.index()"><span>Home</span></a></li>
-				<li><a href="http://ginas.hres.ca/ginas/#view=register"><span>Register Substance</span></a></li>
-				<li><a href="http://tripod.nih.gov/pub/ginasISO/"><span>Download</span></a></li>
-				<li><a id = "bug-link" data-toggle="modal" data-target="#screenshot" role="button">Report a Bug</a></li>
-				 <li><button type="button" class="btn navbar-btn btn-default"
-					  data-toggle="modal"
-	  				data-target="#strucModal">Structure Search</button>&nbsp;</li>  
-				<li>
-				<form class="form-inline main-search" role="search" method="GET"
-				action="@ix.ginas.controllers.routes.GinasApp.search(null)" id = "search-bar">
-				<div class="input-group">
-				<input type="text" class="form-control typeahead" id="search"
-						title="Search" placeholder="Search..." name="q"> 
-						<span class="input-group-btn">
-						<button class="btn btn-default" id="search" type="search"
-							value="submit">
-							<span class="fa fa-search"></span>
-						</button>
-					</span>
-				</div>
-			</form>
-			</li>
-			</ul>
-<div class="nav navbar-nav pull-right" id ="menu-login">
-  <ul class="nav navbar-nav pull-right">
-    @if(!play.Play.isProd()) {
-    <li><a href= "@ix.ginas.controllers.routes.GinasLoad.load()" id ="load-button"><button  class="btn btn-default">Load Data</button></a></li>
-    }
-<li><a href= "@ix.ginas.controllers.routes.GinasFactory.login()" id ="login-button"><button  class="btn btn-default">Login</button></a></li>
-</ul>
-</div>
-		</div>
-		<!-- close input group  -->
-	</div>
-	@ix.ncats.views.html.typeahead(Array("Name","Substance_Class"))
-	@screenshot()
-	@report()
-
+        <div class="collapse navbar-collapse navbar-default" id="menubar">
+            <ul class="nav navbar-nav pull-left">
+                <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()"><span>Home</span></a></li>
+                <li><a href="http://ginas.hres.ca/ginas/#view=register"><span>Register Substance</span></a></li>
+                <li><a href="http://tripod.nih.gov/pub/ginasISO/"><span>Download</span></a></li>
+                <li><a id = "bug-link" data-toggle="modal" data-target="#screenshot" role="button">Report a Bug</a></li>
+                @*<li><button type="button" class="btn navbar-btn btn-default"
+                data-toggle="modal"
+                data-target="#strucModal">Structure Search</button> &nbsp;
+                </li>*@
+                <li><a href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()"><span>Structure Search</span></a></li>
+                <li>
+                    <form class="form-inline main-search" role="search" method="GET"
+                    action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id = "search-bar">
+                        <div class="input-group">
+                            <input type="text" class="form-control typeahead" id="search"
+                            title="Search" placeholder="Search..." name="q">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" id="search" type="search"
+                                value="submit">
+                                    <span class="fa fa-search"></span>
+                                </button>
+                            </span>
+                        </div>
+                    </form>
+                </li>
+            </ul>
+            <div class="nav navbar-nav pull-right" id ="menu-login">
+                <ul class="nav navbar-nav pull-right">
+                    @if(!play.Play.isProd()) {
+                        <li><a href= "@ix.ginas.controllers.routes.GinasLoad.load()" id ="load-button"><button class="btn btn-default">
+                            Load Data</button></a></li>
+                    }
+                <li><a href= "@ix.ginas.controllers.routes.GinasFactory.login()" id ="login-button"><button class="btn btn-default">Login</button></a></li>
+                </ul>
+            </div>
+        </div>
+            <!-- close input group  -->
+    </div>
+    @ix.ncats.views.html.typeahead(Array("Name", "Substance_Class"))
+    @screenshot()
+    @report()
 
 </nav>

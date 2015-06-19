@@ -1,6 +1,6 @@
 @import ix.ncats.controllers.App
 
-@(current: Int, rows: Int, total: Int, pages: Array[Int])
+@(current: Int, rows: Int, total: Int, pages: Array[Int])(trailer: Html)
 
 @item(page: Int) = {
 <li><a href="@App.page(rows,page)">
@@ -17,20 +17,20 @@
     @if(pages.length > 1) {
     <div class="btn-group" role="group">
       <ul class="pagination">
-    @if(current <= 1) {
-       <li class="disabled">
+      @if(current <= 1) {
+        <li class="disabled">
          <a href='@App.page(rows,current)' aria-label="Previous">
 	   <span aria-hidden="true" class="fa fa-angle-double-left"></span>   
          </a>
-       </li>
-    } else {
-       <li>
+        </li>
+      } else {
+        <li>
             <a href='@App.page(rows, current-1)' aria-label="Previous">
               <span aria-hidden="true" class="fa fa-angle-double-left"></span>
             </a>
-       </li>
-    }
-    @for(i <- pages) {
+        </li>
+      }
+      @for(i <- pages) {
         @if(i == 0) {
            <li class="disabled">
              <a href="#"><span><i class="fa fa-ellipsis-h"></i></span></a>
@@ -44,38 +44,28 @@
               @item(i)
            }
         }
-     }
-     @if(current >= pages(pages.length-1)) {                  
+      }
+      @if(current >= pages(pages.length-1)) {                  
          <li class="disabled">
            <a href='@App.page(rows,current)' aria-label="Next">
              <span aria-hidden="true" class="fa fa-angle-double-right"></span>
            </a>
          </li>
-     } else {
+      } else {
          <li>
            <a href='@App.page(rows,current+1)' aria-label="Next">
              <span aria-hidden="true" class="fa fa-angle-double-right"></span>
            </a>
          </li>
-     }
-  </ul>
-
+      }
+      </ul>
     </div>
-
+    @if(trailer.body.nonEmpty) {    
+       <div class="btn-group pull-right" role="group">
+         @trailer
+       </div>
     }
-
-      <div class="btn-group pull-right" role="group">
-          <h3>
-          @if(request.uri.contains("?")) {
-              <a class="btn btn-default" href="@request.uri&action=download" role="button">
-                  <i class="fa fa-download fa-lg "></i></a>
-          } else {
-              <a class="btn btn-default" href="@request.uri?action=download" role="button">
-                  <i class="fa fa-download fa-lg "></i></a>
-          }
-          </h3>
-      </div>
-
+  }
   </div>
 </nav>
 

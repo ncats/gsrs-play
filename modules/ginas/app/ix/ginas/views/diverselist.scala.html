@@ -1,0 +1,74 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.MixtureSubstance
+
+@import ix.ginas.models.v1.StructurallyDiverse
+@import ix.ginas.models.v1.StructurallyDiverseSubstance
+@(sub: StructurallyDiverseSubstance)
+
+<div class="panel panel-default sub-list">
+    <div class="panel-heading sub-title">
+        <div class = "row">
+            <div class = "col-md-10">
+                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">@sub.getName()</a></h3>
+            </div>
+            <div class = "col-md-2 prot-approvID">
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))"><code>@sub.approvalID</code></a></h4>
+            </div>
+        </div>
+    </div>
+    <div class= "panel-body list-item">
+        <div class = "row">
+            <div class = "col-md-3 text-center">
+                <div class = "row">
+
+                        <i class="fa fa-puzzle-piece fa-4x "></i>
+                    </div>
+                </div>
+            <div class = "col-md-7">
+            @if(sub.names.size()>0) {
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <h5>Other Names:</h5>
+                    </div>
+                    <div class = "col-md-9">
+                        <h5>@ix.ginas.controllers.GinasApp.namesList(sub.names)</h5>
+                    </div>
+                </div>
+            }
+                @if(sub.codes.size()>0){
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <h5>Codes:</h5>
+                    </div>
+                    <div class = "col-md-9">
+                        <h5>@ix.ginas.controllers.GinasApp.codesList(sub.codes)</h5>
+                    </div>
+                </div>
+                }
+                @if(sub.structurallyDiverse.part.size() > 0){
+                    <div class = "row">
+                        <div class = "col-md-3">
+                            <h5>Components:</h5>
+                        </div>
+                        <div class = "col-md-1">
+                            <span class = "label label-primary label-rounded">@sub.structurallyDiverse.part.size()</span>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class = "col-md-2">
+
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date approved: <h6>@sub.approved</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Last modified: <h6>@sub.approved</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
