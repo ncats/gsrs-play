@@ -172,13 +172,13 @@ public class GinasApp extends App {
 
     static class GinasFacetDecorator extends FacetDecorator {
         GinasFacetDecorator (Facet facet) {
-            super (facet, true, 6);
+            super (facet, true, 10);
         }
 
         @Override
         public String name () {
             String n = super.name();
-            if ("SubstanceStereoChemistry".equals(n))
+            if ("SubstanceStereoChemistry".equalsIgnoreCase(n))
                 return "Stereo Chemistry";
             return n.trim();
         }
@@ -187,6 +187,9 @@ public class GinasApp extends App {
         public String label (final int i) {
             final String label = super.label(i);
             final String name = super.name();
+            if ("StructurallyDiverse".equalsIgnoreCase(label))
+                return "Structurally Diverse";
+
             return label;
         }
     }

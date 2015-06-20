@@ -1168,6 +1168,7 @@ public class App extends Controller {
         }
         
         return renderer.render
-            (page, rows, count, pages, result.getFacets(), results);
+            (page, rows, count, pages, result != null ? result.getFacets()
+             : new ArrayList<TextIndexer.Facet>(), results);
     }
 }

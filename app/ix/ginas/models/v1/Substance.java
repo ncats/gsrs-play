@@ -52,7 +52,7 @@ public class Substance extends Ginas {
         specifiedSubstanceG3,
         specifiedSubstanceG4,
         unspecifiedSubstance,   
-        VIRTUAL
+        concept
     }
     
     @JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
@@ -131,7 +131,7 @@ public class Substance extends Ginas {
     protected transient ObjectMapper mapper = new ObjectMapper ();
     
     public Substance () {
-        this (SubstanceClass.VIRTUAL);
+        this (SubstanceClass.concept);
     }
     public Substance (SubstanceClass subcls) {
         substanceClass = subcls;
