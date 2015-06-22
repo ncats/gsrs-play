@@ -39,4 +39,14 @@ public class StructurallyDiverse extends Ginas {
     public SubstanceReference parentSubstance;
 
     public StructurallyDiverse () {}
+    
+    public String getDisplayParts(){
+    	String ret="";
+    	if(part!=null){
+    		for(Keyword k: part){
+    			ret+=k.getValue();
+    		}
+    	}
+    	return ret;
+    }
 }
