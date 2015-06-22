@@ -272,4 +272,34 @@ public class Substance extends Ginas {
                         +" invalid relationship(s)!");
         }
     }
+    
+    public boolean isNonSubstanceConcept(){
+    	if(this.substanceClass.equals("concept")){
+    		return 	!isSubstanceVariant();
+    	}
+    	return false;
+    }
+    public boolean isSubstanceVariant(){
+    	for(Relationship r:relationships){
+			if(r.type.equals("SUBSTANCE->SUB_CONCEPT")){
+				return true;
+			}
+		}
+		return false;
+    }
+    
+    /**
+     * Returns parent substance concept record for substance variant concepts.
+     * 
+     * 
+     * @return
+     */
+    public SubstanceReference getParentSubstanceReference(){
+    	for(Relationship r:relationships){
+			if(r.type.equals("SUBSTANCE->SUB_CONCEPT")){
+				return r.relatedSubstance;
+			}
+		}
+    	return null;
+    }
 }
