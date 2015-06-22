@@ -24,8 +24,8 @@
         </thead>
         @for(r <- relationships) {
             <tr>
-                @if(SubstanceFactory.getSubstanceByApprovalID(r.relatedSubstance.approvalID) != null) {
-                    @defining(SubstanceFactory.getSubstanceByApprovalID(r.relatedSubstance.approvalID)) { rs =>
+                @if(SubstanceFactory.getFullSubstance(r.relatedSubstance) != null) {
+                    @defining(SubstanceFactory.getFullSubstance(r.relatedSubstance)) { rs =>
                         @if(!rs.getClass.toString.equals("ix.ginas.models.v1.ChemicalSubstance")){
                         <td></td>
 
@@ -36,7 +36,7 @@
                         </td>
                             }
                         <td>
-                            <a href="@ix.ginas.controllers.routes.GinasApp.chemical(r.relatedSubstance.approvalID)">@r.relatedSubstance.refPname</a>
+                            	<a href="@ix.ginas.controllers.routes.GinasApp.substance(r.relatedSubstance.getLinkingID())">@r.relatedSubstance.refPname</a>
                         </td>
                     }
                 } else {

@@ -62,15 +62,16 @@
         }
         @if(sub.structurallyDiverse.sourceMaterialType != null) {<li>Source Materials Type: @sub.structurallyDiverse.sourceMaterialType</li>}
         @if(sub.structurallyDiverse.sourceMaterialState != null) {<li>Source Materials State: @sub.structurallyDiverse.sourceMaterialState</li>}
-        @if(sub.structurallyDiverse.organismFamily != null) {<li>Organism Family: @sub.structurallyDiverse.organismFamily</li>}
-        @if(sub.structurallyDiverse.organismGenus != null) {<li>Organism Genus : @sub.structurallyDiverse.organismGenus</li>}
-        @if(sub.structurallyDiverse.organismSpecies != null) {<li>Organism Species: @sub.structurallyDiverse.organismSpecies</li>}
-        @if(sub.structurallyDiverse.infraSpecificType != null) {<li>Infra Specific Type: @sub.structurallyDiverse.infraSpecificType</li>}
-        @if(sub.structurallyDiverse.infraSpecificName != null) {<li>Infra Specific Name: @sub.structurallyDiverse.infraSpecificName</li>}
+        @if(sub.structurallyDiverse.organismFamily != null) {<li>Organism Family: <a href="../substances?facet=Family/@sub.structurallyDiverse.organismFamily">@sub.structurallyDiverse.organismFamily</a></li>}
+        @if(sub.structurallyDiverse.organismGenus != null) {<li>Organism Genus : <a href="../substances?facet=Genus/@sub.structurallyDiverse.organismGenus">@sub.structurallyDiverse.organismGenus</a></li>}
+        @if(sub.structurallyDiverse.organismSpecies != null) {<li>Organism Species: <a href="../substances?facet=Species/@sub.structurallyDiverse.organismSpecies">@sub.structurallyDiverse.organismSpecies</a></li>}
+        @if(sub.structurallyDiverse.organismAuthor != null) {<li>Author: @sub.structurallyDiverse.organismAuthor</li>}
+        @if(sub.structurallyDiverse.infraSpecificType != null) {<li>Infraspecific Type: @sub.structurallyDiverse.infraSpecificType</li>}
+        @if(sub.structurallyDiverse.infraSpecificName != null) {<li>Infraspecific Name: @sub.structurallyDiverse.infraSpecificName</li>}
         @if(sub.structurallyDiverse.developmentalStage != null) {<li>Development Stage: @sub.structurallyDiverse.developmentalStage</li>}
         @if(sub.structurallyDiverse.partLocation != null) {<li>Part Location: @sub.structurallyDiverse.partLocation</li>}
         @if(sub.structurallyDiverse.part != null) {
-        	<li>Part Location: @sub.structurallyDiverse.getDisplayParts()</li>
+        	<li>Part: @sub.structurallyDiverse.getDisplayParts()</li>
         }                
         
         

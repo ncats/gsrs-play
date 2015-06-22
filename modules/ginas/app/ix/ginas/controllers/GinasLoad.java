@@ -309,6 +309,27 @@ public class GinasLoad extends App {
                                 +cls.getName());
                 }
                 break;
+            case concept:
+                if (cls == null) {
+                    Substance sub =
+                        mapper.treeToValue
+                        (tree, Substance.class);
+                    sub.save();
+                    return sub;
+                }
+                else if (cls.isAssignableFrom
+                         (Substance.class)) {
+                	Substance sub =
+                        (Substance)mapper
+                        .treeToValue(tree, cls);
+                    sub.save();
+                    return sub;
+                }
+                else {
+                    Logger.warn(tree.get("uuid").asText()+" is not of type "
+                                +cls.getName());
+                }
+                break;
                 
             default:
                 Logger.warn("Skipping substance class "+type);

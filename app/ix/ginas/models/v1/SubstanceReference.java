@@ -28,4 +28,14 @@ public class SubstanceReference extends Ginas {
     public String approvalID;
 
     public SubstanceReference () {}
+    
+    public String getLinkingID(){
+    	if(approvalID!=null){
+    		return approvalID;
+    	}
+    	if(refuuid!=null){
+    		return refuuid.split("-")[0];
+    	}
+    	return refPname;
+    }
 }

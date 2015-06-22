@@ -1,9 +1,7 @@
 @import ix.ginas.controllers.GinasApp
-@import ix.ginas.models.v1.MixtureSubstance
 
-@import ix.ginas.models.v1.StructurallyDiverse
-@import ix.ginas.models.v1.StructurallyDiverseSubstance
-@(sub: StructurallyDiverseSubstance)
+@import ix.ginas.models.v1.Substance
+@(sub: Substance)
 
 <div class="panel panel-default sub-list">
     <div class="panel-heading sub-title">
@@ -45,24 +43,10 @@
                     </div>
                 </div>
                 }
-                @if(sub.structurallyDiverse.part.size() > 0){
-                    <div class = "row">
-                        <div class = "col-md-3">
-                            <h5>Part:</h5>
-                        </div>
-                        <div class = "col-md-1">
-                            <span class = "label label-primary label-rounded">@sub.structurallyDiverse.getDisplayParts()</span>
-                        </div>
-                    </div>
-                }
             </div>
             <div class = "col-md-2">
 
-                <div class = "row">
-                    <div class = "col-md-12">
-                        Date approved: <h6>@sub.approved</h6>
-                    </div>
-                </div>
+               
                 <div class = "row">
                     <div class = "col-md-12">
                         Last modified: <h6>@sub.approved</h6>

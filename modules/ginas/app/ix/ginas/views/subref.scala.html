@@ -1,23 +1,21 @@
 @import ix.ginas.controllers.v1.SubstanceFactory
 @import ix.ginas.models.v1.{ChemicalSubstance, SubstanceReference}
 @(sub: SubstanceReference)
-    @defining(SubstanceFactory.getSubstanceByApprovalID(sub.approvalID)) { ref =>
+    @defining(SubstanceFactory.getFullSubstance(sub)) { ref =>
         <div class="col-md-3 text-center thumb-col">
             <div class="panel panel-default">
                 <div class = "panel-body">
-                    @if(SubstanceFactory.getSubstanceByApprovalID(ref.approvalID) != null) {
-                        @defining(SubstanceFactory.getSubstanceByApprovalID(ref.approvalID)) { rs =>
-                            @if(!rs.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
+                    @if(ref != null) {
+                            @if(!ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
+                            
                             }else{
-
-                                    <img class="struc-thumb img-responsive" alt="Structure of @rs.getName()"
-                                    src='@ix.ncats.controllers.routes.App.structure(rs.asInstanceOf[ChemicalSubstance].structure.id, "svg", 150)'>
-
+                                    <img class="struc-thumb img-responsive" alt="Structure of @ref.getName()"
+                                    src='@ix.ncats.controllers.routes.App.structure(ref.asInstanceOf[ChemicalSubstance].structure.id, "svg", 150)'>
                             }
                         </div>
                 <div class ="panel-footer">
                     <a href="@ix.ginas.controllers.routes.GinasApp.substance(ref.approvalID)">@sub.refPname</a>
-                    }
+                    
                     } else {
                     <i>Substance not yet imported</i> <br />
                 @sub.refPname
