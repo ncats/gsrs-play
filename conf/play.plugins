@@ -5,9 +5,10 @@
 # inxight plugins
 # this plugin must be first!
 2001:ix.core.plugins.IxContext
-2002:ix.core.plugins.PersistenceQueue
-2005:ix.core.plugins.TextIndexerPlugin
-2010:ix.core.plugins.EutilsPlugin
-2015:ix.core.plugins.PayloadPlugin
+2005:ix.core.plugins.IxCache
+2010:ix.core.plugins.PersistenceQueue
+2015:ix.core.plugins.TextIndexerPlugin
+2020:ix.core.plugins.EutilsPlugin
+2025:ix.core.plugins.PayloadPlugin
 3000:ix.core.plugins.StructureIndexerPlugin
 3005:ix.core.plugins.StructureProcessorPlugin

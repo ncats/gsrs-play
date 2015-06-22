@@ -147,4 +147,10 @@ object ApplicationBuild extends Build {
       javacOptions ++= javaBuildOptions
   ).dependsOn(qhts).aggregate(qhts)
 
+  val cbc = Project("cbc", file("modules/cbc"))
+    .enablePlugins(PlayJava).settings(
+    version := appVersion,
+      libraryDependencies ++= commonDependencies,
+      javacOptions ++= javaBuildOptions
+  ).dependsOn(ncats).aggregate(ncats)
 }

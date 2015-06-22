@@ -124,48 +124,34 @@
             </div>
         }
 
-    <script>
+<script>
 function dismissQuery () {
     location.assign('@resetAction');
-                }
+}
 
-                $(document).ready(function () {
-                //   $('a[data-toggle="tab"]').on('show.bs.tab', function(e) {
-                   //       console.log('tab shown: '+e.target);
-                       //window.dispatchEvent(new Event('resize'));
-                //    });
-
-                    @defining(App.checkStatus()) { status =>
-            @if(status != null) {
+$(document).ready(function () {
+   @defining(App.checkStatus()) { status =>
+      @if(status != null) {
          $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
          var delay = 2000; // 2s
          var checkStatus;
 
          checkStatus = window.setInterval(function () {
-
-      	     $.get('@status
-
-                                '+'@App.queryString("cutoff")
-                ', function(data) {
-                             if (data.status == 'Done' || data.status == 'Failed') {
-                            window.clearInterval(checkStatus);
-                                    $('#searching').html('');
-                            if(data.count > @total
-
-                                ) {
-                                               location.reload(true);
-                                            }
-                                         }
-                                         else {
-                                             console.log(data.status);
-                                                console.log('status '+data.count);
-                                            $('#searching').html('<i class="fa fa-spinner fa-spin"></i>searching... '+data.count+' matches');
-                                         }
-                                         });
-                                         }, delay);
-                                      }
-        }
-
-
-                });
-                </script>
+      	     $.get('@status'+'@App.queryString("cutoff")', function(data) {
+                  if (data.status == 'Done' || data.status == 'Failed') {
+                     window.clearInterval(checkStatus);
+                     $('#searching').html('');
+                     if(data.count > @total) {
+                        location.reload(true);
+                     }
+                  } else {
+                     console.log(data.status);
+                     console.log('status '+data.count);
+                     $('#searching').html('<i class="fa fa-spinner fa-spin"></i>searching... '+data.count+' matches');
+                  }
+              });
+          }, delay);
+       }
+  }
+});
+</script>

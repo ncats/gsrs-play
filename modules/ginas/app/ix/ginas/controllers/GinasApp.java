@@ -263,20 +263,16 @@ public class GinasApp extends App {
         final String key = "substances/"+Util.sha1(request ());
 
         if (request().queryString().containsKey("facet") || q != null) {
-            final TextIndexer.SearchResult result = getOrElse
-                    (key, new Callable<TextIndexer.SearchResult> () {
-                        public TextIndexer.SearchResult call ()
-                                throws Exception {
-                            Logger.debug("Cache missed: "+key);
-                            return getSearchResult
-                                    (Substance.class, q, total);
-                        }
-                    });
-
+            final TextIndexer.SearchResult result =
+                getSearchResult (Substance.class, q, total);
+            
+            Logger.debug("_substance: q="+q+" rows="+rows+" page="+page+" => "+result+" finished? "+result.finished());
             if (result.finished()) {
+                final String k = key+"/result";
                 return getOrElse
-                        (key+"/result", new Callable<Result> () {
+                        (k, new Callable<Result> () {
                             public Result call () throws Exception {
+                                Logger.debug("Cache missed: "+k);
                                 return createSubstanceResult
                                         (result, rows, page);
                             }

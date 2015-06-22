@@ -10,7 +10,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import play.Logger;
-import play.cache.Cache;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Call;
@@ -42,6 +41,7 @@ import static tripod.chem.indexer.StructureIndexer.*;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.IxContext;
+import ix.core.plugins.IxCache;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
@@ -71,14 +71,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+
 /**
  * Basic plumbing for an App
  */
 public class App extends Controller {
-    public static final int CACHE_TIMEOUT =
-        play.Play.application()
-        .configuration().getInt("ix.cache.time", 24*60*60); // 1 day
-
+    static final String APP_CACHE = App.class.getName();
+    
     static final String RENDERER_URL =
         play.Play.application()
         .configuration().getString("ix.structure.renderer.url");
@@ -493,17 +492,15 @@ public class App extends Controller {
         return getSearchResult (indexer, kind, q, total, query);
     }
 
-    public static SearchResult getSearchResult
-        (final TextIndexer indexer, final Class kind,
-         final String q, final int total, final Map<String, String[]> query) {
-        
+    public static String signature (String q, Map<String, String[]> query) {
         List<String> qfacets = new ArrayList<String>();
         if (query.get("facet") != null) {
             for (String f : query.get("facet"))
                 qfacets.add(f);
         }
         
-        final boolean hasFacets = q != null && q.indexOf('/') > 0;
+        final boolean hasFacets = q != null
+            && q.indexOf('/') > 0 && q.indexOf("\"") < 0;
         if (hasFacets) {
             // treat this as facet
             qfacets.add("MeSH/"+q);
@@ -519,8 +516,18 @@ public class App extends Controller {
             args.add(f);
         Collections.sort(args);
         
-        // filtering
-        try {
+        return Util.sha1(args.toArray(new String[0])).substring(0, 15); 
+    }
+
+    public static SearchResult getSearchResult
+        (final TextIndexer indexer, final Class kind,
+         final String q, final int total, final Map<String, String[]> query) {
+        
+        final String sha1 = signature (q, query);
+        final boolean hasFacets = q != null
+            && q.indexOf('/') > 0 && q.indexOf("\"") < 0;
+        
+        try {       
             long start = System.currentTimeMillis();
             SearchResult result;
             if (indexer != textIndexer) {
@@ -531,42 +538,44 @@ public class App extends Controller {
                      total, 0, FACET_DIM, query);
             }
             else {
-                String sha1 = Util.sha1(args.toArray(new String[0]));
-                /*
-                Logger.debug("request sha1: "+sha1);
-                for (String a : args) {
-                    Logger.debug("** "+a);
-                }
-                */
+                Logger.debug("request sha1: "+sha1+" cached? "
+                             +IxCache.contains(sha1));
+
                 result = getOrElse
                     (sha1, new Callable<SearchResult>() {
                             public SearchResult call () throws Exception {
+                                Logger.debug("Cache 1 missed: "+sha1);
                                 return SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
                             }
                         });
-                
+
+                /*
                 if (hasFacets && result.count() == 0) {
                     Logger.debug("No results found for facet; "
                                  +"retry as just query: "+q);
                     // empty result.. perhaps the query contains /'s
-                    Cache.remove(sha1); // clear cache
+                    IxCache.remove(sha1); // clear cache
                     result = getOrElse
                         (sha1, new Callable<SearchResult>() {
                                 public SearchResult call ()
                                     throws Exception {
+                                    Logger.debug("Cache 2 missed: "+sha1);
                                     return SearchFactory.search
                                     (kind, q, total, 0, FACET_DIM,
                                      request().queryString());
                                 }
                             });
                 }
+                */
+                Logger.debug(sha1+" => "+result);
             }
             double ellapsed = (System.currentTimeMillis() - start)*1e-3;
             Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
-                                       +"search %2$d results...",
-                                       ellapsed, result.size()));
+                                       +"search %2$d/%3$d results...",
+                                       ellapsed, result.size(),
+                                       result.count()));
             
             return result;
         }
@@ -585,9 +594,10 @@ public class App extends Controller {
     public static <T> T getOrElse (long modified,
                                    String key, Callable<T> callable)
         throws Exception {
-        if (System.currentTimeMillis() <= (modified + CACHE_TIMEOUT))
-            Cache.remove(key);
-        return Cache.getOrElse(key, callable, CACHE_TIMEOUT);
+        if (System.currentTimeMillis() <= (modified + CACHE_TIMEOUT)) {
+            IxCache.remove(key);
+        }
+        return IxCache.getOrElse(key, callable);
     }
 
     public static Result marvin () {
@@ -655,7 +665,7 @@ public class App extends Controller {
         String key = Util.sha1(value)+"::"+size;
         Result result = null;
         try {
-            result = Cache.getOrElse(key, new Callable<Result> () {
+            result = IxCache.getOrElse(key, new Callable<Result> () {
                     public Result call () throws Exception {
                         WSRequestHolder ws = WS.url(RENDERER_URL)
                         .setFollowRedirects(true)
@@ -672,7 +682,7 @@ public class App extends Controller {
                 }, CACHE_TIMEOUT);
             
             if (result == null)
-                Cache.remove(key);
+                IxCache.remove(key);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -909,10 +919,27 @@ public class App extends Controller {
         String mesg;
         Long start;
         Long stop;
-        final List results = new CopyOnWriteArrayList ();
-        final String id = randvar (10);
+        List results = new CopyOnWriteArrayList ();
+        String id = randvar (10);
+        Integer total;
 
         SearchResultContext () {
+        }
+
+        SearchResultContext (SearchResult result) {
+            start = result.getTimestamp();          
+            if (result.finished()) {
+                status = Status.Done;
+                stop = start+result.ellapsed();
+            }
+            else if (result.size() > 0) status = Status.Running;
+            if (status != Status.Done) {
+                mesg = String.format
+                    ("Loading...%1$d%%",
+                     (int)(100.*result.size()/result.count()+0.5));
+            }
+            results = result.getMatches();
+            total = result.count();
         }
 
         public String getId () { return id; }
@@ -921,6 +948,7 @@ public class App extends Controller {
         public String getMessage () { return mesg; }
         public void setMessage (String mesg) { this.mesg = mesg; }
         public Integer getCount () { return results.size(); }
+        public Integer getTotal () { return total; }
         public Long getStart () { return start; }
         public Long getStop () { return stop; }
         public boolean finished () {
@@ -994,7 +1022,8 @@ public class App extends Controller {
                 else {
                 }
 
-                Object value = Cache.get(key);
+                Logger.debug("status: key="+key);
+                Object value = IxCache.get(key);
                 if (value != null) {
                     SearchResultContext context = (SearchResultContext)value;
                     Logger.debug("checkStatus: status="+context.getStatus()
@@ -1005,7 +1034,7 @@ public class App extends Controller {
                         break;
                         
                     default:
-                        return routes.App.status(type.toLowerCase(), query);
+                        return routes.App.status(key);
                     }
                     //return routes.App.status(type.toLowerCase(), query);
                 }
@@ -1014,9 +1043,33 @@ public class App extends Controller {
                 ex.printStackTrace();
             }
         }
+        else {
+            String key = signature (query, request().queryString());
+            Logger.debug("status: key="+key);       
+            return routes.App.status(key);
+        }
         return null;
     }
 
+    public static Result status (String key) {
+        Object value = IxCache.get(key);
+        Logger.debug("status["+key+"] => "+value);
+        if (value != null) {
+            if (value instanceof SearchResult) {
+                // wrap SearchResult into SearchResultContext..
+                SearchResultContext ctx
+                    = new SearchResultContext ((SearchResult)value);
+                ctx.id = key;
+                value = ctx;
+            }
+            ObjectMapper mapper = new ObjectMapper ();
+            return ok (mapper.valueToTree(value));
+        }
+
+        return notFound ("No key found: "+key+"!");
+    }
+
+    /*
     public static Result status (String type, String query) {
         String key = null;
         if (type.equalsIgnoreCase("substructure")) {
@@ -1038,7 +1091,7 @@ public class App extends Controller {
             return badRequest ("Unknown type: \""+type+"\"");
         }
 
-        Object value = Cache.get(key);
+        Object value = IxCache.get(key);
         if (value != null) {
             SearchResultContext context = (SearchResultContext)value;
             ObjectMapper mapper = new ObjectMapper ();
@@ -1047,7 +1100,8 @@ public class App extends Controller {
 
         return notFound ("No query "+query+" of type "+type+" found!");
     }
-
+    */
+    
     public static SearchResultContext substructure
         (final String query, final int rows,
          final int page, final SearchResultProcessor processor) {
@@ -1130,7 +1184,7 @@ public class App extends Controller {
             Long stop = context.getStop();
             if (!context.finished() || 
                 (stop != null && stop >= result.getTimestamp()))
-                Cache.remove(key);
+                IxCache.remove(key);
             
             count = result.count();
             Logger.debug(key+": "+count+" finished? "+context.finished()
@@ -1148,7 +1202,7 @@ public class App extends Controller {
                 results.add((T)result.get(i));
         }
 
-        if (Cache.get(key) != null) {
+        if (IxCache.get(key) != null) {
             final String k = "structureResult/"
                 +context.getId()+"/"+Util.sha1(request());
             final int _page = page;
