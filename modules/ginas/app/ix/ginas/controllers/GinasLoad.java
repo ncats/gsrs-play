@@ -26,6 +26,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.io.FileOutputStream;
+import java.util.zip.GZIPInputStream;
 
 import play.Logger;
 import play.Play;
@@ -44,6 +46,8 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+
+
 
 
 public class GinasLoad extends App {
@@ -366,11 +370,20 @@ public class GinasLoad extends App {
                                 is = zip.getInputStream(ze);
                                 break;
                             }
-                        }
-                        catch (Exception ex) {
+                        }catch (Exception ex) {
                             Logger.warn("Not a zip file \""+file+"\"!");
+                            //try as gzip
+							try {
+								GZIPInputStream gzis = new GZIPInputStream(
+										new FileInputStream(file));
+								is=gzis;
+
+							} catch (IOException e) {
+								Logger.warn("Not a gzip file \""+file+"\"!");
+								is = new FileInputStream (file);
+							}
                             // try as plain txt file
-                            is = new FileInputStream (file);
+                            
                         }
                         return processDump (is);
                     }

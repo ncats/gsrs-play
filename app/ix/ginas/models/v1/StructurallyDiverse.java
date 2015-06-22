@@ -44,6 +44,9 @@ public class StructurallyDiverse extends Ginas {
     	String ret="";
     	if(part!=null){
     		for(Keyword k: part){
+    			if(ret.length()>0){
+    				ret+="; ";
+    			}
     			ret+=k.getValue();
     		}
     	}
