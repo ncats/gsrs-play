@@ -1053,7 +1053,7 @@ public class App extends Controller {
 
     public static Result status (String key) {
         Object value = IxCache.get(key);
-        Logger.debug("status["+key+"] => "+value);
+        //Logger.debug("status["+key+"] => "+value);
         if (value != null) {
             if (value instanceof SearchResult) {
                 // wrap SearchResult into SearchResultContext..

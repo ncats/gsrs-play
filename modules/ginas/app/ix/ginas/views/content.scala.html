@@ -132,7 +132,11 @@ function dismissQuery () {
 $(document).ready(function () {
    @defining(App.checkStatus()) { status =>
       @if(status != null) {
-         $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
+         $('#searching')
+	     .html('<i class="fa fa-spinner fa-spin"></i> searching...');
+         $('#loading-progress')
+	     .html('<i class="fa fa-spinner fa-spin"></i> loading...');
+	     
          var delay = 2000; // 2s
          var checkStatus;
 
@@ -141,13 +145,19 @@ $(document).ready(function () {
                   if (data.status == 'Done' || data.status == 'Failed') {
                      window.clearInterval(checkStatus);
                      $('#searching').html('');
-                     if(data.count > @total) {
-                        location.reload(true);
+		     $('#loading-progress').html('');
+                     if(data.count >= @total) {
+                        //location.reload(true);
                      }
                   } else {
-                     console.log(data.status);
-                     console.log('status '+data.count);
-                     $('#searching').html('<i class="fa fa-spinner fa-spin"></i>searching... '+data.count+' matches');
+                     console.log(data.status + ' '+data.count+' '+data.total);
+                     $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
+		     if (data.total) {
+		       var pct = Math.floor(100.0*data.count / data.total+0.5);
+		        $('#loading-progress').html('<div class="progress">'
+			+' <div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">Loading...'
+			+ pct +'% ('+data.count+'/'+data.total+')</div></div>');
+		     }
                   }
               });
           }, delay);

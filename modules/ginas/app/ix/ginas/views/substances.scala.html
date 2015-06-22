@@ -15,7 +15,7 @@
 
     <div class= "panel-body">
       @if(substancesList.isEmpty) {
-        <div id="loading"></div>
+        <div id="loading-progress"></div>
       } else {
         <div class = "row collapse hidden-xs" id ="grid">
         @for(sub <- substancesList) {
@@ -69,12 +69,3 @@
     </div>
 }
 
-<script>
-$(document).ready(function () {
-   @defining(App.checkStatus()) { status =>
-      @if(status != null) {
-         $('#loading').html('<i class="fa fa-spinner fa-spin"></i> loading...');
-      }
-   }
-});
-</script>
