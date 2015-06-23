@@ -21,6 +21,7 @@ create table ix_ginas_agent_modification (
   agent_modification_type   varchar(255),
   agent_substance_uuid      varchar(40),
   amount_uuid               varchar(40),
+  modification_group        varchar(255),
   constraint pk_ix_ginas_agent_modification primary key (uuid))
 ;
 
@@ -334,6 +335,7 @@ create table ix_ginas_physical_modification (
   last_edited_by_id         bigint,
   deprecated                tinyint(1) default 0,
   physical_modification_role varchar(255) not null,
+  modification_group        varchar(255),
   constraint pk_ix_ginas_physical_modification primary key (uuid))
 ;
 
@@ -572,6 +574,7 @@ create table ix_ginas_structural_modification (
   extent                    varchar(255),
   extent_amount_uuid        varchar(40),
   molecular_fragment_uuid   varchar(40),
+  modification_group        varchar(255),
   constraint pk_ix_ginas_structural_modification primary key (uuid))
 ;
 
