@@ -12,6 +12,7 @@ import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.ginas.models.Ginas;
 import ix.ginas.models.KeywordListSerializer;
+import ix.ginas.models.v1.PartListDeserializer;
 import ix.ginas.models.utils.JSONEntity;
 
 @Entity
@@ -36,7 +37,7 @@ public class StructurallyDiverse extends Ginas {
     public String organismSpecies;
     
     @Indexable(name="Author", facet=true)
-	public String organismAuthor;
+        public String organismAuthor;
     
     public String partLocation;
     
@@ -45,7 +46,7 @@ public class StructurallyDiverse extends Ginas {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_strucdiv_part")
     @JsonSerialize(using = KeywordListSerializer.class)
-//    @Indexable(name="Part", facet=true)
+    @JsonDeserialize(using = PartListDeserializer.class)    
     public List<Keyword> part = new ArrayList<Keyword>();
 
     public String infraSpecificType;
@@ -63,15 +64,15 @@ public class StructurallyDiverse extends Ginas {
     public StructurallyDiverse () {}
     
     public String getDisplayParts(){
-    	String ret="";
-    	if(part!=null){
-    		for(Keyword k: part){
-    			if(ret.length()>0){
-    				ret+="; ";
-    			}
-    			ret+=k.getValue();
-    		}
-    	}
-    	return ret;
+        String ret="";
+        if(part!=null){
+                for(Keyword k: part){
+                        if(ret.length()>0){
+                                ret+="; ";
+                        }
+                        ret+=k.getValue();
+                }
+        }
+        return ret;
     }
 }
