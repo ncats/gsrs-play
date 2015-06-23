@@ -33,7 +33,7 @@
                             		
                             }else{
                              	@if(ref.getClass.toString.equals("class ix.ginas.models.v1.StructurallyDiverseSubstance")){
-                                   <i class="fa fa-puzzle-piece fa-4x "></i>
+                                   
                                 }else{
                                 	@if(ref.getClass.toString.equals("class ix.ginas.models.v1.ProteinSubstance")){
                                 		<img src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="img-responsive" id="" />
@@ -52,7 +52,13 @@
 								                </div>
 								            </div>
 	                                	}else{
-	                                		
+	                                		@if(ref.getClass.toString.equals("class ix.ginas.models.v1.PolymerSubstance")){
+		                                		
+		                                	}else{
+		                                		@if(ref.substanceClass.equals("concept")){
+		                                			<i class="fa fa-cloud fa-4x "></i>
+		                                		}
+		                                	}	
 	                                	}	
                                 	}
                                 } 

@@ -1,0 +1,27 @@
+@import ix.core.models.Structure
+@import ix.ginas.controllers.GinasApp
+
+@import ix.ginas.models.v1.Substance
+@(prot: Substance)
+
+<div class = "col-md-3 thumb-col">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+
+            <p class="text-right" data-toggle="tooltip" title="Approval ID">
+                <a href="@ix.ginas.controllers.routes.GinasApp.protein(GinasApp.getId(prot))">
+                    <code> @prot.approvalID</code></a></p>
+        </div>
+        <div class="panel-body struc-img">
+            <a href="@ix.ginas.controllers.routes.GinasApp.protein(GinasApp.getId(prot))">
+                <i class="fa fa-cloud fa-4x "></i>
+            </a>
+        </div>
+        <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@prot.getName()">
+            <a href="@ix.ginas.controllers.routes.GinasApp.protein(GinasApp.getId(prot))">
+            @GinasApp.truncate(prot.getName())
+            </a>
+        </div>
+    </div>
+</div>
+<!--END panel panel-primary-->

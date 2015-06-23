@@ -16,6 +16,10 @@ public class GinasFactory extends EntityFactory {
     public static Result index () {
         return ok (ix.ginas.views.html.index.render());
     }
+    
+    public static Result app () {
+        return ok (ix.ginas.views.html.index.render());
+    }
 
     public static Result register () {
         return ok (ix.ginas.views.html.register.render());
@@ -42,6 +46,7 @@ public class GinasFactory extends EntityFactory {
         }
 
     public static Principal byUsername (String user) {
+    	//return GinasApp.SubstanceResult
         return finder.where().eq("username", user).findUnique();
     } 
 
