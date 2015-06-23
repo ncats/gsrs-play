@@ -39,26 +39,30 @@
             <h2 class= "pull-right"> @sub.getApprovalIDDisplay()</h2>
         </div>
     </div>
-   
+    <div class = "row">
+        <div class = "col-md-9">
+            <h4>Concept</h4>
+        </div>
+    </div>
     <div class="row info" id="details">
      	@if(sub.isNonSubstanceConcept()) {
     		This is a non-substance concept
     	}else{
     		This is a variant concept on substance:<br> 
-    		 @if(SubstanceFactory.getFullSubstance(sub.getParentSubstanceReference()) != null) {
+    		 			@if(SubstanceFactory.getFullSubstance(sub.getParentSubstanceReference()) != null) {
                             @subref(sub.getParentSubstanceReference())
                         }else{
                             <div class="col-md-3 text-center thumb-col">
                                 <div class="panel panel-default">
                                     <div class = "panel-body">
-                            <i>Substance not yet imported</i> <br />
-                        </div>
-                    <div class = "panel-footer">
-                    @sub.getParentSubstanceReference().refPname
-                    </div>
-                                    </div>
-                                </div>
-                    }
+                            			<i>Substance not yet imported</i> <br />
+                        			</div>
+		                    		<div class = "panel-footer">
+		                    			@sub.getParentSubstanceReference().refPname
+		                    		</div>
+                         		</div>
+                            </div>
+                    	}
     		
     	}
     </div>

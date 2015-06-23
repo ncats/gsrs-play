@@ -76,8 +76,6 @@ public class GinasApp extends App {
             "Material Class",
             "Material Type",
             "Family",
-            "Genus",
-            "Species",
             "Parts"
     };
 

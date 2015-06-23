@@ -42,6 +42,11 @@
             <h2 class= "pull-right"> @sub.approvalID</h2>
         </div>
     </div>
+     <div class = "row">
+        <div class = "col-md-9">
+            <h4>Mixture Substance</h4>
+        </div>
+    </div>
     <div class="row info" id="components">
     @components(sub.mixture)
     </div>
@@ -53,6 +58,11 @@
     @if(sub.codes.size() > 0) {
         <div class="row info" id="codes">
         @codes(sub.codes)
+        </div>
+    }
+    @if(sub.hasChildConceptReferences()) {
+        <div class="row info" id="variants">
+        	@variantconcepts(sub)
         </div>
     }
     @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {

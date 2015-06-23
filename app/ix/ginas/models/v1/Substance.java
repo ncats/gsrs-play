@@ -319,4 +319,21 @@ public class Substance extends Ginas {
     	}
     	return null;
     }
+    
+    public List<SubstanceReference> getChildConceptReferences(){
+    	List<SubstanceReference> subConcepts = new ArrayList<SubstanceReference>();
+    	for(Relationship r:relationships){
+			if(r.type.equals("SUB_CONCEPT->SUBSTANCE")){
+				subConcepts.add(r.relatedSubstance);
+			}
+		}
+    	return subConcepts;
+    }
+    public boolean hasChildConceptReferences(){
+    	if(getChildConceptReferences().size()>0){
+    		return true;
+    	}else{
+    		return false;
+    	}
+    }
 }

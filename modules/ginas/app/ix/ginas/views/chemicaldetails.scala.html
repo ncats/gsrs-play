@@ -3,8 +3,9 @@
 
 @(sub: ix.ginas.models.v1.ChemicalSubstance)
 
+
 @structureImage(s: Structure, size: Integer) = {
-    <img class="struc-thumb img-responsive" alt="Structure of @sub.getName"
+    <img class="struc-thumb img-responsive" alt="Structure of @sub.getName" title="Structure of @sub.getName"
     src='@ix.ncats.controllers.routes.App.structure(s.id, "svg", size)'>
 }
 
@@ -101,6 +102,11 @@
             <h2 class= "pull-right"> @sub.approvalID</h2>
         </div>
     </div>
+    <div class = "row">
+        <div class = "col-md-9">
+            <h4>Chemical Substance</h4>
+        </div>
+    </div>
     <div class="row info" id="structureDetails">
 
         <h3>
@@ -144,6 +150,11 @@
     @if(sub.codes.length > 0) {
         <div class="row info" id="codes">
         @codes(sub.codes)
+        </div>
+    }
+    @if(sub.hasChildConceptReferences()) {
+        <div class="row info" id="variants">
+        	@variantconcepts(sub)
         </div>
     }
     @if(GinasApp.resolveRelationships(sub.uuid.toString()).length > 0) {
