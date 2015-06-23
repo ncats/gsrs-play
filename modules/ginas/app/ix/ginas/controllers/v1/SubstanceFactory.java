@@ -14,6 +14,7 @@ import ix.core.controllers.EntityFactory;
 import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
+import ix.ginas.controllers.*;
 
 @NamedResource(name="substances",
                type=Substance.class,
@@ -21,12 +22,12 @@ import ix.core.NamedResource;
 public class SubstanceFactory extends EntityFactory {
     static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
-    static public final Model.Finder<Long, Substance> subfinder =
-            new Model.Finder(Long.class, Substance.class);
-    static public final Model.Finder<Long, ChemicalSubstance> chemfinder =
-            new Model.Finder(Long.class, ChemicalSubstance.class);
-    static public final Model.Finder<Long, ProteinSubstance> protfinder =
-            new Model.Finder(Long.class, ProteinSubstance.class);
+    static public final Model.Finder<UUID, Substance> subfinder =
+            new Model.Finder(UUID.class, Substance.class);
+    static public final Model.Finder<UUID, ChemicalSubstance> chemfinder =
+            new Model.Finder(UUID.class, ChemicalSubstance.class);
+    static public final Model.Finder<UUID, ProteinSubstance> protfinder =
+            new Model.Finder(UUID.class, ProteinSubstance.class);
     
     public static Substance getSubstance (String id) {
         return getSubstance (UUID.fromString(id));
@@ -36,8 +37,21 @@ public class SubstanceFactory extends EntityFactory {
         return getEntity (uuid, finder);
     }
     
-    public static Substance getSubstanceByApprovalID (String approvalID) {
-        return finder.where().eq("approvalID", approvalID).findUnique();
+    public static Substance getFullSubstance(SubstanceReference subRef){
+    	return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
+    }
+    
+    private static Substance getSubstanceByApprovalIDOrUUID (String approvalID, String uuid) {
+    	Logger.debug("###################Fetching:" + approvalID + " : " + uuid);
+    	Substance s=getSubstance(uuid);
+    	if(s!=null)return s;
+    	
+    	List<Substance> list=GinasApp.resolve(finder,approvalID);
+    	if(list!=null && list.size()>0){
+    		return list.get(0);
+    	}
+    	return null;
+    	//return finder.where().eq("approvalID", approvalID).findUnique();
     }
 
     public static List<Substance> getSubstances
@@ -80,7 +94,7 @@ public class SubstanceFactory extends EntityFactory {
         return edits (uuid, Substance.class);
     }
 
-    public static Result get (UUID uuid, String expand) {
+    public static Result getUUID (UUID uuid, String expand) {
         return get (uuid, expand, finder);
     }
 

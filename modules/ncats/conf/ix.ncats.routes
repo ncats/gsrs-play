@@ -19,7 +19,8 @@ GET	/structure/$id<[0-9]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>	ix.ncats.co
 ######
 # return the status of a previous query
 ######
-GET	/status/:type/:query	ix.ncats.controllers.App.status(type: String, query: String)
+#GET	/status/:type/:query	ix.ncats.controllers.App.status(type: String, query: String)
+GET	/status/:key	ix.ncats.controllers.App.status(key: String)
 
 #
 # authentication

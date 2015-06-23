@@ -11,7 +11,7 @@
         <div class="row">
             <h5>Any of these components may be present:</h5>
             @for(c <- comp) {
-                        @if(SubstanceFactory.getSubstanceByApprovalID(c.substance.approvalID) != null) {
+                        @if(SubstanceFactory.getFullSubstance(c.substance) != null) {
                             @subref(c.substance)
                         }else{
                             <div class="col-md-3 text-center thumb-col">
@@ -36,7 +36,7 @@
             <h5>One of these components may be present:</h5>
             @for(c <- comp) {
                 <div class="col-md-3">
-                @if(SubstanceFactory.getSubstanceByApprovalID(c.substance.approvalID) != null) {
+                @if(SubstanceFactory.getFullSubstance(c.substance) != null) {
                     @subref(c.substance)
                 } else {
                     <i>Substance not yet imported</i> <br />
@@ -53,7 +53,7 @@
             <h5>Necessary:</h5>
             @for(c <- comp) {
                 <div class="col-md-3">
-                @if(SubstanceFactory.getSubstanceByApprovalID(c.substance.approvalID) != null) {
+                 @if(SubstanceFactory.getFullSubstance(c.substance) != null) {
                     @subref(c.substance)
                 } else {
                     <i>Substance not yet imported</i> <br />

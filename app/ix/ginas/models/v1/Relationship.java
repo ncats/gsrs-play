@@ -58,4 +58,11 @@ public class Relationship extends Ginas {
     public String type;
 
     public Relationship () {}
+    
+    public String getDisplayType(){
+    	if(type.contains("->")){
+    		return type.split("->")[1] + " (" +type.split("->")[0] +")";
+    	}
+    	return type;
+    }
 }

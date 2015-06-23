@@ -97,6 +97,10 @@ function setStructure (struc) {
 </div>
 
 <script>
+  $(document).ready(function() {
+     sketcher = new JSDraw("sketcher");
+  });
+  
   function submitForm () {
    // console.log(el);
     $('#strucModal').modal('hide');  

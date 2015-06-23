@@ -2,7 +2,6 @@
 # GINAS
 #
 GET         /                       ix.ginas.controllers.GinasFactory.index
-GET         /app                       ix.ginas.controllers.GinasFactory.app
 GET         /register                   ix.ginas.controllers.GinasFactory.register
 GET         /structure                  ix.ginas.controllers.GinasFactory.structuresearch
 GET         /substance/:name            ix.ginas.controllers.GinasApp.substance(name: String)

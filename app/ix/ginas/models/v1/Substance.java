@@ -52,7 +52,7 @@ public class Substance extends Ginas {
         specifiedSubstanceG3,
         specifiedSubstanceG4,
         unspecifiedSubstance,   
-        VIRTUAL
+        concept
     }
     
     @JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
@@ -131,7 +131,7 @@ public class Substance extends Ginas {
     protected transient ObjectMapper mapper = new ObjectMapper ();
     
     public Substance () {
-        this (SubstanceClass.VIRTUAL);
+        this (SubstanceClass.concept);
     }
     public Substance (SubstanceClass subcls) {
         substanceClass = subcls;
@@ -271,5 +271,35 @@ public class Substance extends Ginas {
             Logger.warn("Substance "+approvalID+" has "+remove.size()
                         +" invalid relationship(s)!");
         }
+    }
+    
+    public boolean isNonSubstanceConcept(){
+    	if(this.substanceClass.equals("concept")){
+    		return 	!isSubstanceVariant();
+    	}
+    	return false;
+    }
+    public boolean isSubstanceVariant(){
+    	for(Relationship r:relationships){
+			if(r.type.equals("SUBSTANCE->SUB_CONCEPT")){
+				return true;
+			}
+		}
+		return false;
+    }
+    
+    /**
+     * Returns parent substance concept record for substance variant concepts.
+     * 
+     * 
+     * @return
+     */
+    public SubstanceReference getParentSubstanceReference(){
+    	for(Relationship r:relationships){
+			if(r.type.equals("SUBSTANCE->SUB_CONCEPT")){
+				return r.relatedSubstance;
+			}
+		}
+    	return null;
     }
 }

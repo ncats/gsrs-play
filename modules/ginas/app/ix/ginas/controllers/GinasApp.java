@@ -74,11 +74,12 @@ public class GinasApp extends App {
             "GInAS Tag",
             "Sequence Type",
             "Material Class",
-            "Material State",
             "Material Type",
             "Family",
             "Genus",
-            "Species"
+            "Species",
+            "part"
+            
     };
 
     static <T> List<T> filter (Class<T> cls, List values, int max) {
@@ -172,13 +173,13 @@ public class GinasApp extends App {
 
     static class GinasFacetDecorator extends FacetDecorator {
         GinasFacetDecorator (Facet facet) {
-            super (facet, true, 6);
+            super (facet, true, 10);
         }
 
         @Override
         public String name () {
             String n = super.name();
-            if ("SubstanceStereoChemistry".equals(n))
+            if ("SubstanceStereoChemistry".equalsIgnoreCase(n))
                 return "Stereo Chemistry";
             return n.trim();
         }
@@ -187,6 +188,9 @@ public class GinasApp extends App {
         public String label (final int i) {
             final String label = super.label(i);
             final String name = super.name();
+            if ("StructurallyDiverse".equalsIgnoreCase(label))
+                return "Structurally Diverse";
+
             return label;
         }
     }
@@ -260,20 +264,16 @@ public class GinasApp extends App {
         final String key = "substances/"+Util.sha1(request ());
 
         if (request().queryString().containsKey("facet") || q != null) {
-            final TextIndexer.SearchResult result = getOrElse
-                    (key, new Callable<TextIndexer.SearchResult> () {
-                        public TextIndexer.SearchResult call ()
-                                throws Exception {
-                            Logger.debug("Cache missed: "+key);
-                            return getSearchResult
-                                    (Substance.class, q, total);
-                        }
-                    });
-
+            final TextIndexer.SearchResult result =
+                getSearchResult (Substance.class, q, total);
+            
+            Logger.debug("_substance: q="+q+" rows="+rows+" page="+page+" => "+result+" finished? "+result.finished());
             if (result.finished()) {
+                final String k = key+"/result";
                 return getOrElse
-                        (key+"/result", new Callable<Result> () {
+                        (k, new Callable<Result> () {
                             public Result call () throws Exception {
+                                Logger.debug("Cache missed: "+k);
                                 return createSubstanceResult
                                         (result, rows, page);
                             }
@@ -324,9 +324,9 @@ public class GinasApp extends App {
 
     }
 
-    static final GetResult<Substance> SubstanceResult =
+    public static final GetResult<Substance> SubstanceResult =
             new GetResult<Substance>(Substance.class,
-                    SubstanceFactory.subfinder) {
+                    SubstanceFactory.finder) {
                 public Result getResult (List<Substance> substances)
                         throws Exception {
                     return _getSubstanceResult(substances);
@@ -359,6 +359,9 @@ public class GinasApp extends App {
                 case "specifiedSubstanceG1":
                     return ok(ix.ginas.views.html
                             .group1details.render((SpecifiedSubstanceGroup1) substance));
+                case "concept":
+                    return ok(ix.ginas.views.html
+                            .conceptdetails.render((Substance) substance));
                 default: return _badRequest("type not found");
             }
         }else {
@@ -621,9 +624,9 @@ public class GinasApp extends App {
     }
 
     static abstract class GetResult<T extends Substance> {
-        final Model.Finder<Long, T> finder;
+        final Model.Finder<UUID, T> finder;
         final Class<T> cls;
-        GetResult (Class<T> cls, Model.Finder<Long, T> finder) {
+        GetResult (Class<T> cls, Model.Finder<UUID, T> finder) {
             this.cls = cls;
             this.finder = finder;
         }
@@ -678,12 +681,16 @@ public class GinasApp extends App {
         abstract Result getResult (List<T> e) throws Exception;
     }
 
-    static <T extends Substance> List<T> resolve
-        (Model.Finder<Long, T> finder, String name) {
-        List<T> values = new ArrayList<T>();
+    public static <T extends Substance> List<T> resolve
+        (Model.Finder<UUID, T> finder, String name) {
+    	if(name==null){
+        	return null;
+        }
+    	List<T> values = new ArrayList<T>();
         if (name.length() == 8) { // might be uuid
             values = finder.where().istartsWith("uuid", name).findList();
         }
+        
 
         if (values.isEmpty()) {
             values = finder.where()

@@ -7,9 +7,9 @@ object ApplicationBuild extends Build {
 
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
-  val buildTime = (new java.text.SimpleDateFormat("yyyyMMdd-HHmmss"))
+  val buildTime = (new java.text.SimpleDateFormat("yyyyMMdd"))
     .format(new java.util.Date())
-  val appVersion = "%s-%s-%s".format(branch, commit, buildTime)
+  val appVersion = "%s-%s-%s".format(branch, buildTime, commit)
 
   val commonDependencies = Seq(
     javaWs,
@@ -155,4 +155,10 @@ object ApplicationBuild extends Build {
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
     ).dependsOn(ncats).aggregate(ncats)
 
+  val cbc = Project("cbc", file("modules/cbc"))
+    .enablePlugins(PlayJava).settings(
+    version := appVersion,
+      libraryDependencies ++= commonDependencies,
+      javacOptions ++= javaBuildOptions
+  ).dependsOn(ncats).aggregate(ncats)
 }

@@ -1,6 +1,6 @@
 @import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance, MixtureSubstance, Substance}
 @import ix.ncats.controllers.App.FacetDecorator
-
+@import ix.ncats.controllers.App
 
 @import ix.ginas.models.v1.StructurallyDiverseSubstance
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
@@ -12,7 +12,6 @@
 } {
     <div></div>
 } {
-
     <div class= "panel-body">
         <div class = "row collapse hidden-xs" id ="grid">
         @for(sub <- substancesList) {
@@ -55,15 +54,16 @@
                     @diverselist(diverse)
 
                 }
+                case concept: Substance => {
+                    @conceptlist(concept)
+
+                }
                 case _ => {
 
                 }
             }
-
-
         }
 
         </div>
     </div>
 }
-

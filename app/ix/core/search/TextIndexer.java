@@ -7,6 +7,9 @@ import java.util.concurrent.locks.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.lang.reflect.*;
+import java.lang.ref.Reference;
+import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.lang.annotation.Annotation;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -242,7 +245,9 @@ public class TextIndexer {
         public List<Facet> getFacets () { return facets; }
         public int size () { return matches.size(); }
         public Object get (int index) { return matches.get(index); }
-        public List getMatches () { return matches; }
+        public List getMatches () {
+            return Collections.unmodifiableList(matches);
+        }
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
         public long getTimestamp () { return timestamp; }
@@ -488,12 +493,14 @@ public class TextIndexer {
                         long start = System.currentTimeMillis();
                         Logger.debug(Thread.currentThread()
                                      +": fetching payload "
-                                     +payload.hits.totalHits);
+                                     +payload.hits.totalHits
+                                     +" for "+payload.result);
 
                         payload.fetch();
                         Logger.debug(Thread.currentThread()+": ## fetched "
                                      +payload.result.count
-                                     +" results in "+String.format
+                                     +" for result "+payload.result
+                                     +" in "+String.format
                                      ("%1$dms", 
                                       System.currentTimeMillis()-start));
                     }
