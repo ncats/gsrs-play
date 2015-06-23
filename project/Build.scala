@@ -147,6 +147,14 @@ object ApplicationBuild extends Build {
       javacOptions ++= javaBuildOptions
   ).dependsOn(qhts).aggregate(qhts)
 
+  val ntd = Project("ntd", file("modules/ntd"))
+    .enablePlugins(PlayJava).settings(
+      version := appVersion,
+      libraryDependencies ++= commonDependencies,
+      javacOptions ++= javaBuildOptions
+      //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
+    ).dependsOn(ncats).aggregate(ncats)
+
   val cbc = Project("cbc", file("modules/cbc"))
     .enablePlugins(PlayJava).settings(
     version := appVersion,
