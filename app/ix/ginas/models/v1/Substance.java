@@ -302,4 +302,21 @@ public class Substance extends Ginas {
 		}
     	return null;
     }
+    
+    public String getApprovalID(){
+    	if(approvalID!=null)return approvalID;
+    	SubstanceReference subRef=getParentSubstanceReference();
+    	if(subRef!=null){
+    		return subRef.approvalID;
+    	}
+    	return null;
+    }
+    public String getApprovalIDDisplay(){
+    	if(approvalID!=null)return approvalID;
+    	SubstanceReference subRef=getParentSubstanceReference();
+    	if(subRef!=null){
+    		return "[variant]" + subRef.approvalID;
+    	}
+    	return null;
+    }
 }
