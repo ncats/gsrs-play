@@ -98,8 +98,6 @@
                 </div>
                 @content
 
-
-
                 <div class="panel-footer">
                 @if(pages.length > 1) {
                     @ix.ncats.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
@@ -111,14 +109,9 @@
             <div class="modal export" id="loading">
                 <div class="modal-dialog">
                     <div class="modal-content">
-                        <div class="modal-body">
-                            <div class = "row text-center">
-                                <i class="fa fa-spinner fa-spin fa-4x"></i><br/>
-                                Loading...
-
-                            </div>
-
-                        </div>
+		      <div class="modal-body">
+			<div id="loading-progress"></div>
+		      </div>
                     </div>
                 </div>
             </div>
@@ -129,39 +122,49 @@ function dismissQuery () {
     location.assign('@resetAction');
 }
 
-$(document).ready(function () {
+$(document).ready(function () {  
    @defining(App.checkStatus()) { status =>
       @if(status != null) {
+      
          $('#searching')
 	     .html('<i class="fa fa-spinner fa-spin"></i> searching...');
-         $('#loading-progress')
-	     .html('<i class="fa fa-spinner fa-spin"></i> loading...');
-	     
+			
          var delay = 2000; // 2s
          var checkStatus;
 
+         $('#loading').on('hidden.bs.modal', function (e) {
+	     console.log('closing load dialog');
+ 	     window.clearInterval(checkStatus);
+	     location.reload(true);
+         });
+
          checkStatus = window.setInterval(function () {
-      	     $.get('@status'+'@App.queryString("cutoff")', function(data) {
+      	     $.get('@status'+'@App.queryString("cutoff")',
+	        function(data) {		  
                   if (data.status == 'Done' || data.status == 'Failed') {
                      window.clearInterval(checkStatus);
                      $('#searching').html('');
 		     $('#loading-progress').html('');
                      if(data.count >= @total) {
                         //location.reload(true);
+			$('#loading').modal('hide');
                      }
                   } else {
-                     console.log(data.status + ' '+data.count+' '+data.total);
+                     //console.log(data.status + ' '+data.count+' '+data.total);
                      $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
+		     if (@{(current-1)*rows} > data.count) {
+		       $('#loading').modal('show');
+		     }
 		     if (data.total) {
-		       var pct = Math.floor(100.0*data.count / data.total+0.5);
-		        $('#loading-progress').html('<div class="progress">'
-			+' <div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">Loading...'
-			+ pct +'% ('+data.count+'/'+data.total+')</div></div>');
+	  	        var pct = Math.floor(100.0*data.count / data.total+0.5);
+		        $('#loading-progress').html('<p align="right">('+data.count+'/'+data.total+')</p><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">'+pct+'%</div></div>');
 		     }
                   }
-              });
+                }).error(function () {
+		   window.clearInterval(checkStatus);
+		});
           }, delay);
        }
-  }
+    }
 });
 </script>

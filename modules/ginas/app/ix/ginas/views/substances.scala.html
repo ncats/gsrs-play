@@ -12,11 +12,7 @@
 } {
     <div></div>
 } {
-
     <div class= "panel-body">
-      @if(substancesList.isEmpty) {
-        <div id="loading-progress"></div>
-      } else {
         <div class = "row collapse hidden-xs" id ="grid">
         @for(sub <- substancesList) {
             @sub match {
@@ -65,7 +61,5 @@
         }
 
         </div>
-    }
     </div>
 }
-

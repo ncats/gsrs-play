@@ -1045,7 +1045,15 @@ public class App extends Controller {
         }
         else {
             String key = signature (query, request().queryString());
-            Logger.debug("status: key="+key);       
+            Object value = IxCache.get(key);
+            if (value != null) {
+                SearchResultContext ctx
+                    = new SearchResultContext ((SearchResult)value);
+                
+                if (ctx.finished())
+                    return null;
+            }
+            Logger.debug("status: key="+key);
             return routes.App.status(key);
         }
         return null;
@@ -1059,6 +1067,7 @@ public class App extends Controller {
                 // wrap SearchResult into SearchResultContext..
                 SearchResultContext ctx
                     = new SearchResultContext ((SearchResult)value);
+                
                 ctx.id = key;
                 value = ctx;
             }
@@ -1186,8 +1195,9 @@ public class App extends Controller {
                 (stop != null && stop >= result.getTimestamp()))
                 IxCache.remove(key);
             
-            count = result.count();
-            Logger.debug(key+": "+count+" finished? "+context.finished()
+            count = result.size();
+            Logger.debug(key+": "+count+"/"+result.count()
+                         +" finished? "+context.finished()
                          +" stop="+stop);
             
             rows = Math.min(count, Math.max(1, rows));
@@ -1198,11 +1208,11 @@ public class App extends Controller {
             }
             pages = paging (rows, page, count);
 
-            for (int j = 0; j < rows && i < count; ++j, ++i)
+            for (int j = 0; j < rows && i < count; ++j, ++i) 
                 results.add((T)result.get(i));
         }
 
-        if (IxCache.get(key) != null) {
+        if (IxCache.contains(key)) {
             final String k = "structureResult/"
                 +context.getId()+"/"+Util.sha1(request());
             final int _page = page;
