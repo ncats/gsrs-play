@@ -29,6 +29,7 @@ public class AgentModification extends Ginas {
     
     @OneToOne(cascade=CascadeType.ALL)
     public Amount amount;
-
+    @JSONEntity(title = "Modification Group")
+	String modificationGroup = "1";
     public AgentModification () {}
 }

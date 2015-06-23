@@ -2,6 +2,7 @@ package ix.ginas.models.v1;
 
 import java.util.List;
 import java.util.ArrayList;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -38,6 +39,8 @@ public class StructuralModification extends Ginas {
     public Amount extentAmount;
     @OneToOne(cascade=CascadeType.ALL)
     public SubstanceReference molecularFragment;
-
+    
+    @JSONEntity(title = "Modification Group")
+	String modificationGroup = "1";
     public StructuralModification () {}
 }
