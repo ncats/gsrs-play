@@ -245,7 +245,9 @@ public class TextIndexer {
         public List<Facet> getFacets () { return facets; }
         public int size () { return matches.size(); }
         public Object get (int index) { return matches.get(index); }
-        public List getMatches () { return matches; }
+        public List getMatches () {
+            return Collections.unmodifiableList(matches);
+        }
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
         public long getTimestamp () { return timestamp; }

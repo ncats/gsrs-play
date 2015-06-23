@@ -1,9 +1,11 @@
 @CHARSET "UTF-8";
 
 body {
+    padding-top: 50px;
   text-shadow: none;
   position: relative;
   font-family: Futura, 'Trebuchet MS', Arial, sans-serif;
+
 }
 
 a{
@@ -140,28 +142,28 @@ padding-left: 8%;
 
 .back{
         border-radius: 20px;
-/*         background-color: #1c283a; */
+         background-color: #1c283a;
 }
 
-/* div.box:hover .on { */
-/*     display: block; */
-/*                 -webkit-transition: all 1s ease-in-out; */
-/* -moz-transition: all 1s ease-in-out; */
-/* -ms-transition: all 1s ease-in-out; */
-/* -o-transition: all 1s ease-in-out; */
-/* transition: all 1s ease-in-out; */
+ div.box:hover .on {
+     display: block;
+                 -webkit-transition: all 1s ease-in-out;
+ -moz-transition: all 1s ease-in-out;
+ -ms-transition: all 1s ease-in-out;
+ -o-transition: all 1s ease-in-out;
+ transition: all 1s ease-in-out;
 
-/* } */
+ }
 
-/* div.box:hover .off { */
-/*     display: none; */
+ div.box:hover .off {
+     display: none;
     
-/* } */
+ }
 
-/* div.box .on { */
-/*     display: none; */
+ div.box .on {
+     display: none;
 
-/* } */
+ }
 
 .box{
         height:100%;
