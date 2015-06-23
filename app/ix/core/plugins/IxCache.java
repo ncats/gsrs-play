@@ -19,9 +19,9 @@ public class IxCache extends Plugin {
     static final int TIME_TO_LIVE = 60*60; // 1hr
     static final int TIME_TO_IDLE = 60*60; // 1hr
 
-    static final String CACHE_MAX_ELEMENTS = "maxElements";
-    static final String CACHE_TIME_TO_LIVE = "timeToLive";
-    static final String CACHE_TIME_TO_IDLE = "timeToIdle";
+    public static final String CACHE_MAX_ELEMENTS = "ix.cache.maxElements";
+    public static final String CACHE_TIME_TO_LIVE = "ix.cache.timeToLive";
+    public static final String CACHE_TIME_TO_IDLE = "ix.cache.timeToIdle";
 
     private final Application app;
     private Cache cache;

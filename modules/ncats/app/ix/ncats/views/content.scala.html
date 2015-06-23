@@ -5,7 +5,7 @@
   resetAction: String, current: Int, rows: Int, total: Int,
   pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)(viz: Html)
 
-@main(title, kind){ @header }{ @breadcrumb }{
+@main(title){ @header }{ @breadcrumb }{
 <div class="container-fluid">
   <div class="row">
     @if(total > 0 && facets.length > 0) {

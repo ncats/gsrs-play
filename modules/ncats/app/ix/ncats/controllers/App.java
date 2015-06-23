@@ -794,11 +794,13 @@ public class App extends Controller {
     public static Result structure (final long id,
                                     final String format, final int size) {
         if (format.equals("svg") || format.equals("png")) {
-            String key = Structure.class.getName()+"."+id+"."+size+"."+format;
+            final String key =
+                Structure.class.getName()+"/"+size+"/"+id+"."+format;
             String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
-                Result result = getOrElse (0l, key, new Callable<Result> () {
+                Result result = getOrElse (key, new Callable<Result> () {
                         public Result call () throws Exception {
+                            Logger.debug("Cache missed: "+key);
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
                                 return ok (render (struc, format, size));
@@ -820,30 +822,46 @@ public class App extends Controller {
             }
         }
         else {
-            Structure struc = StructureFactory.getStructure(id);
-            if (struc != null) {
-                response().setContentType("text/plain");
-                if (format.equals("mrv")) {
-                    try {
-                        MolHandler mh = new MolHandler (struc.molfile);
-                        if (mh.getMolecule().getDim() < 2) {
-                            mh.getMolecule().clean(2, null);
+            final String key = Structure.class.getName()+"/"+id+"."+format;
+            try {
+                return getOrElse (key, new Callable<Result> () {
+                        public Result call () throws Exception {
+                            Logger.debug("Cache missed: "+key);
+                            Structure struc = StructureFactory.getStructure(id);
+                            if (struc != null) {
+                                response().setContentType("text/plain");
+                                if (format.equals("mrv")) {
+                                    MolHandler mh =
+                                        new MolHandler (struc.molfile);
+                                    if (mh.getMolecule().getDim() < 2) {
+                                        mh.getMolecule().clean(2, null);
+                                    }
+                                    return ok (mh.getMolecule()
+                                               .toFormat("mrv"));
+                                }
+                                else if (format.equals("mol")
+                                         || format.equals("sdf")) {
+                                    return struc.molfile != null
+                                        ? ok (struc.molfile) : noContent ();
+                                }
+                                else {
+                                    return struc.smiles != null
+                                        ?  ok (struc.smiles) : noContent ();
+                                }
+                            }
+                            else {
+                                Logger.warn("Unknown structure: "+id);
+                            }
+                            return noContent ();
                         }
-                        return ok (mh.getMolecule().toFormat("mrv"));
-                    }
-                    catch (Exception ex) {
-                        return internalServerError
-                            ("Structure "+id+" can't coverted to MRV format");
-                    }
-                }
-                else if (format.equals("mol") || format.equals("sdf")) {
-                    return struc.molfile != null
-                        ? ok (struc.molfile) : noContent ();
-                }
-                else {
-                    return struc.smiles != null
-                        ?  ok (struc.smiles) : noContent ();
-                }
+                    });
+            }
+            catch (Exception ex) {
+                Logger.error("Can't convert format "+format+" for structure "
+                             +id, ex);
+                ex.printStackTrace();
+                return internalServerError
+                    ("Unable to convert structure "+id+" to format "+format);
             }
         }
         return notFound ("Not a valid structure "+id);
@@ -1234,5 +1252,13 @@ public class App extends Controller {
         return renderer.render
             (page, rows, count, pages, result != null ? result.getFacets()
              : new ArrayList<TextIndexer.Facet>(), results);
+    }
+
+    public static Result statistics (String kind) {
+        if (kind.equalsIgnoreCase("cache")) {
+            return ok (ix.ncats.views.html.cachestats.render
+                       (IxCache.getStatistics()));
+        }
+        return badRequest ("Unknown statistics: "+kind);
     }
 }

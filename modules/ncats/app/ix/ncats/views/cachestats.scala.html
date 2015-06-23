@@ -1,0 +1,95 @@
+@import net.sf.ehcache.Statistics
+@import ix.core.plugins.IxCache
+@import play.Play
+
+@(stats: Statistics)
+
+@main("InXight Cache Statistics"){
+@header{
+<a class="brand" href="https://ncats.nih.gov">
+   <img height="50"
+ src='@routes.Assets.at("ncats/images/NIH_NCATS_Master_Logo.png")' alt="NCATS logo"/>
+</a>
+}{
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar"
+	     data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+        </div>
+      </div>
+    </div>
+}}(HtmlFormat.empty){
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+	   <h3 class="panel-title">Cache Configuration</h3>
+	</div>
+	<div class="panel-body">
+	   <table class="table">
+	      <tr>
+	        <td>Max Elements</td>
+		<td>@Play.application().configuration().getInt(IxCache.CACHE_MAX_ELEMENTS)</td>
+	      </tr>
+	      <tr>
+		<td>Time to Live (seconds)</td>
+		<td>@Play.application().configuration().getInt(IxCache.CACHE_TIME_TO_LIVE)</td>
+	      </tr>
+	      <tr>
+		<td>Time to Idle (seconds)</td>
+		<td>@Play.application().configuration().getInt(IxCache.CACHE_TIME_TO_IDLE)</td>
+	      </tr>
+	   </table>
+	</div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+	   <h3 class="panel-title">Cache statistics as of @{new java.util.Date}</h3>
+	</div>
+	<div class="panel-body">
+	  <table class="table table-striped">
+	    <tr>
+	      <th>Parameter</th>
+	      <th>Value</th>
+	    </tr>
+	    <tr>
+	      <td>Average Get Time (ms)</td>
+	      <td>@stats.getAverageGetTime</td>
+	    </tr>
+	    <tr>
+	      <td>Cache Hits</td>
+	      <td>@stats.getCacheHits</td>
+	    </tr>
+	    <tr>
+	      <td>Cache Misses</td>
+	      <td>@stats.getCacheMisses</td>
+	    </tr>
+	    <tr>
+	      <td>Eviction Count</td>
+	      <td>@stats.getEvictionCount</td>
+	    </tr>
+	    <tr>
+	      <td>Object Count</td>
+	      <td>@stats.getObjectCount</td>
+	    </tr>
+	    <tr>
+	      <td>Searches per Second</td>
+	      <td>@stats.getSearchesPerSecond</td>
+	    </tr>
+	  </table>
+	</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+    </div>
+  </div>
+</div>
+}
