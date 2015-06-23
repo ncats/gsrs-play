@@ -14,10 +14,6 @@ public class GinasFactory extends EntityFactory {
         new Model.Finder(Long.class, Principal.class);
 
     public static Result index () {
-        return redirect (routes.GinasFactory.app());
-    }
-    
-    public static Result app () {
         return ok (ix.ginas.views.html.index.render());
     }
 
