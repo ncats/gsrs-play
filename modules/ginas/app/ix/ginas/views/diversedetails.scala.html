@@ -11,7 +11,7 @@
             <div class="row-fluid">
                 <div class="col-md-12">
                     <ul class="nav nav-pills" id="breadcrumb-list">
-                        <li role="presentation" class="active"><a href="#structureDetails">Structure</a></li>
+                        <li role="presentation" class="active"><a href="#structureDetails">Definition</a></li>
 
                         <li role="presentation"><a href="#names">
                             Names <span class="badge">@sub.names.size()</span></a></li>
@@ -41,7 +41,7 @@
     </div>
     <div class="row info" id="substances">
         @if(sub.structurallyDiverse.parentSubstance != null) {
-            Parent Substance:
+            Parent Substance:<br>
             @subref(sub.structurallyDiverse.parentSubstance)
         }
 
@@ -57,18 +57,32 @@
     </div>
 
     <div class="row info" id="details"><ul>
-    <li>Development Stage: @sub.structurallyDiverse.developmentalStage</li>
-        <li>Fraction Name: @sub.structurallyDiverse.fractionName</li>
-        <li>FRaction Material Type: @sub.structurallyDiverse.fractionMaterialType</li>
-        <li>Organism Family: @sub.structurallyDiverse.organismFamily</li>
-        <li>Organism Genus : @sub.structurallyDiverse.organismGenus</li>
-        <li>Organism Species: @sub.structurallyDiverse.organismSpecies</li>
-        <li>Part Location: @sub.structurallyDiverse.partLocation</li>
-        <li>Source Materials Class: @sub.structurallyDiverse.sourceMaterialClass</li>
-        <li>Source Materials State: @sub.structurallyDiverse.sourceMaterialState</li>
-        <li>Source Materials Type: @sub.structurallyDiverse.sourceMaterialType</li>
-        <li>Infra Specific Type: @sub.structurallyDiverse.infraSpecificType</li>
-        <li>Infra Specific Name: @sub.structurallyDiverse.infraSpecificName</li>
+    	@if(sub.structurallyDiverse.sourceMaterialClass != null) {
+        	<li>Source Materials Class: @sub.structurallyDiverse.sourceMaterialClass</li>
+        }
+        @if(sub.structurallyDiverse.sourceMaterialType != null) {<li>Source Materials Type: @sub.structurallyDiverse.sourceMaterialType</li>}
+        @if(sub.structurallyDiverse.sourceMaterialState != null) {<li>Source Materials State: @sub.structurallyDiverse.sourceMaterialState</li>}
+        @if(sub.structurallyDiverse.organismFamily != null) {<li>Organism Family: <a href="../substances?facet=Family/@sub.structurallyDiverse.organismFamily">@sub.structurallyDiverse.organismFamily</a></li>}
+        @if(sub.structurallyDiverse.organismGenus != null) {<li>Organism Genus : <a href="../substances?facet=Genus/@sub.structurallyDiverse.organismGenus">@sub.structurallyDiverse.organismGenus</a></li>}
+        @if(sub.structurallyDiverse.organismSpecies != null) {<li>Organism Species: <a href="../substances?facet=Species/@sub.structurallyDiverse.organismSpecies">@sub.structurallyDiverse.organismSpecies</a></li>}
+        @if(sub.structurallyDiverse.organismAuthor != null) {<li>Author: @sub.structurallyDiverse.organismAuthor</li>}
+        @if(sub.structurallyDiverse.infraSpecificType != null) {<li>Infraspecific Type: @sub.structurallyDiverse.infraSpecificType</li>}
+        @if(sub.structurallyDiverse.infraSpecificName != null) {<li>Infraspecific Name: @sub.structurallyDiverse.infraSpecificName</li>}
+        @if(sub.structurallyDiverse.developmentalStage != null) {<li>Development Stage: @sub.structurallyDiverse.developmentalStage</li>}
+        @if(sub.structurallyDiverse.partLocation != null) {<li>Part Location: @sub.structurallyDiverse.partLocation</li>}
+        @if(sub.structurallyDiverse.part != null) {
+        	<li>Part: @sub.structurallyDiverse.getDisplayParts()</li>
+        }                
+        
+        
+        @if(sub.structurallyDiverse.fractionMaterialType != null) {
+        	<li>Fraction Material Type: @sub.structurallyDiverse.fractionMaterialType</li>      
+        }
+        @if(sub.structurallyDiverse.fractionName != null) {
+        	<li>Fraction Name: @sub.structurallyDiverse.fractionName</li>
+        }
+        
+        
         </ul>
     </div>
 
