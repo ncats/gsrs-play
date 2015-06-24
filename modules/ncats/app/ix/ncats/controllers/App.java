@@ -47,6 +47,7 @@ import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
 import ix.core.controllers.StructureFactory;
 import ix.utils.Util;
+import ix.utils.Global;
 
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
@@ -1260,5 +1261,17 @@ public class App extends Controller {
                        (IxCache.getStatistics()));
         }
         return badRequest ("Unknown statistics: "+kind);
+    }
+
+    public static long[] uptime () {
+        long[] ups = null;
+        if (Global.epoch != null) {
+            ups = new long[3];
+            long u = new java.util.Date().getTime() - Global.epoch.getTime();
+            ups[0] = u/3600000; // hour
+            ups[1] = u/60000; // min
+            ups[2] = u/1000;
+        }
+        return ups;
     }
 }

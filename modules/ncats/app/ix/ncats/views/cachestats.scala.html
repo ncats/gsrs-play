@@ -1,5 +1,6 @@
 @import net.sf.ehcache.Statistics
 @import ix.core.plugins.IxCache
+@import ix.ncats.controllers.App
 @import play.Play
 
 @(stats: Statistics)
@@ -26,40 +27,58 @@
 }}(HtmlFormat.empty){
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-4">
       <div class="panel panel-default">
         <div class="panel-heading">
-	   <h3 class="panel-title">Cache Configuration</h3>
+	   <h3 class="panel-title">Runtime Environment</h3>
 	</div>
 	<div class="panel-body">
-	   <table class="table">
-	      <tr>
-	        <td>Max Elements</td>
-		<td>@Play.application().configuration().getInt(IxCache.CACHE_MAX_ELEMENTS)</td>
-	      </tr>
-	      <tr>
-		<td>Time to Live (seconds)</td>
-		<td>@Play.application().configuration().getInt(IxCache.CACHE_TIME_TO_LIVE)</td>
-	      </tr>
-	      <tr>
-		<td>Time to Idle (seconds)</td>
-		<td>@Play.application().configuration().getInt(IxCache.CACHE_TIME_TO_IDLE)</td>
-	      </tr>
+	  @defining(Runtime.getRuntime()) { rt =>
+	   <table class="table table-striped">
+	     <tr>
+	       <td>Epoch</td>
+	       <td>@ix.utils.Global.epoch<td>
+	     </tr>
+	     @defining(App.uptime) { up =>
+	        @if(up != null) {
+	         <tr>
+		   <td>Uptime</td>
+		   <td>@{"%d hr, %d min, %d sec".format(up(0), up(1), up(2))}</td>
+		 </tr>
+		}
+	     }
+	     <tr>
+	       <td>Server</td>
+	       <td>@java.net.InetAddress.getLocalHost.getCanonicalHostName</td>
+	     </tr>
+	     <tr>
+	       <td>Available Processors</td>
+	       <td>@rt.availableProcessors</td>
+	     </tr>
+	     <tr>
+	       <td>Free Memory</td>
+	       <td>@{"%.2f Mb".format(rt.freeMemory/(1024.0*1024.0))}</td>
+	     </tr>
+	     <tr>
+	       <td>Total Memory</td>
+	       <td>@{"%.2f Mb".format(rt.totalMemory/(1024.0*1024.0))}</td>
+	     </tr>
+	     <tr>
+	       <td>Max Memory</td>
+	       <td>@{"%.2f Mb".format(rt.maxMemory/(1024.0*1024.0))}</td>
+	     </tr>
 	   </table>
+	  }
 	</div>
       </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
       <div class="panel panel-default">
         <div class="panel-heading">
 	   <h3 class="panel-title">Cache statistics as of @{new java.util.Date}</h3>
 	</div>
 	<div class="panel-body">
 	  <table class="table table-striped">
-	    <tr>
-	      <th>Parameter</th>
-	      <th>Value</th>
-	    </tr>
 	    <tr>
 	      <td>Average Get Time (ms)</td>
 	      <td>@stats.getAverageGetTime</td>
@@ -88,7 +107,28 @@
 	</div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+	   <h3 class="panel-title">Cache Configuration</h3>
+	</div>
+	<div class="panel-body">
+	   <table class="table table-striped">
+	      <tr>
+	        <td>Max Elements</td>
+		<td>@Play.application().configuration().getInt(IxCache.CACHE_MAX_ELEMENTS)</td>
+	      </tr>
+	      <tr>
+		<td>Time to Live (seconds)</td>
+		<td>@Play.application().configuration().getInt(IxCache.CACHE_TIME_TO_LIVE)</td>
+	      </tr>
+	      <tr>
+		<td>Time to Idle (seconds)</td>
+		<td>@Play.application().configuration().getInt(IxCache.CACHE_TIME_TO_IDLE)</td>
+	      </tr>
+	   </table>
+	</div>
+      </div>
     </div>
   </div>
 </div>

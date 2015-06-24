@@ -101,6 +101,7 @@ import play.db.ebean.Model;
 import ix.utils.Global;
 import ix.core.models.Indexable;
 import ix.core.models.DynamicFacet;
+import ix.core.plugins.IxCache;
 
 /**
  * Singleton class that responsible for all entity indexing
@@ -453,20 +454,19 @@ public class TextIndexer {
                         }
                         
                         try {
-                            Object value = Cache.getOrElse
+                            Object value = IxCache.getOrElse
                                 (field+":"+id.stringValue(), new Callable () {
                                         public Object call () throws Exception {
                                             return findObject (kind, id);
                                         }
-                                    }, CACHE_TIMEOUT);
+                                    });
                             
                             if (value != null)
                                 result.add(value);
                         }
                         catch (Exception ex) {
-                            Logger.trace("Can't locate class "
-                                         +kind.stringValue()
-                                         +" in classpath!", ex);
+                            Logger.trace("Can't locate object "
+                                         +field+":"+id.stringValue(), ex);
                         }
                     }
                     else {
