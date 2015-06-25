@@ -336,4 +336,22 @@ public class Substance extends Ginas {
     		return false;
     	}
     }
+    public boolean hasModifications(){
+    	if(this.modifications!=null){
+    		if(this.modifications.agentModifications.size()>0 || this.modifications.physicalModifications.size()>0 || this.modifications.structuralModifications.size()>0){
+    			return true;
+    		}
+    	}
+		return false;
+    	
+    }
+    public int getModificationCount(){
+    	int ret=0;
+    	if(this.modifications!=null){
+    		ret+=this.modifications.agentModifications.size();
+    		ret+=this.modifications.physicalModifications.size();
+    		ret+=this.modifications.structuralModifications.size();
+    	}
+    	return ret;
+    }
 }

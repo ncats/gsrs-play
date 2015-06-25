@@ -47,4 +47,27 @@ public class Amount extends Ginas {
     public String approvalID;
 
     public Amount () {}
+    
+    
+    public String toString(){
+    	String val="";
+    	if(highLimit!=null && lowLimit==null && average==null){
+    		val=">"+highLimit;
+    	}else if(highLimit==null && lowLimit==null && average!=null){
+    		val=average+"";
+    	}else if(highLimit==null && lowLimit!=null && average==null){
+    		val="<" + lowLimit;
+    	}else if(highLimit!=null && lowLimit!=null && average!=null){
+    		val=average + "[" + lowLimit + " to " + highLimit + "]";
+    	}else if(highLimit!=null && lowLimit==null && average!=null){
+    		val=average + "[>" + highLimit + "]";
+    	}else if(highLimit==null && lowLimit!=null && average!=null){
+    		val=average + "[<" + lowLimit + "]";
+    	}
+    	if(nonNumericValue!=null){
+    		
+    	}
+    	
+    	return val+ " (" + units + ")"; 
+    }
 }

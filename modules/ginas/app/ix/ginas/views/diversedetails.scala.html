@@ -92,6 +92,111 @@
     </div>
 
 
+     @if(sub.hasModifications()) {
+      
+            <div class="row info" id="mods">
+                <button class="btn btn-primary label-offset det ">
+                    Modifications&nbsp;<span class="badge head"> @sub.getModificationCount()</span></button>
+                <div class="col-md-12">
+                    @if(sub.modifications.agentModifications.length > 0) {
+                        <div class = "row">
+                            <div class="col-md-12">
+                                Agent Modifications
+                                <table class="table table-striped" id="agent-Table">
+                                    <thead>
+                                        <tr>
+                                            <th>Modification Process</th>
+                                            <th>Location Role</th>
+                                            <th>Modification Type</th>
+                                            <th>Amount</th>
+                                            <th>Fragment Name</th>
+                                            <th>Fragment ID</th>
+                                        </tr>
+                                        @for(m <- sub.modifications.agentModifications) {
+                                            <tr>
+                                                <td>@m.agentModificationProcess</td>
+                                                <td>@m.agentModificationRole</td>
+                                                <td>@m.agentModificationType</td>
+                                                <td>amount</td>
+                                                <td>@m.agentSubstance.refPname</td>
+                                                <td>
+                                                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(m.agentSubstance.getLinkingID())">@m.agentSubstance.getLinkingID()</a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    }
+                    @if(sub.modifications.physicalModifications.length > 0) {
+                        <div class = "row">
+                            <div class="col-md-12">
+                                Physical Modifications
+                                <table class="table table-striped" id="physical-Table">
+                                    <thead>
+                                        <tr>
+                                            <th>Modification Role</th>
+                                            <th>Parameter Name</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    @for(m <- sub.modifications.physicalModifications) {
+                                    	@for(pm <- m.parameters) {
+                                        <tr>
+                                            <td>@m.physicalModificationRole</td>
+                                            <td>@pm.parameterName</td>
+                                            <td>@pm.amount.toString()</td>
+                                        </tr>
+                                        }
+                                    }
+                                 </table>
+                            </div>
+                        </div>
+                   
+                    }
+                    @if(sub.modifications.structuralModifications.length > 0) {
+                        <div class = "row">
+                            <div class="col-md-12">
+                                Structural Modifications
+                                <table class="table table-striped" id="structural-Table">
+                                    <thead>
+                                        <tr>
+                                            <th>Modification Type</th>
+                                            <th>Location Site</th>
+                                            <th>Location Type</th>
+                                            <th>Residue Modified</th>
+                                            <th>Extent</th>
+                                            <th>Fragment Name</th>
+                                            <th>Fragment Class</th>
+                                            <th>Fragment Approval</th>
+                                        </tr>
+                                    </thead>
+                                    @for(m <- sub.modifications.structuralModifications) {
+                                        <tr>
+                                            <td>@m.structuralModificationType</td>
+                                            <td>@for(s <- m.sites) {
+                                                [@{
+                                                s.subunitIndex
+                                            }_@s.residueIndex]
+                                            }
+                                            </td>
+                                            <td>@m.locationType</td>
+                                            <td>@m.residueModified</td>
+                                            <td>@m.extent</td>
+                                            <td>@m.molecularFragment.refPname</td>
+                                            <td>@m.molecularFragment.substanceClass</td>
+                                            <td><a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())">@m.molecularFragment.getLinkingID()</a></td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+    }
+
     <div class="row info" id="names">
     @names(sub.names)
     </div>
