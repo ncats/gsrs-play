@@ -274,17 +274,19 @@ public class Substance extends Ginas {
     }
     
     public boolean isNonSubstanceConcept(){
-    	if(this.substanceClass.equals("concept")){
+    	if(this.substanceClass.toString().equals("concept")){
     		return 	!isSubstanceVariant();
     	}
     	return false;
     }
     public boolean isSubstanceVariant(){
-    	for(Relationship r:relationships){
-			if(r.type.equals("SUBSTANCE->SUB_CONCEPT")){
-				return true;
+    	if(this.substanceClass.toString().equals("concept")){
+	    	for(Relationship r:relationships){
+				if(r.type.equals("SUBSTANCE->SUB_CONCEPT")){
+					return true;
+				}
 			}
-		}
+    	}
 		return false;
     }
     
@@ -315,7 +317,7 @@ public class Substance extends Ginas {
     	if(approvalID!=null)return approvalID;
     	SubstanceReference subRef=getParentSubstanceReference();
     	if(subRef!=null){
-    		return "[variant]" + subRef.approvalID;
+    		return subRef.approvalID;
     	}
     	return null;
     }

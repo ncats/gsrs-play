@@ -905,3 +905,10 @@ div#num {
     top: 20px;
     left: -14px;
 }
+
+.keyvalue tr td:first-child{
+	font-weight: bold
+}
+.subconcept {
+  font-style: italic;
+}
