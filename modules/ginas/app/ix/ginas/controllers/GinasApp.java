@@ -963,7 +963,9 @@ public class GinasApp extends App {
     @SuppressWarnings("rawtypes")
     public static int getCount (Object obj){
         int count=0;
+        if(obj==null)return count;
         try {
+        	
             for(Field l: obj.getClass().getFields()){
 //                                              Logger.info(l.getName().toString());
                 Class type = l.getType();

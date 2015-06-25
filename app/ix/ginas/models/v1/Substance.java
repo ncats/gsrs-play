@@ -354,4 +354,7 @@ public class Substance extends Ginas {
     	}
     	return ret;
     }
+    public Modifications getModifications(){
+    	return modifications;
+    }
 }
