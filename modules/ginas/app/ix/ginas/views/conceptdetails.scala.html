@@ -9,25 +9,14 @@
         </div>
     </div>
     <div class="row info" id="details">
+    	<div class = "col-md-12">
      	@if(sub.isNonSubstanceConcept()) {
     		This is a non-substance concept
     	}else{
     		This is a sub-concept of substance:<br> 
-    		 			@if(SubstanceFactory.getFullSubstance(sub.getParentSubstanceReference()) != null) {
-                            @subref(sub.getParentSubstanceReference())
-                        }else{
-                            <div class="col-md-3 text-center thumb-col">
-                                <div class="panel panel-default">
-                                    <div class = "panel-body">
-                            			<i>Substance not yet imported</i> <br />
-                        			</div>
-		                    		<div class = "panel-footer">
-		                    			@sub.getParentSubstanceReference().refPname
-		                    		</div>
-                         		</div>
-                            </div>
-                    	}
+    		@subref(sub.getParentSubstanceReference())
     		
     	}
+    	</div>
     </div>
 }
