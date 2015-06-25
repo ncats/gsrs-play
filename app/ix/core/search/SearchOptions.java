@@ -1,17 +1,22 @@
 package ix.core.search;
 
+import play.Logger;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class SearchOptions {
     public static final int DEFAULT_TOP = 10;
     public static final int DEFAULT_FDIM = 10;
+    // default number of elements to fetch while blocking
+    public static final int DEFAULT_FETCH_SIZE = 50;
     
     public Class<?> kind; // filter by type
 
     public int top = DEFAULT_TOP;
     public int skip;
+    public int fetch = DEFAULT_FETCH_SIZE;
     public int fdim = DEFAULT_FDIM; // facet dimension
     // whether drilldown (false) or sideway (true)
     public boolean sideway = true;
@@ -41,11 +46,60 @@ public class SearchOptions {
     }
 
     public int max () { return skip+top; }
+
+    public void parse (Map<String, String[]> params) {
+        for (Map.Entry<String, String[]> me : params.entrySet()) {
+            if ("facet".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue()){
+                    facets.add(s);
+                }
+            }
+            else if ("order".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue())
+                    order.add(s);
+            }
+            else if ("expand".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue())
+                    expand.add(s);
+            }
+            else if ("drill".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue())
+                    sideway = "sideway".equalsIgnoreCase(s);
+            }
+            else if ("kind".equalsIgnoreCase(me.getKey())) {
+                if (this.kind == null) {
+                    for (String kind: me.getValue()) {
+                        if (kind.length() > 0) {
+                            try {
+                                this.kind = Class.forName(kind);
+                                break; // there should only be one!
+                            }
+                            catch (Exception ex) {
+                                Logger.error
+                                    ("Unable to load class: "+kind, ex);
+                            }
+                        }
+                    }
+                }
+            }
+            else if ("fetch".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue()) {
+                    try {
+                        fetch = Integer.parseInt(s);
+                    }
+                    catch (NumberFormatException ex) {
+                        Logger.error("Not a valid number: "+s);
+                    }
+                }
+            }
+        }
+    }
+    
     public String toString () {
         StringBuilder sb = new StringBuilder
             ("SearchOptions{kind="+(kind!=null ? kind.getName():"")
-             +",top="+top+",skip="+skip+",fdim="+fdim+",sideway="+sideway
-             +",filter="+filter+",facets={");
+             +",top="+top+",skip="+skip+",fdim="+fdim+",fetch="+fetch
+             +",sideway="+sideway+",filter="+filter+",facets={");
         for (Iterator<String> it = facets.iterator(); it.hasNext(); ) {
             sb.append(it.next());
             if (it.hasNext()) sb.append(",");

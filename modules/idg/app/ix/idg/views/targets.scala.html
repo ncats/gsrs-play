@@ -144,87 +144,6 @@ var tinx = function() {
     });
 }
 
-function wordcloud () {
-  var fill = d3.scale.category20();
-  var keywords = [
-    {text: 'Complete proteome',
-     size: 338},
-    {text: 'Reference proteome',
-     size: 338},
-    {text: 'Polymorphism',
-     size: 292},
-    {text: 'ATP-binding',
-     size: 268},
-    {text: 'Nucleotide-binding',
-     size: 268},
-    {text: 'Kinase',
-     size: 267},
-    {text: 'Transferase',
-     size: 267},
-    {text: 'Phosphoprotein',
-     size: 257},
-    {text: 'Serine/threonine-protein kinase',
-     size: 232},
-    {text: 'Alternative splicing',
-     size: 225},
-    {text: '3D-structure',
-     size: 182},
-    {text: 'Cytoplasm',
-     size: 176},
-    {text: 'Membrane',
-     size: 164},
-    {text: 'Nucleus',
-     size: 125},
-    {text: 'Cell membrane',
-     size: 119},
-    {text: 'Metal-binding',
-     size: 94},
-    {text: 'Transmembrane',
-     size: 92},
-    {text: 'Transmembrane helix',
-     size: 92},
-    {text: 'Magnesium',
-     size: 80},
-    {text: 'Receptor',
-     size: 78}
-  ];
-  d3.layout.cloud().size([300, 500])
-  /*
-      .words([
-        "Hello", "world", "normally", "you", "want", "more", "words",
-        "than", "this"].map(function(d) {
-        return {text: d, size: 10 + Math.random() * 20};
-      }))
-      */
-      .words(keywords.map(function(d) {
-        return {text: d.text, size: d.size/10};
-      }))
-      .padding(5)
-      .rotate(function() { return ~~(Math.random() * 2) * 60; })
-      .font("Impact")
-      .fontSize(function(d) { return d.size; })
-      .on("end", draw)
-      .start();
-
-  function draw(words) {
-    d3.select("#word-cloud").append("svg")
-        .attr("width", 300)
-        .attr("height", 500)
-      .append("g")
-        .attr("transform", "translate(100,100)")
-      .selectAll("text")
-        .data(words)
-      .enter().append("text")
-        .style("font-size", function(d) { return d.size + "px"; })
-        .style("font-family", "Impact")
-        .style("fill", function(d, i) { return fill(i); })
-        .attr("text-anchor", "middle")
-        .attr("transform", function(d) {
-          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-        })
-        .text(function(d) { return d.text; });
-  }
-}
 
 $(document).ready(function () {
    jQuery('#content-tab a[href="#viz"]').click(function (e) {
@@ -234,7 +153,6 @@ $(document).ready(function () {
       //jQuery(window).trigger('resize');
       d3.select('svg').remove();
       tinx();
-      //wordcloud();
       //window.dispatchEvent(new Event('resize'));
       console.log('tab shown: '+e.target);
    });

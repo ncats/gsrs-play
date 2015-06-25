@@ -3,7 +3,7 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int])(trailer: Html)
 
 @item(page: Int) = {
-<li><a href="@App.page(rows,page)">
+<li><a href="@HtmlFormat.raw(App.page(rows,page))">
     <span aria-hidden="true">@page</span>
 </a></li>
 }
@@ -19,13 +19,13 @@
       <ul class="pagination">
       @if(current <= 1) {
         <li class="disabled">
-         <a href='@App.page(rows,current)' aria-label="Previous">
+         <a href='@HtmlFormat.raw(App.page(rows,current))' aria-label="Previous">
 	   <span aria-hidden="true" class="fa fa-angle-double-left"></span>   
          </a>
         </li>
       } else {
         <li>
-            <a href='@App.page(rows, current-1)' aria-label="Previous">
+            <a href='@HtmlFormat.raw(App.page(rows, current-1))' aria-label="Previous">
               <span aria-hidden="true" class="fa fa-angle-double-left"></span>
             </a>
         </li>
@@ -38,7 +38,7 @@
         } else {
            @if(i == current) {
               <li class="active">
-                <a href='@App.page(rows,current)'>@current</a>
+                <a href='@HtmlFormat.raw(App.page(rows,current))'>@current</a>
               </li>
            } else {
               @item(i)
@@ -47,13 +47,13 @@
       }
       @if(current >= pages(pages.length-1)) {                  
          <li class="disabled">
-           <a href='@App.page(rows,current)' aria-label="Next">
+           <a href='@HtmlFormat.raw(App.page(rows,current))' aria-label="Next">
              <span aria-hidden="true" class="fa fa-angle-double-right"></span>
            </a>
          </li>
       } else {
          <li>
-           <a href='@App.page(rows,current+1)' aria-label="Next">
+           <a href='@HtmlFormat.raw(App.page(rows,current+1))' aria-label="Next">
              <span aria-hidden="true" class="fa fa-angle-double-right"></span>
            </a>
          </li>
