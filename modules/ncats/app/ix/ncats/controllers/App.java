@@ -197,9 +197,19 @@ public class App extends Controller {
             return URLDecoder.decode(s, "utf8");
         }
         catch (Exception ex) {
+            Logger.trace("Can't decode string "+s, ex);
+        }
+        return s;
+    }
+
+    public static String encode (String s) {
+        try {
+            return URLEncoder.encode(s, "utf8");
+        }
+        catch (Exception ex) {
             Logger.trace("Can't encode string "+s, ex);
         }
-        return null;
+        return s;
     }
 
     public static String encode (Facet facet) {
@@ -209,7 +219,7 @@ public class App extends Controller {
         catch (Exception ex) {
             Logger.trace("Can't encode string "+facet.getName(), ex);
         }
-        return null;
+        return facet.getName();
     }
     
     public static String encode (Facet facet, int i) {
@@ -220,17 +230,17 @@ public class App extends Controller {
         catch (Exception ex) {
             Logger.trace("Can't encode string "+value, ex);
         }
-        return null;
+        return value;
     }
 
     public static String page (int rows, int page) {
         String url = "http"+ (request().secure() ? "s" : "") + "://"
             +request().host()
-            +request().uri();
+            +request().uri().replaceAll("\\+", "%20");
         if (url.charAt(url.length() -1) == '?') {
             url = url.substring(0, url.length()-1);
         }
-        //Logger.debug(url);
+        //Logger.debug("url: "+url);
 
         Map<String, Collection<String>> params =
             WS.url(url).getQueryParameters();
@@ -240,8 +250,10 @@ public class App extends Controller {
         params.remove("page");
         StringBuilder uri = new StringBuilder ("?page="+page);
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
-            for (String v : me.getValue())
-                uri.append("&"+me.getKey()+"="+v);
+            for (String v : me.getValue()) {
+                //Logger.debug(v+" => "+decode(v));
+                uri.append("&"+me.getKey()+"="+v.replaceAll("\\+", "%2B"));
+            }
         }
         
         return uri.toString();
@@ -314,8 +326,14 @@ public class App extends Controller {
                             }
                         }
                         
-                        if (!matched)
+                        if (!matched) {
+                            int pos = v.indexOf('/');
+                            if (pos > 0) {
+                                v = v.substring(0, pos+1)
+                                    + encode (v.substring(pos+1));
+                            }
                             uri.append(me.getKey()+"="+v+"&");
+                        }
                     }
             }
             else {
@@ -545,7 +563,6 @@ public class App extends Controller {
                 result = getOrElse
                     (sha1, new Callable<SearchResult>() {
                             public SearchResult call () throws Exception {
-                                Logger.debug("Cache 1 missed: "+sha1);
                                 return SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
@@ -562,7 +579,6 @@ public class App extends Controller {
                         (sha1, new Callable<SearchResult>() {
                                 public SearchResult call ()
                                     throws Exception {
-                                    Logger.debug("Cache 2 missed: "+sha1);
                                     return SearchFactory.search
                                     (kind, q, total, 0, FACET_DIM,
                                      request().queryString());
@@ -666,7 +682,7 @@ public class App extends Controller {
         String key = Util.sha1(value)+"::"+size;
         Result result = null;
         try {
-            result = IxCache.getOrElse(key, new Callable<Result> () {
+            result = getOrElse (key, new Callable<Result> () {
                     public Result call () throws Exception {
                         WSRequestHolder ws = WS.url(RENDERER_URL)
                         .setFollowRedirects(true)
@@ -680,7 +696,7 @@ public class App extends Controller {
                         }
                         return null;
                     }
-                }, CACHE_TIMEOUT);
+                });
             
             if (result == null)
                 IxCache.remove(key);
@@ -801,7 +817,6 @@ public class App extends Controller {
             try {
                 Result result = getOrElse (key, new Callable<Result> () {
                         public Result call () throws Exception {
-                            Logger.debug("Cache missed: "+key);
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
                                 return ok (render (struc, format, size));
@@ -827,7 +842,6 @@ public class App extends Controller {
             try {
                 return getOrElse (key, new Callable<Result> () {
                         public Result call () throws Exception {
-                            Logger.debug("Cache missed: "+key);
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
                                 response().setContentType("text/plain");
@@ -1141,7 +1155,6 @@ public class App extends Controller {
                 (strucIndexer.lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
-                             Logger.debug("Cache missed: "+key);
                              processor.setResults
                                  (rows, strucIndexer.substructure(query, 0));
                              return processor.getContext();
@@ -1170,7 +1183,6 @@ public class App extends Controller {
                 (strucIndexer.lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
-                             Logger.debug("Cache missed: "+key);
                              processor.setResults
                                  (rows, strucIndexer.similarity
                                   (query, threshold, 0));
@@ -1195,7 +1207,6 @@ public class App extends Controller {
         final TextIndexer.SearchResult result = getOrElse
             (key, new Callable<TextIndexer.SearchResult> () {
                     public TextIndexer.SearchResult call () throws Exception {
-                        Logger.debug("Cache missed: "+key);
                         List results = context.getResults();
                         return results.isEmpty() ? null : SearchFactory.search
                         (results, null, results.size(), 0,
@@ -1231,6 +1242,9 @@ public class App extends Controller {
                 results.add((T)result.get(i));
         }
 
+        final List<TextIndexer.Facet> facets = result != null
+            ? result.getFacets() : new ArrayList<TextIndexer.Facet>();
+
         if (IxCache.contains(key)) {
             final String k = "structureResult/"
                 +context.getId()+"/"+Util.sha1(request());
@@ -1242,17 +1256,14 @@ public class App extends Controller {
             // result is cached
             return getOrElse (k, new Callable<Result> () {
                     public Result call () throws Exception {
-                        Logger.debug("Cache missed: "+k);
                         return renderer.render
                             (_page, _rows, _count, _pages,
-                             result.getFacets(), results);
+                             facets, results);
                     }
                 });
         }
         
-        return renderer.render
-            (page, rows, count, pages, result != null ? result.getFacets()
-             : new ArrayList<TextIndexer.Facet>(), results);
+        return renderer.render(page, rows, count, pages, facets, results);
     }
 
     public static Result statistics (String kind) {
@@ -1263,14 +1274,16 @@ public class App extends Controller {
         return badRequest ("Unknown statistics: "+kind);
     }
 
-    public static long[] uptime () {
-        long[] ups = null;
+    public static int[] uptime () {
+        int[] ups = null;
         if (Global.epoch != null) {
-            ups = new long[3];
-            long u = new java.util.Date().getTime() - Global.epoch.getTime();
-            ups[0] = u/3600000; // hour
-            ups[1] = u/60000; // min
-            ups[2] = u/1000;
+            ups = new int[3];
+            // epoch in seconds
+            long u = (new java.util.Date().getTime()
+                      - Global.epoch.getTime())/1000;
+            ups[0] = (int)(u/3600); // hour
+            ups[1] = (int)((u/60) % 60); // min
+            ups[2] = (int)(u%60); // sec
         }
         return ups;
     }

@@ -41,47 +41,7 @@ public class SearchFactory extends EntityFactory {
         if (options == null) {
             options = new SearchOptions ();
         }
-        for (Map.Entry<String, String[]> me : queryParams.entrySet()) {
-            if ("facet".equalsIgnoreCase(me.getKey())) {
-                for (String s : me.getValue()){
-                    options.facets.add(s);
-                }
-            }
-            else if ("order".equalsIgnoreCase(me.getKey())) {
-                for (String s : me.getValue())
-                    options.order.add(s);
-            }
-            else if ("expand".equalsIgnoreCase(me.getKey())) {
-                for (String s : me.getValue())
-                    options.expand.add(s);
-            }
-            else if ("drill".equalsIgnoreCase(me.getKey())) {
-                for (String s : me.getValue())
-                    options.sideway = "sideway".equalsIgnoreCase(s);
-            }
-            else if ("kind".equalsIgnoreCase(me.getKey())) {
-                if (options.kind == null) {
-                    for (String kind: me.getValue()) {
-                        if (kind.length() > 0) {
-                            try {
-                                options.kind = Class.forName(kind);
-                                break; // there should only be one!
-                            }
-                            catch (Exception ex) {
-                                Logger.error("Unable to load class: "+kind, ex);
-                            }
-                        }
-                    }
-                }
-            }
-            
-            if (Global.DEBUG(1)) {
-                StringBuilder sb = new StringBuilder ();
-                for (String s : me.getValue())
-                    sb.append("\n"+s);
-                Logger.debug(me.getKey()+sb);
-            }
-        }
+        options.parse(queryParams);
         return options;
     }
 
