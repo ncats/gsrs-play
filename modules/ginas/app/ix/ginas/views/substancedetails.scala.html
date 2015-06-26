@@ -170,7 +170,19 @@
         @relationships(sub.relationships)
         </div>
     }
-
+	@if(sub.notes!=null && sub.notes.size()>0) {
+		<div class="row info" id="notes">
+		 <button class="btn btn-primary label-offset det ">
+                    Notes&nbsp;<span class="badge head"> @sub.notes.size()</span></button>
+                    <table class="table table-striped" id="notes-Table">
+       	@for(n <- sub.notes) {
+       		<tr><td>
+       		@n.note
+       		</td></tr>      			
+       	} 
+       	</table>
+        </div>
+    }
 
 
     <div class="row info" id="refs">
