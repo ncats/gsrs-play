@@ -39,7 +39,7 @@
 	        @if(sub.structurallyDiverse.infraSpecificName != null && !sub.structurallyDiverse.infraSpecificName.equals("")) {<tr><td>Infraspecific Name</td><td>@sub.structurallyDiverse.infraSpecificName</td></tr>}
 	        @if(sub.structurallyDiverse.developmentalStage != null && !sub.structurallyDiverse.developmentalStage.equals("")) {<tr><td>Development Stage</td><td>@sub.structurallyDiverse.developmentalStage</td></tr>}
 	        @if(sub.structurallyDiverse.partLocation != null && !sub.structurallyDiverse.partLocation.equals("")) {<tr><td>Part Location</td><td>@sub.structurallyDiverse.partLocation</td></tr>}
-	        @if(sub.structurallyDiverse.part != null && sub.structurallyDiverse.part.size()!=0) {
+	        @if(sub.structurallyDiverse.part != null && sub.structurallyDiverse.part.size() > 0 && !sub.structurallyDiverse.getDisplayParts().equals("")) {
 	        	<tr><td>Part</td><td>@sub.structurallyDiverse.getDisplayParts()</td></tr>
 	        }                
 	        @if(sub.structurallyDiverse.fractionMaterialType != null && !sub.structurallyDiverse.fractionMaterialType.equals("")) {
