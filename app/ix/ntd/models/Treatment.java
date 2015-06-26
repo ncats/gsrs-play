@@ -10,22 +10,29 @@ import java.util.Date;
 @DiscriminatorValue("TRE")
 public class Treatment extends Model {
     @Indexable(facet=true)
-    public String treatmentName;
 
-    public Integer dose;
     public enum DosageUnit{
-        g,
-        micrograms,
-        mg,
-        mcg_kg,
-        mg_kg_day,
-        mg_kg,
-        ml,
-        mol,
-        Other
+        g("g"),
+        micrograms("micrograms"),
+        mg("mg"),
+        mcg_kg("mcg/kg"),
+        mg_kg_day("mg/kg/day"),
+        mg_kg("mg/kg"),
+        ml("ml"),
+        mol("mol");
+
+        private String displayName;
+
+        DosageUnit(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String displayName() {
+            return displayName;
+        }
 
     }
-    public Integer frequency;
+
     public enum FrequencyUnit{
         Hourly,
         Daily,
@@ -34,7 +41,7 @@ public class Treatment extends Model {
         Yearly,
         Other
     }
-    public Integer treatmentDuration;
+
     public enum DurationUnit{
         Hours,
         Days,
@@ -54,8 +61,16 @@ public class Treatment extends Model {
         Other
     }
 
+    public String treatmentName;
+    public Integer dose;
+    public Integer treatmentDuration;
+    public Integer frequency;
     public Integer regimenID;
 
+    public DosageUnit dosageUnit;
+    public FrequencyUnit frequencyUnit;
+    public DurationUnit durationUnit;
+    public Route route;
     @Lob
     public String treatmentNotes;
 
