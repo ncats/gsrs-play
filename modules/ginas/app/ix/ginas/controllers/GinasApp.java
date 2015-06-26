@@ -76,10 +76,7 @@ public class GinasApp extends App {
             "Material Class",
             "Material Type",
             "Family",
-            "Genus",
-            "Species",
-            "part"
-            
+            "Parts"
     };
 
     static <T> List<T> filter (Class<T> cls, List values, int max) {
@@ -683,10 +680,10 @@ public class GinasApp extends App {
 
     public static <T extends Substance> List<T> resolve
         (Model.Finder<UUID, T> finder, String name) {
-    	if(name==null){
-        	return null;
+        if(name==null){
+                return null;
         }
-    	List<T> values = new ArrayList<T>();
+        List<T> values = new ArrayList<T>();
         if (name.length() == 8) { // might be uuid
             values = finder.where().istartsWith("uuid", name).findList();
         }
@@ -966,7 +963,9 @@ public class GinasApp extends App {
     @SuppressWarnings("rawtypes")
     public static int getCount (Object obj){
         int count=0;
+        if(obj==null)return count;
         try {
+        	
             for(Field l: obj.getClass().getFields()){
 //                                              Logger.info(l.getName().toString());
                 Class type = l.getType();

@@ -1,0 +1,26 @@
+@import ix.core.models.Structure
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.StructurallyDiverseSubstance
+@(sub: StructurallyDiverseSubstance)
+
+<div class = "col-md-3 thumb-col">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+
+            <p class="text-right" data-toggle="tooltip" title="Approval ID">
+                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+                    <code> @sub.approvalID</code></a></p>
+        </div>
+        <div class="panel-body struc-img">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+                <i class="fa fa-puzzle-piece fa-4x "></i>
+            </a>
+        </div>
+        <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@sub.getName()">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+            @GinasApp.truncate(sub.getName())
+            </a>
+        </div>
+    </div>
+</div>
+<!--END panel panel-primary-->

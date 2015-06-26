@@ -274,17 +274,19 @@ public class Substance extends Ginas {
     }
     
     public boolean isNonSubstanceConcept(){
-    	if(this.substanceClass.equals("concept")){
+    	if(this.substanceClass.toString().equals("concept")){
     		return 	!isSubstanceVariant();
     	}
     	return false;
     }
     public boolean isSubstanceVariant(){
-    	for(Relationship r:relationships){
-			if(r.type.equals("SUBSTANCE->SUB_CONCEPT")){
-				return true;
+    	if(this.substanceClass.toString().equals("concept")){
+	    	for(Relationship r:relationships){
+				if(r.type.equals("SUBSTANCE->SUB_CONCEPT")){
+					return true;
+				}
 			}
-		}
+    	}
 		return false;
     }
     
@@ -301,5 +303,60 @@ public class Substance extends Ginas {
 			}
 		}
     	return null;
+    }
+    
+    public String getApprovalID(){
+    	if(approvalID!=null)return approvalID;
+    	SubstanceReference subRef=getParentSubstanceReference();
+    	if(subRef!=null){
+    		return subRef.approvalID;
+    	}
+    	return null;
+    }
+    public String getApprovalIDDisplay(){
+    	if(approvalID!=null)return approvalID;
+    	SubstanceReference subRef=getParentSubstanceReference();
+    	if(subRef!=null){
+    		return subRef.approvalID;
+    	}
+    	return null;
+    }
+    
+    public List<SubstanceReference> getChildConceptReferences(){
+    	List<SubstanceReference> subConcepts = new ArrayList<SubstanceReference>();
+    	for(Relationship r:relationships){
+			if(r.type.equals("SUB_CONCEPT->SUBSTANCE")){
+				subConcepts.add(r.relatedSubstance);
+			}
+		}
+    	return subConcepts;
+    }
+    public boolean hasChildConceptReferences(){
+    	if(getChildConceptReferences().size()>0){
+    		return true;
+    	}else{
+    		return false;
+    	}
+    }
+    public boolean hasModifications(){
+    	if(this.modifications!=null){
+    		if(this.modifications.agentModifications.size()>0 || this.modifications.physicalModifications.size()>0 || this.modifications.structuralModifications.size()>0){
+    			return true;
+    		}
+    	}
+		return false;
+    	
+    }
+    public int getModificationCount(){
+    	int ret=0;
+    	if(this.modifications!=null){
+    		ret+=this.modifications.agentModifications.size();
+    		ret+=this.modifications.physicalModifications.size();
+    		ret+=this.modifications.structuralModifications.size();
+    	}
+    	return ret;
+    }
+    public Modifications getModifications(){
+    	return modifications;
     }
 }

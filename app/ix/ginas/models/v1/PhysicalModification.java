@@ -2,6 +2,7 @@ package ix.ginas.models.v1;
 
 import java.util.List;
 import java.util.ArrayList;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,6 +26,7 @@ public class PhysicalModification extends Ginas {
     @JoinTable(name="ix_ginas_physical_modification_param")
     public List<PhysicalParameter> parameters =
         new ArrayList<PhysicalParameter>();
-
+    @JSONEntity(title = "Modification Group")
+	String modificationGroup = "1";
     public PhysicalModification () {}
 }

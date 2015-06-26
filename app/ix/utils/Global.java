@@ -47,6 +47,8 @@ public class Global extends GlobalSettings {
     private Set<Class<?>> resources;
     private IxContext ctx;
 
+    public static Date epoch;
+
     protected void init (Application app) throws Exception {
         ctx = app.plugin(IxContext.class);
         if (ctx == null) {
@@ -71,7 +73,8 @@ public class Global extends GlobalSettings {
     public void onStart (Application app) {
         try {
             init (app);
-            Logger.info("Global instance "+this);
+            epoch = new Date ();
+            Logger.info("Global instance "+this+" started at "+epoch);
             _instance = this;
         }
         catch (Exception ex) {

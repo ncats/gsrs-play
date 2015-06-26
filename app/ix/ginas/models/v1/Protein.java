@@ -67,7 +67,7 @@ public class Protein extends Ginas {
     @JsonIgnore
     private Map<String, String> _modifiedCache=null;
     public Map<String, String> getModifiedSites(){
-    	
+    	Map<String, String> _modifiedCache = null;
     	if(_modifiedCache!=null){
     		return _modifiedCache;
     	}
@@ -80,22 +80,26 @@ public class Protein extends Ginas {
     		}
     	}
     	//glycosylation
-    	for(Site s: this.glycosylation.NGlycosylationSites){
-    		_modifiedCache.put(s.toString(),"nglycosylation");
+    	if(this.glycosylation!=null){
+	    	for(Site s: this.glycosylation.NGlycosylationSites){
+	    		_modifiedCache.put(s.toString(),"nglycosylation");
+	    	}
+	    	for(Site s: this.glycosylation.OGlycosylationSites){
+				_modifiedCache.put(s.toString(),"oglycosylation");
+	    	}
+	    	for(Site s: this.glycosylation.CGlycosylationSites){
+				_modifiedCache.put(s.toString(),"cglycosylation");
+	    	}    	
     	}
-    	for(Site s: this.glycosylation.OGlycosylationSites){
-			_modifiedCache.put(s.toString(),"oglycosylation");
-    	}
-    	for(Site s: this.glycosylation.CGlycosylationSites){
-			_modifiedCache.put(s.toString(),"cglycosylation");
-    	}    	
-    	//modifications
-    	for(StructuralModification sm : this.modifications.structuralModifications){
-    		if(sm.sites!=null){
-    			for(Site s: sm.sites){
-    				_modifiedCache.put(s.toString(),"structuralModification");
-    	    	}
-    		}
+    	if(modifications!=null){
+    		//modifications
+	    	for(StructuralModification sm : this.modifications.structuralModifications){
+	    		if(sm.sites!=null){
+	    			for(Site s: sm.sites){
+	    				_modifiedCache.put(s.toString(),"structuralModification");
+	    	    	}
+	    		}
+	    	}
     	}
     	
     	//TODO: Need otherlinks as well

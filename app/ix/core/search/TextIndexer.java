@@ -101,6 +101,7 @@ import play.db.ebean.Model;
 import ix.utils.Global;
 import ix.core.models.Indexable;
 import ix.core.models.DynamicFacet;
+import ix.core.plugins.IxCache;
 
 /**
  * Singleton class that responsible for all entity indexing
@@ -121,8 +122,6 @@ public class TextIndexer {
      */
     public static final int CACHE_TIMEOUT = 60*60*24; // 24 hours
     public static final int FETCH_WORKERS = 4; // number of fetch workers
-    // default number of elements to fetch while blocking
-    public static final int DEFAULT_FETCH_SIZE = 50;
 
     /**
      * Make sure to properly update the code when upgrading version
@@ -163,7 +162,14 @@ public class TextIndexer {
         public List<FV> getValues () {
             return values; 
         }
-        
+
+        public FV getValue (int index) { return values.get(index); }
+        public String getLabel (int index) {
+            return values.get(index).getLabel();
+        }
+        public Integer getCount (int index) {
+            return values.get(index).getCount();
+        }
         public Integer getCount (String label) {
             for (FV fv : values)
                 if (fv.label.equalsIgnoreCase(label))
@@ -453,20 +459,19 @@ public class TextIndexer {
                         }
                         
                         try {
-                            Object value = Cache.getOrElse
+                            Object value = IxCache.getOrElse
                                 (field+":"+id.stringValue(), new Callable () {
                                         public Object call () throws Exception {
                                             return findObject (kind, id);
                                         }
-                                    }, CACHE_TIMEOUT);
+                                    });
                             
                             if (value != null)
                                 result.add(value);
                         }
                         catch (Exception ex) {
-                            Logger.trace("Can't locate class "
-                                         +kind.stringValue()
-                                         +" in classpath!", ex);
+                            Logger.trace("Can't locate object "
+                                         +field+":"+id.stringValue(), ex);
                         }
                     }
                     else {
@@ -1011,18 +1016,21 @@ public class TextIndexer {
         try {
             SearchResultPayload payload = new SearchResultPayload
                 (searchResult, hits, searcher);
-            /*if (filter != null) {
-                payload.fetch(hits.totalHits);
+            if (options.fetch <= 0) {
+                payload.fetch();
             }
-            else*/ {
+            else {
                 // we first block until we have enough result to show
-                payload.fetch(DEFAULT_FETCH_SIZE);
-            }
+                payload.fetch(options.fetch);
 
-            if (hits.totalHits > DEFAULT_FETCH_SIZE) {
-                // now queue the payload so the remainder is fetched in
-                // the background
-                fetchQueue.put(payload);
+                if (hits.totalHits > options.fetch) {
+                    // now queue the payload so the remainder is fetched in
+                    // the background
+                    fetchQueue.put(payload);
+                }
+                else {
+                    payload.fetch();
+                }
             }
         }
         catch (Exception ex) {

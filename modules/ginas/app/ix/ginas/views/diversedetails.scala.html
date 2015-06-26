@@ -3,110 +3,61 @@
 @(sub: ix.ginas.models.v1.StructurallyDiverseSubstance)
 
 
-@ginas(sub.getName, "ix.ginas.models.v1.StructurallyDiverseSubstance") {
-    @menu()
-} {
-    <nav class="navbar navbar-default" id="breadcrumb">
-        <div class="container-fluid">
-            <div class="row-fluid">
-                <div class="col-md-12">
-                    <ul class="nav nav-pills" id="breadcrumb-list">
-                        <li role="presentation" class="active"><a href="#structureDetails">Definition</a></li>
-
-                        <li role="presentation"><a href="#names">
-                            Names <span class="badge">@sub.names.size()</span></a></li>
-                        @if(sub.codes.size() > 0) {
-                            <li role="presentation"><a href="#codes">
-                                Codes <span class="badge">@sub.codes.size()</span></a></li>
-                        }
-                        @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-                            <li role="presentation"><a href="#relationships" id = "relation">
-                                Relationships <span class="badge">@sub.relationships.size()</span></a></li>
-                        }
-                        <li role="presentation"><a href="#refs">
-                            References <span class="badge">@sub.references.size()</span></a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
-} {
+@substancedetails(sub) {
     <div class = "row">
         <div class = "col-md-9">
-            <h1>@sub.getName()</h1>
-        </div>
-        <div class = "col-md-3">
-            <h2 class= "pull-right"> @sub.approvalID</h2>
+            <h4>Structurally Diverse Substance</h4>
         </div>
     </div>
+    <div class="row info" id="toplevel">
+    	<div class="col-md-5">
+    	<br>
+    	<table class="table table-striped keyvalue">
+    	@if(sub.structurallyDiverse.sourceMaterialClass != null && !sub.structurallyDiverse.sourceMaterialClass.equals("")) {<tr><td>Source Materials Class</td><td>@sub.structurallyDiverse.sourceMaterialClass</td></tr>}
+        @if(sub.structurallyDiverse.sourceMaterialType != null && !sub.structurallyDiverse.sourceMaterialType.equals("")) {<tr><td>Source Materials Type</td><td>@sub.structurallyDiverse.sourceMaterialType</td></tr>}
+        @if(sub.structurallyDiverse.sourceMaterialState != null && !sub.structurallyDiverse.sourceMaterialState.equals("")) {<tr><td>Source Materials State</td><td>@sub.structurallyDiverse.sourceMaterialState</td></tr>}
+        </table>
+        </div>
+    </div>
+    @if(sub.structurallyDiverse.parentSubstance != null) {
     <div class="row info" id="substances">
-        @if(sub.structurallyDiverse.parentSubstance != null) {
+    	<div class="col-md-12">
             Parent Substance:<br>
             @subref(sub.structurallyDiverse.parentSubstance)
-        }
-
+        </div>
+    </div>
+    }
+    <div class="row info" id="details">
+    	<div class="col-md-5">
+    	<br>
+    	<table class="table table-striped keyvalue">
+	        @if(sub.structurallyDiverse.organismFamily != null && !sub.structurallyDiverse.organismFamily.equals("")) {<tr><td>Organism Family</td><td><a href="../substances?facet=Family/@sub.structurallyDiverse.organismFamily">@sub.structurallyDiverse.organismFamily</a></td></tr>}
+	        @if(sub.structurallyDiverse.organismGenus != null && !sub.structurallyDiverse.organismGenus.equals("")) {<tr><td>Organism Genus </td><td><a href="../substances?facet=Genus/@sub.structurallyDiverse.organismGenus">@sub.structurallyDiverse.organismGenus</a></td></tr>}
+	        @if(sub.structurallyDiverse.organismSpecies != null && !sub.structurallyDiverse.organismSpecies.equals("")) {<tr><td>Organism Species</td><td><a href="../substances?facet=Species/@sub.structurallyDiverse.organismSpecies">@sub.structurallyDiverse.organismSpecies</a></td></tr>}
+	        @if(sub.structurallyDiverse.organismAuthor != null && !sub.structurallyDiverse.organismAuthor.equals("")) {<tr><td>Author</td><td>@sub.structurallyDiverse.organismAuthor</td></tr>}
+	        @if(sub.structurallyDiverse.infraSpecificType != null && !sub.structurallyDiverse.infraSpecificType.equals("")) {<tr><td>Infraspecific Type</td><td>@sub.structurallyDiverse.infraSpecificType</td></tr>}
+	        @if(sub.structurallyDiverse.infraSpecificName != null && !sub.structurallyDiverse.infraSpecificName.equals("")) {<tr><td>Infraspecific Name</td><td>@sub.structurallyDiverse.infraSpecificName</td></tr>}
+	        @if(sub.structurallyDiverse.developmentalStage != null && !sub.structurallyDiverse.developmentalStage.equals("")) {<tr><td>Development Stage</td><td>@sub.structurallyDiverse.developmentalStage</td></tr>}
+	        @if(sub.structurallyDiverse.partLocation != null && !sub.structurallyDiverse.partLocation.equals("")) {<tr><td>Part Location</td><td>@sub.structurallyDiverse.partLocation</td></tr>}
+	        @if(sub.structurallyDiverse.part != null && sub.structurallyDiverse.part.size() > 0 && !sub.structurallyDiverse.getDisplayParts().equals("")) {
+	        	<tr><td>Part</td><td>@sub.structurallyDiverse.getDisplayParts()</td></tr>
+	        }                
+	        @if(sub.structurallyDiverse.fractionMaterialType != null && !sub.structurallyDiverse.fractionMaterialType.equals("")) {
+	        	<tr><td>Fraction Material Type</td><td>@sub.structurallyDiverse.fractionMaterialType</td></tr>      
+	        }
+	        @if(sub.structurallyDiverse.fractionName != null && !sub.structurallyDiverse.fractionName.equals("")) {
+	        	<tr><td>Fraction Name</td><td>@sub.structurallyDiverse.fractionName</td></tr>
+	        }
+        </table>
         @if(sub.structurallyDiverse.hybridSpeciesMaternalOrganism != null) {
-            Maternal Organism:
+            Hybrid Maternal Organism:
            @subref(sub.structurallyDiverse.hybridSpeciesMaternalOrganism)
         }
 
         @if(sub.structurallyDiverse.hybridSpeciesPaternalOrganism != null) {
-            Paternal Organism:
+            Hybrid Paternal Organism:
            @subref(sub.structurallyDiverse.hybridSpeciesPaternalOrganism)
         }
-    </div>
-
-    <div class="row info" id="details"><ul>
-    	@if(sub.structurallyDiverse.sourceMaterialClass != null) {
-        	<li>Source Materials Class: @sub.structurallyDiverse.sourceMaterialClass</li>
-        }
-        @if(sub.structurallyDiverse.sourceMaterialType != null) {<li>Source Materials Type: @sub.structurallyDiverse.sourceMaterialType</li>}
-        @if(sub.structurallyDiverse.sourceMaterialState != null) {<li>Source Materials State: @sub.structurallyDiverse.sourceMaterialState</li>}
-        @if(sub.structurallyDiverse.organismFamily != null) {<li>Organism Family: <a href="../substances?facet=Family/@sub.structurallyDiverse.organismFamily">@sub.structurallyDiverse.organismFamily</a></li>}
-        @if(sub.structurallyDiverse.organismGenus != null) {<li>Organism Genus : <a href="../substances?facet=Genus/@sub.structurallyDiverse.organismGenus">@sub.structurallyDiverse.organismGenus</a></li>}
-        @if(sub.structurallyDiverse.organismSpecies != null) {<li>Organism Species: <a href="../substances?facet=Species/@sub.structurallyDiverse.organismSpecies">@sub.structurallyDiverse.organismSpecies</a></li>}
-        @if(sub.structurallyDiverse.organismAuthor != null) {<li>Author: @sub.structurallyDiverse.organismAuthor</li>}
-        @if(sub.structurallyDiverse.infraSpecificType != null) {<li>Infraspecific Type: @sub.structurallyDiverse.infraSpecificType</li>}
-        @if(sub.structurallyDiverse.infraSpecificName != null) {<li>Infraspecific Name: @sub.structurallyDiverse.infraSpecificName</li>}
-        @if(sub.structurallyDiverse.developmentalStage != null) {<li>Development Stage: @sub.structurallyDiverse.developmentalStage</li>}
-        @if(sub.structurallyDiverse.partLocation != null) {<li>Part Location: @sub.structurallyDiverse.partLocation</li>}
-        @if(sub.structurallyDiverse.part != null) {
-        	<li>Part: @sub.structurallyDiverse.getDisplayParts()</li>
-        }                
-        
-        
-        @if(sub.structurallyDiverse.fractionMaterialType != null) {
-        	<li>Fraction Material Type: @sub.structurallyDiverse.fractionMaterialType</li>      
-        }
-        @if(sub.structurallyDiverse.fractionName != null) {
-        	<li>Fraction Name: @sub.structurallyDiverse.fractionName</li>
-        }
-        
-        
-        </ul>
-    </div>
-
-
-    <div class="row info" id="names">
-    @names(sub.names)
-    </div>
-
-    @if(sub.codes.size() > 0) {
-        <div class="row info" id="codes">
-        @codes(sub.codes)
         </div>
-    }
-    @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-        <div class="row info" id="relationships">
-        @relationships(sub.relationships)
-        </div>
-    }
-
-
-
-    <div class="row info" id="refs">
-    @references(sub.references)
     </div>
-
-
 }

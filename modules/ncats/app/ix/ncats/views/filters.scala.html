@@ -29,7 +29,9 @@
 	  @defining(App.sha1(f.facet,i)) { id =>
 	     <td>
 	       <input type="checkbox" checked="true"
-		      onclick="filterToggle(this)" label = "@HtmlFormat.raw(f.label(i))" id="@id"/>
+		      onclick="filterToggle(this)" 
+		      label="Toggle @f.facet.getLabel(i)"
+		      id="@id"/>
 	     </td>
 	     <script>
 	        filters['@id'] = {
@@ -59,7 +61,9 @@
 	<tr>
 	  @defining(App.sha1(f.facet,i)) { id =>
 	     <td>
-	       <input type="checkbox" onclick="filterToggle(this)" label = "@HtmlFormat.raw(f.label(i))" id="@id"/>
+	       <input type="checkbox" onclick="filterToggle(this)" 
+	       	      label = "Toggle @f.facet.getLabel(i)"
+		      id="@id"/>
 	     </td>
 	     <script>
 	        filters['@id'] = {

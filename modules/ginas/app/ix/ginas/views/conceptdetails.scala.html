@@ -2,88 +2,21 @@
 @import ix.ginas.controllers.v1.SubstanceFactory
 @(sub: ix.ginas.models.v1.Substance)
 
-
-@ginas(sub.getName, "ix.ginas.models.v1.Substance") {
-    @menu()
-} {
-    <nav class="navbar navbar-default" id="breadcrumb">
-        <div class="container-fluid">
-            <div class="row-fluid">
-                <div class="col-md-12">
-                    <ul class="nav nav-pills" id="breadcrumb-list">
-                        <li role="presentation" class="active"><a href="#structureDetails">Definition</a></li>
-
-                        <li role="presentation"><a href="#names">
-                            Names <span class="badge">@sub.names.size()</span></a></li>
-                        @if(sub.codes.size() > 0) {
-                            <li role="presentation"><a href="#codes">
-                                Codes <span class="badge">@sub.codes.size()</span></a></li>
-                        }
-                        @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-                            <li role="presentation"><a href="#relationships" id = "relation">
-                                Relationships <span class="badge">@sub.relationships.size()</span></a></li>
-                        }
-                        <li role="presentation"><a href="#refs">
-                            References <span class="badge">@sub.references.size()</span></a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
-} {
+@substancedetails(sub) {
     <div class = "row">
         <div class = "col-md-9">
-            <h1>@sub.getName()</h1>
-        </div>
-        <div class = "col-md-3">
-            <h2 class= "pull-right"> @sub.approvalID</h2>
+            <h4>Concept</h4>
         </div>
     </div>
-   
     <div class="row info" id="details">
+    	<div class = "col-md-12">
      	@if(sub.isNonSubstanceConcept()) {
     		This is a non-substance concept
     	}else{
-    		This is a variant concept on substance:<br> 
-    		 @if(SubstanceFactory.getFullSubstance(sub.getParentSubstanceReference()) != null) {
-                            @subref(sub.getParentSubstanceReference())
-                        }else{
-                            <div class="col-md-3 text-center thumb-col">
-                                <div class="panel panel-default">
-                                    <div class = "panel-body">
-                            <i>Substance not yet imported</i> <br />
-                        </div>
-                    <div class = "panel-footer">
-                    @sub.getParentSubstanceReference().refPname
-                    </div>
-                                    </div>
-                                </div>
-                    }
+    		This is a sub-concept of substance:<br> 
+    		@subref(sub.getParentSubstanceReference())
     		
     	}
+    	</div>
     </div>
-
-
-    <div class="row info" id="names">
-    @names(sub.names)
-    </div>
-
-    @if(sub.codes.size() > 0) {
-        <div class="row info" id="codes">
-        @codes(sub.codes)
-        </div>
-    }
-    @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-        <div class="row info" id="relationships">
-        @relationships(sub.relationships)
-        </div>
-    }
-
-
-
-    <div class="row info" id="refs">
-    @references(sub.references)
-    </div>
-
-
 }

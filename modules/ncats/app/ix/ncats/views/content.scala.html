@@ -5,7 +5,7 @@
   resetAction: String, current: Int, rows: Int, total: Int,
   pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)(viz: Html)
 
-@main(title, kind){ @header }{ @breadcrumb }{
+@main(title){ @header }{ @breadcrumb }{
 <div class="container-fluid">
   <div class="row">
     @if(total > 0 && facets.length > 0) {
@@ -93,10 +93,10 @@
       @pagination(current, rows, total, pages){
           <h3>
           @if(request.uri.contains("?")) {
-              <a class="btn btn-default" href="@request.uri&action=download" role="button">
+              <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)&action=download" role="button">
                   <i class="fa fa-download fa-lg "></i></a>
           } else {
-              <a class="btn btn-default" href="@request.uri?action=download" role="button">
+              <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?action=download" role="button">
                   <i class="fa fa-download fa-lg "></i></a>
           }
           </h3>
@@ -110,7 +110,16 @@
 	}
       </div>
    </div>
-</div>  
+</div>
+<div class="modal" id="loading">
+   <div class="modal-dialog">
+     <div class="modal-content">
+         <div class="modal-body">
+   	    <div id="loading-progress"></div>
+	 </div>
+     </div>
+   </div>
+</div>
 }
 
 <script>
@@ -119,33 +128,60 @@ function dismissQuery () {
 }
 
 $(document).ready(function () {
-//   $('a[data-toggle="tab"]').on('show.bs.tab', function(e) {
-   //       console.log('tab shown: '+e.target);
-       //window.dispatchEvent(new Event('resize'));
-//    });
     
     @defining(App.checkStatus()) { status =>
       @if(status != null) {
-         $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
-         var delay = 2000; // 2s
-         var checkStatus;
+         $('#searching')
+		.html('<i class="fa fa-spinner fa-spin"></i> searching...');
 
-         checkStatus = window.setInterval(function () {
-      	     $.get('@status'+'@App.queryString("cutoff")', function(data) {
+         var delay = 0;
+         var checkStatus;
+	 var timer;
+
+         $('#loading').on('hidden.bs.modal', function (e) {
+	     console.log('closing load dialog');
+ 	     window.clearInterval(timer);
+	     location.reload(true);
+         });
+
+	 
+	 checkStatus = function () {
+	     if (delay == 0) {
+	        console.log('Starting timer...');
+		window.clearInterval(timer);
+		delay = 2000;
+	        timer = window.setInterval(checkStatus, delay);
+	     }
+
+	     var url = '@status'+'@App.queryString("cutoff")';
+	     console.log(url);
+      	     $.get(url, function(data) {
 	         if (data.status == 'Done' || data.status == 'Failed') {
-		    window.clearInterval(checkStatus);
+		    window.clearInterval(timer);
                     $('#searching').html('');
-		    if(data.count > @total) {
-		       location.reload(true);
+       	            $('#loading-progress').html('');
+                    if(data.count >= @total) {
+                        //location.reload(true);
+	                $('#loading').modal('hide');
 		    }
-		 }
-		 else {
+		 } else {
 	            //console.log('status '+data.count);
 		    $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
+		     if (@Math.min(current*rows,total) > data.count) {
+  	                $('#loading').modal('show');
+		     }
+		     if (data.total) {
+	  	        var pct = Math.floor(100.0*data.count / data.total+0.5);
+		        $('#loading-progress').html('<p align="right">('+data.count+'/'+data.total+')</p><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">'+pct+'%</div></div>');
+		     }		     
 		 }
+	     }).error(function () {
+	         window.clearInterval(timer);
 	     });
-         }, delay);
+         };
+
+	 timer = window.setInterval(checkStatus, delay);
       }
-    }
+   }
 });
 </script>

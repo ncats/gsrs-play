@@ -21,4 +21,8 @@ public class PhysicalParameter extends Ginas {
     public Amount amount;
 
     public PhysicalParameter () {}
+    
+    public String toString(){
+    	return parameterName + "," + amount.toString();
+    }
 }
