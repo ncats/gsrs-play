@@ -2,6 +2,7 @@ import sbt._
 import Keys._
 import play._
 import play.PlayImport._
+import sbtbuildinfo.Plugin._
 
 object ApplicationBuild extends Build {
 
@@ -69,6 +70,29 @@ object ApplicationBuild extends Build {
     "-encoding", "UTF-8"
       ,"-Xlint:-options"
       //,"-Xlint:deprecation"
+  )
+
+
+  val buildSettings = Seq(
+    version := appVersion,
+    organization := "NCATS",
+    homepage := Some(url("https://www.ncats.nih.gov"))
+  )
+
+  val appSettings = buildSettings ++ buildInfoSettings ++ Seq (
+    sourceGenerators in Compile <+= buildInfo,
+    buildInfoKeys := Seq(
+      BuildInfoKey.action("branch") {
+        "git rev-parse --abbrev-ref HEAD".!!.trim
+      },
+      BuildInfoKey.action("commit") {
+        "git rev-parse --short HEAD".!!.trim
+      },
+      BuildInfoKey.action("buildTime") {
+        System.currentTimeMillis
+      }
+    ),
+    buildInfoPackage := "ix"
   )
 
   val core = Project("core", file("."))
