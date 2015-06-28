@@ -1,6 +1,0 @@
-[0m[[0mdebug[0m] [0mCopy resource mappings: [0m
-[0m[[0mdebug[0m] [0m	(/data/workspace/inxight/modules/ntd/conf/ntd.conf,/data/workspace/inxight/modules/ntd/target/scala-2.10/classes/ntd.conf)[0m
-[0m[[0mdebug[0m] [0m	(/data/workspace/inxight/modules/ntd/conf/evolutions,/data/workspace/inxight/modules/ntd/target/scala-2.10/classes/evolutions)[0m
-[0m[[0mdebug[0m] [0m	(/data/workspace/inxight/modules/ntd/conf/ix.ntd.routes,/data/workspace/inxight/modules/ntd/target/scala-2.10/classes/ix.ntd.routes)[0m
-[0m[[0mdebug[0m] [0m	(/data/workspace/inxight/modules/ntd/conf/evolutions/default,/data/workspace/inxight/modules/ntd/target/scala-2.10/classes/evolutions/default)[0m
-[0m[[0mdebug[0m] [0m	(/data/workspace/inxight/modules/ntd/conf/evolutions/default/1.sql,/data/workspace/inxight/modules/ntd/target/scala-2.10/classes/evolutions/default/1.sql)[0m
