@@ -26,4 +26,8 @@ public class Parameter extends Ginas {
     public Amount value;
 
     public Parameter () {}
+    
+    public String toString(){
+    	return name + "," + type + "," + value.toString();
+    }
 }

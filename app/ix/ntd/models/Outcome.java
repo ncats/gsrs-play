@@ -8,14 +8,18 @@ import java.util.List;
  */
 public class Outcome extends Model {
 
-    public enum summary {
+    public enum Summary {
         Indeterminate,
         Success,
         Failure
     }
 
+    public enum ClinicalTest {
 
-    public List<String> clinical = new ArrayList<String>();
+    }
+
+public Summary summary;
+    public List<ClinicalTest> clinical = new ArrayList<ClinicalTest>();
     public List<String> microbial = new ArrayList<String>();
     public List<String> imaging = new ArrayList<String>();
     public List<String> adverseEvents = new ArrayList<String>();

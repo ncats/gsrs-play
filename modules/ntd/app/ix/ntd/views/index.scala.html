@@ -1,0 +1,696 @@
+@import ix.ntd.models.Reference;
+@import ix.ntd.models.Treatment;
+
+@main("CURE") {
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+
+                    <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation"><a href="#reference" aria-controls="reference" role="tab" data-toggle="tab">
+                        Reference</a></li>
+                    <li role="presentation" class="active"><a href="#basic" aria-controls="basic" role="tab" data-toggle="tab">
+                        Basic</a></li>
+                    <li role="presentation"><a href="#patient" aria-controls="patient" role="tab" data-toggle="tab">
+                        Patient</a></li>
+                    <li role="presentation"><a href="#dis-presentation" aria-controls="dis-presentation" role="tab" data-toggle="tab">
+                        Presentation</a></li>
+                    <li role="presentation"><a href="#treatment" aria-controls="treatment" role="tab" data-toggle="tab">
+                        Treatment</a></li>
+                    <li role="presentation"><a href="#outcome" aria-controls="outcome" role="tab" data-toggle="tab">
+                        Outcome</a></li>
+                    <li role="presentation"><a href="#review" aria-controls="review" role="tab" data-toggle="tab">
+                        Review</a></li>
+                </ul>
+
+                    <!-- Tab panes -->
+                <form class="form-horizontal" name="caseForm" id = "add-record" role="form" ng-submit="ntd.submit()" novalidate>
+                    <div class="tab-content">
+
+                        <div role="tabpanel" class="tab-pane" id="reference" ng-controller="ReferenceController as referenceCtrl">
+                            <div class = "form-group">
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <label for="pmid">PMID</label>
+                                        <input ng-model="regimen.reference.pmid" type="text" class="form-control" id = "pmid" placeholder="PMID" >
+                                        <span class="input-group-btn">
+                                            <button ng-click="referenceCtrl.populateFromPubmed()" class="btn btn-default" type="button">Populate from pubmed</button>
+                                        </span>
+                                    </div>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="refType">Reference Type</label>
+                                    <div class="input-group">
+                                        <label class="radio-inline" >
+                                            <input ng-model="regimen.reference.refType" type="radio" id="refTypeReport" name="refType" value="Clinician_Report" />
+                                            Clinician Report
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model="regimen.reference.refType" type="radio" id="refTypeReference" name="refType" checked="checked" value="Published_Reference" />
+                                            Published Reference
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="doi">DOI</label>
+                                    <input ng-model="regimen.reference.doi" type="text" class="form-control" name = "doi" id = "doi" placeholder="doi">
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-12">
+                                    <label for="title">Article Title</label>
+                                    <input ng-model="regimen.reference.title" type="text" class="form-control" name = "title" id = "title" placeholder="Article Title">
+                                </div><!-- /input-group -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-12">
+                                    <label for="url">Article URL</label>
+                                    <input ng-model="regimen.reference.url" type="url" class="form-control" name = "url" id = "url" placeholder="Article URL">
+                                </div>
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="refAbstract">Article Abstract</label>
+                                    <textarea ng-model="regimen.reference.refAbstract" class="form-control" rows="3" name = "refAbstract" id = "refAbstract" placeholder="Article Abstract"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-2">
+                                    <label for="year">Year Published</label>
+                                    <select ng-model="regimen.reference.year" class="form-control" name = "year" id = "year">
+                                        <option ng-repeat="n in range(1960)">{{n}}</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="articleType">Article Type</label>
+                                    <div class="input-group" ng-init="regimen.reference.articleType='Original'">
+                                        @for(opt <- Reference.ArticleType.values()){
+                                            <option value =@opt>@opt</option>
+                                        }
+
+                                        <label class="radio-inline" >
+                                            <input ng-model="regimen.reference.typeOfArticle" type="radio" id="articleTypeNone" name="typeOfArticle" value="None" />
+                                            None
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model="regimen.reference.typeOfArticle" type="radio" id="articleTypeOriginal" name="typeOfArticle" checked="checked" value="Original" />
+                                            Original
+                                        </label>
+                                        <label class="radio-inline" >
+                                            <input ng-model="regimen.reference.typeOfArticle" type="radio" id="articleTypeReview" name="typeOfArticle" value="Review" />
+                                            Review
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="TreatmentOrPrevention">Treatment/Prevention</label>
+                                    <div class="input-group">
+                                        <label class="radio-inline">
+                                            <input ng-model="patient.reference.treatOrPre" type="radio" id="TreatmentOrPreventionNone" name="treatOrPre" value="None" />
+                                            None
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model="patient.reference.treatOrPre" type="radio" id="TreatmentOrPreventionTreatment" name="treatOrPre" checked="checked" value="Treatment" />
+                                            Treatment
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model="patient.reference.treatOrPre" type="radio" id="TreatmentOrPreventionPrevention" name="treatOrPre" value="Prevention" />
+                                            Prevention
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="refType">Aim of Study</label>
+                                    <div class="input-group">
+                                        <label class="radio-inline">
+                                            <input ng-model="patient.reference.aimOfStudy" type="radio" id="AimofStudyNone" name="aimOfStudy" checked="checked" value="None" />
+                                            None
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model="patient.reference.aimOfStudy" type="radio" id="AimofStudySafety" name="aimOfStudy" value="Safety" />
+                                            Safety
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model="patient.reference.aimOfStudy" type="radio" id="AimofStudyEffectiveness" name="aimOfStudy" value="Efffectiveness" />
+                                            Effectiveness
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model="patient.reference.aimOfStudy" type="radio" id="AimofStudyBoth" name="aimOfStudy" value="Both" />
+                                            Safety and Effectiveness
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-3">
+                                    <label for="typeOfStudy">Type of Study</label>
+                                    <select ng-model="patient.reference.typeOfStudy" class="form-control" name = "typeOfStudy" id = "typeOfStudy">
+                                        <option value="Case_Report">Case Report</option>
+                                        <option value ="Case_Series">Case Series</option>
+                                        <option value = "Case_Study">Case Study</option>
+                                        <option value = "Observational_Study">Observational Study</option>
+                                        <option value="Clinical_Trial">Clinical Trial</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-3">
+                                    <label for="language">Language</label>
+                                    <select ng-model="patient.reference.language" class="form-control" name = "language" id = "language">
+                                        <option value="Case_Report">English</option>
+                                        <option value ="Case_Series">English</option>
+                                        <option value = "Case_Study">English</option>
+                                        <option value = "Observational_Study">English</option>
+                                        <option value="Clinical_Trial">English</option>
+                                        <option value = "Other">English</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="TreatmentOrPrevention">Treatment/Prevention</label>
+                                    <div class="input-group">
+                                        <label class="checkbox-inline">
+                                            <input ng-model="patient.reference.fullTextAvailable" type="checkbox" id="fullTextAvailable" name="fullTextAvailable" value="fullTextAvailable" />
+                                            Full Text Available
+                                        </label>
+                                        <label class="checkbox-inline" ng-show="patient.reference.fullTextAvailable">
+                                            <input ng-model="patient.reference.fullTextInRepository" type="checkbox" id="fullTextInRepository" name="fullTextInRepository" value="fullTextInRepository" ng-show="patient.reference.fullTextAvailable"/>
+                                            Full text in repository?
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane active" id="basic">
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="diseaseName">Disease Name</label>
+                                    <input ng-model="patient.disease.diseaseName"  type="text" class="form-control" name = "diseaseName" id = "diseaseName" placeholder="Disease Name" required>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="treatmentName">Treatment Name</label>
+                                    <input ng-model="patient.treatments.treatment.name" type="text" class="form-control" name = "treatmentName" id = "treatmentName" placeholder="Treatment Name" required>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="outcome">Outcome</label>
+                                    <div class="input-group">
+                                        <label class="radio-inline">
+                                            <input ng-model = "patient.outcome.summary" type="radio" id="outcomeIndeterminate" name="summary" value="Indeterminate" />
+                                            Indeterminate
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model = "patient.outcome.summary" type="radio" id="outcomeSuccess" name="summary" value="Success" />
+                                            Success
+                                        </label>
+                                        <label class="radio-inline">
+                                            <input ng-model = "patient.outcome.summary" type="radio" id="outcomeFailure" name="summary" value="Failure" />
+                                            Failure
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="patient">
+                            <div class = "form-group">
+                                <div class="col-md-2">
+                                    <label for="age">Age</label>
+                                    <select ng-model="regimen.patient.age" class="form-control" name = "age" id = "age" >
+                                        @for(ag <- Patient.Age.values()){
+                                        <option value =@ag>@ag.displayName()</option>
+                                    }
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="gender">Gender</label>
+                                    <div class="input-group">
+                                        @for(gender <- Patient.Gender.values()){
+                                        <label class="radio-inline">
+                                            <input ng-model="regimen.patient.gender" type="radio" id="gender@gender" name="gender" value="@gender"/>@gender</label>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-3">
+                                    <label for="country">Country Contracted</label>
+                                    <select  ng-model="patient.country" class="form-control" name = "country" id = "country">
+                                        <option value = "Other">not America</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="condition">Other Conditions</label>
+                                    <div class="input-group">
+                                        @for(cond<-Patient.Condition.values()) {
+                                            <label class="checkbox-inline">
+                                                <input type="checkbox" id="condition@cond" name="condition" value="@cond"/>
+                                                @cond.displayName()
+                                            </label>
+                                        }
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-3">
+                                    <label for="strain">Organism/Strain</label>
+                                    <select  ng-model="patient.disease.strain" class="form-control" name = "strain" id = "strain">
+
+                                        <option value = "Other">not America</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="stage">Disease Stage</label>
+                                    <select  ng-model="patient.disease.stage" class="form-control" name = "stage" id = "stage">
+
+                                        @*<option value="WHO_Category_I">WHO Category I (small early lesion)</option>*@
+                                        @*<option value ="WHO_Category_II">*@
+                                            @*WHO Category II (No ulcerative and ulcerative plaque and edematous forms)</option>*@
+                                        @*<option value = "WHO_Category_III">*@
+                                            @*WHO Category III (Large ulcerative lesions (>5 cm in diameter))</option>*@
+                                        @*<option value = "Preulcerative">Pre-ulcerative</option>*@
+                                        @*<option value="Ulcerative">Ulcerative</option>*@
+                                        @*<option value = "Acute">Acute</option>*@
+                                        @*<option value="Chronic">Chronic</option>*@
+                                        @*<option value ="Stage1">Stage 1 (No CNS Involvement)</option>*@
+                                        @*<option value = "Stage2">Stage 2 (CNS Involvement)</option>*@
+                                        @*<option value = "AcuteMicrofilaraemia">Acute: Microfilaraemia</option>*@
+                                        @*<option value="Worms">Chronic: (Adult worms)</option>*@
+                                        @*<option value = "Other">Other</option>*@
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-3">
+                                    <label for="DiseaseLocation">Disease Location</label>
+                                    <select ng-model="patient.disease.location" class="form-control" name = "DiseaseLocation" id = "DiseaseLocation">
+                                        <option value="Cardiologic">Cardiologic</option>
+                                        <option value ="Gastrointestinal">Gastrointestinal</option>
+                                        <option value = "Nervous_System">Nervous System</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-3">
+                                    <label for="DiseaseForm">Disease Form</label>
+                                    <select ng-model="patient.disease.diseaseForm" class="form-control" name = "DiseaseForm" id = "DiseaseForm">
+                                        <option value="Case_Report">Acute filarial lymphangitis</option>
+                                        <option value ="Case_Series">Alveolar</option>
+                                        <option value = "Case_Study">Cutaneous</option>
+                                        <option value = "Observational_Study">Cystic (unilocular)</option>
+                                        <option value="Clinical_Trial">Elephantiasis</option>
+                                        <option value = "Hydrocele">Hydrocele</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-3">
+                                    <label for="transmission">Transmission</label>
+                                    <select ng-model="patient.disease.transmission" class="form-control" name = "transmission" id = "transmission">
+                                        <option value="Arthropod">Arthropod-borne</option>
+                                        <option value ="Congenital">Congenital</option>
+                                        <option value = "Orally-transmitted">Orally-transmitted</option>
+                                        <option value = "Transfusion">Transfusion</option>
+                                        <option value="Transplant">Transplant</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="ResistanceOrFailures">Drug Resistance/Failures</label>
+                                    <textarea ng-model="patient.disease.ResistanceOrFailures" class="form-control" rows="3" name = "ResistanceOrFailures" id = "ResistanceOrFailures"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="patientNotes">Patient Notes</label>
+                                    <textarea ng-model="patient.patientNotes" class="form-control" rows="3" name = "patientNotes" id = "patientNotes" ></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="">Concomitant Medications</label>
+                                    <textarea ng-model="patient.patientNotes" class="form-control" rows="3" name = "" id = ""></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="dis-presentation">
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="symptoms">Signs and Symptoms</label>
+                                    <textarea class="form-control" rows="3" name = "symptoms" id = "symptoms"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="symptomFlags">Flags</label>
+                                    <select multiple class="form-control" name = "symptomFlags" id = "symptomFlags">
+                                        <option value="WHO_Category_I">AFB Smear</option>
+                                        <option value ="WHO_Category_II">Biopsy</option>
+                                        <option value = "WHO_Category_III">Biopsy (including aspirate)</option>
+                                        <option value = "Preulcerative">Blood Sample</option>
+                                        <option value="Ulcerative">Blood Smear</option>
+                                        <option value = "Acute">Blood Smear identifying microfilariae</option>
+                                        <option value="Chronic">Culture</option>
+                                        <option value ="Stage1">Eosinophilia measure</option>
+                                        <option value = "Stage2">Histopathology/Biopsy</option>
+                                        <option value = "AcuteMicrofilaraemia">Immunological Tests</option>
+                                        <option value="Worms">Parasite Visualization in Patient Sample</option>
+                                        <option value = "Stage2">PCR</option>
+                                        <option value = "AcuteMicrofilaraemia">Serological Tests</option>
+                                        <option value="Worms">Xenodiagnosis</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="labs">Lab/Microbial</label>
+                                    <textarea class="form-control" rows="3" name = "labs" id = "labs"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="symptomFlags">Flags</label>
+                                    <select multiple class="form-control" name = "symptomFlags" id = "symptomFlags">
+                                        <option value="WHO_Category_I">AFB Smear</option>
+                                        <option value ="WHO_Category_II">Biopsy</option>
+                                        <option value = "WHO_Category_III">Biopsy (including aspirate)</option>
+                                        <option value = "Preulcerative">Blood Sample</option>
+                                        <option value="Ulcerative">Blood Smear</option>
+                                        <option value = "Acute">Blood Smear identifying microfilariae</option>
+                                        <option value="Chronic">Culture</option>
+                                        <option value ="Stage1">Eosinophilia measure</option>
+                                        <option value = "Stage2">Histopathology/Biopsy</option>
+                                        <option value = "AcuteMicrofilaraemia">Immunological Tests</option>
+                                        <option value="Worms">Parasite Visualization in Patient Sample</option>
+                                        <option value = "Stage2">PCR</option>
+                                        <option value = "AcuteMicrofilaraemia">Serological Tests</option>
+                                        <option value="Worms">Xenodiagnosis</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="imaging">Radiological/Imaging</label>
+                                    <textarea class="form-control" rows="3" name = "imaging" id = "imaging"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="symptomFlags">Flags</label>
+                                    <select multiple class="form-control" name = "symptomFlags" id = "symptomFlags">
+                                        <option value="WHO_Category_I">AFB Smear</option>
+                                        <option value ="WHO_Category_II">Biopsy</option>
+                                        <option value = "WHO_Category_III">Biopsy (including aspirate)</option>
+                                        <option value = "Preulcerative">Blood Sample</option>
+                                        <option value="Ulcerative">Blood Smear</option>
+                                        <option value = "Acute">Blood Smear identifying microfilariae</option>
+                                        <option value="Chronic">Culture</option>
+                                        <option value ="Stage1">Eosinophilia measure</option>
+                                        <option value = "Stage2">Histopathology/Biopsy</option>
+                                        <option value = "AcuteMicrofilaraemia">Immunological Tests</option>
+                                        <option value="Worms">Parasite Visualization in Patient Sample</option>
+                                        <option value = "Stage2">PCR</option>
+                                        <option value = "AcuteMicrofilaraemia">Serological Tests</option>
+                                        <option value="Worms">Xenodiagnosis</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="other">Other</label>
+                                    <textarea class="form-control" rows="3" name = "other" id = "other"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="symptomFlags">Flags</label>
+                                    <select multiple class="form-control" name = "symptomFlags" id = "symptomFlags">
+                                        <option value="WHO_Category_I">AFB Smear</option>
+                                        <option value ="WHO_Category_II">Biopsy</option>
+                                        <option value = "WHO_Category_III">Biopsy (including aspirate)</option>
+                                        <option value = "Preulcerative">Blood Sample</option>
+                                        <option value="Ulcerative">Blood Smear</option>
+                                        <option value = "Acute">Blood Smear identifying microfilariae</option>
+                                        <option value="Chronic">Culture</option>
+                                        <option value ="Stage1">Eosinophilia measure</option>
+                                        <option value = "Stage2">Histopathology/Biopsy</option>
+                                        <option value = "AcuteMicrofilaraemia">Immunological Tests</option>
+                                        <option value="Worms">Parasite Visualization in Patient Sample</option>
+                                        <option value = "Stage2">PCR</option>
+                                        <option value = "AcuteMicrofilaraemia">Serological Tests</option>
+                                        <option value="Worms">Xenodiagnosis</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="treatment">
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="treatmentName">Drug Name</label>
+                                    <input ng-model="regimen.treatments.treatment.name" type="text" class="form-control" name = "treatmentName" id = "treatmentName" placeholder="{{regimen.treatments.treatment.name}}">
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-2">
+                                    <label for="dose">Dose</label>
+                                    <input ng-model="regimen.treatments.treatment.dose" type="text" class="form-control" name = "dose" id = "dose">
+                                </div><!-- /.col-lg-2 -->
+                                <div class="col-md-2">
+                                    <label for="dosageUnit">Dosage Unit</label>
+                                    <select ng-model="regimen.treatments.treatment.dosageUnit" class="form-control" name = "dosageUnit" id = "dosageUnit">
+                                        @for(opt <- Treatment.DosageUnit.values()){
+                                            <option value =@opt>@opt.displayName()</option>
+                                        }
+                                    </select>
+                                </div><!-- /.col-lg-2 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-2">
+                                    <label for="frequency">Frequency</label>
+                                    <input ng-model="patient.treatments.treatment.frequency" type="text" class="form-control" name = "frequency" id = "frequency" placeholder="Frequency">
+                                </div><!-- /.col-lg-2 -->
+                                <div class="col-md-2">
+                                    <label for="frequencyUnit">Frequency Unit</label>
+                                    <select ng-model="patient.treatments.treatment.frequencyUnit" class="form-control" name = "frequencyUnit" id = "frequencyUnit">
+                                    @for(opt <- Treatment.FrequencyUnit.values()){
+                                        <option value =@opt>@opt</option>
+                                    }
+                                    </select>
+                                </div><!-- /.col-lg-2-->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-2">
+                                    <label for="treatmentDuration">Duration</label>
+                                    <input ng-model="patient.treatments.treatment.treatmentDuration" type="text" class="form-control" name = "treatmentDuration" id = "treatmentDuration" placeholder="Duration">
+                                </div><!-- /.col-lg-2 -->
+                                <div class="col-md-2">
+                                    <label for="durationUnit">Duration Unit</label>
+                                    <select ng-model="patient.treatments.treatment.durationUnit" class="form-control" name = "durationUnit" id = "durationUnit">
+                                    @for(opt <- Treatment.DurationUnit.values()){
+                                        <option value =@opt>@opt</option>
+                                    }
+                                    </select>
+                                </div><!-- /.col-lg-2-->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="treatmentNotes">Treatment Notes</label>
+                                    <textarea ng-model="patient.treatments.treatment.treatmentNotes" class="form-control" rows="3" name = "treatmentNotes" id = "treatmentNotes"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <button class = "btn btn-primary">Add another Treatment</button>
+                            <button class = "btn btn-danger" ng-show="ntd.patient.disease.treatments.size()>1">Remove Treatment</button>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="surgery">Surgery</label>
+                                    <div class="input-group">
+                                        <label class="checkbox-inline">
+                                            <input ng-model="patient.surgery" type="checkbox" id="surgery" name="surgery" value="true" />
+                                            Surgery was performed, in addition to medication
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-6">
+                                    <label for="previousFailure">Previous Failure?</label>
+                                    <div class="input-group">
+                                        <label class="checkbox-inline">
+                                            <input ng-model="patient.previousFailure" type="checkbox" id="previousFailure" name="previousFailure" value="true" />
+                                            The patient previously failed treatment for this condition
+                                        </label>>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div role="tabpanel" class="tab-pane" id="outcome">
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="clinical">Clinical</label>
+                                    <textarea class="form-control" rows="3" name = "symptoms" id = "symptoms"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="symptomFlags">Flags</label>
+                                    <select multiple class="form-control" name = "symptomFlags" id = "symptomFlags">
+                                        <option value="WHO_Category_I">AFB Smear</option>
+                                        <option value ="WHO_Category_II">Biopsy</option>
+                                        <option value = "WHO_Category_III">Biopsy (including aspirate)</option>
+                                        <option value = "Preulcerative">Blood Sample</option>
+                                        <option value="Ulcerative">Blood Smear</option>
+                                        <option value = "Acute">Blood Smear identifying microfilariae</option>
+                                        <option value="Chronic">Culture</option>
+                                        <option value ="Stage1">Eosinophilia measure</option>
+                                        <option value = "Stage2">Histopathology/Biopsy</option>
+                                        <option value = "AcuteMicrofilaraemia">Immunological Tests</option>
+                                        <option value="Worms">Parasite Visualization in Patient Sample</option>
+                                        <option value = "Stage2">PCR</option>
+                                        <option value = "AcuteMicrofilaraemia">Serological Tests</option>
+                                        <option value="Worms">Xenodiagnosis</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="labs">Lab/Microbial</label>
+                                    <textarea class="form-control" rows="3" name = "labs" id = "labs"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="symptomFlags">Flags</label>
+                                    <select multiple class="form-control" name = "symptomFlags" id = "symptomFlags">
+                                        <option value="WHO_Category_I">AFB Smear</option>
+                                        <option value ="WHO_Category_II">Biopsy</option>
+                                        <option value = "WHO_Category_III">Biopsy (including aspirate)</option>
+                                        <option value = "Preulcerative">Blood Sample</option>
+                                        <option value="Ulcerative">Blood Smear</option>
+                                        <option value = "Acute">Blood Smear identifying microfilariae</option>
+                                        <option value="Chronic">Culture</option>
+                                        <option value ="Stage1">Eosinophilia measure</option>
+                                        <option value = "Stage2">Histopathology/Biopsy</option>
+                                        <option value = "AcuteMicrofilaraemia">Immunological Tests</option>
+                                        <option value="Worms">Parasite Visualization in Patient Sample</option>
+                                        <option value = "Stage2">PCR</option>
+                                        <option value = "AcuteMicrofilaraemia">Serological Tests</option>
+                                        <option value="Worms">Xenodiagnosis</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="imaging">Radiological/Imaging</label>
+                                    <textarea class="form-control" rows="3" name = "imaging" id = "imaging"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="symptomFlags">Flags</label>
+                                    <select multiple class="form-control" name = "symptomFlags" id = "symptomFlags">
+                                        <option value="WHO_Category_I">AFB Smear</option>
+                                        <option value ="WHO_Category_II">Biopsy</option>
+                                        <option value = "WHO_Category_III">Biopsy (including aspirate)</option>
+                                        <option value = "Preulcerative">Blood Sample</option>
+                                        <option value="Ulcerative">Blood Smear</option>
+                                        <option value = "Acute">Blood Smear identifying microfilariae</option>
+                                        <option value="Chronic">Culture</option>
+                                        <option value ="Stage1">Eosinophilia measure</option>
+                                        <option value = "Stage2">Histopathology/Biopsy</option>
+                                        <option value = "AcuteMicrofilaraemia">Immunological Tests</option>
+                                        <option value="Worms">Parasite Visualization in Patient Sample</option>
+                                        <option value = "Stage2">PCR</option>
+                                        <option value = "AcuteMicrofilaraemia">Serological Tests</option>
+                                        <option value="Worms">Xenodiagnosis</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="other">Other</label>
+                                    <textarea class="form-control" rows="3" name = "other" id = "other"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-5">
+                                    <label for="symptomFlags">Flags</label>
+                                    <select multiple class="form-control" name = "symptomFlags" id = "symptomFlags">
+                                        <option value="WHO_Category_I">AFB Smear</option>
+                                        <option value ="WHO_Category_II">Biopsy</option>
+                                        <option value = "WHO_Category_III">Biopsy (including aspirate)</option>
+                                        <option value = "Preulcerative">Blood Sample</option>
+                                        <option value="Ulcerative">Blood Smear</option>
+                                        <option value = "Acute">Blood Smear identifying microfilariae</option>
+                                        <option value="Chronic">Culture</option>
+                                        <option value ="Stage1">Eosinophilia measure</option>
+                                        <option value = "Stage2">Histopathology/Biopsy</option>
+                                        <option value = "AcuteMicrofilaraemia">Immunological Tests</option>
+                                        <option value="Worms">Parasite Visualization in Patient Sample</option>
+                                        <option value = "Stage2">PCR</option>
+                                        <option value = "AcuteMicrofilaraemia">Serological Tests</option>
+                                        <option value="Worms">Xenodiagnosis</option>
+                                        <option value = "Other">Other</option>
+                                    </select>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                            <div class = "form-group">
+                                <div class="col-md-8">
+                                    <label for="adverseEvents">Adverse Events</label>
+                                    <textarea class="form-control" rows="3" name = "adverseEvents" id = "adverseEvents"></textarea>
+                                </div><!-- /.col-lg-6 -->
+                            </div>
+                        </div>
+
+
+                {{patient}}
+                        <br/>
+{{caseForm.$valid}}
+                        <div ng-show="caseForm.$valid">
+                            <button class = "btn btn-primary">Submit</button>
+                        </div>
+                        </div>
+
+                    @*</div>*@
+                </form>
+            </div>
+        </div>
+    </div>
+
+}
+@import ix.ntd.models.Patient
+
+

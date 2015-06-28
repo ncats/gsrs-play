@@ -13,17 +13,8 @@ public class Reference extends Model {
         Clinician_Report,
         Published_Reference
     }
-    public String year;
 
-    public Integer pmid;
-
-    public String doi;
-    public String title;
-    public String url;
-    @Lob
-    public String refAbstract;
-
-    public enum typeOfArticle{
+    public enum ArticleType{
        None, Original, Review}
 
     public enum typeOfStudy {
@@ -40,17 +31,35 @@ public class Reference extends Model {
         Effectiveness,
         Both
     }
-    public enum language {
+    public enum Language {
     }
-
-    public boolean fullTextAvailable;
-    public boolean  fullTextInRepository;
 
     public enum TreatmentOrPrevention{
         Treatment,
         Prevention,
         None
     }
+
+    public String year;
+
+    public Integer pmid;
+
+    public String doi;
+    public String title;
+    public String url;
+    @Lob
+    public String refAbstract;
+
+    public RefType refType;
+    public ArticleType articleType;
+    public typeOfStudy typeOfStudy;
+    public AimofStudy aimOfStudy;
+    public TreatmentOrPrevention treatOrPre;
+    public Language language;
+    public boolean fullTextAvailable;
+    public boolean  fullTextInRepository;
+
+
 
 
 

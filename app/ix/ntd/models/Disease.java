@@ -5,6 +5,7 @@ import play.db.ebean.Model;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Lob;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,49 +14,22 @@ import java.util.List;
 @DiscriminatorValue("DIS")
 public class Disease extends Model {
     @Indexable(facet=true)
-    public String diseaseName;
 
-    public enum Stage{
-        WHO_Category_I, //(small early lesion)
-        WHO_Category_II, //(No ulcerative and ulcerative plaque and edematous forms)
-        WHO_Category_III, // (Large ulcerative lesions (>5 cm in diameter))
-        Preulcerative,
-        Ulcerative,
-        Acute,
-        Chronic,
-        Stage1, //(No CNS Involvement)
-        Stage2, //(CNS Involvement)
-        AcuteMicrofilaraemia,
-        // Chronic, //(Adult worms)
-        Other
+    public enum DiseaseName{
+        XDR_TB,
+        Leishmaniasis,
+        Lymphatic_filariasis,
+        artemesinin_resistant_malaria
     }
 
-    public enum OrganismStrain{
-
-    }
-
-    //DO WE NEED THIS CATEGORY???
-    public enum DiseaseLocation{
-        Cardiologic,
-        Gastrointestinal,
-        Nervous_System,
-        Other
-    }
-
-    public enum DiseaseForm {
-
-    }
-
-    public enum TransmissionMode{
-
-    }
-
-    public String ResistanceOrFailures;
+    public DiseaseName diseaseName;
 
 
+public Presentation presentation;
 
     public List<Treatment> treatments = new ArrayList<Treatment>();
 
     public Disease(){
     }
+
 }

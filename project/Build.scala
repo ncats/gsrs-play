@@ -32,6 +32,7 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "handlebars" % "2.0.0-1"
       ,"org.webjars" % "jquery-ui" % "1.11.2"
       ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
+      ,"org.webjars" % "angularjs" % "1.3.16"
       ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"
       ,"org.webjars" % "font-awesome" % "4.2.0"
       ,"org.webjars" % "html5shiv" % "3.7.2"

@@ -12,9 +12,6 @@ import java.util.List;
  */
 public class Presentation extends Model {
 
-    List<String> symptoms = new ArrayList<String>();
-    List<String> labs = new ArrayList<String>();
-    List<String> imaging = new ArrayList<String>();
-    List<String> other = new ArrayList<String>();
+
 
 }

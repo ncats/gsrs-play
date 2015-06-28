@@ -11,56 +11,26 @@
         <div class="row">
             <h5>Any of these components may be present:</h5>
             @for(c <- comp) {
-                        @if(SubstanceFactory.getFullSubstance(c.substance) != null) {
                             @subref(c.substance)
-                        }else{
-                            <div class="col-md-3 text-center thumb-col">
-                                <div class="panel panel-default">
-                                    <div class = "panel-body">
-                            <i>Substance not yet imported</i> <br />
-                        </div>
-                    <div class = "panel-footer">
-                    @c.substance.refPname
-                    </div>
-                                    </div>
-                                </div>
-                    }
-
-}
-</div>
-}
+            }
+		</div>
+	}
 }
 @defining(GinasApp.getComponentsByType(components, "MAY_BE_PRESENT_ONE_OF")) { comp =>
     @if(comp.length > 0) {
         <div class="row">
             <h5>One of these components may be present:</h5>
             @for(c <- comp) {
-                <div class="col-md-3">
-                @if(SubstanceFactory.getFullSubstance(c.substance) != null) {
                     @subref(c.substance)
-                } else {
-                    <i>Substance not yet imported</i> <br />
-                    @c.substance.refPname
-
-                }
-                </div>
             }
         </div>
     }
 }@defining(GinasApp.getComponentsByType(components, "MUST_BE_PRESENT")) { comp =>
     @if(comp.length > 0) {
         <div class="row">
-            <h5>Necessary:</h5>
+            <h5>All of the following components <i>must</i> be present:</h5>
             @for(c <- comp) {
-                <div class="col-md-3">
-                 @if(SubstanceFactory.getFullSubstance(c.substance) != null) {
                     @subref(c.substance)
-                } else {
-                    <i>Substance not yet imported</i> <br />
-                    @c.substance.refPname
-
-                }
-                </div>
             }
         </div>
     }
