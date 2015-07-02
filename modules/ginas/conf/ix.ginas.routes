@@ -1,7 +1,7 @@
 #
 # GINAS
 #
-GET         /                       ix.ginas.controllers.GinasFactory.index
+GET         /                           ix.ginas.controllers.GinasFactory.index
 GET         /register                   ix.ginas.controllers.GinasFactory.register
 GET         /structure                  ix.ginas.controllers.GinasFactory.structuresearch
 GET         /substance/:name            ix.ginas.controllers.GinasApp.substance(name: String)
@@ -19,6 +19,7 @@ GET         /search                     ix.ginas.controllers.GinasApp.search(kin
 POST        /authenticate               ix.ginas.controllers.GinasApp.authenticate
 GET         /login                      ix.ginas.controllers.GinasFactory.login
 GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationships(uuid: String)
+GET         /test                      ix.ginas.controllers.v1.CVFactory.run
 
-->	    /	ix.ncats.Routes
-->	    /	ix.Routes
+->          /                           ix.ncats.Routes
+->          /                           ix.Routes
