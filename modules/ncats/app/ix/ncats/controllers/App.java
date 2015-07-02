@@ -234,16 +234,10 @@ public class App extends Controller {
     }
 
     public static String page (int rows, int page) {
-        String url = "http"+ (request().secure() ? "s" : "") + "://"
-            +request().host()
-            +request().uri().replaceAll("\\+", "%20");
-        if (url.charAt(url.length() -1) == '?') {
-            url = url.substring(0, url.length()-1);
-        }
-        //Logger.debug("url: "+url);
+        Logger.debug(">> page(rows="+rows+",page="
+                     +page+") uri: "+request().uri());
 
-        Map<String, Collection<String>> params =
-            WS.url(url).getQueryParameters();
+        Map<String, Collection<String>> params = getQueryParameters ();
         
         // remove these
         //params.remove("rows");
@@ -252,9 +246,11 @@ public class App extends Controller {
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             for (String v : me.getValue()) {
                 //Logger.debug(v+" => "+decode(v));
-                uri.append("&"+me.getKey()+"="+v.replaceAll("\\+", "%2B"));
+                uri.append("&"+me.getKey()+"="+v);
             }
         }
+
+        Logger.debug("<< "+uri);
         
         return uri.toString();
     }
@@ -265,17 +261,10 @@ public class App extends Controller {
     }
 
     public static String url (String... remove) {
-        String url = "http"+ (request().secure() ? "s" : "") + "://"
-            +request().host()
-            +request().uri();
-        if (url.charAt(url.length()-1) == '?') {
-            url = url.substring(0, url.length()-1);
-        }
-        //Logger.debug(">> uri="+request().uri());
+        Logger.debug(">> uri="+request().uri());
 
         StringBuilder uri = new StringBuilder ("?");
-        Map<String, Collection<String>> params =
-            WS.url(url).getQueryParameters();
+        Map<String, Collection<String>> params = getQueryParameters ();
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             boolean matched = false;
             for (String s : remove)
@@ -290,8 +279,34 @@ public class App extends Controller {
                         uri.append(me.getKey()+"="+v+"&");
             }
         }
-        //Logger.debug(">> "+uri);
+        Logger.debug("<< "+uri);
+        
         return uri.substring(0, uri.length()-1);
+    }
+
+    static Map<String, Collection<String>> getQueryParameters () {
+        Map<String, Collection<String>> params =
+            new TreeMap<String, Collection<String>>();
+        String uri = request().uri();
+        int pos = uri.indexOf('?');
+        if (pos >= 0) {
+            for (String p : uri.substring(pos+1).split("&")) {
+                pos = p.indexOf('=');
+                if (pos > 0) {
+                    String key = p.substring(0, pos);
+                    String value = p.substring(pos+1);
+                    Collection<String> values = params.get(key);
+                    if (values == null) {
+                        params.put(key, values = new ArrayList<String>());
+                    }
+                    values.add(value);
+                }
+                else {
+                    Logger.error("Bad parameter: "+p);
+                }
+            }
+        }
+        return params;
     }
 
     /**
@@ -299,17 +314,10 @@ public class App extends Controller {
      * given facets
      */
     public static String url (FacetDecorator[] facets, String... others) {
-        String url = "http"+ (request().secure() ? "s" : "") + "://"
-            +request().host()
-            +request().uri();
-        if (url.charAt(url.length()-1) == '?') {
-            url = url.substring(0, url.length()-1);
-        }
-        //Logger.debug(">> uri="+request().uri());
+        Logger.debug(">> uri="+request().uri());
 
         StringBuilder uri = new StringBuilder ("?");
-        Map<String, Collection<String>> params =
-            WS.url(url).getQueryParameters();
+        Map<String, Collection<String>> params = getQueryParameters ();
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             if (me.getKey().equals("facet")) {
                 for (String v : me.getValue())
@@ -327,11 +335,6 @@ public class App extends Controller {
                         }
                         
                         if (!matched) {
-                            int pos = v.indexOf('/');
-                            if (pos > 0) {
-                                v = v.substring(0, pos+1)
-                                    + encode (v.substring(pos+1));
-                            }
                             uri.append(me.getKey()+"="+v+"&");
                         }
                     }
@@ -352,7 +355,7 @@ public class App extends Controller {
             }
         }
         
-        Logger.debug(">> "+uri);
+        Logger.debug("<< uri="+uri);
         return uri.substring(0, uri.length()-1);
     }
 

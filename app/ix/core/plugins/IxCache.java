@@ -70,6 +70,9 @@ public class IxCache extends Plugin {
 
     public static <T> T getOrElse (String key, Callable<T> generator)
         throws Exception {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        
         Object value = get (key);
         if (value == null) {
             //Logger.debug("IxCache missed: "+key);
@@ -83,6 +86,9 @@ public class IxCache extends Plugin {
     // mimic play.Cache 
     public static <T> T getOrElse (String key, Callable<T> generator,
                                    int seconds) throws Exception {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        
         Object value = get (key);
         if (value == null) {
             //Logger.debug("IxCache missed: "+key);           
@@ -92,6 +98,19 @@ public class IxCache extends Plugin {
             return v;
         }
         return (T)value;
+    }
+
+    public static void set (String key, Object value) {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        _instance.cache.put(new Element (key, value));
+    }
+
+    public static void set (String key, Object value, int expiration) {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        _instance.cache.put
+            (new Element (key, value, expiration <= 0, expiration, expiration));
     }
 
     public static boolean remove (String key) {

@@ -13,7 +13,8 @@ POST    /tcrd   ix.idg.controllers.TcrdRegistry.load
 #
 # main app
 #
-GET /about ix.idg.controllers.IDGApp.about
+GET	/	ix.idg.controllers.IDGApp.home
+GET	/about	ix.idg.controllers.IDGApp.about
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/kinome	ix.idg.controllers.IDGApp.kinome
 GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 30, page: Int ?= 1)
@@ -28,3 +29,5 @@ GET	/tinx/target/:acc		ix.idg.controllers.TINXApp.tinxForTarget(acc: String)
 
 ->	/	ix.ncats.Routes
 ->	/	ix.Routes
+
+GET	/:any	ix.idg.controllers.IDGApp.lastUnicorn(any: String)

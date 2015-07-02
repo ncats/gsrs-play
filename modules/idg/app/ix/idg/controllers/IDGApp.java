@@ -17,6 +17,7 @@ import ix.core.models.Value;
 import ix.core.models.XRef;
 import ix.core.search.TextIndexer;
 import ix.core.search.SearchOptions;
+import ix.core.plugins.IxCache;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
@@ -26,7 +27,6 @@ import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
 import play.cache.Cached;
-import play.cache.Cache;
 
 import tripod.chem.indexer.StructureIndexer;
 
@@ -217,7 +217,7 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static abstract class GetResult<T> {
+    static abstract class GetResult<T extends EntityModel> {
         final Model.Finder<Long, T> finder;
         final Class<T> cls;
         GetResult (Class<T> cls, Model.Finder<Long, T> finder) {
@@ -236,6 +236,18 @@ public class IDGApp extends App implements Commons {
                             if (values.size() > 1) {
                                 Logger.warn("\""+name+"\" yields "
                                             +values.size()+" matches!");
+                            }
+                            
+                            // also cache all the synonyms
+                            for (T v : values) {
+                                for (Keyword kw : v.getSynonyms()) {
+                                    IxCache.set(cls.getName()+"/"
+                                                +kw.term, values);
+                                    IxCache.set(cls.getName()+"/"
+                                                +kw.term.toUpperCase(), values);
+                                    IxCache.set(cls.getName()+"/"
+                                                +kw.term.toLowerCase(), values);
+                                }
                             }
                             return values;
                         }
@@ -390,21 +402,15 @@ public class IDGApp extends App implements Commons {
                     LigandFactory.finder.findRowCount()));
     }
 
+    public static Result home () {
+        return redirect (routes.IDGApp.index());
+    }
+
     @Cached(key="_kinome", duration = Integer.MAX_VALUE)
     public static Result kinome () {
         return ok (ix.idg.views.html.kinome.render());
     }
 
-    public static void clearCache () {
-        String[] caches = new String[] {
-            "_about",
-            "_index",
-            "_kinome"
-        };
-        for (String c : caches)
-            Cache.remove(c);
-    }
-    
     public static Result error (int code, String mesg) {
         return ok (ix.idg.views.html.error.render(code, mesg));
     }
@@ -1120,7 +1126,7 @@ public class IDGApp extends App implements Commons {
                         public TextIndexer.SearchResult
                             call ()  throws Exception {
                             return SearchFactory.search
-                            (null, null, null, MAX_SEARCH_RESULTS,
+                            (textIndexer, null, null, MAX_SEARCH_RESULTS,
                              0, FACET_DIM, queryString);
                         }
                     });
@@ -1138,7 +1144,7 @@ public class IDGApp extends App implements Commons {
                         public TextIndexer.SearchResult
                             call () throws Exception {
                             return SearchFactory.search
-                            (null, null, query, MAX_SEARCH_RESULTS, 0,
+                            (textIndexer, null, query, MAX_SEARCH_RESULTS, 0,
                              FACET_DIM, request().queryString());
                         }
                     });
@@ -1690,5 +1696,10 @@ public class IDGApp extends App implements Commons {
                     }
                 });
         }
+    }
+
+
+    public static Result lastUnicorn (String url) {
+        return _notFound ("Unknown resource: "+url);
     }
 }
