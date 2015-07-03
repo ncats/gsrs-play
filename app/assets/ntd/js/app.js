@@ -5,7 +5,7 @@
 (function () {
     var ntdApp = angular.module('ntd', []);
 
-    ntdApp.controller('NtdController', function ($scope, $http) {
+    ntdApp.controller('NtdController', function ($scope, $http, $location) {
         $scope.regimen= {};
         var url = '/ntd/index';
         this.submit = function(){
