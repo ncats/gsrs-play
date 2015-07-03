@@ -14,7 +14,7 @@ import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.Ginas;
 
 @Entity
-@Table(name="ix_ginas_structural_modification")
+@Table(name="ix_ginas_structuralmod")
 @JSONEntity(title = "Structural Modification", isFinal = true)
 public class StructuralModification extends Ginas {
     @JSONEntity(title = "Modification Type", isRequired = true)
@@ -29,7 +29,7 @@ public class StructuralModification extends Ginas {
     
     @JSONEntity(title = "Modified Sites", format = "table", itemsTitle = "Site")
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_structural_modification_1")
+    @JoinTable(name="ix_ginas_structuralmod_1")
     public List<Site> sites = new ArrayList<Site>();
     
     @JSONEntity(title = "Extent", values = "JSONConstants.ENUM_EXTENT", isRequired = true)
@@ -41,6 +41,6 @@ public class StructuralModification extends Ginas {
     public SubstanceReference molecularFragment;
     
     @JSONEntity(title = "Modification Group")
-	String modificationGroup = "1";
+        String modificationGroup = "1";
     public StructuralModification () {}
 }

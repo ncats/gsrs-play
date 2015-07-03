@@ -48,8 +48,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 
 
-
-
 public class GinasLoad extends App {
     static final TextIndexer TEXT_INDEXER = 
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
@@ -319,7 +317,7 @@ public class GinasLoad extends App {
                 }
                 else if (cls.isAssignableFrom
                          (Substance.class)) {
-                	Substance sub =
+                        Substance sub =
                         (Substance)mapper
                         .treeToValue(tree, cls);
                     sub.save();
@@ -394,17 +392,16 @@ public class GinasLoad extends App {
                         }catch (Exception ex) {
                             Logger.warn("Not a zip file \""+file+"\"!");
                             //try as gzip
-							try {
-								GZIPInputStream gzis = new GZIPInputStream(
-										new FileInputStream(file));
-								is=gzis;
-
-							} catch (IOException e) {
-								Logger.warn("Not a gzip file \""+file+"\"!");
-								is = new FileInputStream (file);
-							}
+                            try {
+                                GZIPInputStream gzis = new GZIPInputStream
+                                    (new FileInputStream(file));
+                                is=gzis;
+                                
+                            } catch (IOException e) {
+                                Logger.warn("Not a gzip file \""+file+"\"!");
+                                is = new FileInputStream (file);
+                            }
                             // try as plain txt file
-                            
                         }
                         return processDump (is);
                     }

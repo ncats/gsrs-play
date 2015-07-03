@@ -11,7 +11,7 @@ import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.Ginas;
 
 @Entity
-@Table(name="ix_ginas_substancereference")
+@Table(name="ix_ginas_substanceref")
 @JSONEntity(name = "substanceReference", isFinal = true)
 public class SubstanceReference extends Ginas {
     @JSONEntity(title = "Substance Name")
@@ -30,12 +30,12 @@ public class SubstanceReference extends Ginas {
     public SubstanceReference () {}
     
     public String getLinkingID(){
-    	if(approvalID!=null){
-    		return approvalID;
-    	}
-    	if(refuuid!=null){
-    		return refuuid.split("-")[0];
-    	}
-    	return refPname;
+        if(approvalID!=null){
+                return approvalID;
+        }
+        if(refuuid!=null){
+                return refuuid.split("-")[0];
+        }
+        return refPname;
     }
 }

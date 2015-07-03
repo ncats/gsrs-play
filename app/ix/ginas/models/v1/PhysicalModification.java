@@ -14,7 +14,7 @@ import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.Ginas;
 
 @Entity
-@Table(name="ix_ginas_physical_modification")
+@Table(name="ix_ginas_physicalmod")
 @JSONEntity(title = "Physical Modification", isFinal = true)
 public class PhysicalModification extends Ginas {
     @JSONEntity(title = "Role of Modification", isRequired = true)
@@ -23,10 +23,10 @@ public class PhysicalModification extends Ginas {
     
     @JSONEntity(title = "Physical Parameters", isRequired = true, minItems = 1)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_physical_modification_param")
+    @JoinTable(name="ix_ginas_physical_modparam")
     public List<PhysicalParameter> parameters =
         new ArrayList<PhysicalParameter>();
     @JSONEntity(title = "Modification Group")
-	String modificationGroup = "1";
+        String modificationGroup = "1";
     public PhysicalModification () {}
 }

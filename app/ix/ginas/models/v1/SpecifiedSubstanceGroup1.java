@@ -9,8 +9,9 @@ import java.util.List;
 @DiscriminatorValue("SSI")
 public class SpecifiedSubstanceGroup1 extends Substance {
     @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "ix_ginas_substance_component")
-    public List<SpecifiedSubstanceComponent> specifiedSubstance = new ArrayList<SpecifiedSubstanceComponent>();
+    @JoinTable(name = "ix_ginas_substance_comp")
+    public List<SpecifiedSubstanceComponent> specifiedSubstance =
+        new ArrayList<SpecifiedSubstanceComponent>();
 
     public SpecifiedSubstanceGroup1() {
     }

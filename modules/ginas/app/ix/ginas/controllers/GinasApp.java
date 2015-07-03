@@ -113,6 +113,11 @@ public class GinasApp extends App {
         return ok (ix.ginas.views.html.error.render(code, mesg));
     }
 
+    public static Result lastUnicorn (String name) {
+        return notFound (ix.ginas.views.html.error.render
+                         (404, "Unknown resource: "+request().uri()));
+    }
+    
     public static Result _notFound (String mesg) {
         return notFound (ix.ginas.views.html.error.render(404, mesg));
     }
@@ -965,7 +970,7 @@ public class GinasApp extends App {
         int count=0;
         if(obj==null)return count;
         try {
-        	
+                
             for(Field l: obj.getClass().getFields()){
 //                                              Logger.info(l.getName().toString());
                 Class type = l.getType();

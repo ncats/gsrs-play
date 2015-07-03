@@ -24,7 +24,6 @@ public class StructurallyDiverse extends Ginas {
     @Indexable(name="Material Type", facet=true)
     public String sourceMaterialType;
     
-    
     public String sourceMaterialState;
     
     @Indexable(name="Family", facet=true)
@@ -37,7 +36,7 @@ public class StructurallyDiverse extends Ginas {
     public String organismSpecies;
     
     @Indexable(name="Author", facet=true)
-        public String organismAuthor;
+    public String organismAuthor;
     
     public String partLocation;
     
@@ -54,10 +53,15 @@ public class StructurallyDiverse extends Ginas {
     public String developmentalStage;
     public String fractionName;
     public String fractionMaterialType;
+
     @OneToOne(cascade=CascadeType.ALL)
+    @JoinColumn(name="paternal_uuid")
     public SubstanceReference hybridSpeciesPaternalOrganism;
+    
     @OneToOne(cascade=CascadeType.ALL)
+    @JoinColumn(name="maternal_uuid")
     public SubstanceReference hybridSpeciesMaternalOrganism;
+
     @OneToOne(cascade=CascadeType.ALL)
     public SubstanceReference parentSubstance;
 

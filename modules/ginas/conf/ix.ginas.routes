@@ -22,3 +22,5 @@ GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationsh
 
 ->	    /	ix.ncats.Routes
 ->	    /	ix.Routes
+
+GET	    /:any	ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

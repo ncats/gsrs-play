@@ -7,6 +7,8 @@ import ix.ginas.models.Ginas;
 
 @Entity
 @Table(name="ix_ginas_component")
+@Inheritance
+@DiscriminatorValue("COMP")
 public class Component extends Ginas {
     public String type;
     

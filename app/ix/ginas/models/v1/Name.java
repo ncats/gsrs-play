@@ -54,9 +54,9 @@ public class Name extends Ginas {
     
     @JSONEntity(title = "Languages", format = "table", itemsTitle = "Language", itemsFormat = JSONConstants.CV_LANGUAGE)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_language",
+    @JoinTable(name="ix_ginas_name_lang",
                joinColumns=@JoinColumn
-               (name="ix_ginas_name_language_uuid",
+               (name="ix_ginas_name_lang_uuid",
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)    
@@ -64,18 +64,18 @@ public class Name extends Ginas {
     
     @JSONEntity(title = "Naming Jurisdictions", format = "table", itemsTitle = "Jurisdiction", itemsFormat = JSONConstants.CV_JURISDICTION)
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_jurisdiction",
+    @JoinTable(name="ix_ginas_name_juris",
                joinColumns=@JoinColumn
-               (name="ix_ginas_name_jurisdiction_uuid",
+               (name="ix_ginas_name_juris_uuid",
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)    
     public List<Keyword> nameJurisdiction = new ArrayList<Keyword>();
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_reference",
+    @JoinTable(name="ix_ginas_name_ref",
                joinColumns=@JoinColumn
-               (name="ix_ginas_name_reference_uuid",
+               (name="ix_ginas_name_ref_uuid",
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)    

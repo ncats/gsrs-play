@@ -24,28 +24,28 @@ import ix.ginas.models.Ginas;
 public class Modifications extends Ginas {
     @JSONEntity(title = "Agent Modifications")
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_modifications_agent")
+    @JoinTable(name="ix_ginas_mod_agent")
     public List<AgentModification> agentModifications =
         new ArrayList<AgentModification>();
     
     @JSONEntity(title = "Physical Modifications")
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_modifications_physical")
+    @JoinTable(name="ix_ginas_mod_physical")
     public List<PhysicalModification> physicalModifications =
         new ArrayList<PhysicalModification>();
     
     @JSONEntity(title = "Structural Modifications")
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_modifications_structural")
+    @JoinTable(name="ix_ginas_mod_structural")
     public List<StructuralModification> structuralModifications =
         new ArrayList<StructuralModification>();
 
     public Modifications () {}
     
     public int getLength(){
-    	Logger.info("agent " + this.agentModifications.size());
-    	Logger.info("phy " + this.physicalModifications.size());
-    	Logger.info("struc " + this.structuralModifications.size());
-    	return this.agentModifications.size() + this.physicalModifications.size() + this.structuralModifications.size();
+        Logger.info("agent " + this.agentModifications.size());
+        Logger.info("phy " + this.physicalModifications.size());
+        Logger.info("struc " + this.structuralModifications.size());
+        return this.agentModifications.size() + this.physicalModifications.size() + this.structuralModifications.size();
     }
 }

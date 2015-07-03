@@ -11,7 +11,7 @@ import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.Ginas;
 
 @Entity
-@Table(name="ix_ginas_physical_parameter")
+@Table(name="ix_ginas_physicalpar")
 @JSONEntity(title = "Physical Parameter", isFinal = true)
 public class PhysicalParameter extends Ginas {
     @JSONEntity(title = "Parameter Name", isRequired = true)
@@ -23,6 +23,6 @@ public class PhysicalParameter extends Ginas {
     public PhysicalParameter () {}
     
     public String toString(){
-    	return parameterName + "," + amount.toString();
+        return parameterName + "," + amount.toString();
     }
 }

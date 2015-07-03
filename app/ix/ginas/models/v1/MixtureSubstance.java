@@ -9,7 +9,7 @@ import java.util.ArrayList;
 @DiscriminatorValue("MIX")
 public class MixtureSubstance extends Substance {
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_substance_component")
+    @JoinTable(name="ix_ginas_substance_comp")
     public List<Component> mixture = new ArrayList<Component>();
 
     public MixtureSubstance () {}

@@ -12,7 +12,7 @@ import ix.ginas.models.Ginas;
 
 @JSONEntity(title = "Agent Modification", isFinal = true)
 @Entity
-@Table(name="ix_ginas_agent_modification")
+@Table(name="ix_ginas_agentmod")
 public class AgentModification extends Ginas {
     @JSONEntity(title = "Process")
     public String agentModificationProcess;
@@ -30,6 +30,6 @@ public class AgentModification extends Ginas {
     @OneToOne(cascade=CascadeType.ALL)
     public Amount amount;
     @JSONEntity(title = "Modification Group")
-	String modificationGroup = "1";
+        String modificationGroup = "1";
     public AgentModification () {}
 }
