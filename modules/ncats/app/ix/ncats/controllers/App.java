@@ -328,7 +328,7 @@ public class App extends Controller {
                             // use the real name.. f.name() is a decoration
                             // that might not be the same as the actual
                             // facet name
-                            if (s.startsWith(f.facet.getName())) {
+                            if (!f.hidden && s.startsWith(f.facet.getName())) {
                                 matched = true;
                                 break;
                             }

@@ -92,7 +92,7 @@
 	    <table class="tree table">
 	      @for(act <- activities) {
 	         <tr class="treegrid-@act.target.id">
-		   <td><a href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(act.target))">@act.target.getName()</a></td>
+		   <td><a onclick="showLoadModal()" href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(act.target))">@act.target.getName()</a></td>
 		   <td><span class="label label-@act.target.idgTDL.label"
 		          data-toggle="tooltip" data-html="true"
 			  title="<p align='left'>@act.target.idgTDL.desc</p>">@act.target.idgTDL</span></td>
@@ -189,6 +189,15 @@
 </div>
 }
 
+<div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
+     aria-labelledby="mySmallModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
+    </div>
+  </div>
+</div>
+
 <script>
 $(function () {
   $('[data-toggle="popover"]').popover();
@@ -199,11 +208,25 @@ $(document).ready(function () {
   $('.tree').treegrid({
    expanderExpandedClass: 'fa fa-angle-down',
    expanderCollapsedClass: 'fa fa-angle-right',
-@if(activities.length > 3) {
-   initialState: 'collapsed'
-} else {
-   initialState: 'expanded'
-}
+   @if(activities.length > 3) {
+     initialState: 'collapsed'
+   } else {
+     initialState: 'expanded'
+   }
   });
 });
+
+function showLoadModal () {
+  console.log('showing modal...');
+  $('#loadmodal').modal({
+      keyboard: false,
+      show: true,
+      backdrop: 'static'
+    });
+}
+
+$(window).unload(function () {
+    $('#loadmodal').modal('hide');    
+});
+			    
 </script>

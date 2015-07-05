@@ -16,20 +16,44 @@
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
-@keyword(kw: Keyword, max: Int = 40) = {
-  @if(max > 0 && kw.term.length() > max) {
+@facet(label: String, value: String, max: Int = 40) = {
+  @if(max > 0 && value.length > max) {
     <a id="keyword" class="label label-primary"
        data-toggle="popover"
        data-html="true"
        data-trigger="hover"
        data-placement="top"
-       title="@kw.label"
-       data-content="<p align='left'>@kw.term</p>"
-       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@{kw.term.substring(0, max)}...</a>&nbsp;
+       title="@label"
+       data-content="<p align='left'>@value</p>"
+       onclick="showLoadModal()"
+       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@{value.substring(0, max)}...</a>&nbsp;
   } else {
-    <a id="keyword" class="label label-primary"
-       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(kw.label,"utf8")+"/"}@URLEncoder.encode(kw.term, "utf8")'>@kw.term</a>
+    <a id="keyword" class="label label-primary" onclick="showLoadModal()"
+       href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value</a>
   }
+}
+
+@keyword(kw: Keyword, max: Int = 40) = {
+  @facet(kw.label, kw.term, max)
+}
+
+@disease = {
+  @if(diseases.length > 0) {
+   <div class="panel panel-default">
+       <div class="panel-heading">
+         <h3 class="panel-title">Disease (@diseases.length)</h3>
+       </div>
+       <div class="panel-body">
+	    @for(d <- diseases) {
+	       @if(d.uniprot != null) {
+	         @facet(UNIPROT_DISEASE, d.disease.name)
+	       } else {
+	         @facet(IDG_DISEASE, d.disease.name)
+	       }
+	    }
+	</div>
+   </div>
+ }
 }
 
 @property(name: String, dir: Int = 0) = {
@@ -310,12 +334,12 @@
 			        case "Ab Count" => {
 				  <span data-toggle="tooltip"
 				     data-html="true"
-				     title="<p align='left'>Antibody count from antibodypedia.com</p>">Antibody</span>
+				     title="<p align='left'>Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com">Antibody</a></span>
 				}
 				case "MAb Count" => {
 				  <span data-toggle="tooltip"
 				     data-html="true"
-				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>">Monoclonal Antibody</span>
+				     title="<p align='left'>Monoclonal Antibody count from antibodypedia.com</p>"><a href="http://antibodypedia.com">Monoclonal Antibody</a></span>
 				}
 				case "PubMed Count" => {
    				  <span data-toggle="tooltip"
@@ -346,6 +370,7 @@
       </div>
       <div class="col-md-4">      
 	@property(IDG_TISSUE)
+	@disease
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
@@ -462,7 +487,7 @@
 		    } else {
 		      class="label label-primary"
 		    }
-		    onclick="showLoadModal()"
+		    id="keyword"
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
 		  }
 		</div>
@@ -483,7 +508,8 @@
 		    } else {
 		      class="label label-primary"
 		    }
-		    onclick="showLoadModal()"
+		    id="keyword"
+		    onclick="showLoadModal()"   
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
 		  }
 		  <a class="label label-danger"
@@ -496,6 +522,7 @@
 		    } else {
 		      class="label label-primary"
 		    }
+		    id="keyword"
 		    onclick="showLoadModal()"
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
 		  }
@@ -513,7 +540,7 @@
       <div class="col-md-12">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Publications</h3>
+            <h3 class="panel-title">Publication (@target.publications.size)</h3>
           </div>
           <div class="panel-body">
             <div class="panel-body">

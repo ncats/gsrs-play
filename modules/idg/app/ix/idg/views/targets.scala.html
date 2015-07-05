@@ -7,7 +7,7 @@
 
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
-        <td><a onclick="showLoadModal()"
+        <td><a id='load' onclick="showLoadModal()" 
 	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
         <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
         data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
@@ -154,11 +154,15 @@ $(document).ready(function () {
       d3.select('svg').remove();
       tinx();
       //window.dispatchEvent(new Event('resize'));
-      console.log('tab shown: '+e.target);
+	      console.log('tab shown: '+e.target);
+   });
+   $('#loadmodal').on('shown.bs.modal', function (e) {
+      console.log('modal is shown...');
    });
 });
 
 function showLoadModal () {
+  console.log('showing modal...');
   $('#loadmodal').modal({
       keyboard: false,
       show: true,
