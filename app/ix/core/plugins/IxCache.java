@@ -75,7 +75,7 @@ public class IxCache extends Plugin {
         
         Object value = get (key);
         if (value == null) {
-            //Logger.debug("IxCache missed: "+key);
+            Logger.debug("IxCache missed: "+key);
             T v = generator.call();
             _instance.cache.put(new Element (key, v));
             return v;
@@ -91,7 +91,7 @@ public class IxCache extends Plugin {
         
         Object value = get (key);
         if (value == null) {
-            //Logger.debug("IxCache missed: "+key);           
+            Logger.debug("IxCache missed: "+key);           
             T v = generator.call();
             _instance.cache.put
                 (new Element (key, v, seconds <= 0, seconds, seconds));

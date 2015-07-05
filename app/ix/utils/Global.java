@@ -13,6 +13,9 @@ import play.db.DB;
 import play.libs.Json;
 import play.mvc.Http;
 import play.mvc.Controller;
+import play.api.mvc.EssentialFilter;
+import play.filters.gzip.GzipFilter;
+
 import com.typesafe.config.*;
 import scala.collection.immutable.Iterable;
 import scala.collection.JavaConverters;
@@ -163,6 +166,10 @@ public class Global extends GlobalSettings {
         Logger.info("## stopping");
     }
 
+    public <T extends EssentialFilter> Class<T>[] filters() {
+        return new Class[]{GzipFilter.class};
+    }
+    
     /*
     @Override
     public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {

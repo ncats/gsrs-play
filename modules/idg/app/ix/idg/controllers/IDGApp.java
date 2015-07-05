@@ -252,12 +252,17 @@ public class IDGApp extends App implements Commons {
                             // also cache all the synonyms
                             for (T v : values) {
                                 for (Keyword kw : v.getSynonyms()) {
-                                    IxCache.set(cls.getName()+"/"
-                                                +kw.term, values);
-                                    IxCache.set(cls.getName()+"/"
-                                                +kw.term.toUpperCase(), values);
-                                    IxCache.set(cls.getName()+"/"
-                                                +kw.term.toLowerCase(), values);
+                                    if (!kw.term.equals(name))
+                                        IxCache.set(cls.getName()+"/"
+                                                    +kw.term, values);
+                                    if (!kw.term.toUpperCase().equals(name))
+                                        IxCache.set(cls.getName()+"/"
+                                                    +kw.term.toUpperCase(),
+                                                    values);
+                                    if (!kw.term.toLowerCase().equals(name))
+                                        IxCache.set(cls.getName()+"/"
+                                                    +kw.term.toLowerCase(),
+                                                    values);
                                 }
                             }
                             return values;
@@ -331,15 +336,25 @@ public class IDGApp extends App implements Commons {
                 (Thread.currentThread().getName()
                  +": preparing to warm cache for "+targets.size()+" targets!");
             start.set(System.currentTimeMillis());
-            for (String t : targets) {
+            for (String name : targets) {
                 long s = System.currentTimeMillis();
                 try {
-                    TargetResult.find(t);
+                    List<Target> tar = TargetResult.find(name);
+                    for (Target t : tar) {
+                        List<DiseaseRelevance> dr = getDiseases (t); // cache
+                        Logger.debug(name+": id="+t.id
+                                     +" #syns="+t.synonyms.size()
+                                     +" #pubs="+t.publications.size()
+                                     +" #links="+t.links.size()
+                                     +" #props="+t.properties.size()
+                                     +" #diseases="+dr.size()
+                                     );
+                    }
                     long dif = System.currentTimeMillis()-s;
-                    complete.put(t, dif);
+                    complete.put(name, dif);
                 }
                 catch (Exception ex) {
-                    Logger.debug(t+"...failed: "+ex.getMessage());
+                    Logger.debug(name+"...failed: "+ex.getMessage());
                 }
             }
             stop.set(System.currentTimeMillis());
@@ -609,17 +624,21 @@ public class IDGApp extends App implements Commons {
         return TargetResult.get(name);
     }
 
+    static List<DiseaseRelevance> getDiseases (final Target t)
+        throws Exception {
+        final String key = "targets/"+t.id+"/diseases";
+        return IxCache.getOrElse
+            (key, new Callable<List<DiseaseRelevance>> () {
+                    public List<DiseaseRelevance> call () throws Exception {
+                        return getDiseaseRelevances (t);
+                    }
+                }, 0);
+    }
+    
     static Result _getTargetResult (final List<Target> targets)
         throws Exception {
         final Target t = targets.iterator().next(); // guarantee not empty
-        final String key = "targets/"+t.id+"/diseases";
-        List<DiseaseRelevance> diseases = getOrElse
-            (key, new Callable<List<DiseaseRelevance>> () {
-                 public List<DiseaseRelevance> call () throws Exception {
-                     return getDiseaseRelevances (t);
-                 }
-             });
-
+        List<DiseaseRelevance> diseases = getDiseases (t);
         List<Keyword> breadcrumb = getBreadcrumb (t);
         
         return ok (ix.idg.views.html

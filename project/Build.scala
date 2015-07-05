@@ -17,6 +17,7 @@ object ApplicationBuild extends Build {
     javaJdbc,
     javaEbean,
     cache,
+    filters,
     "mysql" % "mysql-connector-java" % "5.1.31"
       ,"commons-codec" % "commons-codec" % "1.9"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
