@@ -208,7 +208,6 @@ public class TcrdRegistry extends Controller implements Commons {
             
             // the ligands are handled by the
             //  ChemblRegistry.LigandStructureReceiver callback
-            IDGApp.clearCache();            
         }
 
         public void shutdown () throws SQLException {
@@ -1197,7 +1196,7 @@ public class TcrdRegistry extends Controller implements Commons {
             String secret = requestData.get("secret-code");
             if (secret == null || secret.length() == 0
                 || !secret.equals(Play.application()
-                                  .configuration().getString("ix.secret"))) {
+                                  .configuration().getString("ix.idg.secret"))) {
                 return unauthorized
                     ("You do not have permission to access resource!");
             }

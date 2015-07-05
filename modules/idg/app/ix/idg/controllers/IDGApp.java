@@ -2,6 +2,7 @@ package ix.idg.controllers;
 
 import akka.routing.Router;
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.QueryIterator;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.search.SearchFactory;
@@ -23,10 +24,15 @@ import ix.idg.models.Ligand;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
+
+import play.Play;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
 import play.cache.Cached;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import tripod.chem.indexer.StructureIndexer;
 
@@ -43,7 +49,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.net.URLEncoder;
 
 import static ix.core.search.TextIndexer.Facet;
@@ -228,7 +239,7 @@ public class IDGApp extends App implements Commons {
         public List<T> find (final String name) throws Exception {
             long start = System.currentTimeMillis();
             final String key = cls.getName()+"/"+name;
-            List<T> e = getOrElse
+            List<T> e = IxCache.getOrElse
                 (key, new Callable<List<T>> () {
                         public List<T> call () throws Exception {
                             List<T> values = finder.where()
@@ -251,7 +262,7 @@ public class IDGApp extends App implements Commons {
                             }
                             return values;
                         }
-                    });
+                    }, 0);
             double ellapsed = (System.currentTimeMillis()-start)*1e-3;
             Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
                          +" to retrieve "+e.size()+" matches for "+name);
@@ -293,6 +304,57 @@ public class IDGApp extends App implements Commons {
         }
 
         abstract Result getResult (List<T> e) throws Exception;
+    }
+
+    static class TargetCacheWarmer implements Runnable {
+        final AtomicLong start = new AtomicLong ();
+        final AtomicLong stop = new AtomicLong ();
+        
+        @JsonIgnore
+        final ExecutorService threadPool;
+        @JsonIgnore
+        final Future task;
+
+        @JsonIgnore
+        final List<String> targets;
+        final Map<String, Long> complete =
+            new ConcurrentHashMap<String, Long>();
+        
+        TargetCacheWarmer (List<String> targets) {
+            this.targets = targets;
+            threadPool = Executors.newSingleThreadExecutor();
+            task = threadPool.submit(this);
+        }
+
+        public void run () {
+            Logger.debug
+                (Thread.currentThread().getName()
+                 +": preparing to warm cache for "+targets.size()+" targets!");
+            start.set(System.currentTimeMillis());
+            for (String t : targets) {
+                long s = System.currentTimeMillis();
+                try {
+                    TargetResult.find(t);
+                    long dif = System.currentTimeMillis()-s;
+                    complete.put(t, dif);
+                }
+                catch (Exception ex) {
+                    Logger.debug(t+"...failed: "+ex.getMessage());
+                }
+            }
+            stop.set(System.currentTimeMillis());
+            Logger.debug
+                (Thread.currentThread().getName()
+                 +": target cache warmer complete..."+new java.util.Date());
+            threadPool.shutdown();
+        }
+
+        public Map<String, Long> getComplete () { return complete; }
+        public boolean isDone () { return task.isDone(); }
+        public int getTotal () { return targets.size(); }
+        public int getCount () { return complete.size(); }
+        public long getStart () { return start.get(); }
+        public long getStop () { return stop.get(); }
     }
     
     public static final String[] TARGET_FACETS = {
@@ -562,6 +624,43 @@ public class IDGApp extends App implements Commons {
         
         return ok (ix.idg.views.html
                    .targetdetails.render(t, diseases, breadcrumb));
+    }
+
+    public static Result targetWarmCache (String secret) {
+        if (secret == null || secret.length() == 0
+            || !secret.equals(Play.application()
+                              .configuration().getString("ix.idg.secret"))) {
+            return unauthorized
+                ("You do not have permission to access this resource!");
+        }
+
+        try {
+            TargetCacheWarmer cache = IxCache.getOrElse
+                ("IDGApp.targetWarmCache", new Callable<TargetCacheWarmer> () {
+                        public TargetCacheWarmer call () throws Exception {
+                            Logger.debug("Warming up target cache...");
+                            QueryIterator<Keyword> kiter = KeywordFactory
+                            .finder.where()
+                            .eq("label", UNIPROT_ACCESSION)
+                            .findIterate();
+                            
+                            List<String> targets = new ArrayList<String>();
+                            while (kiter.hasNext()) {
+                                Keyword kw = kiter.next();
+                                targets.add(kw.term);
+                            }
+                            
+                            return new TargetCacheWarmer (targets);
+                        }
+                    }, 0);
+            ObjectMapper mapper = new ObjectMapper ();
+            return ok (mapper.valueToTree(cache));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't retrieve target cache", ex);
+            return _internalServerError (ex);
+        }
     }
 
     static List<Keyword> getBreadcrumb (Target t) {
