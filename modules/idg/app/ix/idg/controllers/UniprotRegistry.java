@@ -416,7 +416,7 @@ public class UniprotRegistry extends DefaultHandler implements Commons {
             if (disease != null) {
                 XRef xref = createXRef (disease);
                 for (Keyword kw : disease.synonyms) {
-                    if ("UniProt".equals(kw.label)) {
+                    if (UNIPROT_DISEASE.equals(kw.label)) {
                         Keyword uni = KeywordFactory.registerIfAbsent
                             (UNIPROT_DISEASE, disease.name, kw.href);
                         xref.properties.add(uni);

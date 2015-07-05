@@ -39,21 +39,65 @@
 
 @disease = {
   @if(diseases.length > 0) {
-   <div class="panel panel-default">
-       <div class="panel-heading">
-         <h3 class="panel-title">Disease (@diseases.length)</h3>
+    @if(diseases.length > 10) {
+       <div class="modal fade" id="disease-modal"
+          tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+	  aria-hidden="true">
+	  <div class="modal-dialog">
+	     <div class="modal-content">
+	        <div class="modal-header">
+	          <button type="button" class="close"
+		  	data-dismiss="modal" aria-label="Close">
+			<span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">Diseases annotated for <em>@target.getName</em></h4>
+		</div>
+      		<div class="modal-body">
+		@for(d <- diseases) {
+	          @if(d.comment != null) {
+	            @*facet(UNIPROT_DISEASE, d.disease.name)*@
+	          } else {
+	            @facet(IDG_DISEASE, d.disease.name)
+	          }
+	        }
+		</div>
+             </div>
+          </div>	  
        </div>
-       <div class="panel-body">
+       <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Disease (@diseases.length)</h3>
+          </div>
+	  <div class="panel-body">
+	    @for(d <- diseases.slice(0,10)) {
+               @if(d.comment != null) {
+	            @*facet(UNIPROT_DISEASE, d.disease.name)*@
+	       } else {
+	            @facet(IDG_DISEASE, d.disease.name)
+	       }
+	    }
+   	    <a class="label label-danger"
+	        data-toggle="modal"
+		data-target="#disease-modal"
+		href="#">See all...</a>
+	  </div>
+      </div>
+    } else {
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Disease (@diseases.length)</h3>
+        </div>
+        <div class="panel-body">
 	    @for(d <- diseases) {
-	       @if(d.uniprot != null) {
-	         @facet(UNIPROT_DISEASE, d.disease.name)
+	       @if(d.comment != null) {
+	         @*facet(UNIPROT_DISEASE, d.disease.name)*@
 	       } else {
 	         @facet(IDG_DISEASE, d.disease.name)
 	       }
 	    }
-	</div>
-   </div>
- }
+        </div>
+      </div>
+    }
+  }
 }
 
 @property(name: String, dir: Int = 0) = {
@@ -409,7 +453,7 @@
                       } else {
                       <td></td>
                       }
-                      <td>@dr.comment"  "</td>
+                      <td>@dr.comment</td>
                     </tr>
                     }
                   }
@@ -478,7 +522,7 @@
 	          <button type="button" class="close"
 		  	data-dismiss="modal" aria-label="Close">
 			<span aria-hidden="true">&times;</span></button>
-			<h4 class="modal-title" id="myModalLabel">Medical Subject Headings for @target.getName</h4>
+			<h4 class="modal-title" id="myModalLabel">Medical Subject Headings for <em>@target.getName</em></h4>
 		</div>
       		<div class="modal-body">
 	          @for(m <- mesh) {
