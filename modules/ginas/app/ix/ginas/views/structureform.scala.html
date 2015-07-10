@@ -1,0 +1,88 @@
+<div class = "row" ng-controller="StructureController as StructureCtrl">
+    <button class="btn btn-primary label-offset det">
+                       Structure</button>
+    <a ng-show="!addingStructure" ng-click="addStructure()" aria-label="Add Structure"><i class = "fa fa-plus fa-2x success"></i></a>
+    <div ng-show="addingStructure">
+        <div class="col-md-12" id="sketcherForm" dataformat='molfile' ng-model="structure.molfile" ondatachange="molchange(this);" >
+        </div>
+        <div class="col-md-12">
+            <table class="table table-striped" id="structureTable">
+                <thead>
+                    <tr>
+                        <th>Molecular Formula</th>
+                        <th>Molecular Weight</th>
+                        <th>Defined Stereocenters</th>
+                        <th>EX Centers</th>
+                        <th>Charge</th>
+                        <th>Reference ID</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tr>
+                    <td>
+                                    {{substance.structure.formula}}
+                    </td>
+                    <td>
+                                    {{substance.structure.mwt}}
+                    </td>
+                    <td>
+                    {{substance.structure.definedStereo}}/{{substance.structure.stereoCenters}}
+                    </td>
+                    <td>
+                    {{substance.structure.ezCenters}}
+                    </td>
+                    <td>
+                    {{substance.structure.charge}}
+                    </td>
+                    <td>
+                    {{nameVar.references.id}} {{nameVar.references.citation}}
+                    </td>
+                    <td>
+                        <a ng-show="!isEditingStructure" ng-click="setEditedStructure(structure); toggleEditStructure();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+                    </td>
+                    <td>
+                        <a ng-show="!isEditingStructure" ng-click="removeStructure(structure)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
+                    </td>
+                </tr>
+                <tr ng-show="isEditingStructure">
+                    <form name="refEdit" id = "edit-ref" role="form" ng-submit="updateRef(editReference)" novalidate>
+                        <td></td>
+                        <td><input class="form-control" ng-model = "editReference.citation" placeholder="Citation" title="Citation" id="citation" required/> </td>
+                        @*<td><select class="form-control" title="Language" id="language" ng-model = "editReference.docType" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>*@
+                        @*<td><input class="form-control" title="Date Accessed" placeholder="Today" id="doc-date" ng-model = "editReference.documentDate" required/></td>*@
+                        <td><input class="form-control" ng-model = "editReference.url" placeholder="url" title="Url" id="url" required/></td>
+                        <td><a id ="ref-submit" ng-show="refEdit.$valid" ng-click="updateReference(editReference)" arial-label="Save">
+                            <i class="fa fa-floppy-o fa-2x success"></i></a>
+                        </td>
+                        <td><a ng-click="toggleEditRef();" aria-label="Cancel">
+                            <i class="fa fa-ban fa-2x danger"></i></a>
+                        </td>
+                    </form>
+                </tr>
+                <tr ng-show="!isEditingStructure && noStructure">
+                    <form name="structureForm" id = "add-structure" role="form" ng-submit="validateStructure(structure)" novalidate >
+                        @*<input class="form-control hidden" ng-model = "structure.molfile" placeholder="Molfile" title="Molfile" id="molfile" required />*@
+                        <td> <input class="form-control" ng-change = "getSmiles()" ng-model = "structure.formula" placeholder="Formula" title="Molecular Formula" id="formula" required /> </td>
+                        <td> <input class="form-control" title="Molecular Weight" placeholder="Weight" id="mol-weight" ng-model = "structure.mwt" required /></td>
+                        <td><select title="Defined Stereocenters" id="def-stereo" ng-model="structure.definedStereo" ng-options="n for n in [] | range:1:10" required></select>
+                            /
+                            <select title="Stereocenters" id="stereo" ng-model="structure.stereoCenters" ng-options="n for n in [] | range:1:10" required></select></td>
+                        <td><select title="ezCenters" id="ezCenters" ng-model="structure.ezCenters" ng-options="n for n in [] | range:1:10" required></select></td>
+                        <td><select title="Charge" id="charge" ng-model="structure.charge" ng-options="n for n in [] | range:1:10" required></select></td>
+                        <td><select class="form-control" title="Reference" id="reference" ng-model = "name.references" ng-options="ref.citation for ref in substance.references" required>
+                    </select>
+                        </td>
+                        <td><a ng-click="clearStructure()" aria-label="Clear">
+                            <i class="fa fa-eraser fa-2x danger"></i></a>
+                        </td>
+                        <td><button class="btn btn-default" type="submit" ng-show="structureForm.$valid">
+                                        Validate</button>
+                        </td>
+                    </form>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</div>

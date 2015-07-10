@@ -238,7 +238,7 @@ body, html {
 }
 
 .wizard-panel {
-    padding-top: 25px;
+    padding: 30px;
     height: auto;
     background-color: white;
     border: 1px solid rgb(136, 136, 136);
@@ -911,4 +911,19 @@ div#num {
 }
 .subconcept {
   font-style: italic;
+}
+
+.success{
+    color: #5cb85c;
+}
+
+.success:hover{
+    color: #398439;
+}
+
+.danger{
+   color: #d9534f;
+}
+.danger:hover {
+    color: #ac2925;
 }

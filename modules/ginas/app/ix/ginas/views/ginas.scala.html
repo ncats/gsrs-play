@@ -53,7 +53,11 @@
     <script
     src='@routes.WebJarAssets.at(WebJarAssets.locate("angular-route.js"))'></script>
     <script src='@routes.Assets.at("ginas/js/ginasApp.js")' type='text/javascript'></script>
-
+    <script
+    src='@routes.WebJarAssets.at(WebJarAssets.locate("dojo/dojo.js"))'></script>
+    <script
+    src='@routes.Assets.at("javascripts/JSDraw3.2.3/Scilligence.JSDraw2.Pro.js")'></script>
+    @*<!-- <script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script> -->*@
 
     @screengrab()
     @filereader()
@@ -81,6 +85,7 @@
     <script>
   $(document).ready(function(){
 	  //Hide protein count numbers
+	  var smilesurl = '@ix.ncats.controllers.routes.App.smiles';
 		$('#numbers').click(function() {
 			$( ".count" ).toggle();
 		});
@@ -93,21 +98,8 @@
 		  $('[data-toggle="tooltip"]').tooltip();
 		  $('[data-toggle="popover"]').popover();
 
-	 //start JSDRAW 
-//  	var sketch = new JSDraw("sketcher");
-  		
-  	//structure drawer	
-//	  $('#strucModal').on('shown.bs.modal', function (ev) {
-//	     var button = $(ev.relatedTarget);
-//	     var url = button.data('molurl');
-//	     if (url) {
-//	       $.get(url, function (moldata) {
-//			console.log("MOLFILE:" + moldata);
-//			sketch.setMolfile(moldata);
-//		 });
-//	     }
-//	  });
-	  
+
+
 	  $('#strucModal').on('hidden.bs.modal', function (e) {
 			sketch.setMolfile("");
 	       $('#structure').val("");
@@ -115,10 +107,69 @@
 // $('#loading').modal('hide');
 
   });
+</script>
+
+    <script>
 
 
-  </script>
 
+  function submitForm () {
+   // console.log(el);
+    $('#strucModal').modal('hide');
+    $('#loading').modal("show");
+    $("#search-btn").submit();
+  }
+
+  function searchSelect () {
+	console.log("search select");
+     var selection = document.getElementById("search-selection");
+     var text = document.getElementById("tanimoto-cutoff");
+     var search = document.getElementById("search-btn");
+     text.disabled = selection.value != 'Similarity';
+     if (!text.disabled) {
+        checkTanimoto (text);
+     } else {
+        search.disabled = false;
+     }
+
+     console.log(selection.value);
+  }
+  function checkTanimoto (el) {
+      //console.log("tanimoto='"+el.value+"'");
+      var search = document.getElementById("search-btn");
+      try {
+        var x = el.value.trim();
+        search.disabled = x.length == 0 || isNaN(x) || x <= 0 || x > 1.;
+      } catch (e) {
+        search.disabled = true;
+      }
+  }
+
+  function molchange(sketch){
+	  $('#mol-weight').val(sketch.getMolWeight());
+       $('#molfile').val(sketch.getMolfile());
+       $('#structure').typeahead('val', '"'+sketch.getSmiles()+'"');
+       setQuery(sketch.getSmiles());
+  };
+
+  function setQuery (value) {
+  console.log(value);
+  $.ajax({
+    type: "POST",
+    url: '@ix.ncats.controllers.routes.App.smiles',
+    contentType: 'text/plain',
+    data: value,
+    success: function (data) {
+       console.log(' => '+data);
+       $('#formula').val(data);
+    },
+    error: function (xhr, status) {
+       console.error("Can't convert to smiles");
+    },
+    dataType: 'text'
+   });
+}
+</script>
 
 </body>
 </html>

@@ -1,0 +1,73 @@
+@import ix.ginas.controllers.v1.CVFactory;
+
+<div class ="row" id = "references" ng-controller="ReferenceController as ReferenceCtrl">
+    <button class="btn btn-primary label-offset det">
+                        References&nbsp;<span class="badge" ng-show="substance.references.length>0">
+                        {{substance.references.length}}</span> </button>
+    <div class="col-md-12">
+        <table class="table table-striped" id="allReferencesTable">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Citation</th>
+                    <th>Doc Type</th>
+                    <th>Date Accessed</th>
+                    <th>URL</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tr ng-repeat="r in substance.references">
+                <td>
+                                    {{r.id}}
+                </td>
+                <td>
+                    <a href={{r.url}}>{{r.citation}}</a>
+                </td>
+                <td>
+                                    {{r.docType.display}}
+                </td>
+                <td>
+                                    {{r.documentDate}}
+                </td>
+                <td>{{r.url}}</td>
+                <td>
+                    <a ng-show="!isEditingRef" ng-click="setEditedRef(r); toggleEditRef();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+                </td>
+                <td>
+                    <a ng-show="!isEditingRef" ng-click="removeRef(r)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
+                </td>
+            </tr>
+            <tr ng-show="isEditingRef">
+                <form name="refEdit" id = "edit-ref" role="form" ng-submit="updateRef(editReference)" novalidate>
+                    <td></td>
+                    <td><input class="form-control" ng-model = "editReference.citation" placeholder="Citation" title="Citation" id="citation" required/> </td>
+                    <td><select class="form-control" title="Language" id="language" ng-model = "editReference.docType" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>
+                        <td><input class="form-control" title="Date Accessed" placeholder="Today" id="doc-date" ng-model = "editReference.documentDate" required/></td>
+                        <td><input class="form-control" ng-model = "editReference.url" placeholder="url" title="Url" id="url" required/></td>
+                        <td><a id ="ref-submit" ng-show="refEdit.$valid" ng-click="updateReference(editReference)" arial-label="Save">
+                            <i class="fa fa-floppy-o fa-2x success"></i></a>
+                        </td>
+                        <td><a ng-click="toggleEditRef();" aria-label="Cancel">
+                            <i class="fa fa-ban fa-2x danger"></i></a>
+                        </td>
+                </form>
+            </tr>
+            <tr ng-show="!isEditingRef">
+                <form name="refForm" id = "add-ref" role="form" ng-submit="validateReference(reference)" novalidate >
+                    <td> <input class="form-control" ng-model = "reference.citation" placeholder="Citation" title="Citation" id="citation" required/> </td>
+                    <td> <select class="form-control" title="Language" id="language" ng-model = "reference.docType" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>
+                        <td> <input class="form-control" title="Date Accessed" placeholder="Today" id="doc-date" ng-model = "reference.documentDate" required/></td>
+                        <td> <input class="form-control" ng-model = "reference.url" placeholder="url" title="Url" id="url" required/></td>
+
+                        <td>
+                            <div ng-show="refForm.$valid">
+                                <button class="btn btn-default" type="submit" id="ref-submit">
+                                                    Validate</button>
+                            </div>
+                        </td>
+                </form>
+            </tr>
+        </table>
+    </div>
+</div>
