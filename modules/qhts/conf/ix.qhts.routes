@@ -1,4 +1,5 @@
 #
 # qHTS resources
 #
-GET	/test	ix.qhts.controllers.QhtsFactory.test
+GET	/test1	ix.qhts.controllers.QhtsFactory.test1
+GET	/test2	ix.qhts.controllers.QhtsFactory.test2

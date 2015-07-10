@@ -25,14 +25,6 @@ public class HillModel extends Model {
     public Double infAct; // inf activity
     public Double zeroAct;
 
-    @Indexable(name="Curve Class 1", facet=true)
-    @Column(length=10)
-    public String curveClass1;
-    
-    @Indexable(name="Curve Class 2", facet=true)
-    @Column(length=10)
-    public String curveClass2;
-    
     @OneToOne(cascade=CascadeType.ALL)
     public Curve crc; // reference concentration response curve
 

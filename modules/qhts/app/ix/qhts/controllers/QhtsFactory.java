@@ -1,9 +1,12 @@
 package ix.qhts.controllers;
 
 import java.util.*;
+import java.sql.*;
+import javax.sql.DataSource;
 
 import play.*;
 import play.db.ebean.*;
+import play.db.DB;
 import play.data.*;
 import play.mvc.*;
 import com.avaje.ebean.Query;
@@ -16,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class QhtsFactory extends Controller {
     
-    public static Result test () {
+    public static Result test1 () {
         Model.Finder<Long, Curve> curveFinder =
             new Model.Finder(Long.class, Curve.class);
 
@@ -51,5 +54,27 @@ public class QhtsFactory extends Controller {
         }
 
         return ok (mapper.valueToTree(crc));
+    }
+
+    public static Result test2 () {
+        Connection con = null;
+        try {
+            DataSource hts = DB.getDataSource("hts");
+            con = hts.getConnection();
+            return ok ("successfuly connect to HTS database!");
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
+        finally {
+            if (con != null) {
+                try {
+                    con.close();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
     }
 }

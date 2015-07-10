@@ -17,6 +17,12 @@ GET	/structure/$id<[0-9]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>	ix.ncats.co
 # return the status of a previous query
 GET	/status/:key	ix.ncats.controllers.App.status(key: String)
 
+# cache methods
+GET	/cache/@summary	ix.ncats.controllers.App.cacheSummary
+GET	/cache/@list	ix.ncats.controllers.App.cacheList(top: Int ?= 100, skip: Int ?= 0)
+GET	/cache/*key	ix.ncats.controllers.App.cache(key: String)
+DELETE	/cache/*key	ix.ncats.controllers.App.cacheDelete(key: String)
+
 # return cache statistics
 GET	/statistics/:kind	ix.ncats.controllers.App.statistics(kind: String)
 

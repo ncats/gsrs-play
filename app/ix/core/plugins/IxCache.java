@@ -1,5 +1,8 @@
 package ix.core.plugins;
 
+import java.util.List;
+import java.util.Collections;
+import java.util.ArrayList;
 import java.util.concurrent.Callable;
 
 import play.Logger;
@@ -25,6 +28,7 @@ public class IxCache extends Plugin {
 
     private final Application app;
     private Cache cache;
+    private IxContext ctx;
 
     static private IxCache _instance;
     
@@ -35,6 +39,8 @@ public class IxCache extends Plugin {
     @Override
     public void onStart () {
         Logger.info("Loading plugin "+getClass().getName()+"...");
+        ctx = app.plugin(IxContext.class);
+        
         int maxElements = app.configuration()
             .getInt(CACHE_MAX_ELEMENTS, MAX_ELEMENTS);
         CacheConfiguration config =
@@ -61,6 +67,12 @@ public class IxCache extends Plugin {
         }
     }
 
+    public static Element getElm (String key) {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        return _instance.cache.get(key);
+    }
+    
     public static Object get (String key) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");
@@ -75,7 +87,8 @@ public class IxCache extends Plugin {
         
         Object value = get (key);
         if (value == null) {
-            Logger.debug("IxCache missed: "+key);
+            if (_instance.ctx.debug(2))
+                Logger.debug("IxCache missed: "+key);
             T v = generator.call();
             _instance.cache.put(new Element (key, v));
             return v;
@@ -91,7 +104,8 @@ public class IxCache extends Plugin {
         
         Object value = get (key);
         if (value == null) {
-            Logger.debug("IxCache missed: "+key);           
+            if (_instance.ctx.debug(2))
+                Logger.debug("IxCache missed: "+key);
             T v = generator.call();
             _instance.cache.put
                 (new Element (key, v, seconds <= 0, seconds, seconds));
@@ -100,6 +114,24 @@ public class IxCache extends Plugin {
         return (T)value;
     }
 
+    public static List getKeys () {
+        try {
+            return new ArrayList (_instance.cache.getKeys());
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't get cache keys", ex);
+        }
+        return null;
+    }
+    
+    public static List getKeys (int top, int skip) {
+        List keys = getKeys ();
+        if (keys != null) {
+            keys = keys.subList(skip, Math.min(skip+top, keys.size()));
+        }
+        return keys;
+    }
+    
     public static void set (String key, Object value) {
         if (_instance == null)
             throw new IllegalStateException ("Cache hasn't been initialized!");

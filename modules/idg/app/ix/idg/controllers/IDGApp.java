@@ -30,6 +30,7 @@ import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
 import play.cache.Cached;
+import play.mvc.Http;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -239,7 +240,7 @@ public class IDGApp extends App implements Commons {
         public List<T> find (final String name) throws Exception {
             long start = System.currentTimeMillis();
             final String key = cls.getName()+"/"+name;
-            List<T> e = IxCache.getOrElse
+            List<T> e = getOrElse
                 (key, new Callable<List<T>> () {
                         public List<T> call () throws Exception {
                             List<T> values = finder.where()
@@ -267,7 +268,7 @@ public class IDGApp extends App implements Commons {
                             }
                             return values;
                         }
-                    }, 0);
+                    });
             double ellapsed = (System.currentTimeMillis()-start)*1e-3;
             Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
                          +" to retrieve "+e.size()+" matches for "+name);
@@ -350,8 +351,7 @@ public class IDGApp extends App implements Commons {
                                      +" #diseases="+dr.size()
                                      );
                     }
-                    long dif = System.currentTimeMillis()-s;
-                    complete.put(name, dif);
+                    complete.put(name, System.currentTimeMillis()-s);
                 }
                 catch (Exception ex) {
                     Logger.debug(name+"...failed: "+ex.getMessage());
@@ -627,12 +627,12 @@ public class IDGApp extends App implements Commons {
     static List<DiseaseRelevance> getDiseases (final Target t)
         throws Exception {
         final String key = "targets/"+t.id+"/diseases";
-        return IxCache.getOrElse
+        return getOrElse
             (key, new Callable<List<DiseaseRelevance>> () {
                     public List<DiseaseRelevance> call () throws Exception {
                         return getDiseaseRelevances (t);
                     }
-                }, 0);
+                });
     }
     
     static Result _getTargetResult (final List<Target> targets)
@@ -654,7 +654,7 @@ public class IDGApp extends App implements Commons {
         }
 
         try {
-            TargetCacheWarmer cache = IxCache.getOrElse
+            TargetCacheWarmer cache = getOrElse
                 ("IDGApp.targetWarmCache", new Callable<TargetCacheWarmer> () {
                         public TargetCacheWarmer call () throws Exception {
                             Logger.debug("Warming up target cache...");
@@ -671,7 +671,7 @@ public class IDGApp extends App implements Commons {
                             
                             return new TargetCacheWarmer (targets);
                         }
-                    }, 0);
+                    });
             ObjectMapper mapper = new ObjectMapper ();
             return ok (mapper.valueToTree(cache));
         }
@@ -985,7 +985,9 @@ public class IDGApp extends App implements Commons {
         final int total = TargetFactory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
             Map<String, String[]> query = getRequestQuery ();
-            if (!query.containsKey("order")) {
+            if (!query.containsKey("order") && q == null) {
+                // only implicitly order based on novelty if it's not a
+                // search
                 query.put("order", new String[]{"$novelty"});
             }
             
@@ -1815,7 +1817,6 @@ public class IDGApp extends App implements Commons {
                 });
         }
     }
-
 
     public static Result lastUnicorn (String url) {
         return _notFound ("Unknown resource: "+url);

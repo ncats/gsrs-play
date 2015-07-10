@@ -70,8 +70,9 @@ import gov.nih.ncgc.jchemical.Jchemical;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import net.sf.ehcache.Element;
 
 /**
  * Basic plumbing for an App
@@ -234,8 +235,7 @@ public class App extends Controller {
     }
 
     public static String page (int rows, int page) {
-        Logger.debug(">> page(rows="+rows+",page="
-                     +page+") uri: "+request().uri());
+        //Logger.debug(">> page(rows="+rows+",page="+page+") uri: "+request().uri());
 
         Map<String, Collection<String>> params = getQueryParameters ();
         
@@ -250,7 +250,7 @@ public class App extends Controller {
             }
         }
 
-        Logger.debug("<< "+uri);
+        //Logger.debug("<< "+uri);
         
         return uri.toString();
     }
@@ -261,7 +261,7 @@ public class App extends Controller {
     }
 
     public static String url (String... remove) {
-        Logger.debug(">> uri="+request().uri());
+        //Logger.debug(">> uri="+request().uri());
 
         StringBuilder uri = new StringBuilder ("?");
         Map<String, Collection<String>> params = getQueryParameters ();
@@ -279,7 +279,7 @@ public class App extends Controller {
                         uri.append(me.getKey()+"="+v+"&");
             }
         }
-        Logger.debug("<< "+uri);
+        //Logger.debug("<< "+uri);
         
         return uri.substring(0, uri.length()-1);
     }
@@ -538,7 +538,7 @@ public class App extends Controller {
             args.add(f);
         Collections.sort(args);
         
-        return Util.sha1(args.toArray(new String[0])).substring(0, 15); 
+        return Util.sha1(args.toArray(new String[0]));
     }
 
     public static SearchResult getSearchResult
@@ -1114,39 +1114,6 @@ public class App extends Controller {
         return notFound ("No key found: "+key+"!");
     }
 
-    /*
-    public static Result status (String type, String query) {
-        String key = null;
-        if (type.equalsIgnoreCase("substructure")) {
-            key = "substructure/"+Util.sha1(query);
-        }
-        else if (type.equalsIgnoreCase("similarity")) {
-            String c = request().getQueryString("cutoff");
-            if (c == null)
-                return badRequest ("No \"cutoff\" parameter "
-                                   +"specified for query of type "+type);
-            try {
-                key = "similarity/"+getKey (query, Double.parseDouble(c));
-            }
-            catch (Exception ex) {
-                return badRequest ("Bogus cutoff value: "+c);
-            }
-        }
-        else {
-            return badRequest ("Unknown type: \""+type+"\"");
-        }
-
-        Object value = IxCache.get(key);
-        if (value != null) {
-            SearchResultContext context = (SearchResultContext)value;
-            ObjectMapper mapper = new ObjectMapper ();
-            return ok (mapper.valueToTree(context));
-        }
-
-        return notFound ("No query "+query+" of type "+type+" found!");
-    }
-    */
-    
     public static SearchResultContext substructure
         (final String query, final int rows,
          final int page, final SearchResultProcessor processor) {
@@ -1269,6 +1236,88 @@ public class App extends Controller {
         return renderer.render(page, rows, count, pages, facets, results);
     }
 
+    static ObjectNode toJson (Element elm) {
+        return toJson (new ObjectMapper (), elm);
+    }
+    
+    static ObjectNode toJson (ObjectMapper mapper, Element elm) {
+        return toJson (mapper.createObjectNode(), elm);
+    }
+
+    static ObjectNode toJson (ObjectNode node, Element elm) {
+        node.put("id",System.identityHashCode(elm.getObjectValue()));
+        node.put("class", elm.getObjectValue().getClass().getName());
+        node.put("key", elm.getObjectKey().toString());
+        node.put("creation", new Date (elm.getCreationTime()).toString());
+        node.put("expiration", new Date (elm.getExpirationTime()).toString());
+        node.put("lastAccess", new Date (elm.getLastAccessTime()).toString());
+        node.put("lastUpdate", new Date (elm.getLastUpdateTime()).toString());
+        node.put("timeToIdle", elm.getTimeToIdle());
+        node.put("timeToLive", elm.getTimeToLive());
+        node.put("isEternal", elm.isEternal());
+        node.put("isExpired", elm.isExpired());
+        return node;
+    }
+
+    public static Result cache (String key) {
+        try {
+            Element elm = IxCache.getElm(key);
+            if (elm == null) {
+                return notFound ("Unknown cache: "+key);
+            }
+
+            return ok (toJson (elm));
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
+    }
+
+    public static Result cacheSummary () {
+        return ok (ix.ncats.views.html.cachestats.render
+                   (IxCache.getStatistics()));
+    }
+
+    public static Result cacheList (int top, int skip) {
+        List keys = IxCache.getKeys(top, skip);
+        if (keys != null) {
+            ObjectMapper mapper = new ObjectMapper ();
+            ArrayNode nodes = mapper.createArrayNode();
+            for (Iterator it = keys.iterator(); it.hasNext(); ) {
+                Object key = it.next();
+                try {
+                    Element elm = IxCache.getElm(key.toString());
+                    if (elm != null)
+                        nodes.add(toJson (mapper, elm));
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            return ok (nodes);
+        }
+        return ok ("No cache available!");
+    }
+
+    public static Result cacheDelete (String key) {
+        try {
+            Element elm = IxCache.getElm(key);
+            if (elm == null) {
+                return notFound ("Unknown cache: "+key);
+            }
+                
+            if (IxCache.remove(key)) {
+                return ok (toJson (elm));
+            }
+            
+            return ok ("Can't remove cache element: "+key);
+        }
+        catch (Exception ex) {
+            return internalServerError (ex.getMessage());
+        }
+    }
+    
     public static Result statistics (String kind) {
         if (kind.equalsIgnoreCase("cache")) {
             return ok (ix.ncats.views.html.cachestats.render
