@@ -1,0 +1,112 @@
+@import ix.ginas.controllers.v1.CVFactory;
+<div class = "row" ng-controller="NameController as NameCtrl">
+    <button class="btn btn-primary label-offset det">
+                        Names&nbsp;<span class="badge" ng-show="substance.names.length>0">
+                        {{substance.names.length}}</span> </button>
+    <a ng-show="!addingNames" ng-click="addNames()" aria-label="Add Names"><i class = "fa fa-plus fa-2x success"></i></a>
+    <div class="col-md-12">
+        <table class="table table-striped" id="namesTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th ng-show="ofType">Domain</th>
+                    <th ng-show="ofType">Jurisdiction</th>
+                    <th ng-show="ofType">Naming Org</th>
+                    <th>Language</th>
+                    <th>Preferred</th>
+                    <th>Reference ID</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tr ng-repeat="nameVar in substance.names">
+                <td>
+                                    {{nameVar.name}}
+                </td>
+                <td>
+                                    {{nameVar.type.display}}
+                </td>
+                <td ng-show="ofType">
+                                    {{nameVar.domain.display}}</td>
+                <td ng-show="ofType">
+                                    {{nameVar.jurisdiction.display}}</td>
+                <td ng-show="ofType">
+                                    {{nameVar.nameOrgs.org}}</td>
+                <td>
+                                    {{ nameVar.languages.display}}
+                </td>
+                <td class="text-center"><i ng-show="nameVar.preferred===true" class="fa fa-check fa-2x success"></i>
+                </td>
+                <td>
+                    {{nameVar.references.id}} {{nameVar.references.citation}}
+
+                </td>
+                <td><a ng-show="!isEditing" ng-click="setEditedName(nameVar); toggleEdit();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+                </td>
+                <td>
+                    <a ng-show="!isEditing" ng-click="NameCtrl.removeName(nameVar)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
+                </td>
+            </tr>
+            <tr ng-show="isEditing">
+                <form class="form-horizontal" name="editForm" id = "add-name" role="form" ng-submit="updateName(editName)" novalidate>
+                    <h4 ng-show="isEditing">Editing {{editName.name}}</h4>
+                    <td><input class="form-control" ng-model = "editName.name" placeholder="Name" title="Name" id="name" required/></td>
+                    <td> <select class="form-control" title="Name Type" id="type" ng-model = "editName.type" ng-change="typeCheck()" ng-options="r.display for r in @CVFactory.getField("NAME_TYPE") track by r.display" required>
+                                    </select></td>
+                    <td ng-show="name.type.value=='of'"><select class="form-control" title="Domain" id="domain" ng-model = "editName.domain" ng-options="r.display for r in @CVFactory.getField("NAME_DOMAIN") track by r.display" required>
+                                    </select>
+                    </td>
+                    <td ng-show="name.type.value=='of'"><select class="form-control" title="Jurisdiction" id="jurisdiction" ng-model = "editName.jurisdiction" ng-options="r.display for r in @CVFactory.getField("JURISDICTION") track by r.display" required>
+                                    </select>
+                    </td>
+                    <td ng-show="name.type.value=='of'"><select class="form-control" title="Naming Organization" id="name-org" ng-model = "editName.nameOrgs.nameOrg" ng-options="r.display for r in @CVFactory.getField("NAME_ORG") track by r.display" required>
+                                    </select>
+                    </td>
+                    <td> <select class="form-control" title="Language" id="language" ng-model = "editName.languages" ng-options="r.display for r in @CVFactory.getField("LANGUAGE") track by r.display" required>
+                                    </select></td>
+                    <td class="text-center"> <input type = "checkbox" ng-model = "editName.preferred" placeholder="Preferred" title="Preferred" id="preferred"/></td>
+                    <td><select class="form-control" title="Reference" id="reference" ng-model = "editName.references" ng-options="ref.id for ref in substance.references" required>
+                    </select>
+                    </td>
+                    <td><a id ="name-submit" ng-show="editForm.$valid" ng-click="updateName(editName)" arial-label="Save">
+                        <i class="fa fa-floppy-o fa-2x success"></i></a>
+                    </td>
+                    <td><a type="submit" ng-click="toggleEdit();" aria-label="Cancel">
+                        <i class="fa fa-ban fa-2x danger"></i></a>
+                    </td>
+                </form>
+            </tr>
+            <tr ng-show="!isEditing && addingNames">
+                <form class="form-horizontal" name="nameForm" id = "add-name" role="form" ng-submit="validateName(name)" novalidate>
+                    <td><input class="form-control" ng-model = "name.name" placeholder="Name" title="Name" id="name" required/></td>
+                    <td> <select class="form-control" title="Name Type" id="type" ng-model = "name.type" ng-change="typeCheck()" ng-options="r.display for r in @CVFactory.getField("NAME_TYPE") track by r.display" required>
+                                    </select></td>
+                    <td ng-show="name.type.value=='of'"><select class="form-control" title="Domain" id="domain" ng-model = "name.domain" ng-options="r.display for r in @CVFactory.getField("NAME_DOMAIN") track by r.display" required>
+                                    </select>
+                    </td>
+                    <td ng-show="name.type.value=='of'"><select class="form-control" title="Jurisdiction" id="jurisdiction" ng-model = "name.jurisdiction" ng-options="r.display for r in @CVFactory.getField("JURISDICTION") track by r.display" required>
+                                    </select>
+                    </td>
+                    <td ng-show="name.type.value=='of'"><select class="form-control" title="Naming Organization" id="name-org" ng-model = "name.nameOrgs.nameOrg" ng-options="r.display for r in @CVFactory.getField("NAME_ORG") track by r.display" required>
+                                    </select>
+                    </td>
+                    <td> <select class="form-control" title="Language" id="language" ng-model = "name.languages" ng-options="r.display for r in @CVFactory.getField("LANGUAGE") track by r.display" required>
+                                    </select></td>
+                    <td class="text-center"> <input type = "checkbox" ng-model = "name.preferred" placeholder="Preferred" title="Preferred" id="preferred"/></td>
+                    <td><select class="form-control" title="Reference" id="reference" ng-model = "name.references" ng-options="ref.citation for ref in substance.references" required>
+                    </select>
+                    </td>
+                    <td><a ng-click="clear()" aria-label="Clear">
+                        <i class="fa fa-eraser fa-2x danger"></i></a>
+                    </td>
+                    <td><button class="btn btn-default" type="submit" ng-show="nameForm.$valid">
+                                        Validate</button>
+                    </td>
+                </form>
+            </tr>
+        </table>
+    </div>
+    <button class = "btn btn-primary pull-right" ng-show="addingNames &&!isEditing" ng-click="addNames()">
+                        Done</button>
+</div>

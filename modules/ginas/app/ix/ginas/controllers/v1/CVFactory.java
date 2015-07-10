@@ -1,9 +1,13 @@
 package ix.ginas.controllers.v1;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.VocabularyTerm;
 import play.Logger;
+import play.libs.Json;
 import play.mvc.Result;
+import scala.util.parsing.json.JSON;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -32,14 +36,14 @@ public class CVFactory extends EntityFactory {
                 VocabularyTerm cv = new VocabularyTerm();
                 int l = cvTerm.length;
                 if (l >= 2) {
-                    cv.valueShort = cvTerm[1];
+                    cv.value = cvTerm[1];
                 } else {
-                    cv.valueShort = null;
+                    cv.value = null;
                 }
                 if (l >= 3) {
-                    cv.valueLong = cvTerm[2];
+                    cv.display = cvTerm[2];
                 } else {
-                    cv.valueLong = null;
+                    cv.display = null;
                 }
                 if (l >= 4) {
                     cv.description = cvTerm[3];
@@ -77,7 +81,7 @@ public class CVFactory extends EntityFactory {
             ArrayList<VocabularyTerm> toReturn = tmpmap.get(domain);
             Collections.sort(toReturn, new Comparator<VocabularyTerm>() {
                 public int compare(VocabularyTerm t1, VocabularyTerm t2) {
-                    return (t1.valueLong+"").compareTo(t2.valueLong+"");
+                    return (t1.display+"").compareTo(t2.display+"");
                 }
             });
         };
@@ -85,9 +89,16 @@ public class CVFactory extends EntityFactory {
         return ok(ix.ginas.views.html.login.render());
     }
 
-    public static ArrayList<VocabularyTerm> getField(String domain) {
+//    public static ArrayList<VocabularyTerm> getField(String domain) {
+//        run();
+//        return map.get(domain);
+//    }
+
+    public static String getField(String domain) {
         run();
-        return map.get(domain);
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode j = mapper.valueToTree(map.get(domain));
+return j.toString();
     }
 
 }

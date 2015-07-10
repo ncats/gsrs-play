@@ -5,8 +5,8 @@ package ix.ginas.models.v1;
  */
 public class VocabularyTerm {
 
-    public String valueShort;
-    public String valueLong;
+    public String value;
+    public String display;
     public String description;
     public String origin;
 
