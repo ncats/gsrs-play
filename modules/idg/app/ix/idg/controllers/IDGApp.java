@@ -921,9 +921,10 @@ public class IDGApp extends App implements Commons {
                    pages, decorate (facets), diseases));
     }
 
-    public static Result targets (final String q,
-                                  final int rows, final int page) {
+    public static Result targets (String q, final int rows, final int page) {
         try {
+            if (q != null && q.trim().length() == 0)
+                q = null;
             return _targets (q, rows, page);
         }
         catch (Exception ex) {
@@ -1337,9 +1338,11 @@ public class IDGApp extends App implements Commons {
         return null;
     }
     
-    public static Result ligands (final String q,
-                                  final int rows, final int page) {
-        String type = request().getQueryString("type"); 
+    public static Result ligands (String q, final int rows, final int page) {
+        String type = request().getQueryString("type");
+        if (q != null && q.trim().length() == 0)
+            q = null;
+        
         long start = System.currentTimeMillis();
         try {
             if (type != null && (type.equalsIgnoreCase("substructure")
@@ -1730,9 +1733,10 @@ public class IDGApp extends App implements Commons {
         return new ArrayList<Keyword>();
     }
     
-    public static Result diseases (final String q,
-                                   final int rows, final int page) {
+    public static Result diseases (String q, final int rows, final int page) {
         try {
+            if (q != null && q.trim().length() == 0)
+                q = null;
             return _diseases (q, rows, page);
         }
         catch (Exception ex) {

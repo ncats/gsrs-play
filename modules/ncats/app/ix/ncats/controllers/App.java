@@ -1245,8 +1245,9 @@ public class App extends Controller {
     }
 
     static ObjectNode toJson (ObjectNode node, Element elm) {
-        node.put("id",System.identityHashCode(elm.getObjectValue()));
-        node.put("class", elm.getObjectValue().getClass().getName());
+        node.put("class", elm.getObjectValue().getClass().getName()
+                 +"@"+String.format
+                 ("%1$x", System.identityHashCode(elm.getObjectValue())));
         node.put("key", elm.getObjectKey().toString());
         node.put("creation", new Date (elm.getCreationTime()).toString());
         node.put("expiration", new Date (elm.getExpirationTime()).toString());
