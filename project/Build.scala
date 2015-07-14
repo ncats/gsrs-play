@@ -18,7 +18,9 @@ object ApplicationBuild extends Build {
     javaEbean,
     cache,
     filters,
-    "mysql" % "mysql-connector-java" % "5.1.31"
+    "com.zaxxer" % "HikariCP-java6" % "2.3.8"
+      ,"com.edulify" %% "play-hikaricp" % "2.0.6"
+      ,"mysql" % "mysql-connector-java" % "5.1.31"
       ,"commons-codec" % "commons-codec" % "1.9"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
       ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"
@@ -99,6 +101,7 @@ object ApplicationBuild extends Build {
 
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(
+    resolvers += Resolver.url("Edulify Repository", url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
     version := appVersion,
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
