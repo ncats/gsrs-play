@@ -117,8 +117,10 @@ function filterToggle (el) {
   }
   console.log(el.id+' '+facet);
   var url = '@HtmlFormat.raw(App.url(facets, "page"))';
-  url += url.length == 0 ? '?' : '&';
-  url += facet;
+  if (facet.length > 0) {
+    url += url.indexOf('&') < 0 ? '?' : '&';
+    url += facet;
+  }
   console.log('>> '+url);
   location.href = url;
 }

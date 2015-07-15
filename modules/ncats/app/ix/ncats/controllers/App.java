@@ -242,7 +242,7 @@ public class App extends Controller {
         // remove these
         //params.remove("rows");
         params.remove("page");
-        StringBuilder uri = new StringBuilder ("?page="+page);
+        StringBuilder uri = new StringBuilder (request().path()+"?page="+page);
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             for (String v : me.getValue()) {
                 //Logger.debug(v+" => "+decode(v));
@@ -316,7 +316,7 @@ public class App extends Controller {
     public static String url (FacetDecorator[] facets, String... others) {
         Logger.debug(">> uri="+request().uri());
 
-        StringBuilder uri = new StringBuilder ("?");
+        StringBuilder uri = new StringBuilder (request().path()+"?");
         Map<String, Collection<String>> params = getQueryParameters ();
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             if (me.getKey().equals("facet")) {

@@ -22,8 +22,6 @@ import ix.ginas.controllers.*;
 public class SubstanceFactory extends EntityFactory {
     static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
-    static public final Model.Finder<UUID, Substance> subfinder =
-            new Model.Finder(UUID.class, Substance.class);
     static public final Model.Finder<UUID, ChemicalSubstance> chemfinder =
             new Model.Finder(UUID.class, ChemicalSubstance.class);
     static public final Model.Finder<UUID, ProteinSubstance> protfinder =
@@ -38,20 +36,20 @@ public class SubstanceFactory extends EntityFactory {
     }
     
     public static Substance getFullSubstance(SubstanceReference subRef){
-    	return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
+        return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
     }
     
     private static Substance getSubstanceByApprovalIDOrUUID (String approvalID, String uuid) {
-    	Logger.debug("###################Fetching:" + approvalID + " : " + uuid);
-    	Substance s=getSubstance(uuid);
-    	if(s!=null)return s;
-    	
-    	List<Substance> list=GinasApp.resolve(finder,approvalID);
-    	if(list!=null && list.size()>0){
-    		return list.get(0);
-    	}
-    	return null;
-    	//return finder.where().eq("approvalID", approvalID).findUnique();
+        Logger.debug("###################Fetching:" + approvalID + " : " + uuid);
+        Substance s=getSubstance(uuid);
+        if(s!=null)return s;
+        
+        List<Substance> list=GinasApp.resolve(finder,approvalID);
+        if(list!=null && list.size()>0){
+                return list.get(0);
+        }
+        return null;
+        //return finder.where().eq("approvalID", approvalID).findUnique();
     }
 
     public static List<Substance> getSubstances
