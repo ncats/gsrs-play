@@ -13,17 +13,48 @@
         };
     });
 
-    ginasApp.controller('GinasController', function ($scope, $http, $location) {
-        $scope.substance= {};
-        $scope.substance.substanceClass = $location.$$search.kind;
-        console.log($location);
+    ginasApp.factory('Substance', function($location) {
+        var Substance = {};
+        var substanceClass = $location.$$search.kind;
+        Substance.substanceClass = substanceClass;
+        switch (substanceClass) {
+            case "Chemical":
+                Substance.chemical = {};
+                break;
+            case "Protein":
+                Substance.protein = {};
+                break;
+            default:
+                console.log('invalid substance class');
+                break;
+        }
+        return Substance;
     });
 
-    ginasApp.controller('NameController',function($scope, $http, $filter){
+    function GinasCtrl(Substance){
+        var ginasCtrl = this;
+        ginasCtrl.substance= Substance;
+    }
+
+
+
+    ginasApp.directive("nameValid", function () {
+        return {
+            restrict :"E",
+            template: "<div>Name ok </div>"
+        };
+
+    });
+
+    ginasApp.controller("GinasCtrl",GinasCtrl);
+
+
+    ginasApp.controller('NameController',function($scope, $http, $filter, $rootScope){
         $scope.isEditing = false;
         $scope.editName = null;
         $scope.addName = null;
         $scope.addingNames=false;
+
 
         $scope.addNames= function(){
             $scope.addingNames= !$scope.addingNames;
@@ -35,14 +66,19 @@
 
 
 
-        function validateName (ginasName) {
+        $scope.validateName = function(ginasName) {
             $scope.editorEnabled = false;
-            console.log(ginasName);
+            $http({
+                method: 'GET',
+                url: "app/api/v1/substances?filter=names.name='"+ ginasName.name+"'",
+                headers: {'Content-Type': 'text/plain'}
+            }).success(function (data) {
+                console.log(data);
+                if(data.count===0){
 
-          //this cleans the language object. probably best to save for last
-          //  var language = {"value":ginasName.languages.valueShort, "display": ginasName.languages.valueLong};
-          //  ginasName.languages = language;
-
+                }
+                return data;
+            });
 
             //new array if object doesn't already have one
             if(!$scope.substance.names){
@@ -51,18 +87,18 @@
             $scope.substance.names.push(ginasName);
             //resets form
             $scope.name={};
-console.log($scope.substance);        }
+            $rootScope.uniqueName =true;
 
-        $scope.typeCheck = function() {
-            console.log($scope.name.type);
-            if ($scope.name.type.value === 'of') {
-                console.log("changing");
-                $scope.ofType = true;
-            }
         };
+
+
+
+
+
 
         $scope.clear = function() {
             $scope.name={};
+
         };
 
 
@@ -118,7 +154,7 @@ console.log($scope.substance);        }
                    //this.name = $scope.name;
 
             };
-        $scope.validateName= validateName;
+
     });
 
     ginasApp.controller('ReferenceController',function($scope) {
@@ -287,4 +323,110 @@ console.log($scope.substance);        }
             });
     };
     });
+
+    ginasApp.controller('SubunitController', function ($scope) {
+        $scope.isEditingSubunit = false;
+        $scope.addingSubunit = false;
+        $scope.editSubunit = null;
+
+        $scope.addSubunit= function(){
+            $scope.addingSubunit= !$scope.addingSubunit;
+        };
+
+        $scope.toggleEditSubunit= function(){
+            console.log("editing)");
+            $scope.isEditingSubunit=!$scope.isEditingSubunit;
+        };
+
+
+        $scope.validateSubunit = function(subunit) {
+            console.log("subunit");
+            $scope.editorEnabled = false;
+            //new array if object doesn't already have one
+            if (!$scope.substance.protein.subunits) {
+                console.log("new array");
+                $scope.substance.protein.subunits = [];
+            }
+            var j = subunit.sequence.length/10;
+            for(var i=0; i<subunit.sequence.length/10; i++){
+console.log("Start: " + (i*10) + subunit.sequence.substring((i*10),((i+1)*10))+ " end: " + ((i+1)*10));
+
+            }
+
+          //  console.log(subunit.sequence.split(''));
+            $scope.substance.protein.subunits.push(subunit);
+            $scope.subunit = {};
+            console.log($scope.substance);
+
+        };
+
+        $scope.setEditedSubunit= function(subunit) {
+            console.log("clicked");
+            $scope.editSubunit = subunit;
+            $scope.tempCopy = angular.copy(subunit);
+        };
+
+        $scope.updateSubunit = function(subunit) {
+            var index = $scope.substance.protein.subunits.indexOf(subunit);
+            $scope.substance.protein.subunits[index] = subunit;
+            $scope.editSubunit = null;
+            $scope.isEditingSubunit = false;
+        };
+
+        $scope.removeSubunit= function(subunit){
+            var index = $scope.substance.protein.subunits.indexOf(subunit);
+            $scope.substance.protein.subunits.splice(index, 1);
+        };
+    });
+
+    ginasApp.controller('DetailsController', function ($scope) {
+        $scope.isEditingDetails = false;
+        $scope.addingDetails = false;
+        $scope.editDetails = null;
+        $scope.detailsSet= false;
+
+        $scope.addDetails= function(){
+            $scope.addingDetails= !$scope.addingDetails;
+        };
+
+        $scope.toggleEditDetails= function(){
+            console.log("editing)");
+            $scope.isEditingDetails=!$scope.isEditingDetails;
+        };
+
+
+        $scope.validateDetails = function(protein) {
+            console.log("subunit");
+            $scope.editorEnabled = false;
+            $scope.substance.protein.proteinType = protein.type;
+            $scope.substance.protein.proteinSubType = protein.subType;
+            $scope.substance.protein.sequenceOrigin = protein.sequenceOrigin;
+            $scope.substance.protein.sequenceType = protein.sequenceType;
+
+            $scope.protein = {};
+            console.log($scope.substance);
+            $scope.detailsSet = true;
+
+
+        };
+
+        $scope.setEditedDetails= function(details) {
+            console.log("clicked");
+            $scope.editDetails = details;
+            $scope.tempCopy = angular.copy(details);
+        };
+
+        $scope.updateDetails = function(details) {
+            var index = $scope.substance.subunits.indexOf(subunit);
+            $scope.substance.subunits[index] = subunit;
+            $scope.editSubunit = null;
+            $scope.isEditingSubunit = false;
+        };
+
+    });
+
+    //ginasApp.directive('ModificationForm', function ($scope) ){
+    //
+    //}
+
 })();

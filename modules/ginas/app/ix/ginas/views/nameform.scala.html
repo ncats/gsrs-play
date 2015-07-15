@@ -1,5 +1,5 @@
 @import ix.ginas.controllers.v1.CVFactory;
-<div class = "row" ng-controller="NameController as NameCtrl">
+<div class = "row info" ng-controller="NameController as NameCtrl">
     <button class="btn btn-primary label-offset det">
                         Names&nbsp;<span class="badge" ng-show="substance.names.length>0">
                         {{substance.names.length}}</span> </button>
@@ -79,7 +79,7 @@
             </tr>
             <tr ng-show="!isEditing && addingNames">
                 <form class="form-horizontal" name="nameForm" id = "add-name" role="form" ng-submit="validateName(name)" novalidate>
-                    <td><input class="form-control" ng-model = "name.name" placeholder="Name" title="Name" id="name" required/></td>
+                    <td><input type="text" class="form-control" ng-model = "name.name" placeholder="Name" title="Name" id="name" required/></td>
                     <td> <select class="form-control" title="Name Type" id="type" ng-model = "name.type" ng-change="typeCheck()" ng-options="r.display for r in @CVFactory.getField("NAME_TYPE") track by r.display" required>
                                     </select></td>
                     <td ng-show="name.type.value=='of'"><select class="form-control" title="Domain" id="domain" ng-model = "name.domain" ng-options="r.display for r in @CVFactory.getField("NAME_DOMAIN") track by r.display" required>

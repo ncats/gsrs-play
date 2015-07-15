@@ -519,7 +519,7 @@ samp {
     color: black;
 }
 
-.col-md-12.string {
+.string {
     line-height: 1;
     font-size: 15px;
     font-family: "Lucida Console", Monaco, monospace;
