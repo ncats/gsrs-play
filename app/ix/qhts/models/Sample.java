@@ -20,16 +20,21 @@ public class Sample extends EntityModel {
      */
     public static final String S_TOX21 = "Tox21";
     public static final String S_NCGC = "NCGC";
+    public static final String S_NCGC_BATCH = "NCGC Batch";
     public static final String S_CASRN = "CASRN";
     public static final String S_DSSTOX = "DSSTox";
     public static final String S_SID = "SID";
     public static final String S_CID = "CID";
     public static final String S_UNII = "UNII";
-    public static final String S_InChIKey = "InChIKey";
-    public static final String S_SYN = "SYNONYM"; // generic synonym
+    public static final String S_SYN = "Synonym"; // generic synonym
 
+    /**
+     * Property labels
+     */
     public static final String P_SMILES_ISO = "SMILES_ISO";
-    public static final String P_MOLFILE = "MOLFILE";
+    public static final String P_SMILES_STD = "SMILES_STD"; // standardized
+    public static final String P_MOLFILE = "Molfile";
+    public static final String P_SUPPLIER = "Supplier";
 
     public String name;
 
@@ -65,9 +70,7 @@ public class Sample extends EntityModel {
         this.name = name;
     }
     
-    @Indexable(facet=true,suggest=true,name="qHTS Sample")
-    public String getName () { return name; }
-    
+    public String getName () { return name; }    
     public String getDescription () { return null; }
     public List<Keyword> getSynonyms () { return synonyms; }
     public List<Value> getProperties () { return properties; }

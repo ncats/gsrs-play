@@ -262,7 +262,7 @@ public class GinasApp extends App {
 
     static Result _substances (final String q, final int rows, final int page)
             throws Exception {
-        final int total = SubstanceFactory.finder.findRowCount();
+        final int total = SubstanceFactory.getCount();
         final String key = "substances/"+Util.sha1(request ());
 
         if (request().queryString().containsKey("facet") || q != null) {

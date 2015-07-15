@@ -242,7 +242,7 @@ public class App extends Controller {
         // remove these
         //params.remove("rows");
         params.remove("page");
-        StringBuilder uri = new StringBuilder ("?page="+page);
+        StringBuilder uri = new StringBuilder (request().path()+"?page="+page);
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             for (String v : me.getValue()) {
                 //Logger.debug(v+" => "+decode(v));
@@ -316,7 +316,7 @@ public class App extends Controller {
     public static String url (FacetDecorator[] facets, String... others) {
         Logger.debug(">> uri="+request().uri());
 
-        StringBuilder uri = new StringBuilder ("?");
+        StringBuilder uri = new StringBuilder (request().path()+"?");
         Map<String, Collection<String>> params = getQueryParameters ();
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             if (me.getKey().equals("facet")) {
@@ -1245,8 +1245,9 @@ public class App extends Controller {
     }
 
     static ObjectNode toJson (ObjectNode node, Element elm) {
-        node.put("id",System.identityHashCode(elm.getObjectValue()));
-        node.put("class", elm.getObjectValue().getClass().getName());
+        node.put("class", elm.getObjectValue().getClass().getName()
+                 +"@"+String.format
+                 ("%1$x", System.identityHashCode(elm.getObjectValue())));
         node.put("key", elm.getObjectKey().toString());
         node.put("creation", new Date (elm.getCreationTime()).toString());
         node.put("expiration", new Date (elm.getExpirationTime()).toString());
