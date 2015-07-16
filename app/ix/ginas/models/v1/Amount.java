@@ -70,4 +70,5 @@ public class Amount extends Ginas {
     	
     	return val+ " (" + units + ")"; 
     }
+    
 }
