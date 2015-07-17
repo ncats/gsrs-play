@@ -118,7 +118,7 @@ function filterToggle (el) {
   console.log(el.id+' '+facet);
   var url = '@HtmlFormat.raw(App.url(facets, "page"))';
   if (facet.length > 0) {
-    url += url.indexOf('&') < 0 ? '?' : '&';
+    url += url.indexOf('?') < 0 ? '?' : '&';
     url += facet;
   }
   console.log('>> '+url);
