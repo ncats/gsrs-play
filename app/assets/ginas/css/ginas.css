@@ -337,14 +337,6 @@ nav#main-pagination {
     height: 235px;
 }
 
-.ng-invalid.ng-dirty {
-    border-color: red;
-}
-
-.ng-valid.ng-dirty {
-    border-color: green;
-}
-
 /* END WIZARD CSS */
 #canvas {
     background: none;
@@ -926,4 +918,30 @@ div#num {
 }
 .danger:hover {
     color: #ac2925;
+}
+
+
+.err-check .help-block,.err-check .help-block-duplicate  {
+    display: none;
+}
+
+.err-check.has-error .help-block, .err-check .help-block-duplicate {
+    display: block;
+}
+
+.header-row{
+    text-align: left;
+    border-top: 0;
+    padding: 8px;
+    line-height: 1.42857143;
+    vertical-align: bottom;
+    border-bottom: 2px solid #ddd;
+}
+
+.form-row{
+    padding-top: 30px;
+}
+
+.full-width{
+    max-width:100%;
 }

@@ -3,10 +3,10 @@
 
 @wizardfields(kind: String) = {
     @if(kind == "Chemical") {
-        <div ng-show="uniqueName">@structureform()</div>
+        @*<div ng-show="uniqueName">@structureform()</div>*@
         @nameform()
-        <div ng-show="uniqueName">@codeform()</div>
-        @referenceform()
+        @*<div ng-show="uniqueName">@codeform()</div>*@
+@*//        @referenceform()*@
     }
     @if(kind == "Mixture") {
         @nameform()
