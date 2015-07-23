@@ -4,20 +4,31 @@
                         Names&nbsp;<span class="badge" ng-show="substance.names.length>0">
                         {{substance.names.length}}</span> </button>
     <a ng-show="!addingNames" ng-click="NameCtrl.addNames()" aria-label="Add Names"><i class = "fa fa-plus fa-2x success"></i></a>
+    <a ng-show="addingNames" ng-click="NameCtrl.addNames()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
     <div class="col-md-12">
         <div class = "row header-row">
-            <div class = "col-md-2">
+            <div class = "col-md-4">
                 <strong>Name</strong>
             </div>
-            <div class = "col-md-1">
+
+
+            <div class = "col-md-2">
                 <strong>Type</strong>
             </div>
-            <div class = "col-md-1" ng-show="ofType">
-                                    <strong>Domain</strong></div>
-            <div class = "col-md-1" ng-show="ofType">
-                                    <strong>Jurisdiction</strong></div>
-            <div class = "col-md-1" ng-show="ofType">
-                                    <strong>Naming Org.</strong></div>
+
+@*            <div class ="col-md-4" ng-if="ofType">
+                <div class = "row">
+                    <div class = "col-md-3">
+                        <strong>Type</strong></div>
+                    <div class = "col-md-3">
+                        <strong>Domain</strong></div>
+                    <div class = "col-md-3">
+                        <strong>Jurisdiction</strong></div>
+                    <div class = "col-md-3">
+                        <strong>Naming Org.</strong></div>
+                </div>
+            </div>*@
+
             <div class = "col-md-2">
                 <strong>Language</strong>
             </div>
@@ -26,32 +37,33 @@
             </div>
             <div class = "col-md-2">
                 <strong>Reference ID</strong>
+                {{name.references.length}}
             </div>
-            <div class = "col-md-1">
-
-            </div>
-
         </div>
         <div class = "row" ng-repeat="name in ginasCtrl.substance.names">
-            <div class = "col-md-2">
+            <div class = "col-md-4">
                                     {{name.name}}
             </div>
-            <div class = "col-md-1">
+            <div class = "col-md-2">
                                     {{name.type.display}}
             </div>
-            <div class = "col-md-1" ng-show="ofType">
+@*            <div class="col-md-3" ng-show="ofType">
+                <div class ="row">
+                    <div class = "col-md-4">
                                     {{name.domain.display}}</div>
-            <div class = "col-md-1" ng-show="ofType">
+                    <div class = "col-md-4" ng-show="ofType">
                                     {{name.jurisdiction.display}}</div>
-            <div class = "col-md-1" ng-show="ofType">
-                                    {{name.nameOrgs.org}}</div>
-            <div class = "col-md-2">
+                    <div class = "col-md-4" ng-show="ofType">
+                                    {{name.nameOrgs.org.display}}</div>
+                </div>
+                </div>*@
+                <div class = "col-md-2">
                                     {{ name.languages.display}}
-            </div>
+                </div>
             <div class = "col-md-1 text-center">
                 <i ng-show="name.preferred===true" class="fa fa-check fa-2x success"></i>
             </div>
-            <div class = "col-md-1">
+            <div class = "col-md-2">
                     {{name.references.id}} {{name.references.citation}}
             </div>
             <div class = "col-md-1 pull-right">
@@ -60,82 +72,136 @@
             </div>
 
         </div>
-        @*<div class="row form-row" ng-show="isEditing">*@
-            @*<form class="form-horizontal" name="editNameForm" id = "add-name" role="form" ng-submit="NameCtrl.updateName(editName)" novalidate>*@
-                @*<h4 ng-show="isEditing">Editing {{editName.name}}</h4>*@
-                @*<div class="col-md-2 err-check" show-errors>*@
-                    @*<input type="text" class="form-control" ng-model = "editName.name" title="Name" id="name" name = "edit-name" required/>*@
-                    @*<p class="help-block" ng-if="editNameForm.editName.$error.required">Substance name is required</p>*@
-                    @*<p class="help-block-duplicate" ng-if="editNameForm.editName.$error.required">Duplicate name exists</p>*@
-                @*</div>*@
-                @*<div class="col-md-2 err-check" show-errors>*@
-                    @*<select class="form-control" title="Name Type" id="type" name = "edit-type" ng-model = "editName.type" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @CVFactory.getField("NAME_TYPE") track by r.display" required>*@
-                        @*</select>*@
-                    @*<p class="help-block" ng-if="editNameForm.editName.$error.required">*required</p>*@
-                @*</div>*@
-                @*<div class="col-md-2 err-check" show-errors>*@
-                    @*<select class="form-control" title="Language" id="language" name="edit-language" ng-model = "editName.languages" ng-options="r.value for r in @CVFactory.getField("LANGUAGE") track by r.display" required>*@
-                        @*</select>*@
-                @*</div>*@
-                @*<div class="col-md-1">*@
-                    @*<input type = "checkbox" ng-model = "editName.preferred" placeholder="Preferred" title="Preferred" id="preferred"/>*@
-                @*</div>*@
-                @*<div class="col-md-2 err-check" show-errors>*@
-                    @*<select class="form-control" title="Reference" id="reference"  name = "edit-reference" ng-model = "editName.references" ng-options="ref.citation for ref in substance.references" ></select>*@
-                    @*<p class="help-block" ng-if="editNameForm.editName.$error.required">*required</p>*@
-                @*</div>*@
-                @*<div class="col-md-2  pull-right">*@
-                    @*<a id ="name-submit" ng-show="editNameForm.$valid" ng-click="NameCtrl.updateName(editName)" arial-label="Save">*@
-                        @*<i class="fa fa-floppy-o fa-2x success"></i></a>*@
-                    @*<a type="submit" ng-click="NameCtrl.toggleEdit();" aria-label="Cancel">*@
-                        @*<i class="fa fa-ban fa-2x danger"></i></a>*@
-                @*</div>*@
-            @*</form>*@
-        @*</div>*@
-        <div class="row form-row" ng-show="!isEditing && addingNames">
-            <form class="form-inline" name="nameForm" id = "add-name" role="form" ng-submit="NameCtrl.validateName(name)" novalidate>
-                <div class="col-md-2 err-check" id="name-div" show-errors>
-                    <input type="text" class="form-control text-uppercase" ng-model = "name.name" title="Name" id="name" name = "subName" duplicate required/>
-                    <ul class="error-msgs" ng-messages="nameForm.subName.$error">
-                        <li ng-message="required">Substance name is required</li>
-                        <li ng-message="duplicate">Name already exists in Ginas</li>
-                    </ul>
+        <div class="row form-row" ng-show="isEditing">
+        <form class="form" name="editNameForm" id = "edit-nameForm" role="form" ng-submit="NameCtrl.validateName(editName); NameCtrl.addNames()" novalidate>
+            <div class ="row">
+                <div class="col-md-4 err-check" id="name-div" show-errors>
+                    <input type="text" class="form-control" ng-model ="editName.name" title="Name" id="name" name = "name" required duplicate/>
+                    <ng-messages for="editNameForm.name.$error" ng-if="editNameForm.name.$touched">
+                        <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                    </ng-messages>
                 </div>
-                <div class="col-md-1 err-check" show-errors>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "editName.type" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @CVFactory.getField("NAME_TYPE") track by r.display" required>
+                        </select>
+                    <ng-messages for="editNameForm.type.$error" ng-if="editNameForm.type.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Language" id="language" name="language" ng-model = "editName.languages" ng-options="r.display for r in @CVFactory.getField("LANGUAGE") track by r.display" required>
+                        </select>
+                    <ng-messages for="editNameForm.language.$error" ng-if="editNameForm.language.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-1">
+                    <input type = "checkbox" ng-model = "editName.preferred" ng-change="NameCtrl.prefCheck()" placeholder="Preferred" title="Preferred" id="preferred"/>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                    <p class="danger" ng-if="!ginasCtrl.substance.references && editNameForm.reference.$error">*required</p>
+                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "editName.references = ginasCtrl.substance.references[0]" ng-model = "editName.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
+                    <ng-messages for="editNameForm.reference.$error" ng-if="editNameForm.reference.$pristine">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-1 pull-right" ng-show="addingNames">
+                    <a id ="name-submit" ng-click="NameCtrl.updateName(editName)" arial-label="Save">
+                    <i class="fa fa-floppy-o fa-2x success"></i></a>
+                    <a type="submit" ng-click="NameCtrl.toggleEdit();" aria-label="Cancel">
+                    <i class="fa fa-ban fa-2x danger"></i></a>
+                </div>
+
+            </div>
+        </form>
+    </div>
+        <div class="row form-row" ng-show="!isEditing && addingNames">
+        <form class="form-horizontal" name="nameForm" id = "add-name" role="form"  novalidate>
+                <div class="col-md-4 err-check" id="name-div" show-errors>
+                    <input type="text" class="form-control" ng-model ="name.name" title="Name" id="name" name = "name" required duplicate/>
+                    <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
+                        <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "name.type" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @CVFactory.getField("NAME_TYPE") track by r.display" required>
                         </select>
-                    <p class="help-block" ng-if="nameForm.name.$error.required">*required</p>
+                    <ng-messages for="nameForm.type.$error" ng-if="nameForm.type.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
                 </div>
-                @*<div class = "col-md-1" ng-show="name.type.value=='of'"><select class="form-control" title="Domain" id="domain" name = "domain" ng-model = "name.domain" ng-options="r.display for r in @CVFactory.getField("NAME_DOMAIN") track by r.display" >*@
-                @*</select>*@
-                @*</div>*@
-                @*<div class="col-md-1" ng-show="name.type.value=='of'" ><select class="form-control" title="Jurisdiction" id="jurisdiction" name = "jurisdiction" ng-model = "name.jurisdiction" ng-options="r.display for r in @CVFactory.getField("JURISDICTION") track by r.display" >*@
-                @*</select>*@
-                @*</div>*@
-                @*<div class = "col-md-1" ng-show="name.type.value=='of'"><select class="form-control full-width" title="Naming Organization" id="name-org" name="name-org" ng-model = "name.nameOrgs.nameOrg" ng-options="r.display for r in @CVFactory.getField("NAME_ORG") track by r.display" >*@
-                @*</select>*@
-                @*</div>*@
-                @*<div class="col-md-2 err-check" show-errors>*@
-                    @*<select class="form-control full-width" title="Language" id="language" name="language" ng-model = "name.languages" ng-options="r.display for r in @CVFactory.getField("LANGUAGE") track by r.display" required>*@
-                        @*</select>*@
-                @*</div>*@
-                @*<div class="col-md-1">*@
-                    @*<input type = "checkbox" ng-model = "name.preferred" placeholder="Preferred" title="Preferred" id="preferred"/>*@
-                @*</div>*@
-                @*<div class="col-md-1 err-check" show-errors>*@
-                    @*<select class="form-control" title="Reference" id="reference" name = "reference" ng-model = "name.references" ng-options="ref.citation for ref in substance.references" ></select>*@
-                    @*<p class="help-block" ng-if="nameForm.name.$error.required">*required</p>*@
-                @*</div>*@
-                <div class="col-md-1  pull-right">
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Language" id="language" name="language" ng-model = "name.languages" ng-options="r.display for r in @CVFactory.getField("LANGUAGE") track by r.display" required>
+                        </select>
+                    <ng-messages for="nameForm.language.$error" ng-if="nameForm.language.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-1">
+                    <input type = "checkbox" ng-model = "name.preferred" ng-change="NameCtrl.prefCheck()" placeholder="Preferred" title="Preferred" id="preferred"/>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                    <p class="danger" ng-if="!ginasCtrl.substance.references && nameForm.reference.$error">*required</p>
+                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "name.references = ginasCtrl.substance.references[0]" ng-model = "name.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references"></select>
+                    <ng-messages for="nameForm.reference.$error" ng-if="nameForm.reference.$pristine">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-1 pull-right" ng-show="addingNames">
                     <a ng-click="NameCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <button class="btn btn-default" type="submit">Validate</button>
+                    <a ng-click="NameCtrl.validateName(name)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
                 </div>
-            </form>
+        </form>
         </div>
-        @*</tr></table>*@
-        @*</tr>*@
-        @*</table>*@
+        </div>
     </div>
-    <button class = "btn btn-primary pull-right" ng-show="addingNames &&!isEditing" ng-click="NameCtrl.addNames()">
-                        Done</button>
+        <!-- Modal -->
+    <div class="modal fade" id="addref" tabindex="-1" role="dialog"
+    aria-labelledby="myModalLabelimport" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                    aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="myModalLabelimport">Add a Reference</h4>
+                </div>
+                <div class="modal-body">
+                    @referenceform()
+
+                </div>
+                <div class = "modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"
+                    aria-label="Close">
+                        <span aria-hidden="true">Close</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="officialName" tabindex="-1" role="dialog"
+aria-labelledby="myModalLabelimport" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelimport">Official Name Details</h4>
+            </div>
+            <div class="modal-body">
+            @referenceform()
+
+            </div>
+        </div>
+    </div>
 </div>

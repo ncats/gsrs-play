@@ -905,6 +905,8 @@ div#num {
   font-style: italic;
 }
 
+/*REGISTRATION PANELS*/
+
 .success{
     color: #5cb85c;
 }
@@ -943,5 +945,14 @@ div#num {
 }
 
 .full-width{
-    max-width:100%;
+    max-width:100% !important;
+}
+
+.disabled{
+    opacity: .6;
+    pointer-events: none;
+}
+
+span#calendar-icon {
+    background: white;
 }

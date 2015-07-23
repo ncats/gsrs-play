@@ -1,7 +1,9 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ui.bootstrap.showErrors'])
+    var ginasApp = angular.module('ginas', ['ngMessages', 'ui.bootstrap.showErrors','ui.bootstrap.datetimepicker'])
         .config(function ($locationProvider, showErrorsConfigProvider) {
-            $locationProvider.html5Mode(true);
+            $locationProvider.html5Mode({
+                enabled : true
+            });
             showErrorsConfigProvider.showSuccess(true);
         });
 
@@ -38,61 +40,62 @@
         ginasCtrl.substance = Substance;
     }
 
-
     ginasApp.controller("GinasCtrl", GinasCtrl);
 
-    ginasApp.directive('duplicate', function ($http, $interpolate) {
+    ginasApp.directive('duplicate', function (isDuplicate) {
         return {
             restrict: 'A',
             require: 'ngModel',
-            link: function (scope, elm, attrs, formCtrl) {
-                var showSuccess =false;
-                console.log(scope.nameForm.subName);
-                console.log(elm);
-                console.log(formCtrl);
-                inputEl = elm.parent()[0].querySelector('.form-control[name]');
-                inputNgEl = angular.element(elm);
-                inputName = $interpolate(inputNgEl.attr('name') || '')(scope);
-                console.log(elm);
-                console.log(elm.parent());
-                console.log(inputEl);
-                console.log(inputNgEl);
-                console.log(inputName);
-                formCtrl.$parsers.unshift(function (val) {
-                    $http({
-                        method: 'GET',
-                        url: "app/api/v1/substances?filter=names.name='" + val.toUpperCase() + "'",
-                        headers: {'Content-Type': 'text/plain'}
-                    }).success(function (data) {
-                        if (data.count === 0) {
-                            console.log("success");
-                            formCtrl.$valid = true;
-                            formCtrl.$invalid=false;
-                            console.log( scope);
-                            scope.nameForm.$valid=true;
-                            scope.nameForm.$=false;
-                          //  scope.nameCtrl.nameForm= scope.nameForm;
-                            console.log(scope);
-                            //return formCtrl;
-                        } else {
-                            formCtrl.$setValidity('duplicate', false);
-                            formCtrl.$valid = false;
-                            console.log("exists");
+            link: function (scope, element, attrs, ngModel) {
+                ngModel.$asyncValidators.duplicate = isDuplicate;
+            }
+        };
+    });
 
-                            return undefined;
+    ginasApp.directive('datepicker', function() {
+        return {
+            restrict: 'A',
+            require : 'ngModel',
+            link : function (scope, element, attrs, ngModelCtrl) {
+                $(function(){
+                    $(element).datepicker({
+                        dateFormat:'dd/mm/yy',
+                        onSelect:function (date) {
+                            scope.$apply(function () {
+                                ngModelCtrl.$setViewValue(date);
+                            });
                         }
                     });
                 });
             }
-    };
+        };
     });
 
-    ginasApp.controller('NameController', function ($scope, $http, $filter, $rootScope, Substance) {
+
+
+    ginasApp.factory('isDuplicate', function ($http, $q) {
+        return function dupCheck(modelValue) {
+            var deferred = $q.defer();
+            $http.get("app/api/v1/substances?filter=names.name='" + modelValue.toUpperCase() + "'", {headers: {'Content-Type': 'text/plain'}}).then(
+                function (response) {
+                    if (response.data.count >= 1) {
+                        deferred.reject();
+                    } else {
+                        deferred.resolve();
+                    }
+                });
+
+            return deferred.promise;
+        };
+    });
+
+
+    ginasApp.controller('NameController', function ($scope, Substance, $rootScope) {
         $scope.isEditing = false;
         $scope.editObj = null;
         $scope.addName = null;
-        $scope.addingNames = false;
-        $scope.uniqueName = false;
+        $scope.addingNames = true;
+        $rootScope.uniqueName = false;
 
         this.addNames = function () {
             $scope.addingNames = !$scope.addingNames;
@@ -104,38 +107,35 @@
 
         this.reset = function () {
             $scope.name = {};
-            $scope.name.name=null;
+            $scope.name.name = null;
             $scope.$broadcast('show-errors-reset');
         };
 
         this.validateName = function (name) {
-            console.log(Substance);
-            console.log($scope);
-            console.log($scope.nameForm);
             $scope.$broadcast('show-errors-check-validity');
-            console.log($scope.nameForm);
             if ($scope.nameForm.$valid) {
                 if (!Substance.names) {
                     Substance.names = [];
                 }
-                console.log("add");
                 Substance.names.push(name);
-                $scope.name = {};
                 this.reset();
+                $rootScope.uniqueName = true;
             }
-            console.log("adds");
-            //
-            ////resets form
-            //$scope.name={};
-            //$rootScope.uniqueName =true;
-
         };
 
         this.typeCheck = function () {
             if ($scope.name.type.value === 'of') {
-                $scope.ofType = true;
+                $rootScope.ofType = true;
+                //$('#officialName').modal('show');
+            } else {
+                $rootScope.ofType = false;
             }
         };
+
+        this.prefCheck = function () {
+            console.log("preferred");
+        };
+
 
         this.cancelEditing = function cancelEditing() {
             console.log("cancelling");
@@ -148,15 +148,17 @@
         };
 
         this.setEditedName = function setEditedName(name) {
-            $scope.editObj = name;
+            $scope.editName = name;
             $scope.tempCopy = angular.copy(name);
-            console.log($scope.editObj);
+            console.log($scope.editName);
         };
 
         this.updateName = function updateName(name) {
+            console.log(name);
             var index = Substance.names.indexOf(name);
+            console.log(index);
             Substance.names[index] = name;
-            $scope.editObj = null;
+            $scope.editName = null;
             $scope.isEditing = false;
             console.log(Substance);
         };
@@ -169,101 +171,110 @@
         this.editName = function (name) {
             Substance.names = angular.copy(name);
             $scope.editorEnabled = true;
-            //this.name = $scope.name;
+            this.name = name;
         };
 
     });
 
-    ginasApp.controller('ReferenceController', function ($scope) {
-        $scope.isEditingRef = false;
+    ginasApp.controller('ReferenceController', function ($scope, Substance, $rootScope) {
         $scope.editReference = null;
+        $rootScope.refAdded = false;
+        this.adding = false;
+        this.editing = false;
 
-        $scope.toggleEditRef = function () {
-            console.log("editing)");
-            $scope.isEditingRef = !$scope.isEditingRef;
+        this.toggleEdit = function () {
+            this.editing = !this.editing;
         };
 
+        this.toggleAdd = function () {
+            this.adding = !this.adding;
+        };
 
-        function validateReference(ginasRef) {
-            console.log("references");
-            $scope.editorEnabled = false;
-            //new array if object doesn't already have one
-            if (!$scope.substance.references) {
-                console.log("new array");
-                $scope.substance.references = [];
+        this.validate = function (obj) {
+            $scope.$broadcast('show-errors-check-validity');
+            if ($scope.refForm.$valid) {
+                //new array if object doesn't already have one
+                if (!Substance.references) {
+                    Substance.references = [];
+                }
+                obj.id = Substance.references.length + 1;
+                Substance.references.push(obj);
+                $scope.ref = {};
+                $rootScope.refAdded = true;
             }
-            ginasRef.id = $scope.substance.references.length + 1;
-            $scope.substance.references.push(ginasRef);
-            $scope.reference = {};
-            console.log($scope.substance);
-
-        }
-
-        $scope.validateReference = validateReference;
-
-        $scope.setEditedRef = function (reference) {
-            console.log("clicked");
-            $scope.editReference = reference;
-            $scope.tempCopy = angular.copy(reference);
         };
 
-        $scope.updateReference = function (reference) {
-            var index = $scope.substance.references.indexOf(reference);
-            $scope.substance.references[index] = reference;
-            $scope.editReference = null;
-            $scope.isEditingRef = false;
+        this.setEdited = function (obj) {
+            $scope.editObj = obj;
+            $scope.tempCopy = angular.copy(obj);
         };
 
-        $scope.removeRef = function (reference) {
-            var index = $scope.substance.references.indexOf(reference);
-            $scope.substance.references.splice(index, 1);
+        this.update = function (reference) {
+             console.log(reference);
+            var index = Substance.references.indexOf(reference);
+           Substance.references[index] = reference;
+            $scope.editObj = null;
+            this.toggleEdit();
+        };
+
+        this.remove = function (reference) {
+            var index = Substance.references.indexOf(reference);
+            Substance.references.splice(index, 1);
+        };
+
+        this.reset = function () {
+            $scope.ref = {};
+            $scope.$broadcast('show-errors-reset');
         };
     });
 
-    ginasApp.controller('CodeController', function ($scope) {
+    ginasApp.controller('CodeController', function ($scope, Substance) {
         $scope.isEditingCode = false;
         $scope.editCode = null;
 
-        $scope.addCodes = function () {
+        this.addCodes = function () {
             $scope.addingCodes = !$scope.addingCodes;
         };
 
-        $scope.toggleEditCode = function () {
+        this.toggleEditCode = function () {
             console.log("editing)");
             $scope.isEditingCode = !$scope.isEditingCode;
         };
 
-
-        $scope.validateCode = function (code) {
-            console.log("code");
-            $scope.editorEnabled = false;
-            //new array if object doesn't already have one
-            if (!$scope.substance.codes) {
-                console.log("new array");
-                $scope.substance.codes = [];
-            }
-            $scope.substance.codes.push(code);
+        this.reset = function () {
             $scope.code = {};
-            console.log($scope.codes);
-
+            $scope.$broadcast('show-errors-reset');
         };
 
-        $scope.setEditedCode = function (code) {
-            console.log("clicked");
+        this.validateCode = function (code) {
+            $scope.$broadcast('show-errors-check-validity');
+            if ($scope.codeForm.$valid) {
+                //new array if object doesn't already have one
+                if (!Substance.codes) {
+                    console.log("new array");
+                    Substance.codes = [];
+                }
+                Substance.codes.push(code);
+                reset();
+            }
+        };
+
+        this.setEditedCode = function setEditedCode(code) {
+            console.log(code);
             $scope.editCode = code;
             $scope.tempCopy = angular.copy(code);
         };
 
-        $scope.updateCode = function (code) {
-            var index = $scope.substance.codes.indexOf(code);
-            $scope.substance.codes[index] = code;
+        this.updateCode = function (code) {
+            var index = Substance.codes.indexOf(code);
+            Substance.codes[index] = code;
             $scope.editCode = null;
             $scope.isEditingCode = false;
         };
 
-        $scope.removeCode = function (code) {
-            var index = $scope.substance.codes.indexOf(code);
-            $scope.substance.codes.splice(index, 1);
+        this.removeCode = function (code) {
+            var index = Substance.codes.indexOf(code);
+            Substance.codes.splice(index, 1);
         };
     });
 
@@ -397,41 +408,44 @@
         };
     });
 
-    ginasApp.controller('DetailsController', function ($scope) {
-        $scope.isEditingDetails = false;
-        $scope.addingDetails = false;
-        $scope.editDetails = null;
-        $scope.detailsSet = false;
+    ginasApp.controller('DetailsController', function ($scope, Substance) {
+        $scope.protein = null;
+        this.adding = false;
+        this.editing = false;
 
-        $scope.addDetails = function () {
-            $scope.addingDetails = !$scope.addingDetails;
+        this.toggleEdit = function () {
+            this.editing = !this.editing;
         };
 
-        $scope.toggleEditDetails = function () {
-            console.log("editing)");
-            $scope.isEditingDetails = !$scope.isEditingDetails;
+        this.toggleAdd = function () {
+            this.adding = !this.adding;
         };
 
-
-        $scope.validateDetails = function (protein) {
-            console.log("subunit");
-            $scope.editorEnabled = false;
-            $scope.substance.protein.proteinType = protein.type;
-            $scope.substance.protein.proteinSubType = protein.subType;
-            $scope.substance.protein.sequenceOrigin = protein.sequenceOrigin;
-            $scope.substance.protein.sequenceType = protein.sequenceType;
-
-            $scope.protein = {};
-            console.log($scope.substance);
-            $scope.detailsSet = true;
-
-
+        this.validate = function (obj) {
+            console.log(obj);
+            $scope.$broadcast('show-errors-check-validity');
+            if ($scope.detForm.$valid) {
+                $scope.editorEnabled = false;
+                Substance.protein.proteinType = obj.proteinType;
+                Substance.protein.proteinSubType = obj.proteinSubType;
+                Substance.protein.sequenceOrigin = obj.sequenceOrigin;
+                Substance.protein.sequenceType = obj.sequenceType;
+                $scope.protein = {};
+                $scope.detailsSet = true;
+            }
         };
 
-        $scope.setEditedDetails = function (details) {
-            console.log("clicked");
-            $scope.editDetails = details;
-            $scope.tempCopy = angular.copy(details);
+        this.setEdited = function (obj) {
+            $scope.editObj = obj;
+            $scope.tempCopy = angular.copy(obj);
+        };
+
+        this.update = function (reference) {
+            console.log(reference);
+            var index = Substance.references.indexOf(reference);
+            Substance.references[index] = reference;
+            $scope.editObj = null;
+            this.toggleEdit();
         };
 
         $scope.updateDetails = function (details) {

@@ -31,68 +31,14 @@
                 inputEl = el[0].querySelector('.form-control[name]');
                 inputNgEl = angular.element(inputEl);
                 inputName = $interpolate(inputNgEl.attr('name') || '')(scope);
-                //console.log(options);
-                //console.log(showSuccess);
-                //console.log(scope);
-                //console.log(inputName);
-                //console.log(scope.nameForm);
                 if (!inputName) {
                     throw "show-errors element has no child input elements with a 'name' attribute and a 'form-control' class";
                 }
 
-            //    if(inputName =='subName'){
-            //console.log(el);
-            //        console.log(formCtrl);
-            //        formCtrl.subName.$parsers.unshift(function (value) {
-            //            $http({
-            //                method: 'GET',
-            //                url: "app/api/v1/substances?filter=names.name='" + value.toUpperCase() + "'",
-            //                headers: {'Content-Type': 'text/plain'}
-            //            }).success(function (data) {
-            //                if (data.count === 0) {
-            //                    console.log("success");
-            //                    console.log(formCtrl.subName);
-            //                    formCtrl[inputName].$setValidity('valid', true);
-            //                    //ctrl.$setValidity(yourFieldName, true);
-            //                    //formCtrl.subName.$invalid=false;
-            //                    //formCtrl.subName.$valid=true;
-            //                    //.$setValidity('invalid', false);
-            //                //    console.log(formCtrl.subName);
-            //                    console.log((formCtrl.subName.$invalid));
-            //                //    showSuccess=true;
-            //                    console.log(formCtrl[inputName].$invalid);
-            //                    console.log(formCtrl[inputName]);
-            //                    formCtrl[inputName].$invalid=false;
-            //                    formCtrl[inputName].$valid=true;
-            //                    console.log(formCtrl[inputName]);
-            //                    $scope.$broadcast('show-errors-check-validity');
-            //
-            //                    //    toggleClasses(false);
-            //                    return toggleClasses(formCtrl[inputName].$invalid);
-            //
-            //                }else {
-            //                //    formCtrl.subName.$setValidity('duplicate', false);
-            //                    console.log("exists");
-            //
-            //                    return undefined;
-            //                }
-            //        });
-            //    });
-            //    }
-
                 inputNgEl.bind(trigger, function() {
                     blurred = true;
-                    console.log("binding "+ formCtrl[inputName].$viewValue);
                     return toggleClasses(formCtrl[inputName].$invalid);
                 });
-                //scope.$watch(function() {
-                //    return formCtrl[inputName] && formCtrl[inputName].$invalid;
-                //}, function(invalid) {
-                //    if (!blurred) {
-                //        return;
-                //    }
-                //    return toggleClasses(invalid);
-                //});
                 scope.$on('show-errors-check-validity', function() {
                     return toggleClasses(formCtrl[inputName].$invalid);
                 });
@@ -107,8 +53,6 @@
                 toggleClasses = function(invalid) {
                     el.toggleClass('has-error', invalid);
                     if (showSuccess) {
-                        console.log(invalid);
-                        console.log(el.toggleClass('has-success', !invalid));
                         return el.toggleClass('has-success', !invalid);
                     }
                     return toggleClasses;
