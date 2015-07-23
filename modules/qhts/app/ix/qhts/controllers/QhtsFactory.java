@@ -13,14 +13,19 @@ import play.mvc.*;
 import com.avaje.ebean.Query;
 import com.avaje.ebean.Expr;
 
-import ix.core.chem.StructureProcessor;
 import ix.core.models.Keyword;
 import ix.core.models.Text;
 import ix.core.models.Value;
 import ix.core.models.Structure;
 import ix.qhts.models.*;
+
+import ix.core.chem.StructureProcessor;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.EntityFactory;
+import ix.core.plugins.StructureProcessorPlugin;
+import ix.core.plugins.StructureReceiver;
+import ix.core.plugins.TextIndexerPlugin;
+import ix.core.search.TextIndexer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -28,7 +33,40 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class QhtsFactory extends Controller {
+    static final TextIndexer INDEXER = 
+        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
+    static final StructureProcessorPlugin PROCESSOR =
+        Play.application().plugin(StructureProcessorPlugin.class);
+
+    static public class SampleStructureReceiver implements StructureReceiver {
+        final Sample sample;
+        public SampleStructureReceiver (Sample sample) {
+            this.sample = sample;
+        }
+        
+        public String getSource () {
+            Value supplier = sample.getProperty(Sample.P_SUPPLIER);
+            return supplier != null ? ((Keyword)supplier).term : "";
+        }
+        
+        public void receive (Status status, String mesg, Structure struc) {
+            if (status == Status.OK) {
+                sample.structure = struc;
+                try {
+
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.trace("Can't persist sample: "+sample.getName(), ex);
+                }
+            }
+            else {
+                Logger.error(status+": "+sample.getName()+": "+mesg);
+            }       
+        }
+    }
+    
     static class ActivityAggregator
         implements ProbeDbSchema.RowObserver {
         List<Activity> activities = new ArrayList<Activity>();
@@ -55,17 +93,19 @@ public class QhtsFactory extends Controller {
         return key;
     }
 
-    static Structure parseStructure (Map<String, Object> row) {
+    static Structure parseStructure (List<Structure> components,
+                                     Map<String, Object> row) {
         Structure struc = null;
-        
         Object value = row.get("MOLFILE");
         if (value != null) {
-            struc = StructureProcessor.instrument(toString ((Clob)value));
+            struc = StructureProcessor.instrument
+                (toString ((Clob)value), components);
         }
         else {
             value = row.get("SMILES_ISO");
             if (value != null) {
-                struc = StructureProcessor.instrument(value.toString());
+                struc = StructureProcessor.instrument
+                    (value.toString(), components);
             }
         }
         return struc;
@@ -76,12 +116,16 @@ public class QhtsFactory extends Controller {
     }
 
     static Sample instrument (Sample sample, Map<String, Object> row) {
-        sample.structure = parseStructure (row);
-        // inherite all hashkeys from structure
-        for (Value val : sample.structure.properties) {
-            if (val.label.startsWith("LyChI_L")
-                || val.label.equals(Structure.H_InChI_Key)) {
-                sample.synonyms.add((Keyword)val);
+        List<Structure> components = new ArrayList<Structure>();
+        
+        sample.structure = parseStructure (components, row);
+        if (sample.structure != null) {
+            // inherite all hashkeys from structure
+            for (Value val : sample.structure.properties) {
+                if (val.label.startsWith("LyChI_L")
+                    || val.label.equals(Structure.H_InChI_Key)) {
+                    sample.synonyms.add((Keyword)val);
+                }
             }
         }
         
@@ -129,6 +173,8 @@ public class QhtsFactory extends Controller {
 
         if (sample.name == null)
             sample.name = id;
+
+        Logger.debug(id+": {} components", components.size());
         
         return sample;
     }
