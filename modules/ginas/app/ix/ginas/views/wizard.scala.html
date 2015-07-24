@@ -1,52 +1,45 @@
-@import ix.ginas.controllers.v1.CVFactory;
-
-
 @(kind: String)
 
 
-@breadcrumb2(kind: String) = {
-    <ul class="nav nav-tabs" role="tablist">
-        <li role="presentation" class="active"><a href="#name"
-        aria-controls="name" role="tab" data-toggle="tab"> Names</a></li>
-        @if(kind == "Chemical") {
-            <li role="presentation"><a href="#structure"
-            aria-controls="structure" role="tab" data-toggle="tab">Structure</a></li>
-            <li role="presentation"><a href="#details" aria-controls="details"
-            role="tab" data-toggle="tab">Details</a></li>
-        }
-        @if(kind == "Mixture") {
-            <li role="presentation"><a href="#components"
-            aria-controls="components" role="tab" data-toggle="tab">Select
-                Components</a></li>
-        }
-        @if(kind == "Protein") {
-            <li role="presentation"><a href="#sequence"
-            aria-controls="sequence" role="tab" data-toggle="tab">Sequence</a></li>
-        }
-        @if(kind == "Polymer") {
-            <li role="presentation"><a href="#classification"
-            aria-controls="classification" role="tab" data-toggle="tab">Classification</a></li>
-            <li role="presentation"><a href="#monomer" aria-controls="monomer"
-            role="tab" data-toggle="tab">Monomers</a></li>
-            <li role="presentation"><a href="#poly-structure"
-            aria-controls="poly-structure" role="tab" data-toggle="tab">Polymer
-                Structure</a></li>
-            <li role="presentation"><a href="#properties"
-            aria-controls="properties" role="tab" data-toggle="tab">Physical
-                Properties</a></li>
-        }
-        @if(kind == "Structurally Diverse") {
-            <li role="presentation"><a href="#material"
-            aria-controls="material" role="tab" data-toggle="tab">Source
-                Materials</a></li>
-        }
-        @if(kind == "Concept") {}
-        <li role="presentation"><a href="#codes" aria-controls="codes"
-        role="tab" data-toggle="tab">Codes</a></li>
-        <li role="presentation"><a href="#review" aria-controls="review"
-        role="tab" data-toggle="tab">Review</a></li>
-    </ul>
-
+@wizardfields(kind: String) = {
+    @if(kind == "Chemical") {
+        <div ng-show="uniqueName">@structureform()</div>
+        <div ng-show="ofType">@officialnameform()</div>
+        @nameform()
+        @*<div  ng-class="{disabled: !uniqueName}">@codeform()</div>*@
+        <div ng-show="uniqueName">@codeform()</div>
+        <div ng-show="refAdded">@referenceform()</div>
+    }
+    @if(kind == "Mixture") {
+        @nameform()
+        <div ng-show="uniqueName">@codeform()</div>
+        @referenceform()
+    }
+    @if(kind == "Protein") {
+        <div ng-show="uniqueName">@subunitform()</div>
+       @proteindetailsform()
+        <div ng-show="uniqueName">@disulfideform()</div>
+        <div ng-show="uniqueName">@modificationform()</div>
+        <div ng-show="uniqueName">@glycosylationform()</div>
+        @nameform()
+        <div ng-show="uniqueName">@codeform()</div>
+        <div ng-show="refAdded"> @referenceform()</div>
+    }
+    @if(kind == "Polymer") {
+        @nameform()
+        <div ng-show="uniqueName">@codeform()</div>
+        @referenceform()
+    }
+    @if(kind == "Structurally Diverse") {
+        @nameform()
+        <div ng-show="uniqueName">@codeform()</div>
+        @referenceform()
+    }
+    @if(kind == "Concept") {
+        @nameform()
+        <div ng-show="uniqueName">@codeform()</div>
+        @referenceform()
+    }
 }
 
 @ginas("Register", kind) {
@@ -54,136 +47,15 @@
 } {
     <h3></h3>
 } {
-    <div class="container" >
-        @breadcrumb2(kind)
-        <div class="tab-content">
-            <div role="tabpanel" class="tab-pane fade in active wizard-panel"
-            id="name">
-                <h3></h3>
-                @*<div class="row">*@
-                @*<div class="col-md-6">*@
-                @*<a class="btn btn-default"*@
-                @*href="@ix.ginas.controllers.routes.GinasFactory.index()"*@
-                @*role="button">Cancel</a> <a class="btn btn-default" href="#"*@
-                @*role="button">Export</a>*@
-                @*<button type="button" class="btn btn-default" data-toggle="modal"*@
-                @*data-target="#fileimport" role="button">Import</button>*@
-                @*</div>*@
-                @*</div>*@
-                @structureform()
-                @nameform()
-                @codeform()
-                @referenceform()
-
-            </div>
+    <h3></h3>
+    <div ng-controller ="GinasCtrl as ginasCtrl">
+    @wizardfields(kind)
+    {{ginasCtrl.substance}}
         </div>
-        {{substance}}
-    </div>
     <script>
         var envurl='@ix.ncats.controllers.routes.App.smiles';
-        alert(envurl);
-
     </script>
 
 
-    <!--END panel panel-primary-->
-
     @fileimport() @addnamelist()
 }
-@*</div>*@
-@*<div class="row">*@
-@*<div class="col-md-2 pull-right">*@
-
-@*<button class="btn btn-default">Add Name List</button>*@
-@*</div>*@
-@*</div>*@
-@*<div class="row button-row">*@
-@*<div class="col-md-1 pull-right" role="presentation">*@
-@*<a href="#structure" aria-controls="structure" role="tab"*@
-@*data-toggle="tab">Next</a>*@
-@*</div>*@
-@*</div>*@
-@*</div>*@
-
-@*<div role="tabpanel" class="tab-pane fade active wizard-panel"*@
-@*id="structure">*@
-@*STRUCTURE*@
-@*<div class="embed-responsive embed-responsive-4by3">*@
-@*<div id="sketch"></div>*@
-@*</div>*@
-@*<form class="form-inline" onchange="searchSelect()" method=GET*@
-@*" action="@ix.ginas.controllers.routes.GinasApp.search(null)">*@
-@*<div class="form-group">*@
-@*<select class="form-control" id="search-selection" name="type">*@
-@*<option>Substructure</option>*@
-@*<option>Similarity</option>*@
-@*</select> <input type="text" class="form-control" name="cutoff"*@
-@*style="width : 50 px" id="tanimoto-cutoff"*@
-@*onkeyup="checkTanimoto(this)" data-toggle="tooltip"*@
-@*title="Tanimoto threshold" disabled="true" value="0.8"> <input*@
-@*type="text" class="form-control" data-toggle="tooltip"*@
-@*title="Query structure" style="width : 300 px" name="q"*@
-@*id="structure">*@
-@*</div>*@
-@*<button type="submit" onclick="submitForm()"*@
-@*class="btn btn-primary" id="search-btn">Search</button>*@
-@*</form>*@
-
-@*</div>*@
-
-@*<div role="tabpanel" class="tab-pane fade active wizard-panel"*@
-@*id="details">DETAILS</div>*@
-@*}*@
-
-@*<div role="tabpanel" class="tab-pane fade active wizard-panel"*@
-@*id="codes">*@
-@*<form>*@
-@*<!-- Name Form -->*@
-@*<div class="form-group">*@
-@*<div class="row">*@
-@*<div class="col-md-4">*@
-@*<label for="code-name">Code</label> <input class="form-control"*@
-@*placeholder="Code" title="Code" id="code-name" required></input>*@
-@*</div>*@
-@*<div class="col-md-2">*@
-@*<label for="system">Code System</label> <select*@
-@*class="form-control" title="Code System" id="system" required>*@
-@*<option>Common Name</option>*@
-@*<option>Official Name</option>*@
-@*<option>Systematic Name</option>*@
-@*<option>Brand Name</option>*@
-@*<option>Common Name</option>*@
-@*<option>Code</option>*@
-@*</select>*@
-@*</div>*@
-@*<div class="col-md-4">*@
-@*<label for="ref-url">URL</label> <input class="form-control"*@
-@*placeholder="Reference URL" title="Reference URL" id="ref-url"*@
-@*required></input>*@
-@*</div>*@
-@*<div class="col-md-2">*@
-@*<label for="access">Access Control</label> <select*@
-@*class="form-control" title="Access Control" id="access">*@
-@*<option>Protected</option>*@
-@*<option>Public</option>*@
-@*</select>*@
-@*</div>*@
-@*</div>*@
-@*</div>*@
-@*<div class="form-group">*@
-@*<div class="row">*@
-@*<div class="col-md-6">*@
-@*<label for="comments">Comments</label>*@
-@*<textarea class="form-control" id="comments" rows="3"></textarea>*@
-@*</div>*@
-@*</div>*@
-@*</div>*@
-
-@*</form>*@
-@*</div>*@
-@*<div role="tabpanel" class="tab-pane fade active wizard-panel"*@
-@*id="review">REVIEW</div>*@
-@*{{ginas}}*@
-
-@*</div>*@
-@*</div>*@

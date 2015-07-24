@@ -1,73 +1,134 @@
 @import ix.ginas.controllers.v1.CVFactory;
 
-<div class ="row" id = "references" ng-controller="ReferenceController as ReferenceCtrl">
+<div class ="row info" id = "references" ng-controller="ReferenceController as RefCtrl">
     <button class="btn btn-primary label-offset det">
                         References&nbsp;<span class="badge" ng-show="substance.references.length>0">
                         {{substance.references.length}}</span> </button>
-    <div class="col-md-12">
-        <table class="table table-striped" id="allReferencesTable">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Citation</th>
-                    <th>Doc Type</th>
-                    <th>Date Accessed</th>
-                    <th>URL</th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tr ng-repeat="r in substance.references">
-                <td>
-                                    {{r.id}}
-                </td>
-                <td>
-                    <a href={{r.url}}>{{r.citation}}</a>
-                </td>
-                <td>
-                                    {{r.docType.display}}
-                </td>
-                <td>
-                                    {{r.documentDate}}
-                </td>
-                <td>{{r.url}}</td>
-                <td>
-                    <a ng-show="!isEditingRef" ng-click="setEditedRef(r); toggleEditRef();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
-                </td>
-                <td>
-                    <a ng-show="!isEditingRef" ng-click="removeRef(r)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
-                </td>
-            </tr>
-            <tr ng-show="isEditingRef">
-                <form name="refEdit" id = "edit-ref" role="form" ng-submit="updateRef(editReference)" novalidate>
-                    <td></td>
-                    <td><input class="form-control" ng-model = "editReference.citation" placeholder="Citation" title="Citation" id="citation" required/> </td>
-                    <td><select class="form-control" title="Language" id="language" ng-model = "editReference.docType" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>
-                        <td><input class="form-control" title="Date Accessed" placeholder="Today" id="doc-date" ng-model = "editReference.documentDate" required/></td>
-                        <td><input class="form-control" ng-model = "editReference.url" placeholder="url" title="Url" id="url" required/></td>
-                        <td><a id ="ref-submit" ng-show="refEdit.$valid" ng-click="updateReference(editReference)" arial-label="Save">
-                            <i class="fa fa-floppy-o fa-2x success"></i></a>
-                        </td>
-                        <td><a ng-click="toggleEditRef();" aria-label="Cancel">
-                            <i class="fa fa-ban fa-2x danger"></i></a>
-                        </td>
-                </form>
-            </tr>
-            <tr ng-show="!isEditingRef">
-                <form name="refForm" id = "add-ref" role="form" ng-submit="validateReference(reference)" novalidate >
-                    <td> <input class="form-control" ng-model = "reference.citation" placeholder="Citation" title="Citation" id="citation" required/> </td>
-                    <td> <select class="form-control" title="Language" id="language" ng-model = "reference.docType" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>
-                        <td> <input class="form-control" title="Date Accessed" placeholder="Today" id="doc-date" ng-model = "reference.documentDate" required/></td>
-                        <td> <input class="form-control" ng-model = "reference.url" placeholder="url" title="Url" id="url" required/></td>
 
-                        <td>
-                            <div ng-show="refForm.$valid">
-                                <button class="btn btn-default" type="submit" id="ref-submit">
-                                                    Validate</button>
-                            </div>
-                        </td>
+        <div class="col-md-12">
+            <div class = "row header-row">
+                <div class = "col-md-1">
+                    <strong>ID</strong>
+                </div>
+                <div class = "col-md-4">
+                    <strong>Citation</strong>
+                </div>
+                <div class = "col-md-3">
+                    <strong>Document Type</strong>
+                </div>
+                <div class = "col-md-1">
+                    <strong>Date Accessed</strong>
+                </div>
+                <div class = "col-md-2">
+                    <strong>URL</strong>
+                </div>
+            </div>
+
+            <div class = "row" ng-repeat="obj in ginasCtrl.substance.references">
+                <div class = "col-md-1">
+                                    {{obj.id}}
+                </div>
+                <div class = "col-md-4">
+                    <a href={{obj.url}}>{{obj.citation}}</a>
+                </div>
+                <div class = "col-md-3">
+                                    {{ obj.doctype.display}}
+                </div>
+                <div class = "col-md-1">
+                                    {{obj.documentDate  | date:'MM-dd-yyyy' }}
+                </div>
+                <div class = "col-md-2">
+                                    {{obj.url}}
+                </div>
+                <div class = "col-md-1 pull-right">
+                    <a ng-show="!RefCtrl.editing" ng-click="RefCtrl.setEdited(obj); RefCtrl.toggleEdit();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+                    <a ng-show="!RefCtrl.editing" ng-click="RefCtrl.remove(obj)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
+                </div>
+            </div>
+            <div class="row form-row" ng-show="RefCtrl.editing">
+                <form class="form-horizontal" name="editRefForm" id = "edit-refForm" role="form" ng-submit="RefCtrl.validate(editObj); RefCtrl.add()" novalidate>
+                    <div class = "col-md-1">
+                    </div>
+                        <div class="col-md-4 err-check" id="ref-div" show-errors>
+                            <input type="text" class="form-control" ng-model ="editObj.citation" title="Citation" id="citation" name = "citation" required duplicate/>
+                            <ng-messages for="editRefForm.citation.$error" ng-if="editRefForm.citation.$touched">
+                                <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
+                                <ng-message when="required" class="help-block">*required</ng-message>
+                            </ng-messages>
+                        </div>
+                        <div class="col-md-2 err-check" show-errors>
+                            <select class="form-control" title="Document Type" id="type" name = "type" ng-model = "editObj.doctype" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>
+                        </select>
+                            <ng-messages for="editRefForm.doctype.$error" ng-if="editRefForm.doctype.$touched">
+                                <ng-message when="required" class="help-block">*required</ng-message>
+                            </ng-messages>
+                        </div>
+                        <div class="col-md-1 err-check" show-errors>
+                            <input type="text" class="form-control" ng-model ="editObj.description" title="Description" id="edit-description" name = "description" required/>
+                            <ng-messages for="editRefForm.documentDate.$error" ng-if="editRefForm.documentDate.$dirty">
+                                <ng-message when="required" class="help-block">*required</ng-message>
+                            </ng-messages>
+                        </div>
+                        <div class="col-md-2 err-check" id="ref-div" show-errors>
+                            <input type="text" class="form-control" ng-model ="editObj.url" title="URL" id="url" name = "url" required/>
+                            <ng-messages for="editRefForm.url.$error" ng-if="editRefForm.url.$touched">
+                                <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
+                                <ng-message when="required" class="help-block">*required</ng-message>
+                            </ng-messages>
+                        </div>
+                        <div class="col-md-1 pull-right" ng-show="RefCtrl.editing">
+                            <a id ="name-submit" ng-click="RefCtrl.update(editObj)" arial-label="Save">
+                                <i class="fa fa-floppy-o fa-2x success"></i></a>
+                            <a type="submit" ng-click="RefCtrl.toggleEdit();" aria-label="Cancel">
+                                <i class="fa fa-ban fa-2x danger"></i></a>
+                        </div>
                 </form>
-            </tr>
-        </table>
+            </div>
+            <div class="row form-row" ng-show="!RefCtrl.editing">
+                <form class="form-horizontal" name="refForm" id = "add-ref" role="form" novalidate>
+                    <div class = "col-md-1" ng-model ="ref.id">
+                        {{ginasCtrl.substance.references.length+1}}
+                    </div>
+                    <div class="col-md-4 err-check" id="ref-div" show-errors>
+                        <input type="text" class="form-control" ng-model ="ref.citation" title="Citation" id="citation" name = "citation" required duplicate/>
+                        <ng-messages for="refForm.citation.$error" ng-if="refForm.citation.$touched">
+                            <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
+                            <ng-message when="required" class="help-block">*required</ng-message>
+                        </ng-messages>
+                    </div>
+                    <div class="col-md-2 err-check" show-errors>
+                        <select class="form-control" title="Document Type" id="type" name = "type" ng-model = "ref.doctype" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>
+                        </select>
+                        <ng-messages for="refForm.doctype.$error" ng-if="refForm.doctype.$touched">
+                            <ng-message when="required" class="help-block">*required</ng-message>
+                        </ng-messages>
+                    </div>
+                    <div class="col-md-2 err-check" show-errors>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" id="calendar"  role="button" data-toggle="dropdown" data-target="#" href="#">
+                                <div class="input-group"><input type="text" class="form-control" name = "calendar" data-ng-model="ref.documentDate"><span class="input-group-addon" id ="calendar-icon"><i class="fa fa-calendar"></i></span>
+                                </div>
+                            </a>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                                <datetimepicker ng-model="ref.documentDate" data-datetimepicker-config="{ dropdownSelector: '#calendar', minView:'day' }"/>
+                            </ul>
+                        </div>
+                        <ng-messages for="refForm.documentDate.$error" ng-if="refForm.documentDate.$dirty">
+                            <ng-message when="required" class="help-block">*required</ng-message>
+                        </ng-messages>
+                    </div>
+                    <div class="col-md-2 err-check" id="ref-div" show-errors>
+                        <input type="text" class="form-control" ng-model ="ref.url" title="URL" id="url" name = "url" required/>
+                        <ng-messages for="refForm.url.$error" ng-if="refForm.url.$touched">
+                            <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
+                            <ng-message when="required" class="help-block">*required</ng-message>
+                        </ng-messages>
+                    </div>
+                    <div class="col-md-1 pull-right" ng-show="!RefCtrl.editing">
+                        <a ng-click="RefCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                        <a ng-click="RefCtrl.validate(ref)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-</div>

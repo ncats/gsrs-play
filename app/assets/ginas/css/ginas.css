@@ -337,14 +337,6 @@ nav#main-pagination {
     height: 235px;
 }
 
-.ng-invalid.ng-dirty {
-    border-color: red;
-}
-
-.ng-valid.ng-dirty {
-    border-color: green;
-}
-
 /* END WIZARD CSS */
 #canvas {
     background: none;
@@ -519,7 +511,7 @@ samp {
     color: black;
 }
 
-.col-md-12.string {
+.string {
     line-height: 1;
     font-size: 15px;
     font-family: "Lucida Console", Monaco, monospace;
@@ -913,6 +905,8 @@ div#num {
   font-style: italic;
 }
 
+/*REGISTRATION PANELS*/
+
 .success{
     color: #5cb85c;
 }
@@ -926,4 +920,39 @@ div#num {
 }
 .danger:hover {
     color: #ac2925;
+}
+
+
+.err-check .help-block,.err-check .help-block-duplicate  {
+    display: none;
+}
+
+.err-check.has-error .help-block, .err-check .help-block-duplicate {
+    display: block;
+}
+
+.header-row{
+    text-align: left;
+    border-top: 0;
+    padding: 8px;
+    line-height: 1.42857143;
+    vertical-align: bottom;
+    border-bottom: 2px solid #ddd;
+}
+
+.form-row{
+    padding-top: 30px;
+}
+
+.full-width{
+    max-width:100% !important;
+}
+
+.disabled{
+    opacity: .6;
+    pointer-events: none;
+}
+
+span#calendar-icon {
+    background: white;
 }

@@ -1,7 +1,7 @@
 @(title: String, kind: String)(menu: Html)(breadcrumb: Html)(content: Html)
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" @*ng-app ="ginas"*@>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app ="ginas">
 <head>
     <base href="/ginas/app">
     <meta charset="utf-8">
@@ -29,9 +29,13 @@
     <link rel="stylesheet"
     href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
     <link rel="stylesheet"
+    href='@routes.WebJarAssets.at(WebJarAssets.locate("datetimepicker.css"))'>
+    <link rel="stylesheet"
     href='@routes.Assets.at("ncats/css/jquery.treegrid.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ncats/css/footer.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ginas.css")'>
+
+
     <script
     src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'
     type='text/javascript'></script>
@@ -49,9 +53,16 @@
     <script
        src='@routes.WebJarAssets.at(WebJarAssets.locate("html2canvas.js"))'></script>
     <script
+    src='@routes.WebJarAssets.at(WebJarAssets.locate("moment.js"))'></script>
+    <script
        src='@routes.WebJarAssets.at(WebJarAssets.locate("angular.js"))'></script>
     <script
+    src='@routes.WebJarAssets.at(WebJarAssets.locate("angular-messages.js"))'></script>
+    <script
        src='@routes.WebJarAssets.at(WebJarAssets.locate("angular-route.js"))'></script>
+    <script
+    src='@routes.WebJarAssets.at(WebJarAssets.locate("datetimepicker.js"))'></script>
+    <script src='@routes.Assets.at("ginas/js/showErrors.js")' type='text/javascript'></script>
     <script src='@routes.Assets.at("ginas/js/ginasApp.js")' type='text/javascript'></script>
     <script
     src='@routes.WebJarAssets.at(WebJarAssets.locate("dojo/dojo.js"))'></script>
@@ -78,7 +89,7 @@
         <div class="row-fluid" id="main-menu">@menu </div>
         <div class="row-fluid" id="main-breadcrumb">@breadcrumb</div>
     </div>
-    <div class="container" id="content"  @*ng-controller="GinasController as ginas"*@>
+    <div class="container" id="content" >
     @content
     </div>
 

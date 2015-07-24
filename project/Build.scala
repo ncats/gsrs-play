@@ -139,6 +139,8 @@ object ApplicationBuild extends Build {
     version := appVersion,
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
+      libraryDependencies += "org.webjars" % "momentjs" % "2.10.3",
+      libraryDependencies += "org.webjars" % "angular-bootstrap-datetimepicker" % "0.3.8",
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 

@@ -1,79 +1,141 @@
 @import ix.ginas.controllers.v1.CVFactory;
-<div class = "row" ng-controller="CodeController as CodeCtrl" >
+<div class = "row info" ng-controller="CodeController as CodeCtrl" >
     <button class="btn btn-primary label-offset det">
                         Codes&nbsp;<span class="badge" ng-show="substance.codes.length>0">
                         {{substance.codes.length}}</span> </button>
-    <a ng-show="!addingCodes" ng-click="addCodes()" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
+    <a ng-show="!addingCodes" ng-click="CodeCtrl.addCodes()" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
+    <a ng-show="addingCodes" ng-click="CodeCtrl.addCodes()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
     <div class="col-md-12">
-        <table class="table table-striped" id="codesTable">
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Reference ID</th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tr ng-repeat="code in substance.codes">
-                <td>
-                                    {{code.code}}
-                </td>
-                <td>
-                                    {{code.type.display}}
-                </td>
-                <td>
-                                    {{code.description}}
-                </td>
-                <td>
-                    {{code.references.id}} {{code.references.citation}}
+        <div class = "row header-row">
+            <div class = "col-md-4">
+                <strong>Code</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Type</strong>
+            </div>
+            <div class = "col-md-3">
+                <strong>Description</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Reference ID</strong>
+            </div>
+        </div>
 
-                </td>
-                <td>
-                    <a ng-show="!isEditingCode" ng-click="setEditedCode(code); toggleEditCode();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
-                </td>
-                <td>
-                    <a ng-show="!isEditingCode" ng-click="removeCode(code)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
-                </td>
-            </tr>
-            <tr ng-show="isEditingCode">
-                <form class="form-horizontal" name="editCodeForm" id = "add-code" role="form" ng-submit="updateCode(editCode)" novalidate>
-                    <h4 ng-show="isEditing">Editing {{editCode.code}}</h4>
-                    <td><input class="form-control" ng-model = "editCode.code" placeholder="Code" title="Code" id="code" required/></td>
-                    <td> <select class="form-control" title="Came Type" id="code-type" ng-model = "editCode.type" ng-options="r.display for r in @CVFactory.getField("CODE_TYPE") track by r.display" required>
-                                    </select></td>
-                    <td><input class="form-control" ng-model = "editCode.description" placeholder="Description" title="Description" id="description" /></td>
-                    <td><select class="form-control" title="Reference" id="reference" ng-model = "editCode.references" ng-options="ref.id for ref in substance.references" required>
-                    </select>
-                    </td>
-                    <td><a id ="name-submit" ng-show="editCodeForm.$valid" ng-click="updateCode(editCode)" arial-label="Save">
-                        <i class="fa fa-floppy-o fa-2x success"></i></a>
-                    </td>
-                    <td><a type="submit" ng-click="toggleEditCode();" aria-label="Cancel">
-                        <i class="fa fa-ban fa-2x danger"></i></a>
-                    </td>
-                </form>
-            </tr>
-            <tr ng-show="!isEditingCode && addingCodes">
-                <form class="form-horizontal" name="codeForm" id = "add-code" role="form" ng-submit="validateCode(code)" novalidate>
-                    <td><input class="form-control" ng-model = "code.code" placeholder="Code" title="Code" id="code" required/></td>
-                    <td> <select class="form-control" title="Code Type" id="code-type" ng-model = "code.type" ng-options="r.display for r in @CVFactory.getField("CODE_TYPE") track by r.display" required>
-                                    </select></td>
-                    <td><input class="form-control" ng-model = "code.description" placeholder="Description" title="Description" id="description" /></td>
-                    <td><select class="form-control" title="Reference" id="code-reference" ng-model = "code.references" ng-options="ref.id for ref in substance.references" required>
-                    </select>
-                    </td>
-                    <td><a ng-click="clear()" aria-label="Clear">
-                        <i class="fa fa-eraser fa-2x danger"></i></a>
-                    </td>
-                    <td><button class="btn btn-default" type="submit" ng-show="codeForm.$valid">
-                                        Validate</button>
-                    </td>
-                </form>
-            </tr>
-        </table>
+        <div class = "row" ng-repeat="obj in ginasCtrl.substance.codes">
+            <div class = "col-md-4">
+                                    {{obj.code}}
+            </div>
+            <div class = "col-md-2">
+                                    {{obj.type.display}}
+            </div>
+            <div class = "col-md-3">
+                                    {{ obj.description}}
+            </div>
+            <div class = "col-md-2">
+                    {{obj.references.id}} {{obj.references.citation}}
+            </div>
+            <div class = "col-md-1 pull-right">
+                <a ng-show="!isEditingCode" ng-click="CodeCtrl.setEditedCode(obj); CodeCtrl.toggleEditCode();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+                <a ng-show="!isEditingCode" ng-click="CodeCtrl.removeCode(code)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
+            </div>
+        </div>
+        <div class="row form-row" ng-show="isEditingCode">
+            <form class="form" name="editCodeForm" id = "edit-codeForm" role="form" ng-submit="CodeCtrl.validateCode(editCode); CodeCtrl.addCodes()" novalidate>
+                <div class ="row">
+                    <div class="col-md-4 err-check" id="code-div" show-errors>
+                        <input type="text" class="form-control" ng-model ="editCode.code" title="Code" id="code" name = "code" required duplicate/>
+                        <ng-messages for="editCodeForm.code.$error" ng-if="editCodeForm.code.$touched">
+                            <ng-message when="duplicate" class="help-block">Code already exists in Ginas</ng-message>
+                            <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                        </ng-messages>
+                    </div>
+                    <div class="col-md-2 err-check" show-errors>
+                        <select class="form-control" title="Code Type" id="type" name = "type" ng-model = "editCode.type" ng-options="r.display for r in @CVFactory.getField("CODE_TYPE") track by r.display" required>
+                        </select>
+                        <ng-messages for="editCodeForm.type.$error" ng-if="editCodeForm.type.$touched">
+                            <ng-message when="required" class="help-block">*required</ng-message>
+                        </ng-messages>
+                    </div>
+                    <div class="col-md-3 err-check" show-errors>
+                        <input type="text" class="form-control" ng-model ="editCode.description" title="Description" id="edit-description" name = "description" required/>
+                        <ng-messages for="editCodeForm.description.$error" ng-if="editCodeForm.description.$dirty">
+                            <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                        </ng-messages>
+                    </div>
+                    <div class="col-md-2 err-check" show-errors>
+                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                        <p class="danger" ng-if="!ginasCtrl.substance.references && editCodeForm.reference.$error">*required</p>
+                        <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "editCode.references = ginasCtrl.substance.references[0]" ng-model = "editCode.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
+                        <ng-messages for="editCodeForm.reference.$error" ng-if="editCodeForm.reference.$pristine">
+                            <ng-message when="required" class="help-block">*required</ng-message>
+                        </ng-messages>
+                    </div>
+                    <div class="col-md-1 pull-right" ng-show="addingCodes">
+                        <a id ="name-submit" ng-click="CodeCtrl.updateCode(editCode)" arial-label="Save">
+                            <i class="fa fa-floppy-o fa-2x success"></i></a>
+                        <a type="submit" ng-click="CodeCtrl.toggleEditCode();" aria-label="Cancel">
+                            <i class="fa fa-ban fa-2x danger"></i></a>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <div class="row form-row" ng-show="!isEditingCode && addingCodes">
+            <form class="form-horizontal" name="codeForm" id = "add-code" role="form" novalidate>
+                <div class="col-md-4 err-check" id="code-div" show-errors>
+                    <input type="text" class="form-control" ng-model ="code.code" title="Code" id="code" name = "code" required duplicate/>
+                    <ng-messages for="codeForm.code.$error" ng-if="codeForm.code.$touched">
+                        <ng-message when="duplicate" class="help-block">Code already exists in Ginas</ng-message>
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Code Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in @CVFactory.getField("CODE_TYPE") track by r.display" required>
+                        </select>
+                    <ng-messages for="codeForm.type.$error" ng-if="codeForm.type.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-3 err-check" show-errors>
+                    <input type="text" class="form-control" ng-model ="code.description" title="Description" id="edit-description" name = "description" required/>
+                    <ng-messages for="codeForm.description.$error" ng-if="codeForm.description.$dirty">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                    <p class="danger" ng-if="!ginasCtrl.substance.references && codeForm.reference.$error">*required</p>
+                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "code.references = ginasCtrl.substance.references[0]" ng-model = "code.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
+                    <ng-messages for="codeForm.reference.$error" ng-if="codeForm.reference.$pristine">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-1 pull-right" ng-show="addingCodes">
+                        <a ng-click="CodeCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                        <a ng-click="CodeCtrl.validateCode(code)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
+                </div>
+            </form>
+        </div>
     </div>
-    <button class = "btn btn-primary pull-right" ng-show="addingCodes &&!isEditing" ng-click="addCodes()">
-                        Done</button>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="addnamelist" tabindex="-1" role="dialog"
+aria-labelledby="myModalLabelimport" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelimport">Add a Reference</h4>
+            </div>
+            <div class="modal-body">
+            @referenceform()
+
+            </div>
+        </div>
+    </div>
 </div>

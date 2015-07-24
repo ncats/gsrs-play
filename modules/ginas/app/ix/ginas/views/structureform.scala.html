@@ -1,4 +1,4 @@
-<div class = "row" ng-controller="StructureController as StructureCtrl">
+<div class = "row info" ng-controller="StructureController as StructureCtrl">
     <button class="btn btn-primary label-offset det">
                        Structure</button>
     <a ng-show="!addingStructure" ng-click="addStructure()" aria-label="Add Structure"><i class = "fa fa-plus fa-2x success"></i></a>
@@ -6,6 +6,8 @@
         <div class="col-md-12" id="sketcherForm" dataformat='molfile' ng-model="structure.molfile" ondatachange="molchange(this);" >
         </div>
         <div class="col-md-12">
+            @*<img class="struc-thumb img-responsive" alt="Structure of @substance.getName" title="Structure of @substance.getName"*@
+            @*src='@ix.ncats.controllers.routes.App.structure(.id, "svg", 400)'>*@
             <table class="table table-striped" id="structureTable">
                 <thead>
                     <tr>
@@ -19,7 +21,7 @@
                         <th></th>
                     </tr>
                 </thead>
-                <tr>
+                <tr ng-show="!noStructure">
                     <td>
                                     {{substance.structure.formula}}
                     </td>
