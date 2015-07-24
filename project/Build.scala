@@ -29,6 +29,7 @@ object ApplicationBuild extends Build {
       ,"org.apache.lucene" % "lucene-suggest" % "4.10.0"
       ,"org.apache.lucene" % "lucene-facet" % "4.10.0"
       ,"org.apache.lucene" % "lucene-queryparser" % "4.10.0"
+      ,"org.quartz-scheduler" % "quartz" % "2.2.1"
       ,"org.webjars" %% "webjars-play" % "2.3.0"
       ,"org.webjars" % "bootstrap" % "3.3.5"
       ,"org.webjars" % "typeaheadjs" % "0.10.5-1"

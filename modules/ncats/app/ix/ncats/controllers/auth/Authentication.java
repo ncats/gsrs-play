@@ -112,14 +112,14 @@ public class Authentication extends Controller {
             return redirect (url);
         }
         
-        return redirect (routes.Authentication.profile());
+        return redirect (routes.Authentication.secured());
     }
     
     public static Result login (String url) {
         Session session = getSession ();
         if (session != null) {
             return url != null ? redirect (url)
-                : redirect (routes.Authentication.profile());
+                : redirect (routes.Authentication.secured());
         }
         return ok (ix.ncats.views.html.login.render(url, APP));
     }
