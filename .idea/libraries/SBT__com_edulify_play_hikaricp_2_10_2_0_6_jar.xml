@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="SBT: com.edulify:play-hikaricp_2.10:2.0.6:jar">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/.ivy2/cache/com.edulify/play-hikaricp_2.10/jars/play-hikaricp_2.10-2.0.6.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

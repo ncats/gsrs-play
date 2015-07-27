@@ -16,7 +16,7 @@
         @referenceform()
     }
     @if(kind == "Protein") {
-        <div ng-show="uniqueName">@subunitform()</div>
+        @subunitform()
        @proteindetailsform()
         <div ng-show="uniqueName">@disulfideform()</div>
         <div ng-show="uniqueName">@modificationform()</div>

@@ -1,5 +1,5 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ui.bootstrap.showErrors','ui.bootstrap.datetimepicker'])
+    var ginasApp = angular.module('ginas', ['ngMessages', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker'])
         .config(function ($locationProvider, showErrorsConfigProvider) {
             $locationProvider.html5Mode({
                 enabled : true
@@ -42,16 +42,6 @@
 
     ginasApp.controller("GinasCtrl", GinasCtrl);
 
-    ginasApp.directive('duplicate', function (isDuplicate) {
-        return {
-            restrict: 'A',
-            require: 'ngModel',
-            link: function (scope, element, attrs, ngModel) {
-                ngModel.$asyncValidators.duplicate = isDuplicate;
-            }
-        };
-    });
-
     ginasApp.directive('datepicker', function() {
         return {
             restrict: 'A',
@@ -71,7 +61,15 @@
         };
     });
 
-
+    ginasApp.directive('duplicate', function (isDuplicate) {
+        return {
+            restrict: 'A',
+            require: 'ngModel',
+            link: function (scope, element, attrs, ngModel) {
+                ngModel.$asyncValidators.duplicate = isDuplicate;
+            }
+        };
+    });
 
     ginasApp.factory('isDuplicate', function ($http, $q) {
         return function dupCheck(modelValue) {
@@ -88,6 +86,28 @@
             return deferred.promise;
         };
     });
+
+    ginasApp.directive('subunit', function(){
+        return {
+            restrict: "E",
+            template : '<h1>Click to choose!</h1><div class="clkm" ng-repeat="item in items" ng-click="updateModel(item)">{{item}}</div>',
+            require: 'ngModel',
+            scope : {
+                items : "="
+            },
+            link : function(scope, element, attrs, ctrl){
+                scope.updateModel = function(item)
+                {
+                    ctrl.$setViewValue(item);
+                };
+                ctrl.$viewChangeListeners.push(function() {
+                    scope.$eval(attrs.ngChange);
+                });
+            }
+        };
+    });
+
+
 
 
     ginasApp.controller('NameController', function ($scope, Substance, $rootScope) {
@@ -353,21 +373,39 @@
         };
     });
 
-    ginasApp.controller('SubunitController', function ($scope) {
-        $scope.isEditingSubunit = false;
-        $scope.addingSubunit = false;
-        $scope.editSubunit = null;
+    ginasApp.controller('SubunitController', function ($scope, Substance) {
+        $scope.editReference = null;
+        this.adding = false;
+        this.editing = false;
 
-        $scope.addSubunit = function () {
-            $scope.addingSubunit = !$scope.addingSubunit;
+        this.toggleEdit = function () {
+            this.editing = !this.editing;
         };
 
-        $scope.toggleEditSubunit = function () {
-            console.log("editing)");
-            $scope.isEditingSubunit = !$scope.isEditingSubunit;
+        this.toggleAdd = function () {
+            this.adding = !this.adding;
         };
 
 
+        this.parseSubunit = function (sequence){
+console.log(sequence.split(''));
+        };
+
+
+
+        this.validate = function (obj) {
+            $scope.$broadcast('show-errors-check-validity');
+            if ($scope.refForm.$valid) {
+                //new array if object doesn't already have one
+                if (!Substance.references) {
+                    Substance.references = [];
+                }
+                obj.id = Substance.references.length + 1;
+                Substance.references.push(obj);
+                $scope.ref = {};
+                $rootScope.refAdded = true;
+            }
+        };
         $scope.validateSubunit = function (subunit) {
             console.log("subunit");
             $scope.editorEnabled = false;
@@ -410,15 +448,16 @@
 
     ginasApp.controller('DetailsController', function ($scope, Substance) {
         $scope.protein = null;
-        this.adding = false;
+        this.added = false;
         this.editing = false;
+
+        this.toggleAdd = function () {
+            this.added = !this.added;
+        };
 
         this.toggleEdit = function () {
             this.editing = !this.editing;
-        };
-
-        this.toggleAdd = function () {
-            this.adding = !this.adding;
+            this.added=false;
         };
 
         this.validate = function (obj) {
@@ -430,7 +469,7 @@
                 Substance.protein.proteinSubType = obj.proteinSubType;
                 Substance.protein.sequenceOrigin = obj.sequenceOrigin;
                 Substance.protein.sequenceType = obj.sequenceType;
-                $scope.protein = {};
+                this.added= true;
                 $scope.detailsSet = true;
             }
         };
@@ -440,19 +479,9 @@
             $scope.tempCopy = angular.copy(obj);
         };
 
-        this.update = function (reference) {
-            console.log(reference);
-            var index = Substance.references.indexOf(reference);
-            Substance.references[index] = reference;
-            $scope.editObj = null;
-            this.toggleEdit();
-        };
-
-        $scope.updateDetails = function (details) {
-            var index = $scope.substance.subunits.indexOf(subunit);
-            $scope.substance.subunits[index] = subunit;
-            $scope.editSubunit = null;
-            $scope.isEditingSubunit = false;
+        this.reset = function () {
+            $scope.protein = {};
+            $scope.$broadcast('show-errors-reset');
         };
 
     });
