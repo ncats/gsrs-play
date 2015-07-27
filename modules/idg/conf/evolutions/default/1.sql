@@ -355,6 +355,14 @@ create table ix_idg_target (
   constraint pk_ix_idg_target primary key (id))
 ;
 
+create table ix_core_userprof (
+  id                        varchar(40) not null,
+  user_id                   bigint,
+  created                   datetime,
+  modified                  datetime,
+  constraint pk_ix_core_userprof primary key (id))
+;
+
 create table ix_core_value (
   dtype                     varchar(10) not null,
   id                        bigint auto_increment not null,
@@ -571,6 +579,12 @@ create table ix_idg_target_publication (
   constraint pk_ix_idg_target_publication primary key (ix_idg_target_id, ix_core_publication_id))
 ;
 
+create table ix_core_userprof_property (
+  ix_core_userprof_id            varchar(40) not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_core_userprof_property primary key (ix_core_userprof_id, ix_core_value_id))
+;
+
 create table ix_core_xref_property (
   ix_core_xref_id                bigint not null,
   ix_core_value_id               bigint not null,
@@ -630,8 +644,10 @@ alter table ix_idg_target add constraint fk_ix_idg_target_namespace_26 foreign k
 create index ix_ix_idg_target_namespace_26 on ix_idg_target (namespace_id);
 alter table ix_idg_target add constraint fk_ix_idg_target_organism_27 foreign key (organism_id) references ix_core_value (id) on delete restrict on update restrict;
 create index ix_ix_idg_target_organism_27 on ix_idg_target (organism_id);
-alter table ix_core_xref add constraint fk_ix_core_xref_namespace_28 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_xref_namespace_28 on ix_core_xref (namespace_id);
+alter table ix_core_userprof add constraint fk_ix_core_userprof_user_28 foreign key (user_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_userprof_user_28 on ix_core_userprof (user_id);
+alter table ix_core_xref add constraint fk_ix_core_xref_namespace_29 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_xref_namespace_29 on ix_core_xref (namespace_id);
 
 
 
@@ -754,6 +770,10 @@ alter table ix_idg_target_link add constraint fk_ix_idg_target_link_ix_core_xref
 alter table ix_idg_target_publication add constraint fk_ix_idg_target_publication_ix_idg_target_01 foreign key (ix_idg_target_id) references ix_idg_target (id) on delete restrict on update restrict;
 
 alter table ix_idg_target_publication add constraint fk_ix_idg_target_publication_ix_core_publication_02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
+
+alter table ix_core_userprof_property add constraint fk_ix_core_userprof_property_ix_core_userprof_01 foreign key (ix_core_userprof_id) references ix_core_userprof (id) on delete restrict on update restrict;
+
+alter table ix_core_userprof_property add constraint fk_ix_core_userprof_property_ix_core_value_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
 alter table ix_core_xref_property add constraint fk_ix_core_xref_property_ix_core_xref_01 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
 
@@ -878,6 +898,10 @@ drop table ix_idg_target_property;
 drop table ix_idg_target_link;
 
 drop table ix_idg_target_publication;
+
+drop table ix_core_userprof;
+
+drop table ix_core_userprof_property;
 
 drop table ix_core_value;
 

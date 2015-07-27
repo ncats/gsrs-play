@@ -14,6 +14,7 @@ create table ix_qhts_activity (
   id                        bigint not null,
   sample_id                 bigint,
   assay_id                  bigint,
+  model_id                  bigint,
   constraint pk_ix_qhts_activity primary key (id))
 ;
 
@@ -142,8 +143,6 @@ create table ix_qhts_hillmodel (
   hill_coef                 double,
   inf_act                   double,
   zero_act                  double,
-  curve_class1              varchar(10),
-  curve_class2              varchar(10),
   crc_id                    bigint,
   constraint pk_ix_qhts_hillmodel primary key (id))
 ;
@@ -410,10 +409,10 @@ create table ix_core_acl_group (
   constraint pk_ix_core_acl_group primary key (ix_core_acl_id, ix_core_group_id))
 ;
 
-create table ix_qhts_activity_replicate (
+create table ix_qhts_activity_prop (
   ix_qhts_activity_id            bigint not null,
-  ix_qhts_replicate_id           bigint not null,
-  constraint pk_ix_qhts_activity_replicate primary key (ix_qhts_activity_id, ix_qhts_replicate_id))
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_qhts_activity_prop primary key (ix_qhts_activity_id, ix_core_value_id))
 ;
 
 create table ix_qhts_assay_synonym (
@@ -623,64 +622,66 @@ alter table ix_qhts_activity add constraint fk_ix_qhts_activity_sample_1 foreign
 create index ix_ix_qhts_activity_sample_1 on ix_qhts_activity (sample_id);
 alter table ix_qhts_activity add constraint fk_ix_qhts_activity_assay_2 foreign key (assay_id) references ix_qhts_assay (id) on delete restrict on update restrict;
 create index ix_ix_qhts_activity_assay_2 on ix_qhts_activity (assay_id);
-alter table ix_qhts_assay add constraint fk_ix_qhts_assay_namespace_3 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_qhts_assay_namespace_3 on ix_qhts_assay (namespace_id);
-alter table ix_core_attribute add constraint fk_ix_core_attribute_namespace_4 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_attribute_namespace_4 on ix_core_attribute (namespace_id);
-alter table ix_core_curation add constraint fk_ix_core_curation_curator_5 foreign key (curator_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_curation_curator_5 on ix_core_curation (curator_id);
-alter table ix_qhts_curve add constraint fk_ix_qhts_curve_conc_6 foreign key (conc_id) references ix_qhts_data (id) on delete restrict on update restrict;
-create index ix_ix_qhts_curve_conc_6 on ix_qhts_curve (conc_id);
-alter table ix_qhts_curve add constraint fk_ix_qhts_curve_response_7 foreign key (response_id) references ix_qhts_data (id) on delete restrict on update restrict;
-create index ix_ix_qhts_curve_response_7 on ix_qhts_curve (response_id);
-alter table ix_core_etag add constraint fk_ix_core_etag_namespace_8 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_etag_namespace_8 on ix_core_etag (namespace_id);
-alter table ix_core_etagref add constraint fk_ix_core_etagref_etag_9 foreign key (etag_id) references ix_core_etag (id) on delete restrict on update restrict;
-create index ix_ix_core_etagref_etag_9 on ix_core_etagref (etag_id);
-alter table ix_core_edit add constraint fk_ix_core_edit_editor_10 foreign key (editor_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_edit_editor_10 on ix_core_edit (editor_id);
-alter table ix_core_figure add constraint fk_ix_core_figure_parent_11 foreign key (parent_id) references ix_core_figure (id) on delete restrict on update restrict;
-create index ix_ix_core_figure_parent_11 on ix_core_figure (parent_id);
-alter table ix_qhts_hillmodel add constraint fk_ix_qhts_hillmodel_crc_12 foreign key (crc_id) references ix_qhts_curve (id) on delete restrict on update restrict;
-create index ix_ix_qhts_hillmodel_crc_12 on ix_qhts_hillmodel (crc_id);
-alter table ix_core_investigator add constraint fk_ix_core_investigator_organ_13 foreign key (organization_id) references ix_core_organization (id) on delete restrict on update restrict;
-create index ix_ix_core_investigator_organ_13 on ix_core_investigator (organization_id);
-alter table ix_core_namespace add constraint fk_ix_core_namespace_owner_14 foreign key (owner_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_namespace_owner_14 on ix_core_namespace (owner_id);
-alter table ix_core_payload add constraint fk_ix_core_payload_namespace_15 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_payload_namespace_15 on ix_core_payload (namespace_id);
-alter table ix_core_predicate add constraint fk_ix_core_predicate_namespac_16 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_predicate_namespac_16 on ix_core_predicate (namespace_id);
-alter table ix_core_predicate add constraint fk_ix_core_predicate_subject_17 foreign key (subject_id) references ix_core_xref (id) on delete restrict on update restrict;
-create index ix_ix_core_predicate_subject_17 on ix_core_predicate (subject_id);
-alter table ix_core_principal add constraint fk_ix_core_principal_namespac_18 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_principal_namespac_18 on ix_core_principal (namespace_id);
-alter table ix_core_principal add constraint fk_ix_core_principal_selfie_19 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
-create index ix_ix_core_principal_selfie_19 on ix_core_principal (selfie_id);
-alter table ix_core_principal add constraint fk_ix_core_principal_institut_20 foreign key (institution_id) references ix_core_organization (id) on delete restrict on update restrict;
-create index ix_ix_core_principal_institut_20 on ix_core_principal (institution_id);
-alter table ix_core_procjob add constraint fk_ix_core_procjob_owner_21 foreign key (owner_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_procjob_owner_21 on ix_core_procjob (owner_id);
-alter table ix_core_procjob add constraint fk_ix_core_procjob_payload_22 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
-create index ix_ix_core_procjob_payload_22 on ix_core_procjob (payload_id);
-alter table ix_core_procrecord add constraint fk_ix_core_procrecord_xref_23 foreign key (xref_id) references ix_core_xref (id) on delete restrict on update restrict;
-create index ix_ix_core_procrecord_xref_23 on ix_core_procrecord (xref_id);
-alter table ix_core_procrecord add constraint fk_ix_core_procrecord_job_24 foreign key (job_id) references ix_core_procjob (id) on delete restrict on update restrict;
-create index ix_ix_core_procrecord_job_24 on ix_core_procrecord (job_id);
-alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_25 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_pubauthor_author_25 on ix_core_pubauthor (author_id);
-alter table ix_core_publication add constraint fk_ix_core_publication_journa_26 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
-create index ix_ix_core_publication_journa_26 on ix_core_publication (journal_id);
-alter table ix_core_role add constraint fk_ix_core_role_principal_27 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_role_principal_27 on ix_core_role (principal_id);
-alter table ix_qhts_sample add constraint fk_ix_qhts_sample_namespace_28 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_qhts_sample_namespace_28 on ix_qhts_sample (namespace_id);
-alter table ix_qhts_sample add constraint fk_ix_qhts_sample_structure_29 foreign key (structure_id) references ix_core_structure (id) on delete restrict on update restrict;
-create index ix_ix_qhts_sample_structure_29 on ix_qhts_sample (structure_id);
-alter table ix_core_structure add constraint fk_ix_core_structure_namespac_30 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_structure_namespac_30 on ix_core_structure (namespace_id);
-alter table ix_core_xref add constraint fk_ix_core_xref_namespace_31 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_xref_namespace_31 on ix_core_xref (namespace_id);
+alter table ix_qhts_activity add constraint fk_ix_qhts_activity_model_3 foreign key (model_id) references ix_qhts_hillmodel (id) on delete restrict on update restrict;
+create index ix_ix_qhts_activity_model_3 on ix_qhts_activity (model_id);
+alter table ix_qhts_assay add constraint fk_ix_qhts_assay_namespace_4 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_qhts_assay_namespace_4 on ix_qhts_assay (namespace_id);
+alter table ix_core_attribute add constraint fk_ix_core_attribute_namespace_5 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_attribute_namespace_5 on ix_core_attribute (namespace_id);
+alter table ix_core_curation add constraint fk_ix_core_curation_curator_6 foreign key (curator_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_curation_curator_6 on ix_core_curation (curator_id);
+alter table ix_qhts_curve add constraint fk_ix_qhts_curve_conc_7 foreign key (conc_id) references ix_qhts_data (id) on delete restrict on update restrict;
+create index ix_ix_qhts_curve_conc_7 on ix_qhts_curve (conc_id);
+alter table ix_qhts_curve add constraint fk_ix_qhts_curve_response_8 foreign key (response_id) references ix_qhts_data (id) on delete restrict on update restrict;
+create index ix_ix_qhts_curve_response_8 on ix_qhts_curve (response_id);
+alter table ix_core_etag add constraint fk_ix_core_etag_namespace_9 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_etag_namespace_9 on ix_core_etag (namespace_id);
+alter table ix_core_etagref add constraint fk_ix_core_etagref_etag_10 foreign key (etag_id) references ix_core_etag (id) on delete restrict on update restrict;
+create index ix_ix_core_etagref_etag_10 on ix_core_etagref (etag_id);
+alter table ix_core_edit add constraint fk_ix_core_edit_editor_11 foreign key (editor_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_edit_editor_11 on ix_core_edit (editor_id);
+alter table ix_core_figure add constraint fk_ix_core_figure_parent_12 foreign key (parent_id) references ix_core_figure (id) on delete restrict on update restrict;
+create index ix_ix_core_figure_parent_12 on ix_core_figure (parent_id);
+alter table ix_qhts_hillmodel add constraint fk_ix_qhts_hillmodel_crc_13 foreign key (crc_id) references ix_qhts_curve (id) on delete restrict on update restrict;
+create index ix_ix_qhts_hillmodel_crc_13 on ix_qhts_hillmodel (crc_id);
+alter table ix_core_investigator add constraint fk_ix_core_investigator_organ_14 foreign key (organization_id) references ix_core_organization (id) on delete restrict on update restrict;
+create index ix_ix_core_investigator_organ_14 on ix_core_investigator (organization_id);
+alter table ix_core_namespace add constraint fk_ix_core_namespace_owner_15 foreign key (owner_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_namespace_owner_15 on ix_core_namespace (owner_id);
+alter table ix_core_payload add constraint fk_ix_core_payload_namespace_16 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_payload_namespace_16 on ix_core_payload (namespace_id);
+alter table ix_core_predicate add constraint fk_ix_core_predicate_namespac_17 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_predicate_namespac_17 on ix_core_predicate (namespace_id);
+alter table ix_core_predicate add constraint fk_ix_core_predicate_subject_18 foreign key (subject_id) references ix_core_xref (id) on delete restrict on update restrict;
+create index ix_ix_core_predicate_subject_18 on ix_core_predicate (subject_id);
+alter table ix_core_principal add constraint fk_ix_core_principal_namespac_19 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_principal_namespac_19 on ix_core_principal (namespace_id);
+alter table ix_core_principal add constraint fk_ix_core_principal_selfie_20 foreign key (selfie_id) references ix_core_figure (id) on delete restrict on update restrict;
+create index ix_ix_core_principal_selfie_20 on ix_core_principal (selfie_id);
+alter table ix_core_principal add constraint fk_ix_core_principal_institut_21 foreign key (institution_id) references ix_core_organization (id) on delete restrict on update restrict;
+create index ix_ix_core_principal_institut_21 on ix_core_principal (institution_id);
+alter table ix_core_procjob add constraint fk_ix_core_procjob_owner_22 foreign key (owner_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_procjob_owner_22 on ix_core_procjob (owner_id);
+alter table ix_core_procjob add constraint fk_ix_core_procjob_payload_23 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
+create index ix_ix_core_procjob_payload_23 on ix_core_procjob (payload_id);
+alter table ix_core_procrecord add constraint fk_ix_core_procrecord_xref_24 foreign key (xref_id) references ix_core_xref (id) on delete restrict on update restrict;
+create index ix_ix_core_procrecord_xref_24 on ix_core_procrecord (xref_id);
+alter table ix_core_procrecord add constraint fk_ix_core_procrecord_job_25 foreign key (job_id) references ix_core_procjob (id) on delete restrict on update restrict;
+create index ix_ix_core_procrecord_job_25 on ix_core_procrecord (job_id);
+alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_26 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_pubauthor_author_26 on ix_core_pubauthor (author_id);
+alter table ix_core_publication add constraint fk_ix_core_publication_journa_27 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
+create index ix_ix_core_publication_journa_27 on ix_core_publication (journal_id);
+alter table ix_core_role add constraint fk_ix_core_role_principal_28 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_role_principal_28 on ix_core_role (principal_id);
+alter table ix_qhts_sample add constraint fk_ix_qhts_sample_namespace_29 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_qhts_sample_namespace_29 on ix_qhts_sample (namespace_id);
+alter table ix_qhts_sample add constraint fk_ix_qhts_sample_structure_30 foreign key (structure_id) references ix_core_structure (id) on delete restrict on update restrict;
+create index ix_ix_qhts_sample_structure_30 on ix_qhts_sample (structure_id);
+alter table ix_core_structure add constraint fk_ix_core_structure_namespac_31 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_structure_namespac_31 on ix_core_structure (namespace_id);
+alter table ix_core_xref add constraint fk_ix_core_xref_namespace_32 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_xref_namespace_32 on ix_core_xref (namespace_id);
 
 
 
@@ -692,9 +693,9 @@ alter table ix_core_acl_group add constraint fk_ix_core_acl_group_ix_core__01 fo
 
 alter table ix_core_acl_group add constraint fk_ix_core_acl_group_ix_core__02 foreign key (ix_core_group_id) references ix_core_group (id) on delete restrict on update restrict;
 
-alter table ix_qhts_activity_replicate add constraint fk_ix_qhts_activity_replicate_01 foreign key (ix_qhts_activity_id) references ix_qhts_activity (id) on delete restrict on update restrict;
+alter table ix_qhts_activity_prop add constraint fk_ix_qhts_activity_prop_ix_q_01 foreign key (ix_qhts_activity_id) references ix_qhts_activity (id) on delete restrict on update restrict;
 
-alter table ix_qhts_activity_replicate add constraint fk_ix_qhts_activity_replicate_02 foreign key (ix_qhts_replicate_id) references ix_qhts_replicate (id) on delete restrict on update restrict;
+alter table ix_qhts_activity_prop add constraint fk_ix_qhts_activity_prop_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
 alter table ix_qhts_assay_synonym add constraint fk_ix_qhts_assay_synonym_ix_q_01 foreign key (ix_qhts_assay_synonym_id) references ix_qhts_assay (id) on delete restrict on update restrict;
 
@@ -804,7 +805,7 @@ drop table if exists ix_core_acl_group;
 
 drop table if exists ix_qhts_activity;
 
-drop table if exists ix_qhts_activity_replicate;
+drop table if exists ix_qhts_activity_prop;
 
 drop table if exists ix_qhts_assay;
 

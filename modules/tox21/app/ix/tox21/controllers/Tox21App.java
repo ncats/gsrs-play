@@ -28,6 +28,7 @@ import ix.core.controllers.search.SearchFactory;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.StructureProcessorPlugin;
 import ix.core.plugins.StructureReceiver;
+import ix.core.plugins.IxCache;
 
 import tripod.chem.indexer.StructureIndexer;
 import static tripod.chem.indexer.StructureIndexer.ResultEnumeration;
@@ -542,7 +543,7 @@ public class Tox21App extends App {
                     });
             if (result == null) {
                 // don't cache this..
-                Cache.remove(key);
+                IxCache.remove(key);
             }
             response().setContentType("image/svg+xml");
             return result;

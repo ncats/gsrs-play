@@ -138,6 +138,7 @@ public class NIHLdapConnector {
         String id = getAttr (attrs, "employeeID");
         if (id != null) {
             e = new Employee ();
+            e.provider = LDAP_URL;
             e.uid = Long.parseLong(id);     
             instrument (e, attrs);
         }

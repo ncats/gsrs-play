@@ -22,6 +22,9 @@ POST	/daemon	ix.publications.controllers.PublicationProjectProcessor.daemon
 GET     /processor       ix.publications.controllers.PublicationProjectProcessor.loader
 POST    /processor       ix.publications.controllers.PublicationProjectProcessor.load
 
+GET	/pubcache	 ix.publications.controllers.PubCache.index
+POST	/pubcache	 ix.publications.controllers.PubCache.load
+
 #
 # mockups
 #
@@ -35,4 +38,3 @@ GET /mock	ix.publications.controllers.ReachApp.samples
 GET /mock/gaucher.php ix.publications.controllers.ReachApp.gaucher
 
 ->  /	ix.ncats.Routes
-->  /	ix.Routes

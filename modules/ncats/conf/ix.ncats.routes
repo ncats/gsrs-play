@@ -30,4 +30,6 @@ GET	/statistics/:kind	ix.ncats.controllers.App.statistics(kind: String)
 GET /login	ix.ncats.controllers.auth.Authentication.login(url: String ?= null)
 GET /logout	ix.ncats.controllers.auth.Authentication.logout
 POST  /login	ix.ncats.controllers.auth.Authentication.authenticate(url: String ?= null)
-GET /index	ix.ncats.controllers.auth.Authentication.index
+GET   /session	ix.ncats.controllers.auth.Authentication.secured
+
+->    /		ix.Routes

@@ -69,26 +69,43 @@ public class StructureProcessor {
     }
 
     public static Structure instrument (String mol) {
+        return instrument (mol, null);
+    }
+    
+    public static Structure instrument
+        (String mol, Collection<Structure> components) {
         Structure struc = new Structure ();
         struc.digest = digest (mol);
         try {
             MolHandler mh = new MolHandler (mol);
-            instrument (struc, mh.getMolecule());
+            instrument (struc, components, mh.getMolecule());
         }
         catch (Exception ex) {
             throw new IllegalArgumentException (ex);
         }
         return struc;
     }
-    
+ 
     public static Structure instrument (Molecule mol) {
+        return instrument (mol, null);
+    }
+   
+    public static Structure instrument (Molecule mol,
+                                        Collection<Structure> components) {
         Structure struc = new Structure ();
         struc.digest = digest (mol);
-        instrument (struc, mol);
+        instrument (struc, components, mol);
         return struc;
     }
+
+    static void instrument (Structure struc,
+                            Collection<Structure> components,
+                            Molecule mol) {
+        instrument (struc, components, mol, true);
+    }
     
-    static void instrument (Structure struc, Molecule mol) {
+    static void instrument (Structure struc, Collection<Structure> components,
+                            Molecule mol, boolean standardize) {
         if (mol.getDim() < 2) {
             mol.clean(2, null);
         }
@@ -203,16 +220,26 @@ public class StructureProcessor {
         }
             
         Molecule stdmol = mol.cloneMolecule();
-        LyChIStandardizer mstd = new LyChIStandardizer ();
-        mstd.removeSaltOrSolvent(false);
-        try {
-            mstd.standardize(stdmol);
+        if (standardize) {
+            LyChIStandardizer mstd = new LyChIStandardizer ();
+            mstd.removeSaltOrSolvent(false);
+            try {
+                mstd.standardize(stdmol);
+                if (mstd.getFragmentCount() > 1) {
+                    Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
+                    // break this structure into its individual components
+                    Structure[] moieties = new Structure[frags.length];
+                    for (int i = 0; i < frags.length; ++i) {
+                        moieties[i] = new Structure ();
+                        instrument (moieties[i], components, frags[i], false);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                logger.log(Level.SEVERE, 
+                           "Can't standardize structure", ex);
+            }
         }
-        catch (Exception ex) {
-            logger.log(Level.SEVERE, 
-                       "Can't standardize structure", ex);
-        }
-        
         //System.out.print(mol.toFormat("mol"));
         
         String[] hash = LyChIStandardizer.hashKeyArray(stdmol);

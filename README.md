@@ -44,7 +44,7 @@ cd ginas-alpha_v0-0f75de1-20150618-002011
 ./bin/ginas -Dconfig.resource=ginas.conf -Dhttp.port=9000 -Djava.awt.headless=true
 ```
 
-To clean up, simply issue
+To clean up, simply issue:
 
 ```
 sbt clean

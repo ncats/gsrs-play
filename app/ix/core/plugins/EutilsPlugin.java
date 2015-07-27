@@ -72,11 +72,11 @@ public class EutilsPlugin extends Plugin {
     public Publication getPublication (final Long pmid) {
         try {
             String key = getClass().getName()+":"+pmid;
-            return Cache.getOrElse(key, new Callable<Publication> () {
+            return IxCache.getOrElse(key, new Callable<Publication> () {
                     public Publication call () throws Exception {
                         return fetchAndCache (pmid);
                     }
-                }, ctx.cacheTime());
+                });
         }
         catch (Exception ex) {
             //ex.printStackTrace();

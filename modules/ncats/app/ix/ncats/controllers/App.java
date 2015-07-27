@@ -74,10 +74,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.sf.ehcache.Element;
 
+import ix.ncats.controllers.auth.*;
+
 /**
  * Basic plumbing for an App
  */
-public class App extends Controller {
+public class App extends Authentication {
     static final String APP_CACHE = App.class.getName();
     
     static final String RENDERER_URL =

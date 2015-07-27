@@ -80,6 +80,27 @@ public class IxCache extends Plugin {
         return elm != null ? elm.getObjectValue() : null;
     }
 
+    public static long getLastAccessTime (String key) {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        Element elm = _instance.cache.get(key);
+        return elm != null ? elm.getLastAccessTime() : 0l;
+    }
+
+    public static long getExpirationTime (String key) {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        Element elm = _instance.cache.get(key);
+        return elm != null ? elm.getExpirationTime() : 0l;
+    }
+
+    public static boolean isExpired (String key) {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        Element elm = _instance.cache.get(key);
+        return elm != null ? elm.isExpired() : false;
+    }
+
     public static <T> T getOrElse (String key, Callable<T> generator)
         throws Exception {
         if (_instance == null)

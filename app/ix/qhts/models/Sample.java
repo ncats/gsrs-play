@@ -36,6 +36,11 @@ public class Sample extends EntityModel {
     public static final String P_MOLFILE = "Molfile";
     public static final String P_SUPPLIER = "Supplier";
 
+    /**
+     * Link labels
+     */
+    public static final String MOIETY = "MOIETY";
+
     public String name;
 
     //@JsonView(BeanViews.Full.class)
