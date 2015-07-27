@@ -14,6 +14,7 @@ public class GinasFactory extends EntityFactory {
         new Model.Finder(Long.class, Principal.class);
 
     public static Result index () {
+        GinasApp.getCV();
         return ok (ix.ginas.views.html.index.render());
     }
     
@@ -46,7 +47,7 @@ public class GinasFactory extends EntityFactory {
         }
 
     public static Principal byUsername (String user) {
-    	//return GinasApp.SubstanceResult
+        //return GinasApp.SubstanceResult
         return finder.where().eq("username", user).findUnique();
     } 
 

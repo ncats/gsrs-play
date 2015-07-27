@@ -1,4 +1,4 @@
-@import ix.ginas.controllers.v1.CVFactory;
+@import ix.ginas.controllers.GinasApp;
 <div class = "row info" id = "protein-details" ng-controller="DetailsController as DetailsCtrl" >
   <button class="btn btn-primary label-offset det">
                         Details&nbsp;</button>
@@ -41,28 +41,28 @@
           <div class="row form-row" ng-show="!DetailsCtrl.added">
               <form class="form-horizontal" name="detForm" id = "add-ref" role="form" novalidate>
                   <div class="col-md-2 err-check" show-errors>
-                      <select class="form-control" title="Protein Type" id="type" name = "type" ng-model = "protein.proteinType" ng-options="r.display for r in @CVFactory.getField("PROTEIN_TYPE") track by r.display" required>
+                      <select class="form-control" title="Protein Type" id="type" name = "type" ng-model = "protein.proteinType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
                         </select>
                       <ng-messages for="editDetForm.proteinType.$error" ng-if="editDetForm.proteinType.$touched">
                           <ng-message when="required" class="help-block">*required</ng-message>
                       </ng-messages>
                   </div>
                   <div class="col-md-4 err-check" show-errors>
-                      <select class="form-control" title="Protein Subtype" id="proteinSubType" name = "proteinSubType" ng-model = "protein.proteinSubType" ng-options="r.display for r in @CVFactory.getField("PROTEIN_SUBTYPE") track by r.display" required>
+                      <select class="form-control" title="Protein Subtype" id="proteinSubType" name = "proteinSubType" ng-model = "protein.proteinSubType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
                         </select>
                       <ng-messages for="detForm.proteinSubType.$error" ng-if="detForm.proteinSubType.$touched">
                           <ng-message when="required" class="help-block">*required</ng-message>
                       </ng-messages>
                   </div>
                   <div class="col-md-2 err-check" show-errors>
-                      <select class="form-control" title="Sequence Origin" id="sequenceOrigin" name = "sequenceOrigin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in @CVFactory.getField("SEQUENCE_ORIGIN") track by r.display" required>
+                      <select class="form-control" title="Sequence Origin" id="sequenceOrigin" name = "sequenceOrigin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
                         </select>
                       <ng-messages for="detForm.sequenceOrigin.$error" ng-if="detForm.sequenceOrigin.$touched">
                           <ng-message when="required" class="help-block">*required</ng-message>
                       </ng-messages>
                   </div>
                   <div class="col-md-2 err-check" show-errors>
-                      <select class="form-control" title="Sequence Type" id="sequenceType" name = "sequenceType" ng-model = "protein.sequenceType" ng-options="r.display for r in @CVFactory.getField("SEQUENCE_TYPE") track by r.display" required>
+                      <select class="form-control" title="Sequence Type" id="sequenceType" name = "sequenceType" ng-model = "protein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
                         </select>
                       <ng-messages for="detForm.sequenceType.$error" ng-if="detForm.sequenceType.$touched">
                           <ng-message when="required" class="help-block">*required</ng-message>

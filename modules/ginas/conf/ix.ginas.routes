@@ -20,7 +20,5 @@ POST        /authenticate               ix.ginas.controllers.GinasApp.authentica
 GET         /login                      ix.ginas.controllers.GinasFactory.login
 GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationships(uuid: String)
 
-
 ->	    /	ix.ncats.Routes
-
 GET	    /:any	ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

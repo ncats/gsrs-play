@@ -1,4 +1,4 @@
-@import ix.ginas.controllers.v1.CVFactory;
+@import ix.ginas.controllers.GinasApp;
 <div class = "row info" ng-controller="NameController as NameCtrl">
     <button class="btn btn-primary label-offset det">
                         Names&nbsp;<span class="badge" ng-show="substance.names.length>0">
@@ -83,14 +83,14 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "editName.type" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @CVFactory.getField("NAME_TYPE") track by r.display" required>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "editName.type" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" required>
                         </select>
                     <ng-messages for="editNameForm.type.$error" ng-if="editNameForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Language" id="language" name="language" ng-model = "editName.languages" ng-options="r.display for r in @CVFactory.getField("LANGUAGE") track by r.display" required>
+                    <select class="form-control" title="Language" id="language" name="language" ng-model = "editName.languages" ng-options="r.display for r in @GinasApp.getCV.getField("LANGUAGE") track by r.display" required>
                         </select>
                     <ng-messages for="editNameForm.language.$error" ng-if="editNameForm.language.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
@@ -127,14 +127,14 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "name.type" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @CVFactory.getField("NAME_TYPE") track by r.display" required>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "name.type" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" required>
                         </select>
                     <ng-messages for="nameForm.type.$error" ng-if="nameForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Language" id="language" name="language" ng-model = "name.languages" ng-options="r.display for r in @CVFactory.getField("LANGUAGE") track by r.display" required>
+                    <select class="form-control" title="Language" id="language" name="language" ng-model = "name.languages" ng-options="r.display for r in @GinasApp.getCV.getField("LANGUAGE") track by r.display" required>
                         </select>
                     <ng-messages for="nameForm.language.$error" ng-if="nameForm.language.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

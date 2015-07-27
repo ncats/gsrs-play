@@ -1,3 +1,5 @@
+@import ix.ginas.controllers.GinasApp
+
 <div class = "row info" ng-controller="StructureController as StructureCtrl">
     <button class="btn btn-primary label-offset det">
                        Structure</button>
@@ -51,7 +53,7 @@
                     <form name="refEdit" id = "edit-ref" role="form" ng-submit="updateRef(editReference)" novalidate>
                         <td></td>
                         <td><input class="form-control" ng-model = "editReference.citation" placeholder="Citation" title="Citation" id="citation" required/> </td>
-                        @*<td><select class="form-control" title="Language" id="language" ng-model = "editReference.docType" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>*@
+                        @*<td><select class="form-control" title="Language" id="language" ng-model = "editReference.docType" ng-options="r.display for r in @GinasApp.getCV.getField("DOCUMENT_TYPE") track by r.display" required>*@
                         @*<td><input class="form-control" title="Date Accessed" placeholder="Today" id="doc-date" ng-model = "editReference.documentDate" required/></td>*@
                         <td><input class="form-control" ng-model = "editReference.url" placeholder="url" title="Url" id="url" required/></td>
                         <td><a id ="ref-submit" ng-show="refEdit.$valid" ng-click="updateReference(editReference)" arial-label="Save">

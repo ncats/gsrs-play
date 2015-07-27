@@ -32,4 +32,5 @@ GET /logout	ix.ncats.controllers.auth.Authentication.logout
 POST  /login	ix.ncats.controllers.auth.Authentication.authenticate(url: String ?= null)
 GET   /session	ix.ncats.controllers.auth.Authentication.secured
 
+->    /		ix.core.test.Routes
 ->    /		ix.Routes

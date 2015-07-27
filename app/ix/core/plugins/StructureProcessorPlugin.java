@@ -598,6 +598,9 @@ public class StructureProcessorPlugin extends Plugin {
             reporter.tell(PersistModel.Save(job), sender);
             Logger.trace("Failed to process payload "+pp.payload.id, t);
         }
+        finally {
+            job.save();
+        }
         return job;
     }
 }

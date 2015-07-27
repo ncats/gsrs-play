@@ -33,7 +33,8 @@ public class Structures extends Controller {
         try {
             Payload payload = payloadPlugin.parseMultiPart
                 ("load-file", request ());
-            structurePlugin.submit(payload);
+            String id = structurePlugin.submit(payload);
+            Logger.debug("Job "+id+" submitted!");
         }
         catch (IOException ex) {
             return internalServerError ("Request is not multi-part encoded!");

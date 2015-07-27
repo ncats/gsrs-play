@@ -1,4 +1,4 @@
-@import ix.ginas.controllers.v1.CVFactory;
+@import ix.ginas.controllers.GinasApp;
 <div class = "row info" ng-controller="DetailsController as DetailsCtrl" >
   <button class="btn btn-primary label-offset det">
                         Modifications&nbsp;</button>
@@ -38,13 +38,13 @@
       </tr>
       <tr ng-show="isEditingDetails">
         <form class="form-horizontal" name="editDetailsForm" id = "add-details" role="form" ng-submit="updateDetails(editProtein)" novalidate>
-          <td> <select class="form-control" title="Details Type" id="protein-type" ng-model = "editProtein.type" ng-options="r.display for r in @CVFactory.getField("PROTEIN_TYPE") track by r.display" required>
+          <td> <select class="form-control" title="Details Type" id="protein-type" ng-model = "editProtein.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
                                     </select></td>
-          <td> <select class="form-control" title="Details Type" id="protein-subtype" ng-model = "editProtein.SubType" ng-options="r.display for r in @CVFactory.getField("PROTEIN_SUBTYPE") track by r.display" required>
+          <td> <select class="form-control" title="Details Type" id="protein-subtype" ng-model = "editProtein.SubType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
                                     </select></td>
-          <td> <select class="form-control" title="Details Type" id="protein-origin" ng-model = "editProtein.sequenceOrigin" ng-options="r.display for r in @CVFactory.getField("SEQUENCE_ORIGIN") track by r.display" required>
+          <td> <select class="form-control" title="Details Type" id="protein-origin" ng-model = "editProtein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
                                     </select></td>
-          <td> <select class="form-control" title="Details Type" id="protein-sequencetype" ng-model = "editProtein.sequenceType" ng-options="r.display for r in @CVFactory.getField("SEQUENCE_TYPE") track by r.display" required>
+          <td> <select class="form-control" title="Details Type" id="protein-sequencetype" ng-model = "editProtein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
                                     </select></td>
           <td><a id ="name-submit" ng-show="editDetailsForm.$valid" ng-click="updateDetails(editDetails)" arial-label="Save">
             <i class="fa fa-floppy-o fa-2x success"></i></a>
@@ -56,13 +56,13 @@
       </tr>
       <tr ng-show="!isEditingDetails && addingDetails">
         <form class="form-horizontal" name="detailForm" id = "add-detail" role="form" ng-submit="validateDetails(protein)" novalidate>
-          <td> <select class="form-control" title="Details Type" id="protein-type" ng-model = "protein.type" ng-options="r.display for r in @CVFactory.getField("PROTEIN_TYPE") track by r.display" required>
+          <td> <select class="form-control" title="Details Type" id="protein-type" ng-model = "protein.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
                                     </select></td>
-          <td> <select class="form-control" title="Details Type" id="protein-subtype" ng-model = "protein.subType" ng-options="r.display for r in @CVFactory.getField("PROTEIN_SUBTYPE") track by r.display" required>
+          <td> <select class="form-control" title="Details Type" id="protein-subtype" ng-model = "protein.subType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
                                     </select></td>
-          <td> <select class="form-control" title="Details Type" id="protein-origin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in @CVFactory.getField("SEQUENCE_ORIGIN") track by r.display" required>
+          <td> <select class="form-control" title="Details Type" id="protein-origin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
                                     </select></td>
-          <td> <select class="form-control" title="Details Type" id="protein-sequencetype" ng-model = "protein.sequenceType" ng-options="r.display for r in @CVFactory.getField("SEQUENCE_TYPE") track by r.display" required>
+          <td> <select class="form-control" title="Details Type" id="protein-sequencetype" ng-model = "protein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
                                     </select></td>
           <td><a ng-click="clear()" aria-label="Clear">
             <i class="fa fa-eraser fa-2x danger"></i></a>

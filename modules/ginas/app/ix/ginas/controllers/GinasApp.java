@@ -6,9 +6,11 @@ import ix.core.models.Structure;
 import ix.core.models.Value;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.plugins.IxCache;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.controllers.v1.CV;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
@@ -30,9 +32,10 @@ import org.springframework.util.StringUtils;
 
 import play.Logger;
 import play.Play;
-import play.cache.Cache;
 import play.db.ebean.Model;
-import play.mvc.Result;
+import play.mvc.*;
+import play.libs.ws.*;
+import play.libs.F;
 import tripod.chem.indexer.StructureIndexer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -156,6 +159,27 @@ public class GinasApp extends App {
         }
         //Logger.info("trunc " + trunc);
         return trunc.substring(0, 17)+ "...";
+    }
+
+    public static CV getCV () {
+        try {
+            return IxCache.getOrElse("ginasCV", new Callable<CV>() {
+                    public CV call () throws Exception {
+                        Call call =
+                           controllers.routes.Assets.at("ginas/CV.txt");
+                        Logger.debug("CV: "+call);
+                        F.Promise<WSResponse> ws =
+                             WS.url(call.absoluteURL(request ())).get();
+                        CV cv = new CV (ws.get(1000).getBodyAsStream());
+                        Logger.debug("CV loaded: size="+cv.size());
+                        return cv;
+                    }
+                }, 0);
+        }
+        catch (Exception ex) {
+            Logger.error("Can't load CV", ex);
+        }
+        return null;
     }
 
     static FacetDecorator[] decorate (Facet... facets) {

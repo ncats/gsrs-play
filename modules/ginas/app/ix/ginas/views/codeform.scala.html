@@ -1,4 +1,5 @@
-@import ix.ginas.controllers.v1.CVFactory;
+@import ix.ginas.controllers.GinasApp
+
 <div class = "row info" ng-controller="CodeController as CodeCtrl" >
     <button class="btn btn-primary label-offset det">
                         Codes&nbsp;<span class="badge" ng-show="substance.codes.length>0">
@@ -50,7 +51,7 @@
                         </ng-messages>
                     </div>
                     <div class="col-md-2 err-check" show-errors>
-                        <select class="form-control" title="Code Type" id="type" name = "type" ng-model = "editCode.type" ng-options="r.display for r in @CVFactory.getField("CODE_TYPE") track by r.display" required>
+                        <select class="form-control" title="Code Type" id="type" name = "type" ng-model = "editCode.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" required>
                         </select>
                         <ng-messages for="editCodeForm.type.$error" ng-if="editCodeForm.type.$touched">
                             <ng-message when="required" class="help-block">*required</ng-message>
@@ -91,7 +92,7 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Code Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in @CVFactory.getField("CODE_TYPE") track by r.display" required>
+                    <select class="form-control" title="Code Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" required>
                         </select>
                     <ng-messages for="codeForm.type.$error" ng-if="codeForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

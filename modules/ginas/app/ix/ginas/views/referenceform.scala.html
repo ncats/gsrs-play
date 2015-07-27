@@ -1,4 +1,4 @@
-@import ix.ginas.controllers.v1.CVFactory;
+@import ix.ginas.controllers.GinasApp;
 
 <div class ="row info" id = "references" ng-controller="ReferenceController as RefCtrl">
     <button class="btn btn-primary label-offset det">
@@ -57,7 +57,7 @@
                             </ng-messages>
                         </div>
                         <div class="col-md-2 err-check" show-errors>
-                            <select class="form-control" title="Document Type" id="type" name = "type" ng-model = "editObj.doctype" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>
+                            <select class="form-control" title="Document Type" id="type" name = "type" ng-model = "editObj.doctype" ng-options="r.display for r in @GinasApp.getCV.getField("DOCUMENT_TYPE") track by r.display" required>
                         </select>
                             <ng-messages for="editRefForm.doctype.$error" ng-if="editRefForm.doctype.$touched">
                                 <ng-message when="required" class="help-block">*required</ng-message>
@@ -97,7 +97,7 @@
                         </ng-messages>
                     </div>
                     <div class="col-md-2 err-check" show-errors>
-                        <select class="form-control" title="Document Type" id="type" name = "type" ng-model = "ref.doctype" ng-options="r.display for r in @CVFactory.getField("DOCUMENT_TYPE") track by r.display" required>
+                        <select class="form-control" title="Document Type" id="type" name = "type" ng-model = "ref.doctype" ng-options="r.display for r in @GinasApp.getCV.getField("DOCUMENT_TYPE") track by r.display" required>
                         </select>
                         <ng-messages for="refForm.doctype.$error" ng-if="refForm.doctype.$touched">
                             <ng-message when="required" class="help-block">*required</ng-message>

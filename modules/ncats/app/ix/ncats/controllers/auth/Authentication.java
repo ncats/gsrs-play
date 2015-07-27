@@ -134,6 +134,9 @@ public class Authentication extends Controller {
         return redirect (routes.Authentication.login(null));
     }
 
+    static ix.core.plugins.SchedulerPlugin scheduler =
+        Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
+    
     @Security.Authenticated(Secured.class)    
     public static Result secured () {
         Session session = getSession ();
@@ -141,6 +144,8 @@ public class Authentication extends Controller {
             flash ("message", "Session timeout; please login again!");
             return redirect (routes.Authentication.login(null));
         }
+
+        scheduler.submit(session.id.toString());
         
         ObjectMapper mapper = new ObjectMapper ();
         return ok (mapper.valueToTree(session));
