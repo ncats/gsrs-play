@@ -19,7 +19,7 @@ GET         /search                     ix.ginas.controllers.GinasApp.search(kin
 POST        /authenticate               ix.ginas.controllers.GinasApp.authenticate
 GET         /login                      ix.ginas.controllers.GinasFactory.login
 GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationships(uuid: String)
-GET         /test                      ix.ginas.controllers.v1.CVFactory.run
+
 
 ->	    /	ix.ncats.Routes
 

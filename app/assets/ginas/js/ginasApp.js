@@ -388,7 +388,13 @@
 
 
         this.parseSubunit = function (sequence){
-console.log(sequence.split(''));
+             var split = sequence.split('');
+            var invalid = ['B','J','O','U','X', 'Z'];
+            for(var i in split){
+                var char = split[i];
+
+            }
+
         };
 
 
