@@ -41,11 +41,6 @@ import tripod.chem.indexer.StructureIndexer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
-    static final TextIndexer TEXT_INDEXER = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
-    static final StructureIndexer STRUC_INDEXER =
-        Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
-
     // substance finder
     static final Model.Finder<UUID, Substance> SUBFINDER =
         new Model.Finder(UUID.class, Substance.class);
@@ -391,7 +386,7 @@ public class GinasApp extends App {
                 default: return _badRequest("type not found");
             }
         }else {
-            TextIndexer indexer = textIndexer.createEmptyInstance();
+            TextIndexer indexer = _textIndexer.createEmptyInstance();
             for (Substance sub : substances)
                 indexer.add(sub);
 
@@ -600,7 +595,7 @@ public class GinasApp extends App {
                        .chemicaldetails.render(chemical));
         }
         else {
-            TextIndexer indexer = textIndexer.createEmptyInstance();
+            TextIndexer indexer = _textIndexer.createEmptyInstance();
             for (ChemicalSubstance chem : chemicals)
                 indexer.add(chem);
 
@@ -856,7 +851,7 @@ public class GinasApp extends App {
                        .proteindetails.render(protein));
         }
         else {
-            TextIndexer indexer = textIndexer.createEmptyInstance();
+            TextIndexer indexer = _textIndexer.createEmptyInstance();
             for (ProteinSubstance prot : proteins)
                 indexer.add(prot);
 
@@ -1222,20 +1217,14 @@ public class GinasApp extends App {
 
     /******************* MIXTURES *************************************************/
 
-public static List<Component> getComponentsByType (List<Component> components, String type){
-    List<Component> comp = new ArrayList<Component>();
-    for(Component c: components){
-        if(c.type.equals(type)){
-            comp.add(c);
+    public static List<Component> getComponentsByType (List<Component> components, String type){
+        List<Component> comp = new ArrayList<Component>();
+        for(Component c: components){
+            if(c.type.equals(type)){
+                comp.add(c);
+            }
         }
+        return comp;
     }
-return comp;
-}
-
-public static Result molStructure (String mol){
-
-
-}
-
 }
 

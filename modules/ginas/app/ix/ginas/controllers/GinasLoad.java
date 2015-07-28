@@ -49,8 +49,6 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 
 
 public class GinasLoad extends App {
-    static final TextIndexer TEXT_INDEXER = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
                     
     public static Result error (int code, String mesg) {
         return ok (ix.ginas.views.html.error.render(code, mesg));
@@ -454,7 +452,7 @@ public class GinasLoad extends App {
             Chem.setFormula(chem.structure);
             chem.structure.save();
             // it's bad to reference App from here!!!!
-            strucIndexer.add(String.valueOf(chem.structure.id),
+            _strucIndexer.add(String.valueOf(chem.structure.id),
                              chem.structure.molfile);
         }
         catch (IOException e) {
