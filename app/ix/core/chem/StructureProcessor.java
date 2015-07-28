@@ -14,6 +14,7 @@ import chemaxon.struc.MolAtom;
 import chemaxon.struc.MolBond;
 import chemaxon.struc.Molecule;
 import chemaxon.util.MolHandler;
+import chemaxon.formats.MolImporter;
 
 import lychi.LyChIStandardizer;
 import lychi.util.ChemUtil;
@@ -68,6 +69,20 @@ public class StructureProcessor {
             && atom.getAtno() != 15;
     }
 
+    public static Structure instrument (byte[] buf) {
+        return instrument (buf, null);
+    }
+    
+    public static Structure instrument (byte[] buf,
+                                        Collection<Structure> components) {
+        try {
+            return instrument (MolImporter.importMol(buf), components);
+        }
+        catch (Exception ex) {
+            throw new IllegalArgumentException (ex);
+        }
+    }
+    
     public static Structure instrument (String mol) {
         return instrument (mol, null);
     }

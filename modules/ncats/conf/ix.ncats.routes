@@ -13,6 +13,7 @@ GET	/render/:value	ix.ncats.controllers.App.render(value: String, size: Int ?= 1
 
 # return a structure in the designated format
 GET	/structure/$id<[0-9]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>	ix.ncats.controllers.App.structure(id: Long, format: String, size: Int ?= 150)
+POST	/structure	ix.ncats.controllers.App.molinstrument
 
 # return the status of a previous query
 GET	/status/:key	ix.ncats.controllers.App.status(key: String)

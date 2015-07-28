@@ -1,6 +1,8 @@
 package ix.core.models;
 
 import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
 import play.db.ebean.*;
 import javax.persistence.*;
 
@@ -17,10 +19,10 @@ public class ProcessingJob extends Model {
     
     @Id
     public Long id;
-    
-    @Column(nullable=false,unique=true)
-    public String jobkey;
-    public String invoker;
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_core_procjob_key")
+    public List<Keyword> keys = new ArrayList<Keyword>();
 
     public Status status = Status.PENDING;
     @Column(name="job_start")
@@ -41,9 +43,6 @@ public class ProcessingJob extends Model {
     public Payload payload;
 
     public ProcessingJob () {
-    }
-    public ProcessingJob (String key) {
-        this.jobkey = key;
     }
 
     @JsonView(BeanViews.Compact.class)

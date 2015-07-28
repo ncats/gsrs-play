@@ -13,9 +13,11 @@ import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Call;
+import play.mvc.BodyParser;
 import play.libs.ws.*;
 import play.libs.F;
 import play.libs.Akka;
+import play.mvc.Http;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -42,10 +44,12 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.IxCache;
+import ix.core.plugins.PersistenceQueue;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
 import ix.core.controllers.StructureFactory;
+import ix.core.controllers.EntityFactory;
 import ix.utils.Util;
 import ix.utils.Global;
 
@@ -93,12 +97,15 @@ public class App extends Authentication {
     public static final int FACET_DIM = 20;
     public static final int MAX_SEARCH_RESULTS = 1000;
 
-    public static final TextIndexer textIndexer = 
+    public static final TextIndexer _textIndexer = 
         play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
-    public static final StructureIndexer strucIndexer =
+    public static final StructureIndexer _strucIndexer =
         play.Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
-    public static final IxContext IX =
+    public static final IxContext _ix =
         play.Play.application().plugin(IxContext.class);
+
+    public static final PersistenceQueue _pq =
+        play.Play.application().plugin(PersistenceQueue.class);
 
     /**
      * interface for rendering a result page
@@ -498,13 +505,13 @@ public class App extends Authentication {
 
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total) {
-        return getSearchResult (textIndexer, kind, q, total);
+        return getSearchResult (_textIndexer, kind, q, total);
     }
 
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total,
          Map<String, String[]> query) {
-        return getSearchResult (textIndexer, kind, q, total, query);
+        return getSearchResult (_textIndexer, kind, q, total, query);
     }
     
     public static SearchResult getSearchResult
@@ -554,7 +561,7 @@ public class App extends Authentication {
         try {       
             long start = System.currentTimeMillis();
             SearchResult result;
-            if (indexer != textIndexer) {
+            if (indexer != _textIndexer) {
                 // if it's an ad-hoc indexer, then we don't bother caching
                 //  the results
                 result = SearchFactory.search
@@ -610,7 +617,7 @@ public class App extends Authentication {
 
     public static <T> T getOrElse (String key, Callable<T> callable)
         throws Exception {
-        return getOrElse (textIndexer.lastModified(), key, callable);
+        return getOrElse (_textIndexer.lastModified(), key, callable);
     }
     
     public static <T> T getOrElse (long modified,
@@ -1124,11 +1131,11 @@ public class App extends Authentication {
             Logger.debug("substructure: query="+query
                          +" rows="+rows+" page="+page+" key="+key);
             return getOrElse
-                (strucIndexer.lastModified(),
+                (_strucIndexer.lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
                              processor.setResults
-                                 (rows, strucIndexer.substructure(query, 0));
+                                 (rows, _strucIndexer.substructure(query, 0));
                              return processor.getContext();
                          }
                      });
@@ -1152,11 +1159,11 @@ public class App extends Authentication {
             final String key = "similarity/"+getKey (query, threshold);
             final int size = (page+1)*rows;
             return getOrElse
-                (strucIndexer.lastModified(),
+                (_strucIndexer.lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
                              processor.setResults
-                                 (rows, strucIndexer.similarity
+                                 (rows, _strucIndexer.similarity
                                   (query, threshold, 0));
                              return processor.getContext();
                          }
@@ -1341,5 +1348,35 @@ public class App extends Authentication {
             ups[2] = (int)(u%60); // sec
         }
         return ups;
+    }
+
+    @BodyParser.Of(value = BodyParser.Text.class,
+                   maxLength = 1024 * 1024)
+    public static Result molinstrument () {
+        //String mime = request().getHeader("Content-Type");
+        //Logger.debug("molinstrument: content-type: "+mime);
+        
+        ObjectMapper mapper = EntityFactory.getEntityMapper();
+        ObjectNode node = mapper.createObjectNode();
+        try {
+            String payload = request().body().asText();
+            if (payload != null) {
+                List<Structure> moieties = new ArrayList<Structure>();
+                Structure struc = StructureProcessor.instrument
+                    (payload, moieties);
+                // we should be really use the PersistenceQueue to do this
+                // so that it doesn't block
+                struc.save();
+                for (Structure m : moieties)
+                    m.save();
+                node.put("structure", mapper.valueToTree(struc));
+                node.put("moieties", mapper.valueToTree(moieties));
+            }
+        }
+        catch (Exception ex) {
+            Logger.error("Can't process payload", ex);
+            return internalServerError ("Can't process mol payload");       
+        }
+        return ok (node);
     }
 }

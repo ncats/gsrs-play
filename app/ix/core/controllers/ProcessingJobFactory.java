@@ -36,7 +36,7 @@ public class ProcessingJobFactory extends EntityFactory {
     }
 
     public static ProcessingJob getJob (String key) {
-        return finder.where().eq("jobkey", key).findUnique();
+        return finder.where().eq("keys.term", key).findUnique();
     }
     
     public static Result count () { return count (finder); }

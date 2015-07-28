@@ -10,6 +10,7 @@ import java.util.concurrent.Callable;
 import play.Logger;
 import play.Plugin;
 import play.Application;
+import play.db.ebean.Model;
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
 
@@ -28,6 +29,18 @@ public class PersistenceQueue extends Plugin implements Runnable {
     public static abstract class AbstractPersistenceContext
         implements PersistenceContext {
         public abstract void persists () throws Exception;
+        public Priority priority () { return Priority.MEDIUM; }
+    }
+
+    public static class DefaultPersistenceContext
+        implements PersistenceContext {
+        Model model;
+        public DefaultPersistenceContext (Model model) {
+            this.model = model;
+        }
+        public void persists () throws Exception {
+            model.save();
+        }
         public Priority priority () { return Priority.MEDIUM; }
     }
 
@@ -122,5 +135,9 @@ public class PersistenceQueue extends Plugin implements Runnable {
             ex.printStackTrace();
             throw new RuntimeException ("Unable submit request", ex);
         }
+    }
+
+    public void submit (Model model) {
+        submit (new DefaultPersistenceContext (model));
     }
 }

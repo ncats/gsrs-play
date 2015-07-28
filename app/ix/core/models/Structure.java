@@ -149,11 +149,17 @@ public class Structure extends IxModel {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_properties")
     public JsonNode getJsonProperties () {
-        ObjectNode node = null;
-        if (!properties.isEmpty()) {
-            node = mapper.createObjectNode();
-            node.put("count", properties.size());
-            node.put("href", Global.getRef(getClass (), id)+"/properties");
+        JsonNode node = null;
+        if (id != null) {
+            if (!properties.isEmpty()) {
+                ObjectNode obj = mapper.createObjectNode();
+                obj.put("count", properties.size());
+                obj.put("href", Global.getRef(getClass (), id)+"/properties");
+                node = obj;
+            }
+        }
+        else {
+            //node = mapper.valueToTree(properties);
         }
         return node;
     }
@@ -161,16 +167,22 @@ public class Structure extends IxModel {
     @JsonView(BeanViews.Compact.class)
     @JsonProperty("_links")
     public JsonNode getJsonLinks () {
-        ObjectNode node = null;
-        if (!links.isEmpty()) {
-            node = mapper.createObjectNode();
-            node.put("count", links.size());
-            node.put("href", Global.getRef(getClass (), id)+"/links");
+        JsonNode node = null;
+        if (id != null) {
+            if (!links.isEmpty()) {
+                ObjectNode obj = mapper.createObjectNode();
+                obj.put("count", links.size());
+                obj.put("href", Global.getRef(getClass (), id)+"/links");
+                node = obj;
+            }
+        }
+        else {
+            //node = mapper.valueToTree(links);
         }
         return node;
     }
 
     public String getSelf () {
-        return Global.getRef(this)+"?view=full";
+        return id != null ? Global.getRef(this)+"?view=full" : null;
     }
 }

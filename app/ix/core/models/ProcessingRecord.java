@@ -1,6 +1,8 @@
 package ix.core.models;
 
 import java.util.Date;
+import java.util.List;
+import java.util.ArrayList;
 import play.db.ebean.*;
 import javax.persistence.*;
 
@@ -9,7 +11,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.utils.Global;
 
 @Entity
-@Table(name="ix_core_procrecord")
+@Table(name="ix_core_procrec")
 public class ProcessingRecord extends Model {
     public enum Status {
         OK, FAILED, PENDING, UNKNOWN
@@ -24,6 +26,10 @@ public class ProcessingRecord extends Model {
 
     @Column(length=128)
     public String name;
+    
+    @ManyToMany
+    @JoinTable(name="ix_core_procrec_prop")
+    public List<Value> properties = new ArrayList<Value>();
     
     /**
      * record status
