@@ -146,7 +146,7 @@
                 <div class="col-md-2 err-check" show-errors>
                     <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
                     <p class="danger" ng-if="!ginasCtrl.substance.references && nameForm.reference.$error">*required</p>
-                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "name.references = ginasCtrl.substance.references[0]" ng-model = "name.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references"></select>
+                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-model = "name.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" ng-init= "name.references = ginasCtrl.substance.references[0]"></select>
                     <ng-messages for="nameForm.reference.$error" ng-if="nameForm.reference.$pristine">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>

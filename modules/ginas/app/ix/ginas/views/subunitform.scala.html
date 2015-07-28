@@ -3,7 +3,10 @@
                         Subunits&nbsp;<span class="badge" ng-show="substance.protein.subunits.length>0">
                         {{substance.subunits.length}}</span> </button>
     <a ng-show="!adding" ng-click="SubunitCtrl.toggleAdd()" aria-label="Add Subunits"><i class = "fa fa-plus fa-2x success"></i></a>
-    <div class="col-md-12">
+@*    <div class="col-md-12">
+        <div class = "row string text-uppercase" >
+            <span ng-repeat="char in SubunitCtrl.display" ng-class="char.valid ? 'success' : 'danger' ">{{char.value}}</span>
+            </div>
         <div class="panel panel-default subunit-panel" ng-repeat="prop in substance.protein.subunits">
             <div class="panel-heading">
                 <h3 class="panel-title">Subunit {{substance.protein.subunits.indexOf(prop)+1}}</h3>
@@ -11,18 +14,16 @@
             <div class="panel-body">
                 <div class = "row string text-uppercase" >
 
-
-                    {{prop.sequence}}
-                    <div class = "aaBlock" ng-repeat="n in [] | range:1:prop.length">
-                        @*for(j <- 0 until (length / 10)) {*@
-                        @*<div class = "col-md-2 aaBlock">*@
-                        @*<div class = "row">*@
-                        @*<div class = "col-md-12 text-right">*@
-                        @*<span class = "count">@((j + 1) * 10)</span>*@
-                        @*</div>*@
-                        @*</div>*@
+*@@*                    <div class = "aaBlock" ng-repeat="n in [] | range:1:prop.length">
+                        *@@**@@*for(j <- 0 until (length / 10)) {*@@**@@*
+                        *@@**@@*<div class = "col-md-2 aaBlock">*@@**@@*
+                        *@@**@@*<div class = "row">*@@**@@*
+                        *@@**@@*<div class = "col-md-12 text-right">*@@**@@*
+                        *@@**@@*<span class = "count">@((j + 1) * 10)</span>*@@**@@*
+                        *@@**@@*</div>*@@**@@*
+                        *@@**@@*</div>*@@**@@*
                         {{n}}
-                    </div>
+                    </div>*@@*
                 </div>
             </div>
             <div class = "row">
@@ -32,7 +33,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>*@
 @*    <div class="col-md-12" id="allSubunitsTable" ng-show="isEditingSubunit">
         <form name="subunitEdit" id = "edit-subunit" role="form" ng-submit="updateSubunit(editSubunit)" novalidate>
             <div class="row">
@@ -59,8 +60,8 @@
         <form name="subunitForm" id = "add-subunit" role="form" novalidate >
             <div class = "row">
                 <div class = "col-md-12">
-                    @*<subunit ng-model="foo" items=items ng-change="parse(foo)"></subunit>*@
-                    <textarea class="form-control string text-uppercase" rows="5" ng-model = "subunit.sequence" ng-change = "SubunitCtrl.parseSubunit(subunit.sequence)" name="sequence"  placeholder="Sequence" title="sequence" id="sequence" required></textarea>
+                    <subunit ng-model="subunit" ng-change = "SubunitCtrl.clean(subunit)"></subunit>
+                    @*<textarea class="form-control string text-uppercase" rows="5" ng-model = "subunit.sequence" ng-model-options='{ debounce: 1000 }' ng-change = "SubunitCtrl.clean(subunit.sequence); SubunitCtrl.parseSubunit(subunit.sequence)" name="sequence"  placeholder="Sequence" title="sequence" id="sequence" required></textarea>*@
                 </div>
             </div>
 @*            <div class="row">

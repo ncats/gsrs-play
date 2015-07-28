@@ -27,6 +27,7 @@
                 break;
             case "Protein":
                 Substance.protein = {};
+                var subunit = "";
                 break;
             default:
                 console.log('invalid substance class');
@@ -87,28 +88,44 @@
         };
     });
 
-    ginasApp.directive('subunit', function(){
+/*    ginasApp.directive('subunit', function(){
+        var editTemplate = '<textarea class="form-control string text-uppercase" ng-show="editing" ng-dblclick="edit()" rows="5" ng-model = "subunit.sequence" name="sequence"  placeholder="Sequence" title="sequence" id="sequence" required></textarea>';
+        var displayTemplate = '<div class="panel-body" ng-hide="editing" ng-dblclick="edit()"><div class = "row string text-uppercase" >preview</div></div>';
         return {
             restrict: "E",
-            template : '<h1>Click to choose!</h1><div class="clkm" ng-repeat="item in items" ng-click="updateModel(item)">{{item}}</div>',
-            require: 'ngModel',
-            scope : {
-                items : "="
-            },
-            link : function(scope, element, attrs, ctrl){
-                scope.updateModel = function(item)
-                {
-                    ctrl.$setViewValue(item);
+            //template : '<textarea class="form-control string text-uppercase" rows="5" ng-model = "subunit.sequence" ng-model-options="{ debounce: 1000 }" ng-change = "SubunitCtrl.clean(subunit.sequence); SubunitCtrl.parseSubunit(subunit.sequence)" name="sequence"  placeholder="Sequence" title="sequence" id="sequence" ng-transclude required></textarea>',
+            compile:function(tElement, tAttrs, transclude){
+                console.log(tElement);
+                var displayElement = angular.element(displayTemplate);
+                var subunit = tElement.text();
+                tElement.html(editTemplate);
+                tElement.append(displayElement);
+                return function(scope, element, attrs){
+                    scope.editing=true;
+                    console.log(scope);
+                    console.log(element);
+                   scope.sequence = subunit;
+                    console.log(scope);
+                    scope.edit = function(){
+                        var elementHTML = scope.SubunitCtrl.parseSubunit(subunit);
+                        displayElement.html= elementHTML;
+                        scope.editing= !scope.editing;
+                    };
                 };
-                ctrl.$viewChangeListeners.push(function() {
-                    scope.$eval(attrs.ngChange);
-                });
             }
         };
+    });*/
+
+    ginasApp.directive('subunit', function() {
+        return {
+            restrict: 'E',
+            require: '^ngModel',
+            scope: {
+                sequence: '='
+            },
+            template: '<textarea class="form-control string text-uppercase" rows="5" ng-model = "sequence" ng-change = "clean(sequence)" name="sequence"  placeholder="Sequence" title="sequence" id="sequence" required></textarea>',
+        };
     });
-
-
-
 
     ginasApp.controller('NameController', function ($scope, Substance, $rootScope) {
         $scope.isEditing = false;
@@ -377,7 +394,8 @@
         $scope.editReference = null;
         this.adding = false;
         this.editing = false;
-
+        this.display=[];
+        this.subunit={};
         this.toggleEdit = function () {
             this.editing = !this.editing;
         };
@@ -386,20 +404,42 @@
             this.adding = !this.adding;
         };
 
+        this.clean = function(sequence){
+            console.log("clean");
+            return sequence.replace(/[^A-Za-z]/g, '');
+        };
 
         this.parseSubunit = function (sequence){
-             var split = sequence.split('');
-            var invalid = ['B','J','O','U','X', 'Z'];
+            console.log(sequence);
+            var split = sequence.replace(/[^A-Za-z]/g, '').split('');
+            var display=[];
+            console.log(split);
+            var invalid = ['B','J','O','U','X','Z'];
             for(var i in split){
-                var char = split[i];
+                var obj={};
+                console.log(split[i]);
+                var valid = dojo.indexOf(invalid, split[i].toUpperCase());
+                console.log(valid);
+                if(valid>=0){
+                    obj.value = split[i];
+                    obj.valid=false;
+                    display.push(obj);
+                    obj={};
+                }else{
+                    obj.value = split[i];
+                    obj.valid= true;
+                    display.push(obj);
+                    obj={};
+                }
 
             }
 
+        this.display = display;
+            console.log(display);
+            return display;
         };
 
-
-
-        this.validate = function (obj) {
+/*        this.validate = function (obj) {
             $scope.$broadcast('show-errors-check-validity');
             if ($scope.refForm.$valid) {
                 //new array if object doesn't already have one
@@ -411,27 +451,42 @@
                 $scope.ref = {};
                 $rootScope.refAdded = true;
             }
+        };*/
+
+        this.validate = function (obj) {
+            console.log(obj);
         };
+
         $scope.validateSubunit = function (subunit) {
-            console.log("subunit");
-            $scope.editorEnabled = false;
-            //new array if object doesn't already have one
-            if (!$scope.substance.protein.subunits) {
-                console.log("new array");
-                $scope.substance.protein.subunits = [];
-            }
-            var j = subunit.sequence.length / 10;
-            for (var i = 0; i < subunit.sequence.length / 10; i++) {
-                console.log("Start: " + (i * 10) + subunit.sequence.substring((i * 10), ((i + 1) * 10)) + " end: " + ((i + 1) * 10));
+            console.log(subunit);
 
-            }
-
-            //  console.log(subunit.sequence.split(''));
-            $scope.substance.protein.subunits.push(subunit);
-            $scope.subunit = {};
-            console.log($scope.substance);
 
         };
+
+
+
+        /*
+                $scope.validateSubunit = function (subunit) {
+                    console.log(subunit);
+                    $scope.editorEnabled = false;
+                    //new array if object doesn't already have one
+                    if (!$scope.substance.protein.subunits) {
+                        console.log("new array");
+                        $scope.substance.protein.subunits = [];
+                    }
+                    var j = subunit.sequence.length / 10;
+                    for (var i = 0; i < subunit.sequence.length / 10; i++) {
+                        console.log("Start: " + (i * 10) + subunit.sequence.substring((i * 10), ((i + 1) * 10)) + " end: " + ((i + 1) * 10));
+
+                    }
+
+                    //  console.log(subunit.sequence.split(''));
+                    $scope.substance.protein.subunits.push(subunit);
+                    $scope.subunit = {};
+                    console.log($scope.substance);
+
+                };
+        */
 
         $scope.setEditedSubunit = function (subunit) {
             console.log("clicked");

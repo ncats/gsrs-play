@@ -1232,9 +1232,10 @@ public static List<Component> getComponentsByType (List<Component> components, S
 return comp;
 }
 
+public static Result molStructure (String mol){
 
 
-
+}
 
 }
 
