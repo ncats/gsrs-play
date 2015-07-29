@@ -139,10 +139,12 @@ public class Structure extends IxModel {
     
     @Transient
     private ObjectMapper mapper = new ObjectMapper ();
-    
+
+    /*
     @Transient
     @JsonIgnore
     public transient Object mol; // a transient mol object
+    */
     
     public Structure () {}
 

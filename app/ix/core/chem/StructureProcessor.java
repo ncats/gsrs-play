@@ -108,7 +108,6 @@ public class StructureProcessor {
     public static Structure instrument (Molecule mol,
                                         Collection<Structure> components) {
         Structure struc = new Structure ();
-        struc.digest = digest (mol);
         instrument (struc, components, mol);
         return struc;
     }
@@ -121,6 +120,11 @@ public class StructureProcessor {
     
     static void instrument (Structure struc, Collection<Structure> components,
                             Molecule mol, boolean standardize) {
+        
+        if (struc.digest == null) {
+            struc.digest = digest (mol);
+        }
+        
         if (mol.getDim() < 2) {
             mol.clean(2, null);
         }
@@ -246,7 +250,9 @@ public class StructureProcessor {
                     Structure[] moieties = new Structure[frags.length];
                     for (int i = 0; i < frags.length; ++i) {
                         moieties[i] = new Structure ();
-                        instrument (moieties[i], components, frags[i], false);
+                        if (components != null)
+                            components.add(moieties[i]);
+                        instrument (moieties[i], null, frags[i], false);
                     }
                 }
             }
@@ -271,6 +277,28 @@ public class StructureProcessor {
         struc.formula = mol.getFormula();
         struc.mwt = mol.getMass();
         struc.smiles = ChemUtil.canonicalSMILES(mol);
+
+        calcStereo (struc);
+    }
+
+    static void calcStereo (Structure struc) {
+        int total = struc.stereoCenters, defined = struc.definedStereo;
+        if (total == 0) {
+            struc.stereoChemistry = Structure.Stereo.ACHIRAL;
+        }
+        else if (total == defined) {
+            struc.stereoChemistry = Structure.Stereo.ABSOLUTE;
+        }
+        else if (total == 1 && defined == 0) {
+            struc.stereoChemistry = Structure.Stereo.RACEMIC;
+            struc.opticalActivity = Structure.Optical.PLUS_MINUS;
+        }
+        else if ((total - defined) == 1) {
+            struc.stereoChemistry = Structure.Stereo.EPIMERIC;
+        }
+        else if ((total - defined) > 1) {
+            struc.stereoChemistry = Structure.Stereo.MIXED;
+        }
     }
 
     public static String toHex (byte[] binary) {
