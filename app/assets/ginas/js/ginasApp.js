@@ -1,5 +1,5 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker'])
+    var ginasApp = angular.module('ginas', ['ngMessages','ng-resource', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker'])
         .config(function ($locationProvider, showErrorsConfigProvider) {
             $locationProvider.html5Mode({
                 enabled : true
@@ -127,12 +127,25 @@
         };
     });
 
+/*    ginasApp.directive('structure', function() {
+        return {
+            restrict: 'E',
+            template: '<img class="struc-thumb img-responsive" alt="Structure" title="Structure" src='@ix.ncats.controllers.routes.App.structure(s.id, "svg", size)>',
+        };
+    });*/
+
+        ginasApp.structureFactory = angular.factory('structureFactory', function($resource) {
+                var structureImage = $resource('/api/persons/:id', {id: '@id'});
+                 return persons;
+                });
+
+
     ginasApp.controller('NameController', function ($scope, Substance, $rootScope) {
         $scope.isEditing = false;
         $scope.editObj = null;
         $scope.addName = null;
         $scope.addingNames = true;
-        $rootScope.uniqueName = false;
+        $rootScope.uniqueName = true;
 
         this.addNames = function () {
             $scope.addingNames = !$scope.addingNames;
@@ -315,10 +328,21 @@
         };
     });
 
-    ginasApp.controller('StructureController', function ($scope, $http) {
+    ginasApp.controller('StructureController', function ($scope, $http, Substance) {
         $scope.isEditingStructure = false;
         $scope.editStructure = null;
         $scope.noStructure = true;
+        this.adding = false;
+        this.editing = false;
+
+
+        this.toggleEdit = function () {
+            this.editing = !this.editing;
+        };
+
+        this.toggleAdd = function () {
+            this.adding = !this.adding;
+        };
 
         $scope.addStructure = function () {
             $scope.addingStructure = !$scope.addingStructure;
@@ -347,9 +371,52 @@
             console.log($scope.substance);
         };
 
-        $scope.toggleEditStructure = function () {
-            console.log("editing)");
-            $scope.isEditingStructure = !$scope.isEditingStructure;
+        this.resolveMol= function(structure){
+            console.log("resolving mol file");
+            sketcher.setMolfile(structure.molfile);
+            var url = window.strucUrl;//'/ginas/app/smiles';
+            var mol = sketcher.getMolfile();
+            console.log(mol);
+            $http({
+                method: 'POST',
+                url: url,
+                data: mol,
+                headers: {'Content-Type': 'text/plain'}
+            }).success(function (data) {
+                console.log(data);
+                console.log(structure);
+                $scope.structure= data.structure;
+                console.log(structure);
+/*            structure.mwt= sketcher.getMolWeight();
+            structure.formula= sketcher.getSmiles();*/
+           // this.molchange(sketcher);
+        });
+        };
+
+        this.molchange= function(sketch){
+            console.log("molchange");
+            $('#mol-weight').val(sketch.getMolWeight());
+            $('#molfile').val(sketch.getMolfile());
+            $('#structure').typeahead('val', '"'+sketch.getSmiles()+'"');
+            this.getSmiles(sketch.getSmiles());
+        };
+
+        this.setQuery = function(value) {
+            console.log(value);
+            $.ajax({
+                type: "POST",
+                url: '@ix.ncats.controllers.routes.App.smiles',
+                contentType: 'text/plain',
+                data: value,
+                success: function (data) {
+                    console.log(' => '+data);
+                    $('#formula').val(data);
+                },
+                error: function (xhr, status) {
+                    console.error("Can't convert to smiles");
+                },
+                dataType: 'text'
+            });
         };
 
         $scope.setEditedStructure = function (structure) {
@@ -368,23 +435,39 @@
             $scope.substance.structure = null;
         };
 
-        $scope.getSmiles = function () {
-            console.log("here");
-            var smile = sketcher.getSmiles();
-            var url = window.envurl;//'/ginas/app/smiles';
-            console.log(url);
-            console.log(smile);
-            data = JSON.stringify(smile);
-            console.log(data);
-
+        $scope.resolve= function(){
+            console.log("resolve");
+            var url = window.strucUrl;//'/ginas/app/smiles';
+            var mol = sketcher.getMolfile();
+            console.log(mol);
             $http({
                 method: 'POST',
                 url: url,
+                data: mol,
+                headers: {'Content-Type': 'text/plain'}
+            }).success(function (data) {
+                console.log(data);
+                //$scope.substance.structure.formula = data;
+                return data;
+            });
+        };
+
+        this.getSmiles = function () {
+            console.log("here");
+            var smile = sketcher.getSmiles();
+            var url2 = window.envurl;//'/ginas/app/smiles';
+            console.log(url2);
+            console.log(smile);
+            data = JSON.stringify(smile);
+            console.log(data);
+            $http({
+                method: 'POST',
+                url: url2,
                 data: smile,
                 headers: {'Content-Type': 'text/plain'}
             }).success(function (data) {
                 console.log(data);
-                $scope.substance.structure.formula = data;
+                structure.formula = data;
                 return data;
             });
         };
