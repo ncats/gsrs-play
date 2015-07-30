@@ -6,7 +6,7 @@
 
 @structureImage(s: Structure, size: Integer) = {
     <img class="struc-thumb img-responsive" alt="Structure of @sub.getName" title="Structure of @sub.getName"
-    src='@ix.ncats.controllers.routes.App.structure(s.id, "svg", size)'>
+    src='@ix.ncats.controllers.routes.App.structure(s.getId(), "svg", size)'>
 }
 
 @makeTable(s: Structure, stype: String) = {
@@ -86,7 +86,7 @@
 
                             <button type="button" class="btn navbar-btn btn-primary" id = "strucSearch"
                             data-toggle="modal"
-                            data-molurl='@ix.ncats.controllers.routes.App.structure(sub.structure.id, "mol")'
+                            data-molurl='@ix.ncats.controllers.routes.App.structure(sub.structure.getId, "mol")'
                             data-target="#strucModal"><span class="fa fa-search"></span></button>
                         </li>
                     </ul>

@@ -40,7 +40,7 @@
                 }
 
                 <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                src='@ix.ncats.controllers.routes.App.structure(chem.structure.id, "svg", 150)'>
+                src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 150)'>
             </div>
             <div class = "col-md-6">
                 <div class = "row">
@@ -89,7 +89,7 @@
                                 data-target="#@chem.approvalID-list-mol"><i class="fa fa-external-link chem-button"></i></button></li>
                             @molexport(chem.structure.molfile, chem.getName(), chem.approvalID+"-list")
                             <li><button type="button" class="btn btn-default btn-sm" data-toggle="modal"
-                            data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.id, "mol")'
+                            data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "mol")'
                             data-target="#strucModal"><span class="fa fa-search chem-button"></span></button>
                             </li>
                         </ul>

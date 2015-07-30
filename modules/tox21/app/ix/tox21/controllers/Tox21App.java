@@ -526,7 +526,7 @@ public class Tox21App extends App {
         Sample sample = Tox21Factory.getSample(id);
         Result r = null;
         if (sample != null) {
-            r = structure (sample.structure.id, "svg", size);
+            r = structure (sample.structure.getId(), "svg", size);
         }
         return r;
     }
