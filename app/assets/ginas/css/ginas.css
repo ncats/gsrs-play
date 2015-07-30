@@ -472,11 +472,6 @@ nav#main-pagination {
     margin-top: -20px;
 }
 
-/* #myCanvas { */
-/* width: 400px; */
-/* height: auto; */
-/* } */
-
 #canvas {
     -webkit-transform: scale(20);
     -moz-transform: scale(20);
@@ -486,7 +481,7 @@ nav#main-pagination {
 
 #strucModal {
     position: relative;
-    top: -80%;
+    /*top: -80%;*/
 
 }
 
@@ -687,13 +682,6 @@ div#num {
 
 .bars {
     font-size: 21px;
-}
-
-
-#strucModal {
-    position: relative;
-    top: -80%;
-
 }
 
 #draw-box{
@@ -955,4 +943,18 @@ div#num {
 
 span#calendar-icon {
     background: white;
+}
+
+div#structureSearcher {
+    padding-top: 20px;
+    padding-bottom: 15px;
+}
+
+div#jsdraw {
+    padding-bottom: 20px;
+}
+
+.padded {
+    padding-left: 15px;
+    padding-right: 5px;
 }

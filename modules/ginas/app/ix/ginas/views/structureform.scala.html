@@ -4,15 +4,18 @@
     <a ng-show="!addingStructure" ng-click="addStructure()" aria-label="Add Structure"><i class = "fa fa-plus fa-2x success"></i></a>
     @*<div ng-show="addingStructure">*@
     <div>
-        <div class="col-md-12">
+        <div class="col-md-12" id="structureSearcher">
             <form name = "structureForm" id = "add-structure" role="form" novalidate>
                 <div class="row">
-                    <div class = "col-md-6">
-                    <div id="sketcherForm" dataformat='molfile' ng-model="structure.molfile" ng-change="molchange(this);" ></div>
-                        <structure></structure>
+                    <div class = "col-md-12" id="jsdraw">
+                        <sketcher ng-model="structure"></sketcher>
+                    </div>
                 </div>
-                        <textarea class="col-md-6 pull-right" rows="10" name="mol" ng-model="structure.molfile"></textarea>
-                        <a ng-click="StructureCtrl.resolveMol(structure)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
+                <div class="row">
+                    <div class="col-md-2 pull-right">
+                        <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" ng-show="structure.molfile" aria-label="Export"><i class="fa fa-external-link fa-2x success"></i></a>&nbsp;
+                        <a class= "pull-right padded" data-toggle="modal" data-target="#structureimport" aria-label="Import" ><i class="fa fa-clipboard fa-2x success"></i></a>
+                    </div>
                 </div>
                 <div class ="row header-row">
                     <div class = "col-md-3"><strong>Molecular Formula</strong></div>
@@ -24,16 +27,16 @@
                 </div>
                 <div class ="row" >
                     <div class = "col-md-3">
-                                    {{structure.formula}}
+                                    {{ginasCtrl.substance.chemical.structure.formula}}
                     </div>
                     <div class = "col-md-3">
-                                    {{structure.mwt}}
+                                    {{structure.structure.mwt}}
                     </div>
                     <div class = "col-md-2">
-                    {{structure.definedStereo}}/{{structure.stereoCenters}}
+                    {{structure.structure.definedStereo}}/{{structure.structure.stereoCenters}}
                     </div>
                     <div class = "col-md-1">
-                    {{structure.ezCenters}}
+                    {{structure.structure.ezCenters}}
                     </div>
                     <div class = "col-md-1">
                     {{structure.charge}}
@@ -42,29 +45,87 @@
                     {{nameVar.references.id}} {{nameVar.references.citation}}
                     </div>
                 </div>
-@*                <div class ="row" >
-                    *@@*<input class="form-control hidden" ng-model = "structure.molfile" placeholder="Molfile" title="Molfile" id="molfile" required />*@@*
+                @* <div class ="row" >
+                *@@*<input class="form-control hidden" ng-model = "structure.molfile" placeholder="Molfile" title="Molfile" id="molfile" required />*@@*
                 <div class = "col-md-3"><input type="text" class="form-control" name = "formula" ng-change = "resolve()" ng-model = "structure.formula" placeholder="Formula" title="Molecular Formula" id="formula" required /> </div>
                 <div class = "col-md-3"> <input type = "text" class="form-control" title="Molecular Weight" name="mol-weight" placeholder="Weight" id="mol-weight" ng-model = "structure.mwt" required /></div>
                 <div class = "col-md-2"><select title="Defined Stereocenters" id="def-stereo" name ="def-stereo" ng-model="structure.definedStereo" ng-options="n for n in [] | range:0:10" required></select>
-                    /
-                    <select title="Stereocenters" id="stereo" ng-model="structure.stereoCenters" name="stereoCenters" ng-options="n for n in [] | range:0:10" required></select></div>
+                /
+                <select title="Stereocenters" id="stereo" ng-model="structure.stereoCenters" name="stereoCenters" ng-options="n for n in [] | range:0:10" required></select></div>
                 <div class = "col-md-1"><select title="ezCenters" id="ezCenters" name="exCenters" ng-model="structure.ezCenters" ng-options="n for n in [] | range:0:10" required></select></div>
                 <div class = "col-md-1"><select title="Charge" id="charge" name = "charge" ng-model="structure.charge" ng-options="n for n in [] | range:0:10" required></select></div>
                 <div class="col-md-2 err-check" show-errors>
-                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-                    <p class="danger" ng-if="!ginasCtrl.substance.references && nameForm.reference.$error">*required</p>
-                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-model = "name.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" ng-init= "name.references = ginasCtrl.substance.references[0]"></select>
-                    <ng-messages for="nameForm.reference.$error" ng-if="nameForm.reference.$pristine">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                <p class="danger" ng-if="!ginasCtrl.substance.references && nameForm.reference.$error">*required</p>
+                <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-model = "name.references" ng-options="ref.citation for ref in ginasCtrl.substance.references" ng-init= "name.references = ginasCtrl.substance.references[0]"></select>
+                <ng-messages for="nameForm.reference.$error" ng-if="nameForm.reference.$pristine">
+                <ng-message when="required" class="help-block">*required</ng-message>
+                </ng-messages>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <a ng-click="StructureCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="StructureCtrl.validateName(name)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
+                <a ng-click="StructureCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                <a ng-click="StructureCtrl.validateName(name)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
                 </div>
                 </div>*@
             </form>
+        </div>
+    </div>
+    <div class="modal fade export" id="molexport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelExport" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabelExport">Export Mol File</h4>
+                </div>
+                <div class="modal-body">
+                    <div class = "row">
+                        <textarea class="col-md-12" id = "inputExport">
+                         {{structure.molfile}}
+                        </textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="" data-dismiss="modal">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+        <!-- Modal -->
+    <div class="modal fade" id="structureimport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelimport" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabelimport">Structure Import</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form" role="import" method="GET"
+                    action="" id = "filereader">
+                        <div class="form-group">
+                            <div class = "row">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <label for="exampleInputFile">Load File</label>
+                                        <input type="button" value="Choose File" onclick="window.FileContentsGrabber.append('mol-sequence')" id="exampleInputFile">
+                                        <p class="help-block">or</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class = "row">
+                                <div class="col-md-12">
+                                    <label for="description-det">Enter molfile, smiles or systematic name:</label>
+                                    <textarea class="form-control" rows="10" ng-model="structure.molfile" ng-change=" " id="mol-sequence"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" ng-click="structure.molfile=null;" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" ng-click="StructureCtrl.resolveMol(structure)" data-dismiss="modal">Import</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>

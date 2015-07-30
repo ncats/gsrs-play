@@ -1,5 +1,5 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages','ng-resource', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker'])
+    var ginasApp = angular.module('ginas', ['ngMessages','ngResource', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker'])
         .config(function ($locationProvider, showErrorsConfigProvider) {
             $locationProvider.html5Mode({
                 enabled : true
@@ -115,30 +115,82 @@
             }
         };
     });*/
+    ginasApp.directive('moiety', function() {
+        return {
+            restrict: 'E',
+            scope: {
+                m: '=',
+            },
+            templateUrl: "app/assets/ginas/templates/moietydisplay.scala.html",
+        };
+    });
+
 
     ginasApp.directive('subunit', function() {
         return {
             restrict: 'E',
             require: '^ngModel',
             scope: {
-                sequence: '='
+                sequence: '=',
             },
             template: '<textarea class="form-control string text-uppercase" rows="5" ng-model = "sequence" ng-change = "clean(sequence)" name="sequence"  placeholder="Sequence" title="sequence" id="sequence" required></textarea>',
         };
     });
 
-/*    ginasApp.directive('structure', function() {
+    ginasApp.directive('sketcher', function($http, $timeout, Substance) {
         return {
             restrict: 'E',
-            template: '<img class="struc-thumb img-responsive" alt="Structure" title="Structure" src='@ix.ncats.controllers.routes.App.structure(s.id, "svg", size)>',
-        };
-    });*/
+            require:"ngModel",
+            template: "<div id='sketcherForm' dataformat='molfile' ondatachange='setMol(this)'></div>",
+            controller: function ($scope, $attrs) {
+                sketcher = new JSDraw("sketcherForm");
+            },
 
-        ginasApp.structureFactory = angular.factory('structureFactory', function($resource) {
-                var structureImage = $resource('/api/persons/:id', {id: '@id'});
-                 return persons;
-                });
+            link: function (scope, element, attrs, ngModel) {
 
+             this.setMol = function(){
+                 var url = window.strucUrl;//'/ginas/app/smiles';
+                 var mol = sketcher.getMolfile();
+                 $http({
+                     method: 'POST',
+                     url: url,
+                     data: mol,
+                     headers: {'Content-Type': 'text/plain'}
+                 }).success(function (data) {
+                     console.log(data);
+                     console.log(Substance);
+                     Substance.chemical.structure=data.structure;
+                     Substance.chemical.moieties=data.moieties;
+                     /*$timeout(function() {
+                         console.log(data);
+                     ngModel.$setViewValue(data);
+                         scope.q= data.structure.smiles;
+                     scope.$apply();
+                     }, 0,false);
+                     console.log(ngModel);*/
+                     scope.q= data.structure.smiles;
+                 });
+             };
+
+             this.getSmiles = function () {
+             console.log("here");
+             var smile = sketcher.getSmiles();
+             var url2 = window.smilesUrl;//'/ginas/app/smiles';
+             data = JSON.stringify(smile);
+             $http({
+             method: 'POST',
+             url: url2,
+             data: smile,
+             headers: {'Content-Type': 'text/plain'}
+             }).success(function (data) {
+             console.log(data);
+             structure.formula = data;
+             return data;
+             });
+             };
+             }
+             };
+        });
 
     ginasApp.controller('NameController', function ($scope, Substance, $rootScope) {
         $scope.isEditing = false;
@@ -346,9 +398,7 @@
 
         $scope.addStructure = function () {
             $scope.addingStructure = !$scope.addingStructure;
-            sketcher = new JSDraw("sketcherForm");
-            //sketcher.options.ondatachange="getSmiles();";
-            console.log(sketcher);
+
         };
 
         $scope.validateStructure = function (structure) {
@@ -395,10 +445,10 @@
 
         this.molchange= function(sketch){
             console.log("molchange");
-            $('#mol-weight').val(sketch.getMolWeight());
+/*            $('#mol-weight').val(sketch.getMolWeight());
             $('#molfile').val(sketch.getMolfile());
             $('#structure').typeahead('val', '"'+sketch.getSmiles()+'"');
-            this.getSmiles(sketch.getSmiles());
+            this.getSmiles(sketch.getSmiles());*/
         };
 
         this.setQuery = function(value) {
@@ -630,8 +680,18 @@
 
     });
 
-    //ginasApp.directive('ModificationForm', function ($scope) ){
-    //
-    //}
+    ginasApp.controller('StrucSearchController', function ($scope){
+        $scope.select =['Substructure','Similarity'];
+        $scope.type='Substructure';
+        $scope.cutoff = 0.8;
+        $scope.q = "";
+
+        this.change= function(q){
+            console.log(q);
+        };
+    });
+
+
+
 
 })();
