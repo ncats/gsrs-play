@@ -634,6 +634,7 @@ public class App extends Authentication {
         return ok (ix.ncats.views.html.marvin.render());
     }
 
+    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 10)
     public static Result smiles () {
         String data = request().body().asText();
         Logger.info(data);
@@ -648,6 +649,7 @@ public class App extends Authentication {
         }
     }
 
+    @BodyParser.Of(value = BodyParser.Json.class, maxLength = 1024*10)
     public static Result molconvert () {
         JsonNode json = request().body().asJson();        
         try {
@@ -820,7 +822,7 @@ public class App extends Authentication {
         return render (mol, format, size);
     }
 
-    public static Result structure (final long id,
+    public static Result structure (final String id,
                                     final String format, final int size) {
         if (format.equals("svg") || format.equals("png")) {
             final String key =
@@ -1350,8 +1352,7 @@ public class App extends Authentication {
         return ups;
     }
 
-    @BodyParser.Of(value = BodyParser.Text.class,
-                   maxLength = 1024 * 1024)
+    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 10)
     public static Result molinstrument () {
         //String mime = request().getHeader("Content-Type");
         //Logger.debug("molinstrument: content-type: "+mime);

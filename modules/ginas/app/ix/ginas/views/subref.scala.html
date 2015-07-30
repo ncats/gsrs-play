@@ -15,7 +15,7 @@
                     @if(ref != null) {
                             @if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
 	                            	<img class="struc-thumb img-responsive" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
-	                                src='@ix.ncats.controllers.routes.App.structure(ref.asInstanceOf[ChemicalSubstance].structure.id, "svg", 150)'>
+	                                src='@ix.ncats.controllers.routes.App.structure(ref.asInstanceOf[ChemicalSubstance].structure.getId, "svg", 150)'>
 	                            		
 	                            }else{
 	                             	@if(ref.getClass.toString.equals("class ix.ginas.models.v1.StructurallyDiverseSubstance")){

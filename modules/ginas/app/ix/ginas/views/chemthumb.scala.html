@@ -17,7 +17,7 @@
         <div class="panel-body struc-img">
             <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))">
                 <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                src='@ix.ncats.controllers.routes.App.structure(chem.structure.id, "svg", 200)'>
+                src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 200)'>
             </a>
             <div class = "row stereo">
                 <div class = "col-md-10">
@@ -57,7 +57,7 @@
                             data-target="#@chem.approvalID-mol"><i class="fa fa-external-link chem-button"></i></button></li>
                         @molexport(chem.structure.molfile, chem.getName(), chem.approvalID)
                         <li><button type="button" class="btn btn-default btn-sm" data-toggle="modal"
-                        data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.id, "mol")'
+                        data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "mol")'
                         data-target="#strucModal"><span class="fa fa-search chem-button"></span></button>
                         </li>
                     </ul>

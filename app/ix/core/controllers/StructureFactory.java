@@ -18,22 +18,27 @@ import ix.core.NamedResource;
                description="Resource for handling chemical structures")
 public class StructureFactory extends EntityFactory {
     
-    public static final Model.Finder<Long, Structure> finder = 
-        new Model.Finder(Long.class, Structure.class);
+    public static final Model.Finder<UUID, Structure> finder = 
+        new Model.Finder(UUID.class, Structure.class);
 
-    public static Structure getStructure (Long id) {
+    public static Structure getStructure (UUID id) {
         return getEntity (id, finder);
     }
+
+    public static Structure getStructure (String id) {
+        return getEntity (toUUID (id), finder);
+    }
+    
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);
     }
 
-    public static Result get (Long id, String select) {
+    public static Result get (UUID id, String select) {
         return get (id, select, finder);
     }
 
-    public static Result field (Long id, String path) {
+    public static Result field (UUID id, String path) {
         return field (id, path, finder);
     }
 
@@ -41,7 +46,15 @@ public class StructureFactory extends EntityFactory {
         return create (Structure.class, finder);
     }
 
-    public static Result delete (Long id) {
+    public static Result delete (UUID id) {
         return delete (id, finder);
+    }
+
+    public static Result edits (UUID id) {
+        return edits (id, Structure.class);
+    }
+
+    public static Result update (UUID id, String field) {
+        return update (id, field, Structure.class, finder);
     }
 }

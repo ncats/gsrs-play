@@ -559,7 +559,7 @@ public class IDGApp extends App implements Commons {
      */
     static DataSource[] _getDataSources () throws Exception {
         SearchOptions opts = new SearchOptions (null, 1, 0, 10);           
-        TextIndexer.SearchResult results = textIndexer.search(opts, null);
+        TextIndexer.SearchResult results = _textIndexer.search(opts, null);
         Set<String> labels = new TreeSet<String>();
         for (TextIndexer.Facet f : results.getFacets()) {
             if (f.getName().equals(SOURCE)) {
@@ -577,7 +577,7 @@ public class IDGApp extends App implements Commons {
             DataSource ds = new DataSource (la);
             for (Class cls : entities) {
                 opts = new SearchOptions (cls, 1, 0, 10);
-                results = textIndexer.search(opts, null);
+                results = _textIndexer.search(opts, null);
                 for (TextIndexer.Facet f : results.getFacets()) {
                     if (f.getName().equals(SOURCE)) {
                         for (TextIndexer.FV fv : f.getValues())
@@ -1247,7 +1247,7 @@ public class IDGApp extends App implements Commons {
                         public TextIndexer.SearchResult
                             call ()  throws Exception {
                             return SearchFactory.search
-                            (textIndexer, null, null, MAX_SEARCH_RESULTS,
+                            (_textIndexer, null, null, MAX_SEARCH_RESULTS,
                              0, FACET_DIM, queryString);
                         }
                     });
@@ -1265,7 +1265,7 @@ public class IDGApp extends App implements Commons {
                         public TextIndexer.SearchResult
                             call () throws Exception {
                             return SearchFactory.search
-                            (textIndexer, null, query, MAX_SEARCH_RESULTS, 0,
+                            (_textIndexer, null, query, MAX_SEARCH_RESULTS, 0,
                              FACET_DIM, request().queryString());
                         }
                     });
@@ -1521,7 +1521,7 @@ public class IDGApp extends App implements Commons {
                        .liganddetails.render(ligand, acts, breadcrumb));
         }
         else {
-            TextIndexer indexer = textIndexer.createEmptyInstance();
+            TextIndexer indexer = _textIndexer.createEmptyInstance();
             for (Ligand lig : ligands)
                 indexer.add(lig);
             

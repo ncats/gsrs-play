@@ -1,6 +1,8 @@
 package ix.core.models;
 
 import java.util.List;
+import java.util.UUID;
+import java.util.Date;
 import java.util.ArrayList;
 import javax.persistence.*;
 
@@ -14,11 +16,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.utils.Global;
+import play.db.ebean.Model;
 
 @MappedSuperclass
 @Entity
 @Table(name="ix_core_structure")
-public class Structure extends IxModel {
+public class Structure extends Model {
+    @Id public UUID id;
+    @Version public Long version;
+
+    public final Date created = new Date ();
+    public Date modified;
+    public boolean deprecated;
+
     /**
      * Property labels
      */
@@ -186,5 +196,15 @@ public class Structure extends IxModel {
 
     public String getSelf () {
         return id != null ? Global.getRef(this)+"?view=full" : null;
+    }
+
+    @PrePersist
+    @PreUpdate
+    public void modified () {
+        this.modified = new Date ();
+    }
+
+    public String getId () {
+        return id != null ? id.toString() : null;
     }
 }

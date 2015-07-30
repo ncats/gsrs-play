@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import com.avaje.ebean.*;
 import com.avaje.ebean.event.BeanPersistListener;
+import javax.persistence.Id;
 
 import ix.utils.Global;
 import ix.core.models.*;
@@ -36,26 +37,57 @@ public class RouteFactory extends Controller {
     static final public Model.Finder<Long, Principal> palFinder =
         new Model.Finder(Long.class, Principal.class);
 
-    static final ConcurrentMap<String, Class> registry = 
+    static final ConcurrentMap<String, Class> _registry = 
         new ConcurrentHashMap<String, Class>();
+    static final Set<String> _uuid = new TreeSet<String>();
 
     public static <T  extends EntityFactory> void register 
         (String context, Class<T> factory) {
-        Class old = registry.putIfAbsent(context, factory);
+        Class old = _registry.putIfAbsent(context, factory);
         if (old != null) {
             Logger.warn("Context \""+context
                         +"\" now maps to "+factory.getClass());
         }
+        
+        NamedResource named  = factory.getAnnotation(NamedResource.class);
+        if (named != null) {
+            try {
+                Class cls = named.type();
+                Field id = null;
+                for (Field f : cls.getFields()) {
+                    if (null != f.getAnnotation(Id.class)) {
+                        id = f;
+                    }
+                }
+
+                if (id == null) { // possible?
+                    Logger.error("Fatal error: Entity "+cls.getName()
+                                 +" for factory "+factory.getClass()
+                                 +" doesn't have any Id annotation!");
+                }
+                else {
+                    Class c = id.getType();
+                    if (UUID.class.isAssignableFrom(c)) {
+                        Logger.debug("## "+cls.getName()
+                                     +" is globally unique!");
+                        _uuid.add(context);
+                    }
+                }
+            }
+            catch (Exception ex) {
+                Logger.error("Can't access named resource type", ex);
+            }
+        }
     }
 
     public static Result listResources () {
-        Set<String> resources = new TreeSet<String>(registry.keySet());
+        Set<String> resources = new TreeSet<String>(_registry.keySet());
         List<String> urls = new ArrayList<String>();
         ObjectMapper mapper = new ObjectMapper ();      
         ArrayNode nodes = mapper.createArrayNode();
         for (String res : resources) {
             ObjectNode n = mapper.createObjectNode();
-            NamedResource named  = (NamedResource)registry
+            NamedResource named  = (NamedResource)_registry
                 .get(res).getAnnotation(NamedResource.class);
             n.put("name", res);
             n.put("kind", named.type().getName());
@@ -88,7 +120,7 @@ public class RouteFactory extends Controller {
 
     static Method getMethod (String context, 
                              String method, Class<?>... types) {
-        Class factory = registry.get(context);
+        Class factory = _registry.get(context);
         if (factory != null) {
             try {
                 return factory.getMethod(method, types);
@@ -112,13 +144,13 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has not method count()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
     public static Result search (String context, String q, 
                                  int top, int skip, int fdim) {
-        Class factory = registry.get(context);
+        Class factory = _registry.get(context);
         if (factory != null) {
             NamedResource res = 
                 (NamedResource)factory.getAnnotation(NamedResource.class);
@@ -137,7 +169,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method get(Long,String)",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
@@ -145,13 +177,14 @@ public class RouteFactory extends Controller {
         try {
             Method m = getMethod (context, "get", UUID.class, String.class);
             if (m != null)
-                return (Result)m.invoke(null, UUID.fromString(uuid), expand);
+                return (Result)m.invoke(null, EntityFactory.toUUID(uuid),
+                                        expand);
         }
         catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method get(UUID,String)",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
@@ -173,13 +206,13 @@ public class RouteFactory extends Controller {
         try {
             Method m = getMethod (context, "edits", UUID.class);
             if (m != null)
-                return (Result)m.invoke(null, UUID.fromString(id));
+                return (Result)m.invoke(null, EntityFactory.toUUID(id));
         }
         catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method edits(UUID)",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
@@ -193,7 +226,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method field(Long,String)",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
@@ -201,7 +234,8 @@ public class RouteFactory extends Controller {
         try {
             Method m = getMethod (context, "field", UUID.class, String.class);
             if (m != null) {
-                return (Result)m.invoke(null, UUID.fromString(uuid), field);
+                return (Result)m.invoke
+                    (null, EntityFactory.toUUID(uuid), field);
             }
             else {
                 Logger.error
@@ -213,7 +247,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method field(UUID,String)",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
@@ -229,7 +263,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method page(int,int,String)",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
@@ -243,7 +277,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method create()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
@@ -257,7 +291,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method update(Long,String)",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
@@ -265,13 +299,32 @@ public class RouteFactory extends Controller {
         try {
             Method m = getMethod (context, "update", UUID.class, String.class);
             if (m != null)
-                return (Result)m.invoke(null, UUID.fromString(id), field);
+                return (Result)m.invoke
+                    (null, EntityFactory.toUUID(id), field);
         }
         catch (Exception ex) {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.debug("Unknown context: "+context);
+        Logger.warn("Context {} has no method update(UUID,String)", context);
         return badRequest ("Unknown Context: \""+context+"\"");
+    }
+
+    public static Result _getUUID (String uuid, String expand) {
+        for (String context : _uuid) {
+            Result r = getUUID (context, uuid, expand);
+            if (r.toScala().header().status() < 400)
+                return r;
+        }
+        return notFound ("Unknown id "+uuid);
+    }
+    
+    public static Result _fieldUUID (String uuid, String field) {
+        for (String context : _uuid) {
+            Result r = fieldUUID (context, uuid, field);
+            if (r.toScala().header().status() < 400)
+                return r;
+        }
+        return notFound ("Unknown id "+uuid);
     }
 }

@@ -45,7 +45,7 @@
 	    @if(qc.structure != null) {
   	      <button type="button" class="btn btn-default"
 	            data-toggle="modal" data-target="#strucModal"
-		    data-molurl='@ix.ncats.controllers.routes.App.structure(qc.structure.id,"mol")'
+		    data-molurl='@ix.ncats.controllers.routes.App.structure(qc.structure.getId,"mol")'
 	            aria-label="Left Align" style="float:right;">
 	       <span class="fa fa-external-link" aria-hidden="true"></span>
 	      </button>
@@ -111,10 +111,8 @@ $(document).ready(function () {
         dataType: "html",
         contentType: "image/svg+xml",
 	@if(qc.structure != null) {
-           url: '@ix.ncats.controllers.routes.App.structure(qc.structure.id,"svg",300)',
-	} else {
-	   url: '@ix.ncats.controllers.routes.App.structure(0,"svg")',
-	}
+           url: '@ix.ncats.controllers.routes.App.structure(qc.structure.getId,"svg",300)',
+        }
         success: function (d) {
             // replace div's content with returned data
             $('#loading').html(d);
