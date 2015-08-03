@@ -2,7 +2,8 @@
     var ginasApp = angular.module('ginas', ['ngMessages','ngResource', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker'])
         .config(function ($locationProvider, showErrorsConfigProvider) {
             $locationProvider.html5Mode({
-                enabled : true
+                enabled : true,
+                requireBase: false
             });
             showErrorsConfigProvider.showSuccess(true);
         });
@@ -122,6 +123,19 @@
                 m: '=',
             },
             templateUrl: "app/assets/ginas/templates/moietydisplay.scala.html",
+        };
+    });
+
+    ginasApp.directive('rendered', function() {
+        return {
+            restrict: 'E',
+            scope: {
+                m: '=',
+            },
+            template: '<img = ',
+            link: function(scope, element, attrs){
+                console.log(m);
+            }
         };
     });
 
@@ -401,38 +415,37 @@
 
         };
 
-        $scope.validateStructure = function (structure) {
-            structure.formula = sketcher.getFormula();
-            console.log(structure);
-            //console.log(sketcher.getSmiles());
-
-            structure.molfile = sketcher.getMolfile();
-            structure.mwt = sketcher.getMolWeight();
-
-            //structure.formula = formulaVar;
-            $scope.substance.structure = structure;
-            //$scope.substance.structure.molfile=sketcher.getMolfile();
-            //$scope.substance.structure.mwt=sketcher.getMolWeight();
-
-            $scope.editorEnabled = false;
-
-            $scope.structure = {};
-            $scope.noStructure = false;
-            console.log($scope.substance);
-        };
+        //$scope.validateStructure = function (structure) {
+        //    structure.formula = sketcher.getFormula();
+        //    console.log(structure);
+        //    //console.log(sketcher.getSmiles());
+        //
+        //    structure.molfile = sketcher.getMolfile();
+        //    structure.mwt = sketcher.getMolWeight();
+        //    $scope.substance.structure = structure;
+        //
+        //    $scope.editorEnabled = false;
+        //
+        //    $scope.structure = {};
+        //    $scope.noStructure = false;
+        //    console.log($scope.substance);
+        //};
 
         this.resolveMol= function(structure){
             console.log("resolving mol file");
-            sketcher.setMolfile(structure.molfile);
+            //sketcher.setMolfile(structure.molfile);
             var url = window.strucUrl;//'/ginas/app/smiles';
-            var mol = sketcher.getMolfile();
-            console.log(mol);
+            //var mol = structure.molfile;
+         //   console.log(mol);
+         //   mol = "\n"+mol;
+          console.log(structure.molfile);
             $http({
                 method: 'POST',
                 url: url,
-                data: mol,
+                data: structure.molfile,
                 headers: {'Content-Type': 'text/plain'}
             }).success(function (data) {
+                sketcher.setMolfile(data.structure.molfile);
                 console.log(data);
                 console.log(structure);
                 $scope.structure= data.structure;
@@ -443,12 +456,12 @@
         });
         };
 
-        this.molchange= function(sketch){
+        /*this.molchange= function(sketch){
             console.log("molchange");
-/*            $('#mol-weight').val(sketch.getMolWeight());
+/!*            $('#mol-weight').val(sketch.getMolWeight());
             $('#molfile').val(sketch.getMolfile());
             $('#structure').typeahead('val', '"'+sketch.getSmiles()+'"');
-            this.getSmiles(sketch.getSmiles());*/
+            this.getSmiles(sketch.getSmiles());*!/
         };
 
         this.setQuery = function(value) {
@@ -468,12 +481,13 @@
                 dataType: 'text'
             });
         };
-
-        $scope.setEditedStructure = function (structure) {
+*/
+/*        $scope.setEditedStructure = function (structure) {
             console.log("clicked");
             $scope.editStructure = structure;
             $scope.tempCopy = angular.copy(structure);
-        };
+        };*/
+/*
 
         $scope.updateStructure = function (structure) {
             $scope.substance.structure = structure;
@@ -484,7 +498,8 @@
         $scope.removeStructure = function (structure) {
             $scope.substance.structure = null;
         };
-
+*/
+/*
         $scope.resolve= function(){
             console.log("resolve");
             var url = window.strucUrl;//'/ginas/app/smiles';
@@ -520,7 +535,7 @@
                 structure.formula = data;
                 return data;
             });
-        };
+        };*/
     });
 
     ginasApp.controller('SubunitController', function ($scope, Substance) {

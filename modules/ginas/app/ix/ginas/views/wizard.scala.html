@@ -5,8 +5,8 @@
     @if(kind == "Chemical") {
         <div ng-show="uniqueName">@structureform()</div>
         <div ng-show="ofType">@officialnameform()</div>
-        @nameform()
         @moietyform()
+        @nameform()
         <div ng-show="uniqueName">@codeform()</div>
         <div ng-show="refAdded">@referenceform()</div>
     }
