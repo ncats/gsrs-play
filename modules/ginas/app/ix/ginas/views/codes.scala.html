@@ -10,6 +10,7 @@
         <thead>
             <tr>
                 <th>Code</th>
+                <th>Code System</th>
                 <th>Type</th>
                 <th>Description</th>
                 <th>References</th>
@@ -18,6 +19,7 @@
         @for(c <- codes) {
             <tr>
                 <td><a href="@c.url">@c.code</a></td>
+                <td>@c.codeSystem</td>
                 <td>@GinasApp.getType(c)</td>
                 <td>@c.comments</td>
                 @referencetable(c.references, c.code, 4)
