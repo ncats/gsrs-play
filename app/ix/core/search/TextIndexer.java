@@ -299,7 +299,15 @@ public class TextIndexer {
             lookup = new AnalyzingInfixSuggester 
                 (LUCENE_VERSION, new NIOFSDirectory 
                  (dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
-
+            
+            if(!isNew){
+	            try{
+	            	lookup.getCount();
+	            }catch(Exception e){
+	            	isNew=true;
+	            }
+            }
+            
             if (isNew) {
                 Logger.debug("Initializing lookup "+dir.getName());
                 build ();
