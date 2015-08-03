@@ -43,7 +43,7 @@ public class Substance extends Ginas {
     public enum SubstanceClass {
         chemical,
         protein,
-        nucleicacid,
+        nucleicAcid,
         polymer,
         structurallyDiverse,
         mixture,
