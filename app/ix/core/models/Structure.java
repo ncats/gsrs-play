@@ -112,6 +112,10 @@ public class Structure extends Model {
     @Indexable(name="Molecular Formula", facet=true)
     public String formula;
     
+    
+    //Added for testing.
+    public Integer count;
+    
     @JsonProperty("stereochemistry")
     @Column(name="stereo")
     @Indexable(name="StereoChemistry", facet=true)

@@ -958,3 +958,8 @@ div#jsdraw {
     padding-left: 15px;
     padding-right: 5px;
 }
+
+#mol-sequence{
+	font-family: monospace;
+	font-size: 8pt;
+}

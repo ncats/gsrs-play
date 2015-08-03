@@ -118,6 +118,15 @@ public class StructureProcessor {
         instrument (struc, components, mol, true);
     }
     
+    /**
+     * This should return a decomposed version of a structure for G-SRS.
+     * 
+     * This means that a molfile should come back with
+     * @param struc
+     * @param components
+     * @param mol
+     * @param standardize
+     */
     static void instrument (Structure struc, Collection<Structure> components,
                             Molecule mol, boolean standardize) {
         
@@ -131,6 +140,7 @@ public class StructureProcessor {
         
         // no explicit Hs
         mol.hydrogenize(false);
+        
         // make sure molecule is kekulized consistently
         mol.aromatize();
         mol.dearomatize();
@@ -242,18 +252,51 @@ public class StructureProcessor {
         if (standardize) {
             LyChIStandardizer mstd = new LyChIStandardizer ();
             mstd.removeSaltOrSolvent(false);
+            
             try {
-                mstd.standardize(stdmol);
-                if (mstd.getFragmentCount() > 1) {
-                    Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
+            	
+               // TP: commented out standardization, and 2 moiety limit.
+               // the unfortunate side effect was to strip waters
+
+            	// Also, probably better to be err on the side of 
+            	// preserving user input
+            	
+            	
+               //mstd.standardize(stdmol);
+               // if (mstd.getFragmentCount() >= 1) {
+            	
+            	
+            	
                     // break this structure into its individual components
-                    Structure[] moieties = new Structure[frags.length];
+            		Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
+                    // used to not duplicate moieties
+                    Map<String, Structure> moietiesMap = new HashMap<String,Structure>();
+                    
                     for (int i = 0; i < frags.length; ++i) {
-                        moieties[i] = new Structure ();
-                        if (components != null)
-                            components.add(moieties[i]);
-                        instrument (moieties[i], null, frags[i], false);
-                    }
+                    	
+                    	Structure moiety = new Structure ();
+                    	instrument (moiety, null, frags[i], false);
+                    	for(Value v:moiety.properties){
+                    		if(v instanceof Keyword){
+                    			if(((Keyword)v).label.equals(Structure.H_LyChI_L4)){
+                    				String hash=((Keyword) v).term;
+                    				Structure s = moietiesMap.get(hash);
+                    				if(s!=null){
+                    					s.count++;
+                    				}else{
+                    					moiety.count=1;
+                    					moietiesMap.put(hash,moiety);
+                    					components.add(moiety);
+                    				}
+                    				break;
+                    			}
+                    		}
+                    	}
+                    	
+                   // }
+                    
+//                    if (components != null)
+//                        components.add(moieties[i]);
                 }
             }
             catch (Exception ex) {
