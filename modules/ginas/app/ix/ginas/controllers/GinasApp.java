@@ -360,27 +360,27 @@ public class GinasApp extends App {
         // name isn't unique
         if (true || substances.size() == 1) {
             Substance substance = substances.iterator().next();
-            String type = substance.substanceClass.toString();
+            Substance.SubstanceClass type = substance.substanceClass;
             switch (type) {
-                case "chemical":
+                case chemical:
                     return ok(ix.ginas.views.html
                             .chemicaldetails.render((ChemicalSubstance) substance));
-                case "protein":
+                case protein:
                     return ok(ix.ginas.views.html
                             .proteindetails.render((ProteinSubstance) substance));
-                case "mixture":
+                case mixture:
                     return ok(ix.ginas.views.html
                             .mixturedetails.render((MixtureSubstance) substance));
-                case "polymer":
+                case polymer:
                     return ok(ix.ginas.views.html
                             .polymerdetails.render((PolymerSubstance) substance));
-                case "structurallyDiverse":
+                case structurallyDiverse:
                     return ok(ix.ginas.views.html
                             .diversedetails.render((StructurallyDiverseSubstance) substance));
-                case "specifiedSubstanceG1":
+                case specifiedSubstanceG1:
                     return ok(ix.ginas.views.html
                             .group1details.render((SpecifiedSubstanceGroup1) substance));
-                case "concept":
+                case concept:
                     return ok(ix.ginas.views.html
                             .conceptdetails.render((Substance) substance));
                 default: return _badRequest("type not found");

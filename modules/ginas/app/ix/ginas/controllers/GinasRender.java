@@ -19,30 +19,30 @@ public class GinasRender {
 		if(tree==null){
 			Logger.info("Map is null");
 		}else{
-			Logger.info( "Working with map");
+			Logger.info("Working with map");
 		}
 		JsonNode subclass = tree.get("substanceClass");
 		if (subclass != null && !subclass.isNull()) {
-			String type =
-					ret2.substanceClass.toString();
-			Logger.info(type);
+			Substance.SubstanceClass type =
+					Substance.SubstanceClass.valueOf(ret2.substanceClass.toString());
+			//Logger.info(type);
 			switch (type) {
-			case "chemical":
+			case chemical:
 				ret = extractChemicalMfile(tree);
 				break;
-			case "protein":
+			case protein:
 				ret = extractProteinMfile(tree);
 				break;
-			case "nucleicacid":
+			case nucleicAcid:
 				ret = extractNucleicAcidMfile(tree);
 				break;
-			case "structurallyDiverse":
+			case structurallyDiverse:
 				ret = extractStructurallyDiverseMfile(tree);
 				break;
-			case "polymer":
+			case polymer:
 				ret = extractPolymerMfile(tree);
 				break;
-			case "mixture":
+			case mixture:
 				ret = extractMixtureMfile(tree);
 				break;
 			default:
