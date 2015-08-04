@@ -1,0 +1,89 @@
+@import ix.ginas.controllers.GinasApp;
+
+<div class = "row info" ng-controller="RelationshipController as RelationshipCtrl">
+    <button class="btn btn-primary label-offset det">
+                      Relationships&nbsp;<span class="badge" ng-show="ginasCtrl.substance.chemical.relationships.length>0">
+                        {{ginasCtrl.substance.chemical.relationships.length}}</span> </button>
+    @*<a ng-show="!addingStructure" ng-click="addStructure()" aria-label="Add Structure"><i class = "fa fa-plus fa-2x success"></i></a>*@
+    @*<div ng-show="addingStructure">*@
+    <div>
+
+        <div class="col-md-12">
+
+            <div class ="row header-row">
+                <th></th>
+                <th>Name</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th>References</th>
+                <div class="col-md-1"></div>
+                <div class="col-md-2"><strong>Name</strong></div>
+                <div class="col-md-2"><strong>Type</strong></div>
+                <div class="col-md-2"><strong>Comments</strong></div>
+                <div class="col-md-1"><strong>Interaction Type</strong></div>
+                <div class="col-md-1"><strong>Qualification</strong></div>
+                <div class="col-md-1"><strong>Amount</strong></div>
+                <div class="col-md-1"><strong>References</strong></div>
+            </div>
+            <div ng-repeat="relationship in ginasCtrl.substance.chemical.relationships">
+                <relationship r="relationship"></relationship>
+            </div>
+        </div>
+        <div class="row form-row" >
+            <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form"  novalidate>
+
+                <div class="col-md-2 err-check" id="name-div" show-errors>
+                    <input type="text" class="form-control typeahead" ng-model ="relationship.name" title="Name" id="name" name = "name" required />
+        @*            <input type="text" class="form-control typeahead" id="search"
+                    title="Search" placeholder="Search..." name="q">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" id="search" type="search"
+                        value="submit">
+                            <span class="fa fa-search"></span>
+                        </button>
+                    </span>*@
+                    <ng-messages for="relationshipForm.name.$error" ng-if="relationshipForm.name.$touched">
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                    </ng-messages>
+                </div>
+
+        <div class="col-md-2 err-check" show-errors>
+            <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "relationship.type" ng-options="r.display for r in @GinasApp.getCV.getField("RELATIONSHIP_TYPE") track by r.display" required>
+                        </select>
+            <ng-messages for="relationshipForm.type.$error" ng-if="relationshipForm.type.$touched">
+                <ng-message when="required" class="help-block">*required</ng-message>
+            </ng-messages>
+        </div>
+                <div class="col-md-2 err-check" id="name-div" show-errors>
+                    <input type="text" class="form-control" ng-model ="relationship.comments" title="Comments" id="comments" name = "comments"/>
+                </div>
+
+        <div class="col-md-2 err-check" show-errors>
+            <select class="form-control" title="Interaction Type" id="interactionType" name = "interactionType" ng-model = "relationship.interactionType" ng-options="r.display for r in @GinasApp.getCV.getField("INTERACTION_TYPE") track by r.display" required>
+                        </select>
+            <ng-messages for="relationshipForm.interactionType.$error" ng-if="relationshipForm.interactionType.$touched">
+                <ng-message when="required" class="help-block">*required</ng-message>
+            </ng-messages>
+        </div>
+        <div class="col-md-2 err-check" show-errors>
+            <select class="form-control" title="Qualification" id="qualification" name = "qualification" ng-model = "relationship.qualification" ng-options="r.display for r in @GinasApp.getCV.getField("QUALIFICATION") track by r.display" required>
+                        </select>
+            <ng-messages for="relationshipForm.qualification.$error" ng-if="relationshipForm.qualification.$touched">
+                <ng-message when="required" class="help-block">*required</ng-message>
+            </ng-messages>
+        </div>
+        <div class="col-md-2 err-check" show-errors>
+            <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "relationship.amount" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" required>
+                        </select>
+            <ng-messages for="relationshipForm.type.$error" ng-if="relationshipForm.type.$touched">
+                <ng-message when="required" class="help-block">*required</ng-message>
+            </ng-messages>
+        </div>
+
+</form>
+</div>
+        </div>
+        </div>

@@ -11,7 +11,7 @@
                 </div>
                 <div class="row">
                     <div class="col-md-2 pull-right">
-                        <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export"><i class="fa fa-external-link fa-2x success"></i></a>&nbsp;
+                        <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export"><i class="fa fa-external-link fa-2x success"></i></a> &nbsp;
                         <a class= "pull-right padded" data-toggle="modal" data-target="#structureimport" aria-label="Import" ><i class="fa fa-clipboard fa-2x success"></i></a>
                     </div>
                 </div>
@@ -39,8 +39,13 @@
                     <div class = "col-md-1">
                     {{ginasCtrl.substance.chemical.charge}}
                     </div>
-                    <div class = "col-md-2">
-                    {{nameVar.references.id}} {{nameVar.references.citation}}
+                    <div class="col-md-2 err-check" show-errors>
+                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                        <p class="danger" ng-if="!ginasCtrl.substance.references && editNameForm.reference.$error">*required</p>
+                        <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "editName.references = ginasCtrl.substance.references[0]" ng-model = "editName.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
+                        <ng-messages for="editNameForm.reference.$error" ng-if="editNameForm.reference.$pristine">
+                            <ng-message when="required" class="help-block">*required</ng-message>
+                        </ng-messages>
                     </div>
                 </div>
             </form>

@@ -126,15 +126,21 @@
         };
     });
 
-    ginasApp.directive('rendered', function() {
+    ginasApp.directive('rendered', function($http) {
         return {
             restrict: 'E',
             scope: {
-                m: '=',
+                r: '=',
             },
-            template: '<img = ',
             link: function(scope, element, attrs){
-                console.log(m);
+                $http({
+                    method: 'GET',
+                    url: 'app/structure/'+scope.r+'.svg',
+                    headers: {'Content-Type': 'text/plain'}
+                }).success(function (data) {
+                    //console.log(data);
+                    element.html(data);
+                });
             }
         };
     });
@@ -175,13 +181,6 @@
                      console.log(Substance);
                      Substance.chemical.structure=data.structure;
                      Substance.chemical.moieties=data.moieties;
-                     /*$timeout(function() {
-                         console.log(data);
-                     ngModel.$setViewValue(data);
-                         scope.q= data.structure.smiles;
-                     scope.$apply();
-                     }, 0,false);
-                     console.log(ngModel);*/
                      scope.q= data.structure.smiles;
                  });
              };
@@ -415,22 +414,6 @@
 
         };
 
-        //$scope.validateStructure = function (structure) {
-        //    structure.formula = sketcher.getFormula();
-        //    console.log(structure);
-        //    //console.log(sketcher.getSmiles());
-        //
-        //    structure.molfile = sketcher.getMolfile();
-        //    structure.mwt = sketcher.getMolWeight();
-        //    $scope.substance.structure = structure;
-        //
-        //    $scope.editorEnabled = false;
-        //
-        //    $scope.structure = {};
-        //    $scope.noStructure = false;
-        //    console.log($scope.substance);
-        //};
-
         this.resolveMol= function(structure){
             console.log("resolving mol file");
             //sketcher.setMolfile(structure.molfile);
@@ -450,92 +433,8 @@
                 console.log(structure);
                 $scope.structure= data.structure;
                 console.log(structure);
-/*            structure.mwt= sketcher.getMolWeight();
-            structure.formula= sketcher.getSmiles();*/
-           // this.molchange(sketcher);
         });
         };
-
-        /*this.molchange= function(sketch){
-            console.log("molchange");
-/!*            $('#mol-weight').val(sketch.getMolWeight());
-            $('#molfile').val(sketch.getMolfile());
-            $('#structure').typeahead('val', '"'+sketch.getSmiles()+'"');
-            this.getSmiles(sketch.getSmiles());*!/
-        };
-
-        this.setQuery = function(value) {
-            console.log(value);
-            $.ajax({
-                type: "POST",
-                url: '@ix.ncats.controllers.routes.App.smiles',
-                contentType: 'text/plain',
-                data: value,
-                success: function (data) {
-                    console.log(' => '+data);
-                    $('#formula').val(data);
-                },
-                error: function (xhr, status) {
-                    console.error("Can't convert to smiles");
-                },
-                dataType: 'text'
-            });
-        };
-*/
-/*        $scope.setEditedStructure = function (structure) {
-            console.log("clicked");
-            $scope.editStructure = structure;
-            $scope.tempCopy = angular.copy(structure);
-        };*/
-/*
-
-        $scope.updateStructure = function (structure) {
-            $scope.substance.structure = structure;
-            $scope.editStructure = null;
-            $scope.isEditingStructure = false;
-        };
-
-        $scope.removeStructure = function (structure) {
-            $scope.substance.structure = null;
-        };
-*/
-/*
-        $scope.resolve= function(){
-            console.log("resolve");
-            var url = window.strucUrl;//'/ginas/app/smiles';
-            var mol = sketcher.getMolfile();
-            console.log(mol);
-            $http({
-                method: 'POST',
-                url: url,
-                data: mol,
-                headers: {'Content-Type': 'text/plain'}
-            }).success(function (data) {
-                console.log(data);
-                //$scope.substance.structure.formula = data;
-                return data;
-            });
-        };
-
-        this.getSmiles = function () {
-            console.log("here");
-            var smile = sketcher.getSmiles();
-            var url2 = window.envurl;//'/ginas/app/smiles';
-            console.log(url2);
-            console.log(smile);
-            data = JSON.stringify(smile);
-            console.log(data);
-            $http({
-                method: 'POST',
-                url: url2,
-                data: smile,
-                headers: {'Content-Type': 'text/plain'}
-            }).success(function (data) {
-                console.log(data);
-                structure.formula = data;
-                return data;
-            });
-        };*/
     });
 
     ginasApp.controller('SubunitController', function ($scope, Substance) {
@@ -706,6 +605,9 @@
         };
     });
 
+    ginasApp.controller('RelationshipController', function ($scope){
+
+    });
 
 
 

@@ -4,8 +4,9 @@
 @wizardfields(kind: String) = {
     @if(kind == "Chemical") {
         <div ng-show="uniqueName">@structureform()</div>
+        @relationshipdisplay()
         <div ng-show="ofType">@officialnameform()</div>
-        @moietyform()
+        <div ng-show="ginasCtrl.substance.chemical.moieties.length>0">@moietyform()</div>
         @nameform()
         <div ng-show="uniqueName">@codeform()</div>
         <div ng-show="refAdded">@referenceform()</div>
@@ -53,6 +54,7 @@
     {{ginasCtrl.substance}}
         </div>
     <script>
+        @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
         var strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
         var envurl='@ix.ncats.controllers.routes.App.smiles';
     </script>
