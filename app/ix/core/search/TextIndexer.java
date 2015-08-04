@@ -299,7 +299,19 @@ public class TextIndexer {
             lookup = new AnalyzingInfixSuggester 
                 (LUCENE_VERSION, new NIOFSDirectory 
                  (dir, NoLockFactory.getNoLockFactory()), indexAnalyzer);
-
+            
+            //If there's an error getting the index count, it probably wasn't 
+            //saved properly. Treat it as new if an error is thrown.
+            if(!isNew){
+	            try{
+	            	lookup.getCount();
+	            }catch(Exception e){
+	            	isNew=true;
+					Logger.warn("Error building lookup " + dir.getName()
+							+ " will reinitialize");
+	            }
+            }
+            
             if (isNew) {
                 Logger.debug("Initializing lookup "+dir.getName());
                 build ();
