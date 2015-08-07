@@ -11,26 +11,17 @@
         <div class="col-md-12">
 
             <div class ="row header-row">
-                <th></th>
-                <th>Name</th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th></th>
-                <th>References</th>
-                <div class="col-md-1"></div>
                 <div class="col-md-2"><strong>Name</strong></div>
                 <div class="col-md-2"><strong>Type</strong></div>
                 <div class="col-md-2"><strong>Comments</strong></div>
-                <div class="col-md-1"><strong>Interaction Type</strong></div>
-                <div class="col-md-1"><strong>Qualification</strong></div>
+                <div class="col-md-2"><strong>Interaction Type</strong></div>
+                <div class="col-md-2"><strong>Qualification</strong></div>
                 <div class="col-md-1"><strong>Amount</strong></div>
-                <div class="col-md-1"><strong>References</strong></div>
+                <div class="col-md-1"></div>
             </div>
-            <div ng-repeat="relationship in ginasCtrl.substance.chemical.relationships">
+@*            <div ng-repeat="relationship in ginasCtrl.substance.chemical.relationships">
                 <relationship r="relationship"></relationship>
-            </div>
+            </div>*@
         </div>
         <div class="row form-row" >
             <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
@@ -70,6 +61,8 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
+
+                <div class="col-md-1">Amount</div>
                 <div class="col-md-2 err-check" show-errors>
                     <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
                     <p class="danger" ng-if="!ginasCtrl.substance.references && nameForm.reference.$error">*required</p>

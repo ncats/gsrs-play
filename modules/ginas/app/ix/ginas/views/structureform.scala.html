@@ -7,8 +7,10 @@
                 <div class="row">
                     <div class = "col-md-12" id="jsdraw">
                         <sketcher ng-model="structure"></sketcher>
+
                     </div>
                 </div>
+
                 <div class="row">
                     <div class="col-md-2 pull-right">
                         <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export"><i class="fa fa-external-link fa-2x success"></i></a> &nbsp;
@@ -31,7 +33,7 @@
                                     {{ginasCtrl.substance.chemical.structure.mwt}}
                     </div>
                     <div class = "col-md-2">
-                    {{ginasCtrl.substance.chemical.structure.definedStereo}}/{{ginasCtrl.substance.chemical.structure.stereoCenters}}
+                    {{ginasCtrl.substance.chemical.structure.definedStereo ||0 }}/{{ginasCtrl.substance.chemical.structure.stereoCenters || 0}}
                     </div>
                     <div class = "col-md-1">
                     {{ginasCtrl.substance.chemical.structure.ezCenters}}
@@ -41,9 +43,9 @@
                     </div>
                     <div class="col-md-2 err-check" show-errors>
                         <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-                        <p class="danger" ng-if="!ginasCtrl.substance.references && editNameForm.reference.$error">*required</p>
-                        <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "editName.references = ginasCtrl.substance.references[0]" ng-model = "editName.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
-                        <ng-messages for="editNameForm.reference.$error" ng-if="editNameForm.reference.$pristine">
+                        <p class="danger" ng-if="!ginasCtrl.substance.references && structureForm.reference.$error">*required</p>
+                        <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "structure.references = ginasCtrl.substance.references[0]" ng-model = "structure.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
+                        <ng-messages for="structureForm.reference.$error" ng-if="structureForm.reference.$pristine">
                             <ng-message when="required" class="help-block">*required</ng-message>
                         </ng-messages>
                     </div>
