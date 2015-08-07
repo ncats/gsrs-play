@@ -214,7 +214,7 @@ public class SearchFactory extends EntityFactory {
                 if (!results.isEmpty())
                     node.put(f, mapper.valueToTree(results));
             }
-
+            Logger.info(node.toString());
             return ok (node);
         }
         catch (Exception ex) {

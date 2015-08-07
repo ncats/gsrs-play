@@ -52,7 +52,8 @@ public class Substance extends Ginas {
         specifiedSubstanceG3,
         specifiedSubstanceG4,
         unspecifiedSubstance,   
-        concept
+        concept,
+        reference
     }
     
     @JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
