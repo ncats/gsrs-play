@@ -1,6 +1,7 @@
 package ix.ginas.models.v1;
 
 import javax.persistence.*;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -8,9 +9,8 @@ import java.util.ArrayList;
 @Inheritance
 @DiscriminatorValue("MIX")
 public class MixtureSubstance extends Substance {
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_substance_comp")
-    public List<Component> mixture = new ArrayList<Component>();
-
+	@OneToOne(cascade=CascadeType.ALL)
+    public Mixture mixture;
+	
     public MixtureSubstance () {}
 }

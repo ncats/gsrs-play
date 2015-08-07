@@ -252,8 +252,12 @@ body, html {
     border-radius: 4px;
 }
 
-#search-bar, #menu-login {
+#menu-login {
     padding-top: 8px;
+}
+
+#search-bar{
+	padding-top: 40px;
 }
 
 /*PAGINATION CSS */
