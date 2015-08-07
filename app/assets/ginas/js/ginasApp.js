@@ -17,14 +17,19 @@
     ginasApp.factory('Substance', function () {
         var Substance = {};
         var substanceClass = window.location.search.split('=')[1];
-        Substance.substanceClass = substanceClass;
         switch (substanceClass) {
-            case "Chemical":
+            case "chemical":
+                Substance.substanceClass = substanceClass;
                 Substance.chemical = {};
                 break;
-            case "Protein":
+            case "protein":
+                Substance.substanceClass = substanceClass;
                 Substance.protein = {};
                 var subunit = "";
+                break;
+            case "structurallyDiverse":
+                Substance.substanceClass = substanceClass;
+                Substance.structurallyDiverse = {};
                 break;
             default:
                 console.log('invalid substance class');
@@ -99,7 +104,7 @@
         return {
             restrict: 'E',
             scope: {
-                m: '='
+                moiety: '='
             },
             templateUrl: "app/assets/ginas/templates/moietydisplay.html"
         };
@@ -111,7 +116,7 @@
             scope: {
                 r: '='
             },
-            link: function (scope, element, attrs) {
+            link: function (scope, element) {
                 $http({
                     method: 'GET',
                     url: 'app/structure/' + scope.r + '.svg',
@@ -620,4 +625,50 @@
             };
     });
 
+    ginasApp.controller('DiverseController', function ($scope, Substance, $rootScope) {
+        this.adding = true;
+
+        this.toggleEdit = function () {
+            this.editing = !this.editing;
+        };
+
+        this.toggleAdd = function () {
+            this.adding = !this.adding;
+        };
+
+        this.reset = function () {
+            $scope.diverse = {};
+            $scope.$broadcast('show-errors-reset');
+        };
+
+        this.validate = function (obj) {
+            $scope.$broadcast('show-errors-check-validity');
+            if ($scope.diverseForm.$valid) {
+                Substance.structurallyDiverse.sourceMaterialClass= obj.sourceMaterialClass;
+                Substance.structurallyDiverse.sourceMaterialType= obj.sourceMaterialType;
+                Substance.structurallyDiverse.sourceMaterialState= obj.sourceMaterialState;
+                this.toggleAdd();
+            }
+        };
+
+        this.setEdited = function (obj) {
+            $scope.editObj = obj;
+            $scope.tempCopy = angular.copy(obj);
+        };
+
+        this.update = function (reference) {
+            console.log(reference);
+            var index = Substance.references.indexOf(reference);
+            Substance.references[index] = reference;
+            $scope.editObj = null;
+            this.toggleEdit();
+        };
+
+        this.remove = function (reference) {
+            var index = Substance.references.indexOf(reference);
+            Substance.references.splice(index, 1);
+        };
+
+
+    });
 })();

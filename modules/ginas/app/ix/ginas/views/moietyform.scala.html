@@ -8,20 +8,19 @@
         <div class="col-md-12" id="structureSearcher">
 
             <div class ="row header-row">
-                <div class="col-md-2"><strong>Moiety Structure</strong></div>
-                <div class="col-md-1 text-center"><strong>Moiety Count</strong></div>
-                <div class="col-md-1"><strong>Stereo Chemistry</strong></div>
-                <div class="col-md-1"><strong>Optical Activity</strong></div>
-                <div class="col-md-1"><strong>Additional Stereochemistry</strong></div>
-                <div class="col-md-1"><strong>Formula</strong></div>
-                <div class="col-md-1"><strong>Molecular Weight</strong></div>
-                <div class="col-md-1"><strong>Defined Stereocenters</strong></div>
-                <div class="col-md-1"><strong>EZ Centers</strong></div>
-                <div class="col-md-1"><strong>Charge</strong></div>
-                <div class="col-md-1"><strong>References</strong></div>
+                <div class="col-md-2 text-center"><strong>Moiety Structure</strong></div>
+                <div class="col-md-1 text-center"><strong text-center>Moiety Count</strong></div>
+                <div class="col-md-1 text-center"><strong>Stereo Chemistry</strong></div>
+                <div class="col-md-1 text-center"><strong>Optical Activity</strong></div>
+                <div class="col-md-1 text-center"><strong>Additional Stereochemistry</strong></div>
+                <div class="col-md-2 text-center"><strong>Formula</strong></div>
+                <div class="col-md-1 text-center"><strong>Molecular Weight</strong></div>
+                <div class="col-md-1 text-center"><strong>Defined Stereocenters</strong></div>
+                <div class="col-md-1 text-center"><strong>EZ Centers</strong></div>
+                <div class="col-md-1 text-center"><strong>Charge</strong></div>
             </div>
             <div ng-repeat="submoiety in ginasCtrl.substance.chemical.moieties">
-                <moiety m="submoiety"></moiety>
+                <moiety moiety="submoiety"></moiety>
             </div>
         </div>
     </div>

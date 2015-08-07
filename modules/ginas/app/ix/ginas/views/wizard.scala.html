@@ -32,6 +32,9 @@
         @referenceform()
     }
     @if(kind == "Structurally Diverse") {
+        @diversesourceform()
+        <div ng-show="sourceMaterialType=='Organism'">  </div>
+        @diverseorganismform()
         @nameform()
         <div ng-show="uniqueName">@codeform()</div>
         @referenceform()
