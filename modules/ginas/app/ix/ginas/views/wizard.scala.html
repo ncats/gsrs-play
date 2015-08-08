@@ -2,7 +2,7 @@
 
 
 @wizardfields(kind: String) = {
-    @if(kind == "Chemical") {
+    @if(kind.toLowerCase() == "chemical") {
         <div ng-show="uniqueName">@structureform()</div>
         @relationshipdisplay()
         <div ng-show="ofType">@officialnameform()</div>
@@ -11,12 +11,12 @@
         <div ng-show="uniqueName">@codeform()</div>
         <div ng-show="refAdded">@referenceform()</div>
     }
-    @if(kind == "Mixture") {
+    @if(kind.toLowerCase() == "mixture") {
         @nameform()
         <div ng-show="uniqueName">@codeform()</div>
         @referenceform()
     }
-    @if(kind == "Protein") {
+    @if(kind.toLowerCase() == "protein") {
         @subunitform()
        @proteindetailsform()
         <div ng-show="uniqueName">@disulfideform()</div>
@@ -26,12 +26,12 @@
         <div ng-show="uniqueName">@codeform()</div>
         <div ng-show="refAdded"> @referenceform()</div>
     }
-    @if(kind == "Polymer") {
+    @if(kind.toLowerCase() == "polymer") {
         @nameform()
         <div ng-show="uniqueName">@codeform()</div>
         @referenceform()
     }
-    @if(kind == "Structurally Diverse") {
+    @if(kind.toLowerCase() == "structurallyDiverse") {
         @diversesourceform()
         <div ng-show="sourceMaterialType=='Organism'">  </div>
         @diverseorganismform()
@@ -39,7 +39,7 @@
         <div ng-show="uniqueName">@codeform()</div>
         @referenceform()
     }
-    @if(kind == "Concept") {
+    @if(kind.toLowerCase() == "concept") {
         @nameform()
         <div ng-show="uniqueName">@codeform()</div>
         @referenceform()
