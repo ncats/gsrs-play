@@ -145,8 +145,23 @@ public class App extends Authentication {
             return facet.getValues().get(i).getCount().toString();
         }
     }
-    
+    /**
+     * This returns links to up to 10 pages of interest.
+     * 
+     * The first few are always 1-3
+     * 
+     * The last 2 pages are always the last 2 possible
+     * 
+     * The middle pages are the pages around the current page
+     * 
+     * @param rowsPerPage
+     * @param page
+     * @param total
+     * @return
+     */
     public static int[] paging (int rowsPerPage, int page, int total) {
+    	
+    	//last page
         int max = (total+ rowsPerPage-1)/rowsPerPage;
         if (page < 0 || page > max) {
             throw new IllegalArgumentException ("Bogus page "+page);
@@ -169,8 +184,11 @@ public class App extends Authentication {
         else {
             pages = new int[10];
             int i = 0;
+            //0-7 set to +1
             for (; i < 7; ++i)
                 pages[i] = i+1;
+            //if the page is larger than 7 (last 3 page)
+            //
             if (page >= pages[i-1]) {
                 // now shift
                 pages[--i] = page;

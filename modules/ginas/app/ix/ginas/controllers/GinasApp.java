@@ -245,9 +245,12 @@ public class GinasApp extends App {
      }
 
     public static Result substances (final String q, final int rows, final int page){
-        String type = request().getQueryString("type");
+    	 System.out.println("Test");
+    	String type = request().getQueryString("type");
         Logger.debug("Substances: rows=" + rows + " page=" + page);
+       
         try {
+        	
             if (type != null && (type.equalsIgnoreCase("substructure")
                     || type.equalsIgnoreCase("similarity"))) {
                 // structure search
@@ -275,19 +278,28 @@ public class GinasApp extends App {
             }
         }
         catch (Exception ex) {
+        	ex.printStackTrace();
             return _internalServerError (ex);
         }
     }
 
+    /**
+     * 
+     * @param q
+     * @param rows
+     * @param page
+     * @return
+     * @throws Exception
+     */
     static Result _substances (final String q, final int rows, final int page)
             throws Exception {
-        final int total = SubstanceFactory.getCount();
+        final int total = Math.max(SubstanceFactory.getCount(),1);
         final String key = "substances/"+Util.sha1(request ());
-
+      System.out.println("Testtttttt");
         if (request().queryString().containsKey("facet") || q != null) {
             final TextIndexer.SearchResult result =
                 getSearchResult (Substance.class, q, total);
-            
+           // if(true)throw new IllegalStateException("one two");
             Logger.debug("_substance: q="+q+" rows="+rows+" page="+page+" => "+result+" finished? "+result.finished());
             if (result.finished()) {
                 final String k = key+"/result";
@@ -310,7 +322,7 @@ public class GinasApp extends App {
                     TextIndexer.Facet[] facets =
                             filter(getFacets(Substance.class, 30),
                                     ALL_FACETS);
-                    int nrows = Math.min(total, Math.max(1, rows));
+                    int nrows = Math.max(Math.min(total, Math.max(1, rows)),1);
                     int[] pages = paging(nrows, page, total);
 
                     List<Substance> substances =

@@ -253,9 +253,11 @@ public class RouteFactory extends Controller {
     
     public static Result page (String context, int top,
                                int skip, String filter) {
+    	
         try {
             Method m = getMethod (context, "page", 
                                   int.class, int.class, String.class);
+            System.out.println(m);
             if (m != null)
                 return (Result)m.invoke(null, top, skip, filter);
         }

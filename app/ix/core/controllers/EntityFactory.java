@@ -171,6 +171,7 @@ public class EntityFactory extends Controller {
         Logger.debug(request().uri()+": "+options);
         Query<T> query = finder.query();
         
+        
         for (String path : options.expand) {
             Logger.debug("  -> fetch "+path);
             query = query.fetch(path);
@@ -219,6 +220,7 @@ public class EntityFactory extends Controller {
         final FetchOptions options = new FetchOptions (top, skip, filter);
         List<T> results = filter (options, finder);
 
+        
         final ETag etag = new ETag ();
         etag.top = options.top;
         etag.skip = options.skip;
@@ -268,6 +270,7 @@ public class EntityFactory extends Controller {
                                              +ids.size());
                             }
                             catch (Exception ex) {
+                            	ex.printStackTrace();
                                 Logger.trace(Thread.currentThread().getName()
                                              +": ETag "+etag.id, ex);
                             }
@@ -275,7 +278,11 @@ public class EntityFactory extends Controller {
                     });
             }
         }
-        etag.save();
+        try{
+        	etag.save();
+        }catch(Exception e){
+        	Logger.error("Error saving etag. This sometimes happens on empty DB");
+        }
 
         ObjectMapper mapper = getEntityMapper ();
         ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
