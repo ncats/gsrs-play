@@ -364,6 +364,56 @@
             Substance.codes.splice(index, 1);
         };
     });
+    
+    ginasApp.controller('NoteController', function ($scope, Substance) {
+        $scope.isEditingNote = false;
+        $scope.editNote = null;
+
+        this.addNotes = function () {
+            $scope.addingNotes = !$scope.addingNotes;
+        };
+
+        this.toggleEditNote = function () {
+            console.log("editing)");
+            $scope.isEditingNote = !$scope.isEditingNote;
+        };
+
+        this.reset = function () {
+            $scope.note = {};
+            $scope.$broadcast('show-errors-reset');
+        };
+
+        this.validateNote = function (note) {
+            $scope.$broadcast('show-errors-check-validity');
+            if ($scope.noteForm.$valid) {
+                //new array if object doesn't already have one
+                if (!Substance.notes) {
+                    console.log("new array");
+                    Substance.notes = [];
+                }
+                Substance.notes.push(note);
+                reset();
+            }
+        };
+
+        this.setEditedNote = function setEditedNote(note) {
+            console.log(note);
+            $scope.editNote = note;
+            $scope.tempCopy = angular.copy(note);
+        };
+
+        this.updateNote = function (note) {
+            var index = Substance.codes.indexOf(note);
+            Substance.notes[index] = note;
+            $scope.editNote = null;
+            $scope.isEditingNote = false;
+        };
+
+        this.removeNote = function (note) {
+            var index = Substance.codes.indexOf(note);
+            Substance.notes.splice(index, 1);
+        };
+    });
 
     ginasApp.controller('StructureController', function ($scope, $http, Substance) {
         $scope.isEditingStructure = false;

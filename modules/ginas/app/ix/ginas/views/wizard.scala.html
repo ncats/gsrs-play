@@ -9,6 +9,7 @@
         <div ng-show="ginasCtrl.substance.chemical.moieties.length>0">@moietyform()</div>
         @nameform()
         <div ng-show="uniqueName">@codeform()</div>
+        <div>@noteform()</div>
         <div ng-show="refAdded">@referenceform()</div>
     }
     @if(kind.toLowerCase() == "mixture") {
