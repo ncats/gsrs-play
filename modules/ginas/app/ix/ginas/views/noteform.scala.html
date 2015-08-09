@@ -58,11 +58,7 @@
         <div class="row form-row" ng-show="!isEditingNote && addingNotes">
             <form class="form-horizontal" name="noteForm" id = "add-note" role="form" novalidate>
                 <div class="col-md-4 err-check" id="note-div" show-errors>
-                    <input type="text" class="form-control" ng-model ="note.note" title="Note" id="note" name = "note" required duplicate/>
-                    <ng-messages for="noteForm.note.$error" ng-if="noteForm.note.$touched">
-                        <ng-message when="duplicate" class="help-block">Note already exists in Ginas</ng-message>
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                    <input type="text" class="form-control" ng-model ="note.note" title="Note" id="note" name = "note" required/>
                 </div>
                 
                 <div class="col-md-2 err-check" show-errors>

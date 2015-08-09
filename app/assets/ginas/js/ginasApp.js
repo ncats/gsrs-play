@@ -385,6 +385,7 @@
 
         this.validateNote = function (note) {
             $scope.$broadcast('show-errors-check-validity');
+            console.log("valid:" + $scope.noteForm.$valid);
             if ($scope.noteForm.$valid) {
                 //new array if object doesn't already have one
                 if (!Substance.notes) {
@@ -410,7 +411,7 @@
         };
 
         this.removeNote = function (note) {
-            var index = Substance.codes.indexOf(note);
+            var index = Substance.notes.indexOf(note);
             Substance.notes.splice(index, 1);
         };
     });

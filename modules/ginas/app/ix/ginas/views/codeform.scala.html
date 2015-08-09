@@ -44,7 +44,7 @@
             <form class="form" name="editCodeForm" id = "edit-codeForm" role="form" ng-submit="CodeCtrl.validateCode(editCode); CodeCtrl.addCodes()" novalidate>
                 <div class ="row">
                     <div class="col-md-4 err-check" id="code-div" show-errors>
-                        <input type="text" class="form-control" ng-model ="editCode.code" title="Code" id="code" name = "code" required duplicate/>
+                        <input type="text" class="form-control" ng-model ="editCode.code" title="Code" id="code" name = "code" required/>
                         <ng-messages for="editCodeForm.code.$error" ng-if="editCodeForm.code.$touched">
                             <ng-message when="duplicate" class="help-block">Code already exists in Ginas</ng-message>
                             <ng-message when="required" class="help-block">Substance name is required</ng-message>
@@ -85,7 +85,7 @@
         <div class="row form-row" ng-show="!isEditingCode && addingCodes">
             <form class="form-horizontal" name="codeForm" id = "add-code" role="form" novalidate>
                 <div class="col-md-4 err-check" id="code-div" show-errors>
-                    <input type="text" class="form-control" ng-model ="code.code" title="Code" id="code" name = "code" required duplicate/>
+                    <input type="text" class="form-control" ng-model ="code.code" title="Code" id="code" name = "code" required/>
                     <ng-messages for="codeForm.code.$error" ng-if="codeForm.code.$touched">
                         <ng-message when="duplicate" class="help-block">Code already exists in Ginas</ng-message>
                         <ng-message when="required" class="help-block">*required</ng-message>

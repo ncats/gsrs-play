@@ -50,7 +50,7 @@
                     <div class = "col-md-1">
                     </div>
                         <div class="col-md-4 err-check" id="ref-div" show-errors>
-                            <input type="text" class="form-control" ng-model ="editObj.citation" title="Citation" id="citation" name = "citation" required duplicate/>
+                            <input type="text" class="form-control" ng-model ="editObj.citation" title="Citation" id="citation" name = "citation" required/>
                             <ng-messages for="editRefForm.citation.$error" ng-if="editRefForm.citation.$touched">
                                 <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
                                 <ng-message when="required" class="help-block">*required</ng-message>
@@ -70,9 +70,8 @@
                             </ng-messages>
                         </div>
                         <div class="col-md-2 err-check" id="ref-div" show-errors>
-                            <input type="text" class="form-control" ng-model ="editObj.url" title="URL" id="url" name = "url" required/>
+                            <input type="text" class="form-control" ng-model ="editObj.url" title="URL" id="url" name = "url"/>
                             <ng-messages for="editRefForm.url.$error" ng-if="editRefForm.url.$touched">
-                                <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
                                 <ng-message when="required" class="help-block">*required</ng-message>
                             </ng-messages>
                         </div>
@@ -90,7 +89,7 @@
                         {{ginasCtrl.substance.references.length+1}}
                     </div>
                     <div class="col-md-4 err-check" id="ref-div" show-errors>
-                        <input type="text" class="form-control" ng-model ="ref.citation" title="Citation" id="citation" name = "citation" required duplicate/>
+                        <input type="text" class="form-control" ng-model ="ref.citation" title="Citation" id="citation" name = "citation" required/>
                         <ng-messages for="refForm.citation.$error" ng-if="refForm.citation.$touched">
                             <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
                             <ng-message when="required" class="help-block">*required</ng-message>
@@ -118,9 +117,8 @@
                         </ng-messages>
                     </div>
                     <div class="col-md-2 err-check" id="ref-div" show-errors>
-                        <input type="text" class="form-control" ng-model ="ref.url" title="URL" id="url" name = "url" required/>
+                        <input type="text" class="form-control" ng-model ="ref.url" title="URL" id="url" name = "url" />
                         <ng-messages for="refForm.url.$error" ng-if="refForm.url.$touched">
-                            <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
                             <ng-message when="required" class="help-block">*required</ng-message>
                         </ng-messages>
                     </div>
@@ -132,3 +130,4 @@
             </div>
         </div>
     </div>
+    
