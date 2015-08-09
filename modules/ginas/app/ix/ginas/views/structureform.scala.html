@@ -42,7 +42,7 @@
                     {{ginasCtrl.substance.chemical.charge}}
                     </div>
                     <div class="col-md-2 err-check" show-errors>
-                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
                         <p class="danger" ng-if="!ginasCtrl.substance.references && structureForm.reference.$error">*required</p>
                         <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "structure.references = ginasCtrl.substance.references[0]" ng-model = "structure.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
                         <ng-messages for="structureForm.reference.$error" ng-if="structureForm.reference.$pristine">

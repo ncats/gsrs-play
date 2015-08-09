@@ -37,7 +37,7 @@
                     </div>
                    
                     <div class="col-md-2 err-check" show-errors>
-                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
                         <p class="danger" ng-if="!ginasCtrl.substance.references && editNoteForm.reference.$error">*required</p>
                         <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "editNote.references = ginasCtrl.substance.references[0]" ng-model = "editNote.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" ></select>
                         <ng-messages for="editNoteForm.reference.$error" ng-if="editNoteForm.reference.$pristine">
@@ -62,7 +62,7 @@
                 </div>
                 
                 <div class="col-md-2 err-check" show-errors>
-                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
                     <p class="danger" ng-if="!ginasCtrl.substance.references && noteForm.reference.$error">*required</p>
                     <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "note.references = ginasCtrl.substance.references[0]" ng-model = "note.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references"></select>
                     <ng-messages for="noteForm.reference.$error" ng-if="noteForm.reference.$pristine">
@@ -79,21 +79,4 @@
 </div>
 
 <!-- Modal -->
-<div class="modal fade" id="addnamelist" tabindex="-1" role="dialog"
-aria-labelledby="myModalLabelimport" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"
-                aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4 class="modal-title" id="myModalLabelimport">Add a Reference</h4>
-            </div>
-            <div class="modal-body">
-            @referenceform()
-
-            </div>
-        </div>
-    </div>
-</div>
+    @referencemodalform()
