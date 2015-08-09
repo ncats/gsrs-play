@@ -8,7 +8,7 @@
     <a ng-show="addingNotes" ng-click="NoteCtrl.addNotes()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
     <div class="col-md-12">
         <div class = "row header-row">
-            <div class = "col-md-4">
+            <div class = "col-md-9">
                 <strong>Note</strong>
             </div>
             <div class = "col-md-2">
@@ -17,7 +17,7 @@
         </div>
 
         <div class = "row" ng-repeat="obj in ginasCtrl.substance.notes">
-            <div class = "col-md-4">
+            <div class = "col-md-9">
                                     {{obj.note}}
             </div>
             <div class = "col-md-2">
@@ -31,8 +31,8 @@
         <div class="row form-row" ng-show="isEditingNote">
             <form class="form" name="editNoteForm" id = "edit-noteForm" role="form" ng-submit="NoteCtrl.validateNote(editNote); NoteCtrl.addNotes()" novalidate>
                 <div class ="row">
-                    <div class="col-md-4 err-check" id="note-div" show-errors>
-                        <input type="text" class="form-control" ng-model ="editNote.note" title="Note" id="note" name = "note" required/>
+                    <div class="col-md-9 err-check" id="note-div" show-errors>
+                        <textarea type="text" class="form-control" ng-model ="editNote.note" title="Note" id="note" name = "note" required></textarea>
                    
                     </div>
                    
@@ -57,8 +57,8 @@
 
         <div class="row form-row" ng-show="!isEditingNote && addingNotes">
             <form class="form-horizontal" name="noteForm" id = "add-note" role="form" novalidate>
-                <div class="col-md-4 err-check" id="note-div" show-errors>
-                    <input type="text" class="form-control" ng-model ="note.note" title="Note" id="note" name = "note" required/>
+                <div class="col-md-9 err-check" id="note-div" show-errors>
+                    <textarea type="text" class="form-control" ng-model ="note.note" title="Note" id="note" name = "note" required></textarea>
                 </div>
                 
                 <div class="col-md-2 err-check" show-errors>
