@@ -4,13 +4,17 @@
 @wizardfields(kind: String) = {
     @if(kind.toLowerCase() == "chemical") {
         <div ng-show="uniqueName">@structureform()</div>
-        @relationshipdisplay()
-        <div ng-show="ofType">@officialnameform()</div>
-        <div ng-show="ginasCtrl.substance.chemical.moieties.length>0">@moietyform()</div>
+        
+        <div>@moietyform()</div>
         @nameform()
         <div ng-show="uniqueName">@codeform()</div>
+        <div ng-show="ofType">@officialnameform()</div>
+        @relationshipdisplay()
         <div>@noteform()</div>
+        
         <div ng-show="refAdded">@referenceform()</div>
+		<!-- Modal -->
+    	@referencemodalform()
     }
     @if(kind.toLowerCase() == "mixture") {
         @nameform()
