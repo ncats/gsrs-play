@@ -31,6 +31,7 @@
             </div>
             <div class = "col-md-2">
                                     {{obj.codeSystem}}
+            </div>
             <div class = "col-md-2">
                                     {{obj.type.display}}
             </div>
@@ -103,6 +104,13 @@
                     <input type="text" class="form-control" ng-model ="code.code" title="Code" id="code" name = "code" required/>
                     <ng-messages for="codeForm.code.$error" ng-if="codeForm.code.$touched">
                         <ng-message when="duplicate" class="help-block">Code already exists in Ginas</ng-message>
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Code Type" id="type" name = "codeSystem" ng-model = "code.codeSystem" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
+                        </select>
+                    <ng-messages for="codeForm.codeSystem.$error" ng-if="codeForm.codeSystem.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>

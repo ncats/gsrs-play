@@ -967,3 +967,8 @@ div#jsdraw {
 	font-family: monospace;
 	font-size: 8pt;
 }
+
+
+a{
+	cursor:pointer;
+}
