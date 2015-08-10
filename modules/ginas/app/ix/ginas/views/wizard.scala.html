@@ -2,7 +2,8 @@
 
 
 @wizardfields(kind: String) = {
-    @if(kind.toLowerCase() == "chemical") {
+
+    @if(kind == "chemical") {
         <div ng-show="uniqueName">@structureform()</div>
         
         <div>@moietyform()</div>
@@ -15,40 +16,48 @@
         <div ng-show="refAdded">@referenceform()</div>
 		<!-- Modal -->
     	@referencemodalform()
+    }else{
+	    @if(kind == "mixture") {
+	        @nameform()
+	        <div ng-show="uniqueName">@codeform()</div>
+	        @referenceform()
+	    }else{
+		    @if(kind == "protein") {
+		        @subunitform()
+		       @proteindetailsform()
+		        <div ng-show="uniqueName">@disulfideform()</div>
+		        <div ng-show="uniqueName">@modificationform()</div>
+		        <div ng-show="uniqueName">@glycosylationform()</div>
+		        @nameform()
+		        <div ng-show="uniqueName">@codeform()</div>
+		        <div ng-show="refAdded"> @referenceform()</div>
+		    }else{
+			    @if(kind == "polymer") {
+			        @nameform()
+			        <div ng-show="uniqueName">@codeform()</div>
+			        @referenceform()
+			    }else{
+				    @if(kind == "structurallyDiverse") {
+				        @diversesourceform()
+				        <div ng-show="sourceMaterialType=='Organism'">  </div>
+				        @diverseorganismform()
+				        @nameform()
+				        <div ng-show="uniqueName">@codeform()</div>
+				        @referenceform()
+				    }else{
+					    @if(kind.toLowerCase() == "concept") {
+					        @nameform()
+					        <div ng-show="uniqueName">@codeform()</div>
+					        @referenceform()
+					    }else{
+					    	<h2>Unknown substance class: @kind</h2>
+					    }
+				    }
+			    }
+		    }
+	    }
     }
-    @if(kind.toLowerCase() == "mixture") {
-        @nameform()
-        <div ng-show="uniqueName">@codeform()</div>
-        @referenceform()
-    }
-    @if(kind.toLowerCase() == "protein") {
-        @subunitform()
-       @proteindetailsform()
-        <div ng-show="uniqueName">@disulfideform()</div>
-        <div ng-show="uniqueName">@modificationform()</div>
-        <div ng-show="uniqueName">@glycosylationform()</div>
-        @nameform()
-        <div ng-show="uniqueName">@codeform()</div>
-        <div ng-show="refAdded"> @referenceform()</div>
-    }
-    @if(kind.toLowerCase() == "polymer") {
-        @nameform()
-        <div ng-show="uniqueName">@codeform()</div>
-        @referenceform()
-    }
-    @if(kind.toLowerCase() == "structurallyDiverse") {
-        @diversesourceform()
-        <div ng-show="sourceMaterialType=='Organism'">  </div>
-        @diverseorganismform()
-        @nameform()
-        <div ng-show="uniqueName">@codeform()</div>
-        @referenceform()
-    }
-    @if(kind.toLowerCase() == "concept") {
-        @nameform()
-        <div ng-show="uniqueName">@codeform()</div>
-        @referenceform()
-    }
+   
 }
 
 @ginas("Register", kind) {
