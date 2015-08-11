@@ -51,7 +51,7 @@ public class GinasApp extends App {
 
     
     public static final String[] CHEMICAL_FACETS = {
-        "Status",
+        "Record Status",
         "Substance Class",
         "SubstanceStereoChemistry",
         "Molecular Weight",
@@ -65,7 +65,7 @@ public class GinasApp extends App {
     };
 
     public static final String[] ALL_FACETS = {
-            "Status",
+            "Record Status",
             "Substance Class",
             "SubstanceStereoChemistry",
             "Molecular Weight",
@@ -74,7 +74,8 @@ public class GinasApp extends App {
             "Material Class",
             "Material Type",
             "Family",
-            "Parts"
+            "Parts",
+            "Code System"
     };
 
     static <T> List<T> filter (Class<T> cls, List values, int max) {
@@ -201,7 +202,7 @@ public class GinasApp extends App {
         public String name () {
             String n = super.name();
             if ("SubstanceStereoChemistry".equalsIgnoreCase(n))
-                return "Stereo Chemistry";
+                return "Stereochemistry";
             return n.trim();
         }
 

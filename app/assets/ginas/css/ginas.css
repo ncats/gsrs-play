@@ -146,6 +146,11 @@ body, html {
     font-weight: 600;
 }
 
+button#strucSearch {
+    margin-top: 0px;
+    margin-left: 10px;
+}
+
 #grid {
     background-color: #F8F8F8;
 }

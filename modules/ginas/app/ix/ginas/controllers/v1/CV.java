@@ -64,6 +64,17 @@ public class CV {
         return j.toString();
     }
 
+    public String getDisplay (String domain, String value) {
+        String ret= null;
+        List<VocabularyTerm> domainList = map.get(domain);
+        for(VocabularyTerm v : domainList){
+            if(v.value.equals(value)){
+                ret = v.display;
+            }
+        }
+        return ret;
+    }
+
     public int size () { return map.size(); }
 }
 
