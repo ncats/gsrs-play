@@ -8,12 +8,13 @@
     <a ng-show="addingProperties" ng-click="PropertyCtrl.addProperties()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
     <div class="col-md-12">
         <div class = "row header-row">
+             <div class = "col-md-2">
+                <strong>Property Type</strong>
+            </div>
             <div class = "col-md-2">
                 <strong>Property Name</strong>
             </div>
-            <div class = "col-md-2">
-                <strong>Property Type</strong>
-            </div>
+           
             <div class = "col-md-3">
                 <strong>Property Value</strong>
             </div>
@@ -29,12 +30,13 @@
         </div>
 
         <div class = "row" ng-repeat="obj in ginasCtrl.substance.properties">
+             <div class = "col-md-2">
+               	{{obj.propertyType.display}}
+            </div>
             <div class = "col-md-2">
                	{{obj.name.display}}
             </div>
-            <div class = "col-md-2">
-               	{{obj.propertyType.display}}
-            </div>
+           
             <div class = "col-md-3">
                 {{obj.value}}
             </div>
@@ -59,13 +61,14 @@
             <form class="form" name="editPropertyForm" id = "edit-propertyForm" role="form" ng-submit="PropertyCtrl.validateProperty(editProperty); PropertyCtrl.addProperties()" novalidate>
                 <div class ="row">
                     <div class="col-md-2 err-check" id="property-div" show-errors>
-                        <select class="form-control" title="Property Name" id="name" name = "name" ng-model = "editProperty.name" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
+                        <select class="form-control" title="Property Type" id="type" name = "type" ng-model = "editProperty.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROPERTY_TYPE") track by r.display" required>
                         </select>
                     </div>
                     <div class="col-md-2 err-check" id="property-div" show-errors>
-                        <select class="form-control" title="Property Type" id="type" name = "type" ng-model = "editProperty.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
+                        <select class="form-control" title="Property Name" id="name" name = "name" ng-model = "editProperty.name" ng-options="r.display for r in @GinasApp.getCV.getField("PROPERTY_NAME") track by r.display" required>
                         </select>
                     </div>
+                    
                    
                     @referenceselectorform("editPropertyForm","editProperty")
                     @editcontrolsform("PropertyCtrl","editProperty","toggleEditProperty","updateProperty","addingProperties")
@@ -77,13 +80,14 @@
         <div class="row form-row" ng-show="!isEditingProperty && addingProperties">
             <form class="form-horizontal" name="propertyForm" id = "add-property" role="form" novalidate>
                 <div class="col-md-2 err-check" id="property-div" show-errors>
-                	<select class="form-control" title="Property Name" id="name" name = "name" ng-model = "property.name" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
+                	<select class="form-control" title="Property Type" id="name" name = "name" ng-model = "property.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROPERTY_TYPE") track by r.display" required>
                 	</select>
 				</div>
-				<div class="col-md-2 err-check" id="property-div" show-errors>
-                	<select class="form-control" title="Property Type" id="name" name = "name" ng-model = "property.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
+                <div class="col-md-2 err-check" id="property-div" show-errors>
+                	<select class="form-control" title="Property Name" id="name" name = "name" ng-model = "property.name" ng-options="r.display for r in @GinasApp.getCV.getField("PROPERTY_NAME") track by r.display" required>
                 	</select>
 				</div>
+				
                 
                 <div class="col-md-2 err-check" show-errors>
                     <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
