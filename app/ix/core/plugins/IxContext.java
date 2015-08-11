@@ -1,12 +1,21 @@
 package ix.core.plugins;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
+
+import play.Application;
 import play.Logger;
 import play.Plugin;
-import play.Application;
 import play.db.DB;
 
 public class IxContext extends Plugin {
@@ -25,6 +34,7 @@ public class IxContext extends Plugin {
     static final String IX_PAYLOAD_BASE = IX_PAYLOAD+".base";
     static final String IX_STRUCTURE = "ix.structure";
     static final String IX_STRUCTURE_BASE = IX_STRUCTURE+".base";
+    static final String APPLICATION_SQL_INIT = "application.sql.init";
     
 
     private final Application app;
@@ -75,6 +85,32 @@ public class IxContext extends Plugin {
         DatabaseMetaData meta = DB.getConnection().getMetaData();
         Logger.info("## Database vendor: "+meta.getDatabaseProductName()
                     +" "+meta.getDatabaseProductVersion());
+        
+        String dbName=meta.getDatabaseProductName().toLowerCase();
+        if(!dbinitialized(meta)){
+        	Logger.info("Database not initialized, applying scripts");
+        	File f=getFile(APPLICATION_SQL_INIT,"../conf/sql/init/");
+        	if(f.exists()){
+        		String path = f.getAbsolutePath()+"/"+dbName+".sql";
+        		File initFile = new File(path);
+        		if(initFile.exists()){
+        			Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
+        			Statement s = DB.getConnection().createStatement();
+        			String sqlRun = readFullFileToString(initFile);
+        			System.out.println(sqlRun);
+        			try{
+        			ResultSet rs1=s.executeQuery(sqlRun);
+        			Logger.info("SQL initialization applied.");
+        			}catch(Exception e){
+        				e.printStackTrace();
+        			}
+        			
+        		}else{
+        			Logger.info("No SQL initialization present for database:" + dbName);
+        		}
+        	}
+        }
+        //meta.
 
         host = app.configuration().getString("application.host");
         if (host == null || host.length() == 0) {
@@ -107,6 +143,51 @@ public class IxContext extends Plugin {
             api = "/"+api;
         Logger.info("## Application api context: "
                     +((host != null ? host : "") + context+api));
+    }
+    
+    /**
+     * Simple utility function to read the full contents of a file
+     * into a string. Do not use this method if the target file
+     * is large.
+     * 
+     * Returns null on io exceptions.
+     * 
+     * @param f
+     * @return
+     */
+    private static String readFullFileToString(File f){
+    	
+		try {
+			StringBuffer sb = new StringBuffer();
+	    	BufferedReader br;
+			br = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+	    	for (int c = br.read(); c != -1; c = br.read()) sb.append((char)c);
+	    	return sb.toString();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return null;
+    }
+    
+    /**
+     * Checks if the db has been initialized. Used for running
+     * sql scripts needed for some databases before later initialization.
+     * 
+     * 
+     * This method currently checks for the existence of 'play_evolutions' table
+     * @param meta
+     * @return
+     */
+    private static boolean dbinitialized(DatabaseMetaData meta){
+    	try {
+			ResultSet rs = meta.getTables(null,null, "play_evolutions", null);
+			return rs.next();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}    
+    	return true;
     }
 
     File getFile (String var, String def) throws IOException {

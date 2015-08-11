@@ -1,11 +1,11 @@
 #
 # Plugins
 # ~~~~~~~
+199:ix.core.plugins.IxContext
 200:com.edulify.play.hikaricp.HikariCPPlugin
 #1500:com.typesafe.plugin.CommonsMailerPlugin
 # inxight plugins
 # this plugin must be first!
-2001:ix.core.plugins.IxContext
 2005:ix.core.plugins.IxCache
 2010:ix.core.plugins.PersistenceQueue
 2015:ix.core.plugins.TextIndexerPlugin
