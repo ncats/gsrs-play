@@ -24,6 +24,7 @@ import ix.ginas.models.*;
 @Table(name="ix_ginas_code")
 public class Code extends Ginas {
     @JSONEntity(title = "Code system", format = JSONConstants.CV_CODE_SYSTEM)
+    @Indexable(facet=true, name="Code System")
     public String codeSystem;
     
     @JSONEntity(title = "Code", isRequired = true)

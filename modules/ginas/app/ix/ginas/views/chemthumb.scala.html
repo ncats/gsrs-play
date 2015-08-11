@@ -51,12 +51,10 @@
             <div class = "row">
                 <div class = "col-md-12">
                     <ul class= "list-inline pull-right list-unstyled">
-                        <li>
-                            <button type="button" class="btn btn-default btn-sm"
-                            data-toggle="modal"
-                            data-target="#@chem.approvalID-mol"><i class="fa fa-external-link chem-button"></i></button></li>
-                        @molexport(chem.structure.molfile, chem.getName(), chem.approvalID)
-                        <li><button type="button" class="btn btn-default btn-sm" data-toggle="modal"
+                        <li><export-button structureid ="'@chem.structure.id'" ></export-button>
+                          </li>
+
+                        <li><button type="button" class="btn btn-primary" data-toggle="modal"
                         data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "mol")'
                         data-target="#strucModal"><span class="fa fa-search chem-button"></span></button>
                         </li>
