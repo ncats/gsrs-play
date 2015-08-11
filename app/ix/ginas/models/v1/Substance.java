@@ -61,7 +61,7 @@ public class Substance extends Ginas {
     @Column(name="class")
     public SubstanceClass substanceClass;
     
-    @Indexable(suggest=true,facet=true, name="Status")
+    @Indexable(suggest=true,facet=true, name="Record Status")
     public String status;
     
     public String approvedBy;

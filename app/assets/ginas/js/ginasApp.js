@@ -1,7 +1,7 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead', 'screengrabber'])
+    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead', 'screengrabber'])
         .config(function (showErrorsConfigProvider) {
-                  showErrorsConfigProvider.showSuccess(true);
+            showErrorsConfigProvider.showSuccess(true);
         });
 
     ginasApp.filter('range', function () {
@@ -41,6 +41,8 @@
     function GinasCtrl(Substance) {
         var ginasCtrl = this;
         ginasCtrl.substance = Substance;
+
+
     }
 
     ginasApp.controller("GinasCtrl", GinasCtrl);
@@ -185,6 +187,58 @@
         };
     });
 
+/*    ginasApp.controller('ExportController', function () {
+        this.export = function (id) {
+            console.log(id);
+        };
+
+    });*/
+
+    ginasApp.directive('exportButton', function(){
+        return{
+            restrict: 'E',
+            scope:{
+                structureid: '='
+            },
+            template:'<button type="button" class="btn btn-primary" structureid = structureid  export><i class="fa fa-external-link chem-button"></i></button>'
+        };
+    });
+
+    ginasApp.directive('export', function($http) {
+        return function (scope, element, attrs) {
+            element.bind("click", function () {
+                console.log(scope);
+                console.log(element);
+                var modal =  angular.element( document.getElementById('export-mol'));
+
+                $http({
+                    method: 'GET',
+                    url: 'app/structure/' + scope.structureid + '.mol',
+                    headers: {'Content-Type': 'text/plain'}
+                }).success(function (data) {
+                   // angular.element(document.getElementById('inputExport')).html(data);
+                    modal.find('#inputExport').text(data);
+                });
+
+                   modal.modal('show');
+                    modal.on('show.bs.modal', function(e){
+                        console.log(e);
+                    });
+
+                    console.log(document.getElementById('export-mol'));
+
+            });
+        };
+    });
+
+
+    ginasApp.directive('molExport', function ($http) {
+        return {
+            restrict: 'E',
+            templateUrl: "app/assets/ginas/templates/molexport.html"
+        };
+    });
+
 
     ginasApp.controller('ReferenceController', function ($scope, Substance, $rootScope) {
         $scope.editReference = null;
@@ -320,7 +374,7 @@
         $scope.editCode = null;
         $scope.addingCodes = true;
         $scope.isEditing = false;
-        
+
         this.addCodes = function () {
             $scope.addingCodes = !$scope.addingCodes;
         };
@@ -348,7 +402,7 @@
                 this.reset();
             }
         };
-        
+
 
         this.setEditedCode = function setEditedCode(code) {
             console.log(code);
@@ -368,7 +422,7 @@
             Substance.codes.splice(index, 1);
         };
     });
-    
+
     ginasApp.controller('NoteController', function ($scope, Substance) {
         $scope.isEditingNote = false;
         $scope.editNote = null;
@@ -680,28 +734,28 @@
 
     ginasApp.controller('RelationshipController', function ($scope, $rootScope, substanceFactory) {
 
-            this.getSubstances = function (name) {
-                console.log(name);
-                substanceFactory.getSubstances(name)
-                    .success(function (response) {
-                        console.log(response);
-                        if (response.count >= 1) {
-                            console.log("adding data");
-                            $rootScope.data = response.content;
-                        } else {
-                            console.log("no results");
-                        }
-                    })
-                    .error(function (error) {
-                        $scope.status = 'Unable to load substance data: ' + error.message;
-                    });
-            };
+        this.getSubstances = function (name) {
+            console.log(name);
+            substanceFactory.getSubstances(name)
+                .success(function (response) {
+                    console.log(response);
+                    if (response.count >= 1) {
+                        console.log("adding data");
+                        $rootScope.data = response.content;
+                    } else {
+                        console.log("no results");
+                    }
+                })
+                .error(function (error) {
+                    $scope.status = 'Unable to load substance data: ' + error.message;
+                });
+        };
     });
 
     ginasApp.controller('TypeaheadController', function ($scope) {
 
         var nameTypeahead = new Bloodhound({
-            datumTokenizer: function(d) {
+            datumTokenizer: function (d) {
                 return Bloodhound.tokenizers.whitespace(d.key);
             },
             queryTokenizer: Bloodhound.tokenizers.whitespace,
@@ -709,7 +763,7 @@
                 wildcard: 'QUERY',
                 url: '/ginas/app/api/v1/suggest/Name?q=QUERY'
             }
-    });
+        });
         nameTypeahead.initialize();
         $scope.nameDataSource = {
             name: 'Name',
@@ -721,10 +775,10 @@
         };
 
         $scope.nameOptions = {
-                hint: true,
-                highlight: true,
-                minLength: 2
-            };
+            hint: true,
+            highlight: true,
+            minLength: 2
+        };
     });
 
     ginasApp.controller('DiverseController', function ($scope, Substance, $rootScope) {
@@ -746,9 +800,9 @@
         this.validate = function (obj) {
             $scope.$broadcast('show-errors-check-validity');
             if ($scope.diverseForm.$valid) {
-                Substance.structurallyDiverse.sourceMaterialClass= obj.sourceMaterialClass;
-                Substance.structurallyDiverse.sourceMaterialType= obj.sourceMaterialType;
-                Substance.structurallyDiverse.sourceMaterialState= obj.sourceMaterialState;
+                Substance.structurallyDiverse.sourceMaterialClass = obj.sourceMaterialClass;
+                Substance.structurallyDiverse.sourceMaterialType = obj.sourceMaterialType;
+                Substance.structurallyDiverse.sourceMaterialState = obj.sourceMaterialState;
                 this.toggleAdd();
             }
         };
