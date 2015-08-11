@@ -35,15 +35,9 @@
                         <textarea type="text" class="form-control" ng-model ="editNote.note" title="Note" id="note" name = "note" required></textarea>
                    
                     </div>
+                    
+                   @referenceselectorform("editNoteForm","editNote")
                    
-                    <div class="col-md-2 err-check" show-errors>
-                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-                        <p class="danger" ng-if="!ginasCtrl.substance.references && editNoteForm.reference.$error">*required</p>
-                        <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "editNote.references = ginasCtrl.substance.references[0]" ng-model = "editNote.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" ></select>
-                        <ng-messages for="editNoteForm.reference.$error" ng-if="editNoteForm.reference.$pristine">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
                     <div class="col-md-1 pull-right" ng-show="addingNotes">
                         <a id ="name-submit" ng-click="NoteCtrl.updateNote(editNote)" arial-label="Save">
                             <i class="fa fa-floppy-o fa-2x success"></i></a>

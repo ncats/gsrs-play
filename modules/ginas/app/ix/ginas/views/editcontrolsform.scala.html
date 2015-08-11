@@ -1,0 +1,12 @@
+@(Controller : String, editObject : String = "editObject", updateMethod : String = "update", toggleEditMethod : String = "toggleEdit",
+showCondition : String = "addingObject"
+);
+
+@import ix.ginas.controllers.GinasApp;
+
+<div class="col-md-1 pull-right" ng-show="@(showCondition)">
+   <a id ="name-submit" ng-click="@(Controller).@(updateMethod)(@(editObject))" arial-label="Save">
+   <i class="fa fa-floppy-o fa-2x success"></i></a>
+   <a type="submit" ng-click="@(Controller).@(toggleEditMethod)();" aria-label="Cancel">
+   <i class="fa fa-ban fa-2x danger"></i></a>
+</div>

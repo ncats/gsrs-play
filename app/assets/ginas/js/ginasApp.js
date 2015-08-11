@@ -407,7 +407,7 @@
         };
 
         this.updateNote = function (note) {
-            var index = Substance.codes.indexOf(note);
+            var index = Substance.notes.indexOf(note);
             Substance.notes[index] = note;
             $scope.editNote = null;
             $scope.isEditingNote = false;
@@ -416,6 +416,55 @@
         this.removeNote = function (note) {
             var index = Substance.notes.indexOf(note);
             Substance.notes.splice(index, 1);
+        };
+    });
+    ginasApp.controller('PropertyController', function ($scope, Substance) {
+        $scope.isEditingProperty = false;
+        $scope.editProperty = null;
+
+        this.addProperties = function () {
+            $scope.addingProperties = !$scope.addingProperties;
+        };
+
+        this.toggleEditProperty = function () {
+            console.log("editing)");
+            $scope.isEditingProperty = !$scope.isEditingProperty;
+        };
+
+        this.reset = function () {
+            $scope.property = {};
+            $scope.$broadcast('show-errors-reset');
+        };
+
+        this.validateProperty = function (property) {
+            $scope.$broadcast('show-errors-check-validity');
+            if ($scope.propertyForm.$valid) {
+                //new array if object doesn't already have one
+                if (!Substance.properties) {
+                    console.log("new array");
+                    Substance.properties = [];
+                }
+                Substance.properties.push(property);
+                this.reset();
+            }
+        };
+
+        this.setEditedProperty = function setEditedProperty(property) {
+            console.log(property);
+            $scope.editProperty = property;
+            $scope.tempCopy = angular.copy(property);
+        };
+
+        this.updateProperty = function (property) {
+            var index = Substance.properties.indexOf(property);
+            Substance.properties[index] = property;
+            $scope.editProperty = null;
+            $scope.isEditingProperty = false;
+        };
+
+        this.removeProperty = function (property) {
+            var index = Substance.properties.indexOf(property);
+            Substance.properties.splice(index, 1);
         };
     });
 

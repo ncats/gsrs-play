@@ -105,21 +105,13 @@
 	                <div class="col-md-1">
 	                    <input type = "checkbox" ng-model = "editName.preferred" ng-change="NameCtrl.prefCheck()" placeholder="Preferred" title="Preferred" id="preferred"/>
 	                </div>
-	                <div class="col-md-2 err-check" show-errors>
-	                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addnamelist" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-	                    <p class="danger" ng-if="!ginasCtrl.substance.references && editNameForm.reference.$error">*required</p>
-	                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "editName.references = ginasCtrl.substance.references[0]" ng-model = "editName.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
-	                    <ng-messages for="editNameForm.reference.$error" ng-if="editNameForm.reference.$pristine">
-	                        <ng-message when="required" class="help-block">*required</ng-message>
-	                    </ng-messages>
-	                </div>
+	                @referenceselectorform("editNameForm","editName")
 	                <div class="col-md-1 pull-right" ng-show="addingNames">
 	                    <a id ="name-submit" ng-click="NameCtrl.updateName(editName)" arial-label="Save">
 	                    <i class="fa fa-floppy-o fa-2x success"></i></a>
 	                    <a type="submit" ng-click="NameCtrl.toggleEdit();" aria-label="Cancel">
 	                    <i class="fa fa-ban fa-2x danger"></i></a>
 	                </div>
-	
 	            </div>
 	        </form>
 	    </div>

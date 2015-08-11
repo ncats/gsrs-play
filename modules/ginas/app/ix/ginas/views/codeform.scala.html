@@ -30,7 +30,7 @@
                                     {{obj.code}}
             </div>
             <div class = "col-md-2">
-                                    {{obj.codeSystem}}
+                                    {{obj.codeSystem.display}}
             </div>
             <div class = "col-md-2">
                                     {{obj.type.display}}
@@ -79,21 +79,13 @@
                             <ng-message when="required" class="help-block">Substance name is required</ng-message>
                         </ng-messages>
                     </div>
-                    <div class="col-md-2 err-check" show-errors>
-                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-                        <p class="danger" ng-if="!ginasCtrl.substance.references && editCodeForm.reference.$error">*required</p>
-                        <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "editCode.references = ginasCtrl.substance.references[0]" ng-model = "editCode.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
-                        <ng-messages for="editCodeForm.reference.$error" ng-if="editCodeForm.reference.$pristine">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
+                    @referenceselectorform("editCodeForm","editCode")
                     <div class="col-md-1 pull-right" ng-show="addingCodes">
                         <a id ="name-submit" ng-click="CodeCtrl.updateCode(editCode)" arial-label="Save">
                             <i class="fa fa-floppy-o fa-2x success"></i></a>
                         <a type="submit" ng-click="CodeCtrl.toggleEditCode();" aria-label="Cancel">
                             <i class="fa fa-ban fa-2x danger"></i></a>
                     </div>
-
                 </div>
             </form>
         </div>
