@@ -25,8 +25,9 @@
                 <th>Defined Stereocenters</th>
                 <th>EZ Centers</th>
                 <th>Charge</th>
-                <th>Reference</th>
-
+                @if(stype != "moiety") {
+                    <th>Reference</th>
+                }
             </tr>
         </thead>
         @fillTable(s, stype)
@@ -57,7 +58,6 @@
             <td><span class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></td>
             <td><span class="badge">@m.structure.atropisomerism</span></td>
             <td><span class="badge">@m.structure.charge</span></td>
-            @referencetable(GinasApp.getStructureReferences(m.structure), "hi", 6)
         </tr>
     }
 }
@@ -79,9 +79,7 @@
             <div class = "row">
                 <div class = "col-md-6 col-md-offset-6">
                     <ul class= "form-inline pull-right list-unstyled" id = "exportSave">
-                        <li><button type="button" class="btn navbar-btn btn-primary" id = "strucExport"
-                        data-toggle="modal"
-                        data-target="#structureExport">Export</button></li>
+                        <li> <export-button structureid ="'@sub.structure.id'" ></export-button></li>
                         <li>
 
                             <button type="button" class="btn navbar-btn btn-primary" id = "strucSearch"

@@ -57,6 +57,8 @@
     <script
        src='@routes.WebJarAssets.at(WebJarAssets.locate("angular.js"))'></script>
     <script
+    src='@routes.WebJarAssets.at(WebJarAssets.locate("ui-bootstrap.js"))'></script>
+    <script
     src='@routes.WebJarAssets.at(WebJarAssets.locate("angular-messages.js"))'></script>
     <script
        src='@routes.WebJarAssets.at(WebJarAssets.locate("angular-route.js"))'></script>
@@ -109,8 +111,9 @@
         <div class="row-fluid" id="main-menu">@menu </div>
         <div class="row-fluid" id="main-breadcrumb">@breadcrumb</div>
     </div>
-    <div class="container" id="content">
+    <div class="container" id="content" ng-controller ="GinasCtrl as ginasCtrl">
     @content
+        <mol-export></mol-export>
     </div>
 
     <script>
