@@ -50,7 +50,7 @@
 					        <div ng-show="uniqueName">@forms.codeform()</div>
 					        @forms.referenceform()
 					    }else{
-					    	<h2>Unknown substance class: @kind</h2>
+					    	<h2>Unknown substance class: @forms.kind</h2>
 					    }
 				    }
 			    }

@@ -1,0 +1,80 @@
+@import ix.ginas.controllers.GinasApp;
+<div class = "row info" ng-controller="DetailsController as DetailsCtrl" >
+    <button class="btn btn-primary label-offset det">
+        Disulfide Links&nbsp;<span class="badge" ng-show="substance.codes.length>0">
+                        {{substance.protein.disulfidelinks.length}}</span> </button>
+    <a ng-show="!detailsSet" ng-click="addDetails()" aria-label="Add Details"><i class = "fa fa-plus fa-2x success"></i></a>
+    <div class="col-md-12">
+        <table class="table table-striped" id="detailsTable">
+            <thead>
+            <tr>
+                <th>Protein Type</th>
+                <th>Protein Subtype</th>
+                <th>Sequence Origin</th>
+                <th>Sequence Type</th>
+                <th></th>
+                <th></th>
+            </tr>
+            </thead>
+            <tr>
+                <td>
+                    {{substance.protein.proteinType.display}}
+                </td>
+                <td>
+                    {{substance.protein.proteinSubType.display}}
+                </td>
+                <td>
+                    {{substance.protein.sequenceOrigin.display}}
+                </td>
+                <td>
+                    {{substance.protein.sequenceType.display}}
+
+                </td>
+                <td>
+                    <a ng-show="!isEditingDetails" ng-click="setEditedDetails(protein); toggleEditDetails();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+                </td>
+                <td>
+                    @*<a ng-show="!isEditingDetails" ng-click="removeDetails(protein)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>*@
+                </td>
+            </tr>
+            <tr ng-show="isEditingDetails">
+                <form class="form-horizontal" name="editDetailsForm" id = "add-details" role="form" ng-submit="updateDetails(editProtein)" novalidate>
+                    <td> <select class="form-control" title="Details Type" id="protein-type" ng-model = "editProtein.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
+                        </select></td>
+                    <td> <select class="form-control" title="Details Type" id="protein-subtype" ng-model = "editProtein.SubType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
+                        </select></td>
+                    <td> <select class="form-control" title="Details Type" id="protein-origin" ng-model = "editProtein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
+                        </select></td>
+                    <td> <select class="form-control" title="Details Type" id="protein-sequencetype" ng-model = "editProtein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
+                        </select></td>
+                    <td><a id ="name-submit" ng-show="editDetailsForm.$valid" ng-click="updateDetails(editDetails)" arial-label="Save">
+                        <i class="fa fa-floppy-o fa-2x success"></i></a>
+                    </td>
+                    <td><a type="submit" ng-click="toggleEditDetails();" aria-label="Cancel">
+                        <i class="fa fa-ban fa-2x danger"></i></a>
+                    </td>
+                </form>
+            </tr>
+            <tr ng-show="!isEditingDetails && addingDetails">
+                <form class="form-horizontal" name="detailForm" id = "add-detail" role="form" ng-submit="validateDetails(protein)" novalidate>
+                    <td> <select class="form-control" title="Details Type" id="protein-type" ng-model = "protein.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
+                        </select></td>
+                    <td> <select class="form-control" title="Details Type" id="protein-subtype" ng-model = "protein.subType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
+                        </select></td>
+                    <td> <select class="form-control" title="Details Type" id="protein-origin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
+                        </select></td>
+                    <td> <select class="form-control" title="Details Type" id="protein-sequencetype" ng-model = "protein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
+                        </select></td>
+                    <td><a ng-click="clear()" aria-label="Clear">
+                        <i class="fa fa-eraser fa-2x danger"></i></a>
+                    </td>
+                    <td><button class="btn btn-default" type="submit" ng-show="detailForm.$valid">
+                        Validate</button>
+                    </td>
+                </form>
+            </tr>
+        </table>
+    </div>
+    <button class = "btn btn-primary pull-right" ng-show="addingDetails && !isEditing" ng-click="addDetails()">
+        Done</button>
+</div>

@@ -1,0 +1,84 @@
+@import ix.ginas.controllers.GinasApp;
+<div class = "row info" id = "protein-details" ng-controller="DetailsController as DetailsCtrl" >
+  <button class="btn btn-primary label-offset det">
+                        Details&nbsp;</button>
+      <div class="col-md-12">
+          <div class = "row header-row">
+              <div class = "col-md-2">
+                  <strong>Protein Type</strong>
+              </div>
+              <div class = "col-md-4">
+                  <strong>Protein Subtype</strong>
+              </div>
+              <div class = "col-md-2">
+                  <strong>Sequence Origin</strong>
+              </div>
+              <div class = "col-md-2">
+                  <strong>Sequence Type</strong>
+              </div>
+          </div>
+
+          <div class = "row" ng-show="DetailsCtrl.added">
+
+
+              <div class = "col-md-2">
+                                    {{ginasCtrl.substance.protein.proteinType.display}}
+              </div>
+              <div class = "col-md-4">
+                                    {{ginasCtrl.substance.protein.proteinSubType.display}}
+              </div>
+              <div class = "col-md-2">
+                                    {{ginasCtrl.substance.protein.sequenceOrigin.display}}
+              </div>
+              <div class = "col-md-2">
+                                    {{ginasCtrl.substance.protein.sequenceType.display}}
+              </div>
+
+              <div class = "col-md-1 pull-right">
+                  <a ng-show="DetailsCtrl.added" ng-click="DetailsCtrl.toggleEdit();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+              </div>
+          </div>
+          <div class="row form-row" ng-show="!DetailsCtrl.added">
+              <form class="form-horizontal" name="detForm" id = "add-ref" role="form" novalidate>
+                  <div class="col-md-2 err-check" show-errors>
+                      <select class="form-control" title="Protein Type" id="type" name = "type" ng-model = "protein.proteinType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
+                        </select>
+                      <ng-messages for="editDetForm.proteinType.$error" ng-if="editDetForm.proteinType.$touched">
+                          <ng-message when="required" class="help-block">*required</ng-message>
+                      </ng-messages>
+                  </div>
+                  <div class="col-md-4 err-check" show-errors>
+                      <select class="form-control" title="Protein Subtype" id="proteinSubType" name = "proteinSubType" ng-model = "protein.proteinSubType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
+                        </select>
+                      <ng-messages for="detForm.proteinSubType.$error" ng-if="detForm.proteinSubType.$touched">
+                          <ng-message when="required" class="help-block">*required</ng-message>
+                      </ng-messages>
+                  </div>
+                  <div class="col-md-2 err-check" show-errors>
+                      <select class="form-control" title="Sequence Origin" id="sequenceOrigin" name = "sequenceOrigin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
+                        </select>
+                      <ng-messages for="detForm.sequenceOrigin.$error" ng-if="detForm.sequenceOrigin.$touched">
+                          <ng-message when="required" class="help-block">*required</ng-message>
+                      </ng-messages>
+                  </div>
+                  <div class="col-md-2 err-check" show-errors>
+                      <select class="form-control" title="Sequence Type" id="sequenceType" name = "sequenceType" ng-model = "protein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
+                        </select>
+                      <ng-messages for="detForm.sequenceType.$error" ng-if="detForm.sequenceType.$touched">
+                          <ng-message when="required" class="help-block">*required</ng-message>
+                      </ng-messages>
+                  </div>
+                  <div class="col-md-1 pull-right" ng-show="!DetailsCtrl.added && DetailsCtrl.editing">
+                      <a type="submit" ng-click="DetailsCtrl.toggleAdd();" aria-label="Cancel">
+                      <i class="fa fa-ban fa-2x danger"></i></a>
+                      <a ng-click="DetailsCtrl.validate(protein)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
+                  </div>
+                  <div class="col-md-1 pull-right" ng-show="!DetailsCtrl.added && !DetailsCtrl.editing">
+                      <a ng-click="DetailsCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                      <a ng-click="DetailsCtrl.validate(protein)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
+                  </div>
+              </form>
+          </div>
+      </div>
+  </div>
+

@@ -1,0 +1,8 @@
+@import ix.ginas.controllers.GinasApp;
+<div class = "row info" ng-controller="NameController as CodeCtrl" >
+  <button class="btn btn-primary label-offset det">
+                        Official Name</button>
+  <a ng-show="!addingCodes" ng-click="CodeCtrl.addName()" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
+  <a ng-show="addingCodes" ng-click="CodeCtrl.addName()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
+
+</div>
