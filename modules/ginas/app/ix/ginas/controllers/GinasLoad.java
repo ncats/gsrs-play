@@ -568,8 +568,7 @@ public class GinasLoad extends App {
 			return dt/(importCount+1);
 		}
 		public long getTotalImportTimems(){
-			long dt=lastTime.getTime()-startTime.getTime();
-			return dt/(importCount+1);
+			return lastTime.getTime()-startTime.getTime();
 		}
 		
 		public String getStatusType(){
