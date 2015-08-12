@@ -259,9 +259,9 @@ AMOUNT_UNIT	mmol/g	mmol/g
 AMOUNT_UNIT	\u03BCm	\u03BCm		
 AMOUNT_UNIT	nm	nm		
 AMOUNT_UNIT	pH	pH		
-NAME_DOMAIN	Drug	Drug		
-NAME_DOMAIN	Cosmetic	Cosmetic		
-NAME_DOMAIN	Food	Food		
+NAME_DOMAIN	drug	Drug		
+NAME_DOMAIN	cosmetic	Cosmetic		
+NAME_DOMAIN	food	Food		
 MONOMER_AMOUNT_TYPE	WEIGHT_RATIO_PER_POLYMER	Weight Ratio (per polymer)		
 MONOMER_AMOUNT_TYPE	MOL_RATIO_PER_POLYMER	Mol Ratio (per polymer)		
 MONOMER_AMOUNT_TYPE	WEIGHT_PERCENT_PER_POLYMER	Weight Percent (per polymer)		

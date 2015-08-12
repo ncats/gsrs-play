@@ -385,4 +385,11 @@ public class Substance extends Ginas {
     public Modifications getModifications(){
         return modifications;
     }
+    
+    public Reference getReferenceByUUID(String uuid){
+    	for(Reference r:this.references){
+    		if(r.uuid.toString().equals(uuid))return r;
+    	}
+    	return null;
+    }
 }

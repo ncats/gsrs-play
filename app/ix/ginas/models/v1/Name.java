@@ -6,6 +6,8 @@ import ix.ginas.models.utils.JSONConstants;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.TreeSet;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,7 +25,9 @@ import ix.ginas.models.*;
 @Entity
 @Table(name="ix_ginas_name")
 public class Name extends Ginas {
-    @ManyToMany(cascade=CascadeType.ALL)
+    private static final String SRS_LOCATOR = "SRS_LOCATOR";
+
+	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_name_access")
     @JsonSerialize(using = PrincipalListSerializer.class)
     @JsonDeserialize(using = PrincipalListDeserializer.class)
@@ -106,10 +110,39 @@ public class Name extends Ginas {
         }
     }
     
-    //TODO
-    public List<String> getLocators(){
+    /**
+     * Returns the locators that have been added to this name record.
+     * 
+     * These are tags that are used for searching and display.
+     * 
+     * Currently, this requires the parent substance in order to 
+     * make it work.
+     * 
+     * @param sub the parent substance of this name
+     * @return
+     */
+    public List<String> getLocators(Substance sub){
     	List<String> locators = new ArrayList<String>();
-    	//this.references.get(0).
-    	return null;
+    	//locators.add("TEST");
+    	if(sub!=null){
+    		System.out.println("Real sub");
+	    	for(Keyword ref: this.references){
+	    		System.out.println(ref.getValue());
+	    		Reference r=sub.getReferenceByUUID(ref.getValue());
+	    		
+	    		if(r!=null){
+	    			System.out.println(r.citation);
+	    			if(r.docType.equals(Name.SRS_LOCATOR)){
+	    				try{
+	    					String tag=r.citation.split("\\[")[1].split("\\]")[0];
+	    					locators.add(tag);
+	    				}catch(Exception e){
+	    					
+	    				}
+	    			}
+	    		}
+	    	}
+    	}
+    	return new ArrayList<String>(new TreeSet<String>(locators));
     }
 }
