@@ -47,9 +47,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 
+import java.util.Date;
 
 public class GinasLoad extends App {
-                    
+    public static java.util.Map<String,Process> processes = new java.util.concurrent.ConcurrentHashMap<String,Process>();                
+	
+	
     public static Result error (int code, String mesg) {
         return ok (ix.ginas.views.html.error.render(code, mesg));
     }
@@ -401,7 +404,7 @@ public class GinasLoad extends App {
                             }
                             // try as plain txt file
                         }
-                        return processDump (is);
+                        return processDump (is, false);
                     }
                     else {
                         return badRequest
@@ -421,30 +424,166 @@ public class GinasLoad extends App {
         return ok (mapper.valueToTree(sub));
     }
 
-    public static Result processDump (InputStream is) throws Exception {
-        BufferedReader br = new BufferedReader (new InputStreamReader (is));
-        int count = 0;
-        for (String line; (line = br.readLine()) != null; ) {
-            String[] toks = line.split("\t");
-            Logger.debug("processing "+toks[0]+" "+toks[1]+"..."+count);
-            try {
-                ByteArrayInputStream bis = new ByteArrayInputStream
-                    (toks[2].getBytes("utf8"));
-                Substance sub = persistJSON (bis, null);
-                if (sub == null) {
-                    Logger.warn("Can't persist record "+toks[1]);
-                }
-                else {
-                    ++count;
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-        br.close();
-        return ok (count+" record(s) processed!");
+    /**
+     * Processes an inputstream of jsonDump format.
+     * @param is
+     * @param sync
+     * @return
+     * @throws Exception
+     */
+    public static Result processDump (final InputStream is, boolean sync) throws Exception {
+    	final String requestID = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+    	
+    	JsonDumpImportProcess jdip= new JsonDumpImportProcess(is);
+    	processes.put(jdip.processID(),jdip);
+    	
+    	if(sync){
+        	jdip.getRunnable().run();
+    		return ok (jdip.statusMessage());
+    	}else{
+    		(new Thread(jdip.getRunnable())).start();
+    		return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(jdip.processID()));
+    	}
     }
+    
+    public static Result monitorProcess(String processID){
+    	Process p =processes.get(processID);
+    	if(p==null){
+    		return _internalServerError (new IllegalArgumentException("Process \"" + processID + "\" does not exist."));
+    	}else{
+    		return ok(p.statusMessage());
+    	}
+    }
+    
+    static abstract class Process{
+    	public abstract String processID();
+    	public abstract boolean isComplete();
+    	public abstract Date startTime();
+    	public abstract Date completeTime();
+    	public abstract Date estimatedCompleteTime();
+    	public abstract String statusMessage();
+    	public String submittedBy(){
+    		return "system";
+    	}
+    }
+    static class JsonDumpImportProcess extends Process{
+    	String requestID = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+    	String statusMessage="initializing";
+    	Date startTime;
+    	Date endTime=null;
+    	Date lastTime=null;
+    	boolean done=false;
+    	boolean canceled=false;
+    	
+    	int importCount=0;
+    	int failedCount=0;
+    	
+    	Runnable r;
+    	public JsonDumpImportProcess(final InputStream is){
+    		r = new Runnable(){
+        		@Override
+        		public void run(){
+        			startTime=new Date();
+        			lastTime=startTime;
+        			
+        			try{
+        				BufferedReader br = new BufferedReader (new InputStreamReader (is));
+	        	        
+	        	        for (String line; (line = br.readLine()) != null; ) {
+	        	            String[] toks = line.split("\t");
+	        	            Logger.debug("processing "+toks[0]+" "+toks[1]+"..."+importCount);
+	        	            try {
+	        	                ByteArrayInputStream bis = new ByteArrayInputStream
+	        	                    (toks[2].getBytes("utf8"));
+	        	                Substance sub = persistJSON (bis, null);
+	        	                if (sub == null) {
+	        	                    Logger.warn("Can't persist record "+toks[1]);
+	        	                    failedCount++;
+	        	                }
+	        	                else {
+	        	                    importCount++;
+	        	                }
+	        	            }
+	        	            catch (Exception ex) {
+	        	            	Logger.warn("Can't persist record "+toks[1]);
+        	                    failedCount++;
+	        	                ex.printStackTrace();
+	        	            }
+        	                lastTime=new Date();
+	        	        }
+	        	        br.close();
+        			}
+        	        catch (Exception ex) {
+    	                ex.printStackTrace();
+    	                canceled=true;
+    	            }
+        	       
+        	        endTime=new Date();
+        	        lastTime=new Date();
+        	        done=true;
+        		}
+        	};
+        	
+    	}
+    	
+		@Override
+		public String processID() {
+			return requestID;
+		}
+
+		@Override
+		public boolean isComplete() {
+			return done;
+		}
+
+		@Override
+		public Date startTime() {
+			return startTime;
+		}
+
+		@Override
+		public Date completeTime() {
+			return endTime;
+		}
+
+		@Override
+		public Date estimatedCompleteTime() {
+			return null;
+		}
+		
+		@Override
+		public String statusMessage(){
+			String msg="Process is " +getStatusType() + ".\n";
+			msg+="Imported records:\t" +importCount + "\n";
+			msg+="Failed records:\t" +failedCount + "\n";
+			msg+="Start time:\t" +startTime + "\n";
+			msg+="End time:\t" +endTime + "\n";
+			msg+="Processing Time:\t" + getTotalImportTimems() + "ms\n";
+			msg+="Average time per record:\t" + getAverageImportTimems() + "ms\n";
+			return msg;
+		}
+		
+		public long getAverageImportTimems(){
+			long dt=lastTime.getTime()-startTime.getTime();
+			return dt/(importCount+1);
+		}
+		public long getTotalImportTimems(){
+			long dt=lastTime.getTime()-startTime.getTime();
+			return dt/(importCount+1);
+		}
+		
+		public String getStatusType(){
+			if(done)return "complete";
+			return "running";
+		}
+		
+		public Runnable getRunnable(){
+			return r;
+		}
+    	
+		
+    }
+    
 
     static Substance persist (ChemicalSubstance chem) throws Exception {
         // now index the structure for searching

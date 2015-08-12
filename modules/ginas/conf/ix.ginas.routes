@@ -15,6 +15,7 @@ GET         /report                     ix.ginas.controllers.GinasFactory.report
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON
 GET         /load                       ix.ginas.controllers.GinasLoad.load
+GET         /monitor/:processID         ix.ginas.controllers.GinasLoad.monitorProcess(processID : String)
 GET         /search                     ix.ginas.controllers.GinasApp.search(kind: String ?= null)
 POST        /authenticate               ix.ginas.controllers.GinasApp.authenticate
 GET         /login                      ix.ginas.controllers.GinasFactory.login

@@ -105,4 +105,11 @@ public class Name extends Ginas {
             name = name.substring(0,254);
         }
     }
+    
+    //TODO
+    public List<String> getLocators(){
+    	List<String> locators = new ArrayList<String>();
+    	//this.references.get(0).
+    	return null;
+    }
 }
