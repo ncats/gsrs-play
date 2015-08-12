@@ -254,6 +254,30 @@ public class Substance extends Ginas {
         return names.get(0).name;
     }
 
+    public List<Name> getOfficialNames(){
+        List<Name> officialNames = new ArrayList<Name>();
+            for(Name n : this.names){
+             if(n.type.equals("of")){
+                 officialNames.add(n);
+             }
+            }
+        return officialNames;
+    }
+
+    public List<Name> getNonOfficialNames(){
+        List<Name> nonOfficialNames = new ArrayList<Name>();
+        for(Name n : this.names){
+            if(!n.type.equals("of")){
+                nonOfficialNames.add(n);
+            }
+        }
+        return nonOfficialNames;
+    }
+
+    public List<Name> getAllNames(){
+        return names;
+    }
+
     @PrePersist
     @PreUpdate
     public void tidy () {

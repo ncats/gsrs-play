@@ -34,7 +34,11 @@ public class SubstanceFactory extends EntityFactory {
     public static Substance getSubstance (UUID uuid) {
         return getEntity (uuid, finder);
     }
-    
+
+    public static Result get (UUID id, String select) {
+        return get (id, select, finder);
+    }
+
     public static Substance getFullSubstance(SubstanceReference subRef){
         return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
     }

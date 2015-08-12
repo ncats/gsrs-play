@@ -151,8 +151,12 @@
             </div>
     }
 
+    <div class="row info" id="off-names">
+    @officialnames(sub.getOfficialNames())
+    </div>
+
     <div class="row info" id="names">
-    @names(sub.names)
+    @names(sub.getNonOfficialNames())
     </div>
 
     @if(sub.codes.size() > 0) {

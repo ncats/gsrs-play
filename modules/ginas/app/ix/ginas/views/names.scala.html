@@ -3,24 +3,6 @@
 
 @(names: List[Name])
 
-@typeParse(t: String) = {
-@if(t == "of") {
-    Official Name
-}
-@if(t == "sys") {
-    Systematic Name
-}
-@if(t == "bn") {
-    Brand Name
-}
-@if(t == "cn") {
-    Common Name
-}
-@if(t == "cd") {
-    Code
-}
-}
-
 <button class="btn btn-primary label-offset det">Names&nbsp;<span class="badge"> @names.length</span></button>
 <div class="col-md-12">
     <table class="table table-striped" id="namesTable">
@@ -36,8 +18,11 @@
         @for(n <- names) {
             <tr>
                 <td>@n.name</td>
-                <td>@typeParse(GinasApp.getType(n))</td>
-                <td>@GinasApp.getCV.getDisplay("LANGUAGE",n.languages(0).term)</td>
+                <td>@GinasApp.getCV.getDisplay("NAME_TYPE",{n.`type`})</td>
+                <td>@for(l <- n.languages) {
+                    @GinasApp.getCV.getDisplay("LANGUAGE", l.term) &nbsp;
+                }
+                </td>
                 <td>@if(n.preferred == true) {<i class="fa fa-check fa-2x success"></i> } else {}</td>
                 @referencetable(n.references, n.uuid.toString(), 5)
             </tr>
