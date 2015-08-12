@@ -61,11 +61,11 @@ JURISDICTION	ES	SPAIN
 JURISDICTION	SE	SWEDEN		
 JURISDICTION	CH	SWITZERLAND		
 JURISDICTION	GB	UNITED KINGDOM		
-NAME_ORG	INN	International Non-proprietary Name		
-NAME_ORG	USAN	United States Adopted Name		
-NAME_ORG	INCI	International Nomenclature of Cosmetic Ingredient		
-NAME_ORG	BAN	British Adopted Name		
-NAME_ORG	JAN	Japanese Adopted Name		
+NAME_ORG	INN	INN	International Non-proprietary Name
+NAME_ORG	USAN	USAN	United States Adopted Name
+NAME_ORG	INCI	INCI	International Nomenclature of Cosmetic Ingredient
+NAME_ORG	BAN	BAN	British Adopted Name
+NAME_ORG	JAN	JAN	Japanese Adopted Name
 NAME_TYPE	of	Official Name		
 NAME_TYPE	sys	Systematic Name		
 NAME_TYPE	bn	Brand Name		
