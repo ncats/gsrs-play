@@ -18,7 +18,7 @@ import javax.persistence.Table;
 @Table(name="ix_ginas_mixture")
 public class Mixture extends Ginas {
 	@ManyToMany(cascade=CascadeType.ALL)
-	@JoinTable(name="ix_ginas_substance_mixture_comp")
+	@JoinTable(name="ix_ginas_substance_mix_comp")
 	public List<Component> components;
 	
 	@OneToOne(cascade=CascadeType.ALL)
