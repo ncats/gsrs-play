@@ -76,7 +76,6 @@
         };
     });
 
-
     ginasApp.factory('isDuplicate', function ($q, substanceFactory) {
         return function dupCheck(modelValue) {
             var deferred = $q.defer();
@@ -100,7 +99,6 @@
         };
         return substanceFactory;
     }]);
-
 
     ginasApp.directive('moiety', function () {
         return {
@@ -187,13 +185,6 @@
         };
     });
 
-/*    ginasApp.controller('ExportController', function () {
-        this.export = function (id) {
-            console.log(id);
-        };
-
-    });*/
-
     ginasApp.directive('exportButton', function(){
         return{
             restrict: 'E',
@@ -230,7 +221,6 @@
             });
         };
     });
-
 
     ginasApp.directive('molExport', function ($http) {
         return {
@@ -369,6 +359,85 @@
         };
 
     });
+
+    ginasApp.controller('OfficialNameController', function ($scope, Substance, $rootScope) {
+        $scope.isEditing = false;
+        $scope.addName = null;
+        $scope.addingNames = true;
+        $rootScope.uniqueName = true;
+
+        this.addNames = function () {
+            $scope.addingNames = !$scope.addingNames;
+        };
+
+        this.toggleEdit = function () {
+            $scope.isEditing = !$scope.isEditing;
+        };
+
+        this.reset = function () {
+            $scope.name = {};
+            $scope.name.name = null;
+            $scope.$broadcast('show-errors-reset');
+        };
+
+        this.validateName = function (name) {
+            $scope.$broadcast('show-errors-check-validity');
+            if ($scope.nameForm.$valid) {
+                if (!Substance.officialNames) {
+                    Substance.officialNames = [];
+                }
+                Substance.officialNames.push(name);
+                this.reset();
+                //$rootScope.uniqueName = true;
+            }
+        };
+
+        this.typeCheck = function () {
+            if ($scope.name.type.value === 'of') {
+                $rootScope.ofType = true;
+                //$('#officialName').modal('show');
+            } else {
+                $rootScope.ofType = false;
+            }
+        };
+
+        this.prefCheck = function () {
+            console.log("preferred");
+        };
+
+
+        this.cancelEditing = function cancelEditing() {
+            var index = Substance.officialNames.indexOf($scope.editName);
+            Substance.officialNames[index] = $scope.tempCopy;
+            $scope.isEditing = false;
+            $scope.editedName = null;
+        };
+
+        this.setEditedName = function setEditedName(name) {
+            $scope.editName = name;
+            $scope.tempCopy = angular.copy(name);
+        };
+
+        this.updateName = function updateName(name) {
+            var index = Substance.names.indexOf(name);
+            Substance.officialNames[index] = name;
+            $scope.editName = null;
+            $scope.isEditing = false;
+        };
+
+        this.removeName = function (name) {
+            var index = Substance.officialNames.indexOf(name);
+            Substance.officialNames.splice(index, 1);
+        };
+
+        this.editName = function (name) {
+            Substance.officialNames = angular.copy(name);
+            $scope.editorEnabled = true;
+            this.name = name;
+        };
+
+    });
+
     ginasApp.controller('CodeController', function ($scope, Substance) {
         $scope.isEditingCode = false;
         $scope.editCode = null;
