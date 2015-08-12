@@ -261,7 +261,7 @@ public class Substance extends Ginas {
                  officialNames.add(n);
              }
             }
-        return officialNames;
+        return Name.sortNames(officialNames);
     }
 
     public List<Name> getNonOfficialNames(){
@@ -271,7 +271,7 @@ public class Substance extends Ginas {
                 nonOfficialNames.add(n);
             }
         }
-        return nonOfficialNames;
+        return Name.sortNames(nonOfficialNames);
     }
 
     public List<Name> getAllNames(){

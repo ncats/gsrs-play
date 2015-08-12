@@ -3,6 +3,8 @@ package ix.ginas.models.v1;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.JSONConstants;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -145,4 +147,56 @@ public class Name extends Ginas {
     	}
     	return new ArrayList<String>(new TreeSet<String>(locators));
     }
+    
+    
+    /*
+     * Utility function to sort names in nice display order.
+     * 
+     * Sort criteria:
+     * 		1) Preferred status
+     * 		2) Official status
+     * 		3) English first
+     * 		4) Number of References
+     * 		5) Name Type
+     * 		6) Alphabetical
+     * 
+     */
+    public static List<Name> sortNames(List<Name> nameList){
+    	Collections.sort(nameList, new Comparator<Name>(){
+			@Override
+			public int compare(Name o1, Name o2) {
+				if(o1.preferred!=o2.preferred){
+					if(o2.preferred)return 1;
+					return -1;
+				}		
+				if(o1.isOfficial()!=o2.isOfficial()){
+					if(o2.isOfficial())return 1;
+					return -1;
+				}
+				if(o1.isLanguage("en")!=o2.isLanguage("en")){
+					if(o2.isLanguage("en"))return 1;
+					return -1;
+				}
+				int refDiff=o2.references.size()-o1.references.size();
+				if(refDiff!=0){
+					return refDiff;
+				}
+				if(!o2.type.equals(o1.type)){
+					return -o2.type.compareTo(o1.type);
+				}
+				return -o2.name.compareTo(o1.name);
+			}    		
+    	});
+    	return nameList;
+    }
+	public boolean isOfficial() {
+		if(this.type.equals("of"))return true;
+		return false;
+	}
+	public boolean isLanguage(String lang){
+		for(Keyword k:this.languages){
+			if(k.getValue().equals(lang))return true;
+		}
+		return false;
+	}
 }
