@@ -64,15 +64,24 @@ public class CV {
         return j.toString();
     }
 
+    /**
+     * Returns the proper display term for value.
+     * 
+     * If there is none found, display itself.
+     * @param domain
+     * @param value
+     * @return
+     */
     public String getDisplay (String domain, String value) {
-        String ret= null;
         List<VocabularyTerm> domainList = map.get(domain);
-        for(VocabularyTerm v : domainList){
-            if(v.value.equals(value)){
-                ret = v.display;
-            }
+        if(domainList!=null){
+	        for(VocabularyTerm v : domainList){
+	            if(v.value.equals(value)){
+	            	return v.display;
+	            }
+	        }
         }
-        return ret;
+        return value;
     }
 
     public int size () { return map.size(); }

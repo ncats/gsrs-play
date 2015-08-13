@@ -261,7 +261,7 @@ public class Substance extends Ginas {
                  officialNames.add(n);
              }
             }
-        return officialNames;
+        return Name.sortNames(officialNames);
     }
 
     public List<Name> getNonOfficialNames(){
@@ -271,7 +271,7 @@ public class Substance extends Ginas {
                 nonOfficialNames.add(n);
             }
         }
-        return nonOfficialNames;
+        return Name.sortNames(nonOfficialNames);
     }
 
     public List<Name> getAllNames(){
@@ -384,5 +384,12 @@ public class Substance extends Ginas {
     }
     public Modifications getModifications(){
         return modifications;
+    }
+    
+    public Reference getReferenceByUUID(String uuid){
+    	for(Reference r:this.references){
+    		if(r.uuid.toString().equals(uuid))return r;
+    	}
+    	return null;
     }
 }

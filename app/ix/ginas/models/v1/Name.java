@@ -3,9 +3,13 @@ package ix.ginas.models.v1;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.JSONConstants;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.TreeSet;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -23,7 +27,9 @@ import ix.ginas.models.*;
 @Entity
 @Table(name="ix_ginas_name")
 public class Name extends Ginas {
-    @ManyToMany(cascade=CascadeType.ALL)
+    private static final String SRS_LOCATOR = "SRS_LOCATOR";
+
+	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_name_access")
     @JsonSerialize(using = PrincipalListSerializer.class)
     @JsonDeserialize(using = PrincipalListDeserializer.class)
@@ -106,10 +112,91 @@ public class Name extends Ginas {
         }
     }
     
-    //TODO
-    public List<String> getLocators(){
+    /**
+     * Returns the locators that have been added to this name record.
+     * 
+     * These are tags that are used for searching and display.
+     * 
+     * Currently, this requires the parent substance in order to 
+     * make it work.
+     * 
+     * @param sub the parent substance of this name
+     * @return
+     */
+    public List<String> getLocators(Substance sub){
     	List<String> locators = new ArrayList<String>();
-    	//this.references.get(0).
-    	return null;
+    	//locators.add("TEST");
+    	if(sub!=null){
+    		System.out.println("Real sub");
+	    	for(Keyword ref: this.references){
+	    		System.out.println(ref.getValue());
+	    		Reference r=sub.getReferenceByUUID(ref.getValue());
+	    		
+	    		if(r!=null){
+	    			System.out.println(r.citation);
+	    			if(r.docType.equals(Name.SRS_LOCATOR)){
+	    				try{
+	    					String tag=r.citation.split("\\[")[1].split("\\]")[0];
+	    					locators.add(tag);
+	    				}catch(Exception e){
+	    					
+	    				}
+	    			}
+	    		}
+	    	}
+    	}
+    	return new ArrayList<String>(new TreeSet<String>(locators));
     }
+    
+    
+    /*
+     * Utility function to sort names in nice display order.
+     * 
+     * Sort criteria:
+     * 		1) Preferred status
+     * 		2) Official status
+     * 		3) English first
+     * 		4) Number of References
+     * 		5) Name Type
+     * 		6) Alphabetical
+     * 
+     */
+    public static List<Name> sortNames(List<Name> nameList){
+    	Collections.sort(nameList, new Comparator<Name>(){
+			@Override
+			public int compare(Name o1, Name o2) {
+				if(o1.preferred!=o2.preferred){
+					if(o2.preferred)return 1;
+					return -1;
+				}		
+				if(o1.isOfficial()!=o2.isOfficial()){
+					if(o2.isOfficial())return 1;
+					return -1;
+				}
+				if(o1.isLanguage("en")!=o2.isLanguage("en")){
+					if(o2.isLanguage("en"))return 1;
+					return -1;
+				}
+				int refDiff=o2.references.size()-o1.references.size();
+				if(refDiff!=0){
+					return refDiff;
+				}
+				if(!o2.type.equals(o1.type)){
+					return -o2.type.compareTo(o1.type);
+				}
+				return -o2.name.compareTo(o1.name);
+			}    		
+    	});
+    	return nameList;
+    }
+	public boolean isOfficial() {
+		if(this.type.equals("of"))return true;
+		return false;
+	}
+	public boolean isLanguage(String lang){
+		for(Keyword k:this.languages){
+			if(k.getValue().equals(lang))return true;
+		}
+		return false;
+	}
 }

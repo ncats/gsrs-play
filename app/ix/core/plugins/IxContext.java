@@ -87,20 +87,26 @@ public class IxContext extends Plugin {
                     +" "+meta.getDatabaseProductVersion());
         
         String dbName=meta.getDatabaseProductName().toLowerCase();
+        Logger.info("Checking for existence of DB schema ... " + dbName);
         if(!dbinitialized(meta)){
         	Logger.info("Database not initialized, applying scripts");
-        	File f=getFile(APPLICATION_SQL_INIT,"../conf/sql/init/");
+        	File f=null;
+        	f=getFile(APPLICATION_SQL_INIT,"../conf/sql/init/");
+        	
         	if(f.exists()){
+        		Logger.info("Initialization folder exists:" + f.getCanonicalPath());
         		String path = f.getAbsolutePath()+"/"+dbName+".sql";
         		File initFile = new File(path);
+        		Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
         		if(initFile.exists()){
         			Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
         			Statement s = DB.getConnection().createStatement();
         			String sqlRun = readFullFileToString(initFile);
         			System.out.println(sqlRun);
         			try{
-        			ResultSet rs1=s.executeQuery(sqlRun);
-        			Logger.info("SQL initialization applied.");
+        				ResultSet rs1=s.executeQuery(sqlRun);
+        				rs1.close();
+        				Logger.info("SQL initialization applied.");
         			}catch(Exception e){
         				e.printStackTrace();
         			}
@@ -108,7 +114,11 @@ public class IxContext extends Plugin {
         		}else{
         			Logger.info("No SQL initialization present for database:" + dbName);
         		}
+        	}else{
+        		Logger.info("Initialization folder does not exist:" + f.getCanonicalPath());
         	}
+        }else{
+        	Logger.info("Schema exists");
         }
         //meta.
 
@@ -182,7 +192,19 @@ public class IxContext extends Plugin {
     private static boolean dbinitialized(DatabaseMetaData meta){
     	try {
 			ResultSet rs = meta.getTables(null,null, "play_evolutions", null);
-			return rs.next();
+			boolean exists=rs.next();
+			if(exists) return true;
+			rs.close();
+			rs = meta.getTables(null,null, "%", null);
+			while(rs.next()){
+				if(rs.getString(3).toLowerCase().contains("play_evolutions")){
+					rs.close();
+					return true;
+				}
+			}
+			rs.close();
+			return exists;
+			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
