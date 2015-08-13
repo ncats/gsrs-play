@@ -19,7 +19,7 @@
 } {
 
     <div class= "panel-body">
-        <div class = "row collapse hidden-xs" id ="grid">
+        <div class = "row hidden-xs" ng-show="enabled" id ="grid">
             @for(sub <- substances){
                 @sub match{
                     case chem:ChemicalSubstance=>{
@@ -35,7 +35,7 @@
             }
 
         </div>
-        <div class = "row collapse in" id ="list">
+        <div class = "row hidden-xs" ng-show="!enabled" id ="list">
         @for(sub <- substances){
             @sub match{
                 case chem:ChemicalSubstance=>{

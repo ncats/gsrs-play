@@ -1,7 +1,9 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead', 'screengrabber'])
-        .config(function (showErrorsConfigProvider) {
+    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead', 'screengrabber', 'LocalStorageModule'])
+        .config(function (showErrorsConfigProvider, localStorageServiceProvider) {
             showErrorsConfigProvider.showSuccess(true);
+            localStorageServiceProvider
+                .setPrefix('ginas');
         });
 
     ginasApp.filter('range', function () {
@@ -38,14 +40,19 @@
         return Substance;
     });
 
-    function GinasCtrl(Substance) {
+    ginasApp.controller("GinasCtrl", function($scope, localStorageService, Substance){
         var ginasCtrl = this;
         ginasCtrl.substance = Substance;
-
-
-    }
-
-    ginasApp.controller("GinasCtrl", GinasCtrl);
+        console.log(localStorageService);
+       // localStorageService.set('grid', true);
+        $scope.enabled= true;
+        $scope.unbind = localStorageService.bind($scope, 'enabled');
+        this.enabled= function getItem(key) {
+            return localStorageService.get('enabled') || false;
+        };
+        this.numbers= true;
+        localStorageService.set('enabled', $scope.enabled);
+    });
 
     ginasApp.directive('datepicker', function () {
         return {
@@ -193,6 +200,45 @@
             }
         };
     });
+
+    ginasApp.directive('switch', function () {
+        return {
+            restrict: 'AE',
+            replace: true,
+            transclude: true,
+            template: function (element, attrs) {
+                var html = '';
+                html += '<span';
+                html += ' class="switch' + (attrs.class ? ' ' + attrs.class : '') + '"';
+                html += attrs.ngModel ? ' ng-click="' + attrs.ngModel + '=!' + attrs.ngModel + (attrs.ngChange ? '; ' + attrs.ngChange + '()"' : '"') : '';
+                html += ' ng-class="{ checked:' + attrs.ngModel + ' }"';
+                html += '>';
+                html += '<small></small>';
+                html += '<input type="checkbox"';
+                html += attrs.id ? ' id="' + attrs.id + '"' : '';
+                html += attrs.name ? ' name="' + attrs.name + '"' : '';
+                html += attrs.ngModel ? ' ng-model="' + attrs.ngModel + '"' : '';
+                html += ' style="display:none" />';
+                html += '<span class="switch-text">';
+                /*adding new container for switch text*/
+                html += attrs.on ? '<span class="on">' + attrs.on + '</span>' : '';
+                /*switch text on value set by user in directive html markup*/
+                html += attrs.off ? '<span class="off">' + attrs.off + '</span>' : ' ';
+                /*switch text off value set by user in directive html markup*/
+                html += '</span>';
+                return html;
+            }
+        };
+    });
+
+    ginasApp.directive('viewToggle', function(){
+        return{
+            restrict: 'E',
+            reguire: 'ngModel',
+            template:'<ul class= "list-inline list-unstyled"><li><i class="fa fa-th fa-2x" id="grid-view"></i></li><li><input id="view-select" class="cmn-toggle cmn-toggle-round" ng-model = "ginasCtrl.grid" ng-click="ginasCtrl.toggleView()" type="checkbox" ><label for="view-select" id = "view-label"></label></li><li><i class="fa fa-th-list fa-2x" id="list-view"></i></li></ul>'
+        };
+    });
+
 
     ginasApp.directive('exportButton', function(){
         return{

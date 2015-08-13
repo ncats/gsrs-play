@@ -20,11 +20,9 @@
                     Subunits&nbsp;<span class="badge head"> @sub.protein.subunits.size()</span></button>
             </div>
             <div class = "col-md-2 pull-right">
-                <div class="switch">
-                    <div class= "pull-left" id="num">NUMBERING</div>
-                    <input id="numbers" class="cmn-toggle cmn-toggle-round" type="checkbox" checked>
-                    <label for="numbers"></label>
-                </div>
+                <form class="form" name="numbers-select" id = "numbers-select">
+                    <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-list-ol fa-2x"></i>' off='<i class="fa fa-bars fa-2x"></i>'></switch>
+                </form>
             </div>
         </div>
         <div class = "col-md-12">
@@ -43,7 +41,7 @@
                                         <div class = "col-md-2 aaBlock">
                                             <div class = "row">
                                                 <div class = "col-md-12 text-right">
-                                                    <span class = "count">@((j + 1) * 10)</span>
+                                                    <span class = "count" ng-hide="numbers">@((j + 1) * 10)</span>
                                                 </div>
                                             </div>
                                             <div class = "row">
@@ -63,7 +61,7 @@
                                 <div class = "col-md-2 aaBlock">
                                     <div class = "row">
                                         <div class = "col-md-12 text-right">
-                                            <span class = "count">@length</span>
+                                            <span class = "count" ng-hide="numbers">@length</span>
                                         </div>
                                     </div>
                                     <div class = "row">
