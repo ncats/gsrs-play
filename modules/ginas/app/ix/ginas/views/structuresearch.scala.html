@@ -5,25 +5,26 @@
 } {
     <div class = "panel-default"  ng-controller ="StrucSearchController as StrucSearchCtrl">
         <div class= "panel-body">
+            <form class="form-inline"
+            method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances()" novalidate>
             <div class="row">
                 <div class="col-md-12">
-                    <sketcher width="100%" ng-model="structure.molfile"></sketcher>
+                    <sketcher width="100%" ng-model="structure"  structure-query="StrucSearchCtrl.controllerFunction"></sketcher>
                 </div>
             </div>
         </div>
         <div class="panel-footer">
             <div class="row">
                 <div class="col-md-12">
-                    <form class="form-inline"
-                    method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances()" novalidate>
-                        <div class="form-group">
+
+                        <div class="form-group col-md-2">
                             <label class="sr-only" for="search-selection">Search Type</label>
                             <select class="form-control" id="search-selection" name="type" ng-model ="type" >
                                 <option ng-repeat="v in select" value="{{v}}">{{v}}</option>
                             </select>
                             <label class="sr-only" for="tanimoto-cutoff">Tanimoto threshold</label>
 
-                            <input class="form-control"
+                            <input class="form-control col-md-2"
                             ng-if="type=='Similarity'" type="number" step=".1"
                             min="0" max="1"
                             name="cutoff"
@@ -32,14 +33,12 @@
                             title="Tanimoto threshold"
                             ng-model="cutoff"
                             >
-
                             <input type="text" class="form-control"
                             data-toggle="tooltip"
                             title="Query structure"
                             name="q"
                             ng-hide="true"
-                            ng-model="structure.molfile"
-                            ng-change="StrucSearchCtrl.getSmiles(q);"
+                            ng-model="ginasCtrl.substance.q"
                             id="structure">
                         </div>
                         <button type="submit" onclick="submitForm()"

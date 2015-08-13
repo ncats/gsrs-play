@@ -144,13 +144,15 @@
         return {
             restrict: 'E',
             require: "ngModel",
+            scope:{
+              structureQuery: '='
+            },
             template: "<div id='sketcherForm' dataformat='molfile' ondatachange='setMol(this)'></div>",
             controller: function ($scope, $attrs) {
                 sketcher = new JSDraw("sketcherForm");
             },
 
-            link: function (scope, element, attrs, ngModel) {
-
+            link: function (scope, element, attrs, ngModelCtrl) {
                 this.setMol = function () {
                     var url = window.strucUrl;//'/ginas/app/smiles';
                     var mol = sketcher.getMolfile();
@@ -161,10 +163,17 @@
                         data: mol,
                         headers: {'Content-Type': 'text/plain'}
                     }).success(function (data) {
+
+                        if(!Substance.chemical){
+                            Substance.chemical = {};
+                        }
                         Substance.chemical.structure = data.structure;
                         Substance.chemical.moieties = data.moieties;
-                        scope.q = data.structure.smiles;
+                        Substance.q= data.structure.smiles;
                     });
+
+                    console.log(Substance);
+                    console.log(element);
                 };
 
                 this.getSmiles = function () {
@@ -794,11 +803,13 @@
         $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
-        $scope.q = "";
+       $scope.q = "";
 
-        this.change = function (q) {
-            console.log(q);
+        $scope.controllerFunction = function(valueFromDirective){
+            console.log(valueFromDirective);
         };
+
+
     });
 
     ginasApp.controller('RelationshipController', function ($scope, $rootScope, substanceFactory) {
