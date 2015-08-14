@@ -401,7 +401,7 @@ public class GinasLoad extends App {
                     	// New way:
                     	
                     	String id = ginasRecordProcessorPlugin.submit(payload);
-                        return ok("Running job " + id);
+                        return ok("Running job " + id + " payload is " + payload.name + " also " + payload.id);
                         
                         
                         // Old way
@@ -450,11 +450,29 @@ public class GinasLoad extends App {
     }
     
     public static Result monitorProcess(String processID){
-    	ProcessingJob job = ProcessingJobFactory
-				.getJob(processID);
+    	ProcessingJob job = ProcessingJobFactory.getJob(processID);
+    	
+
+    	String msg = "";
+    	if(job!=null){
+    		List<ProcessingRecord> precs = ProcessingJobFactory.getJobRecords(job.id);
+	    	msg+="Started:" + job.start + "\n";
+	    	msg+="Ended:" + job.stop + "\n";
+	    	msg+="Message:" + job.message + "\n";
+	    	msg+="Status:" + job.status + "\n";
+	    	if(job.payload!=null){
+		    	msg+="Payload:" + job.payload.name + "\n";
+		    		    	List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload(job.payload.id.toString());
+		    	if(jobs!=null)
+		    		msg+="Payload Jobs:" + jobs.size() + "\n";
+	    	}
+	    	if(precs!=null)
+	    	msg+="Number of Records:" + precs.size() + "\n";
+    	}
     	
     	
-    	return ok("Processing:" + job.message);
+    	
+    	return ok("Processing job:" + processID + "\n\n" + msg);
     	
     	//OLD WAY:
 //    	Process p =processes.get(processID);

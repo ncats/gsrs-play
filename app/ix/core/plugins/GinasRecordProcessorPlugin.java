@@ -608,29 +608,29 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			ActorRef sender, PayloadProcessor pp) throws Exception {
 		List<ProcessingJob> jobs = ProcessingJobFactory
 				.getJobsByPayload(pp.payload.id.toString());
-		Logger.debug("Okay, where are these jobs?");
+		//Logger.debug("Okay, where are these jobs?");
 		ProcessingJob job = null;
 		
 		if (jobs.isEmpty()) {
-			Logger.debug("Sweet, I found some!");
+			//Logger.debug("Sweet, I found some!");
 			job = new ProcessingJob();
 			job.start = System.currentTimeMillis();
 			job.keys.add(new Keyword(
 					GinasRecordProcessorPlugin.class.getName(), pp.key));
 			job.status = ProcessingJob.Status.RUNNING;
 			job.payload = pp.payload;
-			Logger.debug("Lemme try to process one...");
+			//Logger.debug("Lemme try to process one...");
 			try {
 				InputStream is = PayloadFactory.getStream(pp.payload);
-				Logger.debug("Making extractor");
+				//Logger.debug("Making extractor");
 				RecordExtractor extract = _recordExtractor.makeNewExtractor(is);
 				Logger.debug("Made extractor:" + extract.getClass().getName());
 				for (Object m; (m = extract.getNextRecord()) != null;) {
-					Logger.debug("Extracting");
+					//Logger.debug("Extracting");
 					proc.tell(new PayloadRecordGeneric(job, m), sender);
 				}
 				extract.close();
-				Logger.debug("Extracted no problems");
+				//Logger.debug("Extracted no problems");
 			} catch (Throwable t) {
 				job.message = t.getMessage();
 				job.status = ProcessingJob.Status.FAILED;
@@ -640,7 +640,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				reporter.tell(PersistModel.Save(job), sender);
 			}
 		} else {
-			Logger.debug("No jobs? What is this, this economy? MIRITE?");
+			//Logger.debug("No jobs? What is this, this economy? MIRITE?");
 			job = jobs.iterator().next();
 			job.keys.add(new Keyword(
 					GinasRecordProcessorPlugin.class.getName(), pp.key));
@@ -715,15 +715,20 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public void persist(PersistRecord<Substance, Substance> prec) {
 			try {
 				if (prec.theRecordToPersist != null) {
+					Logger.debug("persisting:"+ prec.rec.name);
+					
 					if(prec.theRecordToPersist instanceof ChemicalSubstance){
 						GinasRecordProcessorPlugin.persist((ChemicalSubstance) prec.theRecordToPersist, prec.indexer);
 					}
+					
 					 Transaction tx = Ebean.beginTransaction();
 				        try {
 				        	prec.theRecordToPersist.save();
 				            tx.commit();
+				            prec.rec.status = ProcessingRecord.Status.OK;
 				        }
 				        catch (Exception ex) {
+				        	
 				            ex.printStackTrace();
 				        }
 				        finally {
@@ -733,9 +738,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					//prec.indexer.add(prec.rec.job.payload.name, prec.struc.id.toString(), prec.mol);
 					prec.rec.xref = new XRef(prec.theRecordToPersist);
 					prec.rec.xref.save();
+					
 					//??????
 				}
+				
 				prec.rec.save();
+				
 				Logger.debug("Saved struc " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.uuid : null)
 						+ " record " + prec.rec.id);
 			} catch (Throwable t) {
@@ -754,16 +762,18 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			rec.start = System.currentTimeMillis();
 			Substance struc = null;
 			try {
+				Logger.debug("transforming:"+ rec.name);
 				struc = makeSubstance(pr.theRecord);
 				rec.stop = System.currentTimeMillis();
-				rec.status = ProcessingRecord.Status.OK;
-				Logger.debug("I made a new substance!");
+				rec.status = ProcessingRecord.Status.ADAPTED;
+
+				//Logger.debug("I made a new substance!");
 			} catch (Throwable t) {
 				rec.stop = System.currentTimeMillis();
 				rec.status = ProcessingRecord.Status.FAILED;
 				rec.message = t.getMessage();
 
-				Logger.debug("But ... I wanted to make a new substance ...");
+				//Logger.debug("But ... I wanted to make a new substance ...");
 				//t.printStackTrace();
 			}
 			return struc;
@@ -789,7 +799,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			try {
 				String line=buff.readLine();
 				String[] toks = line.split("\t");
-	            Logger.debug("processing "+toks[0]+" "+toks[1]+"...");
+	            Logger.debug("extracting:"+ toks[1]);
 	            ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes("utf8"));
 	            ObjectMapper mapper = new ObjectMapper ();
 		        mapper.addHandler(new GinasV1ProblemHandler ());
