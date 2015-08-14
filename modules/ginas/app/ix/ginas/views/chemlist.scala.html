@@ -85,11 +85,7 @@
                         <ul class= "list-inline pull-right list-unstyled">
                             <li>
                                <export-button structureid ="'@chem.structure.id'" ></export-button></li>
-
-
-                            <li><button type="button" class="btn btn-primary" data-toggle="modal"
-                            data-molurl='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "mol")'
-                            data-target="#strucModal"><span class="fa fa-search chem-button"></span></button>
+                            <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" ng-click="ginasCtrl.passStructure('@chem.structure.molfile')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
                             </li>
                         </ul>
                     </div>
