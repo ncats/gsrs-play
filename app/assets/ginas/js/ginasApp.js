@@ -43,15 +43,23 @@
     ginasApp.controller("GinasCtrl", function($scope, localStorageService, Substance){
         var ginasCtrl = this;
         ginasCtrl.substance = Substance;
-        console.log(localStorageService);
-       // localStorageService.set('grid', true);
         $scope.enabled= true;
+        $scope.mol = null;
+        //$scope.unbind = localStorageService.bind($scope, 'mol');
         $scope.unbind = localStorageService.bind($scope, 'enabled');
         this.enabled= function getItem(key) {
             return localStorageService.get('enabled') || false;
         };
         this.numbers= true;
         localStorageService.set('enabled', $scope.enabled);
+
+        this.passStructure= function(molfile){
+            localStorageService.set('mol', molfile);
+        };
+        this.clearStructure= function(){
+            console.log("destroy");
+            return localStorageService.remove('mol');
+        };
     });
 
     ginasApp.directive('datepicker', function () {
@@ -164,7 +172,7 @@
         };
     });
 
-    ginasApp.directive('sketcher', function ($http, $timeout, Substance) {
+    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance) {
         return {
             restrict: 'E',
             require: "ngModel",
@@ -172,15 +180,36 @@
               structureQuery: '='
             },
             template: "<div id='sketcherForm' dataformat='molfile' ondatachange='setMol(this)'></div>",
-            controller: function ($scope, $attrs) {
-                sketcher = new JSDraw("sketcherForm");
-            },
 
             link: function (scope, element, attrs, ngModelCtrl) {
-                this.setMol = function () {
-                    var url = window.strucUrl;//'/ginas/app/smiles';
-                    var mol = sketcher.getMolfile();
-                    //console.log(mol);
+                sketcher = new JSDraw("sketcherForm");
+                var url = window.strucUrl;//'/ginas/app/smiles';
+                var mol = (localStorageService.get('mol') || false);
+            console.log(mol);
+                if (!mol) {
+                    this.setMol = function () {
+                        mol = sketcher.getMolfile();
+                        //console.log(mol);
+                        $http({
+                            method: 'POST',
+                            url: url,
+                            data: mol,
+                            headers: {'Content-Type': 'text/plain'}
+                        }).success(function (data) {
+
+                            if (!Substance.chemical) {
+                                Substance.chemical = {};
+                            }
+                            Substance.chemical.structure = data.structure;
+                            Substance.chemical.moieties = data.moieties;
+                            Substance.q = data.structure.smiles;
+                        });
+
+                        console.log(Substance);
+                        console.log(element);
+                    };
+                }
+                else{
                     $http({
                         method: 'POST',
                         url: url,
@@ -188,32 +217,17 @@
                         headers: {'Content-Type': 'text/plain'}
                     }).success(function (data) {
 
-                        if(!Substance.chemical){
+                        if (!Substance.chemical) {
                             Substance.chemical = {};
                         }
                         Substance.chemical.structure = data.structure;
                         Substance.chemical.moieties = data.moieties;
-                        Substance.q= data.structure.smiles;
+                        Substance.q = data.structure.smiles;
                     });
-
+                    sketcher.setMolfile(mol);
                     console.log(Substance);
                     console.log(element);
-                };
-
-                this.getSmiles = function () {
-                    var smile = sketcher.getSmiles();
-                    var url2 = window.smilesUrl;//'/ginas/app/smiles';
-                    data = JSON.stringify(smile);
-                    $http({
-                        method: 'POST',
-                        url: url2,
-                        data: smile,
-                        headers: {'Content-Type': 'text/plain'}
-                    }).success(function (data) {
-                        structure.formula = data;
-                        return data;
-                    });
-                };
+                }
             }
         };
     });
@@ -248,15 +262,6 @@
         };
     });
 
-    ginasApp.directive('viewToggle', function(){
-        return{
-            restrict: 'E',
-            reguire: 'ngModel',
-            template:'<ul class= "list-inline list-unstyled"><li><i class="fa fa-th fa-2x" id="grid-view"></i></li><li><input id="view-select" class="cmn-toggle cmn-toggle-round" ng-model = "ginasCtrl.grid" ng-click="ginasCtrl.toggleView()" type="checkbox" ><label for="view-select" id = "view-label"></label></li><li><i class="fa fa-th-list fa-2x" id="list-view"></i></li></ul>'
-        };
-    });
-
-
     ginasApp.directive('exportButton', function(){
         return{
             restrict: 'E',
@@ -270,25 +275,15 @@
     ginasApp.directive('export', function($http) {
         return function (scope, element, attrs) {
             element.bind("click", function () {
-                console.log(scope);
-                console.log(element);
                 var modal =  angular.element( document.getElementById('export-mol'));
-
                 $http({
                     method: 'GET',
                     url: 'app/structure/' + scope.structureid + '.mol',
                     headers: {'Content-Type': 'text/plain'}
                 }).success(function (data) {
-                   // angular.element(document.getElementById('inputExport')).html(data);
                     modal.find('#inputExport').text(data);
                 });
-
                    modal.modal('show');
-                    modal.on('show.bs.modal', function(e){
-                        console.log(e);
-                    });
-
-                    console.log(document.getElementById('export-mol'));
 
             });
         };
@@ -300,6 +295,10 @@
             templateUrl: "app/assets/ginas/templates/molexport.html"
         };
     });
+
+
+
+
 
 
     ginasApp.controller('ReferenceController', function ($scope, Substance, $rootScope) {
@@ -667,13 +666,13 @@
         };
     });
 
-    ginasApp.controller('StructureController', function ($scope, $http, Substance) {
+    ginasApp.controller('StructureController', function ($scope, $http, localStorageService, Substance) {
         $scope.isEditingStructure = false;
         $scope.editStructure = null;
         $scope.noStructure = true;
         this.adding = false;
         this.editing = false;
-
+        localStorageService.remove('mol');
 
         this.toggleEdit = function () {
             this.editing = !this.editing;
