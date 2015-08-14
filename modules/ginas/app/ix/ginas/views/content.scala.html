@@ -81,18 +81,9 @@
                         @ix.ncats.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
                         </div>
                         <div class= "col-md-3 text-right hidden-xs">
-                            <ul class= "list-inline list-unstyled">
-                                <li>
-                                    <i class="fa fa-th fa-2x" id="grid-view"></i>
-                                </li>
-                                <li>
-                                    <input id="view-select" class="cmn-toggle cmn-toggle-round" type="checkbox" checked>
-                                    <label for="view-select" id = "view-label"></label>
-                                </li>
-                                <li>
-                                    <i class="fa fa-th-list fa-2x" id="list-view"></i>
-                                </li>
-                            </ul>
+                            <form class="form" name="grid-select" id = "grid-select">
+                            <switch id="enabled" name="enabled" ng-model="enabled" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
+                            </form>
                         </div>
                     </div>
                 </div>

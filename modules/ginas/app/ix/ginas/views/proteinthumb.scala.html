@@ -1,9 +1,7 @@
-@import ix.core.models.Structure
+
 @import ix.ginas.controllers.GinasApp
-@import ix.ginas.models.v1.ChemicalSubstance
-
-
 @import ix.ginas.models.v1.ProteinSubstance
+
 @(prot: ProteinSubstance)
 
 <div class = "col-md-3 thumb-col">
@@ -17,7 +15,6 @@
         <div class="panel-body struc-img">
             <a href="@ix.ginas.controllers.routes.GinasApp.protein(GinasApp.getId(prot))">
                 <img src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="img-responsive" id="" />
-
             </a>
         </div>
         <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@prot.getName()">
