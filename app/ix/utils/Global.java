@@ -5,18 +5,22 @@ import java.util.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
 
-import play.GlobalSettings;
-import play.Application;
-import play.Logger;
+import play.*;
 import play.db.ebean.EbeanPlugin;
 import play.db.DB;
+import play.libs.F.Promise;
 import play.libs.Json;
+import play.mvc.Action;
 import play.mvc.Http;
 import play.mvc.Controller;
+import play.mvc.Http.RequestHeader;
+import play.mvc.Result;
+import play.mvc.Http.Request;
 import play.api.mvc.EssentialFilter;
 import play.filters.gzip.GzipFilter;
 
 import com.typesafe.config.*;
+
 import scala.collection.immutable.Iterable;
 import scala.collection.JavaConverters;
 
@@ -28,7 +32,9 @@ import com.avaje.ebean.SqlQuery;
 import com.avaje.ebean.SqlRow;
 
 import javax.sql.DataSource;
+
 import java.sql.DatabaseMetaData;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -307,4 +313,22 @@ public class Global extends GlobalSettings {
             throw new IllegalArgumentException (ex);
         }
     }
+//    @Override
+//    public Action onRequest(Request request, Method actionMethod) {
+//
+//		System.out.println(request.path());
+//    	if(request.path().endsWith("/")){
+//    		System.out.println("YEAH!");
+//    	}
+//       //return movedPermanently("/" + path);
+//       return super.onRequest(request, actionMethod);
+//    }
+    
+    @Override
+    public Promise<Result> onHandlerNotFound(RequestHeader request) {
+    	if(!request.path().endsWith("/"))return super.onHandlerNotFound(request);
+    	//return Promise.<Result>((request.path().substring(0, request.path().length()-1));
+        return Promise.<Result>pure(Controller.movedPermanently(request.path().substring(0, request.path().length()-1)));
+    }
+    
 }
