@@ -1,197 +1,122 @@
 @import ix.ginas.controllers.GinasApp
-@import ix.ginas.controllers.v1.SubstanceFactory
-@(sub: ix.ginas.models.v1.Substance)(content: Html)
 
 
-@ginas(sub.getName, "ix.ginas.models.v1.StructurallyDiverseSubstance") {
-    @menu()
-} {
-    <nav class="navbar navbar-default" id="breadcrumb">
-        <div class="container-fluid">
-            <div class="row-fluid">
-                <div class="col-md-12">
-                    <ul class="nav nav-pills" id="breadcrumb-list">
-                        <li role="presentation" class="active"><a href="#structureDetails">Definition</a></li>
+@(sub: ix.ginas.models.v1.Substance)(breadcrumb: Html)(content: Html)
 
-                        <li role="presentation"><a href="#names">
-                            Names <span class="badge">@sub.names.size()</span></a></li>
-                        @if(sub.codes.size() > 0) {
-                            <li role="presentation"><a href="#codes">
-                                Codes <span class="badge">@sub.codes.size()</span></a></li>
-                        }
-                        @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-                            <li role="presentation"><a href="#relationships" id = "relation">
-                                Relationships <span class="badge">@sub.relationships.size()</span></a></li>
-                        }
-                        <li role="presentation"><a href="#refs">
-                            References <span class="badge">@sub.references.size()</span></a></li>
-                    </ul>
+
+    @ginas(sub.getName, "ix.ginas.models.v1.StructurallyDiverseSubstance") {
+        @menu()
+    } {
+        <nav class="navbar navbar-default" id="breadcrumb">
+            <div class="container-fluid">
+                <div class="row-fluid">
+                    <div class="col-md-6">
+                        <ul class="nav nav-pills" id="breadcrumb-list">
+                            @breadcrumb
+                            <li role="presentation"><a href="" ng-click="scrollTo('names')">
+                                Names <span class="badge">@sub.names.size()</span></a></li>
+                            @defining(sub.getModificationCount()) { gcount =>
+                                @if(gcount > 0 ){
+                                    <li role="presentation"><a href="" ng-click="scrollTo('mods')">Modifications
+                                        <span class= "badge">@gcount</span></a>
+                                    </li>
+                                }
+                            }
+                            @if(sub.codes.size() > 0) {
+                                <li role="presentation"><a href="" ng-click="scrollTo('codes')">
+                                    Codes <span class="badge">@sub.codes.size()</span></a></li>
+                            }
+                            @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
+                                <li role="presentation"><a href="" ng-click="scrollTo('relationships')" id = "relation">
+                                    Relationships <span class="badge">@sub.relationships.size()</span></a></li>
+                            }
+                            <li role="presentation"><a href="" ng-click="scrollTo('refs')">
+                                References <span class="badge">@sub.references.size()</span></a></li>
+                        </ul>
+                    </div>
+                    <div class = "col-md-2">
+                        <h3><em>@sub.getName()</em></h3></div>
+                    <div class ="col-md-1"><h4><em> @sub.getApprovalIDDisplay()</em></h4>
+                    </div>
                 </div>
             </div>
-        </div>
-    </nav>
-} {
-    <div class = "row">
-        <div class = "col-md-9">
-            <h1>@sub.getName()</h1>
-        </div>
-        <div class = "col-md-3">
-        	@if(sub.isSubstanceVariant()){
-        		<h2 class= "pull-right subconcept"> @sub.getApprovalIDDisplay()</h2>
-        	}else{
-        		<h2 class= "pull-right"> @sub.getApprovalIDDisplay()</h2>
-        	}
-            
-        </div>
-    </div>
-     @content
+        </nav>
+    } {
+        <div class = "row">
+            <div class = "col-md-9">
+                <h1>@sub.getName()</h1>
+            </div>
+            <div class = "col-md-3">
+            @if(sub.isSubstanceVariant()) {
+                <h2 class= "pull-right subconcept"> @sub.getApprovalIDDisplay()</h2>
+            } else {
+                <h2 class= "pull-right"> @sub.getApprovalIDDisplay()</h2>
+            }
 
-     @if(sub.hasModifications()) {
-      
+            </div>
+        </div>
+        @content
+
+        @if(sub.hasModifications()) {
+
             <div class="row info" id="mods">
                 <button class="btn btn-primary label-offset det ">
                     Modifications&nbsp;<span class="badge head"> @sub.getModificationCount()</span></button>
                 <div class="col-md-12">
                     @if(sub.getModifications().agentModifications.length > 0) {
-                        <div class = "row">
-                            <div class="col-md-12">
-                                Agent Modifications
-                                <table class="table table-striped" id="agent-Table">
-                                    <thead>
-                                        <tr>
-                                            <th>Modification Process</th>
-                                            <th>Location Role</th>
-                                            <th>Modification Type</th>
-                                            <th>Amount</th>
-                                            <th>Fragment Name</th>
-                                            <th>Fragment ID</th>
-                                        </tr>
-                                        @for(m <- sub.getModifications().agentModifications) {
-                                            <tr>
-                                                <td>@m.agentModificationProcess</td>
-                                                <td>@m.agentModificationRole</td>
-                                                <td>@m.agentModificationType</td>
-                                                <td>amount</td>
-                                                <td>@m.agentSubstance.refPname</td>
-                                                <td>
-                                                    <a href="@ix.ginas.controllers.routes.GinasApp.substance(m.agentSubstance.getLinkingID())">@m.agentSubstance.getLinkingID()</a>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
+                        @agentmodifications(sub.getModifications().agentModifications)
                     }
                     @if(sub.getModifications().physicalModifications.length > 0) {
-                        <div class = "row">
-                            <div class="col-md-12">
-                                Physical Modifications
-                                <table class="table table-striped" id="physical-Table">
-                                    <thead>
-                                        <tr>
-                                            <th>Modification Role</th>
-                                            <th>Parameter Name</th>
-                                            <th>Amount</th>
-                                        </tr>
-                                    </thead>
-                                    @for(m <- sub.getModifications().physicalModifications) {
-                                    	@for(pm <- m.parameters) {
-                                        <tr>
-                                            <td>@m.physicalModificationRole</td>
-                                            <td>@pm.parameterName</td>
-                                            <td>@pm.amount.toString()</td>
-                                        </tr>
-                                        }
-                                    }
-                                 </table>
-                            </div>
-                        </div>
-                   
+                        @physicalmodifications(sub.getModifications().physicalModifications)
                     }
                     @if(sub.getModifications().structuralModifications.length > 0) {
-                        <div class = "row">
-                            <div class="col-md-12">
-                                Structural Modifications
-                                <table class="table table-striped" id="structural-Table">
-                                    <thead>
-                                        <tr>
-                                            <th>Modification Type</th>
-                                            <th>Location Site</th>
-                                            <th>Location Type</th>
-                                            <th>Residue Modified</th>
-                                            <th>Extent</th>
-                                            <th>Fragment Name</th>
-                                            <th>Fragment Class</th>
-                                            <th>Fragment Approval</th>
-                                        </tr>
-                                    </thead>
-                                    @for(m <- sub.getModifications().structuralModifications) {
-                                        <tr>
-                                            <td>@m.structuralModificationType</td>
-                                            <td>@for(s <- m.sites) {
-                                                [@{
-                                                s.subunitIndex
-                                            }_@s.residueIndex]
-                                            }
-                                            </td>
-                                            <td>@m.locationType</td>
-                                            <td>@m.residueModified</td>
-                                            <td>@m.extent</td>
-                                            <td>@m.molecularFragment.refPname</td>
-                                            <td>@m.molecularFragment.substanceClass</td>
-                                            <td><a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())">@m.molecularFragment.getLinkingID()</a></td>
-                                        </tr>
-                                    }
-                                </table>
-                            </div>
-                        </div>
+                        @structuralmodifications(sub.getModifications().structuralModifications)
                     }
                 </div>
             </div>
-    }
-
-    <div class="row info" id="off-names">
-    @officialnames(sub.getOfficialNames(), sub)
-    </div>
-
-    <div class="row info" id="names">
-    @names(sub.getNonOfficialNames(),sub)
-    </div>
-
-    @if(sub.codes.size() > 0) {
-        <div class="row info" id="codes">
-        @codes(sub.codes)
+        }
+        <div class="row info" id="names">
+        @officialnames(sub.getOfficialNames(), sub)
         </div>
-    }
-    @if(sub.hasChildConceptReferences()) {
-        <div class="row info" id="variants">
-        	@variantconcepts(sub)
+
+        <div class="row info">
+        @names(sub.getNonOfficialNames(), sub)
         </div>
-    }
-    @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-        <div class="row info" id="relationships">
-        @relationships(sub.relationships)
-        </div>
-    }
-	@if(sub.notes!=null && sub.notes.size()>0) {
-		<div class="row info" id="notes">
-		 <button class="btn btn-primary label-offset det ">
+
+        @if(sub.codes.size() > 0) {
+            <div class="row info" id="codes">
+            @codes(sub.codes)
+            </div>
+        }
+        @if(sub.hasChildConceptReferences()) {
+            <div class="row info" id="variants">
+            @variantconcepts(sub)
+            </div>
+        }
+        @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
+            <div class="row info" id="relationships">
+            @relationships(sub.relationships)
+            </div>
+        }
+        @if(sub.notes != null && sub.notes.size() > 0) {
+            <div class="row info" id="notes">
+                <button class="btn btn-primary label-offset det ">
                     Notes&nbsp;<span class="badge head"> @sub.notes.size()</span></button>
-                    <table class="table table-striped" id="notes-Table">
-       	@for(n <- sub.notes) {
-       		<tr><td>
-       		@n.note
-       		</td></tr>      			
-       	} 
-       	</table>
+                <table class="table table-striped" id="notes-Table">
+                @for(n <- sub.notes) {
+                    <tr><td>
+                    @n.note
+                    </td>
+                    </tr>
+                }
+                </table>
+            </div>
+        }
+
+
+        <div class="row info" id="refs">
+        @references(sub.references)
         </div>
+
+
     }
-
-
-    <div class="row info" id="refs">
-    @references(sub.references)
-    </div>
-
-
-}

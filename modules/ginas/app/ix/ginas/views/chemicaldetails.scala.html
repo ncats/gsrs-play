@@ -62,7 +62,11 @@
     }
 }
 }
-@substancedetails(sub) {
+@substancedetails(sub){
+    <li role="presentation" class="active"><a href="#structureDetails">Structure</a></li>
+    @if(sub.moieties.length>0){
+        <li role="presentation"><a href="#moieties" >Moieties <span class="badge">@sub.moieties.length</span></a></li> }
+} {
     <div class = "row">
         <div class = "col-md-9">
             <h4>Chemical Substance</h4>

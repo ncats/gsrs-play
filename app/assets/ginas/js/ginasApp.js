@@ -40,10 +40,24 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasCtrl", function($scope, localStorageService, Substance){
+    ginasApp.controller("GinasCtrl", function($scope, $location, localStorageService, Substance){
         var ginasCtrl = this;
         ginasCtrl.substance = Substance;
-        $scope.enabled= true;
+
+        $scope.ScrollTo = function (prmElementToScrollTo)
+        {
+            //Store the old location.hash
+            var oldLocation = $location.hash();
+
+            //Set the location.hash to the id of the chosen element and navigate to it
+            $location.hash(prmElementToScrollTo);
+            $anchorScroll();
+
+            //Change the location.hash back to the old one to prevent page reloading
+            $location.hash(oldLocation);
+        };
+
+        $scope.enabled= false;
         $scope.mol = null;
         //$scope.unbind = localStorageService.bind($scope, 'mol');
         $scope.unbind = localStorageService.bind($scope, 'enabled');

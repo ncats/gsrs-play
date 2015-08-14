@@ -8,6 +8,24 @@
 }
 
 @substancedetails(sub) {
+    <li role="presentation" class="active"><a href="#subunits">Subunits
+        <span class= "badge">@sub.protein.subunits.length</span></a>
+    </li>
+    @defining(sub.protein.disulfideLinks.length) { count =>
+        @if(count > 0 ){
+            <li role="presentation"><a href="#disulfide">Disulfide Links
+                <span class= "badge">@count</span></a>
+            </li>
+        }
+    }
+    @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
+        @if(count > 0 ){
+            <li role="presentation"><a href="#glyco">Glycosylation
+                <span class= "badge">@count</span></a>
+            </li>
+        }
+    }
+} {
      <div class = "row">
         <div class = "col-md-9">
             <h4>Protein Substance</h4>

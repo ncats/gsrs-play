@@ -1,0 +1,35 @@
+
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.AgentModification
+
+
+@(mods: List[AgentModification])
+<div class = "row">
+  <div class="col-md-12">
+    Agent Modifications
+    <table class="table table-striped" id="agent-Table">
+      <thead>
+        <tr>
+          <th>Modification Process</th>
+          <th>Location Role</th>
+          <th>Modification Type</th>
+          <th>Amount</th>
+          <th>Fragment Name</th>
+          <th>Fragment ID</th>
+        </tr>
+        @for(m <- mods) {
+          <tr>
+            <td>@m.agentModificationProcess</td>
+            <td>@m.agentModificationRole</td>
+            <td>@m.agentModificationType</td>
+            <td>amount</td>
+            <td>@m.agentSubstance.refPname</td>
+            <td>
+              <a href="@ix.ginas.controllers.routes.GinasApp.substance(m.agentSubstance.getLinkingID())">@m.agentSubstance.getLinkingID()</a>
+            </td>
+          </tr>
+        }
+      </thead>
+    </table>
+  </div>
+</div>

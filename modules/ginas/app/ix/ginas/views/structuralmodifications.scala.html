@@ -1,0 +1,42 @@
+
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.StructuralModification
+
+
+@(mods: List[StructuralModification])
+<div class = "row">
+  <div class="col-md-12">
+    Structural Modifications
+    <table class="table table-striped" id="structural-Table">
+      <thead>
+        <tr>
+          <th>Modification Type</th>
+          <th>Location Site</th>
+          <th>Location Type</th>
+          <th>Residue Modified</th>
+          <th>Extent</th>
+          <th>Fragment Name</th>
+          <th>Fragment Class</th>
+          <th>Fragment Approval</th>
+        </tr>
+      </thead>
+      @for(m <- mods) {
+        <tr>
+          <td>@m.structuralModificationType</td>
+          <td>@for(s <- m.sites) {
+            [@{
+            s.subunitIndex
+          }_@s.residueIndex]
+          }
+          </td>
+          <td>@m.locationType</td>
+          <td>@m.residueModified</td>
+          <td>@m.extent</td>
+          <td>@m.molecularFragment.refPname</td>
+          <td>@m.molecularFragment.substanceClass</td>
+          <td><a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())">@m.molecularFragment.getLinkingID()</a></td>
+        </tr>
+      }
+    </table>
+  </div>
+</div>

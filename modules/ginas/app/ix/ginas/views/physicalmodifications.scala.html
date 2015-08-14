@@ -1,0 +1,30 @@
+
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.PhysicalModification
+
+
+@(mods: List[PhysicalModification])
+<div class = "row">
+  <div class="col-md-12">
+    Physical Modifications
+    <table class="table table-striped" id="physical-Table">
+      <thead>
+        <tr>
+          <th>Modification Role</th>
+          <th>Parameter Name</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      @for(m <- mods) {
+        @for(pm <- m.parameters) {
+          <tr>
+            <td>@m.physicalModificationRole</td>
+            <td>@pm.parameterName</td>
+            <td>@pm.amount.toString()</td>
+          </tr>
+        }
+      }
+    </table>
+  </div>
+</div>
+
