@@ -66,7 +66,7 @@ public class PayloadFactory extends EntityFactory {
     public static InputStream getStream (UUID id) {
         Payload payload = getPayload (id);
         if (payload != null)
-            return payloadPlugin.getPayloadAsStream(payload);
+            return payloadPlugin.getPayloadAsStreamUncompressed(payload);
         return null;
     }
     
