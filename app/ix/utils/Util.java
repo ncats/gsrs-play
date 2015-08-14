@@ -1,6 +1,12 @@
 package ix.utils;
 
 import java.util.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.*;
 
 import play.Logger;
@@ -87,4 +93,72 @@ public class Util {
     
     private Util () {
     }
+
+	/**
+	 * Returns an uncompressed InputStream from possibly compressed one.
+	 * 
+	 * @param is
+	 * @param uncompressed
+	 * @return
+	 * @throws IOException
+	 */
+	public static InputStream getUncompressedInputStream(InputStream is,
+			boolean[] uncompressed) throws IOException {
+		InputStream retStream = new BufferedInputStream(is);
+		// if(true)return retStream;
+		retStream.mark(100);
+		if (uncompressed != null) {
+			uncompressed[0] = false;
+		}
+		try {
+			ZipInputStream zis = new ZipInputStream(retStream);
+			ZipEntry entry;
+			boolean got = false;
+			// while there are entries I process them
+			while ((entry = zis.getNextEntry()) != null) {
+				got = true;
+
+				// entry.
+				retStream = zis;
+				break;
+			}
+			if (!got)
+				throw new IllegalStateException("Oops");
+		} catch (Exception ex) {
+			retStream.reset();
+			// try as gzip
+			try {
+				GZIPInputStream gzis = new GZIPInputStream(retStream);
+				retStream = gzis;
+			} catch (IOException e) {
+				retStream.reset();
+				if (uncompressed != null) {
+					uncompressed[0] = true;
+				}
+				// retStream = new FileInputStream (file);
+			}
+			// try as plain txt file
+		}
+		return retStream;
+
+	}
+
+	/**
+	 * Returns an uncompressed inputstream from possibly multiply compressed
+	 * stream
+	 * 
+	 * @param is
+	 * @return
+	 * @throws IOException
+	 */
+	public static InputStream getUncompressedInputStreamRecursive(InputStream is)
+			throws IOException {
+		boolean[] test = new boolean[1];
+		test[0] = false;
+		InputStream is2 = is;
+		while (!test[0]) {
+			is2 = getUncompressedInputStream(is2, test);
+		}
+		return is2;
+	}
 }

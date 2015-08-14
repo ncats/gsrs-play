@@ -1,19 +1,29 @@
 package ix.ginas.controllers;
 
 import ix.core.models.Keyword;
+import ix.core.models.Payload;
+import ix.core.models.ProcessingJob;
+import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
 import ix.core.models.Value;
+import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.core.plugins.GinasRecordProcessorPlugin.PayloadRecordGeneric;
+import ix.core.plugins.GinasRecordProcessorPlugin.PersistRecord;
+import ix.core.plugins.StructureProcessorPlugin.PayloadProcessor;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
 import ix.ginas.models.Ginas;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
 import ix.core.chem.Chem;
+import ix.core.controllers.ProcessingJobFactory;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -50,6 +60,13 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import java.util.Date;
 
 public class GinasLoad extends App {
+	
+	static final GinasRecordProcessorPlugin ginasRecordProcessorPlugin =
+	        Play.application().plugin(GinasRecordProcessorPlugin.class);
+	    static final PayloadPlugin payloadPlugin =
+	        Play.application().plugin(PayloadPlugin.class);
+	    
+	    
     public static java.util.Map<String,Process> processes = new java.util.concurrent.ConcurrentHashMap<String,Process>();                
 	
 	
@@ -377,34 +394,18 @@ public class GinasLoad extends App {
                     is = new FileInputStream (file);
                 }
                 else {
-                    part = body.getFile("json-dump");
-                    if (part != null) {
-                        File file = part.getFile();
-                        try {
-                            // see if it's a zip file
-                            ZipFile zip = new ZipFile (file);
-                            for (Enumeration<? extends ZipEntry> en = zip.entries();
-                                 en.hasMoreElements(); ) {
-                                ZipEntry ze = en.nextElement();
-                                Logger.debug("processing "+ze.getName());
-                                is = zip.getInputStream(ze);
-                                break;
-                            }
-                        }catch (Exception ex) {
-                            Logger.warn("Not a zip file \""+file+"\"!");
-                            //try as gzip
-                            try {
-                                GZIPInputStream gzis = new GZIPInputStream
-                                    (new FileInputStream(file));
-                                is=gzis;
-                                
-                            } catch (IOException e) {
-                                Logger.warn("Not a gzip file \""+file+"\"!");
-                                is = new FileInputStream (file);
-                            }
-                            // try as plain txt file
-                        }
-                        return processDump (is, false);
+                	Payload payload = payloadPlugin.parseMultiPart
+                             ("json-dump", request ());
+                	
+                    if (payload != null) {
+                    	// New way:
+                    	
+                    	String id = ginasRecordProcessorPlugin.submit(payload);
+                        return ok("Running job " + id + " payload is " + payload.name + " also " + payload.id);
+                        
+                        
+                        // Old way
+                        //return processDump (ix.utils.Util.getUncompressedInputStreamRecursive(payloadPlugin.getPayloadAsStream(payload)), false);
                     }
                     else {
                         return badRequest
@@ -424,6 +425,8 @@ public class GinasLoad extends App {
         return ok (mapper.valueToTree(sub));
     }
 
+   
+    
     /**
      * Processes an inputstream of jsonDump format.
      * @param is
@@ -447,12 +450,37 @@ public class GinasLoad extends App {
     }
     
     public static Result monitorProcess(String processID){
-    	Process p =processes.get(processID);
-    	if(p==null){
-    		return _internalServerError (new IllegalArgumentException("Process \"" + processID + "\" does not exist."));
-    	}else{
-    		return ok(p.statusMessage());
+    	ProcessingJob job = ProcessingJobFactory.getJob(processID);
+    	
+
+    	String msg = "";
+    	if(job!=null){
+    		List<ProcessingRecord> precs = ProcessingJobFactory.getJobRecords(job.id);
+	    	msg+="Started:" + job.start + "\n";
+	    	msg+="Ended:" + job.stop + "\n";
+	    	msg+="Message:" + job.message + "\n";
+	    	msg+="Status:" + job.status + "\n";
+	    	if(job.payload!=null){
+		    	msg+="Payload:" + job.payload.name + "\n";
+		    		    	List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload(job.payload.id.toString());
+		    	if(jobs!=null)
+		    		msg+="Payload Jobs:" + jobs.size() + "\n";
+	    	}
+	    	if(precs!=null)
+	    	msg+="Number of Records:" + precs.size() + "\n";
     	}
+    	
+    	
+    	
+    	return ok("Processing job:" + processID + "\n\n" + msg);
+    	
+    	//OLD WAY:
+//    	Process p =processes.get(processID);
+//    	if(p==null){
+//    		return _internalServerError (new IllegalArgumentException("Process \"" + processID + "\" does not exist."));
+//    	}else{
+//    		return ok(p.statusMessage());
+//    	}
     }
     
     static abstract class Process{
@@ -617,4 +645,26 @@ public class GinasLoad extends App {
         }
         return sub;     
     }
+    
+    /*
+    public static Result loadTTT () {
+        String mesg = "processing "+new java.util.Random().nextInt(100);
+        Logger.debug("submitting "+mesg);
+        
+        DynamicForm requestData = Form.form().bindFromRequest();
+        String max = requestData.get("max-strucs");
+        try {
+            Payload payload = payloadPlugin.parseMultiPart
+                ("load-file", request ());
+            String id = structurePlugin.submit(payload);
+            Logger.debug("Job "+id+" submitted!");
+        }
+        catch (IOException ex) {
+            return internalServerError ("Request is not multi-part encoded!");
+        }
+        
+        return redirect (routes.Structures.index());
+    }*/
+
+    
 }

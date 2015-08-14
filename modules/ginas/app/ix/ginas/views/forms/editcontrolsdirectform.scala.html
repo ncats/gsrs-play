@@ -1,6 +1,6 @@
 @(Controller : String, editObject : String = "editObject",showCondition : String = "addingObject", validateMethod : String = "validateProperty", resetMethod : String = "reset");
 
-@import ix.ginas.controllers.GinasApp;
+@import ix.ginas.controllers.GinasApp
 
 <div class="col-md-1 pull-right" ng-show="@(showCondition)">
    <a ng-click="@(Controller).@(resetMethod)()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>

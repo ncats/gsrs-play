@@ -5,6 +5,7 @@ import java.util.List;
 import java.security.MessageDigest;
 import java.security.DigestInputStream;
     
+
 import play.Logger;
 import play.Plugin;
 import play.Application;
@@ -85,6 +86,15 @@ public class PayloadPlugin extends Plugin {
         return createPayload (name, mime, content.getBytes("utf8"));
     }
     
+    /**
+     * Create a payload from a form submission. If there is no
+     * multi-part data associated with that field, returns null.
+     * 
+     * @param field
+     * @param request
+     * @return
+     * @throws IOException
+     */
     public Payload parseMultiPart (String field, Http.Request request)
         throws IOException {
         
@@ -137,5 +147,15 @@ public class PayloadPlugin extends Plugin {
             }
         }
         return null;
+    }
+    public InputStream getPayloadAsStreamUncompressed(Payload pl){
+    	InputStream is = getPayloadAsStream(pl);
+    	if(is==null)return null;
+    	try {
+			return ix.utils.Util.getUncompressedInputStreamRecursive(is);
+		} catch (IOException e) {
+			Logger.trace("Problem uncompressing stream", e);
+		}
+    	return null;
     }
 }

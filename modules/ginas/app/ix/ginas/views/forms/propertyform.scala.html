@@ -38,7 +38,7 @@
             </div>
            
             <div class = "col-md-3">
-                {{obj.value}}
+                <amount value="obj.value"></amount>
             </div>
             <div class = "col-md-2">
                 {{obj.parameters}}
@@ -87,8 +87,22 @@
                 	<select class="form-control" title="Property Name" id="name" name = "name" ng-model = "property.name" ng-options="r.display for r in @GinasApp.getCV.getField("PROPERTY_NAME") track by r.display" required>
                 	</select>
 				</div>
+				<div class="col-md-3">
+                     <amount value="property.value"></amount>
+                </div>
 				
+				<div class="col-md-2">
+                     <input ng-model = "property.parameters" placeholder="Paramaters" title="Paramaters" id="paramaters"/>
+                </div>
                 
+				<div class="col-md-1">
+                     <input type = "checkbox" ng-model = "property.defining" placeholder="Defining" title="Defining" id="defining"/>
+                </div>
+				
+				
+				
+				
+				
                 <div class="col-md-2 err-check" show-errors>
                     <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
                     <p class="danger" ng-if="!ginasCtrl.substance.references && propertyForm.reference.$error">*required</p>
@@ -98,6 +112,55 @@
                     </ng-messages>
                 </div>
                 @editcontrolsdirectform("PropertyCtrl","property","addingProperties","validateProperty","reset")
+                
+                
+                
+                <div class="col-md-9 err-check" id="property-div" show-errors>
+					 <div class = "row header-row">
+		             <div class = "col-md-2">
+		                <strong>Amount Type</strong>
+		            </div>
+		            <div class = "col-md-2">
+		                <strong>Average</strong>
+		            </div>
+		            <div class = "col-md-2">
+		                <strong>Low</strong>
+		            </div>
+		            <div class = "col-md-2">
+		                <strong>High</strong>
+		            </div>
+		            <div class = "col-md-2">
+		                <strong>Unit</strong>
+		            </div>
+		            <div class = "col-md-2">
+		                <strong>Non-Numeric Value</strong>
+		            </div>
+		        </div>
+					<div class="col-md-2 err-check" show-errors>
+						<select class="form-control" title="Amount Type" id="amount.type" name = "amount.type" ng-model = "property.value.type" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_TYPE") track by r.display" >
+	                	</select>
+                	</div> 
+                	<div class="col-md-2 err-check" show-errors>
+	                	<input type="number" class="form-control" title="Amount Average" id="amount.average" name = "amount.average" ng-model = "property.value.average" >
+	                	</input>
+                	</div>
+                	<div class="col-md-2 err-check" show-errors> 
+	                	<input type="number"  class="form-control" title="Amount Low" id="amount.low" name = "amount.low" ng-model = "property.value.low" >
+	                	</input>
+                	</div>
+                	<div class="col-md-2 err-check" show-errors>
+	                	<input type="number"  class="form-control" title="Amount High" id="amount.high" name = "amount.high" ng-model = "property.value.high" >
+	                	</input>
+	                </div>
+                	<div class="col-md-2 err-check" show-errors>
+	                	<select class="form-control" title="Units" id="amount.type" name = "amount.type" ng-model = "property.value.units" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_UNIT") track by r.display" >
+	                	</select>
+                	</div>
+                	<div class="col-md-2 err-check" show-errors>
+	                	<input class="form-control" title="Amount Nonnumeric Value" id="amount.high" name = "amount.high" ng-model = "property.value.nonNumericValue" >
+	                	</input>
+                	</div>
+				</div>
             </form>
         </div>
     </div>
