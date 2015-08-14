@@ -128,6 +128,23 @@
             }
         };
     });
+    
+    ginasApp.directive('amount', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                value: '='
+            },
+            link: function (scope, element, attrs) {
+                console.log("Linking");
+                //console.log(scope);
+                //console.log(scope.amount);
+                //console.log(attrs);
+            },
+            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.unit}}</span></div>'
+        };
+    });
 
     ginasApp.directive('subunit', function () {
         return {
@@ -547,6 +564,10 @@
 
         this.addProperties = function () {
             $scope.addingProperties = !$scope.addingProperties;
+        };
+        
+        this.testsomething = function (){
+            return "TTTTTTTTTTTTTTTTTTTTTT";
         };
 
         this.toggleEditProperty = function () {
