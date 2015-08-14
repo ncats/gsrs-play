@@ -21,6 +21,7 @@ object ApplicationBuild extends Build {
     "com.zaxxer" % "HikariCP-java6" % "2.3.8"
       ,"com.edulify" %% "play-hikaricp" % "2.0.6"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
+      ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"      
       ,"commons-codec" % "commons-codec" % "1.9"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
       ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"
