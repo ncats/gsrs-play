@@ -54,6 +54,10 @@ public class Relationship extends Ginas {
     @OneToOne(cascade=CascadeType.ALL)
     public SubstanceReference relatedSubstance;
     
+    @JSONEntity(title = "Mediator Substance")
+    @OneToOne(cascade=CascadeType.ALL)
+    public SubstanceReference mediatorSubstance;
+    
     @JSONEntity(title = "Relationship Type", format = JSONConstants.CV_RELATIONSHIP_TYPE, isRequired = true)
     public String type;
 
