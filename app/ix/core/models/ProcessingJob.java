@@ -33,6 +33,10 @@ public class ProcessingJob extends Model {
     @Lob
     @Basic(fetch=FetchType.EAGER)
     public String message;
+    
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
+    public String statistics;
 
     @OneToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
@@ -41,6 +45,7 @@ public class ProcessingJob extends Model {
     @OneToOne(cascade=CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
     public Payload payload;
+    
 
     public ProcessingJob () {
     }

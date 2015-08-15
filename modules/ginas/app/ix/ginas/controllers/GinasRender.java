@@ -1,6 +1,6 @@
 package ix.ginas.controllers;
 
-import ix.ginas.controllers.GinasLoad.GinasV1ProblemHandler;
+import ix.ginas.models.utils.GinasV1ProblemHandler;
 import ix.ginas.models.v1.Substance;
 import play.Logger;
 

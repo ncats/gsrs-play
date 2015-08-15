@@ -10,8 +10,6 @@ import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.core.plugins.GinasRecordProcessorPlugin.PayloadRecordGeneric;
-import ix.core.plugins.GinasRecordProcessorPlugin.PersistRecord;
 import ix.core.plugins.StructureProcessorPlugin.PayloadProcessor;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
@@ -20,6 +18,7 @@ import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
 import ix.core.chem.Chem;
 import ix.core.controllers.ProcessingJobFactory;
+import ix.ginas.models.utils.*;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -60,6 +59,7 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import java.util.Date;
 
 public class GinasLoad extends App {
+	public static boolean OLD_LOAD = false;
 	
 	static final GinasRecordProcessorPlugin ginasRecordProcessorPlugin =
 	        Play.application().plugin(GinasRecordProcessorPlugin.class);
@@ -133,228 +133,16 @@ public class GinasLoad extends App {
     }
 
 
-    static class GinasV1ProblemHandler
-        extends  DeserializationProblemHandler {
-        GinasV1ProblemHandler () {
-        }
-        
-        public boolean handleUnknownProperty
-            (DeserializationContext ctx, JsonParser parser,
-             JsonDeserializer deser, Object bean, String property) {
-
-            try {
-                boolean parsed = true;
-                if ("hash".equals(property)) {
-                    Structure struc = (Structure)bean;
-                    //Logger.debug("value: "+parser.getText());
-                    struc.properties.add(new Keyword
-                                         (Structure.H_LyChI_L4,
-                                          parser.getText()));
-                }
-                else if ("references".equals(property)) {
-                    //Logger.debug(property+": "+bean.getClass());
-                    if (bean instanceof Structure) {
-                        Structure struc = (Structure)bean;
-                        parseReferences (parser, struc.properties);
-                    }
-                    else {
-                        parsed = false;
-                    }
-                }
-                else if ("count".equals(property)) {
-                    if (bean instanceof Structure) {
-                        // need to handle this.
-                        parser.skipChildren();
-                    }
-                }
-                else {
-                    parsed = false;
-                }
-
-                if (!parsed) {
-                    Logger.warn("Unknown property \""
-                                +property+"\" while parsing "
-                                +bean+"; skipping it..");
-                    Logger.debug("Token: "+parser.getCurrentToken());
-                    parser.skipChildren();
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            return true;
-        }
-
-        int parseReferences (JsonParser parser, List<Value> refs)
-            throws IOException {
-            int nrefs = 0;
-            if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
-                while (JsonToken.END_ARRAY != parser.nextToken()) {
-                    String ref = parser.getValueAsString();
-                    refs.add(new Keyword (Ginas.REFERENCE, ref));
-                    ++nrefs;
-                }
-            }
-            return nrefs;
-        }
-    }
+   
 
     public static Substance persistJSON
         (InputStream is, Class<? extends Substance> cls) throws Exception {
-        ObjectMapper mapper = new ObjectMapper ();
-        mapper.addHandler(new GinasV1ProblemHandler ());
-        JsonNode tree = mapper.readTree(is);
-        JsonNode subclass = tree.get("substanceClass");
+        Substance sub = GinasUtils.makeSubstance(is);
         
-        if (subclass != null && !subclass.isNull()) {
-            Substance.SubstanceClass type =
-                Substance.SubstanceClass.valueOf(subclass.asText());
-            switch (type) {
-            case chemical:
-                if (cls == null) {
-                    ChemicalSubstance sub =
-                        mapper.treeToValue(tree, ChemicalSubstance.class);
-                    return persist (sub);
-                }
-                else if (cls.isAssignableFrom(ChemicalSubstance.class)) {
-                    ChemicalSubstance sub =
-                        (ChemicalSubstance)mapper.treeToValue(tree, cls);
-                    return persist (sub);
-                }
-                else {
-                    Logger.warn(tree.get("uuid").asText()+" is not of type "
-                                +cls.getName());
-                }
-                break;
-                
-            case protein:
-                if (cls == null) {
-                    ProteinSubstance sub =
-                        mapper.treeToValue(tree, ProteinSubstance.class);
-                    return persist (sub);
-                }
-                else if (cls.isAssignableFrom(ProteinSubstance.class)) {
-                    ProteinSubstance sub =
-                        (ProteinSubstance)mapper.treeToValue(tree, cls);
-                    return persist (sub);
-                }
-                else {
-                    Logger.warn(tree.get("uuid").asText()+" is not of type "
-                                +cls.getName());
-                }
-                break;
-                
-            case mixture:
-                if (cls == null) {
-                    MixtureSubstance sub =
-                        mapper.treeToValue(tree, MixtureSubstance.class);
-                    sub.save();
-                    return sub;
-                }
-                else if (cls.isAssignableFrom(MixtureSubstance.class)) {
-                    MixtureSubstance sub =
-                        (MixtureSubstance)mapper.treeToValue(tree, cls);
-                    sub.save();
-                    return sub;
-                }
-                else {
-                    Logger.warn(tree.get("uuid").asText()+" is not of type "
-                                +cls.getName());
-                }
-                break;
-
-            case polymer:
-                if (cls == null) {
-                    PolymerSubstance sub =
-                        mapper.treeToValue(tree, PolymerSubstance.class);
-                    sub.save();
-                    return sub;
-                }
-                else if (cls.isAssignableFrom(PolymerSubstance.class)) {
-                    PolymerSubstance sub =
-                        (PolymerSubstance)mapper.treeToValue(tree, cls);
-                    sub.save();
-                    return sub;
-                }
-                else {
-                    Logger.warn(tree.get("uuid").asText()+" is not of type "
-                                +cls.getName());
-                }
-                break;
-
-            case structurallyDiverse:
-                if (cls == null) {
-                    StructurallyDiverseSubstance sub =
-                        mapper.treeToValue
-                        (tree, StructurallyDiverseSubstance.class);
-                    sub.save();
-                    return sub;
-                }
-                else if (cls.isAssignableFrom
-                         (StructurallyDiverseSubstance.class)) {
-                    StructurallyDiverseSubstance sub =
-                        (StructurallyDiverseSubstance)mapper
-                        .treeToValue(tree, cls);
-                    sub.save();
-                    return sub;
-                }
-                else {
-                    Logger.warn(tree.get("uuid").asText()+" is not of type "
-                                +cls.getName());
-                }
-                break;
-
-            case specifiedSubstanceG1:
-                if (cls == null) {
-                    SpecifiedSubstanceGroup1 sub =
-                        mapper.treeToValue
-                        (tree, SpecifiedSubstanceGroup1.class);
-                    sub.save();
-                    return sub;
-                }
-                else if (cls.isAssignableFrom
-                         (SpecifiedSubstanceGroup1.class)) {
-                    SpecifiedSubstanceGroup1 sub =
-                        (SpecifiedSubstanceGroup1)mapper
-                        .treeToValue(tree, cls);
-                    sub.save();
-                    return sub;
-                }
-                else {
-                    Logger.warn(tree.get("uuid").asText()+" is not of type "
-                                +cls.getName());
-                }
-                break;
-            case concept:
-                if (cls == null) {
-                    Substance sub =
-                        mapper.treeToValue
-                        (tree, Substance.class);
-                    sub.save();
-                    return sub;
-                }
-                else if (cls.isAssignableFrom
-                         (Substance.class)) {
-                        Substance sub =
-                        (Substance)mapper
-                        .treeToValue(tree, cls);
-                    sub.save();
-                    return sub;
-                }
-                else {
-                    Logger.warn(tree.get("uuid").asText()+" is not of type "
-                                +cls.getName());
-                }
-                break;
-                
-            default:
-                Logger.warn("Skipping substance class "+type);
-            }
+        if(sub!=null){
+        	GinasUtils.persistSubstance(sub, _strucIndexer);
         }
-        else {
-            Logger.error("Not a valid JSON substance!");
-        }
-        return null;
+        return sub;
     }
     
     public static Result load () {
@@ -450,6 +238,7 @@ public class GinasLoad extends App {
     }
     
     public static Result monitorProcess(String processID){
+    	if(!GinasLoad.OLD_LOAD){
     	ProcessingJob job = ProcessingJobFactory.getJob(processID);
     	
 
@@ -473,14 +262,15 @@ public class GinasLoad extends App {
     	
     	
     	return ok("Processing job:" + processID + "\n\n" + msg);
-    	
-    	//OLD WAY:
-//    	Process p =processes.get(processID);
-//    	if(p==null){
-//    		return _internalServerError (new IllegalArgumentException("Process \"" + processID + "\" does not exist."));
-//    	}else{
-//    		return ok(p.statusMessage());
-//    	}
+    	}else{
+    		//OLD WAY:
+	    	Process p =processes.get(processID);
+	    	if(p==null){
+	    		return _internalServerError (new IllegalArgumentException("Process \"" + processID + "\" does not exist."));
+	    	}else{
+	    		return ok(p.statusMessage());
+	    	}
+    	}
     }
     
     static abstract class Process{
@@ -610,61 +400,5 @@ public class GinasLoad extends App {
     	
 		
     }
-    
-
-    static Substance persist (ChemicalSubstance chem) throws Exception {
-        // now index the structure for searching
-        try {
-            Chem.setFormula(chem.structure);
-            chem.structure.save();
-            // it's bad to reference App from here!!!!
-            _strucIndexer.add(String.valueOf(chem.structure.id),
-                             chem.structure.molfile);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        for (Moiety m : chem.moieties)
-            m.structure.save();
-        chem.save();
-        
-        return chem;
-    }
-
-    static Substance persist (ProteinSubstance sub) throws Exception {
-        Transaction tx = Ebean.beginTransaction();
-        try {
-            sub.save();
-            tx.commit();
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        finally {
-            tx.end();
-        }
-        return sub;     
-    }
-    
-    /*
-    public static Result loadTTT () {
-        String mesg = "processing "+new java.util.Random().nextInt(100);
-        Logger.debug("submitting "+mesg);
-        
-        DynamicForm requestData = Form.form().bindFromRequest();
-        String max = requestData.get("max-strucs");
-        try {
-            Payload payload = payloadPlugin.parseMultiPart
-                ("load-file", request ());
-            String id = structurePlugin.submit(payload);
-            Logger.debug("Job "+id+" submitted!");
-        }
-        catch (IOException ex) {
-            return internalServerError ("Request is not multi-part encoded!");
-        }
-        
-        return redirect (routes.Structures.index());
-    }*/
-
     
 }

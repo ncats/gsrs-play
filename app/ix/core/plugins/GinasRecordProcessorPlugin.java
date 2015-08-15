@@ -1,7 +1,5 @@
 package ix.core.plugins;
 
-import ix.core.chem.Chem;
-import ix.core.chem.StructureProcessor;
 import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.models.Keyword;
@@ -9,24 +7,9 @@ import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
-import ix.core.models.Value;
-import ix.core.models.XRef;
-import ix.ginas.models.Ginas;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.MixtureSubstance;
-import ix.ginas.models.v1.Moiety;
-import ix.ginas.models.v1.PolymerSubstance;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.SpecifiedSubstanceGroup1;
-import ix.ginas.models.v1.StructurallyDiverseSubstance;
-import ix.ginas.models.v1.Substance;
 import ix.utils.Util;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
@@ -56,23 +39,21 @@ import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.Transaction;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-
 public class GinasRecordProcessorPlugin extends Plugin {
-	//Replace with the methods you want.
-	private static RecordPersister _recordPersister = new GinasSubstancePersister();
-	private static RecordExtractor _recordExtractor = new GinasDumpExtractor(null);
-	private static RecordTransformer _recordTransformer= new GinasSubstanceTransformer();
-	
 	private static final String GINAS_RECORD_PROCESSOR = "GinasRecordProcessor";
+	private static final int MAX_EXTRACTION_QUEUE = 200;
+	
+	
+	//Replace with the methods you want.
+	private static RecordPersister _recordPersister = new ix.ginas.models.utils.GinasUtils.GinasSubstancePersister();
+	private static RecordExtractor _recordExtractor = new ix.ginas.models.utils.GinasUtils.GinasDumpExtractor(null);
+	private static RecordTransformer _recordTransformer= new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
+	
+	//Hack variable for resisting buildup
+	//of extracted records not yet transformed
+	private int _extractedButNotTransformed=0;
+	
+	
 	private final Application app;
 	private StructureIndexer indexer;
 	private PersistenceQueue PQ;
@@ -81,6 +62,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	private ActorRef processor;		// Not quite sure, needed
 	private Inbox inbox; 			// where things are submitted
 	static final Random rand = new Random();
+	
+	private static GinasRecordProcessorPlugin _instance;
+	
+	public static GinasRecordProcessorPlugin getInstance(){
+		return _instance;
+	}
 
 	static String randomKey(int size) {
 		byte[] b = new byte[size];
@@ -196,11 +183,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		}
 	}*/
 	
-	public static class PayloadRecordGeneric<K> implements Serializable {
+	public static class PayloadExtractedRecord<K> implements Serializable {
 		public final ProcessingJob job;
 		public final K theRecord;
 		
-		public PayloadRecordGeneric(ProcessingJob job, K mol) {
+		public PayloadExtractedRecord(ProcessingJob job, K mol) {
 			this.job = job;
 			this.theRecord = mol;
 		}
@@ -257,13 +244,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		}
 	}
 
-	public static class PersistRecord<K,V> implements Serializable {
+	public static class TransformedRecord<K,V> implements Serializable {
 		public final V theRecordToPersist;
 		public final ProcessingRecord rec;
 		final K theRecord;
-		final StructureIndexer indexer;
+		public final StructureIndexer indexer;
 
-		public PersistRecord(V persistRecord, K record,
+		public TransformedRecord(V persistRecord, K record,
 				ProcessingRecord rec, StructureIndexer indexer) {
 			this.theRecordToPersist = persistRecord;
 			this.rec = rec;
@@ -292,8 +279,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public void onReceive(Object mesg) {
 			if (mesg instanceof PersistModel) {
 				PQ.submit(new PersistModelWorker((PersistModel) mesg));
-			} else if (mesg instanceof PersistRecord) {
-				PQ.submit(new PersistRecordWorker((PersistRecord) mesg));
+			} else if (mesg instanceof TransformedRecord) {
+				PQ.submit(new PersistRecordWorker((TransformedRecord) mesg));
 			} else if (mesg instanceof ReceiverProcessor) {
 				PQ.submit(new ReceiverProcessorWorker((ReceiverProcessor) mesg));
 			} else {
@@ -322,9 +309,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
 	static class PersistRecordWorker implements
 			PersistenceQueue.PersistenceContext {
-		PersistRecord record;
+		TransformedRecord record;
 
-		PersistRecordWorker(PersistRecord record) {
+		PersistRecordWorker(TransformedRecord record) {
 			this.record = record;
 		}
 
@@ -437,13 +424,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
 				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
 				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-				Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
 				
 				ReceiverProcessor receiver = (ReceiverProcessor) mesg;
 				switch (receiver.stage()) {
@@ -480,14 +460,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					assert false : "Stage " + receiver.stage() + " shouldn't "
 							+ "be running in " + getClass().getName() + "!";
 				}
-			} else if (mesg instanceof PayloadRecordGeneric) {
-				PayloadRecordGeneric pr = (PayloadRecordGeneric) mesg;
-				log.info("processing "+pr.job);
+			} else if (mesg instanceof PayloadExtractedRecord) {
+				getInstance().decrementExtractionQueue();
+				PayloadExtractedRecord pr = (PayloadExtractedRecord) mesg;
+				log.info("processing " + pr.job);
 				ProcessingRecord rec = new ProcessingRecord();
 				Object trans = _recordTransformer.transform(pr, rec);
-				
-				reporter.tell(new PersistRecord(trans, pr.theRecord, rec, indexer),
-						self());
+				reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
 			} else if (mesg instanceof Terminated) {
 				ActorRef actor = ((Terminated) mesg).actor();
 
@@ -554,6 +533,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 						"processor");
 		system.actorOf(Props.create(Reporter.class, PQ), "reporter");
 		inbox = Inbox.create(system);
+		_instance=this;
 	}
 
 	@Override
@@ -618,6 +598,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			job.keys.add(new Keyword(
 					GinasRecordProcessorPlugin.class.getName(), pp.key));
 			job.status = ProcessingJob.Status.RUNNING;
+			
 			job.payload = pp.payload;
 			//Logger.debug("Lemme try to process one...");
 			try {
@@ -627,7 +608,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				Logger.debug("Made extractor:" + extract.getClass().getName());
 				for (Object m; (m = extract.getNextRecord()) != null;) {
 					//Logger.debug("Extracting");
-					proc.tell(new PayloadRecordGeneric(job, m), sender);
+					getInstance().waitForProcessingRecordsCount(MAX_EXTRACTION_QUEUE);
+					PayloadExtractedRecord prg=new PayloadExtractedRecord(job, m);
+					getInstance().incrementExtractionQueue();
+					proc.tell(prg, sender);
 				}
 				extract.close();
 				//Logger.debug("Extracted no problems");
@@ -655,10 +639,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	
 	
 	public static abstract class RecordTransformer<K,T>{
-		public abstract T transform(PayloadRecordGeneric<K> pr,ProcessingRecord rec);		
+		public abstract T transform(PayloadExtractedRecord<K> pr,ProcessingRecord rec);		
 	}
 	public static abstract class RecordPersister<K,T>{
-		public abstract void persist(PersistRecord<K,T> prec);		
+		public abstract void persist(TransformedRecord<K,T> prec);		
 	}
 	
 	public static abstract class RecordExtractor<K>{
@@ -701,270 +685,55 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public abstract RecordExtractor<K> makeNewExtractor(InputStream is);
 	}
 	
-	/*********************************************
-	 * Ginas bits for 
-	 * 	1. extracting from InputStream
-	 *  2. transforming to Substance
-	 *  3. persisting
+	
+	
+	
+	
+
+	
+	
+	/*
+	 * The following is a hack to guard against out-of-memory errors.
 	 * 
-	 * @author peryeata
-	 *
+	 * Essentially, if the extraction step happens much faster than the
+	 * transform step, there will be a pile up of new extracted records
+	 * due to the non-blocking nature of the "tell" command in AKKA.
+	 * 
+	 * Instead, we keep a count of what's been processed,
+	 * and call waitForProcessingRecordsCount in order to block for 
+	 * some upper-bound before continuing a process.
+	 * 
+	 * 
 	 */
-	public static class GinasSubstancePersister extends RecordPersister<Substance,Substance>{
-		@Override
-		public void persist(PersistRecord<Substance, Substance> prec) {
-			try {
-				if (prec.theRecordToPersist != null) {
-					Logger.debug("persisting:"+ prec.rec.name);
-					
-					if(prec.theRecordToPersist instanceof ChemicalSubstance){
-						GinasRecordProcessorPlugin.persist((ChemicalSubstance) prec.theRecordToPersist, prec.indexer);
-					}
-					
-					 Transaction tx = Ebean.beginTransaction();
-				        try {
-				        	prec.theRecordToPersist.save();
-				            tx.commit();
-				            prec.rec.status = ProcessingRecord.Status.OK;
-				        }
-				        catch (Exception ex) {
-				        	
-				            ex.printStackTrace();
-				        }
-				        finally {
-				            tx.end();
-				        } 
-					
-					//prec.indexer.add(prec.rec.job.payload.name, prec.struc.id.toString(), prec.mol);
-					prec.rec.xref = new XRef(prec.theRecordToPersist);
-					prec.rec.xref.save();
-					
-					//??????
-				}
-				
-				prec.rec.save();
-				
-				Logger.debug("Saved struc " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.uuid : null)
-						+ " record " + prec.rec.id);
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}
-		}
-	}
-	public static class GinasSubstanceTransformer extends RecordTransformer<JsonNode,Substance>{
-		public Substance transform(PayloadRecordGeneric<JsonNode> pr, ProcessingRecord rec){
-			try{
-				rec.name = pr.theRecord.get("uuid").asText();
-			}catch(Exception e){
-				rec.name = "Nameless";
-			}
-			rec.job = pr.job;
-			rec.start = System.currentTimeMillis();
-			Substance struc = null;
-			try {
-				Logger.debug("transforming:"+ rec.name);
-				struc = makeSubstance(pr.theRecord);
-				rec.stop = System.currentTimeMillis();
-				rec.status = ProcessingRecord.Status.ADAPTED;
-
-				//Logger.debug("I made a new substance!");
-			} catch (Throwable t) {
-				rec.stop = System.currentTimeMillis();
-				rec.status = ProcessingRecord.Status.FAILED;
-				rec.message = t.getMessage();
-
-				//Logger.debug("But ... I wanted to make a new substance ...");
-				//t.printStackTrace();
-			}
-			return struc;
-		}
-	}
-	public static class GinasDumpExtractor extends RecordExtractor<JsonNode>{
-		BufferedReader buff;
-		public GinasDumpExtractor(InputStream is) {
-			super(is);
-			Logger.debug("I'm going to make a nice reader for everyone to use!");
-			try{
-				buff = new BufferedReader(new InputStreamReader(is));
-	            Logger.debug("####################################### Making reader ");
-			}catch(Exception e){
-				Logger.debug("Pfft ... just kidding, I hate readers anyway.");
-			}
-			
-		}
-
-		@Override
-		public JsonNode getNextRecord() {
-			if(buff==null)return null;
-			try {
-				String line=buff.readLine();
-				String[] toks = line.split("\t");
-	            Logger.debug("extracting:"+ toks[1]);
-	            ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes("utf8"));
-	            ObjectMapper mapper = new ObjectMapper ();
-		        mapper.addHandler(new GinasV1ProblemHandler ());
-		        JsonNode tree = mapper.readTree(bis);
-		        return tree;
-			} catch (IOException e) {
+	/**
+	 * Gets the total number of records extracted, but not
+	 * transformed yet.
+	 * @return
+	 */
+    public int getRecordsProcessing(){
+    	return _extractedButNotTransformed;
+    }
+    
+    private synchronized void incrementExtractionQueue(){
+    	_extractedButNotTransformed++;
+    	//Logger.debug("Total Records:" + _extractedButNotTransformed);
+    }
+    private synchronized void decrementExtractionQueue(){
+    	_extractedButNotTransformed--;
+    	//Logger.debug("Total Records:" + _extractedButNotTransformed);
+    }
+    private void waitForProcessingRecordsCount(int max){
+    	while(getRecordsProcessing()>=max){
+    		try {
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			return null;
-		}
-		
-		
-
-		@Override
-		public void close() {
-			try{
-				if(buff!=null)
-					buff.close();
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-
-		@Override
-		public RecordExtractor<JsonNode> makeNewExtractor(InputStream is) {
-			return new GinasDumpExtractor(is);
-		}
-		
-	}
-	
-	
-	static class GinasV1ProblemHandler extends DeserializationProblemHandler {
-		GinasV1ProblemHandler() {
-		}
-
-		public boolean handleUnknownProperty(DeserializationContext ctx,
-				JsonParser parser, JsonDeserializer deser, Object bean,
-				String property) {
-
-			try {
-				boolean parsed = true;
-				if ("hash".equals(property)) {
-					Structure struc = (Structure) bean;
-					// Logger.debug("value: "+parser.getText());
-					struc.properties.add(new Keyword(Structure.H_LyChI_L4,
-							parser.getText()));
-				} else if ("references".equals(property)) {
-					// Logger.debug(property+": "+bean.getClass());
-					if (bean instanceof Structure) {
-						Structure struc = (Structure) bean;
-						parseReferences(parser, struc.properties);
-					} else {
-						parsed = false;
-					}
-				} else if ("count".equals(property)) {
-					if (bean instanceof Structure) {
-						// need to handle this.
-						parser.skipChildren();
-					}
-				} else {
-					parsed = false;
-				}
-
-				if (!parsed) {
-					Logger.warn("Unknown property \"" + property
-							+ "\" while parsing " + bean + "; skipping it..");
-					Logger.debug("Token: " + parser.getCurrentToken());
-					parser.skipChildren();
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
-			return true;
-		}
-
-		int parseReferences(JsonParser parser, List<Value> refs)
-				throws IOException {
-			int nrefs = 0;
-			if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
-				while (JsonToken.END_ARRAY != parser.nextToken()) {
-					String ref = parser.getValueAsString();
-					refs.add(new Keyword(Ginas.REFERENCE, ref));
-					++nrefs;
-				}
-			}
-			return nrefs;
-		}
-	}
-
-	public static Substance makeSubstance(JsonNode tree) throws Exception {
-		JsonNode subclass = tree.get("substanceClass");
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.addHandler(new GinasV1ProblemHandler ());
-		Substance sub=null;
-		if (subclass != null && !subclass.isNull()) {
-			Substance.SubstanceClass type = Substance.SubstanceClass
-					.valueOf(subclass.asText());
-			switch (type) {
-			case chemical:
-					Logger.debug("It's a Chemical!");
-					sub = mapper.treeToValue(tree,
-							ChemicalSubstance.class);
-					return sub;
-			case protein:
-					sub = mapper.treeToValue(tree,
-							ProteinSubstance.class);
-					return sub;
-			case mixture:
-					sub = mapper.treeToValue(tree,
-							MixtureSubstance.class);
-					return sub;
-			case polymer:
-					sub = mapper.treeToValue(tree,
-							PolymerSubstance.class);
-					return sub;
-			case structurallyDiverse:
-					sub = mapper.treeToValue(tree,
-							StructurallyDiverseSubstance.class);
-					return sub;
-			case specifiedSubstanceG1:
-					sub = mapper.treeToValue(tree,
-							SpecifiedSubstanceGroup1.class);
-					return sub;
-			case concept:
-					sub = mapper.treeToValue(tree, Substance.class);
-					return sub;
-			default:
-				Logger.warn("Skipping substance class " + type);
-			}
-		} else {
-			Logger.error("Not a valid JSON substance!");
-		}
-		return null;
-	}
-	
-	static Substance persist (ChemicalSubstance chem, StructureIndexer index) throws Exception {
-        // now index the structure for searching
-        try {
-            Chem.setFormula(chem.structure);
-            chem.structure.save();
-            index.add(String.valueOf(chem.structure.id),chem.structure.molfile);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        for (Moiety m : chem.moieties)
-            m.structure.save();
-        return chem;
+    	}
     }
-
-    static Substance persist (ProteinSubstance sub) throws Exception {
-        Transaction tx = Ebean.beginTransaction();
-        try {
-            sub.save();
-            tx.commit();
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        finally {
-            tx.end();
-        }
-        return sub;     
-    }
+    
 	
+
 	/*********************************************
 	 * Molecule bits for 
 	 * 	1. extracting from InputStream
@@ -1052,9 +821,4 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		
 	}
 	*/
-    
-    
-	public void setRecordExtractor(RecordExtractor rec){
-		_recordExtractor=rec;
-	}
 }
