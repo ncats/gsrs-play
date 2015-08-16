@@ -49,6 +49,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	private static RecordExtractor _recordExtractor = new ix.ginas.models.utils.GinasUtils.GinasDumpExtractor(null);
 	private static RecordTransformer _recordTransformer= new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
 	
+	
 	//Hack variable for resisting buildup
 	//of extracted records not yet transformed
 	private int _extractedButNotTransformed=0;
@@ -261,6 +262,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		@Transactional
 		public void persists() {
 			_recordPersister.persist(this);
+			//System.out.println("Last persist:" + System.currentTimeMillis());
+			
 		}
 	}
 
@@ -368,7 +371,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				log.info("Received payload " + payload.id);
 				
 
-				// now spawn child processor to proces the payload stream
+				// now spawn child processor to process the payload stream
 				ActorRef child = null;
 				Collection<ActorRef> children = JavaConverters
 						.asJavaCollectionConverter(context().children())

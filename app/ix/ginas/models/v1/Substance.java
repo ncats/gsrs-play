@@ -62,10 +62,11 @@ public class Substance extends Ginas {
     public SubstanceClass substanceClass;
     
     @Indexable(suggest=true,facet=true, name="Record Status")
-    public String status;
+    public String status = "PENDING";
+    
+    
     
     public String approvedBy;
-    
     @JsonDeserialize(using=DateDeserializer.class)
     public Date approved;
 

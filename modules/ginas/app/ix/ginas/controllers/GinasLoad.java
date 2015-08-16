@@ -59,7 +59,7 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import java.util.Date;
 
 public class GinasLoad extends App {
-	public static boolean OLD_LOAD = false;
+	public static boolean OLD_LOAD = true;
 	
 	static final GinasRecordProcessorPlugin ginasRecordProcessorPlugin =
 	        Play.application().plugin(GinasRecordProcessorPlugin.class);
@@ -187,13 +187,13 @@ public class GinasLoad extends App {
                 	
                     if (payload != null) {
                     	// New way:
-                    	
-                    	String id = ginasRecordProcessorPlugin.submit(payload);
-                        return ok("Running job " + id + " payload is " + payload.name + " also " + payload.id);
-                        
-                        
+                    	if(!GinasLoad.OLD_LOAD){
+	                    	String id = ginasRecordProcessorPlugin.submit(payload);
+	                        return ok("Running job " + id + " payload is " + payload.name + " also " + payload.id);	
+                    	}else{
                         // Old way
-                        //return processDump (ix.utils.Util.getUncompressedInputStreamRecursive(payloadPlugin.getPayloadAsStream(payload)), false);
+                    		return processDump (ix.utils.Util.getUncompressedInputStreamRecursive(payloadPlugin.getPayloadAsStream(payload)), false);
+                    	}
                     }
                     else {
                         return badRequest

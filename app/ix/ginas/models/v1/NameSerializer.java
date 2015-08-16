@@ -25,7 +25,7 @@ public class NameSerializer extends JsonSerializer<Name> {
         jgen.writeStartObject();
         provider.defaultSerializeField("uuid", name.uuid, jgen);
         provider.defaultSerializeField("created", name.created, jgen);       
-        provider.defaultSerializeField("lastModified", name.lastModified, jgen);
+        provider.defaultSerializeField("lastEdited", name.lastEdited, jgen);
         provider.defaultSerializeField("lastEditedBy", name.lastEditedBy, jgen);
         provider.defaultSerializeField("deprecated", name.deprecated, jgen);
         provider.defaultSerializeField("name", name.name, jgen);

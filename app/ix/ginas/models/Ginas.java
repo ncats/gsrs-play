@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,13 +28,21 @@ public class Ginas extends Model {
     public UUID uuid;
 
     public final Date created = new Date ();
-    public Date lastModified;
+    public Date lastEdited;
     
     @OneToOne(cascade=CascadeType.ALL)
     @JsonSerialize(using = PrincipalSerializer.class)
     @JsonDeserialize(using = PrincipalDeserializer.class)
     public Principal lastEditedBy;
+    
+    //Where did this come from?
     public boolean deprecated;
+    
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_substance_access")
+//    @JsonSerialize(using = PrincipalListSerializer.class)
+//    @JsonDeserialize(using = PrincipalListDeserializer.class)
+//    public List<Principal> access = new ArrayList<Principal>();
     
     public Ginas () {
     }
@@ -41,7 +50,7 @@ public class Ginas extends Model {
     @PrePersist
     @PreUpdate
     public void modified () {
-        this.lastModified = new Date ();
+        this.lastEdited = new Date ();
     }
 
     @Indexable(indexed=false)
