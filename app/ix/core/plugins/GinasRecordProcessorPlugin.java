@@ -261,8 +261,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		
 		@Transactional
 		public void persists() {
+			getInstance().decrementExtractionQueue();
 			_recordPersister.persist(this);
-			//System.out.println("Last persist:" + System.currentTimeMillis());
+			System.out.println("Last persist:" + System.currentTimeMillis());
 			
 		}
 	}
@@ -464,12 +465,17 @@ public class GinasRecordProcessorPlugin extends Plugin {
 							+ "be running in " + getClass().getName() + "!";
 				}
 			} else if (mesg instanceof PayloadExtractedRecord) {
-				getInstance().decrementExtractionQueue();
+				
 				PayloadExtractedRecord pr = (PayloadExtractedRecord) mesg;
 				log.info("processing " + pr.job);
 				ProcessingRecord rec = new ProcessingRecord();
-				Object trans = _recordTransformer.transform(pr, rec);
-				reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
+				try{
+					Object trans = _recordTransformer.transform(pr, rec);
+					reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
+				}catch(Exception e){
+					getInstance().decrementExtractionQueue();
+				}
+				
 			} else if (mesg instanceof Terminated) {
 				ActorRef actor = ((Terminated) mesg).actor();
 
