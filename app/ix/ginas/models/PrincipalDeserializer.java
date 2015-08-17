@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
+import ix.core.controllers.PrincipalFactory;
 import ix.core.models.Principal;
 
 public class PrincipalDeserializer extends JsonDeserializer<Principal> {
@@ -19,6 +20,6 @@ public class PrincipalDeserializer extends JsonDeserializer<Principal> {
         throws IOException, JsonProcessingException {
 
         String acc = parser.getValueAsString();
-        return new Principal (acc, null);
+        return PrincipalFactory.registerIfAbsent(new Principal (acc, null));
     }
 }
