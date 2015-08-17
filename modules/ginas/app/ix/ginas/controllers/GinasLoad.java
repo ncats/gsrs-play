@@ -37,6 +37,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.io.FileOutputStream;
 import java.util.zip.GZIPInputStream;
+import ix.core.plugins.GinasRecordProcessorPlugin.Statistics;
 
 import play.Logger;
 import play.Play;
@@ -58,8 +59,9 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 
 import java.util.Date;
 
+
 public class GinasLoad extends App {
-	public static boolean OLD_LOAD = true;
+	public static boolean OLD_LOAD = false;
 	
 	static final GinasRecordProcessorPlugin ginasRecordProcessorPlugin =
 	        Play.application().plugin(GinasRecordProcessorPlugin.class);
@@ -189,7 +191,8 @@ public class GinasLoad extends App {
                     	// New way:
                     	if(!GinasLoad.OLD_LOAD){
 	                    	String id = ginasRecordProcessorPlugin.submit(payload);
-	                        return ok("Running job " + id + " payload is " + payload.name + " also " + payload.id);	
+	                    	return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
+	                        //return ok("Running job " + id + " payload is " + payload.name + " also " + payload.id);	
                     	}else{
                         // Old way
                     		return processDump (ix.utils.Util.getUncompressedInputStreamRecursive(payloadPlugin.getPayloadAsStream(payload)), false);
@@ -250,13 +253,18 @@ public class GinasLoad extends App {
 	    	msg+="Message:" + job.message + "\n";
 	    	msg+="Status:" + job.status + "\n";
 	    	if(job.payload!=null){
-		    	msg+="Payload:" + job.payload.name + "\n";
-		    		    	List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload(job.payload.id.toString());
-		    	if(jobs!=null)
-		    		msg+="Payload Jobs:" + jobs.size() + "\n";
+	    		Statistics stat = GinasRecordProcessorPlugin.getStatisticsForJob(processID);
+	    		if(stat!=null){
+	    			msg+="Statistics:\n==============\n";
+	    			msg+=stat.toString();
+	    		}
+//		    	msg+="Payload:" + job.payload.name + "\n";
+//		    		    	List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload(job.payload.id.toString());
+//		    	if(jobs!=null)
+//		    		msg+="Payload Jobs:" + jobs.size() + "\n";
 	    	}
 	    	if(precs!=null)
-	    	msg+="Number of Records:" + precs.size() + "\n";
+	    		msg+="Number of Records:" + precs.size() + "\n";
     	}
     	
     	

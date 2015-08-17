@@ -63,4 +63,13 @@ public class ProcessingJob extends Model {
         return owner != null
             ? Global.getRef(getClass (), id)+"/owner" : null;
     }
+    
+    public String getKeyMatching(String label){
+    	for(Keyword k : keys){
+    		if(label.equals(k.label)){
+    			return k.getValue();
+    		}
+    	}
+    	return null;
+    }
 }
