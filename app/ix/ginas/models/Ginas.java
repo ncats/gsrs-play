@@ -1,23 +1,27 @@
 package ix.ginas.models;
 
-import java.util.UUID;
-import java.util.Date;
-import java.util.List;
-import java.util.ArrayList;
-
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import play.db.ebean.Model;
-import play.Logger;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.utils.Global;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.MappedSuperclass;
+import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+
+import play.Logger;
+import play.db.ebean.Model;
+
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @MappedSuperclass
 public class Ginas extends Model {
@@ -25,6 +29,7 @@ public class Ginas extends Model {
     static public final String TAG = "GInAS Tag";
     
     @Id
+    //@Column(name = "DATA_UUID")
     public UUID uuid;
 
     public final Date created = new Date ();
@@ -38,11 +43,16 @@ public class Ginas extends Model {
     //Where did this come from?
     public boolean deprecated;
     
-//    @ManyToMany(cascade=CascadeType.ALL)
-//    @JoinTable(name="ix_ginas_substance_access")
-//    @JsonSerialize(using = PrincipalListSerializer.class)
-//    @JsonDeserialize(using = PrincipalListDeserializer.class)
-//    public List<Principal> access = new ArrayList<Principal>();
+    @ManyToMany(cascade=CascadeType.PERSIST)
+    //@JoinColumn(name="id", referencedColumnName="uuid")
+//    @ManyToMany//(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_access",
+//	    joinColumns=@JoinColumn
+//	    (name="id", referencedColumnName="uuid")
+//	)
+    @JsonSerialize(using = PrincipalListSerializer.class)
+    @JsonDeserialize(using = PrincipalListDeserializer.class)
+    public List<Principal> access = new ArrayList<Principal>();
     
     public Ginas () {
     }
