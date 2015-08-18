@@ -133,12 +133,12 @@ public class GinasUtils {
 	 */
 	public static class GinasSubstancePersister extends RecordPersister<Substance,Substance>{
 		@Override
-		public void persist(TransformedRecord<Substance, Substance> prec) {
-			try {
+		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception{
+				boolean worked=false;
 				if (prec.theRecordToPersist != null) {
 					Logger.debug("persisting:"+ prec.rec.name);
 					
-					boolean worked= GinasUtils.persistSubstance(prec.theRecordToPersist, prec.indexer);
+					worked= GinasUtils.persistSubstance(prec.theRecordToPersist, prec.indexer);
 					if(worked){
 						prec.rec.status = ProcessingRecord.Status.OK;
 						prec.rec.xref = new XRef(prec.theRecordToPersist);
@@ -151,9 +151,8 @@ public class GinasUtils {
 				
 				Logger.debug("Saved struc " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.uuid : null)
 						+ " record " + prec.rec.id);
-			} catch (Throwable t) {
-				t.printStackTrace();
-			}
+				if(!worked)throw new IllegalStateException("Didn't persist");
+				
 		}
 	}
 	public static class GinasSubstanceTransformer extends RecordTransformer<JsonNode,Substance>{
@@ -198,8 +197,9 @@ public class GinasUtils {
 			if(buff==null)return null;
 			try {
 				String line=buff.readLine();
+				if(line==null)return null;
 				String[] toks = line.split("\t");
-	            Logger.debug("extracting:"+ toks[1]);
+	            //Logger.debug("extracting:"+ toks[1]);
 	            ByteArrayInputStream bis = new ByteArrayInputStream(toks[2].getBytes("utf8"));
 	            ObjectMapper mapper = new ObjectMapper ();
 		        JsonNode tree = mapper.readTree(bis);

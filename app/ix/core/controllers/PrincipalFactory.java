@@ -1,0 +1,79 @@
+package ix.core.controllers;
+
+import ix.core.NamedResource;
+import ix.core.models.Principal;
+
+import java.util.List;
+
+import play.Logger;
+import play.db.ebean.Model;
+import play.mvc.Result;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+
+@NamedResource(name="principal",
+               type=Principal.class,
+               description="Users, groups and organizations")
+public class PrincipalFactory extends EntityFactory {
+    public static final Model.Finder<Long, Principal> finder = 
+        new Model.Finder(Long.class, Principal.class);
+
+    public static List<Principal> all () { return all (finder); }
+    public static Result count () { return count (finder); }
+    public static Result page (int top, int skip, String filter) {
+        return page (top, skip, filter, finder);
+    }
+
+    public static List<Principal> filter (int top, int skip) {
+        return filter (top, skip, null);
+    }
+
+    public static List<Principal> filter (int top, int skip, String filter) {
+        return filter (new FetchOptions (top, skip, filter), finder);
+    }
+
+    public static List<Principal> filter (JsonNode json, int top, int skip) {
+        return filter (json, top, skip, finder);
+    }
+
+    public static Result get (Long id, String select) {
+        return get (id, select, finder);
+    }
+
+    public static Result field (Long id, String path) {
+        return field (id, path, finder);
+    }
+
+    public static Result create () {
+        return create (Principal.class, finder);
+    }
+
+    public static Result delete (Long id) {
+        return delete (id, finder);
+    }
+
+    public static Result update (Long id, String field) {
+        return update (id, field, Principal.class, finder);
+    }
+    
+    public static Principal byUserName (String uname) {
+    	
+        return finder.where().eq("username", uname).findUnique();
+    }
+    
+    public static Principal registerIfAbsent (Principal org) {
+        Principal results = byUserName(org.username);
+        if (results == null) {
+            try {
+                org.save();
+                return org;
+            }
+            catch (Exception ex) {
+                Logger.trace("Can't register principal: "+org.username, ex);
+                throw new IllegalArgumentException (ex);
+            }
+        }
+        return results;
+    }
+}
