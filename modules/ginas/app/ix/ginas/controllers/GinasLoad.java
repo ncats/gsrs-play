@@ -247,7 +247,7 @@ public class GinasLoad extends App {
 
     	String msg = "";
     	if(job!=null){
-    		List<ProcessingRecord> precs = ProcessingJobFactory.getJobRecords(job.id);
+    		//List<ProcessingRecord> precs = ProcessingJobFactory.getJobRecords(job.id);
 	    	msg+="Started:" + job.start + "\n";
 	    	msg+="Ended:" + job.stop + "\n";
 	    	msg+="Message:" + job.message + "\n";
@@ -255,18 +255,20 @@ public class GinasLoad extends App {
 	    	if(job.payload!=null){
 	    		Statistics stat = GinasRecordProcessorPlugin.getStatisticsForJob(processID);
 	    		if(stat!=null){
-	    			msg+="Statistics:\n==============\n";
+	    			msg+="\nStatistics:\n==============\n";
 	    			msg+=stat.toString();
+	    			long t=System.currentTimeMillis();
+	    			if(job.stop!=null){
+	    				t=job.stop;
+	    			}
+	    			msg+="Average time to register:" + stat.getAverageTimeToPersistMS(t);
 	    		}
-//		    	msg+="Payload:" + job.payload.name + "\n";
-//		    		    	List<ProcessingJob> jobs = ProcessingJobFactory.getJobsByPayload(job.payload.id.toString());
-//		    	if(jobs!=null)
-//		    		msg+="Payload Jobs:" + jobs.size() + "\n";
 	    	}
-	    	if(precs!=null)
-	    		msg+="Number of Records:" + precs.size() + "\n";
+	    	
+    	}else{
+    		msg = "[not yet started]";
     	}
-    	
+    	msg +="\n\n refresh page for status";
     	
     	
     	return ok("Processing job:" + processID + "\n\n" + msg);
