@@ -48,6 +48,7 @@ import akka.routing.SmallestMailboxRouter;
 //import chemaxon.struc.Molecule;
 
 public class GinasRecordProcessorPlugin extends Plugin {
+	private static final String PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
 	//Hack variable for resisting buildup
 	//of extracted records not yet transformed
 	private static Map<String,Long> queueStatistics = new ConcurrentHashMap<String,Long>();
@@ -639,7 +640,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			msg += "Processed: " + recordsProcessedSuccess + " (" + recordsProcessedFailed + " failed)\n";
 			msg += "Persisted: " + recordsPersistedSuccess + " (" + recordsPersistedFailed + " failed)\n";
 			if(totalRecords!=null)
-				msg += "Total:" + totalRecords.count + "(" + totalRecords.type.toString() + ")";
+				msg += "Total rec: " + totalRecords.count + " (" + totalRecords.type.toString() + ")\n";
 			return msg;			
 		}
 		 
@@ -863,27 +864,27 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	 * @return
 	 */
     public long getRecordsProcessing(){
-    	Long l=queueStatistics.get("PROCESS_QUEUE_SIZE");
+    	Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
     	if(l==null)return 0;
     	return l;
     }
     
     private synchronized void incrementExtractionQueue(){
     	
-    	Long l=queueStatistics.get("PROCESS_QUEUE_SIZE");
+    	Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
     	if(l==null)l=(long) 0;
     	l++;
-    	queueStatistics.put("PROCESS_QUEUE_SIZE",l);
+    	queueStatistics.put(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE,l);
     	//return l;
     	//Logger.debug("Total Records:" + _extractedButNotTransformed);
     }
     private synchronized void decrementExtractionQueue(){
     	
-    	Long l=queueStatistics.get("PROCESS_QUEUE_SIZE");
+    	Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
     	if(l==null)l=(long) 0;
     	l--;
     	
-    	queueStatistics.put("PROCESS_QUEUE_SIZE",l);
+    	queueStatistics.put(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE,l);
     	//Logger.debug("Total Records:" + _extractedButNotTransformed);
     }
     private void waitForProcessingRecordsCount(int max){
