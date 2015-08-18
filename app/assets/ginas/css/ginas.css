@@ -42,7 +42,7 @@ body, html {
 }
 
 #content {
-    padding-top: 225px;
+    padding-top: 190px;
 }
 
 #pub-history {
@@ -336,20 +336,6 @@ nav#main-pagination {
 
 #strucThumbSearch {
     z-index: 9;
-}
-
-.thumbs {
-    font-size: 18px;
-    position: relative;
-    margin-top: -1px;
-}
-
-.approveID {
-    font-family: "Lucida Console", Monaco, monospace;
-}
-
-.nameDiv {
-    margin-top: -20px;
 }
 
 .thumbs{
@@ -662,4 +648,9 @@ div#jsdraw {
 
 a{
 	cursor:pointer;
+}
+
+h2.display-name {
+    padding-right: 25px;
+    margin-top: 5px;
 }
