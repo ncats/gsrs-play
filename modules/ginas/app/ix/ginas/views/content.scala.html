@@ -78,7 +78,7 @@
                 <div class="panel-heading">
                     <div class="row">
                         <div class = "col-md-9">
-                        @ix.ncats.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
+                        @ix.ginas.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
                         </div>
                         <div class= "col-md-3 text-right hidden-xs">
                             <form class="form" name="grid-select" id = "grid-select">
@@ -91,7 +91,7 @@
 
                 <div class="panel-footer">
                 @if(pages.length > 1) {
-                    @ix.ncats.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
+                    @ix.ginas.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
                 }
                 </div>
             </div>
