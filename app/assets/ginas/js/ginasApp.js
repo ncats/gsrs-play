@@ -1,9 +1,10 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead', 'screengrabber', 'LocalStorageModule'])
-        .config(function (showErrorsConfigProvider, localStorageServiceProvider) {
+    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead','LocalStorageModule' ])
+        .config(function (showErrorsConfigProvider, localStorageServiceProvider, $locationProvider) {
             showErrorsConfigProvider.showSuccess(true);
             localStorageServiceProvider
                 .setPrefix('ginas');
+            $locationProvider.html5Mode({ enabled: true, hashPrefix: '!'});
         });
 
     ginasApp.filter('range', function () {
@@ -40,21 +41,14 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasCtrl", function($scope, $location, localStorageService, Substance){
+    ginasApp.controller("GinasCtrl", function($scope, $location, $anchorScroll, localStorageService, Substance){
         var ginasCtrl = this;
         ginasCtrl.substance = Substance;
 
-        $scope.ScrollTo = function (prmElementToScrollTo)
-        {
-            //Store the old location.hash
-            var oldLocation = $location.hash();
-
-            //Set the location.hash to the id of the chosen element and navigate to it
+        $scope.scrollTo = function (prmElementToScrollTo){
+            console.log("scrolling!");
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
-
-            //Change the location.hash back to the old one to prevent page reloading
-            $location.hash(oldLocation);
         };
 
         $scope.enabled= false;
@@ -67,12 +61,22 @@
         this.numbers= true;
         localStorageService.set('enabled', $scope.enabled);
 
-        this.passStructure= function(molfile){
-            localStorageService.set('mol', molfile);
+        this.passStructure= function(id){
+            localStorageService.set('structureid', id);
         };
         this.clearStructure= function(){
             console.log("destroy");
-            return localStorageService.remove('mol');
+            return localStorageService.remove('structureid');
+        };
+    });
+
+    ginasApp.directive('scrollSpy', function($timeout){
+        return function(scope, elem, attr) {
+            scope.$watch(attr.scrollSpy, function(value) {
+                console.log("ok");
+                $timeout(function() { elem.scrollspy('refresh');
+                }, 200);
+            }, true);
         };
     });
 
@@ -190,19 +194,19 @@
         return {
             restrict: 'E',
             require: "ngModel",
-            scope:{
-              structureQuery: '='
+            scope: {
+                structureQuery: '='
             },
             template: "<div id='sketcherForm' dataformat='molfile' ondatachange='setMol(this)'></div>",
 
             link: function (scope, element, attrs, ngModelCtrl) {
                 sketcher = new JSDraw("sketcherForm");
                 var url = window.strucUrl;//'/ginas/app/smiles';
-                var mol = (localStorageService.get('mol') || false);
-            console.log(mol);
-                if (!mol) {
+                var structureid = (localStorageService.get('structureid') || false);
+                console.log(structureid);
+                if (!structureid) {
                     this.setMol = function () {
-                        mol = sketcher.getMolfile();
+                        var mol = sketcher.getMolfile();
                         //console.log(mol);
                         $http({
                             method: 'POST',
@@ -223,24 +227,48 @@
                         console.log(element);
                     };
                 }
-                else{
+                else {
                     $http({
-                        method: 'POST',
-                        url: url,
-                        data: mol,
-                        headers: {'Content-Type': 'text/plain'}
+                        method: 'GET',
+                        url: '/ginas/app/api/v1/structures/'+ structureid,
+                        /*data: structureid,
+                        headers: {'Content-Type': 'text/plain'}*/
                     }).success(function (data) {
-
+                        console.log(data);
                         if (!Substance.chemical) {
+                            Substance.chemical = {};
+                        }
+                        sketcher.setMolfile(data.molfile);
+/*                        Substance.chemical.structure = data.structure;
+                        Substance.chemical.moieties = data.moieties;
+                        Substance.q = data.structure.smiles; */
+                    });
+/*
+
+                    console.log(Substance);
+                    console.log(element);
+*/
+
+
+
+/*                    url ='/ginas/app/structure/'+ structureid+'.mol';
+                    console.log(url);
+                    $http({
+                        method: 'GET',
+                        url: url,
+                    }).success(function (data) {
+                            console.log(data);
+/!*                        if (!Substance.chemical) {
                             Substance.chemical = {};
                         }
                         Substance.chemical.structure = data.structure;
                         Substance.chemical.moieties = data.moieties;
-                        Substance.q = data.structure.smiles;
+                        Substance.q = data.structure.smiles;*!/
+                        sketcher.setMolfile(data);
+
                     });
-                    sketcher.setMolfile(mol);
                     console.log(Substance);
-                    console.log(element);
+                    console.log(element);*/
                 }
             }
         };
@@ -987,4 +1015,5 @@
 
 
     });
+
 })();

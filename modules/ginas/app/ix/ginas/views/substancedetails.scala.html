@@ -9,28 +9,28 @@
     } {
         <nav class="navbar navbar-default" id="breadcrumb">
             <div class="container-fluid">
-                <div class="row-fluid">
+                <div class="row-fluid" >
                     <div class="col-md-6">
                         <ul class="nav nav-pills" id="breadcrumb-list">
                             @breadcrumb
-                            <li role="presentation"><a href="" ng-click="scrollTo('names')">
+                            <li role="presentation" ><a href="#names" prevent-default="" ng-click="scrollTo('names')">
                                 Names <span class="badge">@sub.names.size()</span></a></li>
                             @defining(sub.getModificationCount()) { gcount =>
                                 @if(gcount > 0 ){
-                                    <li role="presentation"><a href="" ng-click="scrollTo('mods')">Modifications
+                                    <li role="presentation"><a href="#mods" prevent-default="" ng-click="scrollTo('mods')">Modifications
                                         <span class= "badge">@gcount</span></a>
                                     </li>
                                 }
                             }
                             @if(sub.codes.size() > 0) {
-                                <li role="presentation"><a href="" ng-click="scrollTo('codes')">
+                                <li role="presentation"><a href="codes" prevent-default="" ng-click="scrollTo('codes')">
                                     Codes <span class="badge">@sub.codes.size()</span></a></li>
                             }
                             @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-                                <li role="presentation"><a href="" ng-click="scrollTo('relationships')" id = "relation">
+                                <li role="presentation" ><a href="#relationships" prevent-default="" ng-click="scrollTo('relationships')" id = "relation">
                                     Relationships <span class="badge">@sub.relationships.size()</span></a></li>
                             }
-                            <li role="presentation"><a href="" ng-click="scrollTo('refs')">
+                            <li role="presentation"><a href="#refs" prevent-default="" ng-click="scrollTo('refs')">
                                 References <span class="badge">@sub.references.size()</span></a></li>
                         </ul>
                     </div>
@@ -42,7 +42,7 @@
             </div>
         </nav>
     } {
-        <div class = "row">
+@*        <div class = "row">
             <div class = "col-md-9">
                 <h1>@sub.getName()</h1>
             </div>
@@ -54,7 +54,7 @@
             }
 
             </div>
-        </div>
+        </div>*@
         @content
 
         @if(sub.hasModifications()) {

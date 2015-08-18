@@ -9,11 +9,6 @@ body, html {
     height: 100%;
 }
 
-body, html {
-    min-height: 100%;
-    height: 100%;
-}
-
 @-moz-document url-prefix(){
     fieldset {
         display: table-cell;
@@ -47,7 +42,7 @@ body, html {
 }
 
 #content {
-    padding-top: 195px;
+    padding-top: 225px;
 }
 
 #pub-history {

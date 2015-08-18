@@ -45,7 +45,6 @@
                         @chemicals.length
                         @total
                         @for(chem <- chemicals) {
-                            hi
                             @chemthumb(chem)
                         }
 
@@ -57,7 +56,7 @@
                 <div class="panel-footer">
                     <a href="@{
                         ix.ginas.controllers.routes.GinasApp.chemicals() + "?" + App.queryString(request().queryString())
-                    }">@totalChemicals chemical(s)</a>
+                    }"  target="_self">@totalChemicals chemical(s)</a>
                 </div>
             </div>
 
@@ -82,7 +81,7 @@
                 <div class="panel-footer">
                     <a href="@{
                         ix.ginas.controllers.routes.GinasApp.proteins() + "?" + App.queryString(request().queryString())
-                    }">@totalProteins protein(s)</a>
+                    }"  target="_self"> @totalProteins protein(s)</a>
                 </div>
             </div>
             <div class="panel panel-default">

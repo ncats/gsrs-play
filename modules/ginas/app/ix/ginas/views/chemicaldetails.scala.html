@@ -63,9 +63,9 @@
 }
 }
 @substancedetails(sub){
-    <li role="presentation" class="active"><a href="#structureDetails">Structure</a></li>
+    <li role="presentation"  class="active"><a href="#structureDetails" prevent-default="" ng-click="scrollTo('structureDetails')">Structure</a></li>
     @if(sub.moieties.length>0){
-        <li role="presentation"><a href="#moieties" >Moieties <span class="badge">@sub.moieties.length</span></a></li> }
+        <li role="presentation"><a href="#moieties" prevent-default=""  ng-click="scrollTo('moieties')" >Moieties <span class="badge">@sub.moieties.length</span></a></li> }
 } {
     <div class = "row">
         <div class = "col-md-9">
@@ -84,12 +84,7 @@
                 <div class = "col-md-6 col-md-offset-6">
                     <ul class= "form-inline pull-right list-unstyled" id = "exportSave">
                         <li> <export-button structureid ="'@sub.structure.id'" ></export-button></li>
-                        <li>
-
-                            <button type="button" class="btn navbar-btn btn-primary" id = "strucSearch"
-                            data-toggle="modal"
-                            data-molurl='@ix.ncats.controllers.routes.App.structure(sub.structure.getId, "mol")'
-                            data-target="#strucModal"><span class="fa fa-search"></span></button>
+                        <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click="ginasCtrl.passStructure('@sub.structure.id')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
                         </li>
                     </ul>
                 </div>
