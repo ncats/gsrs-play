@@ -1,9 +1,10 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead', 'screengrabber', 'LocalStorageModule'])
-        .config(function (showErrorsConfigProvider, localStorageServiceProvider) {
+    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead','LocalStorageModule','ngTagsInput' ])
+        .config(function (showErrorsConfigProvider, localStorageServiceProvider, $locationProvider) {
             showErrorsConfigProvider.showSuccess(true);
             localStorageServiceProvider
                 .setPrefix('ginas');
+            $locationProvider.html5Mode({ enabled: true, hashPrefix: '!'});
         });
 
     ginasApp.filter('range', function () {
@@ -40,25 +41,19 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasCtrl", function($scope, $location, localStorageService, Substance){
+    ginasApp.controller("GinasCtrl", function($scope,  $resource, $location, $anchorScroll, localStorageService, Substance, cvFactory){
         var ginasCtrl = this;
         ginasCtrl.substance = Substance;
 
-        $scope.ScrollTo = function (prmElementToScrollTo)
-        {
-            //Store the old location.hash
-            var oldLocation = $location.hash();
-
-            //Set the location.hash to the id of the chosen element and navigate to it
+        $scope.scrollTo = function (prmElementToScrollTo){
+            console.log("scrolling!");
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
-
-            //Change the location.hash back to the old one to prevent page reloading
-            $location.hash(oldLocation);
         };
 
         $scope.enabled= false;
         $scope.mol = null;
+        $scope.tags={};
         //$scope.unbind = localStorageService.bind($scope, 'mol');
         $scope.unbind = localStorageService.bind($scope, 'enabled');
         this.enabled= function getItem(key) {
@@ -67,12 +62,50 @@
         this.numbers= true;
         localStorageService.set('enabled', $scope.enabled);
 
-        this.passStructure= function(molfile){
-            localStorageService.set('mol', molfile);
+        this.passStructure= function(id){
+            localStorageService.set('structureid', id);
         };
         this.clearStructure= function(){
             console.log("destroy");
-            return localStorageService.remove('mol');
+            return localStorageService.remove('structureid');
+        };
+
+        this.loadTags = function(query) {
+            console.log($scope);
+            console.log(query);
+            return tags.query().$promise;
+          //   return this.getFields('LANGUAGE');
+/*            console.log($scope);
+            return $scope.tags.query().$promise;*/
+        };
+
+        this.getFields = function (cvfield) {
+            console.log(cvfield);
+            cvFactory.getFields(cvfield)
+                .success(function (response) {
+                    console.log(response);
+                    if (response.count >= 1) {
+                        console.log("adding data");
+                       return response;
+                    } else {
+                        console.log("no results");
+                    }
+                })
+                .error(function (error) {
+                    $scope.status = 'Unable to load substance data: ' + error.message;
+                });
+        };
+
+
+
+    });
+
+    ginasApp.directive('scrollSpy', function($timeout){
+        return function(scope, elem, attr) {
+            scope.$watch(attr.scrollSpy, function(value) {
+                $timeout(function() { elem.scrollspy('refresh');
+                }, 200);
+            }, true);
         };
     });
 
@@ -129,6 +162,15 @@
         return substanceFactory;
     }]);
 
+    ginasApp.factory('cvFactory', ['$http', function ($http) {
+        var url = "app/cv/";
+        var cvFactory = {};
+        cvFactory.getFields = function (name) {
+            return $http.get(url + name.toUpperCase(), {headers: {'Content-Type': 'text/plain'}});
+        };
+        return cvFactory;
+    }]);
+
     ginasApp.directive('moiety', function () {
         return {
             restrict: 'E',
@@ -166,7 +208,6 @@
                 value: '='
             },
             link: function (scope, element, attrs) {
-                console.log("Linking");
                 //console.log(scope);
                 //console.log(scope.amount);
                 //console.log(attrs);
@@ -190,19 +231,18 @@
         return {
             restrict: 'E',
             require: "ngModel",
-            scope:{
-              structureQuery: '='
+            scope: {
+                structureQuery: '='
             },
             template: "<div id='sketcherForm' dataformat='molfile' ondatachange='setMol(this)'></div>",
 
             link: function (scope, element, attrs, ngModelCtrl) {
                 sketcher = new JSDraw("sketcherForm");
                 var url = window.strucUrl;//'/ginas/app/smiles';
-                var mol = (localStorageService.get('mol') || false);
-            console.log(mol);
-                if (!mol) {
+                var structureid = (localStorageService.get('structureid') || false);
+                if (!structureid) {
                     this.setMol = function () {
-                        mol = sketcher.getMolfile();
+                        var mol = sketcher.getMolfile();
                         //console.log(mol);
                         $http({
                             method: 'POST',
@@ -223,24 +263,48 @@
                         console.log(element);
                     };
                 }
-                else{
+                else {
                     $http({
-                        method: 'POST',
-                        url: url,
-                        data: mol,
-                        headers: {'Content-Type': 'text/plain'}
+                        method: 'GET',
+                        url: '/ginas/app/api/v1/structures/'+ structureid,
+                        /*data: structureid,
+                        headers: {'Content-Type': 'text/plain'}*/
                     }).success(function (data) {
-
+                        console.log(data);
                         if (!Substance.chemical) {
+                            Substance.chemical = {};
+                        }
+                        sketcher.setMolfile(data.molfile);
+/*                        Substance.chemical.structure = data.structure;
+                        Substance.chemical.moieties = data.moieties;
+                        Substance.q = data.structure.smiles; */
+                    });
+/*
+
+                    console.log(Substance);
+                    console.log(element);
+*/
+
+
+
+/*                    url ='/ginas/app/structure/'+ structureid+'.mol';
+                    console.log(url);
+                    $http({
+                        method: 'GET',
+                        url: url,
+                    }).success(function (data) {
+                            console.log(data);
+/!*                        if (!Substance.chemical) {
                             Substance.chemical = {};
                         }
                         Substance.chemical.structure = data.structure;
                         Substance.chemical.moieties = data.moieties;
-                        Substance.q = data.structure.smiles;
+                        Substance.q = data.structure.smiles;*!/
+                        sketcher.setMolfile(data);
+
                     });
-                    sketcher.setMolfile(mol);
                     console.log(Substance);
-                    console.log(element);
+                    console.log(element);*/
                 }
             }
         };
@@ -987,4 +1051,5 @@
 
 
     });
+
 })();

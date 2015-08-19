@@ -469,18 +469,18 @@ public class GinasApp extends App {
         TextIndexer.Facet[] facets = filter
             (result.getFacets(), CHEMICAL_FACETS);
 
-        List<ChemicalSubstance> chemicals = new ArrayList<ChemicalSubstance>();
+        List<Substance> chemicals = new ArrayList<Substance>();
         int[] pages = new int[0];
         if (result.count() > 0) {
             rows = Math.min(result.count(), Math.max(1, rows));
             pages = paging (rows, page, result.count());
             for (int i = (page - 1) * rows, j = 0; j < rows
                      && i < result.size(); ++j, ++i) {
-                chemicals.add((ChemicalSubstance) result.get(i));
+                chemicals.add((Substance)result.get(i));
             }
         }
 
-        return ok(ix.ginas.views.html.chemicals.render
+        return ok(ix.ginas.views.html.substances.render
                   (page, rows, result.count(),
                    pages, decorate (facets), chemicals));
 
@@ -524,11 +524,11 @@ public class GinasApp extends App {
                         int nrows = Math.min(total, Math.max(1, rows));
                         int[] pages = paging(nrows, page, total);
 
-                        List<ChemicalSubstance> chemicals =
-                            SubstanceFactory.getChemicals
-                            (nrows, (page - 1) * rows, null);
+                        List<Substance> chemicals =
+                            SubstanceFactory.getSubstances
+                                    (nrows, (page - 1) * rows, null);
 
-                        return ok(ix.ginas.views.html.chemicals.render
+                        return ok(ix.ginas.views.html.substances.render
                                   (page, nrows, total, pages,
                                    decorate (facets), chemicals));
                     }
@@ -576,12 +576,12 @@ public class GinasApp extends App {
         throws Exception {
         return structureResult
             (context, rows, page,
-             new DefaultResultRenderer<ChemicalSubstance>() {
+             new DefaultResultRenderer<Substance>() {
                  public Result render (int page, int rows,
                                        int total, int[] pages,
                                        List<TextIndexer.Facet> facets,
-                                       List<ChemicalSubstance> substances) {
-                     return ok (ix.ginas.views.html.chemicals.render
+                                       List<Substance> substances) {
+                     return ok (ix.ginas.views.html.substances.render
                                 (page, rows, total, pages,
                                  decorate (filter (facets, CHEMICAL_FACETS)),
                                  substances));
@@ -589,43 +589,43 @@ public class GinasApp extends App {
              });
     }
 
-    static final GetResult<ChemicalSubstance> ChemicalResult =
-        new GetResult<ChemicalSubstance>(ChemicalSubstance.class,
-                                         SubstanceFactory.chemfinder) {
-            public Result getResult (List<ChemicalSubstance> chemicals)
+    static final GetResult<Substance> ChemicalResult =
+        new GetResult<Substance>(Substance.class,
+                                         SubstanceFactory.finder) {
+            public Result getResult (List<Substance> chemicals)
                 throws Exception {
                 return _getChemicalResult (chemicals);
             }
         };
 
-    static Result _getChemicalResult (List<ChemicalSubstance> chemicals)
+    static Result _getChemicalResult (List<Substance> chemicals)
         throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
         if (true || chemicals.size() == 1) {
-            ChemicalSubstance chemical = chemicals.iterator().next();
+            Substance chemical = chemicals.iterator().next();
             return ok (ix.ginas.views.html
-                       .chemicaldetails.render(chemical));
+                       .chemicaldetails.render((ChemicalSubstance)chemical));
         }
         else {
             TextIndexer indexer = _textIndexer.createEmptyInstance();
-            for (ChemicalSubstance chem : chemicals)
+            for (Substance chem : chemicals)
                 indexer.add(chem);
 
             TextIndexer.SearchResult result = SearchFactory.search
-                (indexer, ChemicalSubstance.class, null, null,
+                (indexer, Substance.class, null, null,
                  indexer.size(), 0, FACET_DIM, request().queryString());
             if (result.count() < chemicals.size()) {
                 chemicals.clear();
                 for (int i = 0; i < result.count(); ++i) {
-                    chemicals.add((ChemicalSubstance)result.get(i));
+                    chemicals.add((Substance)result.get(i));
                 }
             }
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), CHEMICAL_FACETS);
             indexer.shutdown();
 
-            return ok (ix.ginas.views.html.chemicals.render
+            return ok (ix.ginas.views.html.substances.render
                        (1, result.count(), result.count(),
                         new int[0], decorate (facets), chemicals));
         }
@@ -759,7 +759,7 @@ public class GinasApp extends App {
         return references;
     }
 
-    /******************* PROTEINS *************************************************/
+   //******************* PROTEINS *************************************************//*
 
     public static Result proteins (final String q,
                                    final int rows, final int page) {
@@ -812,18 +812,18 @@ public class GinasApp extends App {
             TextIndexer.Facet[] facets = filter
                 (result.getFacets(), PROTEIN_FACETS);
 
-            List<ProteinSubstance> proteins = new ArrayList<ProteinSubstance>();
+            List<Substance> proteins = new ArrayList<Substance>();
             int[] pages = new int[0];
             if (result.count() > 0) {
                 rows = Math.min(result.count(), Math.max(1, rows));
                 pages = paging (rows, page, result.count());
                 for (int i = (page - 1) * rows, j = 0; j < rows
                          && i < result.count(); ++j, ++i) {
-                    proteins.add((ProteinSubstance) result.get(i));
+                    proteins.add((Substance) result.get(i));
                 }
             }
 
-            return ok(ix.ginas.views.html.proteins.render
+            return ok(ix.ginas.views.html.substances.render
                       (page, rows, result.count(),
                        pages, decorate (facets), proteins));
         }
@@ -840,32 +840,32 @@ public class GinasApp extends App {
             rows = Math.min(total, Math.max(1, rows));
             int[] pages = paging(rows, page, total);
 
-            List<ProteinSubstance> proteins =
-                SubstanceFactory.getProteins(rows, (page - 1) * rows, null);
+            List<Substance> proteins =
+                SubstanceFactory.getSubstances(rows, (page - 1) * rows, null);
             Logger.info("protein list length: " + proteins.size());
-            return ok(ix.ginas.views.html.proteins.render
+            return ok(ix.ginas.views.html.substances.render
                       (page, rows, total, pages, decorate (facets), proteins));
         }
     }
 
-    static final GetResult<ProteinSubstance> ProteinResult =
-        new GetResult<ProteinSubstance>(ProteinSubstance.class, SubstanceFactory.protfinder) {
-            public Result getResult (List<ProteinSubstance> proteins) throws Exception {
+    static final GetResult<Substance> ProteinResult =
+        new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
+            public Result getResult (List<Substance> proteins) throws Exception {
                 return _getProteinResult (proteins);
             }
         };
 
-    static Result _getProteinResult (List<ProteinSubstance> proteins) throws Exception {
+    static Result _getProteinResult (List<Substance> proteins) throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
         if (true || proteins.size() == 1) {
-            ProteinSubstance protein = proteins.iterator().next();
+            Substance protein = proteins.iterator().next();
             return ok (ix.ginas.views.html
-                       .proteindetails.render(protein));
+                       .proteindetails.render((ProteinSubstance)protein));
         }
         else {
             TextIndexer indexer = _textIndexer.createEmptyInstance();
-            for (ProteinSubstance prot : proteins)
+            for (Substance prot : proteins)
                 indexer.add(prot);
 
             TextIndexer.SearchResult result = SearchFactory.search
@@ -883,7 +883,7 @@ public class GinasApp extends App {
                 (result.getFacets(), PROTEIN_FACETS);
             indexer.shutdown();
 
-            return ok (ix.ginas.views.html.proteins.render
+            return ok (ix.ginas.views.html.substances.render
                        (1, result.count(), result.count(),
                         new int[0], decorate (facets), proteins));
         }
@@ -1046,13 +1046,13 @@ public class GinasApp extends App {
             String t = request().getQueryString("type");
             if (kind != null && !"".equals(kind)) {
                 if (ChemicalSubstance.class.getName().equals(kind)){
-                    return redirect (routes.GinasApp.chemicals(q, 32, 1));
+                    return redirect (routes.GinasApp.substances(q, 32, 1));
                 }
                 else if (ProteinSubstance.class.getName().equals(kind)){
-                    return redirect (routes.GinasApp.proteins(q, 32, 1));
+                    return redirect (routes.GinasApp.substances(q, 32, 1));
                 }
                 else if ("substructure".equalsIgnoreCase(t)) {
-                    String url = routes.GinasApp.chemicals(q, 16, 1).url()
+                    String url = routes.GinasApp.substances(q, 16, 1).url()
                         +"&type="+t;
                     return redirect (url);
                 }
@@ -1239,5 +1239,15 @@ public class GinasApp extends App {
         }
         return comp;
     }
+
+    public static Result getCVField (String field) {
+        String terms = CV.getCV(field);
+        return ok (terms);
+    }
+
+
+
+
+
 }
 

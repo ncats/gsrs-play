@@ -7,10 +7,10 @@
     <div class="panel-heading sub-title">
         <div class = "row">
             <div class = "col-md-10">
-                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">@sub.getName()</a></h3>
+                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self">@sub.getName()</a></h3>
             </div>
             <div class = "col-md-2 prot-approvID">
-                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))"><code @if(sub.isSubstanceVariant()){
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self"><code @if(sub.isSubstanceVariant()){
 					class="subconcept"
                 }
                 >@sub.getApprovalIDDisplay()</code></a></h4>
