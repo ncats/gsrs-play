@@ -16,7 +16,7 @@ import java.util.*;
  * Created by sheilstk on 6/29/15.
  */
 public class CV {
-    Map<String, List<VocabularyTerm>> map =
+    static Map<String, List<VocabularyTerm>> map =
         new TreeMap<String, List<VocabularyTerm>>();
 
     public CV (InputStream is) throws IOException {
@@ -59,6 +59,12 @@ public class CV {
     }
 
     public String getField (String domain) {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode j = mapper.valueToTree(map.get(domain));
+        return j.toString();
+    }
+
+    public static String getCV (String domain) {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode j = mapper.valueToTree(map.get(domain));
         return j.toString();

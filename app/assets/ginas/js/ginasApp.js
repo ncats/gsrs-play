@@ -1,5 +1,5 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead','LocalStorageModule' ])
+    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead','LocalStorageModule','ngTagsInput' ])
         .config(function (showErrorsConfigProvider, localStorageServiceProvider, $locationProvider) {
             showErrorsConfigProvider.showSuccess(true);
             localStorageServiceProvider
@@ -41,7 +41,7 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasCtrl", function($scope, $location, $anchorScroll, localStorageService, Substance){
+    ginasApp.controller("GinasCtrl", function($scope,  $resource, $location, $anchorScroll, localStorageService, Substance, cvFactory){
         var ginasCtrl = this;
         ginasCtrl.substance = Substance;
 
@@ -53,6 +53,7 @@
 
         $scope.enabled= false;
         $scope.mol = null;
+        $scope.tags={};
         //$scope.unbind = localStorageService.bind($scope, 'mol');
         $scope.unbind = localStorageService.bind($scope, 'enabled');
         this.enabled= function getItem(key) {
@@ -68,12 +69,40 @@
             console.log("destroy");
             return localStorageService.remove('structureid');
         };
+
+        this.loadTags = function(query) {
+            console.log($scope);
+            console.log(query);
+            return tags.query().$promise;
+          //   return this.getFields('LANGUAGE');
+/*            console.log($scope);
+            return $scope.tags.query().$promise;*/
+        };
+
+        this.getFields = function (cvfield) {
+            console.log(cvfield);
+            cvFactory.getFields(cvfield)
+                .success(function (response) {
+                    console.log(response);
+                    if (response.count >= 1) {
+                        console.log("adding data");
+                       return response;
+                    } else {
+                        console.log("no results");
+                    }
+                })
+                .error(function (error) {
+                    $scope.status = 'Unable to load substance data: ' + error.message;
+                });
+        };
+
+
+
     });
 
     ginasApp.directive('scrollSpy', function($timeout){
         return function(scope, elem, attr) {
             scope.$watch(attr.scrollSpy, function(value) {
-                console.log("ok");
                 $timeout(function() { elem.scrollspy('refresh');
                 }, 200);
             }, true);
@@ -133,6 +162,15 @@
         return substanceFactory;
     }]);
 
+    ginasApp.factory('cvFactory', ['$http', function ($http) {
+        var url = "app/cv/";
+        var cvFactory = {};
+        cvFactory.getFields = function (name) {
+            return $http.get(url + name.toUpperCase(), {headers: {'Content-Type': 'text/plain'}});
+        };
+        return cvFactory;
+    }]);
+
     ginasApp.directive('moiety', function () {
         return {
             restrict: 'E',
@@ -170,7 +208,6 @@
                 value: '='
             },
             link: function (scope, element, attrs) {
-                console.log("Linking");
                 //console.log(scope);
                 //console.log(scope.amount);
                 //console.log(attrs);
@@ -203,7 +240,6 @@
                 sketcher = new JSDraw("sketcherForm");
                 var url = window.strucUrl;//'/ginas/app/smiles';
                 var structureid = (localStorageService.get('structureid') || false);
-                console.log(structureid);
                 if (!structureid) {
                     this.setMol = function () {
                         var mol = sketcher.getMolfile();

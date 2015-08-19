@@ -130,9 +130,14 @@
                     </ng-messages>
                 </div>
 
-                <div class="col-md-2 err-check" show-errors>
-                    <select multiple class="form-control" title="Language" id="language" name="language" ng-model = "name.languages" ng-options="r.display for r in @GinasApp.getCV.getField("LANGUAGE") track by r.display" required>
-                        </select>
+                <div class="col-md-2 err-check">
+                    <tags-input title="Language" placeholder="language" id="language" name="language" ng-model="name.languages" min-length="2" display-property="display" key-property="value">
+                        <auto-complete source="ginasCtrl.loadTags($query)" min-length="2"></auto-complete>
+                    </tags-input>
+
+
+                    @*<select multiple class="form-control" title="Language" id="language" name="language" ng-model = "name.languages" ng-options="r.display for r in @GinasApp.getCV.getField("LANGUAGE") track by r.display" required>
+                        </select>*@
                     <ng-messages for="nameForm.language.$error" ng-if="nameForm.language.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>

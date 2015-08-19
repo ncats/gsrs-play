@@ -1239,5 +1239,15 @@ public class GinasApp extends App {
         }
         return comp;
     }
+
+    public static Result getCVField (String field) {
+        String terms = CV.getCV(field);
+        return ok (terms);
+    }
+
+
+
+
+
 }
 
