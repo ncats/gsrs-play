@@ -9,7 +9,9 @@ import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
 import ix.utils.Util;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
@@ -41,6 +43,7 @@ import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
 
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
@@ -60,6 +63,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	private static RecordPersister _recordPersister = new ix.ginas.models.utils.GinasUtils.GinasSubstancePersister();
 	private static RecordExtractor _recordExtractor = new ix.ginas.models.utils.GinasUtils.GinasDumpExtractor(null);
 	private static RecordTransformer _recordTransformer= new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
+	
+	private static PrintWriter persistFailures;
+	private static PrintWriter transformFailures;
 	
 	
 
@@ -283,17 +289,17 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				_recordPersister.persist(this);
 				System.out.println("Last persist:" + System.currentTimeMillis());
 				k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-				Statistics stat = getStatisticsForJob(k);
-				stat.applyChange(Statistics.CHANGE.ADD_PE_GOOD);
-				storeStatisticsForJob(k, stat);
+				
+				Statistics stat=applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_GOOD);
 				Logger.debug(stat.toString());
 			}catch(Exception e){
 				k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-				Statistics stat = getStatisticsForJob(k);
-				stat.applyChange(Statistics.CHANGE.ADD_PE_BAD);
-				storeStatisticsForJob(k, stat);
-//				Logger.debug(stat.toString());
+				applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_BAD);
+				ObjectMapper om = new ObjectMapper();
+				persistFailures.println(rec.name + "\t" + rec.message + "\t" + om.valueToTree(theRecord).toString().replace("\n", ""));
+				persistFailures.flush();
 			}
+			
 			Statistics stat = getStatisticsForJob(k);
 			if(stat.isDone()){
 				ObjectMapper om = new ObjectMapper();
@@ -306,6 +312,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		}
 	}
 
+	
 	/**
 	 * This actor runs in a bounded queue to ensure we don't have issues with
 	 * locking due to database persistence
@@ -514,9 +521,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 						throw new IllegalStateException("Transform error");
 					}
 					String k=pr.jobKey;
-					Statistics stat = getStatisticsForJob(k);
-					stat.applyChange(Statistics.CHANGE.ADD_PR_GOOD);
-					storeStatisticsForJob(k, stat);
+					
+					applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_GOOD);
 					
 					reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
 					
@@ -525,9 +531,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					
 					getInstance().decrementExtractionQueue();
 					String k=pr.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-					Statistics stat = getStatisticsForJob(k);
-					stat.applyChange(Statistics.CHANGE.ADD_PR_BAD);
-					storeStatisticsForJob(k, stat);
+					
+					applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
 				}
 				
 			} else if (mesg instanceof Terminated) {
@@ -573,6 +578,16 @@ public class GinasRecordProcessorPlugin extends Plugin {
         HazelcastInstance instance = Hazelcast.newHazelcastInstance(cfg);
         jobCacheStatistics = instance.getMap("jobStatistics");
         queueStatistics= instance.getMap("queueStatistics");
+        
+        try {
+			persistFailures = new PrintWriter("fail.persist.log");
+			transformFailures = new PrintWriter("fail.transform.log");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+       
+        
         
 		ctx = app.plugin(IxContext.class);
 		if (ctx == null)
@@ -975,12 +990,16 @@ public class GinasRecordProcessorPlugin extends Plugin {
     	if(st==null || s.lastchange > st.lastchange){
     		return jobCacheStatistics.put(jobTerm,s);
     	}else{
-    		Logger.debug("Collision, applying");
     		st.applyChange(s.lastChange);
     		return jobCacheStatistics.put(jobTerm,st);
     	}
     }
 	
+    public static Statistics applyStatisticsChangeForJob(String jobTerm, Statistics.CHANGE change){
+    	Statistics stat = getStatisticsForJob(jobTerm);
+		stat.applyChange(change);
+		return storeStatisticsForJob(jobTerm, stat);
+    }
     
 
 

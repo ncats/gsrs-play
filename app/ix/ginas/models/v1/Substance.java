@@ -37,6 +37,8 @@ import ix.utils.Global;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends Ginas {
+	public static final boolean REMOVE_INVALID_RELATIONSHIPS=false;
+	
     /**
      * sigh.. can we be at least case-consistent?
      */
@@ -293,8 +295,9 @@ public class Substance extends Ginas {
         }
 
         if (!remove.isEmpty()) {
-            for (Relationship rel : remove)
-                relationships.remove(rel);
+        	if(REMOVE_INVALID_RELATIONSHIPS)
+	            for (Relationship rel : remove)
+	                relationships.remove(rel);
             Logger.warn("Substance "+approvalID+" has "+remove.size()
                         +" invalid relationship(s)!");
         }
