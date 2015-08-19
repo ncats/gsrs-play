@@ -136,7 +136,6 @@ public class GinasUtils {
 		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception{
 				boolean worked=false;
 				if (prec.theRecordToPersist != null) {
-					Logger.debug("persisting:"+ prec.rec.name);
 					
 					worked= GinasUtils.persistSubstance(prec.theRecordToPersist, prec.indexer);
 					if(worked){
@@ -149,7 +148,7 @@ public class GinasUtils {
 				}
 				prec.rec.save();
 				
-				Logger.debug("Saved struc " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.uuid : null)
+				Logger.debug("Saved substance " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.uuid : null)
 						+ " record " + prec.rec.id);
 				if(!worked)throw new IllegalStateException("Didn't persist");
 				
@@ -166,7 +165,7 @@ public class GinasUtils {
 			rec.start = System.currentTimeMillis();
 			Substance struc = null;
 			try {
-				Logger.debug("transforming:"+ rec.name);
+				//Logger.debug("transforming:"+ rec.name);
 				struc = GinasUtils.makeSubstance(pr.theRecord);
 				rec.stop = System.currentTimeMillis();
 				rec.status = ProcessingRecord.Status.ADAPTED;
@@ -174,6 +173,7 @@ public class GinasUtils {
 				rec.stop = System.currentTimeMillis();
 				rec.status = ProcessingRecord.Status.FAILED;
 				rec.message = t.getMessage();
+				t.printStackTrace();
 			}
 			return struc;
 		}
@@ -182,12 +182,12 @@ public class GinasUtils {
 		BufferedReader buff;
 		public GinasDumpExtractor(InputStream is) {
 			super(is);
-			Logger.debug("I'm going to make a nice reader for everyone to use!");
+			//Logger.debug("I'm going to make a nice reader for everyone to use!");
 			try{
 				buff = new BufferedReader(new InputStreamReader(is));
-	            Logger.debug("####################################### Making reader ");
+	           // Logger.debug("####################################### Making reader ");
 			}catch(Exception e){
-				Logger.debug("Pfft ... just kidding, I hate readers anyway.");
+				//Logger.debug("Pfft ... just kidding, I hate readers anyway.");
 			}
 			
 		}

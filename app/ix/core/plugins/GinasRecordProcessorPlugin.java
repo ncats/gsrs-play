@@ -12,16 +12,11 @@ import ix.utils.Util;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-
-import com.hazelcast.config.Config;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
 
 import play.Application;
 import play.Logger;
@@ -29,7 +24,6 @@ import play.Plugin;
 import play.db.ebean.Model;
 import play.db.ebean.Transactional;
 import scala.collection.JavaConverters;
-import scala.concurrent.stm.ccstm.Stats;
 import tripod.chem.indexer.StructureIndexer;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -46,6 +40,11 @@ import akka.routing.RouterConfig;
 import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
 
 public class GinasRecordProcessorPlugin extends Plugin {
 	private static final String PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
@@ -198,10 +197,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	public static class PayloadExtractedRecord<K> implements Serializable {
 		public final ProcessingJob job;
 		public final K theRecord;
+		public final String jobKey;
 		
-		public PayloadExtractedRecord(ProcessingJob job, K mol) {
+		public PayloadExtractedRecord(ProcessingJob job, K rec) {
 			this.job = job;
-			this.theRecord = mol;
+			this.theRecord = rec;
+			String k=job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+			jobKey=k;
 		}
 	}
 
@@ -276,24 +278,29 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public void persists() {
 			
 			getInstance().decrementExtractionQueue();
+			String k=null;
 			try{
 				_recordPersister.persist(this);
 				System.out.println("Last persist:" + System.currentTimeMillis());
-				String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-				Statistics stat = jobCacheStatistics.get(k);
-				if(stat!=null){
-					stat.recordsPersistedSuccess++;
-				}
-				jobCacheStatistics.put(k, stat);
+				k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+				Statistics stat = getStatisticsForJob(k);
+				stat.applyChange(Statistics.CHANGE.ADD_PE_GOOD);
+				storeStatisticsForJob(k, stat);
 				Logger.debug(stat.toString());
 			}catch(Exception e){
-				String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-				Statistics stat = jobCacheStatistics.get(k);
-				if(stat!=null){
-					stat.recordsPersistedFailed++;
-				}
-				jobCacheStatistics.put(k, stat);
+				k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+				Statistics stat = getStatisticsForJob(k);
+				stat.applyChange(Statistics.CHANGE.ADD_PE_BAD);
+				storeStatisticsForJob(k, stat);
 //				Logger.debug(stat.toString());
+			}
+			Statistics stat = getStatisticsForJob(k);
+			if(stat.isDone()){
+				ObjectMapper om = new ObjectMapper();
+				rec.job.stop=System.currentTimeMillis();
+				rec.job.status=ProcessingJob.Status.COMPLETE;
+				rec.job.statistics=om.valueToTree(stat).toString();
+				PersistModel.Update(rec.job).persists();
 			}
 			
 		}
@@ -497,28 +504,30 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				}
 			} else if (mesg instanceof PayloadExtractedRecord) {
 				PayloadExtractedRecord pr = (PayloadExtractedRecord) mesg;
-				log.info("processing " + pr.job);
+				
 				ProcessingRecord rec = new ProcessingRecord();
 				try{
+					
 					Object trans = _recordTransformer.transform(pr, rec);
-					reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
-					String k=pr.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-					Statistics stat = jobCacheStatistics.get(k);
-					if(stat!=null){
-						stat.recordsProcessedSuccess++;
+					
+					if(trans==null){
+						throw new IllegalStateException("Transform error");
 					}
-					jobCacheStatistics.put(k, stat);
-//					Logger.debug(stat.toString());
+					String k=pr.jobKey;
+					Statistics stat = getStatisticsForJob(k);
+					stat.applyChange(Statistics.CHANGE.ADD_PR_GOOD);
+					storeStatisticsForJob(k, stat);
+					
+					reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
+					
 				}catch(Exception e){
+					e.printStackTrace();
 					
 					getInstance().decrementExtractionQueue();
 					String k=pr.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-					Statistics stat = jobCacheStatistics.get(k);
-					if(stat!=null){
-						stat.recordsProcessedFailed++;
-					}
-					jobCacheStatistics.put(k, stat);
-//					Logger.debug(stat.toString());
+					Statistics stat = getStatisticsForJob(k);
+					stat.applyChange(Statistics.CHANGE.ADD_PR_BAD);
+					storeStatisticsForJob(k, stat);
 				}
 				
 			} else if (mesg instanceof Terminated) {
@@ -612,7 +621,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		PayloadProcessor pp = new PayloadProcessor(payload);
 		inbox.send(processor, pp);
 		
-		jobCacheStatistics.put(pp.key, new Statistics());
+		storeStatisticsForJob(pp.key, new Statistics());
 		//jobCacheStatistics.put(pp.key, value);
 		return pp.key;
 	}
@@ -632,7 +641,17 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		
 		public long start=System.currentTimeMillis();
 		
+		public enum CHANGE{	ADD_EX_GOOD,
+							ADD_EX_BAD,
+							ADD_PR_GOOD,
+							ADD_PR_BAD,
+							ADD_PE_GOOD,
+							ADD_PE_BAD, MARK_EXTRACTION_DONE
+			};
+		
 		public Estimate totalRecords=null;
+		public CHANGE lastChange=null;
+		public long lastchange=0;
 		
 		
 		public String toString(){
@@ -645,8 +664,57 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		}
 		 
 		
+		public int totalFailedAndPersisted() {
+			return recordsExtractedFailed+recordsProcessedFailed+recordsPersistedFailed+recordsProcessedSuccess;
+		}
+		
+		public void markExtractionDone(){
+			totalRecords= new Estimate(recordsExtractedSuccess+recordsExtractedFailed, Estimate.TYPE.EXACT);
+		}
+		
+		public boolean isDone(){
+			if(totalFailedAndPersisted()>=totalRecords.count && totalRecords.type==Estimate.TYPE.EXACT){
+				return true;
+			}
+			return false;
+		}
+
+
 		public long getAverageTimeToPersistMS(long end){
 			return (end-start)/recordsPersistedSuccess;
+		}
+		
+		public void applyChange(CHANGE c){
+			if(c!=null){
+				this.lastChange=c;
+				switch(c){
+					case ADD_EX_BAD:
+						recordsExtractedFailed++;
+						break;
+					case ADD_EX_GOOD:
+						recordsExtractedSuccess++;
+						break;
+					case ADD_PE_BAD:
+						recordsPersistedFailed++;
+						break;
+					case ADD_PE_GOOD:
+						recordsPersistedSuccess++;
+						break;
+					case ADD_PR_BAD:
+						recordsProcessedFailed++;
+						break;
+					case ADD_PR_GOOD:
+						recordsProcessedSuccess++;
+						break;
+					case MARK_EXTRACTION_DONE:
+						this.markExtractionDone();
+						break;
+					default:
+						break;
+				}
+			}
+			lastchange++;
+			
 		}
 		
 	}
@@ -702,14 +770,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				Estimate es= _recordExtractor.estimateRecordCount(pp.payload);
 				{
 					Logger.debug("Counted records");
-					Statistics stat = jobCacheStatistics.get(pp.key);
+					Statistics stat = getStatisticsForJob(pp.key);
 					if(stat==null){
-						stat.totalRecords=es;
-					}else{
 						stat = new Statistics();
 					}
 					stat.totalRecords=es;
-					jobCacheStatistics.put(pp.key, stat);
+					stat.lastchange=1;
+					storeStatisticsForJob(pp.key, stat);
 					Logger.debug(stat.toString());
 				}
 				
@@ -719,18 +786,18 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				Logger.debug("Made extractor:" + extract.getClass().getName());
 				for (Object m; (m = extract.getNextRecord()) != null;) {
 					//Logger.debug("Extracting");
-					Statistics stat = jobCacheStatistics.get(pp.key);
-					if(stat!=null){
-						stat.recordsExtractedSuccess++;
-					}
-					jobCacheStatistics.put(pp.key, stat);
-
+					Statistics stat = getStatisticsForJob(pp.key);
+					stat.applyChange(Statistics.CHANGE.ADD_EX_GOOD);
+					storeStatisticsForJob(pp.key, stat);
 					getInstance().waitForProcessingRecordsCount(MAX_EXTRACTION_QUEUE);
 					PayloadExtractedRecord prg=new PayloadExtractedRecord(job, m);
 					getInstance().incrementExtractionQueue();
 					proc.tell(prg, sender);
 				}
 				extract.close();
+				Statistics stat = getStatisticsForJob(pp.key);
+				stat.applyChange(Statistics.CHANGE.MARK_EXTRACTION_DONE);
+				storeStatisticsForJob(pp.key, stat);
 			} catch (Throwable t) {
 				job.message = t.getMessage();
 				job.status = ProcessingJob.Status.FAILED;
@@ -899,6 +966,19 @@ public class GinasRecordProcessorPlugin extends Plugin {
     
     public static Statistics getStatisticsForJob(String jobTerm){
     	return jobCacheStatistics.get(jobTerm);
+    }
+    
+    public static synchronized Statistics storeStatisticsForJob(String jobTerm, Statistics s){
+    	Statistics st=getStatisticsForJob(jobTerm);
+    	if(st==s)return s;
+    	//More recent, substitute
+    	if(st==null || s.lastchange > st.lastchange){
+    		return jobCacheStatistics.put(jobTerm,s);
+    	}else{
+    		Logger.debug("Collision, applying");
+    		st.applyChange(s.lastChange);
+    		return jobCacheStatistics.put(jobTerm,st);
+    	}
     }
 	
     

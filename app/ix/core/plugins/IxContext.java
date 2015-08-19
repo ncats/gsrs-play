@@ -110,6 +110,7 @@ public class IxContext extends Plugin {
         			}catch(Exception e){
         				e.printStackTrace();
         			}
+        			s.close();
         			
         		}else{
         			Logger.info("No SQL initialization present for database:" + dbName);
