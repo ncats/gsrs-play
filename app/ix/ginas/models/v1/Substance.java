@@ -70,11 +70,11 @@ public class Substance extends Ginas {
     @JsonDeserialize(using=DateDeserializer.class)
     public Date approved;
 
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_substance_access")
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_substance_access")
+//    @JsonSerialize(using = PrincipalListSerializer.class)
+//    @JsonDeserialize(using = PrincipalListDeserializer.class)
+//    public List<Principal> access = new ArrayList<Principal>();
     
     @JSONEntity(title = "Names", minItems = 1, isRequired = true)
     @ManyToMany(cascade=CascadeType.ALL)

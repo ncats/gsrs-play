@@ -12,9 +12,16 @@ import ix.utils.Util;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.hazelcast.config.Config;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
 
 import play.Application;
 import play.Logger;
@@ -22,6 +29,7 @@ import play.Plugin;
 import play.db.ebean.Model;
 import play.db.ebean.Transactional;
 import scala.collection.JavaConverters;
+import scala.concurrent.stm.ccstm.Stats;
 import tripod.chem.indexer.StructureIndexer;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -40,6 +48,11 @@ import akka.routing.SmallestMailboxRouter;
 //import chemaxon.struc.Molecule;
 
 public class GinasRecordProcessorPlugin extends Plugin {
+	private static final String PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
+	//Hack variable for resisting buildup
+	//of extracted records not yet transformed
+	private static Map<String,Long> queueStatistics = new ConcurrentHashMap<String,Long>();
+	private static Map<String,Statistics> jobCacheStatistics = new ConcurrentHashMap<String,Statistics>();
 	private static final String GINAS_RECORD_PROCESSOR = "GinasRecordProcessor";
 	private static final int MAX_EXTRACTION_QUEUE = 200;
 	
@@ -50,9 +63,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	private static RecordTransformer _recordTransformer= new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
 	
 	
-	//Hack variable for resisting buildup
-	//of extracted records not yet transformed
-	private int _extractedButNotTransformed=0;
+
 	
 	
 	private final Application app;
@@ -205,6 +216,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public PersistModel(Op oper, Model... models) {
 			this.oper = oper;
 			this.models = models;
+			
+	        
 		}
 
 		@Transactional
@@ -261,9 +274,27 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		
 		@Transactional
 		public void persists() {
+			
 			getInstance().decrementExtractionQueue();
-			_recordPersister.persist(this);
-			System.out.println("Last persist:" + System.currentTimeMillis());
+			try{
+				_recordPersister.persist(this);
+				System.out.println("Last persist:" + System.currentTimeMillis());
+				String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+				Statistics stat = jobCacheStatistics.get(k);
+				if(stat!=null){
+					stat.recordsPersistedSuccess++;
+				}
+				jobCacheStatistics.put(k, stat);
+				Logger.debug(stat.toString());
+			}catch(Exception e){
+				String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+				Statistics stat = jobCacheStatistics.get(k);
+				if(stat!=null){
+					stat.recordsPersistedFailed++;
+				}
+				jobCacheStatistics.put(k, stat);
+//				Logger.debug(stat.toString());
+			}
 			
 		}
 	}
@@ -465,15 +496,29 @@ public class GinasRecordProcessorPlugin extends Plugin {
 							+ "be running in " + getClass().getName() + "!";
 				}
 			} else if (mesg instanceof PayloadExtractedRecord) {
-				
 				PayloadExtractedRecord pr = (PayloadExtractedRecord) mesg;
 				log.info("processing " + pr.job);
 				ProcessingRecord rec = new ProcessingRecord();
 				try{
 					Object trans = _recordTransformer.transform(pr, rec);
 					reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
+					String k=pr.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+					Statistics stat = jobCacheStatistics.get(k);
+					if(stat!=null){
+						stat.recordsProcessedSuccess++;
+					}
+					jobCacheStatistics.put(k, stat);
+//					Logger.debug(stat.toString());
 				}catch(Exception e){
+					
 					getInstance().decrementExtractionQueue();
+					String k=pr.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+					Statistics stat = jobCacheStatistics.get(k);
+					if(stat!=null){
+						stat.recordsProcessedFailed++;
+					}
+					jobCacheStatistics.put(k, stat);
+//					Logger.debug(stat.toString());
 				}
 				
 			} else if (mesg instanceof Terminated) {
@@ -515,6 +560,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
 	@Override
 	public void onStart() {
+		Config cfg = new Config();
+        HazelcastInstance instance = Hazelcast.newHazelcastInstance(cfg);
+        jobCacheStatistics = instance.getMap("jobStatistics");
+        queueStatistics= instance.getMap("queueStatistics");
+        
 		ctx = app.plugin(IxContext.class);
 		if (ctx == null)
 			throw new IllegalStateException("IxContext plugin is not loaded!");
@@ -561,8 +611,46 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		// first see if this payload has already processed..
 		PayloadProcessor pp = new PayloadProcessor(payload);
 		inbox.send(processor, pp);
+		
+		jobCacheStatistics.put(pp.key, new Statistics());
+		//jobCacheStatistics.put(pp.key, value);
 		return pp.key;
 	}
+	
+	public static class Statistics implements Serializable{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -5730152930484560692L;
+		public int recordsExtractedSuccess=0;
+		public int recordsProcessedSuccess=0;
+		public int recordsPersistedSuccess=0;
+		
+		public int recordsExtractedFailed=0;
+		public int recordsProcessedFailed=0;
+		public int recordsPersistedFailed=0;
+		
+		public long start=System.currentTimeMillis();
+		
+		public Estimate totalRecords=null;
+		
+		
+		public String toString(){
+			String msg = "Extracted: " + recordsExtractedSuccess + " (" + recordsExtractedFailed + " failed)\n";
+			msg += "Processed: " + recordsProcessedSuccess + " (" + recordsProcessedFailed + " failed)\n";
+			msg += "Persisted: " + recordsPersistedSuccess + " (" + recordsPersistedFailed + " failed)\n";
+			if(totalRecords!=null)
+				msg += "Total rec: " + totalRecords.count + " (" + totalRecords.type.toString() + ")\n";
+			return msg;			
+		}
+		 
+		
+		public long getAverageTimeToPersistMS(long end){
+			return (end-start)/recordsPersistedSuccess;
+		}
+		
+	}
+	
 /*
 	public void submit(String struc, StructureReceiver receiver) {
 		try {
@@ -607,27 +695,47 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			job.keys.add(new Keyword(
 					GinasRecordProcessorPlugin.class.getName(), pp.key));
 			job.status = ProcessingJob.Status.RUNNING;
-			
 			job.payload = pp.payload;
 			//Logger.debug("Lemme try to process one...");
 			try {
-				InputStream is = PayloadFactory.getStream(pp.payload);
-				//Logger.debug("Making extractor");
-				RecordExtractor extract = _recordExtractor.makeNewExtractor(is);
+				Logger.debug("Counting records");
+				Estimate es= _recordExtractor.estimateRecordCount(pp.payload);
+				{
+					Logger.debug("Counted records");
+					Statistics stat = jobCacheStatistics.get(pp.key);
+					if(stat==null){
+						stat.totalRecords=es;
+					}else{
+						stat = new Statistics();
+					}
+					stat.totalRecords=es;
+					jobCacheStatistics.put(pp.key, stat);
+					Logger.debug(stat.toString());
+				}
+				
+				Logger.debug("Making extractor");
+				RecordExtractor extract = _recordExtractor.makeNewExtractor(pp.payload);
+				
 				Logger.debug("Made extractor:" + extract.getClass().getName());
 				for (Object m; (m = extract.getNextRecord()) != null;) {
 					//Logger.debug("Extracting");
+					Statistics stat = jobCacheStatistics.get(pp.key);
+					if(stat!=null){
+						stat.recordsExtractedSuccess++;
+					}
+					jobCacheStatistics.put(pp.key, stat);
+
 					getInstance().waitForProcessingRecordsCount(MAX_EXTRACTION_QUEUE);
 					PayloadExtractedRecord prg=new PayloadExtractedRecord(job, m);
 					getInstance().incrementExtractionQueue();
 					proc.tell(prg, sender);
 				}
 				extract.close();
-				//Logger.debug("Extracted no problems");
 			} catch (Throwable t) {
 				job.message = t.getMessage();
 				job.status = ProcessingJob.Status.FAILED;
 				job.stop = System.currentTimeMillis();
+				t.printStackTrace();
 				Logger.trace("Failed to process payload " + pp.payload.id, t);
 			} finally {
 				reporter.tell(PersistModel.Save(job), sender);
@@ -651,7 +759,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public abstract T transform(PayloadExtractedRecord<K> pr,ProcessingRecord rec);		
 	}
 	public static abstract class RecordPersister<K,T>{
-		public abstract void persist(TransformedRecord<K,T> prec);		
+		public abstract void persist(TransformedRecord<K,T> prec) throws Exception;		
 	}
 	
 	public static abstract class RecordExtractor<K>{
@@ -659,6 +767,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public RecordExtractor(InputStream is){
 			this.is=is;
 		}
+		
 		abstract public K getNextRecord();
 		abstract public void close(); 
 		
@@ -692,10 +801,45 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		}		
 		
 		public abstract RecordExtractor<K> makeNewExtractor(InputStream is);
+		
+		public RecordExtractor<K> makeNewExtractor(Payload p){
+			return makeNewExtractor(PayloadFactory.getStream(p));
+		}
+		
+		/**
+		 * Count records extracted from payload.
+		 * 
+		 * By default, this is implemented naively by iteration.
+		 * 
+		 * Should be overridden to take advantage of better assumptions.
+		 * @param p
+		 * @return
+		 */
+		public Estimate estimateRecordCount(Payload p){
+			long count=0;
+			RecordExtractor extract = makeNewExtractor(p);
+			for (Object m; (m = extract.getNextRecord()) != null;count++) {}
+			extract.close();
+			return new Estimate(count, Estimate.TYPE.EXACT);
+		}
+		
+		
 	}
 	
 	
-	
+	public static class Estimate implements Serializable{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -2496288711650397338L;
+		enum TYPE{EXACT, APPROXIMATE, UNKNOWN};
+		long count;
+		TYPE type;
+		public Estimate(long count, TYPE t){
+			this.count=count;
+			this.type=t;				
+		}
+	}
 	
 	
 
@@ -719,16 +863,28 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	 * transformed yet.
 	 * @return
 	 */
-    public int getRecordsProcessing(){
-    	return _extractedButNotTransformed;
+    public long getRecordsProcessing(){
+    	Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
+    	if(l==null)return 0;
+    	return l;
     }
     
     private synchronized void incrementExtractionQueue(){
-    	_extractedButNotTransformed++;
+    	
+    	Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
+    	if(l==null)l=(long) 0;
+    	l++;
+    	queueStatistics.put(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE,l);
+    	//return l;
     	//Logger.debug("Total Records:" + _extractedButNotTransformed);
     }
     private synchronized void decrementExtractionQueue(){
-    	_extractedButNotTransformed--;
+    	
+    	Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
+    	if(l==null)l=(long) 0;
+    	l--;
+    	
+    	queueStatistics.put(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE,l);
     	//Logger.debug("Total Records:" + _extractedButNotTransformed);
     }
     private void waitForProcessingRecordsCount(int max){
@@ -741,7 +897,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
     	}
     }
     
+    public static Statistics getStatisticsForJob(String jobTerm){
+    	return jobCacheStatistics.get(jobTerm);
+    }
 	
+    
+
 
 	/*********************************************
 	 * Molecule bits for 
