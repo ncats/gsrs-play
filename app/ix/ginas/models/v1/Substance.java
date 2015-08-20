@@ -386,7 +386,7 @@ public class Substance extends Ginas {
                         return true;
                 }
         }
-                return false;
+        return false;
         
     }
     public int getModificationCount(){

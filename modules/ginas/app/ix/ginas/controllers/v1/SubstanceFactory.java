@@ -44,7 +44,6 @@ public class SubstanceFactory extends EntityFactory {
     }
     
     private static Substance getSubstanceByApprovalIDOrUUID (String approvalID, String uuid) {
-        Logger.debug("###################Fetching:" + approvalID + " : " + uuid);
         Substance s=getSubstance(uuid);
         if(s!=null)return s;
         
