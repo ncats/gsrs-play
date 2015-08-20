@@ -22,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 import play.Logger;
 import tripod.chem.indexer.StructureIndexer;
@@ -83,7 +85,7 @@ public class GinasUtils {
 		return null;
 	}
 	
-	public static boolean persistSubstance(Substance theRecordToPersist,StructureIndexer index){
+	public static boolean persistSubstance(Substance theRecordToPersist,StructureIndexer index, List<String> errors){
 		boolean worked=false;
 		Transaction tx = Ebean.beginTransaction();
         try {
@@ -96,12 +98,17 @@ public class GinasUtils {
         }
         catch (Exception ex) {
             ex.printStackTrace();
-            
+            if(errors!=null)
+            	errors.add(ex.getMessage());
         }
         finally {
             tx.end();
         } 
         return worked;
+	}
+	
+	public static boolean persistSubstance(Substance theRecordToPersist,StructureIndexer index){
+		return persistSubstance(theRecordToPersist, index);
 	}
 	
 
@@ -135,22 +142,25 @@ public class GinasUtils {
 		@Override
 		public void persist(TransformedRecord<Substance, Substance> prec) throws Exception{
 				boolean worked=false;
+				List<String> errors = new ArrayList<String>();
 				if (prec.theRecordToPersist != null) {
 					
-					worked= GinasUtils.persistSubstance(prec.theRecordToPersist, prec.indexer);
+					worked= GinasUtils.persistSubstance(prec.theRecordToPersist, prec.indexer,errors);
 					if(worked){
 						prec.rec.status = ProcessingRecord.Status.OK;
 						prec.rec.xref = new XRef(prec.theRecordToPersist);
 						prec.rec.xref.save();
 					}else{
+						prec.rec.message=errors.get(0);
 						prec.rec.status = ProcessingRecord.Status.FAILED;
 					}
+					prec.rec.stop=System.currentTimeMillis();
 				}
 				prec.rec.save();
 				
 				Logger.debug("Saved substance " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.uuid : null)
 						+ " record " + prec.rec.id);
-				if(!worked)throw new IllegalStateException("Didn't persist");
+				if(!worked)throw new IllegalStateException(prec.rec.message);
 				
 		}
 	}
@@ -167,7 +177,7 @@ public class GinasUtils {
 			try {
 				//Logger.debug("transforming:"+ rec.name);
 				struc = GinasUtils.makeSubstance(pr.theRecord);
-				rec.stop = System.currentTimeMillis();
+				//rec.stop = System.currentTimeMillis();
 				rec.status = ProcessingRecord.Status.ADAPTED;
 			} catch (Throwable t) {
 				rec.stop = System.currentTimeMillis();

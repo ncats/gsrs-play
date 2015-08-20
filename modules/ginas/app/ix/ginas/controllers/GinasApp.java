@@ -296,7 +296,6 @@ public class GinasApp extends App {
             throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(),1);
         final String key = "substances/"+Util.sha1(request ());
-      System.out.println("Testtttttt");
         if (request().queryString().containsKey("facet") || q != null) {
             final TextIndexer.SearchResult result =
                 getSearchResult (Substance.class, q, total);

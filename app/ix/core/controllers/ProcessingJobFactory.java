@@ -32,6 +32,9 @@ public class ProcessingJobFactory extends EntityFactory {
 
     public static ProcessingJob getJob (String key) {
     	//finder.setDistinct(false).where().eq("keys.term", key).findUnique();
+    	
+    	// This is because the built SQL for oracle includes a "DISTINCT"
+    	// statement, which doesn't appear to be extractable.
     	List<ProcessingJob> gotJobsv= finder.findList();
     	for(ProcessingJob pj : gotJobsv){
     		if(pj.hasKey(key))return pj;
