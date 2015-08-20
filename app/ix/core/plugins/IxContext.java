@@ -121,6 +121,49 @@ public class IxContext extends Plugin {
         }else{
         	Logger.info("Schema exists");
         }
+        
+        {
+        	Logger.info("Teting database configuration");
+        	File f=null;
+        	f=getFile(APPLICATION_SQL_INIT,"../conf/sql/test/");
+        	
+        	if(f.exists()){
+        		Logger.info("Test folder exists:" + f.getCanonicalPath());
+        		String path = f.getAbsolutePath()+"/"+dbName+".sql";
+        		File initFile = new File(path);
+        		Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
+        		if(initFile.exists()){
+        			Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
+        			Statement s = DB.getConnection().createStatement();
+        			String sqlRun = readFullFileToString(initFile);
+        			System.out.println(sqlRun);
+        			boolean working=true;
+        			try{
+        				ResultSet rs1=s.executeQuery(sqlRun);
+        				
+        				while(rs1.next()){
+        					if(!"worked".equals(rs1.getString("result"))){
+        						working=false;
+        						Logger.error(rs1.getString("message") + "\n\nTry running the following SQL to fix this:\n\n" + rs1.getString("sql"));
+        					}
+        				}
+        				rs1.close();
+        				
+        			}catch(Exception e){
+        				e.printStackTrace();
+        			}
+        			if(working){
+        				Logger.debug("Passed configutation test");
+        			}
+        			s.close();
+        		}else{
+        			Logger.info("No SQL test present for database:" + dbName);
+        		}
+        	}else{
+        		Logger.info("Test folder does not exist:" + f.getCanonicalPath());
+        	}
+        	
+        }
         //meta.
 
         host = app.configuration().getString("application.host");
@@ -191,10 +234,14 @@ public class IxContext extends Plugin {
      * @return
      */
     private static boolean dbinitialized(DatabaseMetaData meta){
+    	ResultSet rs=null;
     	try {
-			ResultSet rs = meta.getTables(null,null, "play_evolutions", null);
+			rs = meta.getTables(null,null, "play_evolutions", null);
 			boolean exists=rs.next();
-			if(exists) return true;
+			if(exists){
+				rs.close();
+				return true;
+			}
 			rs.close();
 			rs = meta.getTables(null,null, "%", null);
 			while(rs.next()){
@@ -208,6 +255,13 @@ public class IxContext extends Plugin {
 			
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
+			if(rs!=null)
+				try {
+					rs.close();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			e.printStackTrace();
 		}    
     	return true;
