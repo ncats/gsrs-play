@@ -33,74 +33,34 @@
 
             <!-- Display bits -->
 
-        <div class = "row" ng-repeat="name in ginasCtrl.substance.officialNames">
-            <div class = "col-md-3">
-                                    {{name.name}}
+        <div class = "row" ng-repeat="name in GinasCtrl.substance.officialNames">
+            <div class="col-md-2">
+                <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
             </div>
-            <div class = "col-md-1"><span ng-repeat="n in name.domains">
-            {{n.display}}</span></div>
+            <div class = "col-md-1"><span ng-repeat="n in name.domain">
+                <span ng-show="!selected" ng-click="NameCtrl.info()" >{{n.display}}</span></span>
+                <tags-input ng-show ="selected" ng-blur="NameCtrl.info()" custom-class="form-control" ng-model="name.domain" title="Domain" placeholder="Domain" id="editdomain" name="domain" display-property="display" key-property="value" add-from-autocomplete-only="true" ng-required="true">
+                    <auto-complete source="NameCtrl.loadItems('NAME_DOMAIN', $query)"  min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                </tags-input>
+            </div>
             <div class = "col-md-2"><span ng-repeat="n in name.nameJurisdiction">
-            {{n.display}}</span></div>
+                <span href="#" editable-text="n.display" blur="submit">{{n.display}}</span>
+            </span></div>
             <div class = "col-md-1"><span ng-repeat="n in name.nameOrgs">
-            {{n.display}}</span></div>
+                <span href="#" editable-text="n.display" blur="submit">{{n.display}}</span>
+            </span></div>
             <div class = "col-md-2"><span ng-repeat="n in name.languages">
-            {{n.display}}</span></div>
+                <span href="#" editable-text="n.display" blur="submit">{{n.display}}</span>
+            </span></div>
             <div class = "col-md-1 text-center">
                 <i ng-show="name.preferred===true" class="fa fa-check fa-2x success"></i>
             </div>
             <div class = "col-md-2">
                     {{name.references.id}} {{name.references.citation}}
             </div>
-            <div class = "col-md-1 pull-right">
-                <a ng-show="!isEditing" ng-click="NameCtrl.setEditedName(name); NameCtrl.toggleEdit();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
-                <a ng-show="!isEditing" ng-click="NameCtrl.removeName(name)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
-            </div>
-
         </div>
-
-            <!-- Editing bits -->
-
-        <div class="row form-row" ng-show="isEditing">
-            <form class="form" name="editNameForm" id = "edit-nameForm" role="form" ng-submit="NameCtrl.validateName(editName); NameCtrl.addNames()" novalidate>
-                <div class ="row">
-                    <div class="col-md-4 err-check" id="name-div" show-errors>
-                        <input type="text" class="form-control" ng-model ="editName.name" title="Name" id="name" name = "name" required duplicate/>
-                        <ng-messages for="editNameForm.name.$error" ng-if="editNameForm.name.$touched">
-                            <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
-                            <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                        </ng-messages>
-                    </div>
-                    <div class="col-md-2 err-check" show-errors>
-                        <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "editName.type" ng-change="NameCtrl.typeCheck()" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" required>
-	                        </select>
-                        <ng-messages for="editNameForm.type.$error" ng-if="editNameForm.type.$touched">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
-                    <div class="col-md-2 err-check" show-errors>
-                        <select class="form-control" title="Language" id="language" name="language" ng-model = "editName.languages" ng-options="r.display for r in @GinasApp.getCV.getField("LANGUAGE") track by r.display" required>
-	                        </select>
-                        <ng-messages for="editNameForm.language.$error" ng-if="editNameForm.language.$touched">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
-                    <div class="col-md-1">
-                        <input type = "checkbox" ng-model = "editName.preferred" ng-change="NameCtrl.prefCheck()" placeholder="Preferred" title="Preferred" id="preferred"/>
-                    </div>
-                    @referenceselectorform("editNameForm","editName")
-                    <div class="col-md-1 pull-right" ng-show="addingNames">
-                        <a id ="name-submit" ng-click="NameCtrl.updateName(editName)" arial-label="Save">
-                            <i class="fa fa-floppy-o fa-2x success"></i></a>
-                        <a type="submit" ng-click="NameCtrl.toggleEdit();" aria-label="Cancel">
-                            <i class="fa fa-ban fa-2x danger"></i></a>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-            <!-- secondary editing bits -->
+        <form class="form-horizontal" name="nameForm" id = "add-name" role="form"  novalidate>
         <div class="row form-row" ng-show="!isEditing && addingNames">
-            <form class="form-horizontal" name="nameForm" id = "add-name" role="form"  novalidate>
                 <div class="col-md-3 err-check" id="name-div" show-errors>
                     <input type="text" class="form-control" ng-model ="name.name" title="Name" id="name" name = "name" required duplicate/>
                     <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
@@ -108,50 +68,51 @@
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-1 err-check" show-errors>
-                    <select multiple class="form-control" title="Domain" id="domain" name="domain" ng-model = "name.domains" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_DOMAIN") track by r.display" required>
-                        </select>
-                    <ng-messages for="nameForm.domain.$error" ng-if="nameForm.domain.$touched">
+                <div class="col-md-2 err-check" show-errors>
+                    <tags-input custom-class="form-control" ng-model="name.domain" title="Domain" placeholder="Domain" id="domain" name="domain" display-property="display" key-property="value" add-from-autocomplete-only="true" ng-required="true">
+                    <auto-complete source="NameCtrl.loadItems('NAME_DOMAIN', $query)"  min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                </tags-input>
+                <ng-messages for="nameForm.domain.$error" ng-if="nameForm.domain.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <select multiple class="form-control" title="Jurisdiction" id="jurisdiction" name="jurisdiction" ng-model = "name.nameJurisdiction" ng-options="r.display for r in @GinasApp.getCV.getField("JURISDICTION") track by r.display" required>
-                        </select>
+               @* <div class="col-md-2 err-check" >
+                <tags-input custom-class="form-control" title="Jurisdiction" placeholder="Jurisdiction" id="jurisdiction" name="jurisdiction" ng-model="name.jurisdiction" display-property="display" key-property="value" add-from-autocomplete-only="true" >
+                    <auto-complete source="NameCtrl.loadJurisdiction($query)" min-length="2"></auto-complete>
+                </tags-input>
                     <ng-messages for="nameForm.jurisdiction.$error" ng-if="nameForm.jurisdiction.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-1 err-check" show-errors>
-                    <select multiple class="form-control" title="Naming Organization" id="nameOrg" name="nameOrg" ng-model = "name.nameOrgs" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_ORG") track by r.display" required>
-                        </select>
+                <div class="col-md-1 err-check" >
+                    <tags-input custom-class="form-control" title="Naming Organization"  placeholder="Naming Org" id="nameOrg" name="nameOrg" ng-model = "name.nameOrgs" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
+                        <auto-complete source="NameCtrl.loadNameOrg($query)" min-length="2"></auto-complete>
+                    </tags-input>
                     <ng-messages for="nameForm.nameOrg.$error" ng-if="nameForm.nameOrg.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-
-                <div class="col-md-2 err-check">
-                    <tags-input title="Language" placeholder="language" id="language" name="language" ng-model="name.languages" min-length="2" display-property="display" key-property="value">
-                        <auto-complete source="ginasCtrl.loadTags($query)" min-length="2"></auto-complete>
+                <div class="col-md-2 err-check" >
+                    <tags-input custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="name.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
+                        <auto-complete source="NameCtrl.loadLanguage($query)" min-length="2"></auto-complete>
                     </tags-input>
-
-
-                    @*<select multiple class="form-control" title="Language" id="language" name="language" ng-model = "name.languages" ng-options="r.display for r in @GinasApp.getCV.getField("LANGUAGE") track by r.display" required>
-                        </select>*@
                     <ng-messages for="nameForm.language.$error" ng-if="nameForm.language.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
-                </div>
+                </div>*@
                 <div class="col-md-1">
                     <input type = "checkbox" ng-model = "name.preferred" ng-change="NameCtrl.prefCheck()" placeholder="Preferred" title="Preferred" id="preferred"/>
                 </div>
                 @referenceselectorform("editNameForm","editName")
-                <div class="col-md-1 pull-right" ng-show="addingNames">
-                    <a ng-click="NameCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="NameCtrl.validateName(name)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
-            </form>
         </div>
+            <div class = "row">
+                <div class="col-md-1 pull-right" ng-show="addingNames">
+                <a ng-click="NameCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                <a ng-click="validate(name, nameForm, 'officialNames'); name=null;" ><i class="fa fa-floppy-o fa-2x success"></i></a>
+            </div>
+            </div>
+            </form>
+
     </div>
 </div>
 

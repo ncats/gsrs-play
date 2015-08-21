@@ -38,8 +38,8 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "handlebars" % "2.0.0-1"
       ,"org.webjars" % "jquery-ui" % "1.11.2"
       ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
-      ,"org.webjars" % "angularjs" % "1.3.16"
-      ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"
+      ,"org.webjars" % "angularjs" % "1.4.3-1"
+      ,"org.webjars" % "angular-ui-bootstrap" % "0.13.3"
       ,"org.webjars" % "font-awesome" % "4.2.0"
       ,"org.webjars" % "html5shiv" % "3.7.2"
       ,"org.webjars" % "requirejs" % "2.1.15"
@@ -143,6 +143,8 @@ object ApplicationBuild extends Build {
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       libraryDependencies += "org.webjars" % "momentjs" % "2.10.3",
       libraryDependencies += "org.webjars" % "angular-bootstrap-datetimepicker" % "0.3.8",
+      libraryDependencies += "org.webjars" % "angular-ui-select" % "0.11.2",
+      libraryDependencies += "org.webjars" % "lodash" % "3.9.0",
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 

@@ -1,10 +1,11 @@
 (function () {
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource','ui.bootstrap', 'ui.bootstrap.showErrors', 'ui.bootstrap.datetimepicker', 'ginasTypeahead','LocalStorageModule','ngTagsInput' ])
+    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
+        'ui.bootstrap.datetimepicker', 'LocalStorageModule', 'ngTagsInput', 'xeditable', 'ui.select'])
         .config(function (showErrorsConfigProvider, localStorageServiceProvider, $locationProvider) {
             showErrorsConfigProvider.showSuccess(true);
             localStorageServiceProvider
                 .setPrefix('ginas');
-            $locationProvider.html5Mode({ enabled: true, hashPrefix: '!'});
+            $locationProvider.html5Mode({enabled: true, hashPrefix: '!'});
         });
 
     ginasApp.filter('range', function () {
@@ -41,69 +42,72 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasCtrl", function($scope,  $resource, $location, $anchorScroll, localStorageService, Substance, cvFactory){
+    ginasApp.controller("GinasCtrl", function ($scope, $resource, $location, $anchorScroll, localStorageService, Substance) {
         var ginasCtrl = this;
-        ginasCtrl.substance = Substance;
-
-        $scope.scrollTo = function (prmElementToScrollTo){
+        $scope.substance = Substance;
+        $scope.empty ={};
+        $scope.scrollTo = function (prmElementToScrollTo) {
             console.log("scrolling!");
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
         };
 
-        $scope.enabled= false;
+        $scope.enabled = false;
         $scope.mol = null;
-        $scope.tags={};
         //$scope.unbind = localStorageService.bind($scope, 'mol');
         $scope.unbind = localStorageService.bind($scope, 'enabled');
-        this.enabled= function getItem(key) {
+        this.enabled = function getItem(key) {
             return localStorageService.get('enabled') || false;
         };
-        this.numbers= true;
+        this.numbers = true;
         localStorageService.set('enabled', $scope.enabled);
 
-        this.passStructure= function(id){
+        this.passStructure = function (id) {
             localStorageService.set('structureid', id);
         };
-        this.clearStructure= function(){
+        this.clearStructure = function () {
             console.log("destroy");
             return localStorageService.remove('structureid');
         };
 
-        this.loadTags = function(query) {
+        $scope.validate = function(obj, form, type){
+            console.log("experiment");
             console.log($scope);
-            console.log(query);
-            return tags.query().$promise;
-          //   return this.getFields('LANGUAGE');
-/*            console.log($scope);
-            return $scope.tags.query().$promise;*/
-        };
-
-        this.getFields = function (cvfield) {
-            console.log(cvfield);
-            cvFactory.getFields(cvfield)
-                .success(function (response) {
-                    console.log(response);
-                    if (response.count >= 1) {
-                        console.log("adding data");
-                       return response;
-                    } else {
-                        console.log("no results");
+            console.log(this.substance);
+            $scope.$broadcast('show-errors-check-validity');
+            switch (this.substance.substanceClass) {
+                case "chemical":
+                    if(form.$valid) {
+                        if(this.substance.chemical[type]){
+                            this.substance.chemical[type].push(obj);
+                        }else {
+                            this.substance.chemical[type] = [];
+                            this.substance.chemical[type].push(obj);
+                        }
                     }
-                })
-                .error(function (error) {
-                    $scope.status = 'Unable to load substance data: ' + error.message;
-                });
+                    break;
+                case "protein":
+                    Substance.substanceClass = substanceClass;
+                    Substance.protein = {};
+                    var subunit = "";
+                    break;
+                case "structurallyDiverse":
+                    Substance.substanceClass = substanceClass;
+                    Substance.structurallyDiverse = {};
+                    break;
+                default:
+                    console.log('invalid substance class');
+                    break;
+            }
+
         };
-
-
-
     });
 
-    ginasApp.directive('scrollSpy', function($timeout){
-        return function(scope, elem, attr) {
-            scope.$watch(attr.scrollSpy, function(value) {
-                $timeout(function() { elem.scrollspy('refresh');
+    ginasApp.directive('scrollSpy', function ($timeout) {
+        return function (scope, elem, attr) {
+            scope.$watch(attr.scrollSpy, function (value) {
+                $timeout(function () {
+                    elem.scrollspy('refresh');
                 }, 200);
             }, true);
         };
@@ -162,14 +166,28 @@
         return substanceFactory;
     }]);
 
-    ginasApp.factory('cvFactory', ['$http', function ($http) {
+    ginasApp.service('data', function($http) {
+        var options = {};
         var url = "app/cv/";
-        var cvFactory = {};
-        cvFactory.getFields = function (name) {
-            return $http.get(url + name.toUpperCase(), {headers: {'Content-Type': 'text/plain'}});
+
+        this.load = function(field) {
+            $http.get(url+field).success(function(data) {
+                console.log(data);
+                options[field] = data;
+            });
         };
-        return cvFactory;
-    }]);
+
+        this.search = function(field, query) {
+            console.log(field);
+            console.log(query);
+            return _.chain(options[field] )
+                .filter(function(x) { return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1; })
+                .sortBy('display')
+                .value();
+        };
+    });
+
+
 
     ginasApp.directive('moiety', function () {
         return {
@@ -199,7 +217,7 @@
             }
         };
     });
-    
+
     ginasApp.directive('amount', function () {
         return {
             restrict: 'E',
@@ -266,45 +284,44 @@
                 else {
                     $http({
                         method: 'GET',
-                        url: '/ginas/app/api/v1/structures/'+ structureid,
+                        url: '/ginas/app/api/v1/structures/' + structureid,
                         /*data: structureid,
-                        headers: {'Content-Type': 'text/plain'}*/
+                         headers: {'Content-Type': 'text/plain'}*/
                     }).success(function (data) {
                         console.log(data);
                         if (!Substance.chemical) {
                             Substance.chemical = {};
                         }
                         sketcher.setMolfile(data.molfile);
-/*                        Substance.chemical.structure = data.structure;
-                        Substance.chemical.moieties = data.moieties;
-                        Substance.q = data.structure.smiles; */
+                        /*                        Substance.chemical.structure = data.structure;
+                         Substance.chemical.moieties = data.moieties;
+                         Substance.q = data.structure.smiles; */
                     });
-/*
+                    /*
 
-                    console.log(Substance);
-                    console.log(element);
-*/
+                     console.log(Substance);
+                     console.log(element);
+                     */
 
 
+                    /*                    url ='/ginas/app/structure/'+ structureid+'.mol';
+                     console.log(url);
+                     $http({
+                     method: 'GET',
+                     url: url,
+                     }).success(function (data) {
+                     console.log(data);
+                     /!*                        if (!Substance.chemical) {
+                     Substance.chemical = {};
+                     }
+                     Substance.chemical.structure = data.structure;
+                     Substance.chemical.moieties = data.moieties;
+                     Substance.q = data.structure.smiles;*!/
+                     sketcher.setMolfile(data);
 
-/*                    url ='/ginas/app/structure/'+ structureid+'.mol';
-                    console.log(url);
-                    $http({
-                        method: 'GET',
-                        url: url,
-                    }).success(function (data) {
-                            console.log(data);
-/!*                        if (!Substance.chemical) {
-                            Substance.chemical = {};
-                        }
-                        Substance.chemical.structure = data.structure;
-                        Substance.chemical.moieties = data.moieties;
-                        Substance.q = data.structure.smiles;*!/
-                        sketcher.setMolfile(data);
-
-                    });
-                    console.log(Substance);
-                    console.log(element);*/
+                     });
+                     console.log(Substance);
+                     console.log(element);*/
                 }
             }
         };
@@ -340,20 +357,20 @@
         };
     });
 
-    ginasApp.directive('exportButton', function(){
-        return{
+    ginasApp.directive('exportButton', function () {
+        return {
             restrict: 'E',
-            scope:{
+            scope: {
                 structureid: '='
             },
-            template:'<button type="button" class="btn btn-primary" structureid = structureid  export><i class="fa fa-external-link chem-button"></i></button>'
+            template: '<button type="button" class="btn btn-primary" structureid = structureid  export><i class="fa fa-external-link chem-button"></i></button>'
         };
     });
 
-    ginasApp.directive('export', function($http) {
+    ginasApp.directive('export', function ($http) {
         return function (scope, element, attrs) {
             element.bind("click", function () {
-                var modal =  angular.element( document.getElementById('export-mol'));
+                var modal = angular.element(document.getElementById('export-mol'));
                 $http({
                     method: 'GET',
                     url: 'app/structure/' + scope.structureid + '.mol',
@@ -361,7 +378,7 @@
                 }).success(function (data) {
                     modal.find('#inputExport').text(data);
                 });
-                   modal.modal('show');
+                modal.modal('show');
 
             });
         };
@@ -373,11 +390,6 @@
             templateUrl: "app/assets/ginas/templates/molexport.html"
         };
     });
-
-
-
-
-
 
     ginasApp.controller('ReferenceController', function ($scope, Substance, $rootScope) {
         $scope.editReference = null;
@@ -509,7 +521,20 @@
 
     });
 
-    ginasApp.controller('OfficialNameController', function ($scope, Substance, $rootScope) {
+    ginasApp.controller('OfficialNameController', function ($scope, Substance, $rootScope, $q, data) {
+        data.load('NAME_DOMAIN');
+
+        this.loadItems = function(field, $query) {
+            return data.search(field, $query);
+        };
+
+        $scope.selected= false;
+
+        this.info= function(){
+            $scope.selected = !$scope.selected;
+        };
+
+
         $scope.isEditing = false;
         $scope.addName = null;
         $scope.addingNames = true;
@@ -529,16 +554,20 @@
             $scope.$broadcast('show-errors-reset');
         };
 
-        this.validateName = function (name) {
+        this.validateName = function (name, form) {
             $scope.$broadcast('show-errors-check-validity');
-            if ($scope.nameForm.$valid) {
+            console.log(form);
+            console.log($scope.nameForm);
+            console.log(form.name);
+            console.log(name);
+         //   if ($scope.nameForm.$valid) {
                 if (!Substance.officialNames) {
                     Substance.officialNames = [];
                 }
                 Substance.officialNames.push(name);
                 this.reset();
                 //$rootScope.uniqueName = true;
-            }
+          //  }
         };
 
         this.typeCheck = function () {
@@ -697,8 +726,8 @@
         this.addProperties = function () {
             $scope.addingProperties = !$scope.addingProperties;
         };
-        
-        this.testsomething = function (){
+
+        this.testsomething = function () {
             return "TTTTTTTTTTTTTTTTTTTTTT";
         };
 
@@ -947,9 +976,9 @@
         $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
-       $scope.q = "";
+        $scope.q = "";
 
-        $scope.controllerFunction = function(valueFromDirective){
+        $scope.controllerFunction = function (valueFromDirective) {
             console.log(valueFromDirective);
         };
 
