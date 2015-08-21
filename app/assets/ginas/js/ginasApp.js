@@ -42,12 +42,41 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $location, $anchorScroll, localStorageService, Substance) {
+    ginasApp.controller("GinasController", function ($scope, $resource, $location, $anchorScroll, localStorageService, Substance, data) {
         var ginasCtrl = this;
         $scope.substance = Substance;
         $scope.empty ={};
+
+
+        //date picker
+        $scope.open = function($event) {
+            $scope.status.opened = true;
+        };
+
+
+        $scope.status = {
+            opened: false
+        };
+
+        //datepicker//
+
+        //adds reference id//
+        $scope.refLength= function() {
+         if(!$scope.substance.references){
+             return 1;
+         }
+            return $scope.substance.references.length + 1;
+        };
+        //add reference id//
+
+        //populates tag fields
+        $scope.loadItems = function(field, $query) {
+            data.load(field);
+            return data.search(field, $query);
+        };
+        //populates tag fields//
+
         $scope.scrollTo = function (prmElementToScrollTo) {
-            console.log("scrolling!");
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
         };
@@ -71,22 +100,25 @@
         };
 
         $scope.validate = function(obj, form, type){
-            console.log("experiment");
-            console.log($scope);
-            console.log(this.substance);
             $scope.$broadcast('show-errors-check-validity');
-            switch (this.substance.substanceClass) {
-                case "chemical":
-                    if(form.$valid) {
-                        if(this.substance.chemical[type]){
-                            this.substance.chemical[type].push(obj);
-                        }else {
-                            this.substance.chemical[type] = [];
-                            this.substance.chemical[type].push(obj);
-                        }
-                        console.log($scope);
-                        console.log(this.substance);
+            if(form.$valid) {
+                if(this.substance[type]){
+                    if(type=='references'){
+                        obj.id = this.substance.references.length + 1;
                     }
+                    this.substance[type].push(obj);
+                }else {
+                    this.substance[type] = [];
+                    if(type=='references'){
+                        obj.id =  1;
+                    }
+                    this.substance[type].push(obj);
+                }
+                $scope.$broadcast('show-errors-reset');
+            }
+            /*switch (this.substance.substanceClass) {
+                case "chemical":
+
                     break;
                 case "protein":
                     Substance.substanceClass = substanceClass;
@@ -100,8 +132,45 @@
                 default:
                     console.log('invalid substance class');
                     break;
-            }
+            }*/
 
+        };
+
+        $scope.toggle =function(el){
+            if (el.selected) {
+                el.selected = !el.selected;
+            }else{
+                el.selected=true;
+            }
+        };
+
+
+        $scope.changeSelect = function(val){
+            console.log(val);
+          val=!val;
+            console.log(val);
+        };
+
+        $scope.remove = function (obj, field) {
+            var index = Substance[field].indexOf(obj);
+            Substance[field].splice(index, 1);
+        };
+
+        $scope.reset =function(form){
+            console.log($scope);
+            form.$setPristine();
+            console.log(form);
+            $scope.$broadcast('show-errors-reset');
+console.log($scope);
+        };
+
+        $scope.selected= false;
+
+        $scope.info= function(scope, element){
+            console.log($scope);
+            console.log(scope);
+            console.log(element);
+            $scope.selected = !$scope.selected;
         };
     });
 
@@ -155,14 +224,11 @@
 
         this.load = function(field) {
             $http.get(url + field.toUpperCase() + "'", {headers: {'Content-Type': 'text/plain'}}).success(function(data) {
-                console.log(data.content[0]);
                 options[field] = data.content[0].terms;
             });
         };
 
         this.search = function(field, query) {
-            console.log(field);
-            console.log(query);
             return _.chain(options[field] )
                 .filter(function(x) { return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1; })
                 .sortBy('display')
@@ -505,17 +571,8 @@
     });
 
     ginasApp.controller('OfficialNameController', function ($scope, Substance, $rootScope, $q, data) {
-        data.load('NAME_DOMAIN');
 
-        this.loadItems = function(field, $query) {
-            return data.search(field, $query);
-        };
 
-        $scope.selected= false;
-
-        this.info= function(){
-            $scope.selected = !$scope.selected;
-        };
 
 
         $scope.isEditing = false;
