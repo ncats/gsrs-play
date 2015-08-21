@@ -4,6 +4,8 @@ import ix.core.NamedResource;
 import ix.core.models.Principal;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import play.Logger;
 import play.db.ebean.Model;
@@ -19,6 +21,8 @@ public class PrincipalFactory extends EntityFactory {
     public static final Model.Finder<Long, Principal> finder = 
         new Model.Finder(Long.class, Principal.class);
 
+    public static Map<String,Principal> justRegisteredCache = new ConcurrentHashMap<String,Principal>();
+    
     public static List<Principal> all () { return all (finder); }
     public static Result count () { return count (finder); }
     public static Result page (int top, int skip, String filter) {
@@ -58,15 +62,22 @@ public class PrincipalFactory extends EntityFactory {
     }
     
     public static Principal byUserName (String uname) {
-    	
+    	Principal p = justRegisteredCache.get(uname);
+    	if(p!=null)return p;
         return finder.where().eq("username", uname).findUnique();
     }
     
-    public static Principal registerIfAbsent (Principal org) {
+    public static synchronized Principal registerIfAbsent (Principal org) {
         Principal results = byUserName(org.username);
         if (results == null) {
             try {
                 org.save();
+                // For some reason, there is a race condition
+                // that seems to happen only with oracle,
+                // where the result can be null, and there's still enough
+                // time between registration and being query-able
+                // The hashmap is a temporary measure to fix this.
+                justRegisteredCache.put(org.username, org);
                 return org;
             }
             catch (Exception ex) {

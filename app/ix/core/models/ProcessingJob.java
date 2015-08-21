@@ -72,4 +72,12 @@ public class ProcessingJob extends Model {
     	}
     	return null;
     }
+    public boolean hasKey(String term){
+    	for(Keyword k : keys){
+    		if(term.equals(k.term)){
+    			return true;
+    		}
+    	}
+    	return false;
+    }
 }

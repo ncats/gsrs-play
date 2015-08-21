@@ -1,19 +1,13 @@
 package ix.core.controllers;
 
-import java.io.*;
-import java.security.*;
-import java.util.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
-
+import ix.core.NamedResource;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
-import ix.core.NamedResource;
+
+import java.util.List;
+
+import play.db.ebean.Model;
+import play.mvc.Result;
 
 @NamedResource(name="jobs",
                type=ProcessingJob.class,
@@ -27,16 +21,25 @@ public class ProcessingJobFactory extends EntityFactory {
     public static ProcessingJob getJob (Long id) {
         return getEntity (id, finder);
     }
+    
     public static List<ProcessingRecord> getJobRecords (Long id) {
         return recordFinder.where().eq("job.id", id).findList();
     }
 
     public static List<ProcessingJob> getJobsByPayload (String uuid) {
-        return finder.where().eq("payload.id", uuid).findList();
+        return finder.setDistinct(false).where().eq("payload.id", uuid).findList();
     }
 
     public static ProcessingJob getJob (String key) {
-        return finder.where().eq("keys.term", key).findUnique();
+    	//finder.setDistinct(false).where().eq("keys.term", key).findUnique();
+    	
+    	// This is because the built SQL for oracle includes a "DISTINCT"
+    	// statement, which doesn't appear to be extractable.
+    	List<ProcessingJob> gotJobsv= finder.findList();
+    	for(ProcessingJob pj : gotJobsv){
+    		if(pj.hasKey(key))return pj;
+    	}
+    	return null;
     }
     
     public static Result count () { return count (finder); }

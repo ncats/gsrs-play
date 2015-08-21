@@ -219,7 +219,7 @@ public class EntityFactory extends Controller {
         //if (select != null) finder.select(select);
         final FetchOptions options = new FetchOptions (top, skip, filter);
         List<T> results = filter (options, finder);
-
+        
         
         final ETag etag = new ETag ();
         etag.top = options.top;

@@ -11,6 +11,7 @@ import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.controllers.v1.CV;
+import ix.ginas.controllers.v1.*;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
@@ -161,12 +162,15 @@ public class GinasApp extends App {
         try {
             return IxCache.getOrElse("ginasCV", new Callable<CV>() {
                     public CV call () throws Exception {
-                        Call call =
-                           controllers.routes.Assets.at("ginas/CV.txt");
-                        Logger.debug("CV: "+call);
-                        F.Promise<WSResponse> ws =
-                             WS.url(call.absoluteURL(request ())).get();
-                        CV cv = new CV (ws.get(1000).getBodyAsStream());
+                    	if(!ControlledVocabularyFactory.isloaded()){
+                    		Call call =
+                                    controllers.routes.Assets.at("ginas/CV.txt");
+                            F.Promise<WSResponse> ws =
+                                    WS.url(call.absoluteURL(request ())).get();
+                            ControlledVocabularyFactory.loadSeedCV(ws.get(1000).getBodyAsStream());
+                    	}
+                        
+                        CV cv = new CV ();
                         Logger.debug("CV loaded: size="+cv.size());
                         return cv;
                     }
@@ -296,7 +300,6 @@ public class GinasApp extends App {
             throws Exception {
         final int total = Math.max(SubstanceFactory.getCount(),1);
         final String key = "substances/"+Util.sha1(request ());
-      System.out.println("Testtttttt");
         if (request().queryString().containsKey("facet") || q != null) {
             final TextIndexer.SearchResult result =
                 getSearchResult (Substance.class, q, total);
