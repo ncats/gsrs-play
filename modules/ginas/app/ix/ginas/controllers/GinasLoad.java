@@ -151,7 +151,7 @@ public class GinasLoad extends App {
         if (Play.isProd()) {
             return redirect (ix.ginas.controllers.routes.GinasFactory.index());
         }
-        return ok (ix.ginas.views.html.load.render());
+        return ok (ix.ginas.views.html.admin.load.render());
     }
     
     public static Result loadJSON () {
