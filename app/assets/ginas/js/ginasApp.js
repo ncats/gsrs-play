@@ -318,7 +318,7 @@
             template: function (element, attrs) {
                 var html = '';
                 html += '<span';
-                html += ' class="switch' + (attrs.class ? ' ' + attrs.class : '') + '"';
+                html += ' class="toggleSwitch' + (attrs.class ? ' ' + attrs.class : '') + '"';
                 html += attrs.ngModel ? ' ng-click="' + attrs.ngModel + '=!' + attrs.ngModel + (attrs.ngChange ? '; ' + attrs.ngChange + '()"' : '"') : '';
                 html += ' ng-class="{ checked:' + attrs.ngModel + ' }"';
                 html += '>';

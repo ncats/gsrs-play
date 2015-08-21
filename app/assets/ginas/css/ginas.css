@@ -473,7 +473,7 @@ i#numbers-off {
 
 /*TOGGLE SWITCH*/
 
-.switch {
+.toggleSwitch {
     background-color: #337ab7;
     border: 1px solid #337ab7;
     position: relative;
@@ -493,7 +493,7 @@ i#numbers-off {
     left: -25px;
 }
 
-.switch small {
+.toggleSwitch small {
     background: #fff;
     border-radius: 100%;
     box-shadow: 0 1px 3px rgba(0,0,0,0.4);
@@ -506,12 +506,12 @@ i#numbers-off {
     -webkit-transition: 0.3s ease-out all;
 }
 
-.switch.checked small {
+.toggleSwitch.checked small {
     left: 27px;
 
 }
 
-.switch .off {
+.toggleSwitch .off {
     display:block;
     position: absolute;
     right: -72%;
@@ -520,7 +520,7 @@ i#numbers-off {
     color:#333333;
 }
 
-.switch .on {
+.toggleSwitch .on {
     display:block;
     z-index: 0;
     position: absolute;
@@ -529,11 +529,11 @@ i#numbers-off {
     color:#333333;
 }
 
-.switch.checked .off {
+.toggleSwitch.checked .off {
     display:block;
 }
 
-.switch.checked .on {
+.toggleSwitch.checked .on {
     display:block;
 }
 
