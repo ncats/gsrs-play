@@ -42,7 +42,7 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasCtrl", function ($scope, $resource, $location, $anchorScroll, localStorageService, Substance) {
+    ginasApp.controller("GinasController", function ($scope, $resource, $location, $anchorScroll, localStorageService, Substance) {
         var ginasCtrl = this;
         $scope.substance = Substance;
         $scope.empty ={};
@@ -84,6 +84,8 @@
                             this.substance.chemical[type] = [];
                             this.substance.chemical[type].push(obj);
                         }
+                        console.log($scope);
+                        console.log(this.substance);
                     }
                     break;
                 case "protein":
@@ -113,25 +115,6 @@
         };
     });
 
-    ginasApp.directive('datepicker', function () {
-        return {
-            restrict: 'A',
-            require: 'ngModel',
-            link: function (scope, element, attrs, ngModelCtrl) {
-                $(function () {
-                    $(element).datepicker({
-                        dateFormat: 'dd/mm/yy',
-                        onSelect: function (date) {
-                            scope.$apply(function () {
-                                ngModelCtrl.$setViewValue(date);
-                            });
-                        }
-                    });
-                });
-            }
-        };
-    });
-
     ginasApp.directive('duplicate', function (isDuplicate) {
         return {
             restrict: 'A',
@@ -145,7 +128,7 @@
     ginasApp.factory('isDuplicate', function ($q, substanceFactory) {
         return function dupCheck(modelValue) {
             var deferred = $q.defer();
-            substanceFactory.getSubstances(name)
+            substanceFactory.getSubstances(modelValue)
                 .success(function (response) {
                     if (response.count >= 1) {
                         deferred.reject();
@@ -168,12 +151,12 @@
 
     ginasApp.service('data', function($http) {
         var options = {};
-        var url = "app/cv/";
+        var url = "app/api/v1/vocabularies?filter=domain='";
 
         this.load = function(field) {
-            $http.get(url+field).success(function(data) {
-                console.log(data);
-                options[field] = data;
+            $http.get(url + field.toUpperCase() + "'", {headers: {'Content-Type': 'text/plain'}}).success(function(data) {
+                console.log(data.content[0]);
+                options[field] = data.content[0].terms;
             });
         };
 
