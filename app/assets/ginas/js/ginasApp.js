@@ -1121,4 +1121,80 @@ console.log($scope);
 
     });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+angular.module('ui.bootstrap.tpls').controller('ProgressDemoCtrl', function ($scope,  $http, $timeout) {
+          $scope.max = 100;
+          $scope.monitor = false;
+          $scope.mess = "";
+          $scope.dynamic = 0;
+          $scope.stat = {
+            recordsPersistedSuccess:0,
+            recordsProcessedSuccess:0,
+            recordsExtractedSuccess:0
+            };
+          $scope.refresh = function(id, pollin) {
+            $scope.id=id;
+            var responsePromise = $http.get("/ginas/app/api/v1/jobs/" + id + "/");
+                responsePromise.success(function(data, status, headers, config) {
+                    //$scope.myData.fromServer = data.title;
+                    if(data.status=="RUNNING"){
+                        $scope.mclass="progress-striped active";
+                    }else{
+                        $scope.mclass="";
+                        $scope.monitor=false;
+                        $scope.mess="Process complete.";
+                    }
+                    $scope.max = data.statistics.totalRecords.count;
+                    $scope.dynamic = data.statistics.recordsPersistedSuccess +
+                          data.statistics.recordsPersistedFailed +
+                          data.statistics.recordsProcessedFailed +
+                          data.statistics.recordsExtractedFailed;
+                    $scope.max = data.statistics.totalRecords.count;
+                    $scope.stat = data.statistics;
+                    $scope.allExtracted = data.statistics.recordsExtractedFailed+data.statistics.recordsExtractedSuccess;
+                    $scope.allPersisted = data.statistics.recordsPersistedFailed+data.statistics.recordsPersistedSuccess;
+                    $scope.allProcessed = data.statistics.recordsProcessedFailed+data.statistics.recordsProcessedSuccess;
+                    
+                });
+                responsePromise.error(function(data, status, headers, config) {
+                    alert("AJAX failed!");
+                });
+                if(pollin){
+                    $scope.monitor=true;
+                    $scope.mess="Polling ...";
+                    poll();
+                }
+          };
+          $scope.stopMonitor = function(){
+                $scope.monitor=false;
+                $scope.mess="";
+          };
+          var poll = function() {
+                $timeout(function() {
+                    console.log("they see me pollin'");
+                    
+                    $scope.refresh($scope.id,false);
+                    if($scope.monitor)poll();
+                }, 1000);
+            }; 
+          
+          
+        });
+
+
+
+
 })();
