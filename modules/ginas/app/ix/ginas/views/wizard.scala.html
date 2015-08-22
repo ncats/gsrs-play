@@ -15,6 +15,8 @@
         <div ng-show="substance.references">@forms.referenceform()</div>
 		<!-- Modal -->
     	@forms.referencemodalform()
+    	<div>@forms.selectors.substanceselectorform()</div>
+    	
     }else{
 	    @if(kind == "mixture") {
 	        @forms.nameform()

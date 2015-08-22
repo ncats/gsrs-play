@@ -1170,7 +1170,7 @@ angular.module('ui.bootstrap.tpls').controller('ProgressDemoCtrl', function ($sc
                     
                 });
                 responsePromise.error(function(data, status, headers, config) {
-                    alert("AJAX failed!");
+                    //alert("AJAX failed!");
                 });
                 if(pollin){
                     $scope.monitor=true;
@@ -1194,6 +1194,106 @@ angular.module('ui.bootstrap.tpls').controller('ProgressDemoCtrl', function ($sc
           
         });
 
+   angular.module('ui.bootstrap.tpls').controller('ModalDemoCtrl', function ($scope, $modal, $log) {
+   
+     $scope.items = ['item1', 'item2', 'item3'];
+   
+     $scope.animationsEnabled = true;
+   
+     $scope.typeahead1 = function (z) {
+       alert(z);
+     };
+     $scope.open = function (size) {
+   
+       var modalInstance = $modal.open({
+         animation: $scope.animationsEnabled,
+         templateUrl: 'substanceSelector.html',
+         controller: 'ModalInstanceCtrl',
+         size: size,
+         resolve: {
+           items: function () {
+             return $scope.items;
+           }
+         }
+       });
+   
+       modalInstance.result.then(function (selectedItem) {
+      subref={};
+
+      subref.refuuid=selectedItem.uuid;
+      subref.refPname=selectedItem.name;
+         subref.approvalID=selectedItem.approvalID;
+         subref.substanceClass="reference";
+       
+
+         $scope.selected = subRef;
+       }, function () {
+         $log.info('Modal dismissed at: ' + new Date());
+       });
+     };
+   
+     $scope.toggleAnimation = function () {
+       $scope.animationsEnabled = !$scope.animationsEnabled;
+     };
+   
+   });
+   
+   // Please note that $modalInstance represents a modal window (instance) dependency.
+   // It is not the same as the $modal service used above.
+   
+   angular.module('ui.bootstrap.tpls').controller('ModalInstanceCtrl', function ($scope, $modalInstance, $http, items) {
+   
+     $scope.items = items;
+     $scope.results = {};
+     $scope.selected = {
+       item: $scope.items[0]
+     };
+     
+     $scope.top=4;
+     $scope.testb=0;
+   
+     $scope.ok = function () {
+       $modalInstance.close($scope.selected.item);
+     };
+   
+     $scope.cancel = function () {
+       $modalInstance.dismiss('cancel');
+     };
+     
+     $scope.fetch = function (term, skip) {
+        var url = "/ginas/app/api/v1/substances/search?q=" +
+            term + "*&top=" + $scope.top + "&skip" + skip;
+        console.log(url);
+        var responsePromise = $http.get(url);
+     
+        responsePromise.success(function(data, status, headers, config) {
+          console.log(data);
+          $scope.results=data;
+      });
+        
+        responsePromise.error(function(data, status, headers, config) {
+         //alert("AJAX failed!");
+      });
+     };
+
+   $scope.search = function () {
+      $scope.fetch($scope.term,0);
+   };
+
+
+     
+  
+
+     $scope.nextPage = function () {
+    console.log($scope.results.skip);
+        $scope.fetch($scope.term,$scope.results.skip + $scope.results.top);
+     };
+     $scope.prevPage = function () {
+        $scope.fetch($scope.term,$scope.results.skip - $scope.results.top);
+     };
+     
+     
+   });
 
 
 

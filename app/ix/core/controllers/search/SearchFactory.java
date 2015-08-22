@@ -151,13 +151,18 @@ public class SearchFactory extends EntityFactory {
             
             ObjectMapper mapper = getEntityMapper ();
             ArrayNode nodes = mapper.createArrayNode();
+            int added=0;
             for (Object obj : result.getMatches()) {
                 if (obj != null) {
                     try {
                         ObjectNode node = (ObjectNode)mapper.valueToTree(obj);
                         if (kind == null)
                             node.put("kind", obj.getClass().getName());
-                        nodes.add(node);
+                        
+                        if(added>=skip)
+                        	nodes.add(node);
+                        added++;
+                        Logger.debug("Using search function");
                     }
                     catch (Exception ex) {
                         Logger.trace("Unable to serialize object to Json", ex);
