@@ -40,7 +40,7 @@
                             <hr/>
                             <h3><em>Progress</em></h3>
                             
-                            {{mess}}
+                            
                             <progressbar class="{{mclass}}" max="max" value="dynamic"><span style="color:white; white-space:nowrap;">{{dynamic}} / {{max}}</span></progressbar>
                             
                             <small><em>Extracted Success</em></small>
@@ -51,6 +51,7 @@
                             
                             <small><em>Persisted Success</em></small>
                             <progressbar class="{{mclass}}" max="allPersisted" value="stat.recordsPersistedSuccess"><span style="color:white; white-space:nowrap;">{{stat.recordsPersistedSuccess}} / {{stat.recordsPersistedSuccess + stat.recordsPersistedFailed}}</span></progressbar>
+                            {{mess}}
                             <h3><button ng-hide="monitor" type="button" class="btn btn-sm btn-primary" ng-click="refresh(@job.id,true)">Update</button></h3>
                             <h3><button ng-show="monitor" type="button" class="btn btn-sm btn-primary" ng-click="stopMonitor()">Stop Updating</button></h3>
                             

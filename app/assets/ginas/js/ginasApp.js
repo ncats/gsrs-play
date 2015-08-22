@@ -1164,9 +1164,9 @@ angular.module('ui.bootstrap.tpls').controller('ProgressDemoCtrl', function ($sc
                           data.statistics.recordsExtractedFailed;
                     $scope.max = data.statistics.totalRecords.count;
                     $scope.stat = data.statistics;
-                    $scope.allExtracted = data.statistics.recordsExtractedFailed+data.statistics.recordsExtractedSuccess;
-                    $scope.allPersisted = data.statistics.recordsPersistedFailed+data.statistics.recordsPersistedSuccess;
-                    $scope.allProcessed = data.statistics.recordsProcessedFailed+data.statistics.recordsProcessedSuccess;
+                    $scope.allExtracted = $scope.max ;
+                    $scope.allPersisted = $scope.max ;
+                    $scope.allProcessed = $scope.max ;
                     
                 });
                 responsePromise.error(function(data, status, headers, config) {
