@@ -7,6 +7,8 @@ import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
+import ix.core.stats.Estimate;
+import ix.core.stats.Statistics;
 import ix.utils.Util;
 
 import java.io.FileNotFoundException;
@@ -42,6 +44,8 @@ import akka.routing.RouterConfig;
 import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
+
+
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -301,7 +305,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			}
 			
 			Statistics stat = getStatisticsForJob(k);
-			if(stat.isDone()){
+			if(stat._isDone()){
 				ObjectMapper om = new ObjectMapper();
 				rec.job.stop=System.currentTimeMillis();
 				rec.job.status=ProcessingJob.Status.COMPLETE;
@@ -641,98 +645,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		return pp.key;
 	}
 	
-	public static class Statistics implements Serializable{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -5730152930484560692L;
-		public int recordsExtractedSuccess=0;
-		public int recordsProcessedSuccess=0;
-		public int recordsPersistedSuccess=0;
-		
-		public int recordsExtractedFailed=0;
-		public int recordsProcessedFailed=0;
-		public int recordsPersistedFailed=0;
-		
-		public long start=System.currentTimeMillis();
-		
-		public enum CHANGE{	ADD_EX_GOOD,
-							ADD_EX_BAD,
-							ADD_PR_GOOD,
-							ADD_PR_BAD,
-							ADD_PE_GOOD,
-							ADD_PE_BAD, MARK_EXTRACTION_DONE
-			};
-		
-		public Estimate totalRecords=null;
-		public CHANGE lastChange=null;
-		public long lastchange=0;
-		
-		
-		public String toString(){
-			String msg = "Extracted: " + recordsExtractedSuccess + " (" + recordsExtractedFailed + " failed)\n";
-			msg += "Processed: " + recordsProcessedSuccess + " (" + recordsProcessedFailed + " failed)\n";
-			msg += "Persisted: " + recordsPersistedSuccess + " (" + recordsPersistedFailed + " failed)\n";
-			if(totalRecords!=null)
-				msg += "Total rec: " + totalRecords.count + " (" + totalRecords.type.toString() + ")\n";
-			return msg;			
-		}
-		 
-		
-		public int totalFailedAndPersisted() {
-			return recordsExtractedFailed+recordsProcessedFailed+recordsPersistedFailed+recordsProcessedSuccess;
-		}
-		
-		public void markExtractionDone(){
-			totalRecords= new Estimate(recordsExtractedSuccess+recordsExtractedFailed, Estimate.TYPE.EXACT);
-		}
-		
-		public boolean isDone(){
-			if(totalFailedAndPersisted()>=totalRecords.count && totalRecords.type==Estimate.TYPE.EXACT){
-				return true;
-			}
-			return false;
-		}
-
-
-		public long getAverageTimeToPersistMS(long end){
-			return (end-start)/recordsPersistedSuccess;
-		}
-		
-		public void applyChange(CHANGE c){
-			if(c!=null){
-				this.lastChange=c;
-				switch(c){
-					case ADD_EX_BAD:
-						recordsExtractedFailed++;
-						break;
-					case ADD_EX_GOOD:
-						recordsExtractedSuccess++;
-						break;
-					case ADD_PE_BAD:
-						recordsPersistedFailed++;
-						break;
-					case ADD_PE_GOOD:
-						recordsPersistedSuccess++;
-						break;
-					case ADD_PR_BAD:
-						recordsProcessedFailed++;
-						break;
-					case ADD_PR_GOOD:
-						recordsProcessedSuccess++;
-						break;
-					case MARK_EXTRACTION_DONE:
-						this.markExtractionDone();
-						break;
-					default:
-						break;
-				}
-			}
-			lastchange++;
-			
-		}
-		
-	}
 	
 /*
 	public void submit(String struc, StructureReceiver receiver) {
@@ -790,7 +702,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 						stat = new Statistics();
 					}
 					stat.totalRecords=es;
-					stat.lastchange=1;
+					stat.applyChange(Statistics.CHANGE.EXPLICIT_CHANGE);
 					storeStatisticsForJob(pp.key, stat);
 					Logger.debug(stat.toString());
 				}
@@ -909,19 +821,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	}
 	
 	
-	public static class Estimate implements Serializable{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -2496288711650397338L;
-		enum TYPE{EXACT, APPROXIMATE, UNKNOWN};
-		long count;
-		TYPE type;
-		public Estimate(long count, TYPE t){
-			this.count=count;
-			this.type=t;				
-		}
-	}
+	
 	
 	
 
@@ -982,15 +882,19 @@ public class GinasRecordProcessorPlugin extends Plugin {
     public static Statistics getStatisticsForJob(String jobTerm){
     	return jobCacheStatistics.get(jobTerm);
     }
+    public static Statistics getStatisticsForJob(ProcessingJob pj){
+    	String k=pj.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+    	return jobCacheStatistics.get(k);
+    }
     
     public static synchronized Statistics storeStatisticsForJob(String jobTerm, Statistics s){
     	Statistics st=getStatisticsForJob(jobTerm);
     	if(st==s)return s;
     	//More recent, substitute
-    	if(st==null || s.lastchange > st.lastchange){
+    	if(st==null || s.isNewer(st)){
     		return jobCacheStatistics.put(jobTerm,s);
     	}else{
-    		st.applyChange(s.lastChange);
+    		st.applyChange(s);
     		return jobCacheStatistics.put(jobTerm,st);
     	}
     }

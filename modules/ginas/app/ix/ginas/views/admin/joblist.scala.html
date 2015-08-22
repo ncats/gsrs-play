@@ -1,0 +1,75 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.GinasLoad
+@import ix.core.models.ProcessingJob
+
+@(job: ProcessingJob, poll: String = "false")
+
+<div class="panel panel-default sub-list">
+    <div class="panel-heading sub-title">
+        <div class = "row">
+            <div class = "col-md-10">
+                <h3><a href="@ix.ginas.controllers.routes.GinasLoad.monitorProcess(GinasLoad.getJobKey(job))" target="_self">@job.getName()</a></h3>
+            </div>
+            <div class = "col-md-2 prot-approvID">
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasLoad.monitorProcess(GinasLoad.getJobKey(job))" target="_self"><code>@job.status</code></a></h4>
+            </div>
+        </div>
+    </div>
+    
+    <div class= "panel-body list-item">
+        <div class = "row">
+            <div class = "col-md-3">
+                <div class ="row">
+                    <div class = "col-md-1 col-md-offset-1">
+                          @if(job.status == ix.core.models.ProcessingJob.Status.RUNNING){
+                            <i class="fa fa-cog fa-4x fa-spin"></i>
+                          }else{
+                            @if(job.status == ix.core.models.ProcessingJob.Status.COMPLETE){
+                                <i class="fa fa-check-square fa-4x"></i>
+                            }else{
+                                <i class="fa fa-question-circle fa-4x"></i>
+                            }
+                          }
+                    </div>
+                </div>
+
+            </div>
+            <div class = "col-md-7">
+                <div class = "row">
+                     <div ng-controller="ProgressDemoCtrl" ng-init="refresh(@job.id, @poll)">
+                            <hr/>
+                            <h3><em>Progress</em></h3>
+                            
+                            {{mess}}
+                            <progressbar class="{{mclass}}" max="max" value="dynamic"><span style="color:white; white-space:nowrap;">{{dynamic}} / {{max}}</span></progressbar>
+                            
+                            <small><em>Extracted Success</em></small>
+                            <progressbar class="{{mclass}}" max="allExtracted" value="stat.recordsExtractedSuccess"><span style="color:white; white-space:nowrap;">{{stat.recordsExtractedSuccess}} / {{stat.recordsExtractedSuccess + stat.recordsExtractedFailed}}</span></progressbar>
+                            
+                            <small><em>Processed Success</em></small>
+                            <progressbar class="{{mclass}}" max="allProcessed" value="stat.recordsProcessedSuccess"><span style="color:white; white-space:nowrap;">{{stat.recordsProcessedSuccess}} / {{stat.recordsProcessedSuccess + stat.recordsProcessedFailed}}</span></progressbar>
+                            
+                            <small><em>Persisted Success</em></small>
+                            <progressbar class="{{mclass}}" max="allPersisted" value="stat.recordsPersistedSuccess"><span style="color:white; white-space:nowrap;">{{stat.recordsPersistedSuccess}} / {{stat.recordsPersistedSuccess + stat.recordsPersistedFailed}}</span></progressbar>
+                            <h3><button ng-hide="monitor" type="button" class="btn btn-sm btn-primary" ng-click="refresh(@job.id,true)">Update</button></h3>
+                            <h3><button ng-show="monitor" type="button" class="btn btn-sm btn-primary" ng-click="stopMonitor()">Stop Updating</button></h3>
+                            
+                        </div>
+                </div>
+            </div>
+            <div class = "col-md-2">
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date started: <h6>@job._getStartAsDate()</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date ended: <h6>@job._getStoppedAsDate()</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>

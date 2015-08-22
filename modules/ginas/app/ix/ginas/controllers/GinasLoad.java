@@ -16,6 +16,7 @@ import ix.core.search.TextIndexer.Facet;
 import ix.ginas.models.Ginas;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
+import ix.utils.Util;
 import ix.core.chem.Chem;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.ginas.models.utils.*;
@@ -33,12 +34,13 @@ import java.util.UUID;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.io.FileOutputStream;
 import java.util.zip.GZIPInputStream;
-import ix.core.plugins.GinasRecordProcessorPlugin.Statistics;
 
+import ix.core.stats.Statistics;
 import play.Logger;
 import play.Play;
 import play.data.DynamicForm;
@@ -62,6 +64,11 @@ import java.util.Date;
 
 public class GinasLoad extends App {
 	public static boolean OLD_LOAD = false;
+	
+	public static final String[] ALL_FACETS = {
+		"Job Status"
+	};
+	
 	
 	static final GinasRecordProcessorPlugin ginasRecordProcessorPlugin =
 	        Play.application().plugin(GinasRecordProcessorPlugin.class);
@@ -239,39 +246,49 @@ public class GinasLoad extends App {
     		return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(jdip.processID()));
     	}
     }
+    public static String getJobKey(ProcessingJob job){
+    	return job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+    }
+    public static Result monitorProcess(ProcessingJob job){
+    	return monitorProcess(getJobKey(job));
+    }
+
+    public static Result monitorProcess(Long jobID){
+    	return monitorProcess(ProcessingJobFactory.getJob(jobID));
+    }
     
     public static Result monitorProcess(String processID){
     	if(!GinasLoad.OLD_LOAD){
-    	ProcessingJob job = ProcessingJobFactory.getJob(processID);
-    	
-
-    	String msg = "";
-    	if(job!=null){
-    		//List<ProcessingRecord> precs = ProcessingJobFactory.getJobRecords(job.id);
-	    	msg+="Started:" + job.start + "\n";
-	    	msg+="Ended:" + job.stop + "\n";
-	    	msg+="Message:" + job.message + "\n";
-	    	msg+="Status:" + job.status + "\n";
-	    	if(job.payload!=null){
-	    		Statistics stat = GinasRecordProcessorPlugin.getStatisticsForJob(processID);
-	    		if(stat!=null){
-	    			msg+="\nStatistics:\n==============\n";
-	    			msg+=stat.toString();
-	    			long t=System.currentTimeMillis();
-	    			if(job.stop!=null){
-	    				t=job.stop;
-	    			}
-	    			msg+="Average time to register:" + stat.getAverageTimeToPersistMS(t);
-	    		}
+    		String msg="";
+	    	ProcessingJob job = ProcessingJobFactory.getJob(processID);
+	    	if(job!=null){
+	    		return ok(ix.ginas.views.html.admin.job.render(job));
+//	    		processID = job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());	
+//	    		//List<ProcessingRecord> precs = ProcessingJobFactory.getJobRecords(job.id);
+//		    	msg+="Started:" + job.start + "\n";
+//		    	msg+="Ended:" + job.stop + "\n";
+//		    	msg+="Message:" + job.message + "\n";
+//		    	msg+="Status:" + job.status + "\n";
+//		    	if(job.payload!=null){
+//		    		Statistics stat = GinasRecordProcessorPlugin.getStatisticsForJob(processID);
+//		    		if(stat!=null){
+//		    			msg+="\nStatistics:\n==============\n";
+//		    			msg+=stat.toString();
+//		    			long t=System.currentTimeMillis();
+//		    			if(job.stop!=null){
+//		    				t=job.stop;
+//		    			}
+//		    			msg+="Average time to register:" + stat.getAverageTimeToPersistMS(t);
+//		    		}
+//		    	}
+		    	
+	    	}else{
+	    		msg = "[not yet started]";
 	    	}
+	    	msg +="\n\n refresh page for status";
 	    	
-    	}else{
-    		msg = "[not yet started]";
-    	}
-    	msg +="\n\n refresh page for status";
-    	
-    	
-    	return ok("Processing job:" + processID + "\n\n" + msg);
+	    	
+	    	return ok("Processing job:" + processID + "\n\n" + msg);
     	}else{
     		//OLD WAY:
 	    	Process p =processes.get(processID);
@@ -411,4 +428,66 @@ public class GinasLoad extends App {
 		
     }
     
+    
+    public static Result jobs (final String q, final int rows, final int page)
+            throws Exception {
+        final int total = Math.max(ProcessingJobFactory.getCount(),1);
+        final String key = "jobs/"+Util.sha1(request ());
+        if (request().queryString().containsKey("facet") || q != null) {
+            final TextIndexer.SearchResult result =
+                getSearchResult (ProcessingJob.class, q, total);
+            if (result.finished()) {
+                final String k = key+"/result";
+                return getOrElse
+                        (k, new Callable<Result> () {
+                            public Result call () throws Exception {
+                                Logger.debug("Cache missed: "+k);
+                                return createJobResult
+                                        (result, rows, page);
+                            }
+                        });
+            }
+
+            return createJobResult (result, rows, page);
+        }
+        else {
+            return getOrElse (key, new Callable<Result> () {
+                public Result call () throws Exception {
+                    Logger.debug("Cache missed: "+key);
+                    TextIndexer.Facet[] facets =
+                            filter(getFacets(ProcessingJob.class, 30),
+                                    ALL_FACETS);
+                    int nrows = Math.max(Math.min(total, Math.max(1, rows)),1);
+                    int[] pages = paging(nrows, page, total);
+
+                    List<ProcessingJob> substances =
+                            ProcessingJobFactory.getProcessingJobs(nrows, (page - 1) * rows, null);
+
+                    return ok(ix.ginas.views.html.admin.jobs.render
+                            (page, nrows, total, pages,
+                                    decorate(facets), substances));
+                }
+            });
+        }
+    }
+
+	static Result createJobResult(TextIndexer.SearchResult result,
+			int rows, int page) {
+		TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
+
+		List<ProcessingJob> substances = new ArrayList<ProcessingJob>();
+		int[] pages = new int[0];
+		if (result.count() > 0) {
+			rows = Math.min(result.count(), Math.max(1, rows));
+			pages = paging(rows, page, result.count());
+			for (int i = (page - 1) * rows, j = 0; j < rows
+					&& i < result.size(); ++j, ++i) {
+				substances.add((ProcessingJob) result.get(i));
+			}
+		}
+
+		return ok(ix.ginas.views.html.admin.jobs.render(page, rows,
+				result.count(), pages, decorate(facets), substances));
+
+	}
 }

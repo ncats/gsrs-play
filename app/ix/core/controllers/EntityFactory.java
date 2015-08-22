@@ -288,6 +288,7 @@ public class EntityFactory extends Controller {
         ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
         obj.put("content", mapper.valueToTree(results));
 
+        Logger.debug("TEST DONE");
         return ok (obj);
     }
 
@@ -457,6 +458,12 @@ public class EntityFactory extends Controller {
         FutureRowCount<T> count = finder.findFutureRowCount();
         return count.get();
     }
+    
+//    protected static Integer getCount () 
+//            throws InterruptedException, ExecutionException {
+//            //FutureRowCount<T> count = finder.findFutureRowCount();
+//            return 0;
+//    }
 
     protected static <K,T> Result field (K id, String field, 
                                          Model.Finder<K, T> finder) {
@@ -1228,4 +1235,6 @@ public class EntityFactory extends Controller {
         }
         return UUID.fromString(id);
     }
+    
+    
 }

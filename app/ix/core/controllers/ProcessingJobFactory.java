@@ -1,10 +1,15 @@
 package ix.core.controllers;
 
 import ix.core.NamedResource;
+import ix.core.controllers.EntityFactory.FetchOptions;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
+import ix.ginas.models.v1.Substance;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import com.avaje.ebean.FutureRowCount;
 
 import play.db.ebean.Model;
 import play.mvc.Result;
@@ -22,13 +27,18 @@ public class ProcessingJobFactory extends EntityFactory {
         return getEntity (id, finder);
     }
     
-    public static List<ProcessingRecord> getJobRecords (Long id) {
+    public static List<ProcessingRecord> getJobRecords (Long id) {    	
         return recordFinder.where().eq("job.id", id).findList();
     }
+    
 
     public static List<ProcessingJob> getJobsByPayload (String uuid) {
         return finder.setDistinct(false).where().eq("payload.id", uuid).findList();
     }
+    public static List<ProcessingJob> getProcessingJobs
+    (int top, int skip, String filter) {
+	    return filter (new FetchOptions (top, skip, filter), finder);
+	}
 
     public static ProcessingJob getJob (String key) {
     	//finder.setDistinct(false).where().eq("keys.term", key).findUnique();
@@ -42,7 +52,13 @@ public class ProcessingJobFactory extends EntityFactory {
     	return null;
     }
     
+    public static Integer getCount () 
+            throws InterruptedException, ExecutionException {
+            return ProcessingJobFactory.getCount(finder);
+        }
+    
     public static Result count () { return count (finder); }
+    
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);
     }
@@ -57,6 +73,8 @@ public class ProcessingJobFactory extends EntityFactory {
         }
         return field (id, path, finder);
     }
+    
+    
 
     public static Result create () {
         throw new UnsupportedOperationException
