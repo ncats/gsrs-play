@@ -275,9 +275,7 @@ console.log($scope);
                 value: '='
             },
             link: function (scope, element, attrs) {
-                //console.log(scope);
-                //console.log(scope.amount);
-                //console.log(attrs);
+                
             },
             template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.unit}}</span></div>'
         };
@@ -1218,15 +1216,14 @@ angular.module('ui.bootstrap.tpls').controller('ProgressDemoCtrl', function ($sc
        });
    
        modalInstance.result.then(function (selectedItem) {
-      subref={};
+         var subref={};
 
-      subref.refuuid=selectedItem.uuid;
-      subref.refPname=selectedItem.name;
+         subref.refuuid=selectedItem.uuid;
+         subref.refPname=selectedItem.name;
          subref.approvalID=selectedItem.approvalID;
          subref.substanceClass="reference";
-       
 
-         $scope.selected = subRef;
+         $scope.selected = subref;
        }, function () {
          $log.info('Modal dismissed at: ' + new Date());
        });
@@ -1252,6 +1249,10 @@ angular.module('ui.bootstrap.tpls').controller('ProgressDemoCtrl', function ($sc
      $scope.top=4;
      $scope.testb=0;
    
+     $scope.select = function (item) {
+       $modalInstance.close(item);
+     };
+
      $scope.ok = function () {
        $modalInstance.close($scope.selected.item);
      };
