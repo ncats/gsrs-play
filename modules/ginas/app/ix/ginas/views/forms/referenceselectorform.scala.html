@@ -1,13 +1,13 @@
-@(formName : String, propertyName : String)
-
-@import ix.ginas.controllers.GinasApp
+@(formName: String, propertyName: String)
 
 <!-- Modal -->
-	<div class="col-md-2 err-check" show-errors>
-	   <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-	   <p class="danger" ng-if="!ginasCtrl.substance.references && @(formName).reference.$error">*required</p>
-	   <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "@(propertyName).references = ginasCtrl.substance.references[0]" ng-model = "@(propertyName).references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" ></select>
-	   <ng-messages for="@(formName).reference.$error" ng-if="@(formName).reference.$pristine">
-	      <ng-message when="required" class="help-block">*required</ng-message>
-	   </ng-messages>
-	</div>
+<div class="col-md-1 err-check" show-errors>
+    <a ng-show="!substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+    <p class="danger" ng-if="!substance.references && @(formName).reference.$error">*required</p>
+    <tags-input custom-class="form-control" ng-hide="!substance.references"  ng-model = "@(propertyName).references" title="References" placeholder="References" id="references" name="references" display-property="citation" key-property="id" add-from-autocomplete-only="true" >
+        <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+    </tags-input>
+    <ng-messages for="@(formName).reference.$error" ng-if="@(formName).reference.$pristine">
+        <ng-message when="required" class="help-block">*required</ng-message>
+    </ng-messages>
+</div>

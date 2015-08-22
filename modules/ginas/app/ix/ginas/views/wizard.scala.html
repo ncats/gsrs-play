@@ -12,7 +12,7 @@
         <div>@forms.relationshipdisplay()</div>
         <div>@forms.noteform()</div>
         <div>@forms.propertyform()</div>
-        <div ng-show="refAdded">@forms.referenceform()</div>
+        <div ng-show="substance.references">@forms.referenceform()</div>
 		<!-- Modal -->
     	@forms.referencemodalform()
     }else{
@@ -30,7 +30,7 @@
 		        <div ng-show="uniqueName">@forms.glycosylationform()</div>
 		        @forms.nameform()
 		        <div ng-show="uniqueName">@forms.codeform()</div>
-		        <div ng-show="refAdded"> @forms.referenceform()</div>
+		        <div ng-show="substance.references"> @forms.referenceform()</div>
 				@forms.referencemodalform()
 		    }else{
 			    @if(kind == "polymer") {
@@ -72,7 +72,7 @@
     <h3></h3>
     <div>
     @wizardfields(kind)
-		<pre>{{GinasCtrl.substance | json}}</pre>
+		<pre>{{substance | json}}</pre>
         </div>
     <script>
         @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
