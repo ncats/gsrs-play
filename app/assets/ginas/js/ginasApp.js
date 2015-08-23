@@ -1155,7 +1155,7 @@ angular.module('ui.bootstrap.tpls').controller('ProgressJobController', function
                     //$scope.myData.fromServer = data.title;
                      if($scope.status!=data.status){
                       //alert($scope.status + "!=" + data.status);
-                      location.reload();
+                      //location.reload();
                      }
                     if(data.status=="RUNNING" || data.status=="PENDING"){
                         $scope.mclass="progress-striped active";
