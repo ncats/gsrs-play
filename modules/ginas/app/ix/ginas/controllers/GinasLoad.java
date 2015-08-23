@@ -34,6 +34,7 @@ import java.util.UUID;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -162,6 +163,7 @@ public class GinasLoad extends App {
     }
     
     public static Result loadJSON () {
+    	
         if (Play.isProd()) {
             return badRequest ("Invalid request!");
         }
@@ -180,17 +182,16 @@ public class GinasLoad extends App {
                 is = u.openStream();
             }
             else {
-                // now try json-file
-                Http.MultipartFormData body =
-                    request().body().asMultipartFormData();
-                Http.MultipartFormData.FilePart part =
-                    body.getFile("json-file");
-                if (part != null) {
-                    File file = part.getFile();
-                    Logger.debug("json-file: "+file);
-                    is = new FileInputStream (file);
-                }
-                else {
+            	
+            	Payload sdpayload = payloadPlugin.parseMultiPart
+                        ("sd-file", request ());
+            	if(sdpayload!=null){
+            		sdpayload.save();
+            		System.out.println("SD:" + sdpayload);
+            		Map m = GinasSDFExtractor.getFieldStatistics(sdpayload, 100);
+            		ObjectMapper om = new ObjectMapper();
+            		return ok(om.valueToTree(m).toString());
+            	}else {
                 	Payload payload = payloadPlugin.parseMultiPart
                              ("json-dump", request ());
                 	

@@ -109,7 +109,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	}
 
 	/**
-	 * Instead of creating seperate classes for performing the different stages,
+	 * Instead of creating separate classes for performing the different stages,
 	 * we're going to do a bad thing by following the convention that each actor
 	 * knows which method to call. Effectively we have the same instance that
 	 * get passed through the actor pipeline. This goes against the
@@ -767,7 +767,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	}
 	
 	public static abstract class RecordExtractor<K>{
-		InputStream is;
+		public InputStream is;
 		public RecordExtractor(InputStream is){
 			this.is=is;
 		}
@@ -807,7 +807,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public abstract RecordExtractor<K> makeNewExtractor(InputStream is);
 		
 		public RecordExtractor<K> makeNewExtractor(Payload p){
-			return makeNewExtractor(PayloadFactory.getStream(p));
+			InputStream pis=PayloadFactory.getStreamAsIs(p);
+			if(pis!=null){
+				System.out.println("############### steam isn't null");
+			}else{
+				System.out.println("############### steam is  totes def null");
+			}
+			return makeNewExtractor(pis);
 		}
 		
 		/**

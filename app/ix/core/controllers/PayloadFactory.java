@@ -82,4 +82,11 @@ public class PayloadFactory extends EntityFactory {
             return getStream (payload.id);
         throw new IllegalArgumentException ("Invalid payload with no id!");
     }   
+    
+    public static InputStream getStreamAsIs (Payload payload) {
+    	Payload payload2 = getPayload (payload.id);
+        if (payload2 != null)
+            return payloadPlugin.getPayloadAsStream(payload2);
+        return null;
+    }   
 }

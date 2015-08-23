@@ -2,13 +2,19 @@ package ix.ginas.models.utils;
 
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalReader;
+import ix.core.models.Payload;
 import ix.core.plugins.GinasRecordProcessorPlugin.RecordExtractor;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import akka.event.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -22,8 +28,25 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 		
 		public GinasSDFExtractor(InputStream is) {
 			super(is);
-			chemExtract=new ChemicalExtractor(is);
+			if(is!=null)
+				chemExtract=new ChemicalExtractor(is);
 			
+		}
+		
+		public void qq(InputStream is) throws IOException{
+			System.out.println("########## SDF");
+			BufferedReader buff = new BufferedReader(new InputStreamReader(is));
+			String line;
+			int c=0;
+			
+			while((line=buff.readLine())!=null){
+				System.out.println(line);
+				c++;
+				if(c>10)break;
+			}
+		}
+		public void qq() throws IOException{
+			qq(this.is);
 		}
 
 		
@@ -42,6 +65,11 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			
 			List<ExtractionError> errors=new ArrayList<ExtractionError>();
 			Chemical c=chemExtract.getNextRecord();
+			if(c==null){
+				System.out.println("############# chemical is null");
+			}else{
+				System.out.println("############# chemical is NOT null:" + c.getName());
+			}
 			Map<String,String> keyValueMap = new HashMap<String,String>();
 			
 			try {
@@ -109,8 +137,71 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 		}
 		
 		
+		public static Map<String,FieldStatistics> getFieldStatistics(Payload pl, int MAX){
+			GinasSDFExtractor gex=
+					(GinasSDFExtractor) new GinasSDFExtractor(null).makeNewExtractor(pl);
+			Map m=null;
+			System.out.println("########################## Got here!?");
+			try {
+				gex.qq();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			Map<String,FieldStatistics> fstats = new HashMap<String,FieldStatistics>();
+			int count=0;
+			
+			while((count<MAX) && (m=gex.getNextRecord())!=null){
+				System.out.println("############## Got one");
+				for(Object k:m.keySet()){
+					FieldStatistics fst= fstats.get(k);
+					if(fst!=null){
+						fst=new FieldStatistics(k+"");
+					}
+					fst.addValue(m.get(k)+"");
+				}
+				count++;
+			}
+			return fstats;
+		}
 		
 		
+		
+		public static class FieldStatistics{
+			public static int MAX_FIRST_STATS=10;
+			public static int MAX_TOP_STATS=100;
+			public String path;
+			public int references;
+			
+			public Map<String,FieldValue> counts = new HashMap<String,FieldValue>();
+			public List<String> firstValues = new ArrayList<String>();
+			
+			public FieldStatistics(String path){
+				this.path=path;
+			}
+			
+			public void addValue(String v){
+				if(firstValues.size()<MAX_FIRST_STATS){
+					firstValues.add(v);
+				}
+				FieldValue fv = counts.get(v);
+				if(fv==null){
+					fv= new FieldValue(v);
+				}
+				fv.increment();
+			}
+			
+		}
+		public static class FieldValue{
+			String value;
+			int count=0;
+			public FieldValue(String f){
+				this.value=f;
+			}
+			public void increment(){
+				this.count++;
+			}
+		}
 		
 		
 		

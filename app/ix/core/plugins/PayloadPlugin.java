@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.security.DigestInputStream;
     
 
+
 import play.Logger;
 import play.Plugin;
 import play.Application;
@@ -138,8 +139,10 @@ public class PayloadPlugin extends Plugin {
 
     public InputStream getPayloadAsStream (Payload pl) {
         File file = getPayload (pl);
+        System.out.println("$$$$$$$$$$$$$$$$ "+ file.getAbsolutePath());
         if (file != null) {
             try {
+            	qq(new FileInputStream (file));
                 return new FileInputStream (file);
             }
             catch (IOException ex) {
@@ -148,6 +151,19 @@ public class PayloadPlugin extends Plugin {
         }
         return null;
     }
+    public static void qq(InputStream is) throws IOException{
+		System.out.println("########## SDF");
+		BufferedReader buff = new BufferedReader(new InputStreamReader(is));
+		String line;
+		int c=0;
+		
+		while((line=buff.readLine())!=null){
+			System.out.println(line);
+			c++;
+			if(c>10)break;
+		}
+	}
+    
     public InputStream getPayloadAsStreamUncompressed(Payload pl){
     	InputStream is = getPayloadAsStream(pl);
     	if(is==null)return null;
