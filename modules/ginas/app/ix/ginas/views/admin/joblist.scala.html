@@ -22,12 +22,12 @@
                 <div class ="row">
                     <div class = "col-md-1 col-md-offset-1">
                           @if(job.status == ix.core.models.ProcessingJob.Status.RUNNING){
-                            <i class="fa fa-cog fa-4x fa-spin"></i>
+                            <i class="fa fa-cog fa-5x fa-spin"></i>
                           }else{
                             @if(job.status == ix.core.models.ProcessingJob.Status.COMPLETE){
-                                <i class="fa fa-check-square fa-4x"></i>
+                                <i class="fa fa-check-square fa-5x"></i>
                             }else{
-                                <i class="fa fa-question-circle fa-4x"></i>
+                                <i class="fa fa-question-circle fa-5x"></i>
                             }
                           }
                     </div>
@@ -36,25 +36,75 @@
             </div>
             <div class = "col-md-7">
                 <div class = "row">
-                     <div ng-controller="ProgressDemoCtrl" ng-init="refresh(@job.id, @poll)">
+                     <div ng-controller="ProgressJobController" ng-init="init(@job.id, @poll, '@job.status')">
                             <hr/>
                             <h3><em>Progress</em></h3>
                             
                             
-                            <progressbar class="{{mclass}}" max="max" value="dynamic"><span style="color:white; white-space:nowrap;">{{dynamic}} / {{max}}</span></progressbar>
+                            <progressbar class="{{mclass}}" max="max" value="dynamic">
+                            	<span class="progress-text">{{dynamic}} / {{max}}</span>
+                            </progressbar>
                             
-                            <small><em>Extracted Success</em></small>
-                            <progressbar class="{{mclass}}" max="allExtracted" value="stat.recordsExtractedSuccess"><span style="color:white; white-space:nowrap;">{{stat.recordsExtractedSuccess}} / {{stat.recordsExtractedSuccess + stat.recordsExtractedFailed}}</span></progressbar>
+                            <small><em>Extracted Records</em></small>
+                            <progress class="{{mclass}}" max="max" >
                             
-                            <small><em>Processed Success</em></small>
-                            <progressbar class="{{mclass}}" max="allProcessed" value="stat.recordsProcessedSuccess"><span style="color:white; white-space:nowrap;">{{stat.recordsProcessedSuccess}} / {{stat.recordsProcessedSuccess + stat.recordsProcessedFailed}}</span></progressbar>
+	                            <bar value="stat.recordsExtractedSuccess" type="success">
+	                            <span class="progress-text">
+	                            {{stat.recordsExtractedSuccess}}
+	                            </span>
+	                            </bar>
+	                            
+	                            <bar value="stat.recordsExtractedFailed" type="danger">
+	                            <span ng-hide="stat.recordsExtractedFailed < 1" class="progress-text">
+	                            {{stat.recordsExtractedFailed}}
+	                            </span>
+	                            </bar>
                             
-                            <small><em>Persisted Success</em></small>
-                            <progressbar class="{{mclass}}" max="allPersisted" value="stat.recordsPersistedSuccess"><span style="color:white; white-space:nowrap;">{{stat.recordsPersistedSuccess}} / {{stat.recordsPersistedSuccess + stat.recordsPersistedFailed}}</span></progressbar>
+                            </progress>
+                            
+                            <small><em>Processed Records</em></small>
+                            
+                            <progress class="{{mclass}}" max="max" >
+                            
+	                            <bar value="stat.recordsProcessedSuccess" type="success">
+	                            <span class="progress-text">
+	                            {{stat.recordsProcessedSuccess}}
+	                            </span>
+	                            </bar>
+	                            
+	                            <bar value="stat.recordsProcessedFailed" type="danger">
+	                            <span ng-hide="stat.recordsProcessedFailed < 1" class="progress-text">
+	                            {{stat.recordsProcessedFailed}}
+	                            </span>
+	                            </bar>
+                            
+                            </progress>
+                            
+                            <small><em>Persisted Records</em></small>
+                            
+                            <progress class="{{mclass}}" max="max" >
+                            
+	                            <bar value="stat.recordsPersistedSuccess" type="success">
+	                            <span class="progress-text">
+	                            {{stat.recordsPersistedSuccess}}
+	                            </span>
+	                            </bar>
+	                            
+	                            <bar value="stat.recordsPersistedFailed" type="danger">
+	                            <span ng-hide="stat.recordsPersistedFailed < 1" class="progress-text">
+	                            {{stat.recordsPersistedFailed}}
+	                            </span>
+	                            </bar>
+                            
+                            </progress>
+                            
+                            <div class = "col-md-10">
                             {{mess}}
-                            <h3><button ng-hide="monitor" type="button" class="btn btn-sm btn-primary" ng-click="refresh(@job.id,true)">Update</button></h3>
-                            <h3><button ng-show="monitor" type="button" class="btn btn-sm btn-primary" ng-click="stopMonitor()">Stop Updating</button></h3>
-                            
+                            </div>
+                            <div class = "col-md-2">
+                            <button ng-hide="monitor" type="button" class="btn btn-sm btn-primary" ng-click="refresh(@job.id,true)">Update</button>
+                            <button ng-show="monitor" type="button" class="btn btn-sm btn-primary" ng-click="stopMonitor()">Stop Updating</button>
+                            </div>
                         </div>
                 </div>
             </div>

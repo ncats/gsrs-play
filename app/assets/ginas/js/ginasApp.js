@@ -1133,22 +1133,31 @@ console.log($scope);
 
 
 
-angular.module('ui.bootstrap.tpls').controller('ProgressDemoCtrl', function ($scope,  $http, $timeout) {
+angular.module('ui.bootstrap.tpls').controller('ProgressJobController', function ($scope,  $http, $timeout) {
           $scope.max = 100;
           $scope.monitor = false;
           $scope.mess = "";
           $scope.dynamic = 0;
+       $scope.status="UNKNOWN";
           $scope.stat = {
             recordsPersistedSuccess:0,
             recordsProcessedSuccess:0,
             recordsExtractedSuccess:0
             };
+       $scope.init = function (id, pollin, status){
+          $scope.status=status;
+          $scope.refresh(id, pollin);
+       };
           $scope.refresh = function(id, pollin) {
             $scope.id=id;
             var responsePromise = $http.get("/ginas/app/api/v1/jobs/" + id + "/");
                 responsePromise.success(function(data, status, headers, config) {
                     //$scope.myData.fromServer = data.title;
-                    if(data.status=="RUNNING"){
+                     if($scope.status!=data.status){
+                      //alert($scope.status + "!=" + data.status);
+                      location.reload();
+                     }
+                    if(data.status=="RUNNING" || data.status=="PENDING"){
                         $scope.mclass="progress-striped active";
                     }else{
                         $scope.mclass="";
@@ -1182,7 +1191,7 @@ angular.module('ui.bootstrap.tpls').controller('ProgressDemoCtrl', function ($sc
           };
           var poll = function() {
                 $timeout(function() {
-                    console.log("they see me pollin'");
+                    //console.log("they see me pollin'");
                     
                     $scope.refresh($scope.id,false);
                     if($scope.monitor)poll();

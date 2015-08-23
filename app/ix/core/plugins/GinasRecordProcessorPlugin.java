@@ -587,7 +587,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			persistFailures = new PrintWriter("fail.persist.log");
 			transformFailures = new PrintWriter("fail.transform.log");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
        
@@ -640,6 +639,14 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		PayloadProcessor pp = new PayloadProcessor(payload);
 		inbox.send(processor, pp);
 		
+		ProcessingJob job = new ProcessingJob();
+		job.start = System.currentTimeMillis();
+		job.keys.add(new Keyword(
+				GinasRecordProcessorPlugin.class.getName(), pp.key));
+		job.status = ProcessingJob.Status.PENDING;
+		job.payload = pp.payload;
+		job.message="Preparing payload for processing";
+		job.save();
 		storeStatisticsForJob(pp.key, new Statistics());
 		//jobCacheStatistics.put(pp.key, value);
 		return pp.key;
@@ -682,15 +689,19 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				.getJobsByPayload(pp.payload.id.toString());
 		//Logger.debug("Okay, where are these jobs?");
 		ProcessingJob job = null;
-		
 		if (jobs.isEmpty()) {
-			//Logger.debug("Sweet, I found some!");
 			job = new ProcessingJob();
 			job.start = System.currentTimeMillis();
 			job.keys.add(new Keyword(
 					GinasRecordProcessorPlugin.class.getName(), pp.key));
-			job.status = ProcessingJob.Status.RUNNING;
+			job.status = ProcessingJob.Status.PENDING;
 			job.payload = pp.payload;
+			
+		}else{
+			job = jobs.iterator().next();
+		}
+		//If the job hasn't started yet, then start it
+		if (job.status==ProcessingJob.Status.PENDING) {
 			//Logger.debug("Lemme try to process one...");
 			try {
 				Logger.debug("Counting records");
@@ -706,6 +717,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					storeStatisticsForJob(pp.key, stat);
 					Logger.debug(stat.toString());
 				}
+				job.status = ProcessingJob.Status.RUNNING;
+				job.payload = pp.payload;
 				
 				Logger.debug("Making extractor");
 				RecordExtractor extract = _recordExtractor.makeNewExtractor(pp.payload);
@@ -735,12 +748,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				reporter.tell(PersistModel.Save(job), sender);
 			}
 		} else {
-			//Logger.debug("No jobs? What is this, this economy? MIRITE?");
-			job = jobs.iterator().next();
 			job.keys.add(new Keyword(
 					GinasRecordProcessorPlugin.class.getName(), pp.key));
 			reporter.tell(PersistModel.Update(job), sender);
-			
 		}
 		return job;
 	}

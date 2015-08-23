@@ -658,5 +658,10 @@ h2.display-name {
 .holder{
     min-height:20px;
 }
+.progress-text{
+    white-space: nowrap;
+    font-weight: bold;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
 
 
