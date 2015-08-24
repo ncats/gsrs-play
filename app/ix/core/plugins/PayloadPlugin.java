@@ -164,14 +164,12 @@ public class PayloadPlugin extends Plugin {
 	}
     
     public InputStream getPayloadAsStreamUncompressed(Payload pl){
-try{
-	System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$ looking at payload");
-	qq(getPayloadAsStreamUncompressedT(pl));
-    	return getPayloadAsStreamUncompressedT(pl);
-}catch(Exception e){
+    	try{
+    		return getPayloadAsStreamUncompressedT(pl);
+    	}catch(Exception e){
 
-}
-return null;
+    	}
+    	return null;
     }
     public InputStream getPayloadAsStreamUncompressedT(Payload pl){
 	

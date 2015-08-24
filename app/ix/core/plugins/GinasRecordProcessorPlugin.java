@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -54,6 +55,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
 public class GinasRecordProcessorPlugin extends Plugin {
+	private static final String EXTRACTOR_KEYWORD = "EXTRACTOR";
 	private static final String PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
 	//Hack variable for resisting buildup
 	//of extracted records not yet transformed
@@ -64,10 +66,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	
 	
 	//Replace with the methods you want.
-	private static RecordPersister _recordPersister = new ix.ginas.models.utils.GinasUtils.GinasSubstancePersister();
-	private static RecordExtractor _recordExtractor = new ix.ginas.models.utils.GinasUtils.GinasDumpExtractor(null);
-	private static RecordTransformer _recordTransformer= new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
-	
+	private static RecordPersister _recordPersister = 
+			new ix.ginas.models.utils.GinasUtils.GinasSubstancePersister();
+	private static RecordExtractor _recordExtractor = 
+			new ix.ginas.models.utils.GinasUtils.GinasDumpExtractor(null);
+	private static RecordTransformer _recordTransformer = 
+			new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
+
 	private static PrintWriter persistFailures;
 	private static PrintWriter transformFailures;
 	
@@ -305,12 +310,16 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			}
 			
 			Statistics stat = getStatisticsForJob(k);
-			if(stat._isDone()){
-				ObjectMapper om = new ObjectMapper();
-				rec.job.stop=System.currentTimeMillis();
-				rec.job.status=ProcessingJob.Status.COMPLETE;
-				rec.job.statistics=om.valueToTree(stat).toString();
-				PersistModel.Update(rec.job).persists();
+			if(stat!=null){
+				if(stat._isDone()){
+					ObjectMapper om = new ObjectMapper();
+					rec.job.stop=System.currentTimeMillis();
+					rec.job.status=ProcessingJob.Status.COMPLETE;
+					rec.job.statistics=om.valueToTree(stat).toString();
+					PersistModel.Update(rec.job).persists();
+				}
+			}else{
+				Logger.error("Can't find statistics on job");
 			}
 			
 		}
@@ -518,8 +527,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				
 				ProcessingRecord rec = new ProcessingRecord();
 				try{
+					RecordTransformer rt=RecordExtractor.getInstanceOfExtractor(
+							pr.job.getKeyMatching(EXTRACTOR_KEYWORD))
+							.getTransformer();
 					
-					Object trans = _recordTransformer.transform(pr, rec);
+					Object trans = rt.transform(pr, rec);
 					
 					if(trans==null){
 						throw new IllegalStateException("Transform error");
@@ -618,7 +630,24 @@ public class GinasRecordProcessorPlugin extends Plugin {
 								new FromConfig().withFallback(config)),
 						"processor");
 		system.actorOf(Props.create(Reporter.class, PQ), "reporter");
-		inbox = Inbox.create(system);
+		
+		long start= System.currentTimeMillis();
+		while(true){
+			try{
+				inbox = Inbox.create(system);
+				break;
+			}catch(Exception e){
+				Logger.error(e.getMessage() + " retrying");
+			}
+			if(System.currentTimeMillis()>start+60000){
+				throw new IllegalStateException("Couldn't start akka");
+			}
+			try{
+				Thread.sleep(10);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
 		_instance=this;
 	}
 
@@ -633,8 +662,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		return true;
 	}
 
-	
 	public String submit(Payload payload) {
+		return submit(payload, _recordExtractor.getClass());
+	}
+	public String submit(Payload payload, Class extractor) {
 		// first see if this payload has already processed..
 		PayloadProcessor pp = new PayloadProcessor(payload);
 		inbox.send(processor, pp);
@@ -643,6 +674,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		job.start = System.currentTimeMillis();
 		job.keys.add(new Keyword(
 				GinasRecordProcessorPlugin.class.getName(), pp.key));
+		//annotate the extractor to use
+		job.keys.add(new Keyword(EXTRACTOR_KEYWORD, extractor.getName()));
+		
 		job.status = ProcessingJob.Status.PENDING;
 		job.payload = pp.payload;
 		job.message="Preparing payload for processing";
@@ -697,6 +731,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			job.status = ProcessingJob.Status.PENDING;
 			job.payload = pp.payload;
 			
+			
 		}else{
 			job = jobs.iterator().next();
 		}
@@ -705,7 +740,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			//Logger.debug("Lemme try to process one...");
 			try {
 				Logger.debug("Counting records");
-				Estimate es= _recordExtractor.estimateRecordCount(pp.payload);
+				RecordExtractor rec = RecordExtractor
+						.getInstanceOfExtractor(job
+								.getKeyMatching(EXTRACTOR_KEYWORD));
+				Estimate es= rec.estimateRecordCount(pp.payload);
 				{
 					Logger.debug("Counted records");
 					Statistics stat = getStatisticsForJob(pp.key);
@@ -721,7 +759,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				job.payload = pp.payload;
 				
 				Logger.debug("Making extractor");
-				RecordExtractor extract = _recordExtractor.makeNewExtractor(pp.payload);
+				RecordExtractor extract = rec.makeNewExtractor(pp.payload);
 				
 				Logger.debug("Made extractor:" + extract.getClass().getName());
 				for (Object m; (m = extract.getNextRecord()) != null;) {
@@ -827,7 +865,17 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			extract.close();
 			return new Estimate(count, Estimate.TYPE.EXACT);
 		}
-		
+		public static RecordExtractor getInstanceOfExtractor(String className){
+			try{
+				Class<?> clazz = Class.forName(className);
+				Constructor<?> ctor = clazz.getConstructor(InputStream.class);
+				RecordExtractor object = (RecordExtractor) ctor.newInstance(new Object[] { null });
+				return object;
+			}catch(Exception e){
+				return null;
+			}
+		}
+		public abstract RecordTransformer getTransformer();
 		
 	}
 	

@@ -186,10 +186,15 @@ public class GinasLoad extends App {
             	Payload sdpayload = payloadPlugin.parseMultiPart
                         ("sd-file", request ());
             	if(sdpayload!=null){
-            		sdpayload.save();
-            		Map m = GinasSDFExtractor.getFieldStatistics(sdpayload, 100);
-			ObjectMapper om = new ObjectMapper();
-            		return ok(om.valueToTree(m).toString());
+					String id = ginasRecordProcessorPlugin.submit(sdpayload,
+							ix.ginas.models.utils.GinasSDFExtractor.class);
+					return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
+
+//                  Statistics / breakdown for later use  
+//            		sdpayload.save();
+//            		Map m = GinasSDFExtractor.getFieldStatistics(sdpayload, 100);
+//            		ObjectMapper om = new ObjectMapper();
+//            		return ok(om.valueToTree(m).toString());
             	}else {
                 	Payload payload = payloadPlugin.parseMultiPart
                              ("json-dump", request ());
@@ -197,8 +202,10 @@ public class GinasLoad extends App {
                     if (payload != null) {
                     	// New way:
                     	if(!GinasLoad.OLD_LOAD){
-	                    	String id = ginasRecordProcessorPlugin.submit(payload);
-	                    	return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
+							String id = ginasRecordProcessorPlugin
+									.submit(payload,
+											ix.ginas.models.utils.GinasUtils.GinasDumpExtractor.class);
+							return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
 	                        //return ok("Running job " + id + " payload is " + payload.name + " also " + payload.id);	
                     	}else{
                         // Old way

@@ -236,6 +236,11 @@ public class GinasUtils {
 		public RecordExtractor<JsonNode> makeNewExtractor(InputStream is) {
 			return new GinasDumpExtractor(is);
 		}
+
+		@Override
+		public RecordTransformer getTransformer() {
+			return new GinasSubstanceTransformer();
+		}
 		
 	}
 }

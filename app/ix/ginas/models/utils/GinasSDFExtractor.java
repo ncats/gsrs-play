@@ -3,27 +3,25 @@ package ix.ginas.models.utils;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalReader;
 import gov.nih.ncgc.jchemical.JchemicalReader;
-
 import ix.core.models.Payload;
+import ix.core.models.Structure;
 import ix.core.plugins.GinasRecordProcessorPlugin.RecordExtractor;
+import ix.core.plugins.GinasRecordProcessorPlugin.RecordTransformer;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Substance;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.TreeMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.lang.Comparable;
-import java.util.Collections;
-
-import akka.event.slf4j.Logger;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -55,14 +53,11 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 		@Override
 		public Map getNextRecord() {
 			ObjectMapper objectMapper = new ObjectMapper();
-			
+			System.out.println("########## extracting");
 			List<ExtractionError> errors=new ArrayList<ExtractionError>();
 			Chemical c=chemExtract.getNextRecord();
-			if(c==null){
-				//System.out.println("############# chemical is null");
-			}else{
-				//System.out.println("############# chemical is NOT null:" + c.getName());
-			}
+			if(c==null)return null;
+			
 			Map<String,String> keyValueMap = new HashMap<String,String>();
 			
 			try {
@@ -93,6 +88,20 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			
 			//substanceObject.put("structure", structureObject);
 			return keyValueMap;
+		}
+		
+		public static Substance convertToStructure(Map<String,String> keyValueMap){
+			ChemicalSubstance csub = new ChemicalSubstance(); 
+			
+			csub.structure= new Structure();
+			csub.structure.molfile=keyValueMap.get("molfile");
+			Name n=new Name();
+			n.name=keyValueMap.get("name");
+			csub.names.add(n);
+			
+			
+			return csub;
+			
 		}
 		
 		static public class ExtractionError{
@@ -315,7 +324,18 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			public RecordExtractor<Chemical> makeNewExtractor(InputStream is) {
 				return new ChemicalExtractor(is);
 			}
+
+			@Override
+			public RecordTransformer getTransformer() {
+				return null;
+			}
 			
+		}
+
+
+		@Override
+		public RecordTransformer getTransformer() {
+			return new GinasFlatMapTransformer();
 		}
 		
 	}
