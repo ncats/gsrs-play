@@ -33,22 +33,6 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			
 		}
 		
-		public void qq(InputStream is) throws IOException{
-			System.out.println("########## SDF");
-			BufferedReader buff = new BufferedReader(new InputStreamReader(is));
-			String line;
-			int c=0;
-			
-			while((line=buff.readLine())!=null){
-				System.out.println(line);
-				c++;
-				if(c>10)break;
-			}
-		}
-		public void qq() throws IOException{
-			qq(this.is);
-		}
-
 		
 		/*
 		 * This will work like this:
@@ -140,23 +124,20 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 		public static Map<String,FieldStatistics> getFieldStatistics(Payload pl, int MAX){
 			GinasSDFExtractor gex=
 					(GinasSDFExtractor) new GinasSDFExtractor(null).makeNewExtractor(pl);
-			Map m=null;
-			System.out.println("########################## Got here!?");
-			try {
-				gex.qq();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			
+			
 			Map<String,FieldStatistics> fstats = new HashMap<String,FieldStatistics>();
 			int count=0;
-			
+
+			Map m=null;
 			while((count<MAX) && (m=gex.getNextRecord())!=null){
-				System.out.println("############## Got one");
+				//System.out.println("############## Got one");
 				for(Object k:m.keySet()){
+					//System.out.println("############## got stat:" + k);
 					FieldStatistics fst= fstats.get(k);
-					if(fst!=null){
+					if(fst==null){
 						fst=new FieldStatistics(k+"");
+						fstats.put(k+"",fst);
 					}
 					fst.addValue(m.get(k)+"");
 				}
@@ -193,8 +174,8 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			
 		}
 		public static class FieldValue{
-			String value;
-			int count=0;
+			public String value;
+			public int count=0;
 			public FieldValue(String f){
 				this.value=f;
 			}
@@ -225,7 +206,7 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			public ChemicalExtractor(InputStream is) {
 				super(is);
 				try{
-					ChemicalReader cr = ChemicalReader.DEFAULT_CHEMICAL_FACTORY().createChemicalReader(is);
+					mi = ChemicalReader.DEFAULT_CHEMICAL_FACTORY().createChemicalReader(is);
 				}catch(Exception e){
 					e.printStackTrace();
 				}

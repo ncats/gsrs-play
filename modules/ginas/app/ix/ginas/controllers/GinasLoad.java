@@ -189,6 +189,9 @@ public class GinasLoad extends App {
             		sdpayload.save();
             		System.out.println("SD:" + sdpayload);
             		Map m = GinasSDFExtractor.getFieldStatistics(sdpayload, 100);
+			for(Object key:m.keySet()){
+				System.out.println("$$$$$$ " + key);
+			}
             		ObjectMapper om = new ObjectMapper();
             		return ok(om.valueToTree(m).toString());
             	}else {

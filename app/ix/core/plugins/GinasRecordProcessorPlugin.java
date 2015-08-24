@@ -807,12 +807,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public abstract RecordExtractor<K> makeNewExtractor(InputStream is);
 		
 		public RecordExtractor<K> makeNewExtractor(Payload p){
-			InputStream pis=PayloadFactory.getStreamAsIs(p);
-			if(pis!=null){
-				System.out.println("############### steam isn't null");
-			}else{
-				System.out.println("############### steam is  totes def null");
-			}
+			InputStream pis=PayloadFactory.getStream(p);
 			return makeNewExtractor(pis);
 		}
 		

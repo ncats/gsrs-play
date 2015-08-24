@@ -139,10 +139,9 @@ public class PayloadPlugin extends Plugin {
 
     public InputStream getPayloadAsStream (Payload pl) {
         File file = getPayload (pl);
-        System.out.println("$$$$$$$$$$$$$$$$ "+ file.getAbsolutePath());
         if (file != null) {
             try {
-            	qq(new FileInputStream (file));
+            	
                 return new FileInputStream (file);
             }
             catch (IOException ex) {
@@ -165,9 +164,22 @@ public class PayloadPlugin extends Plugin {
 	}
     
     public InputStream getPayloadAsStreamUncompressed(Payload pl){
+try{
+	System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$ looking at payload");
+	qq(getPayloadAsStreamUncompressedT(pl));
+    	return getPayloadAsStreamUncompressedT(pl);
+}catch(Exception e){
+
+}
+return null;
+    }
+    public InputStream getPayloadAsStreamUncompressedT(Payload pl){
+	
+
     	InputStream is = getPayloadAsStream(pl);
     	if(is==null)return null;
     	try {
+
 			return ix.utils.Util.getUncompressedInputStreamRecursive(is);
 		} catch (IOException e) {
 			Logger.trace("Problem uncompressing stream", e);
