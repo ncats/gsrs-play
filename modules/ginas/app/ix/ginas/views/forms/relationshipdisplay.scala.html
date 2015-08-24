@@ -6,64 +6,67 @@
                         {{ginasCtrl.substance.chemical.relationships.length}}</span> </button>
     @*<a ng-show="!addingStructure" ng-click="addStructure()" aria-label="Add Structure"><i class = "fa fa-plus fa-2x success"></i></a>*@
     @*<div ng-show="addingStructure">*@
-    <div>
+    <div class="col-md-12">
 
-        <div class="col-md-12">
-
-            <div class ="row header-row">
-                <div class="col-md-3"><strong>Related Substance</strong></div>
-                <div class="col-md-2"><strong>Type</strong></div>
-                <div class="col-md-2"><strong>Comments</strong></div>
-                <div class="col-md-2"><strong>Interaction Type</strong></div>
-                <div class="col-md-2"><strong>Qualification</strong></div>
-                <div class="col-md-1"><strong>Amount</strong></div>
-            </div>
-@*            <div ng-repeat="relationship in ginasCtrl.substance.chemical.relationships">
-                <relationship r="relationship"></relationship>
-            </div>*@
+        <div class ="row header-row">
+            <div class="col-md-3"><strong>Related Substance</strong></div>
+            <div class="col-md-2"><strong>Type</strong></div>
+            <div class="col-md-2"><strong>Comments</strong></div>
+            <div class="col-md-2"><strong>Interaction Type</strong></div>
+            <div class="col-md-2"><strong>Qualification</strong></div>
+            <div class="col-md-1"><strong>Amount</strong></div>
         </div>
-        <div class="row form-row" >
-            <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
-                <div ng-controller="TypeaheadController as TypeaheadCtrl">
-                    <div class="col-md-3 err-check" id="name-div" show-errors>
-                        @selectors.substanceselectorform()
-                    </div>
-                </div>
+        @*            <div ng-repeat="relationship in ginasCtrl.substance.chemical.relationships">
+        <relationship r="relationship"></relationship>
+        </div>*@
 
+        <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-3">
+                    @*
+                    <substance-selector ng-model="relationship.relatedSubstance"></substance-selector>
+                    *@
+                    @selectors.substanceselectorform()
+                </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "relationship.type" ng-options="r.display for r in @GinasApp.getCV.getField("RELATIONSHIP_TYPE") track by r.display" required>
-                        </select>
+                    <tags-input custom-class="form-control" ng-model="relationship.type" title="Relationship Type" placeholder="Relationship Type" id="type" name="type"  max-tags="1" display-property="display" key-property="value" add-from-autocomplete-only="true" >
+                        <auto-complete source="loadItems('RELATIONSHIP_TYPE', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                    </tags-input>
                     <ng-messages for="relationshipForm.type.$error" ng-if="relationshipForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-2 err-check" id="name-div" show-errors>
-                    <input type="text" class="form-control" ng-model ="relationship.comments" title="Comments" id="comments" name = "comments"/>
+                <div class="col-md-2" id="ref-div">
+                    <input type="text" class="form-control" ng-model ="relationship.comments" title="Comments" id="comments" name = "comments" />
                 </div>
 
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Interaction Type" id="interactionType" name = "interactionType" ng-model = "relationship.interactionType" ng-options="r.display for r in @GinasApp.getCV.getField("INTERACTION_TYPE") track by r.display" required>
-                        </select>
+                    <tags-input custom-class="form-control" ng-model="relationship.interactionType" title="Interaction Type" placeholder="Interaction Type" id="interactionType" name="interactionType"  max-tags="1" display-property="display" key-property="value" add-from-autocomplete-only="true">
+                        <auto-complete source="loadItems('INTERACTION_TYPE', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                    </tags-input>
                     <ng-messages for="relationshipForm.interactionType.$error" ng-if="relationshipForm.interactionType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Qualification" id="qualification" name = "qualification" ng-model = "relationship.qualification" ng-options="r.display for r in @GinasApp.getCV.getField("QUALIFICATION") track by r.display" required>
-                        </select>
+                    <tags-input custom-class="form-control" ng-model="relationship.qualification" title="Qualification" placeholder="Qualification" id="qualification" name="qualification"  max-tags="1" display-property="display" key-property="value" add-from-autocomplete-only="true">
+                        <auto-complete source="loadItems('QUALIFICATION', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                    </tags-input>
                     <ng-messages for="relationshipForm.qualification.$error" ng-if="relationshipForm.qualification.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-
-                <div class="col-md-1 err-check" show-errors>
+                <div class="col-md-1">
                     <amount value="relationship.amount"></amount>
                 </div>
+            </div>
 
-            </form>
-
-        </div>
-        <div class ="row"><div class="col-md-3" ng-repeat="relationship in data">{{relationship.name}}</div></div>
+        </form>
 
     </div>
 </div>
+@* <div class ="row"><div class="col-md-3" ng-repeat="relationship in data">{{relationship.name}}</div></div>
+
+</div>
+</div>
+*@

@@ -1,6 +1,6 @@
 @import ix.ginas.controllers.GinasApp
 
-<div class ="row info" id = "references" ng-controller="ReferenceController as RefCtrl">
+<div class ="row info" id = "references">
     <button class="btn btn-primary label-offset det">
                         References&nbsp;<span class="badge" ng-show="substance.references.length>0">
                         {{substance.references.length}}</span> </button>
@@ -54,7 +54,7 @@
             </div>
 
             <form class="form-horizontal" name="refForm" id = "add-ref" role="form" novalidate>
-            <div class="row form-row" ng-show="!RefCtrl.editing">
+            <div class="row form-row" >
 
                     <div class = "col-md-1">
                         {{substance.references.length +1}}
