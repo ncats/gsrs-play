@@ -35,6 +35,9 @@
 
             </div>
             <div class = "col-md-7">
+		<div class = "row">
+			@job.message
+		</div>
                 <div class = "row">
                      <div ng-controller="ProgressJobController" ng-init="init(@job.id, @poll, '@job.status')">
                             <hr/>

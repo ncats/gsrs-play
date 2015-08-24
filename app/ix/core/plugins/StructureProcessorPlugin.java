@@ -533,7 +533,24 @@ public class StructureProcessorPlugin extends Plugin {
             (Props.create(Processor.class, indexer).withRouter
              (new FromConfig().withFallback(config)), "processor");
         system.actorOf(Props.create(Reporter.class, PQ), "reporter");
-        inbox = Inbox.create(system);
+        
+		long start= System.currentTimeMillis();
+		while(true){
+			try{
+				inbox = Inbox.create(system);
+				break;
+			}catch(Exception e){
+				Logger.error(e.getMessage() + " retrying");
+			}
+			if(System.currentTimeMillis()>start+60000){
+				throw new IllegalStateException("Couldn't start akka");
+			}
+			try{
+				Thread.sleep(10);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
     }
 
     @Override

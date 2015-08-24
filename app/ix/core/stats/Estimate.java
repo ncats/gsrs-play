@@ -7,7 +7,7 @@ public class Estimate implements Serializable{
 		 * 
 		 */
 		private static final long serialVersionUID = -2496288711650397338L;
-		public enum TYPE{EXACT, APPROXIMATE, UNKNOWN};
+		public enum TYPE{EXACT, APPROXIMATE, UNKNOWN, UPPER_BOUND, LOWER_BOUND};
 		private long count;
 		private TYPE type;
 		

@@ -105,11 +105,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public final Payload payload;
 		public final String id;
 		public final String key;
-
+		public Long jobId;
+		
 		public PayloadProcessor(Payload payload) {
 			this.payload = payload;
 			this.key = randomKey(10);
 			this.id = payload.id + ":" + this.key;
+			
 		}
 	}
 
@@ -668,7 +670,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	public String submit(Payload payload, Class extractor) {
 		// first see if this payload has already processed..
 		PayloadProcessor pp = new PayloadProcessor(payload);
-		inbox.send(processor, pp);
+		
 		
 		ProcessingJob job = new ProcessingJob();
 		job.start = System.currentTimeMillis();
@@ -682,6 +684,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		job.message="Preparing payload for processing";
 		job.save();
 		storeStatisticsForJob(pp.key, new Statistics());
+		pp.jobId=job.id;
+		inbox.send(processor, pp);
+		
 		//jobCacheStatistics.put(pp.key, value);
 		return pp.key;
 	}
@@ -716,12 +721,17 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
 	/**
 	 * batch processing
+	 * 
+	 * One issue here is that this is designed to only
+	 * have 1 job per payload. In practice, it might not
+	 * be done this way.
+	 * 
 	 */
 	static ProcessingJob process(ActorRef reporter, ActorRef proc,
 			ActorRef sender, PayloadProcessor pp) throws Exception {
 		List<ProcessingJob> jobs = ProcessingJobFactory
 				.getJobsByPayload(pp.payload.id.toString());
-		//Logger.debug("Okay, where are these jobs?");
+		Logger.debug("Okay, where are these jobs?");
 		ProcessingJob job = null;
 		if (jobs.isEmpty()) {
 			job = new ProcessingJob();
@@ -730,8 +740,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					GinasRecordProcessorPlugin.class.getName(), pp.key));
 			job.status = ProcessingJob.Status.PENDING;
 			job.payload = pp.payload;
-			
-			
 		}else{
 			job = jobs.iterator().next();
 		}
@@ -789,6 +797,17 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			job.keys.add(new Keyword(
 					GinasRecordProcessorPlugin.class.getName(), pp.key));
 			reporter.tell(PersistModel.Update(job), sender);
+		}
+		//fail the processing job that was intended by this
+		if(job.id!=pp.jobId){
+			for(ProcessingJob jb2:jobs){
+				if(jb2.id==pp.jobId){
+					Logger.debug("The job already exists, but isn't selected");
+					jb2.status=ProcessingJob.Status.FAILED;
+					jb2.message="Payload job already exists";
+					PersistModel.Update(jb2).persists();
+				}
+			}
 		}
 		return job;
 	}
