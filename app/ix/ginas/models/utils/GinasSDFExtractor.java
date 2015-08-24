@@ -2,6 +2,8 @@ package ix.ginas.models.utils;
 
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalReader;
+import gov.nih.ncgc.jchemical.JchemicalReader;
+
 import ix.core.models.Payload;
 import ix.core.plugins.GinasRecordProcessorPlugin.RecordExtractor;
 
@@ -11,8 +13,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.lang.Comparable;
+import java.util.Collections;
 
 import akka.event.slf4j.Logger;
 
@@ -50,18 +59,19 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			List<ExtractionError> errors=new ArrayList<ExtractionError>();
 			Chemical c=chemExtract.getNextRecord();
 			if(c==null){
-				System.out.println("############# chemical is null");
+				//System.out.println("############# chemical is null");
 			}else{
-				System.out.println("############# chemical is NOT null:" + c.getName());
+				//System.out.println("############# chemical is NOT null:" + c.getName());
 			}
 			Map<String,String> keyValueMap = new HashMap<String,String>();
 			
 			try {
 				keyValueMap.put("name", c.getName());
-				keyValueMap.put("structure", c.export(Chemical.FORMAT_MOL));
+				keyValueMap.put("molfile", c.export(Chemical.FORMAT_MOL));
 				
 				//structureObject.put("molfile", c.export(Chemical.FORMAT_MOL));
 			} catch (Exception e) {
+				e.printStackTrace();
 				//keyValueMap.put("structure", );
 				errors.add(new ExtractionError(e.getMessage(),
 							"structure",null
@@ -73,7 +83,7 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 				for(String line:value.split(LINE_SPLIT)){
 					int cnum=0;
 					for(String col:line.split(DELIM)){
-						String path=property + "." + rnum + "." + cnum;
+						String path=property + "{" + rnum + "}{" + cnum + "}";
 						keyValueMap.put("property." + path, col);
 						cnum++;
 					}
@@ -126,22 +136,31 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 					(GinasSDFExtractor) new GinasSDFExtractor(null).makeNewExtractor(pl);
 			
 			
-			Map<String,FieldStatistics> fstats = new HashMap<String,FieldStatistics>();
+			Map<String,FieldStatistics> fstats = new TreeMap<String,FieldStatistics>();
 			int count=0;
 
 			Map m=null;
 			while((count<MAX) && (m=gex.getNextRecord())!=null){
 				//System.out.println("############## Got one");
+				Set<String> uniqueFields = new HashSet<String>();
 				for(Object k:m.keySet()){
+					String tstart = (k+"").split("\\{")[0];
 					//System.out.println("############## got stat:" + k);
-					FieldStatistics fst= fstats.get(k);
+					FieldStatistics fst= fstats.get(tstart);
 					if(fst==null){
-						fst=new FieldStatistics(k+"");
-						fstats.put(k+"",fst);
+						fst=new FieldStatistics(tstart);
+						fstats.put(tstart,fst);
 					}
-					fst.addValue(m.get(k)+"");
+					fst.addValue(m.get(k)+"",k+"");
+					if(!uniqueFields.contains(tstart)){
+						uniqueFields.add(tstart);
+						fst.recordReferences++;
+					}
 				}
 				count++;
+			}
+			for(String k : fstats.keySet()){
+				fstats.get(k).arrangeCounts();
 			}
 			return fstats;
 		}
@@ -149,31 +168,84 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 		
 		
 		public static class FieldStatistics{
-			public static int MAX_FIRST_STATS=10;
+			public static enum DATA_TYPE{
+				STRING,
+				NUMBER,
+				ORDINAL,
+				UNKNOWN
+			};			
+			public static int MAX_FIRST_STATS=5;
 			public static int MAX_TOP_STATS=100;
+			public static int MAX_ORDINAL_CARDINALITY=5;
 			public String path;
 			public int references;
+			public int recordReferences;
 			
-			public Map<String,FieldValue> counts = new HashMap<String,FieldValue>();
+			private DATA_TYPE dataType=DATA_TYPE.UNKNOWN;
+			
+			public Map<String,FieldValue> counts = new LinkedHashMap<String,FieldValue>();
 			public List<String> firstValues = new ArrayList<String>();
+			public LinkedHashSet<String> paths = new LinkedHashSet<String>();
 			
 			public FieldStatistics(String path){
 				this.path=path;
 			}
 			
-			public void addValue(String v){
+			public void addValue(String v, String path){
+				references++;
+				try{
+					double d=Double.parseDouble(v);
+					if(dataType==DATA_TYPE.UNKNOWN){
+						dataType=DATA_TYPE.NUMBER;
+					}
+				}catch(Exception e){
+					if(dataType==DATA_TYPE.NUMBER){
+						dataType=DATA_TYPE.STRING;
+					}
+				}
 				if(firstValues.size()<MAX_FIRST_STATS){
 					firstValues.add(v);
 				}
 				FieldValue fv = counts.get(v);
 				if(fv==null){
 					fv= new FieldValue(v);
+					counts.put(v, fv);
 				}
 				fv.increment();
+				if(counts.size()>MAX_ORDINAL_CARDINALITY)
+					arrangeCounts();
+				paths.add(path);
+			}
+			public void arrangeCounts(){
+				List<FieldValue> fvals = new ArrayList<FieldValue>(counts.values());
+				Collections.sort(fvals);
+				counts.clear();
+				int k=0;
+				for(FieldValue fv1:fvals){
+					if(k<MAX_ORDINAL_CARDINALITY){
+						counts.put(fv1.value,fv1);
+					}else{
+						break;
+					}
+					k++;
+				}
+			}
+
+			public int getCardinality(){
+				return counts.size();
+			}
+
+			public DATA_TYPE getPredictedType(){
+				if(dataType == DATA_TYPE.UNKNOWN){
+					if(getCardinality() < MAX_ORDINAL_CARDINALITY)
+						return DATA_TYPE.ORDINAL;
+					return DATA_TYPE.STRING;
+				}
+				return dataType;
 			}
 			
 		}
-		public static class FieldValue{
+		public static class FieldValue implements Comparable<FieldValue>{
 			public String value;
 			public int count=0;
 			public FieldValue(String f){
@@ -181,6 +253,9 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			}
 			public void increment(){
 				this.count++;
+			}
+			public int compareTo(FieldValue fv){
+				return this.count-fv.count;
 			}
 		}
 		
@@ -206,7 +281,7 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			public ChemicalExtractor(InputStream is) {
 				super(is);
 				try{
-					mi = ChemicalReader.DEFAULT_CHEMICAL_FACTORY().createChemicalReader(is);
+					mi = new JchemicalReader().createChemicalReader(is);
 				}catch(Exception e){
 					e.printStackTrace();
 				}
