@@ -11,11 +11,11 @@
         <div class="panel-heading">
 
             <p class="text-right" data-toggle="tooltip" title="Approval ID">
-                <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))" target="_self">
+                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
                     <code>@chem.approvalID</code></a></p>
         </div>
         <div class="panel-body struc-img">
-            <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))" target="_self">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
                 <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
                 src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 200)'>
             </a>
@@ -45,7 +45,7 @@
             </div>
         </div>
         <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@chem.getName()">
-            <a href="@ix.ginas.controllers.routes.GinasApp.chemical(GinasApp.getId(chem))" target="_self">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
             @GinasApp.truncate(chem.getName())
             </a>
             <div class = "row">

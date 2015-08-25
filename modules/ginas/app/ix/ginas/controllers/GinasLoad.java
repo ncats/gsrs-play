@@ -6,6 +6,7 @@ import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
 import ix.core.models.Value;
+import ix.core.processing.RecordTransformer;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.GinasRecordProcessorPlugin;
@@ -13,6 +14,7 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureProcessorPlugin.PayloadProcessor;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
+import ix.ginas.controllers.GinasLegacyUtils;
 import ix.ginas.models.Ginas;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
@@ -21,8 +23,10 @@ import ix.core.chem.Chem;
 import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.ginas.models.utils.*;
-import ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
-import ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor;
+import ix.ginas.utils.GinasSDFUtils;
+import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor;
+import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
+import ix.ginas.utils.GinasUtils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -81,7 +85,7 @@ public class GinasLoad extends App {
 	        Play.application().plugin(PayloadPlugin.class);
 	    
 	    
-    public static java.util.Map<String,Process> processes = new java.util.concurrent.ConcurrentHashMap<String,Process>();                
+       
 	
 	
     public static Result error (int code, String mesg) {
@@ -108,17 +112,7 @@ public class GinasLoad extends App {
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
             decors.add(new GinasFacetDecorator (facets[i]));
-        }
-        // now add hidden facet so as to not have them shown in the alert
-        // box
-        //        for (int i = 1; i <= 8; ++i) {
-        //            GinasFacetDecorator f = new GinasFacetDecorator
-        //                (new TextIndexer.Facet
-        //                 (ChemblRegistry.ChEMBL_PROTEIN_CLASS+" ("+i+")"));
-        //            f.hidden = true;
-        //            decors.add(f);
-        //        }
-
+        }       
         GinasFacetDecorator f = new GinasFacetDecorator
             (new TextIndexer.Facet("ChemicalSubstance"));
         f.hidden = true;
@@ -149,15 +143,7 @@ public class GinasLoad extends App {
 
    
 
-    public static Substance persistJSON
-        (InputStream is, Class<? extends Substance> cls) throws Exception {
-        Substance sub = GinasUtils.makeSubstance(is);
-        
-        if(sub!=null){
-        	GinasUtils.persistSubstance(sub, _strucIndexer);
-        }
-        return sub;
-    }
+   
     
     public static Result load () {
         if (Play.isProd()) {
@@ -173,66 +159,50 @@ public class GinasLoad extends App {
         }
         
         DynamicForm requestData = Form.form().bindFromRequest();
-        String type = requestData.get("substance-type");
-        Logger.debug("substance-type: "+type);
         
-        Substance sub = null;
-        try {
-            InputStream is = null;
-            String url = requestData.get("json-url");
-            Logger.debug("json-url: "+url);
-            if (url != null && url.length() > 0) {
-                URL u = new URL (url);
-                is = u.openStream();
-            }
-            else {
-            	
-            	Payload sdpayload = payloadPlugin.parseMultiPart
-                        ("sd-file", request ());
-            	
-            	if(sdpayload!=null){
-//					String id = ginasRecordProcessorPlugin.submit(sdpayload,
-//							ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor.class);
-//					return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
+		try {
 
-//                  Statistics / breakdown for later use  
-//					====================================
-            		sdpayload.save();
-            		Map<String,FieldStatistics> m = GinasSDFExtractor.getFieldStatistics(sdpayload, 100);
-            		return ok(ix.ginas.views.html.admin.sdfimportmapping.render(sdpayload, new ArrayList<FieldStatistics>(m.values())));
-            	}else {
-                	Payload payload = payloadPlugin.parseMultiPart
-                             ("json-dump", request ());
-                	
-                    if (payload != null) {
-                    	// New way:
-                    	if(!GinasLoad.OLD_LOAD){
-							String id = ginasRecordProcessorPlugin
-									.submit(payload,
-											ix.ginas.models.utils.GinasUtils.GinasDumpExtractor.class);
-							return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
-	                        //return ok("Running job " + id + " payload is " + payload.name + " also " + payload.id);	
-                    	}else{
-                        // Old way
-                    		return processDump (ix.utils.Util.getUncompressedInputStreamRecursive(payloadPlugin.getPayloadAsStream(payload)), false);
-                    	}
-                    }
-                    else {
-                        return badRequest
-                            ("Neither json-url nor json-file nor json-dump "
-                             +"parameter is specified!");
-                    }
-                }
-            }
+			Payload sdpayload = payloadPlugin.parseMultiPart("sd-file",
+					request());
 
-            sub = persistJSON (is, null);
-        }
-        catch (Exception ex) {
-            return _internalServerError (ex);
-        }
+			if (sdpayload != null) {
+				sdpayload.save();
+				Map<String, FieldStatistics> m = GinasSDFExtractor
+						.getFieldStatistics(sdpayload, 100);
+				return ok(ix.ginas.views.html.admin.sdfimportmapping.render(
+						sdpayload, new ArrayList<FieldStatistics>(m.values())));
+			} else {
+				Payload payload = payloadPlugin.parseMultiPart("json-dump",
+						request());
 
-        ObjectMapper mapper = new ObjectMapper ();
-        return ok (mapper.valueToTree(sub));
+				if (payload != null) {
+					// New way:
+					if (!GinasLoad.OLD_LOAD) {
+						String id = ginasRecordProcessorPlugin
+								.submit(payload,
+										ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
+						    			ix.ginas.utils.GinasUtils.GinasSubstancePersister.class);
+						return redirect(ix.ginas.controllers.routes.GinasLoad
+								.monitorProcess(id));
+						// return ok("Running job " + id + " payload is " +
+						// payload.name + " also " + payload.id);
+					} else {
+						// Old way
+						return GinasLegacyUtils
+								.processDump(
+										ix.utils.Util
+												.getUncompressedInputStreamRecursive(payloadPlugin
+														.getPayloadAsStream(payload)),
+										false);
+					}
+				} else {
+					return badRequest("Neither json-dump nor "
+							+ "sd-file is specified!");
+				}
+			}
+		} catch (Exception ex) {
+			return _internalServerError(ex);
+		}
     }
 
     public static Result loadSDF (String payloadUUID) {
@@ -255,39 +225,25 @@ public class GinasLoad extends App {
     	}
     	GinasSDFUtils.setPathMappers(payloadUUID, mappers);
     	
-    	System.out.println("#########################");
-    	System.out.println(mappers);
+    	System.out.println("##################################");
+    	System.out.println("mapper rules:" + mappers.size());
+    	for(GinasSDFUtils.PATH_MAPPER pth:mappers){
+    		System.out.println("path:" + pth.path);
+    	}
     	
 //    	return ok("test");
 		
     	
-    	String id = ginasRecordProcessorPlugin.submit(sdpayload, ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor.class);
+    	String id = ginasRecordProcessorPlugin.submit(sdpayload, 
+    			ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.class,
+    			ix.ginas.utils.GinasUtils.GinasSubstancePersister.class
+    			);
 		return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
     	
     }
    
     
-    /**
-     * Processes an inputstream of jsonDump format.
-     * @param is
-     * @param sync
-     * @return
-     * @throws Exception
-     */
-    public static Result processDump (final InputStream is, boolean sync) throws Exception {
-    	final String requestID = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
-    	
-    	JsonDumpImportProcess jdip= new JsonDumpImportProcess(is);
-    	processes.put(jdip.processID(),jdip);
-    	
-    	if(sync){
-        	jdip.getRunnable().run();
-    		return ok (jdip.statusMessage());
-    	}else{
-    		(new Thread(jdip.getRunnable())).start();
-    		return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(jdip.processID()));
-    	}
-    }
+    
     public static String getJobKey(ProcessingJob job){
     	return job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
     }
@@ -309,12 +265,10 @@ public class GinasLoad extends App {
 	    		msg = "[not yet started]";
 	    	}
 	    	msg +="\n\n refresh page for status";
-	    	
-	    	
 	    	return ok("Processing job:" + processID + "\n\n" + msg);
     	}else{
     		//OLD WAY:
-	    	Process p =processes.get(processID);
+    		GinasLegacyUtils.Process p =GinasLegacyUtils.processes.get(processID);
 	    	if(p==null){
 	    		return _internalServerError (new IllegalArgumentException("Process \"" + processID + "\" does not exist."));
 	    	}else{
@@ -323,133 +277,7 @@ public class GinasLoad extends App {
     	}
     }
     
-    static abstract class Process{
-    	public abstract String processID();
-    	public abstract boolean isComplete();
-    	public abstract Date startTime();
-    	public abstract Date completeTime();
-    	public abstract Date estimatedCompleteTime();
-    	public abstract String statusMessage();
-    	public String submittedBy(){
-    		return "system";
-    	}
-    }
-    static class JsonDumpImportProcess extends Process{
-    	String requestID = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
-    	String statusMessage="initializing";
-    	Date startTime;
-    	Date endTime=null;
-    	Date lastTime=null;
-    	boolean done=false;
-    	boolean canceled=false;
-    	
-    	int importCount=0;
-    	int failedCount=0;
-    	
-    	Runnable r;
-    	public JsonDumpImportProcess(final InputStream is){
-    		r = new Runnable(){
-        		@Override
-        		public void run(){
-        			startTime=new Date();
-        			lastTime=startTime;
-        			
-        			try{
-        				BufferedReader br = new BufferedReader (new InputStreamReader (is));
-	        	        
-	        	        for (String line; (line = br.readLine()) != null; ) {
-	        	            String[] toks = line.split("\t");
-	        	            Logger.debug("processing "+toks[0]+" "+toks[1]+"..."+importCount);
-	        	            try {
-	        	                ByteArrayInputStream bis = new ByteArrayInputStream
-	        	                    (toks[2].getBytes("utf8"));
-	        	                Substance sub = persistJSON (bis, null);
-	        	                if (sub == null) {
-	        	                    Logger.warn("Can't persist record "+toks[1]);
-	        	                    failedCount++;
-	        	                }
-	        	                else {
-	        	                    importCount++;
-	        	                }
-	        	            }
-	        	            catch (Exception ex) {
-	        	            	Logger.warn("Can't persist record "+toks[1]);
-        	                    failedCount++;
-	        	                ex.printStackTrace();
-	        	            }
-        	                lastTime=new Date();
-	        	        }
-	        	        br.close();
-        			}
-        	        catch (Exception ex) {
-    	                ex.printStackTrace();
-    	                canceled=true;
-    	            }
-        	       
-        	        endTime=new Date();
-        	        lastTime=new Date();
-        	        done=true;
-        		}
-        	};
-        	
-    	}
-    	
-		@Override
-		public String processID() {
-			return requestID;
-		}
-
-		@Override
-		public boolean isComplete() {
-			return done;
-		}
-
-		@Override
-		public Date startTime() {
-			return startTime;
-		}
-
-		@Override
-		public Date completeTime() {
-			return endTime;
-		}
-
-		@Override
-		public Date estimatedCompleteTime() {
-			return null;
-		}
-		
-		@Override
-		public String statusMessage(){
-			String msg="Process is " +getStatusType() + ".\n";
-			msg+="Imported records:\t" +importCount + "\n";
-			msg+="Failed records:\t" +failedCount + "\n";
-			msg+="Start time:\t" +startTime + "\n";
-			msg+="End time:\t" +endTime + "\n";
-			msg+="Processing Time:\t" + getTotalImportTimems() + "ms\n";
-			msg+="Average time per record:\t" + getAverageImportTimems() + "ms\n";
-			return msg;
-		}
-		
-		public long getAverageImportTimems(){
-			long dt=lastTime.getTime()-startTime.getTime();
-			return dt/(importCount+1);
-		}
-		public long getTotalImportTimems(){
-			return lastTime.getTime()-startTime.getTime();
-		}
-		
-		public String getStatusType(){
-			if(done)return "complete";
-			return "running";
-		}
-		
-		public Runnable getRunnable(){
-			return r;
-		}
-    	
-		
-    }
+    
     
     
     public static Result jobs (final String q, final int rows, final int page)
@@ -512,5 +340,49 @@ public class GinasLoad extends App {
 		return ok(ix.ginas.views.html.admin.jobs.render(page, rows,
 				result.count(), pages, decorate(facets), substances));
 
+	}
+	public static Result testSubmit(){
+		return ok(ix.ginas.views.html.test.testsubmit.render());		
+	}
+	public static Result submitSubstance(){
+		DynamicForm requestData = Form.form().bindFromRequest();
+    	String mappingsjson = requestData.get("substance");
+    	Substance sub=null;
+    	try{
+    		System.out.println(mappingsjson);
+    		GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
+	    	JsonNode jn=ex.getNextRecord();
+	    	GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
+	    	sub = trans.transformSubstance(jn);
+	    	GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
+	    	List<String> errors = new ArrayList<String>();
+	    	if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
+	    		throw new IllegalStateException(errors.toString());
+	    	}
+    	}catch(Throwable e){
+    		return _internalServerError(e);
+    	}
+		return ok("worked:" + sub.uuid);
+	}
+	
+	public static Result updateSubstance(){
+		DynamicForm requestData = Form.form().bindFromRequest();
+    	String mappingsjson = requestData.get("substance");
+    	Substance sub=null;
+    	try{
+    		System.out.println(mappingsjson);
+    		GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
+	    	JsonNode jn=ex.getNextRecord();
+	    	GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
+	    	sub = trans.transformSubstance(jn);
+	    	GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
+	    	List<String> errors = new ArrayList<String>();
+	    	if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
+	    		throw new IllegalStateException(errors.toString());
+	    	}
+    	}catch(Throwable e){
+    		return _internalServerError(e);
+    	}
+		return ok("worked:" + sub.uuid);
 	}
 }

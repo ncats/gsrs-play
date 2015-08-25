@@ -1,13 +1,17 @@
 package ix.core.models;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+
 import play.db.ebean.*;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import ix.utils.Global;
 
 @Entity
@@ -30,6 +34,12 @@ public class ProcessingRecord extends Model {
     @ManyToMany
     @JoinTable(name="ix_core_procrec_prop")
     public List<Value> properties = new ArrayList<Value>();
+    
+    
+    @Version
+    @Column(columnDefinition = "timestamp default '2014-10-06 21:17:06'")
+    public Timestamp lastUpdate; // here
+    
     
     /**
      * record status

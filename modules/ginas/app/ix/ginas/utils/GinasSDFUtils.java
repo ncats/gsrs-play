@@ -1,4 +1,4 @@
-package ix.ginas.models.utils;
+package ix.ginas.utils;
 
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalReader;
@@ -6,18 +6,19 @@ import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Structure;
-import ix.core.plugins.GinasRecordProcessorPlugin.RecordExtractor;
-import ix.core.plugins.GinasRecordProcessorPlugin.RecordTransformer;
-import ix.ginas.models.utils.GinasUtils.GinasAbstractSubstanceTransformer;
+import ix.core.processing.RecordExtractor;
+import ix.core.processing.RecordTransformer;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.GinasUtils.GinasAbstractSubstanceTransformer;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -381,8 +382,9 @@ public class GinasSDFUtils {
 		}
 		public GinasFlatMapTransformer(List<PATH_MAPPER> fieldMaps){
 			this();
-			if(fieldMaps!=null)
+			if(fieldMaps!=null){
 				this.fieldMaps=fieldMaps;
+			}
 		}
 		
 		@Override
@@ -401,6 +403,7 @@ public class GinasSDFUtils {
 	public static class PATH_MAPPER {
 		public String path;
 		public boolean isregex=false;
+		public boolean startswith=true;
 		public boolean allowMultiple = false;
 		public String splitBy = null;
 		public ADD_METHODS method;
@@ -425,6 +428,9 @@ public class GinasSDFUtils {
 		public boolean matches(String path){
 			if(isregex){
 				return path.matches(this.path);
+			}
+			if(startswith){
+				return path.startsWith(this.path);
 			}
 			return this.path.equals(path);
 		}
@@ -536,6 +542,7 @@ public class GinasSDFUtils {
 			Reference r = new Reference();
 			r.citation = path;
 			r.docType = "SDF_PROPERTY";
+			r.documentDate=new Date();
 			s.references.add(r);
 			return r;
 		}

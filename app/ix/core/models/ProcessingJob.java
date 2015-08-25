@@ -1,10 +1,14 @@
 package ix.core.models;
 
 import ix.core.plugins.GinasRecordProcessorPlugin;
+import ix.core.processing.RecordExtractor;
+import ix.core.processing.RecordPersister;
+import ix.core.processing.RecordTransformer;
 import ix.core.stats.Statistics;
 import ix.utils.Global;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,10 +25,12 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Version;
 
 import play.Logger;
 import play.db.ebean.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -33,6 +39,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Entity
 @Table(name="ix_core_procjob")
 public class ProcessingJob extends Model {
+	private static final String EXTRACTOR_KEYWORD = "EXTRACTOR";
+	private static final String TRANSFORM_KEYWORD = "TRANSFORM";
+	private static final String PERSISTER_KEYWORD = "PERSISTER";
+	
     public enum Status {
         COMPLETE, RUNNING, NOT_RUN, FAILED, PENDING, STOPPED, UNKNOWN
     }
@@ -69,6 +79,9 @@ public class ProcessingJob extends Model {
     @JsonView(BeanViews.Full.class)
     public Payload payload;
     
+    @Version
+    @Column(columnDefinition = "timestamp default '2014-10-06 21:17:06'")
+    public Timestamp lastUpdate; // here
 
     public ProcessingJob () {
     }
@@ -133,14 +146,17 @@ public class ProcessingJob extends Model {
     	return GinasRecordProcessorPlugin.getStatisticsForJob(this);
     }
     
+    @JsonIgnore
     public Date _getStartAsDate(){
     	return new Date(start);
     }
     
+    @JsonIgnore
     public Date _getStoppedAsDate(){
     	if(stop==null)return null;
     	return new Date(stop);
     }
+    
     
     public String getName(){
     	if(payload!=null){
@@ -149,4 +165,38 @@ public class ProcessingJob extends Model {
     		return "Unnamed Batch";
     	}
     }
+
+    @JsonIgnore
+	public RecordPersister getPersister() {
+    	RecordPersister rec = RecordPersister
+				.getInstanceOfPersister(this
+						.getKeyMatching(PERSISTER_KEYWORD));
+		return rec;
+	}
+
+    @JsonIgnore
+	public RecordExtractor getExtractor() {
+		RecordExtractor rec = RecordExtractor
+				.getInstanceOfExtractor(this
+						.getKeyMatching(EXTRACTOR_KEYWORD));
+		return rec;
+	}
+
+    @JsonIgnore
+	public RecordTransformer getTransformer() {
+		RecordTransformer rt=RecordExtractor.getInstanceOfExtractor(
+				this.getKeyMatching(EXTRACTOR_KEYWORD))
+				.getTransformer(this.payload);
+		return rt;
+	}
+
+    @JsonIgnore
+	public void setExtractor(Class extractor) {
+		this.keys.add(new Keyword(EXTRACTOR_KEYWORD, extractor.getName()));
+	}
+    
+    @JsonIgnore
+	public void setPersister(Class persister) {
+		this.keys.add(new Keyword(PERSISTER_KEYWORD, persister.getName()));
+	}
 }
