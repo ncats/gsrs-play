@@ -2,7 +2,7 @@
 <div class = "row info">
     <button class="btn btn-primary label-offset det">
                         Names&nbsp;<span class="badge" ng-show="substance.names.length>0">
-                        {{substance.names.length}}</span> </button>
+                        {{substance.unofficialNames.length}}</span> </button>
     <a ng-show="!addingNames" ng-click="addNames()" aria-label="Add Names"><i class = "fa fa-plus fa-2x success"></i></a>
     <a ng-show="addingNames" ng-click="addNames()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
     <div class="col-md-12">
@@ -29,7 +29,7 @@
 
             <!-- Display bits -->
 
-        <div class = "row" ng-repeat="name in substance.names">
+        <div class = "row" ng-repeat="name in substance.unofficialNames">
             <div class="col-md-4">
                 <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
             </div>
@@ -92,7 +92,7 @@
                 </div>
                 @referenceselectorform("nameForm", "name")
             </div>
-            @submitbuttons("name", "nameForm", "names")
+            @submitbuttons("name", "nameForm", "unofficialNames")
         </form>
     </div>
 </div>

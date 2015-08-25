@@ -46,11 +46,11 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasController", function($scope, $resource, $location, $anchorScroll, localStorageService, Substance, data) {
+    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch) {
         var ginasCtrl = this;
         $scope.substance = Substance;
         $scope.empty = {};
-
+        $scope.modal ={};
 
         //date picker
         $scope.open = function($event) {
@@ -176,6 +176,85 @@
             console.log(element);
             $scope.selected = !$scope.selected;
         };
+
+        $scope.openModal = function(size){
+            $scope.modal.instance = $modal.open({
+                template: '<modal-template modal="modal-lg"></modal-template>',
+                scope: $scope
+            });
+
+        };
+
+
+/*        $scope.openModal = function(div) {
+
+            this.modalInstance = $modal.open({
+                templateUrl:'app/assets/ginas/templates/'+ div +'.html',
+                controller: 'ModalController',
+                size: 'lg'
+            });
+        };*/
+
+        $scope.flattenCV =function(sub){
+            for(var v in sub){
+                console.log(sub[v]);
+                if($scope.isCV(sub[v])){
+                    console.log(v + " is CV");
+                    sub[v]=sub[v].value;
+                }else{
+                    if(typeof sub[v] === "object"){
+                        console.log("recursive");
+                        $scope.flattenCV(sub[v]);
+                    }
+                }
+            }
+            console.log(sub);
+            return sub;
+        };
+
+        $scope.isCV = function(ob){
+            console.log("is ccv");
+            if(typeof ob !== "object")return false;
+            if(typeof ob.value !== "undefined"){
+                if(typeof ob.display !== "undefined"){
+                    return true;
+                }
+            }
+            return false;
+        };
+
+
+
+        $scope.fetch = function($query) {
+            console.log($query);
+            substanceSearch.load($query);
+            return substanceSearch.search(field, $query);
+        };
+
+
+
+        $scope.submit = function(){
+            console.log($scope.substance);
+            var sub = $scope.substance;
+            console.log(sub);
+            if (sub.officialNames || sub.unofficialNames){
+                for(var n in sub.officialNames){
+                    var name = sub.officialNames[n];
+                    console.log(name);
+                    name.type= "of";
+                }
+                sub.names = sub.officialNames.concat(sub.unofficialNames);
+                console.log(sub);
+                delete sub.officialNames;
+                delete sub.unofficialNames;
+            }
+            console.log(sub);
+            console.log($scope.flattenCV(JSON.parse(JSON.stringify(sub))));
+            data = $scope.flattenCV(JSON.parse(JSON.stringify(sub)));
+            $http.post('app/submit', data).success(function() {
+                    console.log("success");
+                });
+        };
     });
 
     ginasApp.directive('scrollSpy', function($timeout) {
@@ -250,7 +329,31 @@
         };
     });
 
+    ginasApp.service('substanceSearch', function($http) {
+        var options = {};
+        var url = "app/api/v1/substances?filter=name='";
 
+        this.load = function(field) {
+            $http.get(url + field.toUpperCase() + "'", {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function(data) {
+                console.log(data);
+                options = data.content;
+            });
+        };
+
+        this.search = function(query) {
+            console.log(options);
+            return _.chain(options)
+                .filter(function(x) {
+                    return !query || x.name.indexOf(query) > -1;
+                })
+                .sortBy('name')
+                .value();
+        };
+    });
 
     ginasApp.directive('moiety', function() {
         return {
@@ -259,6 +362,33 @@
                 moiety: '='
             },
             templateUrl: "app/assets/ginas/templates/moietydisplay.html"
+        };
+    });
+
+    ginasApp.directive('modalTemplate',function() {
+        return {
+            restrict: 'E',
+            templateUrl: 'app/assets/ginas/templates/modal-window.html',
+            scope: {
+                modal: '='
+            },
+            controller: function ($scope) {
+                console.log($scope);
+
+                $scope.ok = function () {
+                    $scope.modal.instance.close($scope.selected);
+                };
+
+                $scope.cancel = function () {
+                    $scope.modal.instance.dismiss('cancel');
+                };
+
+                /*                $scope.modal.instance.result.then(function (selectedItem) {
+                 $scope.selected = selectedItem;
+                 }, function () {
+                 $log.info('Modal dismissed at: ' + new Date());
+                 });*/
+            }
         };
     });
 
@@ -946,13 +1076,13 @@
 
     });
 
-    angular.module('ui.bootstrap.tpls').controller('SubstanceSelectorController', function($scope, $modal, $log) {
+    ginasApp.controller('SubstanceSelectorController', function($scope, $modal, $log) {
 
         $scope.items = ['item1', 'item2', 'item3'];
 
         $scope.animationsEnabled = true;
 
-        $scope.open = function(size) {
+        /*$scope.open = function(size) {
 
             var modalInstance = $modal.open({
                 animation: $scope.animationsEnabled,
@@ -983,36 +1113,33 @@
         $scope.toggleAnimation = function() {
             $scope.animationsEnabled = !$scope.animationsEnabled;
         };
-
+*/
     });
 
     // Please note that $modalInstance represents a modal window (instance) dependency.
     // It is not the same as the $modal service used above.
 
-    angular.module('ui.bootstrap.tpls').controller('SubstanceSelectorInstanceController', function($scope, $modalInstance, $http, items) {
+    ginasApp.controller('SubstanceSelectorInstanceController', function($scope, $modalInstance, $http, substanceSearch) {
 
-        $scope.items = items;
+/*        $scope.items = items;
         $scope.results = {};
         $scope.selected = {
             item: $scope.items[0]
-        };
+        };*/
 
-        $scope.top = 4;
+/*        $scope.top = 4;
         $scope.testb = 0;
 
         $scope.select = function(item) {
             $modalInstance.close(item);
         };
 
-        $scope.ok = function() {
-            $modalInstance.close($scope.selected.item);
-        };
+        $scope.fetch = function($query) {
+                substanceSearch.load($query);
+                return substanceSearch.search(field, $query);
+            };*/
 
-        $scope.cancel = function() {
-            $modalInstance.dismiss('cancel');
-        };
-
-        $scope.fetch = function(term, skip) {
+     /*
             var url = "/ginas/app/api/v1/substances/search?q=" +
                 term + "*&top=" + $scope.top + "&skip" + skip;
             console.log(url);
@@ -1030,7 +1157,7 @@
 
         $scope.search = function() {
             $scope.fetch($scope.term, 0);
-        };
+        };*/
 
 
 
@@ -1046,6 +1173,23 @@
 
     });
 
+ginasApp.controller('ModalController',function ($scope, $modalInstance, substanceSearch){
+    $scope.ok = function () {
+        console.log("ok");
+        $modalInstance.close();
+    };
 
+    $scope.cancel = function () {
+        console.log("cancel");
+        $modalInstance.dismiss('cancel');
+    };
+
+    $scope.fetch = function($query) {
+        console.log($query);
+        substanceSearch.load($query);
+        return substanceSearch.search($query);
+    };
+
+});
 
 })();
