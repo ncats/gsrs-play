@@ -1,0 +1,73 @@
+@import ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics
+
+@(field: FieldStatistics)
+
+<div class="panel panel-default sub-list" ng-controller="SDFieldController" ng-init="init('@field.path')">
+    <div class="panel-heading sub-title">
+        <div class = "row">
+            
+            <div class = "col-md-4">
+                <h5>Property Path:</h5> 
+                <code><small>{{path}}</small></code>
+            </div>
+            <div class = "col-md-3">
+                <h5>Field Type:</h5> 
+                <code><small>@field.getPredictedType()</small></code>
+            </div>
+            <div class = "col-md-2">
+                <h5>Cardinality:</h5> 
+                <code><small>@field.getCardinalityString()</small></code>
+            </div>
+            <div class = "col-md-3">
+                <h5>Statistics:</h5> 
+                 <a href="#" ng-hide="showstats" ng-click="showstats=true">
+                           <button class="btn btn-sm btn-primary">
+                            Show Statistics
+                           </button>
+                 </a>
+                 <a href="#" ng-show="showstats" ng-click="showstats=false">
+                           <button class="btn btn-sm btn-primary">
+                            Hide Statistics
+                           </button>
+                 </a>
+            </div>
+        </div>
+        
+        
+        <div class = "row" ng-show="showstats">
+           <div class = "col-md-4">
+                 <h5>First Values:</h5>
+                 @for(value <- field.firstValues) {
+                       <div><pre style="max-height: 50px">@value</pre></div>
+                  }
+            </div>
+            <div class = "col-md-8">
+                 <div class = "row">                       
+                       <div class = "col-md-8"><h4>Value</h4></div>
+                       <div class = "col-md-4"><h4>Count</h4></div>
+                 </div>
+                 @for(value <- field.counts.values()) {
+                    <div class = "row">                       
+                       <div class = "col-md-8"><pre style="max-height: 50px">@value.value</pre></div>
+                       <div class = "col-md-4"><pre style="max-height: 50px">@value.count</pre></div>
+                    </div>
+                  }
+            </div>
+        </div>
+        <div class = "row">
+            <div class = "col-md-12">
+                Field Import:
+                <div class="btn-group" >
+                <label class="btn btn-primary" ng-model="radioModel" btn-radio="'DONT_IMPORT'" uncheckable>Don't Import</label>
+                <label class="btn btn-primary" ng-model="radioModel" btn-radio="'NULL_TYPE'" uncheckable>Default</label>
+                <label class="btn btn-primary" ng-model="radioModel" btn-radio="'ADD_NAME'" uncheckable>Add as Name(s)</label>
+                <label class="btn btn-primary" ng-model="radioModel" btn-radio="'ADD_CODE'" uncheckable>Add as Code(s)</label>        
+                </div>
+            </div>
+        </div>
+        
+        
+        
+        
+    </div>    
+</div>

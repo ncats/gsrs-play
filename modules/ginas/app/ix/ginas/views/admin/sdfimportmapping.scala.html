@@ -1,0 +1,41 @@
+@import ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics
+@import ix.core.models.Payload
+
+@(payload : Payload, fields: List[FieldStatistics])
+
+@ix.ginas.views.html.ginas("Load Data: SDF Mapping", "null") {
+    @ix.ginas.views.html.menu()
+} {
+    <h3></h3>
+} {
+
+    <div class="container">
+        <div class="row">
+               @for(field <- fields) {
+                    @fieldview(field)
+               }
+        </div>
+    </div>
+    
+    <form class="form-horizontal" role="form" method="POST"
+                action="@ix.ginas.controllers.routes.GinasLoad.loadSDF(payload.id.toString())">
+                   <div class="form-group">
+                        <label for="mappings"
+                        class="col-sm-3 control-label">Mappings</label>
+                        <div class="col-sm-9">
+                            <textarea
+                            class="form-control"
+                            name="mappings"
+                            id="mappings">
+                            </textarea>
+                        </div>
+                    <div class="form-group">
+                        <div type="submit" class="col-sm-offset-10 col-sm-2">
+                           <button class="btn btn-sm btn-primary">
+                            Submit
+                           </button>
+                        </div>
+                    </div>
+                </form>
+   
+}

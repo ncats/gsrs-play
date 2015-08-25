@@ -3,12 +3,16 @@ package ix.ginas.models.utils;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalReader;
 import gov.nih.ncgc.jchemical.JchemicalReader;
+import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Structure;
 import ix.core.plugins.GinasRecordProcessorPlugin.RecordExtractor;
 import ix.core.plugins.GinasRecordProcessorPlugin.RecordTransformer;
+import ix.ginas.models.utils.GinasUtils.GinasAbstractSubstanceTransformer;
 import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 
 import java.io.InputStream;
@@ -22,16 +26,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class GinasSDFExtractor extends RecordExtractor<Map>{
+public class GinasSDFUtils {
+	private static final String FIELD_NAME = "#name";
+	private static final String FIELD_INDEX = "#index";
+	private static final String FIELD_MOLFILE = "#molfile";
+	
+	
+	//Used temporarily
+	public static Map<String,List<PATH_MAPPER>> mappers = new ConcurrentHashMap<String,List<PATH_MAPPER>>();
+	
+	
+	public static class GinasSDFExtractor extends RecordExtractor<Map>{
 		private static final String LINE_SPLIT = "\n";
 		private static final String DELIM = "\t";
 
 		ChemicalExtractor chemExtract;
+		public int recordNumber=0;
 		
-		Map<String,String> mapping = new HashMap<String,String>();
 		
 		public GinasSDFExtractor(InputStream is) {
 			super(is);
@@ -39,6 +54,8 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 				chemExtract=new ChemicalExtractor(is);
 			
 		}
+		
+		
 		
 		
 		/*
@@ -52,24 +69,25 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 		 */
 		@Override
 		public Map getNextRecord() {
+			recordNumber++;
 			ObjectMapper objectMapper = new ObjectMapper();
-			System.out.println("########## extracting");
+			//System.out.println("########## extracting");
 			List<ExtractionError> errors=new ArrayList<ExtractionError>();
 			Chemical c=chemExtract.getNextRecord();
 			if(c==null)return null;
 			
 			Map<String,String> keyValueMap = new HashMap<String,String>();
 			
+			keyValueMap.put(FIELD_INDEX, recordNumber+"");
 			try {
-				keyValueMap.put("name", c.getName());
-				keyValueMap.put("molfile", c.export(Chemical.FORMAT_MOL));
-				
+				keyValueMap.put(FIELD_NAME, c.getName());
+				keyValueMap.put(FIELD_MOLFILE, c.export(Chemical.FORMAT_MOL));
 				//structureObject.put("molfile", c.export(Chemical.FORMAT_MOL));
 			} catch (Exception e) {
 				e.printStackTrace();
 				//keyValueMap.put("structure", );
 				errors.add(new ExtractionError(e.getMessage(),
-							"structure",null
+						FIELD_MOLFILE,null
 						));
 			}
 			for(String property:c.getPropertyList()){
@@ -90,19 +108,14 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			return keyValueMap;
 		}
 		
-		public static Substance convertToStructure(Map<String,String> keyValueMap){
-			ChemicalSubstance csub = new ChemicalSubstance(); 
-			
-			csub.structure= new Structure();
-			csub.structure.molfile=keyValueMap.get("molfile");
-			Name n=new Name();
-			n.name=keyValueMap.get("name");
-			csub.names.add(n);
-			
-			
-			return csub;
-			
-		}
+		
+
+		
+		
+		
+		
+		
+		
 		
 		static public class ExtractionError{
 			static enum TYPE {ERROR, WARNING};
@@ -177,15 +190,19 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 		
 		
 		public static class FieldStatistics{
+			
+
 			public static enum DATA_TYPE{
 				STRING,
 				NUMBER,
 				ORDINAL,
-				UNKNOWN
+				UNKNOWN,
+				STRUCTURE
 			};			
 			public static int MAX_FIRST_STATS=5;
 			public static int MAX_TOP_STATS=100;
-			public static int MAX_ORDINAL_CARDINALITY=5;
+			public static int MAX_ORDINAL_CARDINALITY=10;
+			public static int MAX_REWORK_COUNTS=20;
 			public String path;
 			public int references;
 			public int recordReferences;
@@ -198,6 +215,10 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			
 			public FieldStatistics(String path){
 				this.path=path;
+				
+				if(path.equals(FIELD_MOLFILE)){
+					dataType=DATA_TYPE.STRUCTURE;
+				}
 			}
 			
 			public void addValue(String v, String path){
@@ -221,7 +242,7 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 					counts.put(v, fv);
 				}
 				fv.increment();
-				if(counts.size()>MAX_ORDINAL_CARDINALITY)
+				if(counts.size()>MAX_REWORK_COUNTS)
 					arrangeCounts();
 				paths.add(path);
 			}
@@ -231,7 +252,7 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 				counts.clear();
 				int k=0;
 				for(FieldValue fv1:fvals){
-					if(k<MAX_ORDINAL_CARDINALITY){
+					if(k<MAX_REWORK_COUNTS){
 						counts.put(fv1.value,fv1);
 					}else{
 						break;
@@ -243,10 +264,15 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 			public int getCardinality(){
 				return counts.size();
 			}
+			public String getCardinalityString(){
+				if(getCardinality() < MAX_ORDINAL_CARDINALITY)
+					return getCardinality() + "";
+				return ">" + getCardinality();
+			}
 
 			public DATA_TYPE getPredictedType(){
 				if(dataType == DATA_TYPE.UNKNOWN){
-					if(getCardinality() < MAX_ORDINAL_CARDINALITY)
+					if(getCardinality() < MAX_REWORK_COUNTS)
 						return DATA_TYPE.ORDINAL;
 					return DATA_TYPE.STRING;
 				}
@@ -264,7 +290,7 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 				this.count++;
 			}
 			public int compareTo(FieldValue fv){
-				return this.count-fv.count;
+				return -(this.count-fv.count);
 			}
 		}
 		
@@ -337,5 +363,210 @@ public class GinasSDFExtractor extends RecordExtractor<Map>{
 		public RecordTransformer getTransformer() {
 			return new GinasFlatMapTransformer();
 		}
+
+		@Override
+		public RecordTransformer getTransformer(Payload p) {
+			return new GinasFlatMapTransformer(mappers.get(p.id.toString()));
+		}	
+	}
+	
+	
+	public static class GinasFlatMapTransformer extends GinasAbstractSubstanceTransformer<Map<String,String>>{
+		List<PATH_MAPPER> fieldMaps = new ArrayList<PATH_MAPPER>();
+		
+		public GinasFlatMapTransformer(){
+			fieldMaps.add(new PATH_MAPPER(FIELD_NAME,false,PATH_MAPPER.ADD_METHODS.ADD_NAME));
+			fieldMaps.add(new PATH_MAPPER(FIELD_MOLFILE,false,PATH_MAPPER.ADD_METHODS.SET_STRUCTURE));
+			fieldMaps.add(new PATH_MAPPER(".*",false,PATH_MAPPER.ADD_METHODS.NOTE_PROPERTY,true));
+		}
+		public GinasFlatMapTransformer(List<PATH_MAPPER> fieldMaps){
+			this();
+			if(fieldMaps!=null)
+				this.fieldMaps=fieldMaps;
+		}
+		
+		@Override
+		public String getName(Map<String, String> theRecord) {
+			return theRecord.get(FIELD_NAME);
+		}
+
+		@Override
+		public Substance transformSubstance(Map<String, String> rec)
+				throws Throwable {
+			return convertToStructure(rec,fieldMaps);
+		}
+		
 		
 	}
+	public static class PATH_MAPPER {
+		public String path;
+		public boolean isregex=false;
+		public boolean allowMultiple = false;
+		public String splitBy = null;
+		public ADD_METHODS method;
+		public String other;
+
+		
+		
+		public PATH_MAPPER(String pth, boolean allow, ADD_METHODS am, boolean regex) {
+			this.path = pth;
+			this.allowMultiple = allow;
+			this.method = am;
+			this.isregex=regex;
+		}
+		public PATH_MAPPER(String pth, boolean allow, ADD_METHODS am) {
+			this(pth,allow,am,false);
+		}
+		public PATH_MAPPER() {
+			
+		}
+		
+		
+		public boolean matches(String path){
+			if(isregex){
+				return path.matches(this.path);
+			}
+			return this.path.equals(path);
+		}
+		public boolean apply(Substance csub, String sourceValue, String sourcePath){
+			String[] values = new String[]{sourceValue};
+			
+			if(splitBy!=null){
+				values=sourceValue.split(splitBy);
+			}
+			
+			for (String value : values) {
+				switch (method) {
+				case ADD_CODE:
+					PATH_MAPPER.ADD_CODE(csub, value, other, sourcePath);
+					break;
+				case ADD_NAME:
+					PATH_MAPPER.ADD_NAME(csub, value, sourcePath);
+					break;
+				case ADD_PREFERRED_NAME:
+					PATH_MAPPER.ADD_NAME_PREFERRED(csub, value, sourcePath);
+					break;
+				case NOTE_PROPERTY:
+					PATH_MAPPER.ADD_PROPERTY_NOTE(csub, value, sourcePath);
+					break;
+				case SET_STRUCTURE:
+					PATH_MAPPER.SET_STRUCTURE((ChemicalSubstance)csub, value, sourcePath);
+					break;
+				case SIMPLE_NOTE:
+					PATH_MAPPER.ADD_SIMPLE_NOTE(csub, value, sourcePath);
+					break;
+				case ADD_SYSTEMATIC_NAME:
+					PATH_MAPPER.ADD_SYSTEMATIC_NAME(csub, value, sourcePath);
+					break;
+				case DONT_IMPORT:
+				default:
+					break;
+				}
+			}
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			return path.hashCode();
+		}
+
+		public static enum ADD_METHODS {
+			ADD_NAME, ADD_CODE, ADD_PREFERRED_NAME, ADD_SYSTEMATIC_NAME, SET_STRUCTURE, SIMPLE_NOTE, NOTE_PROPERTY, DONT_IMPORT, NULL_TYPE
+		};
+
+		public static void ADD_NAME(Substance sub, String name, String path) {
+			Name n = new Name();
+			n.name = name;
+			sub.names.add(n);
+			n.references.add(new Keyword(makePathReference(sub, path).uuid
+					.toString()));
+		}
+
+		public static void ADD_SYSTEMATIC_NAME(Substance sub, String name,
+				String path) {
+			Name n = new Name();
+			n.name = name;
+			n.type = "SN";
+			sub.names.add(n);
+			n.references.add(new Keyword(makePathReference(sub, path).uuid
+					.toString()));
+		}
+
+		public static void ADD_NAME_PREFERRED(Substance sub, String name,
+				String path) {
+			Name n = new Name();
+			n.name = name;
+			n.preferred = true;
+			sub.names.add(n);
+			n.references.add(new Keyword(makePathReference(sub, path).uuid
+					.toString()));
+		}
+
+		public static void ADD_CODE(Substance sub, String code,
+				String code_system, String path) {
+			Code n = new Code();
+			n.code = code;
+			n.codeSystem = code_system;
+			sub.codes.add(n);
+			n.references.add(new Keyword(makePathReference(sub, path).uuid
+					.toString()));
+		}
+
+		public static void ADD_PROPERTY_NOTE(Substance sub, String note,
+				String path) {
+			sub.addPropertyNote(note, path);
+		}
+
+		public static void ADD_SIMPLE_NOTE(Substance sub, String note,
+				String path) {
+			sub.addNote(note).references.add(new Keyword(makePathReference(
+					sub, path).uuid.toString()));
+		}
+
+		public static void SET_STRUCTURE(ChemicalSubstance csub,
+				String molfile, String path) {
+			if (csub.structure == null)
+				csub.structure = new Structure();
+			csub.structure.molfile = molfile;
+
+		}
+
+		public static Reference makePathReference(Substance s, String path) {
+			Reference r = new Reference();
+			r.citation = path;
+			r.docType = "SDF_PROPERTY";
+			s.references.add(r);
+			return r;
+		}
+
+	}
+	
+	public static Substance convertToStructure(Map<String,String> keyValueMap,List<PATH_MAPPER> fieldMaps){
+		
+		
+		Set<String> assigned = new HashSet<String>();
+		
+		
+		ChemicalSubstance csub = new ChemicalSubstance(); 
+		csub.structure= new Structure();
+		
+		for(PATH_MAPPER mapper:fieldMaps){			
+			for(String k:keyValueMap.keySet()){
+				if(assigned.contains(k) && !mapper.allowMultiple)
+					continue;
+				if (mapper.matches(k)) {
+					mapper.apply(csub, keyValueMap.get(k), k);
+					assigned.add(k);
+				}
+			}
+		}
+		
+		return csub;			
+	}
+	
+	public static void setPathMappers(String payloadUUID, List<PATH_MAPPER> fieldMaps){
+		fieldMaps.add(new PATH_MAPPER(FIELD_MOLFILE,false,PATH_MAPPER.ADD_METHODS.SET_STRUCTURE));
+		mappers.put(payloadUUID, fieldMaps);
+	}
+}

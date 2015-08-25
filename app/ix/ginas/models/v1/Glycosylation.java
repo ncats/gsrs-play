@@ -15,6 +15,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
+
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_glycosylation")

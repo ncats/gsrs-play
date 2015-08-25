@@ -62,12 +62,12 @@ public class SubstanceFactory extends EntityFactory {
     
     public static List<Substance> getChemicals
     (int top, int skip, String filter) {
-    return filter (new FetchOptions (top, skip, filter), finder);
-}
+	    return filter (new FetchOptions (top, skip, filter), finder);
+	}
     public static List<ProteinSubstance> getProteins
     (int top, int skip, String filter) {
-    return filter (new FetchOptions (top, skip, filter), protfinder);
-}
+	    return filter (new FetchOptions (top, skip, filter), protfinder);
+	}
     
      public static Integer getCount () {
         try {

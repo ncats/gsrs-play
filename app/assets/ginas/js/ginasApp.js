@@ -333,7 +333,7 @@
                                 'Content-Type': 'text/plain'
                             }
                         }).success(function(data) {
-
+                            console.log("fetched");
                             if (!Substance.chemical) {
                                 Substance.chemical = {};
                             }
@@ -868,9 +868,11 @@
                 }
             }).success(function(data) {
                 sketcher.setMolfile(data.structure.molfile);
+                console.log("resolved");
                 console.log(structure);
                 $scope.structure = data.structure;
                 console.log(structure);
+                
             });
         };
     });
@@ -1156,6 +1158,7 @@
         };
         $scope.init = function(id, pollin, status) {
             $scope.status = status;
+            $scope.details = pollin;
             $scope.refresh(id, pollin);
         };
         $scope.refresh = function(id, pollin) {
@@ -1315,6 +1318,49 @@
 
     });
 
+ginasApp.factory('SDFFields', function() {
+        var SDFFields = {};
+    });
+
+
+ginasApp.controller('SDFieldController', function ($scope) {
+
+  $scope.path="";
+  $scope.radioModel = 'NULL_TYPE';
+
+
+
+  $scope.checkModel = {
+    DONT_IMPORT: true,
+    ADD_CODE: false,
+    NULL_TYPE: false,
+    ADD_NAME: false
+  };
+  $scope.init = function(path){
+    $scope.path=path;
+  };
+
+  $scope.$watch('radioModel', function(newVal, oldVal){
+    var sdf=window.SDFFields[$scope.path];
+    if(typeof sdf === "undefined"){
+	sdf={};
+        window.SDFFields[$scope.path]=sdf;    
+    }
+    sdf.path=$scope.path;
+    sdf.method=$scope.radioModel;
+
+    console.log(window.SDFFields);
+    var l=[];
+    for(var k in window.SDFFields){
+       l.push(window.SDFFields[k]);
+    }
+    $("#mappings").val(JSON.stringify(l));
+  });
+
+
+});
+
 
 
 })();
+window.SDFFields={};

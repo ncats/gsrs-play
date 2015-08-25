@@ -64,7 +64,8 @@ import ix.utils.Util;
 import tripod.chem.indexer.StructureIndexer;
 
 public class StructureProcessorPlugin extends Plugin {
-    private final Application app;
+    private static final int AKKA_TIMEOUT = 60000;
+	private final Application app;
     private StructureIndexer indexer;
     private PersistenceQueue PQ;
     private IxContext ctx;
@@ -542,7 +543,7 @@ public class StructureProcessorPlugin extends Plugin {
 			}catch(Exception e){
 				Logger.error(e.getMessage() + " retrying");
 			}
-			if(System.currentTimeMillis()>start+60000){
+			if(System.currentTimeMillis()>start+StructureProcessorPlugin.AKKA_TIMEOUT){
 				throw new IllegalStateException("Couldn't start akka");
 			}
 			try{
