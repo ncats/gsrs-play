@@ -253,6 +253,7 @@ console.log($rootScope);
             data = $scope.flattenCV(JSON.parse(JSON.stringify(sub)));
             $http.post('app/submit', data).success(function() {
                     console.log("success");
+                    alert("submitted!");
                 });
         };
     });
@@ -1119,8 +1120,6 @@ console.log($rootScope);
 */
     });
 
-    // Please note that $modalInstance represents a modal window (instance) dependency.
-    // It is not the same as the $modal service used above.
 
     ginasApp.controller('SubstanceSelectorInstanceController', function($scope, $modalInstance, $http, substanceSearch) {
 
