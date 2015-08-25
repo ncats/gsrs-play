@@ -23,10 +23,15 @@
         <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
+                    <span ng-hide="selected"><b><code>No substance selected</code></b></span>
+                    <span ng-show="selected"><b><code>{{selected.approvalID}}</code> {{ selected.refPname }}</b></span>
+                    <button aria-label="Select a substance" type="button" class="btn btn-default" ng-click="openModal('lg')"><span aria-hidden="true" class="fa fa-plus-square"></span></button>
                     @*
                     <substance-selector ng-model="relationship.relatedSubstance"></substance-selector>
                     *@
+@*
                     @selectors.substanceselectorform()
+*@
                 </div>
                 <div class="col-md-2 err-check" show-errors>
                     <tags-input custom-class="form-control" ng-model="relationship.type" title="Relationship Type" placeholder="Relationship Type" id="type" name="type"  max-tags="1" display-property="display" key-property="value" add-from-autocomplete-only="true" >

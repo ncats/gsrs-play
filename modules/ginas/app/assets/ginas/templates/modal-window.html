@@ -1,0 +1,64 @@
+<!-- Modal
+<div class="modal fade" id="modal-div" tabindex="-1" role="dialog"
+     aria-labelledby="" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                hi
+               <modal-content></modal-content>
+            </div>
+            <div class = "modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">Close</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>-->
+
+<div class="modal-header">
+    <h3 class="modal-title">I'm a modal!</h3>
+</div>
+<div class="modal-body">
+    ginasApp.factory('Substance', function() {
+    var Substance = {};
+    var substanceClass = window.location.search.split('=')[1];
+    switch (substanceClass) {
+    case "chemical":
+    Substance.substanceClass = substanceClass;
+    Substance.chemical = {};
+    break;
+    case "protein":
+    Substance.substanceClass = substanceClass;
+    Substance.protein = {};
+    var subunit = "";
+    break;
+    case "structurallyDiverse":
+    Substance.substanceClass = substanceClass;
+    Substance.structurallyDiverse = {};
+    break;
+    default:
+    console.log('invalid substance class');
+    break;
+    }
+    return Substance;
+    });
+    <ul>
+        <li ng-repeat="item in items">
+            <a ng-click="selected.item = item">{{ item }}</a>
+        </li>
+    </ul>
+    Selected: <b>{{ selected.item }}</b>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()">OK</button>
+    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>

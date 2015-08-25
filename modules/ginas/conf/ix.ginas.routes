@@ -13,6 +13,7 @@ GET         /sequence                   ix.ginas.controllers.GinasFactory.sequen
 GET         /report                     ix.ginas.controllers.GinasFactory.report
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON
+POST        /submit                       ix.ginas.controllers.GinasLoad.loadSubstance
 GET         /load                       ix.ginas.controllers.GinasLoad.load
 POST        /submit                     ix.ginas.controllers.GinasLoad.submitSubstance
 POST        /loadSDF/:payloadID         ix.ginas.controllers.GinasLoad.loadSDF(payloadID : String)
@@ -24,5 +25,5 @@ GET         /login                      ix.ginas.controllers.GinasFactory.login
 GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationships(uuid: String)
 GET         /cv/:field                  ix.ginas.controllers.GinasApp.getCVField(field: String)
 
-->	    /	ix.ncats.Routes
-GET	    /:any	ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
+->          /                           ix.ncats.Routes
+GET         /:any                       ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
