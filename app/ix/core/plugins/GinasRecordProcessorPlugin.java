@@ -55,6 +55,7 @@ import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
 public class GinasRecordProcessorPlugin extends Plugin {
+	private static final int AKKA_TIMEOUT = 60000;
 	private static final String EXTRACTOR_KEYWORD = "EXTRACTOR";
 	private static final String PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
 	//Hack variable for resisting buildup
@@ -302,7 +303,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
 				
 				Statistics stat=applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_GOOD);
-				Logger.debug(stat.toString());
+				//Logger.debug(stat.toString());
 			}catch(Exception e){
 				k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
 				applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_BAD);
@@ -529,9 +530,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				
 				ProcessingRecord rec = new ProcessingRecord();
 				try{
+					Payload pay=pr.job.payload;
+					if(pay==null){
+						Logger.error("PAYLOAD IS NULL");
+					}
 					RecordTransformer rt=RecordExtractor.getInstanceOfExtractor(
 							pr.job.getKeyMatching(EXTRACTOR_KEYWORD))
-							.getTransformer();
+							.getTransformer(pay);
 					
 					Object trans = rt.transform(pr, rec);
 					
@@ -546,10 +551,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					
 				}catch(Exception e){
 					e.printStackTrace();
-					
 					getInstance().decrementExtractionQueue();
-					String k=pr.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-					
+					String k=pr.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());					
 					applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
 				}
 				
@@ -559,22 +562,22 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				String id = actor.path().name();
 				int pos = id.indexOf(':');
 				if (pos > 0) {
-					String jid = id.substring(pos + 1);
-					try {
-						ProcessingJob job = ProcessingJobFactory.getJob(jid);
-						if (job != null) {
-							job.stop = System.currentTimeMillis();
-							job.status = ProcessingJob.Status.COMPLETE;
-							reporter.tell(PersistModel.Update(job), self());
-							log.info("done processing job {}!", jid);
-						} else {
-							log.error("Failed to retrieve job " + jid);
-						}
-					} catch (Exception ex) {
-						ex.printStackTrace();
-						log.error("Failed to retrieve job " + jid + "; "
-								+ ex.getMessage());
-					}
+//					String jid = id.substring(pos + 1);
+//					try {
+//						ProcessingJob job = ProcessingJobFactory.getJob(jid);
+//						if (job != null) {
+//							job.stop = System.currentTimeMillis();
+//							job.status = ProcessingJob.Status.COMPLETE;
+//							reporter.tell(PersistModel.Update(job), self());
+//							log.info("done processing job {}!", jid);
+//						} else {
+//							log.error("Failed to retrieve job " + jid);
+//						}
+//					} catch (Exception ex) {
+//						ex.printStackTrace();
+//						log.error("Failed to retrieve job " + jid + "; "
+//								+ ex.getMessage());
+//					}
 				} else {
 					// receiver job
 					// log.error("Invalid job id: "+id);
@@ -641,7 +644,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			}catch(Exception e){
 				Logger.error(e.getMessage() + " retrying");
 			}
-			if(System.currentTimeMillis()>start+60000){
+			if(System.currentTimeMillis()>start+GinasRecordProcessorPlugin.AKKA_TIMEOUT){
 				throw new IllegalStateException("Couldn't start akka");
 			}
 			try{
@@ -895,6 +898,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			}
 		}
 		public abstract RecordTransformer getTransformer();
+		
+		public RecordTransformer getTransformer(Payload p){
+			return getTransformer();
+		}
 		
 	}
 	

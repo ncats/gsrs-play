@@ -47,10 +47,10 @@ public class CV {
      * @return
      */
     public String getDisplay (String domain, String value) {
-        List<VocabularyTerm> domainList = ControlledVocabularyFactory
-				.getControlledVocabulary(domain).terms;
-        if(domainList!=null){
-	        for(VocabularyTerm v : domainList){
+    	ControlledVocabulary cv1 = ControlledVocabularyFactory
+				.getControlledVocabulary(domain);
+        if(cv1!=null){
+	        for(VocabularyTerm v : cv1.terms){
 	            if(v.value.equals(value)){
 	            	return v.display;
 	            }

@@ -22,7 +22,7 @@
                 <div class ="row">
                     <div class = "col-md-1 col-md-offset-1">
                           @if(job.status == ix.core.models.ProcessingJob.Status.RUNNING){
-                            <i class="fa fa-cog fa-5x fa-spin"></i>
+                                <i class="fa fa-cog fa-5x fa-spin"></i>
                           }else{
                             @if(job.status == ix.core.models.ProcessingJob.Status.COMPLETE){
                                 <i class="fa fa-check-square fa-5x"></i>
@@ -32,8 +32,16 @@
                           }
                     </div>
                 </div>
-
-            </div>
+                <div class ="row">
+                <div class = "col-md-1 col-md-offset-1">
+                  <a href="@ix.ginas.controllers.routes.GinasApp.substances(GinasLoad.getJobKey(job))" id="load-button" target="_blank">
+                           <button class="btn btn-sm btn-primary">
+                            View Records
+                           </button>
+                        </a>
+                        </div>
+                </div>
+                </div>
             <div class = "col-md-7">
 		<div class = "row">
 			@job.message
@@ -47,7 +55,9 @@
                             <progressbar class="{{mclass}}" max="max" value="dynamic">
                             	<span class="progress-text">{{dynamic}} / {{max}}</span>
                             </progressbar>
-                            
+                            <button ng-hide="details" type="button" class="btn btn-sm btn-primary" ng-click="details=true">Show Details</button>
+                            <button ng-show="details" type="button" class="btn btn-sm btn-primary" ng-click="details=false">Hide Details</button>
+                            <div ng-show="details">
                             <small><em>Extracted Records</em></small>
                             <progress class="{{mclass}}" max="max" >
                             
@@ -100,7 +110,7 @@
 	                            </bar>
                             
                             </progress>
-                            
+                            </div>
                             <div class = "col-md-10">
                             {{mess}}
                             </div>

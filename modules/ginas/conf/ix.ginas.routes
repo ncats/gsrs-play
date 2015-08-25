@@ -16,6 +16,7 @@ GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON
 POST        /submit                       ix.ginas.controllers.GinasLoad.loadSubstance
 GET         /load                       ix.ginas.controllers.GinasLoad.load
+POST        /loadSDF/:payloadID         ix.ginas.controllers.GinasLoad.loadSDF(payloadID : String)
 GET         /monitor                    ix.ginas.controllers.GinasLoad.jobs(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET         /monitor/:processID         ix.ginas.controllers.GinasLoad.monitorProcess(processID : String)
 GET         /search                     ix.ginas.controllers.GinasApp.search(kind: String ?= null)

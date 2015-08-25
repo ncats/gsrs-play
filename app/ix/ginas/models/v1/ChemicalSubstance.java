@@ -1,11 +1,18 @@
 package ix.ginas.models.v1;
 
+import ix.core.chem.StructureProcessor;
+import ix.core.controllers.search.SearchFactory;
 import ix.core.models.BeanViews;
+import ix.core.models.Indexable;
+import ix.core.models.Keyword;
 import ix.core.models.Structure;
+import ix.core.models.Value;
+import ix.core.search.TextIndexer.SearchResult;
+import ix.ginas.models.Ginas;
+import ix.ginas.models.utils.GinasProcessingMessage;
+import ix.ginas.models.utils.GinasProcessingStrategy;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
-import ix.core.chem.Chem;
-import ix.core.models.Indexable;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -73,4 +80,95 @@ public class ChemicalSubstance extends Substance {
     public Structure.Stereo getStereoChemistry () {
         return structure != null ? structure.stereoChemistry : null;
     }
+    
+    public List<GinasProcessingMessage> prepare(GinasProcessingStrategy strat){
+    	List<GinasProcessingMessage> gpm=super.prepare(strat);
+    	
+    	String payload = this.structure.molfile;
+        if (payload != null) {
+        	List<Moiety> moietiesForSub = new ArrayList<Moiety>();
+            List<Structure> moieties = new ArrayList<Structure>();
+            Structure struc = StructureProcessor.instrument
+                (payload, moieties);
+            this.structure=struc;
+            //struc.count
+            for(Structure m: moieties){
+            	Moiety m2= new Moiety();
+            	m2.structure=m;
+            	m2.count=m.count;
+            	moietiesForSub.add(m2);
+            }
+            
+            if(this.moieties.size()<moietiesForSub.size()){
+            	GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Incorrect number of moeities").appliableChange(true);
+            	gpm.add(mes);
+            	strat.processMessage(mes);
+            	switch(mes.actionType){
+				case APPLY_CHANGE:
+					this.moieties=moietiesForSub;
+					mes.appliedChange=true;
+					break;
+				case FAIL:
+					break;
+				case DO_NOTHING:
+				case IGNORE:
+				default:
+					break;
+            	}            	
+            }
+            if(!struc.digest.equals(this.structure.digest)){
+            	GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Given structure digest disagrees with computed").appliableChange(true);
+            	gpm.add(mes);
+            	strat.processMessage(mes);
+            	switch(mes.actionType){
+				case APPLY_CHANGE:
+					this.structure=struc;
+					mes.appliedChange=true;
+					break;
+				case FAIL:
+					break;
+				case DO_NOTHING:
+				case IGNORE:
+				default:
+					break;
+            	}
+            }
+            String hash=null;
+            for (Value val : struc.properties) {
+                if (Structure.H_LyChI_L4.equals(val.label)) {
+                	hash=val.getValue()+"";
+                }
+            }
+            
+            try {
+				SearchResult sr = SearchFactory.search(Substance.class,"hash=" + hash, 1, 0, 0, null);
+				if(sr.count()>0){
+					GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has " + sr.count() +" possible duplicate(s)").appliableChange(true);
+	            	gpm.add(mes);
+	            	strat.processMessage(mes);
+	            	switch(mes.actionType){
+					case APPLY_CHANGE:
+						this.status="FAILED";
+						this.addPropertyNote(mes.message, "FAIL_REASON");
+						this.addRestrictGroup("admin");
+						break;
+					case DO_NOTHING:
+						break;
+					case FAIL:
+						break;
+					case IGNORE:
+						break;
+					default:
+						break;
+					
+	            	}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+            
+        }
+        return gpm;
+    }
+    
 }

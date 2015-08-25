@@ -8,6 +8,7 @@ import ix.core.plugins.GinasRecordProcessorPlugin.RecordExtractor;
 import ix.core.plugins.GinasRecordProcessorPlugin.RecordPersister;
 import ix.core.plugins.GinasRecordProcessorPlugin.RecordTransformer;
 import ix.core.plugins.GinasRecordProcessorPlugin.TransformedRecord;
+import ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Moiety;
@@ -24,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import play.Logger;
 import tripod.chem.indexer.StructureIndexer;
@@ -164,28 +166,16 @@ public class GinasUtils {
 				
 		}
 	}
-	public static class GinasSubstanceTransformer extends RecordTransformer<JsonNode,Substance>{
-		public Substance transform(PayloadExtractedRecord<JsonNode> pr, ProcessingRecord rec){
-			try{
-				rec.name = pr.theRecord.get("uuid").asText();
-			}catch(Exception e){
-				rec.name = "Nameless";
-			}
-			rec.job = pr.job;
-			rec.start = System.currentTimeMillis();
-			Substance struc = null;
-			try {
-				//Logger.debug("transforming:"+ rec.name);
-				struc = GinasUtils.makeSubstance(pr.theRecord);
-				//rec.stop = System.currentTimeMillis();
-				rec.status = ProcessingRecord.Status.ADAPTED;
-			} catch (Throwable t) {
-				rec.stop = System.currentTimeMillis();
-				rec.status = ProcessingRecord.Status.FAILED;
-				rec.message = t.getMessage();
-				t.printStackTrace();
-			}
-			return struc;
+	public static class GinasSubstanceTransformer extends GinasAbstractSubstanceTransformer<JsonNode>{
+	
+		@Override
+		public String getName(JsonNode theRecord) {
+			return theRecord.get("name").asText();
+		}
+		
+		@Override
+		public Substance transformSubstance(JsonNode rec) throws Throwable {
+			return GinasUtils.makeSubstance(rec);
 		}
 	}
 	public static class GinasDumpExtractor extends RecordExtractor<JsonNode>{
@@ -242,5 +232,36 @@ public class GinasUtils {
 			return new GinasSubstanceTransformer();
 		}
 		
+	}
+	public abstract static class GinasAbstractSubstanceTransformer<K> extends RecordTransformer<K,Substance>{
+		public static GinasProcessingStrategy DEFAULT_STRAT = GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS();
+		@Override
+		public Substance transform(PayloadExtractedRecord<K> pr, ProcessingRecord rec) {
+			
+			try{
+				rec.name = getName(pr.theRecord);
+			}catch(Exception e){
+				rec.name = "Nameless";
+			}
+			//System.out.println("############## transforming:" + rec.name);
+			rec.job = pr.job;
+			rec.start = System.currentTimeMillis();
+			Substance sub = null;
+			try {
+				sub = transformSubstance(pr.theRecord);
+				sub.addImportReference(rec.job);
+				GinasProcessingStrategy.failIfNecessary(sub.prepare(DEFAULT_STRAT));
+				rec.status = ProcessingRecord.Status.ADAPTED;
+			} catch (Throwable t) {
+				rec.stop = System.currentTimeMillis();
+				rec.status = ProcessingRecord.Status.FAILED;
+				rec.message = t.getMessage();
+				t.printStackTrace();
+				return null;
+			}
+			return sub;
+		}
+		public abstract String getName(K theRecord);
+		public abstract Substance transformSubstance(K rec) throws Throwable;
 	}
 }

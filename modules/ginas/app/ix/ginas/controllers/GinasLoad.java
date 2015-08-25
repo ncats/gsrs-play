@@ -1,7 +1,9 @@
 package ix.ginas.controllers;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
@@ -9,6 +11,9 @@ import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
+import ix.ginas.models.utils.GinasSDFUtils;
+import ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor;
+import ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
 import ix.ginas.models.utils.GinasUtils;
 import ix.ginas.models.v1.Substance;
 import ix.ncats.controllers.App;
@@ -24,10 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 
@@ -146,7 +148,6 @@ public class GinasLoad extends App {
         return ok(mapper.valueToTree(sub));
     }
 
-
     public static Result loadJSON() {
 
         if (Play.isProd()) {
@@ -169,16 +170,17 @@ public class GinasLoad extends App {
 
                 Payload sdpayload = payloadPlugin.parseMultiPart
                         ("sd-file", request());
+
                 if (sdpayload != null) {
-                    String id = ginasRecordProcessorPlugin.submit(sdpayload,
-                            ix.ginas.models.utils.GinasSDFExtractor.class);
-                    return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
+//					String id = ginasRecordProcessorPlugin.submit(sdpayload,
+//							ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor.class);
+//					return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
 
 //                  Statistics / breakdown for later use  
-//            		sdpayload.save();
-//            		Map m = GinasSDFExtractor.getFieldStatistics(sdpayload, 100);
-//            		ObjectMapper om = new ObjectMapper();
-//            		return ok(om.valueToTree(m).toString());
+//					====================================
+                    sdpayload.save();
+                    Map<String, FieldStatistics> m = GinasSDFExtractor.getFieldStatistics(sdpayload, 100);
+                    return ok(ix.ginas.views.html.admin.sdfimportmapping.render(sdpayload, new ArrayList<FieldStatistics>(m.values())));
                 } else {
                     Payload payload = payloadPlugin.parseMultiPart
                             ("json-dump", request());
@@ -210,6 +212,38 @@ public class GinasLoad extends App {
 
         ObjectMapper mapper = new ObjectMapper();
         return ok(mapper.valueToTree(sub));
+    }
+
+    public static Result loadSDF(String payloadUUID) {
+        Payload sdpayload = PayloadFactory.getPayload(UUID.fromString(payloadUUID));
+        DynamicForm requestData = Form.form().bindFromRequest();
+        String mappingsjson = requestData.get("mappings");
+        ObjectMapper om = new ObjectMapper();
+        System.out.println(mappingsjson);
+        List<GinasSDFUtils.PATH_MAPPER> mappers = null;
+        try {
+            mappers = new ArrayList<GinasSDFUtils.PATH_MAPPER>();
+            List<GinasSDFUtils.PATH_MAPPER> mappers2 = om.readValue(mappingsjson, new TypeReference<List<GinasSDFUtils.PATH_MAPPER>>() {
+            });
+            for (GinasSDFUtils.PATH_MAPPER pm : mappers2) {
+                if (pm.method != GinasSDFUtils.PATH_MAPPER.ADD_METHODS.NULL_TYPE) {
+                    mappers.add(pm);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        GinasSDFUtils.setPathMappers(payloadUUID, mappers);
+
+        System.out.println("#########################");
+        System.out.println(mappers);
+
+//    	return ok("test");
+
+
+        String id = ginasRecordProcessorPlugin.submit(sdpayload, ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor.class);
+        return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
+
     }
 
 
@@ -254,25 +288,6 @@ public class GinasLoad extends App {
             ProcessingJob job = ProcessingJobFactory.getJob(processID);
             if (job != null) {
                 return ok(ix.ginas.views.html.admin.job.render(job));
-//	    		processID = job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());	
-//	    		//List<ProcessingRecord> precs = ProcessingJobFactory.getJobRecords(job.id);
-//		    	msg+="Started:" + job.start + "\n";
-//		    	msg+="Ended:" + job.stop + "\n";
-//		    	msg+="Message:" + job.message + "\n";
-//		    	msg+="Status:" + job.status + "\n";
-//		    	if(job.payload!=null){
-//		    		Statistics stat = GinasRecordProcessorPlugin.getStatisticsForJob(processID);
-//		    		if(stat!=null){
-//		    			msg+="\nStatistics:\n==============\n";
-//		    			msg+=stat.toString();
-//		    			long t=System.currentTimeMillis();
-//		    			if(job.stop!=null){
-//		    				t=job.stop;
-//		    			}
-//		    			msg+="Average time to register:" + stat.getAverageTimeToPersistMS(t);
-//		    		}
-//		    	}
-
             } else {
                 msg = "[not yet started]";
             }

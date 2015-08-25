@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Date;
+import java.util.UUID;
 
 import javax.persistence.*;
 
@@ -16,7 +17,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.core.models.Keyword;
-
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.*;
@@ -62,5 +62,8 @@ public class Reference extends Ginas {
     @Basic(fetch=FetchType.EAGER)
     public String url;
 
-    public Reference () {}
+    public Reference () {
+    	this.uuid= UUID.randomUUID();
+    	
+    }
 }
