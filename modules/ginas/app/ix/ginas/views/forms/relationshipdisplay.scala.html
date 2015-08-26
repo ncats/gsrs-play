@@ -25,7 +25,8 @@
                 <div class="col-md-3">
                     <span ng-hide="selected"><b><code>No substance selected</code></b></span>
                     <span ng-show="selected"><b><code>{{selected.approvalID}}</code> {{ selected.refPname }}</b></span>
-                    <button aria-label="Select a substance" type="button" class="btn btn-default" ng-click="openModal('lg')"><span aria-hidden="true" class="fa fa-plus-square"></span></button>
+                    <button aria-label="Select a substance" type="button" class="btn btn-default" ng-click="openModal('structuresearch')"><span aria-hidden="true" class="fa fa-plus-square"></span></button>
+                    <modal content="Hello"></modal>
                     @*
                     <substance-selector ng-model="relationship.relatedSubstance"></substance-selector>
                     *@

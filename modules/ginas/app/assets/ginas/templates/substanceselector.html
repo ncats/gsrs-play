@@ -1,104 +1,81 @@
-        <div class="modal-header">
-            <h3 class="modal-title">Select substance</h3>
+<div class="modal-header">
+    <h3 class="modal-title">Substance Selector</h3>
+</div>
+<div class="modal-body">
+    <tags-input custom-class="form-control" ng-model="relationship.subref" title="Relationship Type"
+                placeholder="Relationship Type" id="type" name="type" display-property="name" key-property="approvalID"
+                add-from-autocomplete-only="true">
+        <auto-complete source="fetch($query)" min-length="1" debounce-delay="0"
+                       load-on-down-arrow="true"></auto-complete>
+    </tags-input>
+    <div class="btn-toolbar" role="toolbar">
+        <div class="btn-group" role="group">
+            <h3><span class="label label-default">{{ results.total }}</span></h3>
         </div>
-        <div class="modal-body">
-            <div class="input-group">
-                <tags-input custom-class="form-control" ng-model="relationship.subref" title="Relationship Type" placeholder="Relationship Type" id="type" name="type" display-property="name" key-property="approvalID" add-from-autocomplete-only="true" >
-                    <auto-complete source="fetch($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-<!--
+        <div class="btn-group" role="group">
+            <ul class="pagination">
+                <li>
+                    <a href='#' aria-label="Previous"
+                       ng-click="prevPage()"
+                            >
+                        <span aria-hidden="true" class="fa fa-angle-double-left"></span>
+                    </a>
+                </li>
+                <li>
+                    <a href='#' aria-label="Next"
+                       ng-click="nextPage()"
+                            >
+                        <span aria-hidden="true" class="fa fa-angle-double-right"></span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="panel-body">
+        <div class="row hidden-xs" id="grid">
 
-                <input type="text"
-                       ng-model ="term"
-                       ng-change ="test()"
-                       class="form-control typeahead" id="search"
-                       title="Search" placeholder="Search ..." name="q">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" id="search"
-                                        ng-click="search()"
-                                        >
-                                    <span class="fa fa-search"></span>
-                                </button>
-                            </span>-->
-            </div>
-            <div class="btn-toolbar" role="toolbar">
-                <div class="btn-group" role="group">
-                    <h3><span class="label label-default">{{ results.total }}</span></h3>
-                </div>
-                <div class="btn-group" role="group">
-                    <ul class="pagination">
-                        <li>
-                            <a href='#' aria-label="Previous"
-                               ng-click="prevPage()"
-                                    >
-                                <span aria-hidden="true" class="fa fa-angle-double-left"></span>
+
+            <div class="col-md-3 thumb-col" ng-repeat="item in results.content">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <p class="text-right" data-toggle="tooltip" title="Approval ID">
+                            <a href="#" ng-click="$event.preventDefault(); selected.item = item">
+                                <code>{{item.approvalIDDisplay}}</code>
                             </a>
-                        </li>
-                        <li>
-                            <a href='#' aria-label="Next"
-                               ng-click="nextPage()"
-                                    >
-                                <span aria-hidden="true" class="fa fa-angle-double-right"></span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class= "panel-body">
-                <div class = "row hidden-xs" id ="grid">
+                        </p>
+                    </div>
+                    <div class="panel-body struc-img">
+                        <!--                        <img class="struc-thumb img-responsive" alt="Structure of {{item.name}}"
+                                                     src='/ginas/app/structure/{{item.structure.id}}.svg'>-->
 
+                        <div class="row stereo">
+                            <div class="col-md-10">
 
-
-
-
-
-
-
-                    <div class = "col-md-3 thumb-col" ng-repeat="item in results.content">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <p class="text-right" data-toggle="tooltip" title="Approval ID">
-                                    <a href="#" ng-click="$event.preventDefault(); selected.item = item" >
-                                        <code>{{item.approvalIDDisplay}}</code>
-                                    </a>
-                                </p>
                             </div>
-                            <div class="panel-body struc-img">
-                                <img class = "struc-thumb img-responsive" alt="Structure of {{item.name}}"
-                                     src='/ginas/app/structure/{{item.structure.id}}.svg'>
-                                <div class = "row stereo">
-                                    <div class = "col-md-10">
 
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class = "panel-footer nameDiv" data-toggle="tooltip" title="{{item.name}}">
-                                {{item.name}}
-                            </div>
-                            <a href="#" ng-click="select(item)" >
-                                Select
-                            </a>
                         </div>
                     </div>
-
-
-
-
-
-
-
+                    <div class="panel-footer nameDiv" data-toggle="tooltip" title="{{item.name}}">
+                        {{item.name}}
+                    </div>
+                    <a href="#" ng-click="select(item)">
+                        Select
+                    </a>
                 </div>
             </div>
 
-            Selected: <b><code>{{selected.item.approvalIDDisplay}}</code> {{ selected.item.name }}</b>
 
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-primary" type="button" ng-click="ok()">OK</button>
-            <button class="btn btn-warning" type="button" ng-click="cancel()">Cancel</button>
-        </div>
 
+
+        Selected: <b><code>{{selected.item.approvalIDDisplay}}</code> {{ selected.item.name }}</b>
+
+    </div>
 
 
 </div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="ok()">OK</button>
+    <button class="btn btn-warning" ng-click="cancel()">Cancel</button>
+</div>
+

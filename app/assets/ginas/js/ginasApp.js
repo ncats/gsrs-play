@@ -46,17 +46,14 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasController", function($scope, $rootScope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch) {
+    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch) {
         var ginasCtrl = this;
         $scope.substance = Substance;
-        $scope.empty = {};
-        $scope.modal ={};
-console.log($rootScope);
+
         //date picker
         $scope.open = function($event) {
             $scope.status.opened = true;
         };
-
 
         $scope.status = {
             opened: false
@@ -177,43 +174,47 @@ console.log($rootScope);
             $scope.selected = !$scope.selected;
         };
 
-        $scope.openModal = function(size){
-            $scope.modal.instance = $modal.open({
-                template: '<modal-template modal="modal-lg"></modal-template>',
-                scope: $scope
+        $scope.openModal = function(type){
+            var template;
+            switch (type) {
+                case "reference":
+                    template ="";
+                    break;
+                case "structuresearch":
+                    template = 'app/assets/ginas/templates/substanceselector.html';
+                    break;
+            }
+            var modalInstance = $modal.open({
+                animation: true,
+                //templateUrl: 'app/assets/ginas/templates/substanceselector.html',
+                templateUrl: template,
+               // windowTemplateUrl: 'app/assets/ginas/templates/modal-window.html',
+                controller: 'ModalController',
+                size: 'lg'
             });
 
         };
 
-
-/*        $scope.openModal = function(div) {
-
-            this.modalInstance = $modal.open({
-                templateUrl:'app/assets/ginas/templates/'+ div +'.html',
-                controller: 'ModalController',
-                size: 'lg'
-            });
-        };*/
+        $scope.fetch = function($query) {
+            console.log($query);
+            substanceSearch.load($query);
+            return substanceSearch.search(field, $query);
+        };
 
         $scope.flattenCV =function(sub){
             for(var v in sub){
-                console.log(sub[v]);
                 if($scope.isCV(sub[v])){
-                    console.log(v + " is CV");
                     sub[v]=sub[v].value;
                 }else{
                     if(typeof sub[v] === "object"){
-                        console.log("recursive");
                         $scope.flattenCV(sub[v]);
                     }
                 }
             }
-            console.log(sub);
             return sub;
         };
 
         $scope.isCV = function(ob){
-            console.log("is ccv");
             if(typeof ob !== "object")return false;
             if(typeof ob.value !== "undefined"){
                 if(typeof ob.display !== "undefined"){
@@ -223,33 +224,17 @@ console.log($rootScope);
             return false;
         };
 
-
-
-        $scope.fetch = function($query) {
-            console.log($query);
-            substanceSearch.load($query);
-            return substanceSearch.search(field, $query);
-        };
-
-
-
         $scope.submit = function(){
-            console.log($scope.substance);
             var sub = $scope.substance;
-            console.log(sub);
             if (sub.officialNames || sub.unofficialNames){
                 for(var n in sub.officialNames){
                     var name = sub.officialNames[n];
-                    console.log(name);
                     name.type= "of";
                 }
                 sub.names = sub.officialNames.concat(sub.unofficialNames);
-                console.log(sub);
                 delete sub.officialNames;
                 delete sub.unofficialNames;
             }
-            console.log(sub);
-            console.log($scope.flattenCV(JSON.parse(JSON.stringify(sub))));
             data = $scope.flattenCV(JSON.parse(JSON.stringify(sub)));
             $http.post('app/submit', data).success(function() {
                     console.log("success");
@@ -362,33 +347,6 @@ console.log($rootScope);
                 moiety: '='
             },
             templateUrl: "app/assets/ginas/templates/moietydisplay.html"
-        };
-    });
-
-    ginasApp.directive('modalTemplate',function() {
-        return {
-            restrict: 'E',
-            templateUrl: 'app/assets/ginas/templates/modal-window.html',
-            scope: {
-                modal: '='
-            },
-            controller: function ($scope) {
-                console.log($scope);
-
-                $scope.ok = function () {
-                    $scope.modal.instance.close($scope.selected);
-                };
-
-                $scope.cancel = function () {
-                    $scope.modal.instance.dismiss('cancel');
-                };
-
-                /*                $scope.modal.instance.result.then(function (selectedItem) {
-                 $scope.selected = selectedItem;
-                 }, function () {
-                 $log.info('Modal dismissed at: ' + new Date());
-                 });*/
-            }
         };
     });
 
@@ -1178,6 +1136,8 @@ console.log($rootScope);
 
 
 ginasApp.controller('ModalController',function ($scope, $modalInstance, substanceSearch) {
+    console.log($scope);
+    console.log($modalInstance);
     $scope.ok = function () {
         console.log("ok");
         $modalInstance.close();
