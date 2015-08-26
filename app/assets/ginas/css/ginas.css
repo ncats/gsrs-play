@@ -681,9 +681,12 @@ h2.display-name {
     height: 0;
 }
 .revealable.row {
-    transition: .5s linear all;
+    transition: .2s linear all;
     height: 400px; 
     overflow: hidden;
     display: block !important;
     background: rgb(240, 240, 240) none repeat scroll 0% 0%;
+}
+.list-item .struc-thumb{
+    cursor:  pointer;
 }
