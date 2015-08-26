@@ -3,13 +3,13 @@
 } {
     <h1></h1>
 } {
-    <div class = "panel-default" ng-controller ="StrucSearchController as StrucSearchCtrl">
+    <div class = "panel-default">
         <form class="form-inline"
         method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances()" novalidate>
             <div class= "panel-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <sketcher width="100%" id="structure-search-sketcher" ng-model="structure" structure-query="StrucSearchCtrl.controllerFunction"></sketcher>
+                        <sketcher ng-model="structure"></sketcher>
                     </div>
                 </div>
             </div>
@@ -38,7 +38,7 @@
                             title="Query structure"
                             name="q"
                             ng-hide="true"
-                            ng-model="ginasCtrl.substance.q"
+                            ng-model="substance.q"
                             id="structure">
                         </div>
                         <button type="submit" onclick="submitForm()"

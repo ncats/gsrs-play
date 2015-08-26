@@ -2,67 +2,61 @@ package ix.ginas.controllers.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ix.core.controllers.EntityFactory;
 import ix.ginas.models.v1.ControlledVocabulary;
 import ix.ginas.models.v1.VocabularyTerm;
-import play.Logger;
-import play.libs.Json;
-import play.mvc.Result;
-import scala.util.parsing.json.JSON;
-
-import java.io.*;
-import java.util.*;
 
 /**
  * Created by sheilstk on 6/29/15.
  */
 public class CV {
-    
 
-    public CV (){
-    	
+
+    public CV() {
+
     }
-    
-    
-    
-	public String getField(String domain) {
-		ObjectMapper mapper = new ObjectMapper();
-		ControlledVocabulary cv1 = ControlledVocabularyFactory
-				.getControlledVocabulary(domain);
-		JsonNode j = mapper.valueToTree(cv1.terms);
-		return j.toString();
-	}
 
-    public static String getCV (String domain) {
-    	return new CV().getField(domain);
+
+    public String getField(String domain) {
+        ObjectMapper mapper = new ObjectMapper();
+        ControlledVocabulary cv1 = ControlledVocabularyFactory
+                .getControlledVocabulary(domain);
+        if (cv1 != null) {
+            JsonNode j = mapper.valueToTree(cv1.terms);
+            return j.toString();
+        }
+        return "[{display: 'hi', value: 'you suck'}]";
+    }
+
+    public static String getCV(String domain) {
+        return new CV().getField(domain);
     }
 
     /**
      * Returns the proper display term for value.
-     * 
+     * <p/>
      * If there is none found, display itself.
+     *
      * @param domain
      * @param value
      * @return
      */
-    public String getDisplay (String domain, String value) {
-    	ControlledVocabulary cv1 = ControlledVocabularyFactory
-				.getControlledVocabulary(domain);
-        if(cv1!=null){
-	        for(VocabularyTerm v : cv1.terms){
-	            if(v.value.equals(value)){
-	            	return v.display;
-	            }
-	        }
+    public String getDisplay(String domain, String value) {
+        ControlledVocabulary cv1 = ControlledVocabularyFactory
+                .getControlledVocabulary(domain);
+        if (cv1 != null) {
+            for (VocabularyTerm v : cv1.terms) {
+                if (v.value.equals(value)) {
+                    return v.display;
+                }
+            }
         }
         return value;
     }
 
-    public int size () { 
-    	return ControlledVocabularyFactory.size();
+    public int size() {
+        return ControlledVocabularyFactory.size();
     }
-    
+
 //    public CV (InputStream is) throws IOException {
 //        String line = "";
 //        String cvsSplitBy = "\t";
@@ -104,7 +98,7 @@ public class CV {
 
 //    public Map<String, List<VocabularyTerm>> map =
 //            new TreeMap<String, List<VocabularyTerm>>();
-    
+
 //    public String getField (String domain) {
 //        ObjectMapper mapper = new ObjectMapper();
 //        JsonNode j = mapper.valueToTree(map.get(domain));

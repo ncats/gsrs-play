@@ -1,10 +1,11 @@
+@import ix.ginas.controllers.GinasApp;
 
 <div class = "row info" >
     <button class="btn btn-primary label-offset det">
                         Codes&nbsp;<span class="badge" ng-show="substance.codes.length>0">
                         {{substance.codes.length}}</span> </button>
-    <a ng-show="!addingCodes" ng-click="CodeCtrl.addCodes()" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
-    <a ng-show="addingCodes" ng-click="CodeCtrl.addCodes()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
+    <a ng-show="!addingCodes" ng-click="toggleForm(codeForm)" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
+    <a ng-show="addingCodes" ng-click="toggleForm(codeForm)" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
 
     <div class="col-md-12">
         <div class = "row header-row">
@@ -20,7 +21,7 @@
             <div class = "col-md-3">
                 <strong>Description</strong>
             </div>
-            <div class = "col-md-2">
+            <div class = "col-md-2 text-right">
                 <strong>Reference ID</strong>
             </div>
         </div>
@@ -29,17 +30,11 @@
             <div class="col-md-3">
                 <span href="#" editable-text="obj.code" blur="submit">{{obj.code}}</span>
             </div>
-            <div class = "col-md-2"><span ng-repeat="n in obj.system">
-                <span ng-show="!codeForm.system.selected" ng-click="toggle(codeForm.system)" >{{n.display}}</span></span>
-                <tags-input ng-show ="codeForm.system.selected" ng-blur="toggle(codeForm.system)" custom-class="form-control" ng-model="obj.system" title="System" placeholder="System" id="editsystem" name="system" display-property="display" key-property="value" max-tags= "1" add-from-autocomplete-only="true" required>
-                    <auto-complete source="loadItems('CODE_SYSTEM', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.system" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" blur="submit">{{obj.system.display}}</span>
             </div>
-            <div class = "col-md-2"><span ng-repeat="n in obj.type">
-                <span ng-show="!codeForm.type.selected" ng-click="toggle(codeForm.type)" >{{n.display}}</span></span>
-                <tags-input ng-show ="codeForm.type.selected" ng-blur="toggle(codeForm.type)" custom-class="form-control" ng-model="obj.type" title="Type" placeholder="Type" id="edittype" name="type" display-property="display" key-property="value" max-tags= "1" add-from-autocomplete-only="true" required>
-                    <auto-complete source="loadItems('CODE_TYPE', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" blur="submit">{{obj.type.display}}</span>
             </div>
             <div class="col-md-3">
                 <span href="#" editable-text="obj.description" blur="submit">{{obj.description}}</span>
@@ -65,20 +60,12 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <tags-input custom-class="form-control" ng-model="code.system" title="Code System" placeholder="Code System" id="system" name="system"  max-tags="1" min-length="2" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
-                        <auto-complete source="loadItems('CODE_SYSTEM', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                    </tags-input>
-                    <ng-messages for="codeForm.system.$error" ng-if="codeForm.system.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.system" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
+                        </select>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <tags-input custom-class="form-control" ng-model="code.type" title="Code Type" placeholder="Code Type" id="type" name="type"  max-tags="1" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
-                        <auto-complete source="loadItems('CODE_TYPE', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                    </tags-input>
-                    <ng-messages for="codeForm.type.$error" ng-if="codeForm.type.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" required>
+                        </select>
                 </div>
                 <div class="col-md-3">
                     <input type="text" class="form-control" ng-model ="code.description" title="Description" id="description" name = "description"/>

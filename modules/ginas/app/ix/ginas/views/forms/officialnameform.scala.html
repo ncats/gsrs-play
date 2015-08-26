@@ -3,8 +3,8 @@
     <button class="btn btn-primary label-offset det">
                        Official Names&nbsp;<span class="badge" ng-show="substance.officialNames.length>0">
                         {{substance.officialNames.length}}</span> </button>
-    <a ng-show="!addingNames" ng-click="NameCtrl.addNames()" aria-label="Add Names"><i class = "fa fa-plus fa-2x success"></i></a>
-    <a ng-show="addingNames" ng-click="NameCtrl.addNames()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
+    <a ng-show="!addingNames" ng-click="addNames()" aria-label="Add Names"><i class = "fa fa-plus fa-2x success"></i></a>
+    <a ng-show="addingNames" ng-click="addNames()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
     <div class="col-md-12">
 
             <!-- Title bits -->
@@ -25,7 +25,7 @@
             <div class = "col-md-1">
                 <strong>Preferred</strong>
             </div>
-            <div class = "col-md-1">
+            <div class = "col-md-1 text-right">
                 <strong>Reference ID</strong>
             </div>
         </div>
@@ -36,18 +36,18 @@
             <div class="col-md-3">
                 <span href="#" editable-text="officialName.name" blur="submit">{{officialName.name}}</span>
             </div>
-            <div class = "col-md-2"><span ng-repeat="n in officialName.domain">
-                <span ng-show="!officialNameForm.domain.selected" ng-click="toggle(officialNameForm.domain)" >{{n.display}}</span></span>
-                <tags-input ng-show ="officialNameForm.domain.selected" ng-blur="toggle(officialNameForm.domain)" custom-class="form-control" ng-model="officialName.domain" title="Domain" placeholder="Domain" id="editdomain" name="domain" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
+            <div class = "col-md-2"><span ng-repeat="n in officialName.domains">
+                <span ng-show="!officialNameForm.domains.selected" ng-click="toggle(officialNameForm.domains)" >{{n.display}}</span></span>
+                <tags-input ng-show ="officialNameForm.domains.selected" ng-blur="toggle(officialNameForm.domains)" custom-class="form-control" ng-model="officialName.domains" title="Domain" placeholder="Domain" id="editdomains" name="domains" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
                     <auto-complete source="loadItems('NAME_DOMAIN', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
                 </tags-input>
             </div>
             <div class = "col-md-2">
-                <span ng-show="!officialName.jurisdiction || officialName.jurisdiction.length==0" ng-click="toggle(officialNameForm.jurisdiction)" ><i class="fa fa-plus fa-2x success"></i></span>
-                <span ng-repeat="n in officialName.jurisdiction">
-                    <span ng-show="!officialNameForm.jurisdiction.selected" ng-click="toggle(officialNameForm.jurisdiction)">{{n.display}}</span>
+                <span ng-show="!officialName.nameJurisdiction || officialName.nameJurisdiction.length==0" ng-click="toggle(officialNameForm.nameJurisdiction)" ><i class="fa fa-plus fa-2x success"></i></span>
+                <span ng-repeat="n in officialName.nameJurisdiction">
+                    <span ng-show="!officialNameForm.nameJurisdiction.selected" ng-click="toggle(officialNameForm.nameJurisdiction)">{{n.display}}</span>
                 </span>
-                <tags-input ng-show ="officialNameForm.jurisdiction.selected" ng-blur="toggle(officialNameForm.jurisdiction)" custom-class="form-control" ng-model="officialName.jurisdiction" title="Jurisdiction" placeholder="Jurisdiction" id="jurisdiction" name="jurisdiction" display-property="display" key-property="value" add-from-autocomplete-only="true" >
+                <tags-input ng-show ="officialNameForm.nameJurisdiction.selected" ng-blur="toggle(officialNameForm.nameJurisdiction)" custom-class="form-control" ng-model="officialName.nameJurisdiction" title="Jurisdiction" placeholder="Jurisdiction" id="nameJurisdiction" name="nameJurisdiction" display-property="display" key-property="value" add-from-autocomplete-only="true" >
                     <auto-complete source="loadItems('JURISDICTION', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
                 </tags-input>
             </div>
@@ -84,7 +84,7 @@
 
 
         <form class="form-horizontal" name="officialNameForm" id = "add-name" role="form" novalidate>
-            <div class="row form-row" ng-show="substance.chemical">
+            <div class="row form-row">
                 <div class="col-md-3 err-check" id="officialName-div" show-errors>
                     <input type="text" class="form-control" ng-model ="officialName.name" title="Name" id="name" name = "name" required duplicate/>
                     <ng-messages for="officialNameForm.name.$error" ng-if="officialNameForm.name.$touched">
@@ -93,18 +93,18 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <tags-input custom-class="form-control" ng-model="officialName.domain" title="Domain" placeholder="Domain" id="domain" name="domain" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
+                    <tags-input custom-class="form-control" ng-model="officialName.domains" title="Domain" placeholder="Domain" id="domains" name="domains" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
                         <auto-complete source="loadItems('NAME_DOMAIN', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
                     </tags-input>
-                    <ng-messages for="officialNameForm.domain.$error" ng-if="officialNameForm.domain.$touched">
+                    <ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domainss.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" >
-                    <tags-input custom-class="form-control" ng-model="officialName.jurisdiction" title="Jurisdiction" placeholder="Jurisdiction" id="jurisdiction" name="jurisdiction" display-property="display" key-property="value" add-from-autocomplete-only="true" >
+                    <tags-input custom-class="form-control" ng-model="officialName.nameJurisdiction" title="Jurisdiction" placeholder="Jurisdiction" id="nameJurisdiction" name="nameJurisdiction" display-property="display" key-property="value" add-from-autocomplete-only="true" >
                         <auto-complete source="loadItems('JURISDICTION', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
                     </tags-input>
-                    <ng-messages for="officialNameForm.jurisdiction.$error" ng-if="officialNameForm.jurisdiction.$touched">
+                    <ng-messages for="officialNameForm.nameJurisdiction.$error" ng-if="officialNameForm.nameJurisdiction.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>

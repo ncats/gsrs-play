@@ -1,7 +1,7 @@
 @(formName: String, propertyName: String)
 
 <!-- Modal -->
-<div class="col-md-1 err-check" show-errors>
+<div class="col-md-1 err-check pull-right" show-errors>
     <a ng-show="!substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
     <p class="danger" ng-if="!substance.references && @(formName).reference.$error">*required</p>
     <tags-input custom-class="form-control" ng-hide="!substance.references"  ng-model = "@(propertyName).references" title="References" placeholder="References" id="references" name="references" display-property="citation" key-property="id" add-from-autocomplete-only="true" >
