@@ -685,4 +685,5 @@ h2.display-name {
     height: 400px; 
     overflow: hidden;
     display: block !important;
+    background: rgb(240, 240, 240) none repeat scroll 0% 0%;
 }

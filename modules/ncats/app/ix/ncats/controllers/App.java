@@ -799,13 +799,14 @@ public class App extends Authentication {
         throws Exception {
         Chemical chem = new Jchemical (mol);
         DisplayParams dp = DisplayParams.DEFAULT();
-        
+        dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         if(amap!=null){
 	        ChemicalAtom[] atoms = chem.getAtomArray();
 	        for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
 	            atoms[i].setAtomMap(amap[i]);
 	            if(amap[i]!=0){
 	            	dp = dp.withSubstructureHighlight();
+	            	
 	            }
 	        }
         }
