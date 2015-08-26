@@ -7,6 +7,7 @@ import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -17,7 +18,9 @@ import javax.persistence.Inheritance;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -70,5 +73,25 @@ public class ChemicalSubstance extends Substance {
     @Indexable(name="SubstanceStereoChemistry", facet=true)
     public Structure.Stereo getStereoChemistry () {
         return structure != null ? structure.stereoChemistry : null;
+    }
+    
+    @Transient 
+    private int[] atomMaps=null;
+    
+    @JsonIgnore
+    public int[] getAtomMaps(){
+    	if(atomMaps==null)return new int[0];
+    	return atomMaps;
+    }
+    
+	@JsonIgnore
+	public String getAtomMapsString() {
+		return Arrays.toString(getAtomMaps()).replace("[", "").replace("]", "")
+				.replace(" ", "");
+	}
+    
+    @JsonIgnore
+    public void setAtomMaps(int[] am){
+    	atomMaps=am;
     }
 }

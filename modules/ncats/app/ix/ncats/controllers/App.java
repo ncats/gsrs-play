@@ -753,7 +753,7 @@ public class App extends Authentication {
                             mol.clean(2, null);
                         }
                         Logger.info("ok");
-                        return ok (render (mol, "svg", size));
+                        return ok (render (mol, "svg", size, null));
                     }
                 });
         }
@@ -795,13 +795,19 @@ public class App extends Authentication {
     }
 
 
-     public static byte[] render (Molecule mol, String format, int size)
+     public static byte[] render (Molecule mol, String format, int size, int[] amap)
         throws Exception {
-        Chemical chem = new Jchemical ();
-        chem.load(mol.toFormat("mol"), Chemical.FORMAT_SDF);
-        ChemicalAtom[] atoms = chem.getAtomArray();
-        for (int i = 0; i < Math.min(atoms.length, 10); ++i) {
-            atoms[i].setAtomMap(i+1);
+        Chemical chem = new Jchemical (mol);
+        DisplayParams dp = DisplayParams.DEFAULT();
+        
+        if(amap!=null){
+	        ChemicalAtom[] atoms = chem.getAtomArray();
+	        for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
+	            atoms[i].setAtomMap(amap[i]);
+	            if(amap[i]!=0){
+	            	dp = dp.withSubstructureHighlight();
+	            }
+	        }
         }
 
         /*
@@ -811,7 +817,9 @@ public class App extends Authentication {
         
         ChemicalRenderer render = new NchemicalRenderer (displayParams);
         */
+       
         ChemicalRenderer render = new NchemicalRenderer ();
+        render.setDisplayParams(dp);
         ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
         if (format.equals("svg")) {
             SVGGraphics2D svg = new SVGGraphics2D
@@ -829,7 +837,7 @@ public class App extends Authentication {
         return bos.toByteArray();
     }
     
-    public static byte[] render (Structure struc, String format, int size)
+    public static byte[] render (Structure struc, String format, int size, int[] amap)
         throws Exception {
         MolHandler mh = new MolHandler
             (struc.molfile != null ? struc.molfile : struc.smiles);
@@ -837,11 +845,40 @@ public class App extends Authentication {
         if (mol.getDim() < 2) {
             mol.clean(2, null);
         }
-        return render (mol, format, size);
+        return render (mol, format, size, amap);
     }
 
+    public static int[] stringToIntArray(String amapString){
+    	int[] amap=null;
+    	if(amapString!=null){
+    		String[] amapb = null;
+    		amapb = amapString.split(",");
+    		amap = new int[amapb.length];
+    		for(int i=0;i<amap.length;i++){
+    			try{
+    				amap[i]=Integer.parseInt(amapb[i]);
+    			}catch(Exception e){
+    				
+    			}
+    		}
+    	}
+    	return amap;
+    }
+    
+    /**
+     * Renders a chemical structure from structure ID
+     * atom map can be provided for highlighting
+     * 
+     * @param id
+     * @param format
+     * @param size
+     * @param atomMap
+     * @return
+     */
     public static Result structure (final String id,
-                                    final String format, final int size) {
+                                    final String format, final int size, final String atomMap) {
+    	
+    	final int[] amap = stringToIntArray(atomMap);
         if (format.equals("svg") || format.equals("png")) {
             final String key =
                 Structure.class.getName()+"/"+size+"/"+id+"."+format;
@@ -851,7 +888,7 @@ public class App extends Authentication {
                         public Result call () throws Exception {
                             Structure struc = StructureFactory.getStructure(id);
                             if (struc != null) {
-                                return ok (render (struc, format, size));
+                                return ok (render (struc, format, size, amap));
                             }
                             return null;
                         }
