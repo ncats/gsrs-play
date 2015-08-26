@@ -3,12 +3,12 @@
 </div>
 <div class="modal-body">
     <tags-input custom-class="form-control" ng-model="relationship.subref" title="Relationship Type"
-                placeholder="Relationship Type" id="type" name="type" display-property="name" key-property="approvalID"
-                add-from-autocomplete-only="true">
-        <auto-complete source="fetch($query)" min-length="1" debounce-delay="0"
+                placeholder="Relationship Type" id="type" name="type" display-property="key" key-property="key"
+                add-from-autocomplete-only="true" on-tag-added="retrieveSubstance($tag)" on-tag-removed="clear()">
+        <auto-complete source="fetch($query)" min-length="3" debounce-delay="0"
                        load-on-down-arrow="true"></auto-complete>
     </tags-input>
-    <div class="btn-toolbar" role="toolbar">
+<!--    <div class="btn-toolbar" role="toolbar">
         <div class="btn-group" role="group">
             <h3><span class="label label-default">{{ results.total }}</span></h3>
         </div>
@@ -30,24 +30,22 @@
                 </li>
             </ul>
         </div>
-    </div>
+    </div>-->
     <div class="panel-body">
         <div class="row hidden-xs" id="grid">
-
-
-            <div class="col-md-3 thumb-col" ng-repeat="item in results.content">
+            <div class="col-md-3 thumb-col">
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         <p class="text-right" data-toggle="tooltip" title="Approval ID">
                             <a href="#" ng-click="$event.preventDefault(); selected.item = item">
-                                <code>{{item.approvalIDDisplay}}</code>
+                                <code>{{relationship.subref.approvalID}}</code>
                             </a>
                         </p>
                     </div>
                     <div class="panel-body struc-img">
-                        <!--                        <img class="struc-thumb img-responsive" alt="Structure of {{item.name}}"
-                                                     src='/ginas/app/structure/{{item.structure.id}}.svg'>-->
-
+                        <rendered id="relationship.subref.refuuid"></rendered>
+<!--                                             <img class="struc-thumb img-responsive" alt="Structure of {{item.name}}"
+                                                     src='/ginas/app/structure/{{relationship.subref.refuuid}}.svg'>-->
                         <div class="row stereo">
                             <div class="col-md-10">
 
@@ -56,19 +54,19 @@
                         </div>
                     </div>
                     <div class="panel-footer nameDiv" data-toggle="tooltip" title="{{item.name}}">
-                        {{item.name}}
+                        {{relationship.subref.refPname}}
                     </div>
-                    <a href="#" ng-click="select(item)">
+<!--                    <a href="#" ng-click="select(item)">
                         Select
-                    </a>
+                    </a>-->
                 </div>
             </div>
 
 
         </div>
+<!--
 
-
-        Selected: <b><code>{{selected.item.approvalIDDisplay}}</code> {{ selected.item.name }}</b>
+        Selected: <b><code>{{selected.item.approvalIDDisplay}}</code> {{ selected.item.name }}</b>-->
 
     </div>
 
