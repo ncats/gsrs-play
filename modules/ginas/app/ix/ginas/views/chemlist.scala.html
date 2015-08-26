@@ -19,15 +19,6 @@
         </div>
     </div>
 
-    <div class= "panel-body list-item"><div ng-hide="!bigview">
-        <div ng-show="bigview" class = "revealable row">
-	    	<div class = "col-md-12">
-	    	<img ng-click="bigview=!bigview" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-	                src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 400,chem.getAtomMapsString())'>
-	        </div>
-        </div>
-        </div>
-
     <div class= "panel-body list-item">
     	
 
@@ -109,13 +100,12 @@
         
         
         <div ng-show="bigview" class = "revealable row">
-        <div ng-show="initialized">
-            <div class = "col-md-12">
-            <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                    src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 400,chem.getAtomMapsString())'>
+            <div ng-show="initialized">
+                <div class = "col-md-12">
+                <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+                        src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 400,chem.getAtomMapsString())'>
+                </div>
             </div>
-            
-        </div>
         </div>
         
     </div>
