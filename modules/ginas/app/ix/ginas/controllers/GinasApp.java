@@ -640,6 +640,14 @@ public class GinasApp extends App {
 
     /**
      * return the canonical/default chemical id
+     * 
+     * This needs to be re-evaluated. It is possible for there to
+     * be duplicated names, and there is no check here for this.
+     * 
+     * While it's not as pretty, I'm defaulting to using
+     * the uuid or approvalID.
+     * 
+     * 
      */
     public static String getId (Substance substance) {
         if (substance.approvalID != null)
@@ -647,17 +655,27 @@ public class GinasApp extends App {
 
         /**
          * proper permission should be checked here
+         * 
+	     * TP:
+	     * 
+	     * This needs to be re-evaluated. It is possible for there to
+	     * be duplicated names, and there is no check here for this.
+	     * 
+	     * While it's not as pretty, I'm defaulting to using
+	     * the uuid or approvalID.
          */
-        String official = null;
-        for (Name n : substance.names) {
-            if (n.preferred)
-                return n.name;
-            else if ("Official Name".equalsIgnoreCase(n.type))
-                official = n.name;
-        }
-
-        return official != null ? official
-            : substance.uuid.toString().substring(0, 8);
+//        String official = null;
+//        for (Name n : substance.names) {
+//            if (n.preferred)
+//                return n.name;
+//            else if ("of".equalsIgnoreCase(n.type))
+//                official = n.name;
+//        }
+//
+//        return official != null ? official
+//            : substance.uuid.toString().substring(0, 8);
+        
+        return substance.uuid.toString().substring(0, 8);
     }
 
     static abstract class GetResult<T extends Substance> {

@@ -401,6 +401,10 @@ public class GinasSDFUtils {
 		
 	}
 	public static class PATH_MAPPER {
+		public static enum ADD_METHODS {
+			ADD_NAME, ADD_CODE, ADD_PREFERRED_NAME, ADD_SYSTEMATIC_NAME, SET_STRUCTURE, SIMPLE_NOTE, NOTE_PROPERTY, DONT_IMPORT, NULL_TYPE
+		};
+		
 		public String path;
 		public boolean isregex=false;
 		public boolean startswith=true;
@@ -477,14 +481,13 @@ public class GinasSDFUtils {
 			return path.hashCode();
 		}
 
-		public static enum ADD_METHODS {
-			ADD_NAME, ADD_CODE, ADD_PREFERRED_NAME, ADD_SYSTEMATIC_NAME, SET_STRUCTURE, SIMPLE_NOTE, NOTE_PROPERTY, DONT_IMPORT, NULL_TYPE
-		};
+		
 
 		public static void ADD_NAME(Substance sub, String name, String path) {
 			Name n = new Name();
 			n.name = name;
 			sub.names.add(n);
+			
 			n.references.add(new Keyword(makePathReference(sub, path).uuid
 					.toString()));
 		}
@@ -575,5 +578,9 @@ public class GinasSDFUtils {
 	public static void setPathMappers(String payloadUUID, List<PATH_MAPPER> fieldMaps){
 		fieldMaps.add(new PATH_MAPPER(FIELD_MOLFILE,false,PATH_MAPPER.ADD_METHODS.SET_STRUCTURE));
 		mappers.put(payloadUUID, fieldMaps);
+	}
+	public static String PATH_TYPES(){
+		ObjectMapper om = new ObjectMapper();
+		return om.valueToTree(PATH_MAPPER.ADD_METHODS.values()).toString();
 	}
 }

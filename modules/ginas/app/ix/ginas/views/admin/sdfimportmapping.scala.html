@@ -12,7 +12,9 @@
     <div class="container">
         <div class="row">
                @for(field <- fields) {
-                    @fieldview(field)
+                    @if(field.path !="#molfile"){
+                        @fieldview(field)
+                    }
                }
         </div>
     </div>

@@ -1201,30 +1201,32 @@ ginasApp.factory('SDFFields', function() {
 
 
 ginasApp.controller('SDFieldController', function ($scope) {
-
+  $scope.radio={model:'NULL_TYPE'};
   $scope.path="";
   $scope.radioModel = 'NULL_TYPE';
 
+  $scope.checkModel = [
+    "NULL_TYPE",
+    "DONT_IMPORT",
+    "ADD_CODE",
+    "ADD_NAME",
+    "ADD_NAME"
+  ];
 
-
-  $scope.checkModel = {
-    DONT_IMPORT: true,
-    ADD_CODE: false,
-    NULL_TYPE: false,
-    ADD_NAME: false
+  $scope.init = function(path, model){
+        $scope.path=path;
+        $scope.checkModel = model;
+        console.log(model);
   };
-  $scope.init = function(path){
-    $scope.path=path;
-  };
 
-  $scope.$watch('radioModel', function(newVal, oldVal){
+  $scope.$watch('radio.model', function(newVal, oldVal){
     var sdf=window.SDFFields[$scope.path];
     if(typeof sdf === "undefined"){
-	sdf={};
+    sdf={};
         window.SDFFields[$scope.path]=sdf;    
     }
     sdf.path=$scope.path;
-    sdf.method=$scope.radioModel;
+    sdf.method=$scope.radio.model;
 
     console.log(window.SDFFields);
     var l=[];

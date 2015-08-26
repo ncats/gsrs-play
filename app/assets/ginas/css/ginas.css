@@ -664,4 +664,16 @@ h2.display-name {
     text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
 
-
+.field-values div{
+}
+.field-values code{
+    white-space: nowrap;
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor:pointer;
+}
+.field-values .tooltip-inner{
+    max-width:500px !important;    
+}
