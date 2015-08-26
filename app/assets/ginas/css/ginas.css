@@ -687,3 +687,6 @@ h2.display-name {
     display: block !important;
     background: rgb(240, 240, 240) none repeat scroll 0% 0%;
 }
+.list-item .struc-thumb{
+    cursor:  pointer;
+}

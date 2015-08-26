@@ -41,7 +41,7 @@
                     <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
                 }
 
-                <img ng-click="bigview=!bigview" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+                <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
                 src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 150,chem.getAtomMapsString())'>
             </div>
             <div class = "col-md-6">
@@ -96,11 +96,15 @@
             </div>
         </div>
         
+        
         <div ng-show="bigview" class = "revealable row">
+        <div ng-show="initialized">
             <div class = "col-md-12">
-            <img ng-click="bigview=!bigview" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+            <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
                     src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 400,chem.getAtomMapsString())'>
             </div>
+            
+        </div>
         </div>
         
     </div>

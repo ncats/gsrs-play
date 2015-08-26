@@ -1156,7 +1156,13 @@ ginasApp.controller('ModalController',function ($scope, $modalInstance, substanc
 });
 
 ginasApp.controller('SubstanceListController',function ($scope) {
-	$scope.bigview=false;
+    $scope.bigview=false;
+    $scope.initialized=false;
+    $scope.toggle = function(){
+       $scope.initialized=true;
+       $scope.bigview=!$scope.bigview;
+    };
+    
 });
 
 ginasApp.factory('SDFFields', function() {
@@ -1180,7 +1186,7 @@ ginasApp.controller('SDFieldController', function ($scope) {
   $scope.init = function(path, model){
         $scope.path=path;
         $scope.checkModel = model;
-        console.log(model);
+        //console.log(model);
   };
 
   $scope.$watch('radio.model', function(newVal, oldVal){
