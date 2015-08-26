@@ -22,7 +22,7 @@
             <div class = "col-md-1">
                 <strong>Preferred</strong>
             </div>
-            <div class = "col-md-2">
+            <div class = "col-md-3 text-right">
                 <strong>Reference ID</strong>
             </div>
         </div>
@@ -34,10 +34,8 @@
                 <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
             </div>
             <div class = "col-md-2">
-                <span ng-show="!nameForm.type.selected" ng-click="toggle(nameForm.type)" >{{name.type.display}}</span>
-                <tags-input ng-show ="nameForm.type.selected" ng-blur="toggle(nameForm.type)" custom-class="form-control" ng-model="name.type" title="Type" placeholder="Domain" id="edittype" name="type" display-property="display" key-property="value" max-tags= "1" add-from-autocomplete-only="true" required>
-                    <auto-complete source="loadItems('NAME_DOMAIN', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
+                <span href="#" editable-select="name.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>
+
             </div>
             <div class = "col-md-2"><span ng-repeat="n in name.languages">
                 <span ng-show="!name.languages || name.languages.length==0" ng-click="toggle(nameForm.languages)" ><i class="fa fa-plus fa-2x success"></i></span>
@@ -72,9 +70,8 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <tags-input custom-class="form-control" ng-model="name.type" title="Name Type" placeholder="Name Type" id="type" name="type"  max-tags="1" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
-                        <auto-complete source="loadItems('NAME_TYPE', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                    </tags-input>
+                   <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "name.type" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" required>
+                        </select>
                     <ng-messages for="nameForm.type.$error" ng-if="nameForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>

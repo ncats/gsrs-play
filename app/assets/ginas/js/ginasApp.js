@@ -28,7 +28,8 @@
         switch (substanceClass) {
             case "chemical":
                 Substance.substanceClass = substanceClass;
-                Substance.chemical = {};
+                Substance.structure = {};
+                Substance.moieties=[];
                 break;
             case "protein":
                 Substance.substanceClass = substanceClass;
@@ -49,6 +50,9 @@
     ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch) {
         var ginasCtrl = this;
         $scope.substance = Substance;
+        $scope.select = ['Substructure', 'Similarity'];
+        $scope.type = 'Substructure';
+        $scope.cutoff = 0.8;
 
         //date picker
         $scope.open = function($event) {
@@ -84,7 +88,9 @@
 
         $scope.enabled = false;
         $scope.mol = null;
-        //$scope.unbind = localStorageService.bind($scope, 'mol');
+
+
+        //local storage functions//
         $scope.unbind = localStorageService.bind($scope, 'enabled');
         this.enabled = function getItem(key) {
             return localStorageService.get('enabled') || false;
@@ -92,14 +98,17 @@
         this.numbers = true;
         localStorageService.set('enabled', $scope.enabled);
 
-        this.passStructure = function(id) {
+        //passes structure id from chemlist search to structure search//
+        $scope.passStructure = function(id) {
             localStorageService.set('structureid', id);
         };
-        this.clearStructure = function() {
-            console.log("destroy");
-            return localStorageService.remove('structureid');
+        $scope.clearStructure = function() {
+             localStorageService.remove('structureid');
         };
+        ///
 
+
+        //main submission method
         $scope.validate = function(obj, form, type) {
             $scope.$broadcast('show-errors-check-validity');
             if (form.$valid) {
@@ -117,24 +126,6 @@
                 }
                 $scope.$broadcast('show-errors-reset');
             }
-            /*switch (this.substance.substanceClass) {
-                case "chemical":
-
-                    break;
-                case "protein":
-                    Substance.substanceClass = substanceClass;
-                    Substance.protein = {};
-                    var subunit = "";
-                    break;
-                case "structurallyDiverse":
-                    Substance.substanceClass = substanceClass;
-                    Substance.structurallyDiverse = {};
-                    break;
-                default:
-                    console.log('invalid substance class');
-                    break;
-            }*/
-
         };
 
         $scope.toggle = function(el) {
@@ -241,6 +232,12 @@
                     alert("submitted!");
                 });
         };
+
+        $scope.resolvemol= function(structure){
+            structureMol.get(structure);
+        };
+
+
     });
 
     ginasApp.directive('scrollSpy', function($timeout) {
@@ -301,6 +298,7 @@
                     'Content-Type': 'text/plain'
                 }
             }).success(function(data) {
+                console.log(data);
                 options[field] = data.content[0].terms;
             });
         };
@@ -355,12 +353,15 @@
         return {
             restrict: 'E',
             scope: {
-                r: '='
+                id: '='
+/*                size: '=',
+                amap :'='*/
+
             },
             link: function(scope, element) {
                 $http({
                     method: 'GET',
-                    url: 'app/structure/' + scope.r + '.svg',
+                    url: 'app/structure/' + scope.id + '.svg',
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -413,7 +414,6 @@
                 if (!structureid) {
                     this.setMol = function() {
                         var mol = sketcher.getMolfile();
-                        //console.log(mol);
                         $http({
                             method: 'POST',
                             url: url,
@@ -422,59 +422,23 @@
                                 'Content-Type': 'text/plain'
                             }
                         }).success(function(data) {
-                            console.log("fetched");
-                            if (!Substance.chemical) {
-                                Substance.chemical = {};
-                            }
-                            Substance.chemical.structure = data.structure;
-                            Substance.chemical.moieties = data.moieties;
+                            Substance.structure = data.structure;
+                            Substance.moieties = data.moieties;
                             Substance.q = data.structure.smiles;
+                            console.log(Substance);
                         });
-
-                        console.log(Substance);
-                        console.log(element);
                     };
                 } else {
                     $http({
                         method: 'GET',
-                        url: '/ginas/app/api/v1/structures/' + structureid,
-                        /*data: structureid,
-                         headers: {'Content-Type': 'text/plain'}*/
+                        url: '/ginas/app/api/v1/structures/' + structureid
                     }).success(function(data) {
                         console.log(data);
-                        if (!Substance.chemical) {
-                            Substance.chemical = {};
-                        }
+
                         sketcher.setMolfile(data.molfile);
-                        /*                        Substance.chemical.structure = data.structure;
-                         Substance.chemical.moieties = data.moieties;
-                         Substance.q = data.structure.smiles; */
+                        Substance.q = data.smiles;
+                        console.log(Substance);
                     });
-                    /*
-
-                     console.log(Substance);
-                     console.log(element);
-                     */
-
-
-                    /*                    url ='/ginas/app/structure/'+ structureid+'.mol';
-                     console.log(url);
-                     $http({
-                     method: 'GET',
-                     url: url,
-                     }).success(function (data) {
-                     console.log(data);
-                     /!*                        if (!Substance.chemical) {
-                     Substance.chemical = {};
-                     }
-                     Substance.chemical.structure = data.structure;
-                     Substance.chemical.moieties = data.moieties;
-                     Substance.q = data.structure.smiles;*!/
-                     sketcher.setMolfile(data);
-
-                     });
-                     console.log(Substance);
-                     console.log(element);*/
                 }
             }
         };
@@ -546,56 +510,6 @@
         };
     });
 
-
-    ginasApp.controller('NoteController', function($scope, Substance) {
-        $scope.isEditingNote = false;
-        $scope.editNote = null;
-
-        this.addNotes = function() {
-            $scope.addingNotes = !$scope.addingNotes;
-        };
-
-        this.toggleEditNote = function() {
-            console.log("editing)");
-            $scope.isEditingNote = !$scope.isEditingNote;
-        };
-
-        this.reset = function() {
-            $scope.note = {};
-            $scope.$broadcast('show-errors-reset');
-        };
-
-        this.validateNote = function(note) {
-            $scope.$broadcast('show-errors-check-validity');
-            if ($scope.noteForm.$valid) {
-                //new array if object doesn't already have one
-                if (!Substance.notes) {
-                    console.log("new array");
-                    Substance.notes = [];
-                }
-                Substance.notes.push(note);
-                this.reset();
-            }
-        };
-
-        this.setEditedNote = function setEditedNote(note) {
-            console.log(note);
-            $scope.editNote = note;
-            $scope.tempCopy = angular.copy(note);
-        };
-
-        this.updateNote = function(note) {
-            var index = Substance.notes.indexOf(note);
-            Substance.notes[index] = note;
-            $scope.editNote = null;
-            $scope.isEditingNote = false;
-        };
-
-        this.removeNote = function(note) {
-            var index = Substance.notes.indexOf(note);
-            Substance.notes.splice(index, 1);
-        };
-    });
     ginasApp.controller('PropertyController', function($scope, Substance) {
         $scope.isEditingProperty = false;
         $scope.editProperty = null;
@@ -647,53 +561,6 @@
         this.removeProperty = function(property) {
             var index = Substance.properties.indexOf(property);
             Substance.properties.splice(index, 1);
-        };
-    });
-
-    ginasApp.controller('StructureController', function($scope, $http, localStorageService, Substance) {
-        $scope.isEditingStructure = false;
-        $scope.editStructure = null;
-        $scope.noStructure = true;
-        this.adding = false;
-        this.editing = false;
-        localStorageService.remove('mol');
-
-        this.toggleEdit = function() {
-            this.editing = !this.editing;
-        };
-
-        this.toggleAdd = function() {
-            this.adding = !this.adding;
-        };
-
-        $scope.addStructure = function() {
-            $scope.addingStructure = !$scope.addingStructure;
-
-        };
-
-        this.resolveMol = function(structure) {
-            console.log("resolving mol file");
-            //sketcher.setMolfile(structure.molfile);
-            var url = window.strucUrl; //'/ginas/app/smiles';
-            //var mol = structure.molfile;
-            //   console.log(mol);
-            //   mol = "\n"+mol;
-            console.log(structure.molfile);
-            $http({
-                method: 'POST',
-                url: url,
-                data: structure.molfile,
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            }).success(function(data) {
-                sketcher.setMolfile(data.structure.molfile);
-                console.log("resolved");
-                console.log(structure);
-                $scope.structure = data.structure;
-                console.log(structure);
-                
-            });
         };
     });
 
@@ -850,19 +717,6 @@
             $scope.protein = {};
             $scope.$broadcast('show-errors-reset');
         };
-
-    });
-
-    ginasApp.controller('StrucSearchController', function($scope) {
-        $scope.select = ['Substructure', 'Similarity'];
-        $scope.type = 'Substructure';
-        $scope.cutoff = 0.8;
-        $scope.q = "";
-
-        $scope.controllerFunction = function(valueFromDirective) {
-            console.log(valueFromDirective);
-        };
-
 
     });
 

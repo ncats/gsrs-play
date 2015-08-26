@@ -4,12 +4,12 @@
 @wizardfields(kind: String) = {
 
 @if(kind == "chemical") {
-    <div ng-show="uniqueName">@forms.structureform()</div>
+    <div>@forms.structureform()</div>
     <div>@forms.moietyform()</div>
     <div>@forms.officialnameform()</div>
     <div>@forms.nameform()</div>
     <div >@forms.codeform()</div>
-    <div>@forms.relationshipdisplay()</div>
+    <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>
     <div>@forms.propertyform()</div>
     <div ng-show="substance.references">@forms.referenceform()</div>

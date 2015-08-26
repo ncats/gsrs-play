@@ -1,4 +1,4 @@
-<div class = "row info" ng-controller="StructureController as StructureCtrl">
+<div class = "row info">
     <button class="btn btn-primary label-offset det">
                        Structure</button>
     <div>
@@ -22,32 +22,25 @@
                     <div class = "col-md-2"><strong>Defined Stereocenters</strong></div>
                     <div class = "col-md-1"><strong>EZ Centers</strong></div>
                     <div class = "col-md-1"><strong>Charge</strong></div>
-                    <div class = "col-md-2"><strong>Reference ID</strong></div>
+                    <div class = "col-md-2 text-right"><strong>Reference ID</strong></div>
                 </div>
                 <div class ="row" >
                     <div class = "col-md-3">
-                                    {{ginasCtrl.substance.chemical.structure.formula}}
+                                    {{substance.structure.formula}}
                     </div>
                     <div class = "col-md-3">
-                                    {{ginasCtrl.substance.chemical.structure.mwt}}
+                                    {{substance.structure.mwt}}
                     </div>
                     <div class = "col-md-2">
-                    {{ginasCtrl.substance.chemical.structure.definedStereo ||0 }}/{{ginasCtrl.substance.chemical.structure.stereoCenters || 0}}
+                    {{substance.structure.definedStereo ||0 }}/{{substance.structure.stereoCenters || 0}}
                     </div>
                     <div class = "col-md-1">
-                    {{ginasCtrl.substance.chemical.structure.ezCenters}}
+                    {{substance.structure.ezCenters}}
                     </div>
                     <div class = "col-md-1">
-                    {{ginasCtrl.substance.chemical.charge}}
+                    {{substance.charge}}
                     </div>
-                    <div class="col-md-2 err-check" show-errors>
-                        <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-                        <p class="danger" ng-if="!ginasCtrl.substance.references && structureForm.reference.$error">*required</p>
-                        <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "structure.references = ginasCtrl.substance.references[0]" ng-model = "structure.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
-                        <ng-messages for="structureForm.reference.$error" ng-if="structureForm.reference.$pristine">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
+                    @referenceselectorform("structureForm", "structure")
                 </div>
             </form>
         </div>
@@ -62,7 +55,7 @@
                 <div class="modal-body">
                     <div class = "row">
                         <textarea class="col-md-12" id = "inputExport">
-                         {{ginasCtrl.substance.chemical.structure.molfile}}
+                         {{substance.structure.molfile}}
                         </textarea>
                     </div>
                     <div class="modal-footer">
@@ -103,7 +96,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" ng-click="structure.molfile=null;" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" ng-click="StructureCtrl.resolveMol(structure)" data-dismiss="modal">Import</button>
+                            <button type="button" class="btn btn-primary" ng-click="resolveMol(structure)" data-dismiss="modal">Import</button>
                         </div>
                     </form>
                 </div>
