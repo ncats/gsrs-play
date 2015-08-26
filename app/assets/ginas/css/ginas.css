@@ -677,3 +677,12 @@ h2.display-name {
 .field-values .tooltip-inner{
     max-width:500px !important;    
 }
+.revealable.row.ng-hide {
+    height: 0;
+}
+.revealable.row {
+    transition: .5s linear all;
+    height: 400px; 
+    overflow: hidden;
+    display: block !important;
+}

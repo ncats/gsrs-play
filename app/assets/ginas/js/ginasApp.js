@@ -1195,6 +1195,10 @@ ginasApp.controller('ModalController',function ($scope, $modalInstance, substanc
 
 });
 
+ginasApp.controller('SubstanceListController',function ($scope) {
+	$scope.bigview=false;
+});
+
 ginasApp.factory('SDFFields', function() {
         var SDFFields = {};
     });
