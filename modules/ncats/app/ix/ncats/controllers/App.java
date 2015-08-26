@@ -806,8 +806,11 @@ public class App extends Authentication {
 	            atoms[i].setAtomMap(amap[i]);
 	            if(amap[i]!=0){
 	            	dp = dp.withSubstructureHighlight();
+	            	
 	            }
 	        }
+        }else{
+        	dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
 
         /*
