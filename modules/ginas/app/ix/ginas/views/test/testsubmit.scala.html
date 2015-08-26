@@ -1,9 +1,4 @@
-@import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics
-@import ix.core.models.Payload
-
-@(payload : Payload, fields: List[FieldStatistics])
-
-@ix.ginas.views.html.ginas("Load Data: SDF Mapping", "null") {
+@ix.ginas.views.html.ginas("Test submission", "null") {
     @ix.ginas.views.html.menu()
 } {
     <h3></h3>
@@ -11,24 +6,18 @@
 
     <div class="container">
         <div class="row">
-               @for(field <- fields) {
-                    @if(field.path !="#molfile"){
-                        @fieldview(field)
-                    }
-               }
-        </div>
-    </div>
-    
-    <form class="form-horizontal" role="form" method="POST"
-                action="@ix.ginas.controllers.routes.GinasLoad.loadSDF(payload.id.toString())">
+            <div class = "col-md-8 col-md-offset-2">
+                <h1 class="cover-heading">Test Submission</h1>
+                <form class="form-horizontal" role="form" method="POST"
+                action="@ix.ginas.controllers.routes.GinasLoad.submitSubstance()">
                    <div class="form-group">
                         <label for="mappings"
-                        class="col-sm-3 control-label">Mappings</label>
+                        class="col-sm-3 control-label">Substance JSON</label>
                         <div class="col-sm-9">
                             <textarea
                             class="form-control"
-                            name="mappings"
-                            id="mappings">
+                            name="substance"
+                            id="substance">
                             </textarea>
                         </div>
                     <div class="form-group">
@@ -39,5 +28,8 @@
                         </div>
                     </div>
                 </form>
-   
+
+            </div>
+        </div>
+    </div>
 }

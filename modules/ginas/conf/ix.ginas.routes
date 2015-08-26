@@ -3,19 +3,18 @@
 #
 GET         /                           ix.ginas.controllers.GinasFactory.index
 GET         /register                   ix.ginas.controllers.GinasFactory.register
+GET         /test/submit                ix.ginas.controllers.GinasLoad.testSubmit
 GET         /structure                  ix.ginas.controllers.GinasFactory.structuresearch
 GET         /substance/:name            ix.ginas.controllers.GinasApp.substance(name: String)
 GET         /substances                 ix.ginas.controllers.GinasApp.substances(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET         /chemicals                  ix.ginas.controllers.GinasApp.chemicals(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
-GET         /chemicals/:name            ix.ginas.controllers.GinasApp.chemical(name: String)
 GET         /proteins                   ix.ginas.controllers.GinasApp.proteins(q: String ?= null, rows: Int ?= 32, page: Int ?= 1)
-GET         /proteins/:name             ix.ginas.controllers.GinasApp.protein(name: String)
 GET         /sequence                   ix.ginas.controllers.GinasFactory.sequence(kind: String ?= null)
 GET         /report                     ix.ginas.controllers.GinasFactory.report
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON
-POST        /submit                       ix.ginas.controllers.GinasLoad.loadSubstance
 GET         /load                       ix.ginas.controllers.GinasLoad.load
+POST        /submit                     ix.ginas.controllers.GinasLoad.submitSubstance
 POST        /loadSDF/:payloadID         ix.ginas.controllers.GinasLoad.loadSDF(payloadID : String)
 GET         /monitor                    ix.ginas.controllers.GinasLoad.jobs(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET         /monitor/:processID         ix.ginas.controllers.GinasLoad.monitorProcess(processID : String)
@@ -25,5 +24,5 @@ GET         /login                      ix.ginas.controllers.GinasFactory.login
 GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationships(uuid: String)
 GET         /cv/:field                  ix.ginas.controllers.GinasApp.getCVField(field: String)
 
-->          /                           ix.ncats.Routes
-GET         /:any                       ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
+->      /   ix.ncats.Routes
+GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

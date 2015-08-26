@@ -1,14 +1,14 @@
-package ix.ginas.models.utils;
+package ix.ginas.utils;
 
 import ix.core.chem.Chem;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.XRef;
 import ix.core.plugins.GinasRecordProcessorPlugin.PayloadExtractedRecord;
-import ix.core.plugins.GinasRecordProcessorPlugin.RecordExtractor;
-import ix.core.plugins.GinasRecordProcessorPlugin.RecordPersister;
-import ix.core.plugins.GinasRecordProcessorPlugin.RecordTransformer;
 import ix.core.plugins.GinasRecordProcessorPlugin.TransformedRecord;
-import ix.ginas.models.utils.GinasSDFUtils.GinasSDFExtractor;
+import ix.core.processing.RecordExtractor;
+import ix.core.processing.RecordPersister;
+import ix.core.processing.RecordTransformer;
+import ix.ginas.models.utils.GinasV1ProblemHandler;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Moiety;
@@ -23,9 +23,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import play.Logger;
 import tripod.chem.indexer.StructureIndexer;
@@ -37,6 +37,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasUtils {
 	public static Substance makeSubstance(InputStream bis) throws Exception {
+        ObjectMapper mapper = new ObjectMapper ();
+        JsonNode tree = mapper.readTree(bis);
+        return makeSubstance(tree);
+	}
+	
+	public static Substance makeSubstance(String bis) throws Exception {
         ObjectMapper mapper = new ObjectMapper ();
         JsonNode tree = mapper.readTree(bis);
         return makeSubstance(tree);
@@ -163,7 +169,6 @@ public class GinasUtils {
 				Logger.debug("Saved substance " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.uuid : null)
 						+ " record " + prec.rec.id);
 				if(!worked)throw new IllegalStateException(prec.rec.message);
-				
 		}
 	}
 	public static class GinasSubstanceTransformer extends GinasAbstractSubstanceTransformer<JsonNode>{
@@ -233,6 +238,48 @@ public class GinasUtils {
 		}
 		
 	}
+	public static class GinasJSONExtractor extends RecordExtractor<JsonNode>{
+		public GinasJSONExtractor(InputStream is) {
+			super(is);
+		}
+		public GinasJSONExtractor(String s) throws UnsupportedEncodingException {
+			super(new ByteArrayInputStream(s.getBytes("utf8")));
+		}
+		
+		@Override
+		public JsonNode getNextRecord() {
+			if(is==null)return null;
+			
+			try {
+	            ObjectMapper mapper = new ObjectMapper ();
+		        JsonNode tree = mapper.readTree(is);
+		        is.close();
+		        is=null;
+		        return tree;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
+		
+		
+
+		@Override
+		public void close() {
+		}
+
+		@Override
+		public RecordExtractor<JsonNode> makeNewExtractor(InputStream is) {
+			return new GinasJSONExtractor(is);
+		}
+
+		@Override
+		public RecordTransformer getTransformer() {
+			return new GinasSubstanceTransformer();
+		}
+		
+	}
+	
 	public abstract static class GinasAbstractSubstanceTransformer<K> extends RecordTransformer<K,Substance>{
 		public static GinasProcessingStrategy DEFAULT_STRAT = GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS();
 		@Override
@@ -250,16 +297,22 @@ public class GinasUtils {
 			try {
 				sub = transformSubstance(pr.theRecord);
 				sub.addImportReference(rec.job);
-				GinasProcessingStrategy.failIfNecessary(sub.prepare(DEFAULT_STRAT));
+				prepareSubstance(DEFAULT_STRAT,sub);
 				rec.status = ProcessingRecord.Status.ADAPTED;
 			} catch (Throwable t) {
 				rec.stop = System.currentTimeMillis();
 				rec.status = ProcessingRecord.Status.FAILED;
 				rec.message = t.getMessage();
-				t.printStackTrace();
+				Logger.error(t.getMessage());
 				return null;
 			}
 			return sub;
+		}
+		public static void prepareSubstance(GinasProcessingStrategy prc, Substance sub) throws Exception{
+			GinasProcessingStrategy.failIfNecessary(Validation.validateAndPrepare(sub, prc));
+		}
+		public static void prepareSubstance(Substance sub) throws Exception{
+			prepareSubstance(DEFAULT_STRAT,sub);
 		}
 		public abstract String getName(K theRecord);
 		public abstract Substance transformSubstance(K rec) throws Throwable;

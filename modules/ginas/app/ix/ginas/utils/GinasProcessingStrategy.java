@@ -1,9 +1,8 @@
-package ix.ginas.models.utils;
+package ix.ginas.utils;
 
 import java.util.List;
 
 import play.Logger;
-
 
 public abstract class GinasProcessingStrategy {
 	public abstract void processMessage(GinasProcessingMessage gpm);

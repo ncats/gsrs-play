@@ -107,18 +107,22 @@ public class EntityFactory extends Controller {
         }
         
         public FetchOptions (int top, int skip, String filter) {
-            for (Map.Entry<String, String[]> me
-                     : request().queryString().entrySet()) {
-                String param = me.getKey();
-                if ("order".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        order.add(s);
-                }
-                else if ("expand".equalsIgnoreCase(me.getKey())) {
-                    for (String s : me.getValue())
-                        expand.add(s);
-                }
-            }
+        	try{
+	            for (Map.Entry<String, String[]> me
+	                     : request().queryString().entrySet()) {
+	                String param = me.getKey();
+	                if ("order".equalsIgnoreCase(param)) {
+	                    for (String s : me.getValue())
+	                        order.add(s);
+	                }
+	                else if ("expand".equalsIgnoreCase(me.getKey())) {
+	                    for (String s : me.getValue())
+	                        expand.add(s);
+	                }
+	            }
+        	}catch(Exception e){
+        		
+        	}
             this.top = top;
             this.skip = skip;
             this.filter = filter;
@@ -168,7 +172,11 @@ public class EntityFactory extends Controller {
     protected static <K,T> List<T> filter (FetchOptions options,
                                            Model.Finder<K, T> finder) {
 
-        Logger.debug(request().uri()+": "+options);
+    	try{
+    		Logger.debug(request().uri()+": "+options);
+    	}catch(Exception e){
+    		Logger.debug("non-request-bound: "+options);
+    	}
         Query<T> query = finder.query();
         
         

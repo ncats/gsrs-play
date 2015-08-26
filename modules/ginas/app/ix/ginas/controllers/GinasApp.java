@@ -9,8 +9,6 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.IxCache;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
-import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.controllers.v1.CV;
 import ix.ginas.controllers.v1.*;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
@@ -20,6 +18,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.util.StringUtils;
 
@@ -38,6 +38,8 @@ import play.mvc.*;
 import play.libs.ws.*;
 import play.libs.F;
 import tripod.chem.indexer.StructureIndexer;
+
+import chemaxon.struc.MolAtom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -559,11 +561,13 @@ public class GinasApp extends App {
 
     public static Result substructure
         (final String query, final int rows, final int page) {
+    	final GinasSearchResultProcessor processor= 
+    		new GinasSearchResultProcessor ();
         try {
             SearchResultContext context = substructure
-                (query, rows, page, new GinasSearchResultProcessor ());
-
-            return structureResult (context, rows, page);
+                (query, rows, page, processor);
+            
+            return structureResultAndProcess (context, rows, page,processor);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -574,9 +578,11 @@ public class GinasApp extends App {
              (500, "Unable to perform substructure search: "+query));
     }
 
-    public static Result structureResult
-        (final SearchResultContext context, int rows, int page)
+    public static Result structureResultAndProcess
+        (final SearchResultContext context, int rows, int page,
+        		final GinasSearchResultProcessor processor)
         throws Exception {
+    	
         return structureResult
             (context, rows, page,
              new DefaultResultRenderer<Substance>() {
@@ -584,6 +590,8 @@ public class GinasApp extends App {
                                        int total, int[] pages,
                                        List<TextIndexer.Facet> facets,
                                        List<Substance> substances) {
+                	 if(processor!=null)processor.postProcess(substances);
+                	 
                      return ok (ix.ginas.views.html.substances.render
                                 (page, rows, total, pages,
                                  decorate (filter (facets, CHEMICAL_FACETS)),
@@ -591,6 +599,12 @@ public class GinasApp extends App {
                  }
              });
     }
+
+	public static Result structureResult(final SearchResultContext context,
+			int rows, int page)
+			throws Exception {
+		return structureResultAndProcess(context,rows,page,null);
+	}
 
     static final GetResult<Substance> ChemicalResult =
         new GetResult<Substance>(Substance.class,
@@ -640,6 +654,14 @@ public class GinasApp extends App {
 
     /**
      * return the canonical/default chemical id
+     * 
+     * This needs to be re-evaluated. It is possible for there to
+     * be duplicated names, and there is no check here for this.
+     * 
+     * While it's not as pretty, I'm defaulting to using
+     * the uuid or approvalID.
+     * 
+     * 
      */
     public static String getId (Substance substance) {
         if (substance.approvalID != null)
@@ -647,17 +669,27 @@ public class GinasApp extends App {
 
         /**
          * proper permission should be checked here
+         * 
+	     * TP:
+	     * 
+	     * This needs to be re-evaluated. It is possible for there to
+	     * be duplicated names, and there is no check here for this.
+	     * 
+	     * While it's not as pretty, I'm defaulting to using
+	     * the uuid or approvalID.
          */
-        String official = null;
-        for (Name n : substance.names) {
-            if (n.preferred)
-                return n.name;
-            else if ("Official Name".equalsIgnoreCase(n.type))
-                official = n.name;
-        }
-
-        return official != null ? official
-            : substance.uuid.toString().substring(0, 8);
+//        String official = null;
+//        for (Name n : substance.names) {
+//            if (n.preferred)
+//                return n.name;
+//            else if ("of".equalsIgnoreCase(n.type))
+//                official = n.name;
+//        }
+//
+//        return official != null ? official
+//            : substance.uuid.toString().substring(0, 8);
+        
+        return substance.uuid.toString().substring(0, 8);
     }
 
     static abstract class GetResult<T extends Substance> {
@@ -1026,19 +1058,40 @@ public class GinasApp extends App {
 
     }
 
+    //sigh ... this is the best of a bunch of bad options now
+   
+    
     public static class GinasSearchResultProcessor
         extends SearchResultProcessor {
         final public Set<String> processed = new HashSet<String>();
+        final public Map<String,int[]> atomMaps = new ConcurrentHashMap<String,int[]>();
         int count;
 
         GinasSearchResultProcessor () {
         }
-
+        
+        public void postProcess(List<Substance> lsub){
+        	for(Substance s: lsub){
+        		int[] am = atomMaps.get(s.uuid+"");
+        		if(am!=null){
+        			((ChemicalSubstance)s).setAtomMaps(am);
+        		}
+        	}
+        }
+        
         protected Object instrument (StructureIndexer.Result r)
             throws Exception {
             List<ChemicalSubstance> chemicals =
                 SubstanceFactory.chemfinder
                 .where().eq("structure.id", r.getId()).findList();
+            if(!chemicals.isEmpty()){
+            	int[] amap = new int[r.getMol().getAtomCount()];
+            	int i=0;
+            	for(MolAtom ma:r.getMol().getAtomArray()){
+            		amap[i++]=ma.getAtomMap();
+            	}
+            	atomMaps.put(chemicals.get(0).uuid+"", amap);
+            }
             return chemicals.isEmpty() ? null : chemicals.iterator().next();
         }
     }

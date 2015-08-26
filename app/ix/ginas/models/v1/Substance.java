@@ -11,8 +11,6 @@ import ix.ginas.models.Ginas;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
 import ix.ginas.models.PrincipalSerializer;
-import ix.ginas.models.utils.GinasProcessingMessage;
-import ix.ginas.models.utils.GinasProcessingStrategy;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 
@@ -49,6 +47,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends Ginas {
+	private static final String DEFAULT_NO_NAME = "NO_NAME";
+
 	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH IMPORT";
 
 	public static final boolean REMOVE_INVALID_RELATIONSHIPS = false;
@@ -254,7 +254,10 @@ public class Substance extends Ginas {
 				return n.name;
 			}
 		}
-		return names.get(0).name;
+		if(names!=null && names.size()>0){
+			return names.get(0).name;	
+		}
+		return Substance.DEFAULT_NO_NAME;
 	}
 
 	public List<Name> getOfficialNames() {
@@ -439,15 +442,12 @@ public class Substance extends Ginas {
 		return n;
 	}
 	
-	public List<GinasProcessingMessage> prepare(GinasProcessingStrategy strat){
-		return new ArrayList<GinasProcessingMessage>();
-	}
 
 	public void addRestrictGroup(Principal p){
 		this.access.add(p);
 	}
 	public void addRestrictGroup(String principal){
-		addRestrictGroup(PrincipalFactory.registerIfAbsent(new Principal(principal)));
+		addRestrictGroup(PrincipalFactory.registerIfAbsent(new Principal(principal,null)));
 	}
 	
 	

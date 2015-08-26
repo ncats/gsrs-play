@@ -7,6 +7,9 @@ import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
+import ix.core.processing.RecordExtractor;
+import ix.core.processing.RecordPersister;
+import ix.core.processing.RecordTransformer;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
 import ix.utils.Util;
@@ -49,6 +52,11 @@ import akka.routing.SmallestMailboxRouter;
 
 
 
+
+
+
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
@@ -56,7 +64,8 @@ import com.hazelcast.core.HazelcastInstance;
 
 public class GinasRecordProcessorPlugin extends Plugin {
 	private static final int AKKA_TIMEOUT = 60000;
-	private static final String EXTRACTOR_KEYWORD = "EXTRACTOR";
+	
+	
 	private static final String PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
 	//Hack variable for resisting buildup
 	//of extracted records not yet transformed
@@ -67,12 +76,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	
 	
 	//Replace with the methods you want.
-	private static RecordPersister _recordPersister = 
-			new ix.ginas.models.utils.GinasUtils.GinasSubstancePersister();
-	private static RecordExtractor _recordExtractor = 
-			new ix.ginas.models.utils.GinasUtils.GinasDumpExtractor(null);
-	private static RecordTransformer _recordTransformer = 
-			new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
+//	private static RecordPersister _recordPersister = new ix.ginas.models.utils.GinasUtils.GinasSubstancePersister();
+//	private static RecordExtractor _recordExtractor = 
+//			new ix.ginas.models.utils.GinasUtils.GinasDumpExtractor(null);
+//	private static RecordTransformer _recordTransformer = 
+//			new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
 
 	private static PrintWriter persistFailures;
 	private static PrintWriter transformFailures;
@@ -232,6 +240,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 
 		public final Op oper;
 		public final Model[] models;
+		public boolean worked=false;
 
 		public PersistModel(Op oper, Model... models) {
 			this.oper = oper;
@@ -260,8 +269,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 					}
 					break;
 				}
+				worked=true;
 			} catch (Throwable t) {
 				t.printStackTrace();
+				worked=false;
 			}
 		}
 
@@ -296,35 +307,35 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		public void persists() {
 			
 			getInstance().decrementExtractionQueue();
-			String k=null;
+			String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
 			try{
-				_recordPersister.persist(this);
+				rec.job.getPersister().persist(this);
 				System.out.println("Last persist:" + System.currentTimeMillis());
-				k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
-				
 				Statistics stat=applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_GOOD);
 				//Logger.debug(stat.toString());
 			}catch(Exception e){
-				k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+				e.printStackTrace();
 				applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_BAD);
 				ObjectMapper om = new ObjectMapper();
 				persistFailures.println(rec.name + "\t" + rec.message + "\t" + om.valueToTree(theRecord).toString().replace("\n", ""));
 				persistFailures.flush();
 			}
-			
-			Statistics stat = getStatisticsForJob(k);
-			if(stat!=null){
-				if(stat._isDone()){
-					ObjectMapper om = new ObjectMapper();
-					rec.job.stop=System.currentTimeMillis();
-					rec.job.status=ProcessingJob.Status.COMPLETE;
-					rec.job.statistics=om.valueToTree(stat).toString();
-					PersistModel.Update(rec.job).persists();
-				}
-			}else{
-				Logger.error("Can't find statistics on job");
+			updateJobIfNecessary(rec.job);			
+		}
+	}
+
+	public synchronized static void updateJobIfNecessary(ProcessingJob job2) {
+		ProcessingJob job = ProcessingJobFactory.getJob(job2.id);
+		Statistics stat = getStatisticsForJob(job);
+		if (stat != null) {
+			if (stat._isDone()) {
+				ObjectMapper om = new ObjectMapper();
+				job.stop = System.currentTimeMillis();
+				job.status = ProcessingJob.Status.COMPLETE;
+				job.statistics = om.valueToTree(stat).toString();
+				PersistModel pm = PersistModel.Update(job);
+				pm.persists();
 			}
-			
 		}
 	}
 
@@ -529,31 +540,38 @@ public class GinasRecordProcessorPlugin extends Plugin {
 				PayloadExtractedRecord pr = (PayloadExtractedRecord) mesg;
 				
 				ProcessingRecord rec = new ProcessingRecord();
+				String k=pr.jobKey;
 				try{
 					Payload pay=pr.job.payload;
-					if(pay==null){
-						Logger.error("PAYLOAD IS NULL");
-					}
-					RecordTransformer rt=RecordExtractor.getInstanceOfExtractor(
-							pr.job.getKeyMatching(EXTRACTOR_KEYWORD))
-							.getTransformer(pay);
-					
+					RecordTransformer rt=pr.job.getTransformer();
 					Object trans = rt.transform(pr, rec);
 					
 					if(trans==null){
 						throw new IllegalStateException("Transform error");
 					}
-					String k=pr.jobKey;
 					
 					applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_GOOD);
 					
 					reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
 					
 				}catch(Exception e){
-					e.printStackTrace();
+					Logger.error(e.getMessage());
+					//e.printStackTrace();
 					getInstance().decrementExtractionQueue();
-					String k=pr.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());					
 					applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
+				}finally{
+					Statistics stat = getStatisticsForJob(k);
+					if(stat!=null){
+						if(stat._isDone()){
+							ObjectMapper om = new ObjectMapper();
+							rec.job.stop=System.currentTimeMillis();
+							rec.job.status=ProcessingJob.Status.COMPLETE;
+							rec.job.statistics=om.valueToTree(stat).toString();
+							PersistModel.Update(rec.job).persists();
+						}
+					}else{
+						Logger.error("Can't find statistics on job");
+					}
 				}
 				
 			} else if (mesg instanceof Terminated) {
@@ -667,10 +685,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		return true;
 	}
 
-	public String submit(Payload payload) {
-		return submit(payload, _recordExtractor.getClass());
-	}
-	public String submit(Payload payload, Class extractor) {
+//	public String submit(Payload payload) {
+//		return submit(payload, _recordExtractor.getClass());
+//	}
+	public String submit(Payload payload, Class extractor, Class persister) {
 		// first see if this payload has already processed..
 		PayloadProcessor pp = new PayloadProcessor(payload);
 		
@@ -679,8 +697,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		job.start = System.currentTimeMillis();
 		job.keys.add(new Keyword(
 				GinasRecordProcessorPlugin.class.getName(), pp.key));
-		//annotate the extractor to use
-		job.keys.add(new Keyword(EXTRACTOR_KEYWORD, extractor.getName()));
+		job.setExtractor(extractor);
+		job.setPersister(persister);
 		
 		job.status = ProcessingJob.Status.PENDING;
 		job.payload = pp.payload;
@@ -693,6 +711,37 @@ public class GinasRecordProcessorPlugin extends Plugin {
 		//jobCacheStatistics.put(pp.key, value);
 		return pp.key;
 	}
+
+//	public String submit(Payload payload, 
+//			Class extractor, 
+//			Class transformer,
+//			Class persister, 
+//			Serializable extractInit,
+//			Serializable transformInit,
+//			Serializable persistInit) {
+//		PayloadProcessor pp = new PayloadProcessor(payload);
+//		
+//		
+//		ProcessingJob job = new ProcessingJob();
+//		job.start = System.currentTimeMillis();
+//		job.keys.add(new Keyword(
+//				GinasRecordProcessorPlugin.class.getName(), pp.key));
+//		//annotate the extractor to use
+//		job.keys.add(new Keyword(EXTRACTOR_KEYWORD, extractor.getName()));
+//		job.keys.add(new Keyword(TRANSFORM_KEYWORD, transformer.getName()));
+//		job.keys.add(new Keyword(PERSISTER_KEYWORD, persister.getName()));
+//		
+//		job.status = ProcessingJob.Status.PENDING;
+//		job.payload = pp.payload;
+//		job.message="Preparing payload for processing";
+//		job.save();
+//		storeStatisticsForJob(pp.key, new Statistics());
+//		pp.jobId=job.id;
+//		inbox.send(processor, pp);
+//		
+//		//jobCacheStatistics.put(pp.key, value);
+//		return pp.key;
+//	}
 	
 	
 /*
@@ -751,9 +800,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 			//Logger.debug("Lemme try to process one...");
 			try {
 				Logger.debug("Counting records");
-				RecordExtractor rec = RecordExtractor
-						.getInstanceOfExtractor(job
-								.getKeyMatching(EXTRACTOR_KEYWORD));
+				RecordExtractor rec = job.getExtractor();
 				Estimate es= rec.estimateRecordCount(pp.payload);
 				{
 					Logger.debug("Counted records");
@@ -819,91 +866,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
 	
 	
 	
-	public static abstract class RecordTransformer<K,T>{
-		public abstract T transform(PayloadExtractedRecord<K> pr,ProcessingRecord rec);		
-	}
-	public static abstract class RecordPersister<K,T>{
-		public abstract void persist(TransformedRecord<K,T> prec) throws Exception;		
-	}
 	
-	public static abstract class RecordExtractor<K>{
-		public InputStream is;
-		public RecordExtractor(InputStream is){
-			this.is=is;
-		}
-		
-		abstract public K getNextRecord();
-		abstract public void close(); 
-		
-		public Iterator<K> getRecordIterator(){
-			return new Iterator<K>(){
-				private K cached;
-				private boolean done=false;
-				@Override
-				public boolean hasNext() {
-					if(done)return false;
-					if(cached!=null)
-						return true;
-					cached = getNextRecord();
-					return (cached!=null);
-				}
-
-				@Override
-				public K next() {
-					if(cached!=null){
-						K ret=cached;
-						cached=null;
-						return ret;
-					}
-					return getNextRecord();
-				}
-
-				@Override
-				public void remove() {}
-				
-			};
-		}		
-		
-		public abstract RecordExtractor<K> makeNewExtractor(InputStream is);
-		
-		public RecordExtractor<K> makeNewExtractor(Payload p){
-			InputStream pis=PayloadFactory.getStream(p);
-			return makeNewExtractor(pis);
-		}
-		
-		/**
-		 * Count records extracted from payload.
-		 * 
-		 * By default, this is implemented naively by iteration.
-		 * 
-		 * Should be overridden to take advantage of better assumptions.
-		 * @param p
-		 * @return
-		 */
-		public Estimate estimateRecordCount(Payload p){
-			long count=0;
-			RecordExtractor extract = makeNewExtractor(p);
-			for (Object m; (m = extract.getNextRecord()) != null;count++) {}
-			extract.close();
-			return new Estimate(count, Estimate.TYPE.EXACT);
-		}
-		public static RecordExtractor getInstanceOfExtractor(String className){
-			try{
-				Class<?> clazz = Class.forName(className);
-				Constructor<?> ctor = clazz.getConstructor(InputStream.class);
-				RecordExtractor object = (RecordExtractor) ctor.newInstance(new Object[] { null });
-				return object;
-			}catch(Exception e){
-				return null;
-			}
-		}
-		public abstract RecordTransformer getTransformer();
-		
-		public RecordTransformer getTransformer(Payload p){
-			return getTransformer();
-		}
-		
-	}
 	
 	
 	

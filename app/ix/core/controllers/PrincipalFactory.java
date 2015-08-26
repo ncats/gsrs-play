@@ -62,6 +62,7 @@ public class PrincipalFactory extends EntityFactory {
     }
     
     public static Principal byUserName (String uname) {
+    	System.out.println("########## "+ uname);
     	Principal p = justRegisteredCache.get(uname);
     	if(p!=null)return p;
         return finder.where().eq("username", uname).findUnique();

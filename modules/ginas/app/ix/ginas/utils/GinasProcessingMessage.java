@@ -1,5 +1,4 @@
-package ix.ginas.models.utils;
-
+package ix.ginas.utils;
 public class GinasProcessingMessage {
 	public enum MESSAGE_TYPE{WARNING, ERROR, INFO};
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
