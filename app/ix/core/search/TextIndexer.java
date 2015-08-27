@@ -302,14 +302,15 @@ public class TextIndexer {
             
             //If there's an error getting the index count, it probably wasn't 
             //saved properly. Treat it as new if an error is thrown.
-            if(!isNew){
-	            try{
-	            	lookup.getCount();
-	            }catch(Exception e){
-	            	isNew=true;
-					Logger.warn("Error building lookup " + dir.getName()
-							+ " will reinitialize");
-	            }
+            if (!isNew) {
+                try{
+                    lookup.getCount();
+                }
+                catch (Exception e) {
+                    isNew=true;
+                    Logger.warn("Error building lookup " + dir.getName()
+                                + " will reinitialize");
+                }
             }
             
             if (isNew) {
@@ -417,7 +418,7 @@ public class TextIndexer {
             }
             finally {
                 result.done();
-                searcher.getIndexReader().close();
+                //searcher.getIndexReader().close();
             }
         }
 
@@ -540,6 +541,7 @@ public class TextIndexer {
     private Directory indexDir;
     private Directory taxonDir;
     private IndexWriter indexWriter;
+    private DirectoryReader indexReader;
     private Analyzer indexAnalyzer;
     private DirectoryTaxonomyWriter taxonWriter;
     private FacetsConfig facetsConfig;
@@ -593,6 +595,7 @@ public class TextIndexer {
         IndexWriterConfig conf = new IndexWriterConfig 
             (LUCENE_VERSION, indexAnalyzer);
         indexWriter = new IndexWriter (indexDir, conf);
+        indexReader = DirectoryReader.open(indexWriter, true);  
         taxonWriter = new DirectoryTaxonomyWriter (taxonDir);
 
         facetsConfig = loadFacetsConfig (new File (dir, FACETS_CONFIG_FILE));
@@ -646,6 +649,18 @@ public class TextIndexer {
             fetchWorkers[i] = threadPool.submit(new FetchWorker ());
     }
     
+    protected synchronized DirectoryReader getReader () throws IOException {
+        DirectoryReader reader = DirectoryReader.openIfChanged(indexReader);
+        if (reader != null) {
+            indexReader.close();
+            indexReader = reader;
+        }
+        return indexReader;
+    }
+
+    protected IndexSearcher getSearcher () throws IOException {
+        return new IndexSearcher (getReader ());
+    }
 
     static boolean DEBUG (int level) {
         Global g = Global.getInstance();
@@ -696,6 +711,7 @@ public class TextIndexer {
         IndexWriterConfig conf = new IndexWriterConfig 
             (LUCENE_VERSION, indexer.indexAnalyzer);
         indexer.indexWriter = new IndexWriter (indexer.indexDir, conf);
+        indexer.indexReader = DirectoryReader.open(indexer.indexWriter, true);
         indexer.taxonWriter = new DirectoryTaxonomyWriter (indexer.taxonDir);
         indexer.facetsConfig = new FacetsConfig ();
         for (Map.Entry<String, FacetsConfig.DimConfig> me
@@ -730,7 +746,13 @@ public class TextIndexer {
     }
 
     public int size () {
-        return indexWriter.numDocs();
+        try {
+            return getReader().numDocs();
+        }
+        catch (IOException ex) {
+            Logger.trace("Can't retrieve NumDocs", ex);
+        }
+        return -1;
     }
 
     public SearchResult search (String text, int size) throws IOException {
@@ -815,18 +837,14 @@ public class TextIndexer {
     
     protected SearchResult filter (SearchOptions options, Filter filter)
         throws IOException {
-        IndexSearcher searcher = new IndexSearcher
-            (DirectoryReader.open(indexWriter, true));
-        return search (searcher, new SearchResult (options, null),
+        return search (getSearcher (), new SearchResult (options, null),
                        new MatchAllDocsQuery (), filter);
     }
 
     protected SearchResult search (SearchResult searchResult, 
                                    Query query, Filter filter)
         throws IOException {
-        IndexSearcher searcher = new IndexSearcher
-            (DirectoryReader.open(indexWriter, true));
-        return search (searcher, searchResult, query, filter);
+        return search (getSearcher (), searchResult, query, filter);
     }
     
     protected SearchResult search (IndexSearcher searcher,
@@ -1084,16 +1102,10 @@ public class TextIndexer {
     public Document getDoc (Object entity) throws Exception {
         Term term = getTerm (entity);
         if (term != null) {
-            IndexSearcher searcher = new IndexSearcher
-                (DirectoryReader.open(indexWriter, true));
-            try {
-                TopDocs docs = searcher.search(new TermQuery (term), 1);
-                if (docs.totalHits > 0)
-                    return searcher.doc(docs.scoreDocs[0].doc);
-            }
-            finally {
-                searcher.getIndexReader().close();
-            }
+            IndexSearcher searcher = getSearcher ();
+            TopDocs docs = searcher.search(new TermQuery (term), 1);
+            if (docs.totalHits > 0)
+                return searcher.doc(docs.scoreDocs[0].doc);
         }
         return null;
     }
@@ -1777,6 +1789,8 @@ public class TextIndexer {
                 look.close();
             }
 
+            if (indexReader != null)
+                indexReader.close();
             if (indexWriter != null)
                 indexWriter.close();
             if (taxonWriter != null)

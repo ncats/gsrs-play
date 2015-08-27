@@ -194,4 +194,11 @@ object ApplicationBuild extends Build {
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
+  val seqaln = Project("seqaln", file("modules/seqaln")).settings(
+    version := appVersion,
+    libraryDependencies ++= commonDependencies,
+    javacOptions ++= javaBuildOptions,
+    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
+  )
 }
