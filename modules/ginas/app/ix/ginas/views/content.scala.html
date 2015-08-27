@@ -1,9 +1,10 @@
 @import ix.ncats.controllers.App
 @import ix.ncats.controllers.App.FacetDecorator
+@import ix.core.search.FieldFacet
 
 @(title: String, kind: String,
         resetAction: String, current: Int, rows: Int, total: Int,
-        pages: Array[Int], facets: Array[FacetDecorator])(header: Html)(breadcrumb: Html)(content: Html)
+        pages: Array[Int], facets: Array[FacetDecorator],searchFacets : List[FieldFacet] = null)(header: Html)(breadcrumb: Html)(content: Html)
 
     @ginas(title, kind) {
         @header
@@ -28,6 +29,9 @@
                             class="alert alert-danger alert-dismissible"
                         }
                     role="alert">
+                    
+                          
+                             
                         <button type="button" class="close" data-dismiss="alert"
                         onclick="location.assign('@ix.ginas.controllers.routes.GinasApp.substances().url')"
                         aria-label="Close">
@@ -70,6 +74,31 @@
                                 }
                             }
                         }
+                        
+                        
+                          @if(searchFacets!=null && searchFacets.size()>0){
+                                <h5>Restrict query to field:</h5>
+                                 @for(searchField <- searchFacets) {
+                                    <div class = "col-md-4 fieldfacet">
+                                        <div class="row" style="display:block">
+                                            <div class = "col-md-1">
+                                                <input 
+                                                    type="checkbox"
+                                                    onclick="location.assign('@ix.ginas.controllers.routes.GinasApp.substances().url' + '?q=@searchField.getLuceneQuery()')"
+                                                >
+                                            </div>                                       
+                                            <div class = "col-md-8">
+                                                <span>@searchField.getDisplayField()</span>
+                                            </div>
+                                            <div class = "col-md-1">
+                                                <span class="badge" >@searchField.count</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                 }
+                                 
+                                <div class="spacer">&nbsp;</div>
+                          }
                     </div>
                 }
             }

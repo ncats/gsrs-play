@@ -33,6 +33,7 @@ import javax.persistence.Transient;
 
 import play.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -260,6 +261,7 @@ public class Substance extends Ginas {
 		return Substance.DEFAULT_NO_NAME;
 	}
 
+	@JsonIgnore
 	public List<Name> getOfficialNames() {
 		List<Name> officialNames = new ArrayList<Name>();
 		for (Name n : this.names) {
@@ -270,6 +272,7 @@ public class Substance extends Ginas {
 		return Name.sortNames(officialNames);
 	}
 
+	@JsonIgnore
 	public List<Name> getNonOfficialNames() {
 		List<Name> nonOfficialNames = new ArrayList<Name>();
 		for (Name n : this.names) {
@@ -280,6 +283,7 @@ public class Substance extends Ginas {
 		return Name.sortNames(nonOfficialNames);
 	}
 
+	@JsonIgnore
 	public List<Name> getAllNames() {
 		return names;
 	}
@@ -306,6 +310,7 @@ public class Substance extends Ginas {
 		}
 	}
 
+	@JsonIgnore
 	public boolean isNonSubstanceConcept() {
 		if (this.substanceClass.toString().equals("concept")) {
 			return !isSubstanceVariant();
@@ -313,6 +318,7 @@ public class Substance extends Ginas {
 		return false;
 	}
 
+	@JsonIgnore
 	public boolean isSubstanceVariant() {
 		if (this.substanceClass.toString().equals("concept")) {
 			for (Relationship r : relationships) {
@@ -330,6 +336,7 @@ public class Substance extends Ginas {
 	 * 
 	 * @return
 	 */
+	@JsonIgnore
 	public SubstanceReference getParentSubstanceReference() {
 		for (Relationship r : relationships) {
 			if (r.type.equals("SUBSTANCE->SUB_CONCEPT")) {
@@ -339,6 +346,7 @@ public class Substance extends Ginas {
 		return null;
 	}
 
+	
 	public String getApprovalID() {
 		if (approvalID != null)
 			return approvalID;
@@ -349,6 +357,7 @@ public class Substance extends Ginas {
 		return null;
 	}
 
+	@JsonIgnore
 	public String getApprovalIDDisplay() {
 		if (approvalID != null)
 			return approvalID;
@@ -359,6 +368,7 @@ public class Substance extends Ginas {
 		return null;
 	}
 
+	@JsonIgnore
 	public List<SubstanceReference> getChildConceptReferences() {
 		List<SubstanceReference> subConcepts = new ArrayList<SubstanceReference>();
 		for (Relationship r : relationships) {
@@ -369,6 +379,7 @@ public class Substance extends Ginas {
 		return subConcepts;
 	}
 
+	@JsonIgnore
 	public boolean hasChildConceptReferences() {
 		if (getChildConceptReferences().size() > 0) {
 			return true;
@@ -377,6 +388,7 @@ public class Substance extends Ginas {
 		}
 	}
 
+	@JsonIgnore
 	public boolean hasModifications() {
 		if (this.modifications != null) {
 			if (this.modifications.agentModifications.size() > 0
@@ -399,6 +411,7 @@ public class Substance extends Ginas {
 		return ret;
 	}
 
+	
 	public Modifications getModifications() {
 		return modifications;
 	}

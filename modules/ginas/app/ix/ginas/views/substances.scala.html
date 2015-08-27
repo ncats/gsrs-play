@@ -1,17 +1,20 @@
 @import ix.ginas.models.v1.{ChemicalSubstance, ProteinSubstance, MixtureSubstance, Substance}
 @import ix.ncats.controllers.App.FacetDecorator
 @import ix.ncats.controllers.App
+@import ix.core.search.FieldFacet
 
 @import ix.ginas.models.v1.StructurallyDiverseSubstance
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-        facets: Array[FacetDecorator], substancesList: List[Substance])
+        facets: Array[FacetDecorator], substancesList: List[Substance], searchFacets : List[FieldFacet] = null)
 
 @content("Substances", "ix.ginas.models.v1.Substance", ix.ginas.controllers.routes.GinasApp.substances().url,
-    current, rows, total, pages, facets) {
+    current, rows, total, pages, facets,searchFacets) {
     @menu()
 } {
     <div></div>
 } {
+    
+        
     <div class= "panel-body">
         <div class = "row hidden-xs" ng-show="enabled" id ="grid">
         @for(sub <- substancesList) {
