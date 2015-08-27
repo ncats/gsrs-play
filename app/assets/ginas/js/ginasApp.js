@@ -49,50 +49,54 @@
 
 
     ginasApp.factory('lookup', function() {
-        var lookup = {"name.type":"NAME_TYPE",
-            "name.nameOrgs":"NAME_ORG",
-            "name.nameJurisdiction":"JURISDICTION",
-            "name.domains":"NAME_DOMAIN",
-            "name.languages":"LANGUAGE",
-            "code.system":"CODE_SYSTEM",
-            "code.type":"CODE_TYPE",
-            "relationship.type":"RELATIONSHIP_TYPE",
-            "relationship.interactionType":"INTERACTION_TYPE",
-            "relationship.qualification":"QUALIFICATION",
-            "reference.docType":"DOCUMENT_TYPE"};
+        var lookup = {"names.type":"NAME_TYPE",
+            "names.nameOrgs":"NAME_ORG",
+            "names.nameJurisdiction":"JURISDICTION",
+            "names.domains":"NAME_DOMAIN",
+            "names.languages":"LANGUAGE",
+            "codes.system":"CODE_SYSTEM",
+            "codes.type":"CODE_TYPE",
+            "relationships.type":"RELATIONSHIP_TYPE",
+            "relationships.interactionType":"INTERACTION_TYPE",
+            "relationships.qualification":"QUALIFICATION",
+            "references.docType":"DOCUMENT_TYPE"};
 
-            lookup.getFromName = function(field){
-            console.log(field);
-                for (var name in lookup){
-                    if (field == name){
-                        return true;
-                    }
-/*                }
-                if(lookup.name){
-                    console.log(lookup.name);
-                    return true;*/
+            lookup.getFromName = function(field, val){
+                var domain = lookup[field];
+                if(typeof domain !== "undefined"){
+                    return {
+                        "display":val,
+                        "value":val,
+                        "domain":domain
+                    };
                 }
-                return false;
-        };
+                return null;
+            };
         return lookup;
     });
 
     ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
 
+        $scope.toFormSubstance = function(apiSub){
+            apiSub = $scope.expandCV(apiSub,"");
+            apiSub = $scope.splitNames(apiSub);
 
+
+
+            return apiSub;
+        };
 
         var ginasCtrl = this;
         //localStorageService.set('substance', Substance);
 
         var edit = localStorageService.get('editID');
-        console.log(edit);
         if(edit){
-            console.log("retrieving data");
             substanceIDRetriever.getSubstances(edit).then(function (data) {
-                console.log(data);
-                var sub = $scope.splitNames(data);
+                var sub = $scope.toFormSubstance(data);
              //   sub = $scope.expandCV(data);
+              //  console.log(angular.copy(sub));
                 $scope.substance= sub;
+
               localStorageService.remove('editID');
             });
         }else{
@@ -139,6 +143,11 @@
             return data.search(field, $query);
         };
         //populates tag fields//
+
+        $scope.retrieveItems = function(field, $query) {
+            data.load(field);
+            return data.lookup(field, $query);
+        };
 
         $scope.scrollTo = function(prmElementToScrollTo) {
             $location.hash(prmElementToScrollTo);
@@ -198,7 +207,7 @@
             if(names){
                 for (var n in names){
                     var name = names[n];
-                    if(name.type =="of"){
+                    if(name.type.value == "of"){
                         officialNames.push(name);
                     }else{
                         unofficialNames.push(name);
@@ -267,16 +276,38 @@
             //return substanceSearch.search(field, $query);
         };
 
-        $scope.expandCV = function(sub){
+        $scope.expandCV = function(sub, path){
+
             for(var v in sub) {
-                if (lookup.getFromName(sub[v])) {
-                    console.log("ok");
+
+                var newpath = path;
+                if(newpath.length >= 1 ){
+                    if(!angular.isArray(sub)) {
+                        newpath += ".";
+                    }
+                }
+                if(!angular.isArray(sub)){
+                    newpath=newpath+v;
+                }
+                var newcv = lookup.getFromName(newpath, sub[v]);
+                if(angular.isArray(sub[v])){
+                   newcv=null;
+                }
+
+
+                if (newcv !== null) {
+                    var w = $scope.retrieveItems(newcv.domain, newcv.value);
+                    console.log("##### display:" + data.lookup(newcv.domain, newcv.value)) ;
+                    newcv.display=w;
+                    sub[v]=newcv;
+
                 } else {
                     if(typeof sub[v] === "object") {
-                        $scope.expandCV(sub[v]);
+                        $scope.expandCV(sub[v], newpath);
                     }
                 }
             }
+            return sub;
         };
 
 
@@ -445,6 +476,7 @@
                     'Content-Type': 'text/plain'
                 }
             }).success(function(data) {
+                console.log(data);
                 options[field] = data.content[0].terms;
             });
         };
@@ -455,6 +487,15 @@
                     return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
                 })
                 .sortBy('display')
+                .value();
+        };
+        this.lookup = function(field, query) {
+            console.log(options);
+            return _.chain(options[field])
+                .filter(function(x) {
+                    return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                })
+                .sortBy('value')
                 .value();
         };
     });
