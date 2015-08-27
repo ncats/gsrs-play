@@ -203,6 +203,7 @@
 
         $scope.isCV = function(ob){
             if(typeof ob !== "object")return false;
+            if(ob===null)return false;
             if(typeof ob.value !== "undefined"){
                 if(typeof ob.display !== "undefined"){
                     return true;
@@ -212,7 +213,7 @@
         };
 
         $scope.submit = function(){
-            var sub = $scope.substance;
+            var sub = angular.copy($scope.substance);
             if (sub.officialNames || sub.unofficialNames){
                 for(var n in sub.officialNames){
                     var name = sub.officialNames[n];
@@ -242,6 +243,25 @@
                 console.log(relationship);
                 delete Substance.subref;
             }
+        };
+
+        $scope.submitpaster= function(input){
+            console.log(input);
+            $scope.substance = JSON.parse(input);
+            console.log($scope);
+        };
+
+        $scope.setEditId = function (editid){
+            var url = "app/api/v1/substances/'"+editid +"'";
+            $http.get(url, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function(data) {
+                console.log(data);
+               $scope.substance = data;
+            });
+           // localStorageService.set('editId', $scope.structureid);
         };
 
     });
@@ -509,6 +529,35 @@
             });
         };
     });
+
+    ginasApp.directive('editButton', function() {
+        return {
+            restrict: 'E',
+            scope: {
+                structureid: '='
+            },
+            template: '<button type="button" class="btn btn-primary" ng-click="setEditID" structureid = structureid ><i class="fa fa-wrench chem-button"></i></button>'
+        };
+    });
+
+/*    ginasApp.directive('edit', function($http) {
+        return function(scope, element, attrs) {
+            element.bind("click", function() {
+                localStorageService.set('editId', $scope.structureid);
+                $http({
+                    method: 'GET',
+                    url: 'app/structure/' + scope.structureid + '.mol',
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function(data) {
+                    modal.find('#inputExport').text(data);
+                });
+                modal.modal('show');
+
+            });
+        };
+    });*/
 
     ginasApp.directive('molExport', function($http) {
         return {
