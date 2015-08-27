@@ -1,55 +1,43 @@
 package ix.utils;
 
-import java.io.*;
-import java.util.*;
-import java.lang.reflect.Method;
+import ix.core.NamedResource;
+import ix.core.controllers.v1.RouteFactory;
+import ix.core.plugins.IxContext;
+
 import java.lang.reflect.Field;
-
-import play.*;
-import play.db.ebean.EbeanPlugin;
-import play.db.DB;
-import play.libs.F.Promise;
-import play.libs.Json;
-import play.mvc.Action;
-import play.mvc.Http;
-import play.mvc.Controller;
-import play.mvc.Http.RequestHeader;
-import play.mvc.Result;
-import play.mvc.Http.Request;
-import play.api.mvc.EssentialFilter;
-import play.filters.gzip.GzipFilter;
-
-import com.typesafe.config.*;
-
-import scala.collection.immutable.Iterable;
-import scala.collection.JavaConverters;
-
-import com.avaje.ebean.config.ServerConfig;
-import com.avaje.ebean.EbeanServer;
-import com.avaje.ebean.EbeanServerFactory;
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.SqlQuery;
-import com.avaje.ebean.SqlRow;
-
-import javax.sql.DataSource;
-
-import java.sql.DatabaseMetaData;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import ix.core.plugins.IxContext;
-import ix.core.NamedResource;
-import ix.core.controllers.v1.RouteFactory;
-
 import org.reflections.Reflections;
 
+import play.Application;
+import play.GlobalSettings;
+import play.Logger;
+import play.api.mvc.EssentialFilter;
+import play.filters.gzip.GzipFilter;
+import play.libs.F.Promise;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Http.RequestHeader;
+import play.mvc.Result;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
+import play.api.mvc.WithFilters;
+import julienrf.play.jsonp.Jsonp;
 
 public class Global extends GlobalSettings {
     static Global _instance;
     public static Global getInstance () {
         return _instance;
     }
+   
 
     // lookup of class name to resource
     private Map<String, String> names = new TreeMap<String, String>();
@@ -57,6 +45,8 @@ public class Global extends GlobalSettings {
     private IxContext ctx;
 
     public static Date epoch;
+    
+    
 
     protected void init (Application app) throws Exception {
         ctx = app.plugin(IxContext.class);
@@ -78,6 +68,8 @@ public class Global extends GlobalSettings {
         */
     }
 
+  
+    
     @Override
     public void onStart (Application app) {
         try {
@@ -172,9 +164,10 @@ public class Global extends GlobalSettings {
         Logger.info("## stopping");
     }
 
+    @Override
     public <T extends EssentialFilter> Class<T>[] filters() {
-        return new Class[]{GzipFilter.class};
-    }
+        return new Class[]{GzipFilter.class,julienrf.play.jsonp.JsonpJava.class};
+    }  
     
     /*
     @Override
@@ -313,16 +306,29 @@ public class Global extends GlobalSettings {
             throw new IllegalArgumentException (ex);
         }
     }
-//    @Override
-//    public Action onRequest(Request request, Method actionMethod) {
 //
-//		System.out.println(request.path());
-//    	if(request.path().endsWith("/")){
-//    		System.out.println("YEAH!");
-//    	}
-//       //return movedPermanently("/" + path);
-//       return super.onRequest(request, actionMethod);
-//    }
+//	// For CORS
+//	private class ActionWrapper extends Action.Simple {
+//		public ActionWrapper(Action<?> action, String cback) {
+//			this.delegate = action;
+//		}
+//
+//		@Override
+//		public Promise<Result> call(Http.Context ctx)
+//				throws java.lang.Throwable {
+//			Promise<Result> result = this.delegate.call(ctx);
+//			Http.Response response = ctx.response();
+//			response.setHeader("Access-Control-Allow-Origin", "*");
+//			
+//			return result;
+//		}
+//	}
+//
+//	@Override
+//	public Action<?> onRequest(Http.Request request,
+//			java.lang.reflect.Method actionMethod) {
+//		return new ActionWrapper(super.onRequest(request, actionMethod));
+//	}
     
     @Override
     public Promise<Result> onHandlerNotFound(RequestHeader request) {
