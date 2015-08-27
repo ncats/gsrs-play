@@ -232,7 +232,10 @@ public class TextIndexer {
     }
 
     public static class SearchResult {
-        String query;
+    	
+    	SearchContextAnalyzer searchAnalyzer = new LazySearchAnalyzer();
+    	
+    	String query;
         List<Facet> facets = new ArrayList<Facet>();
         final List matches = new CopyOnWriteArrayList ();
         int count;
@@ -243,7 +246,7 @@ public class TextIndexer {
         SearchResult () {}
         SearchResult (SearchOptions options, String query) {
             this.options = options;
-            this.query = query;
+            this.query = query;            
         }
 
         public String getQuery () { return query; }
@@ -259,9 +262,12 @@ public class TextIndexer {
         public long getTimestamp () { return timestamp; }
         public long ellapsed () { return stop.get() - timestamp; }
         public boolean finished () { return stop.get() >= timestamp; }
+        
+        public SearchContextAnalyzer getSearchContextAnalyzer(){ return searchAnalyzer; };
 
         protected void add (Object obj) {
             matches.add(obj);
+            searchAnalyzer.updateFieldQueryFacets(obj, query);
         }
         
         protected void done () {
