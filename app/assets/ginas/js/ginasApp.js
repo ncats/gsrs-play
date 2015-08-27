@@ -47,9 +47,34 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceFactory) {
+    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever) {
+
+
         var ginasCtrl = this;
-        $scope.substance = Substance;
+        //localStorageService.set('substance', Substance);
+
+        var edit = localStorageService.get('editID');
+        console.log(edit);
+        if(edit){
+            console.log("retrieving data");
+            substanceIDRetriever.getSubstances(edit).then(function (data) {
+                console.log(data);
+                $scope.substance= data;
+            });
+        }else{
+            $scope.substance= Substance;
+        }
+
+/*        function setdata($scope){
+            console.log("getting substance");
+
+        }*/
+
+/*
+        $scope.substance = $scope.getSubstance();
+*/
+
+        console.log($scope);
         $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
@@ -252,7 +277,14 @@
         };
 
         $scope.setEditId = function (editid){
-            var url = "app/api/v1/substances/'"+editid +"'";
+            localStorageService.set('editID', editid);
+/*            console.log(editid);
+            substanceIDRetriever.getSubstances(editid).then(function (data) {
+                console.log(data);
+                 localStorageService.set('substance', data);*/
+/*            });*/
+
+   /*         var url = "app/api/v1/substances/'"+editid +"'";
             $http.get(url, {
                 headers: {
                     'Content-Type': 'text/plain'
@@ -261,7 +293,7 @@
                 console.log(data);
                $scope.substance = data;
             });
-           // localStorageService.set('editId', $scope.structureid);
+           // localStorageService.set('editId', $scope.structureid);*/
         };
 
     });
@@ -315,6 +347,25 @@
         return substanceFactory;
     }]);
 
+    ginasApp.service('substanceIDRetriever', ['$http', function($http) {
+        var url = "app/api/v1/substances(";
+        var substanceIDRet={
+            getSubstances: function(editId) {
+                console.log(editId);
+                var promise =  $http.get(url + editId +")?view=full", {
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).then(function (response) {
+                    console.log(response);
+                    return response.data;
+                });
+                return promise;
+                }
+            };
+        return substanceIDRet;
+        }]);
+
     ginasApp.service('substanceRetriever', ['$http', function($http) {
         var url = "app/api/v1/substances?filter=names.name='";
         var substanceRet={
@@ -327,10 +378,10 @@
                     return response.data;
                 });
                 return promise;
-                }
-            };
+            }
+        };
         return substanceRet;
-        }]);
+    }]);
 
     ginasApp.service('data', function($http) {
         var options = {};
@@ -386,7 +437,6 @@
 
             },
             link: function(scope, element) {
-                console.log(scope.id);
                 $http({
                     method: 'GET',
                     url: 'app/structure/' + scope.id + '.svg',
