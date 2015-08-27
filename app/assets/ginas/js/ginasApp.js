@@ -64,7 +64,6 @@
             lookup.getFromName = function(field){
             console.log(field);
                 for (var name in lookup){
-                    console.log(name);
                     if (field == name){
                         return true;
                     }
@@ -634,93 +633,10 @@
         };
     });
 
-    ginasApp.directive('editButton', function() {
-        return {
-            restrict: 'E',
-            scope: {
-                structureid: '='
-            },
-            template: '<button type="button" class="btn btn-primary" ng-click="setEditID" structureid = structureid ><i class="fa fa-wrench chem-button"></i></button>'
-        };
-    });
-
-/*    ginasApp.directive('edit', function($http) {
-        return function(scope, element, attrs) {
-            element.bind("click", function() {
-                localStorageService.set('editId', $scope.structureid);
-                $http({
-                    method: 'GET',
-                    url: 'app/structure/' + scope.structureid + '.mol',
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).success(function(data) {
-                    modal.find('#inputExport').text(data);
-                });
-                modal.modal('show');
-
-            });
-        };
-    });*/
-
     ginasApp.directive('molExport', function($http) {
         return {
             restrict: 'E',
             templateUrl: "app/assets/ginas/templates/molexport.html"
-        };
-    });
-
-    ginasApp.controller('PropertyController', function($scope, Substance) {
-        $scope.isEditingProperty = false;
-        $scope.editProperty = null;
-
-        this.addProperties = function() {
-            $scope.addingProperties = !$scope.addingProperties;
-        };
-
-        this.testsomething = function() {
-            return "TTTTTTTTTTTTTTTTTTTTTT";
-        };
-
-        this.toggleEditProperty = function() {
-            console.log("editing)");
-            $scope.isEditingProperty = !$scope.isEditingProperty;
-        };
-
-        this.reset = function() {
-            $scope.property = {};
-            $scope.$broadcast('show-errors-reset');
-        };
-
-        this.validateProperty = function(property) {
-            $scope.$broadcast('show-errors-check-validity');
-            if ($scope.propertyForm.$valid) {
-                //new array if object doesn't already have one
-                if (!Substance.properties) {
-                    console.log("new array");
-                    Substance.properties = [];
-                }
-                Substance.properties.push(property);
-                this.reset();
-            }
-        };
-
-        this.setEditedProperty = function setEditedProperty(property) {
-            console.log(property);
-            $scope.editProperty = property;
-            $scope.tempCopy = angular.copy(property);
-        };
-
-        this.updateProperty = function(property) {
-            var index = Substance.properties.indexOf(property);
-            Substance.properties[index] = property;
-            $scope.editProperty = null;
-            $scope.isEditingProperty = false;
-        };
-
-        this.removeProperty = function(property) {
-            var index = Substance.properties.indexOf(property);
-            Substance.properties.splice(index, 1);
         };
     });
 
@@ -927,9 +843,6 @@
 
 
     });
-
-
-
 
     ginasApp.controller('ProgressJobController', function($scope, $http, $timeout) {
         $scope.max = 100;

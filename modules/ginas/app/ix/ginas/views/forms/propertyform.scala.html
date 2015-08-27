@@ -32,7 +32,7 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
             <!-- Display bits -->
 
         <div class = "row" ng-repeat="obj in substance.properties">
-
+            <hr>
             <div class = "col-md-2">
                 <span href="#" editable-select="obj.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{obj.type.display}}</span>
             </div>
@@ -83,10 +83,12 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                     </ng-messages>*@
                 </div>
                 <div class="col-md-2 err-check" id="property-div" show-errors>
-                    <input type="text" class="form-control" ng-model ="property.parameter" title="Name" id="parameter" name = "parameter" />
+                    <a ng-show="!property.parameter" data-toggle="modal" data-target="#addparam" role="button" aria-label="Add a parameter"><i class="fa fa-plus fa-2x success"></i></a>
+
+@*                    <input type="text" class="form-control" ng-model ="property.parameter" title="Name" id="parameter" name = "parameter" />
                     <ng-messages for="propertyForm.parameter.$error" ng-if="propertyForm.parameter.$touched">
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                    </ng-messages>
+                    </ng-messages>*@
                 </div>
                 <div class="col-md-1">
                     <input type = "checkbox" ng-model = "property.defining" title="Defining" id="defining"/>

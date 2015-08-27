@@ -16,6 +16,8 @@
     <!-- Modal -->
     @forms.referencemodalform()
     @forms.amountmodalform()
+    @forms.parametermodalform()
+
 
 } else {
     @if(kind == "mixture") {
@@ -72,7 +74,7 @@
     <h3></h3>
 } {
     <h3></h3>
-    <div>
+    <div ng-cloak>
         @wizardfields(kind)
         <button ng-click="submit(substance)">Submit</button>
         <div class="row"><div class = "col-md-12">
