@@ -1,3 +1,5 @@
+@import ix.ginas.controllers.GinasApp;
+
 <div class = "row info">
     <button class="btn btn-primary label-offset det">
                       Moieties&nbsp;<span class="badge" ng-show="substance.moieties.length>0">
@@ -23,7 +25,12 @@
                 <div class="row text-center">
                     <div class="col-md-2"><rendered id="moiety.id"></rendered></div>
                     <div class="col-md-1"><span class="badge badge-primary">{{moiety.count}}</span></div>
+@*
+
+                    <span href="#" editable-select="moiety.stereochemistry"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("STEREOCHEMISTRY_TYPE") track by r.display" blur="submit">{{moiety.stereochemistry}}</span>
+*@
                     <div class="col-md-1"><span class="badge">{{moiety.stereochemistry}}</span></div>
+
                     <div class="col-md-1"><span class="badge">{{moiety.opticalActivity}}</span></div>
                     <div class="col-md-1"><span class="badge">{{moiety.atropisomerism||"no"}}</span></div>
                     <div class="col-md-2">{{moiety.formula}}</div>

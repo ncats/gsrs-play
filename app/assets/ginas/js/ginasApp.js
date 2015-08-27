@@ -92,9 +92,9 @@
             substanceIDRetriever.getSubstances(edit).then(function (data) {
                 console.log(data);
                 var sub = $scope.splitNames(data);
-                sub = $scope.expandCV(data);
+             //   sub = $scope.expandCV(data);
                 $scope.substance= sub;
-                localStorageService.remove('editID');
+              localStorageService.remove('editID');
             });
         }else{
             $scope.substance= Substance;
@@ -568,6 +568,7 @@
                         sketcher.setMolfile(data.molfile);
                         Substance.q = data.smiles;
                         console.log(Substance);
+                        localStorageService.remove('structureid');
                     });
                 }
             }
