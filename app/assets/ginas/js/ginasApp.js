@@ -47,7 +47,39 @@
         return Substance;
     });
 
-    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever) {
+
+    ginasApp.factory('lookup', function() {
+        var lookup = {"name.type":"NAME_TYPE",
+            "name.nameOrgs":"NAME_ORG",
+            "name.nameJurisdiction":"JURISDICTION",
+            "name.domains":"NAME_DOMAIN",
+            "name.languages":"LANGUAGE",
+            "code.system":"CODE_SYSTEM",
+            "code.type":"CODE_TYPE",
+            "relationship.type":"RELATIONSHIP_TYPE",
+            "relationship.interactionType":"INTERACTION_TYPE",
+            "relationship.qualification":"QUALIFICATION",
+            "reference.docType":"DOCUMENT_TYPE"};
+
+            lookup.getFromName = function(field){
+            console.log(field);
+                for (var name in lookup){
+                    console.log(name);
+                    if (field == name){
+                        return true;
+                    }
+/*                }
+                if(lookup.name){
+                    console.log(lookup.name);
+                    return true;*/
+                }
+                return false;
+        };
+        return lookup;
+    });
+
+    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
+
 
 
         var ginasCtrl = this;
@@ -59,7 +91,10 @@
             console.log("retrieving data");
             substanceIDRetriever.getSubstances(edit).then(function (data) {
                 console.log(data);
-                $scope.substance= data;
+                var sub = $scope.splitNames(data);
+                sub = $scope.expandCV(data);
+                $scope.substance= sub;
+                localStorageService.remove('editID');
             });
         }else{
             $scope.substance= Substance;
@@ -157,6 +192,26 @@
             }
         };
 
+        $scope.splitNames = function(sub){
+          var names = sub.names;
+            var officialNames = [];
+            var unofficialNames = [];
+            if(names){
+                for (var n in names){
+                    var name = names[n];
+                    if(name.type =="of"){
+                        officialNames.push(name);
+                    }else{
+                        unofficialNames.push(name);
+                    }
+                    sub.unofficialNames = unofficialNames;
+                    sub.officialNames = officialNames;
+                    delete sub.names;
+                }
+            }
+            return sub;
+
+        };
 
         $scope.changeSelect = function(val) {
             console.log(val);
@@ -212,6 +267,19 @@
           return  substanceSearch.load($query);
             //return substanceSearch.search(field, $query);
         };
+
+        $scope.expandCV = function(sub){
+            for(var v in sub) {
+                if (lookup.getFromName(sub[v])) {
+                    console.log("ok");
+                } else {
+                    if(typeof sub[v] === "object") {
+                        $scope.expandCV(sub[v]);
+                    }
+                }
+            }
+        };
+
 
         $scope.flattenCV =function(sub){
             for(var v in sub){
@@ -272,28 +340,13 @@
 
         $scope.submitpaster= function(input){
             console.log(input);
-            $scope.substance = JSON.parse(input);
+           var sub = JSON.parse(input);
+            $scope.substance = sub;
             console.log($scope);
         };
 
         $scope.setEditId = function (editid){
             localStorageService.set('editID', editid);
-/*            console.log(editid);
-            substanceIDRetriever.getSubstances(editid).then(function (data) {
-                console.log(data);
-                 localStorageService.set('substance', data);*/
-/*            });*/
-
-   /*         var url = "app/api/v1/substances/'"+editid +"'";
-            $http.get(url, {
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            }).success(function(data) {
-                console.log(data);
-               $scope.substance = data;
-            });
-           // localStorageService.set('editId', $scope.structureid);*/
         };
 
     });
