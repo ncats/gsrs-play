@@ -36,9 +36,7 @@
                            <span href="#" editable-select="relationship.qualification"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("QUALIFICATION") track by r.display" blur="submit">{{relationship.qualification.display}}</span>
                        </div>
                        <div class="col-md-1">Amount</div>
-<div class ="col-md-1">
-    References
-</div>
+                       @referenceview("relationshipForm", "relationship")
         </div>
 
         <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>

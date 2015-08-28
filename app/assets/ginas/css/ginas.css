@@ -698,3 +698,7 @@ h2.display-name {
 .spacer{
 	clear: both;
 }
+
+.break-text{
+    overflow-wrap: break-word;
+}

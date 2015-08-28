@@ -40,14 +40,7 @@
             <div class="col-md-3">
                 <span href="#" editable-text="obj.description" blur="submit">{{obj.description}}</span>
             </div>
-            <div class = "col-md-2"><span ng-repeat="n in code.references">
-                <span ng-show="!code.references || code.references.length==0" ng-click="toggle(codeForm.references)" ><i class="fa fa-plus fa-2x success"></i></span>
-                <span ng-show="!codeForm.references.selected" ng-click="toggle(codeForm.references)" >{{n.id}} {{n.citation}}</span>
-            </span>
-                <tags-input ng-show ="codeForm.references.selected" ng-blur="toggle(codeForm.references)" custom-class="form-control" title="References" placeholder="References" id="references" name="references" ng-model = "name.references" display-property="citation" key-property="id" addFromAutocompleteOnly="true" >
-                    <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-            </div>
+            @referenceview("codeForm", "obj")
         </div>
 
             <!-- Adding bits -->
