@@ -77,7 +77,8 @@
     <script src="/ginas/app/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
     <div ng-cloak>
         @wizardfields(kind)
-        <button ng-click="submit(substance)">Submit</button>
+        <button ng-click="submitSubstance(substance)">Submit</button>
+        <button ng-click="validateSubstance(substance)">Validate</button>
         <div class="row"><div class = "col-md-12">
             <textarea class="form-control" rows="10" ng-model="paste"></textarea>
             </div>
