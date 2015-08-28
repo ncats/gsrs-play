@@ -58,7 +58,19 @@ public class Substance extends Ginas {
 	 * sigh.. can we be at least case-consistent?
 	 */
 	public enum SubstanceClass {
-		chemical, protein, nucleicAcid, polymer, structurallyDiverse, mixture, specifiedSubstanceG1, specifiedSubstanceG2, specifiedSubstanceG3, specifiedSubstanceG4, unspecifiedSubstance, concept, reference
+		chemical, 
+		protein, 
+		nucleicAcid, 
+		polymer, 
+		structurallyDiverse, 
+		mixture, 
+		specifiedSubstanceG1, 
+		specifiedSubstanceG2, 
+		specifiedSubstanceG3, 
+		specifiedSubstanceG4, 
+		unspecifiedSubstance, 
+		concept, 
+		reference
 	}
 
 	@JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
@@ -401,6 +413,7 @@ public class Substance extends Ginas {
 
 	}
 
+	@JsonIgnore
 	public int getModificationCount() {
 		int ret = 0;
 		if (this.modifications != null) {

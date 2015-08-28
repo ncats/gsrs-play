@@ -1,0 +1,102 @@
+@import ix.ginas.controllers.GinasApp
+
+<!-- Modal -->
+<div class="modal fade" id="addparam" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabelimport" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="myModalLabelimport">Add an Amount</h4>
+            </div>
+            <div class="modal-body">
+
+
+                <div class = "row header-row">
+                    <div class = "col-md-3">
+                        <strong>Name</strong>
+                    </div>
+                    <div class = "col-md-3">
+                        <strong>Type</strong>
+                    </div>
+                    <div class = "col-md-3">
+                        <strong>Value</strong>
+                    </div>
+                </div>
+
+<!--                &lt;!&ndash; Display bits &ndash;&gt;
+
+                @*<div class = "row" ng-repeat="name in substance.pararme">
+                <div class="col-md-3">
+                    <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
+                </div>
+                <div class = "col-md-3">
+                    <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>
+
+                </div>
+                <div class = "col-md-2"><span ng-repeat="n in name.languages">
+        <span ng-show="!name.languages || name.languages.length==0" ng-click="toggle(nameForm.languages)" ><i class="fa fa-plus fa-2x success"></i></span>
+        <span ng-show="!nameForm.languages.selected" ng-click="toggle(nameForm.languages)" >{{n.display}}</span>
+        </span>
+                    <tags-input ng-show ="nameForm.languages.selected" ng-blur="toggle(nameForm.languages)" custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="name.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
+                        <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                    </tags-input>
+                </div>
+                <div class = "col-md-1 text-center">
+                    <span href="#" editable-checkbox="name.preferred"><i class="fa fa-check fa-2x success" ng-show="name.preferred"></i> <i class="fa fa-times fa-2x warning" ng-show="!name.preferred"></i></span>
+
+                </div>
+                <div class = "col-md-2"><span ng-repeat="n in name.references">
+        <span ng-show="!name.references || name.references.length==0" ng-click="toggle(nameForm.references)" ><i class="fa fa-plus fa-2x success"></i></span>
+        <span ng-show="!nameForm.references.selected" ng-click="toggle(nameForm.references)" >{{n.id}} {{n.citation}}</span>
+        </span>
+                    <tags-input ng-show ="nameForm.references.selected" ng-blur="toggle(nameForm.references)" custom-class="form-control" title="References" placeholder="References" id="references" name="references" ng-model = "name.references" display-property="citation" key-property="id" addFromAutocompleteOnly="true" >
+                        <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                    </tags-input>
+                </div>
+            </div>*@-->
+                <!-- Adding bits -->
+
+                <form class="form-horizontal" name="parameterForm" id = "add-amount" role="form" novalidate>
+                    <div class="row form-row">
+                        <div class="col-md-3 err-check" show-errors>
+                            <input type="text" class="form-control" title="Parameter Name" id="name" name = "name" ng-model = "parameter.name"/>
+                            <ng-messages for="parameterForm.name.$error" ng-if="parameterForm.name.$touched">
+                                <ng-message when="required" class="help-block">*required</ng-message>
+                            </ng-messages>
+                        </div>
+
+                        <div class="col-md-3 err-check" show-errors>
+                            <select class="form-control" title="Parameter Type" id="type" name = "type" ng-model = "parameter.type" ng-options="r.display for r in @GinasApp.getCV.getField("PARAMETER_TYPE") track by r.display" >
+                            </select>
+                            <ng-messages for="parameterForm.type.$error" ng-if="parameterForm.type.$touched">
+                                <ng-message when="required" class="help-block">*required</ng-message>
+                            </ng-messages>
+                        </div>
+                        <div class="col-md-3 err-check" show-errors>
+                            <a ng-show="!parameter.amount" data-toggle="modal" data-target="#addamount" role="button" aria-label="Add amount"><i class="fa fa-plus fa-2x success"></i></a>
+                            <select class="form-control" title="Parameter Value" id="value" name = "value" ng-model = "parameter.value" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_TYPE") track by r.display" >
+                            </select>
+                            <ng-messages for="parameterForm.type.$error" ng-if="parameterForm.type.$touched">
+                                <ng-message when="required" class="help-block">*required</ng-message>
+                            </ng-messages>
+                        </div>
+                        @* @referenceselectorform("parameterForm", "amount")*@
+                    </div>
+                    @submitbuttons("amount", "parameterForm", "amounts")
+                </form>
+
+
+            </div>
+            <div class = "modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal"
+                        aria-label="Close">
+                    <span aria-hidden="true">Close</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

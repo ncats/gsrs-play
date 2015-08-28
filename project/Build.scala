@@ -23,6 +23,7 @@ object ApplicationBuild extends Build {
       ,"mysql" % "mysql-connector-java" % "5.1.31"
       ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"     
       ,"com.hazelcast" % "hazelcast" % "3.5.1" 
+      ,"org.julienrf" %% "play-jsonp-filter" % "1.2"
       ,"commons-codec" % "commons-codec" % "1.9"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
       ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"

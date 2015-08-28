@@ -15,6 +15,9 @@
     <div ng-show="substance.references">@forms.referenceform()</div>
     <!-- Modal -->
     @forms.referencemodalform()
+    @forms.amountmodalform()
+    @forms.parametermodalform()
+
 
 } else {
     @if(kind == "mixture") {
@@ -71,7 +74,8 @@
     <h3></h3>
 } {
     <h3></h3>
-    <div>
+    <script src="/ginas/app/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
+    <div ng-cloak>
         @wizardfields(kind)
         <button ng-click="submit(substance)">Submit</button>
         <div class="row"><div class = "col-md-12">

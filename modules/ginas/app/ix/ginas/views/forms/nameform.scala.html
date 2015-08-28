@@ -30,6 +30,7 @@
             <!-- Display bits -->
 
         <div class = "row" ng-repeat="name in substance.unofficialNames">
+
             <div class="col-md-4">
                 <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
             </div>
@@ -41,7 +42,7 @@
                 <span ng-show="!name.languages || name.languages.length==0" ng-click="toggle(nameForm.languages)" ><i class="fa fa-plus fa-2x success"></i></span>
                 <span ng-show="!nameForm.languages.selected" ng-click="toggle(nameForm.languages)" >{{n.display}}</span>
             </span>
-                <tags-input ng-show ="nameForm.languages.selected" ng-blur="toggle(nameForm.languages)" custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="name.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
+                <tags-input ng-show ="nameForm.languages.selected" ng-blur="toggle(nameForm.language)" custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="name.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
                     <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
                 </tags-input>
             </div>
@@ -58,6 +59,7 @@
                 </tags-input>
             </div>
         </div>
+
             <!-- Adding bits -->
 
         <form class="form-horizontal" name="nameForm" id = "add-name" role="form" novalidate>

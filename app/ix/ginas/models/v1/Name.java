@@ -127,13 +127,13 @@ public class Name extends Ginas {
     	List<String> locators = new ArrayList<String>();
     	//locators.add("TEST");
     	if(sub!=null){
-    		System.out.println("Real sub");
+    		//System.out.println("Real sub");
 	    	for(Keyword ref: this.references){
-	    		System.out.println(ref.getValue());
+	    		//System.out.println(ref.getValue());
 	    		Reference r=sub.getReferenceByUUID(ref.getValue());
 	    		
 	    		if(r!=null){
-	    			System.out.println(r.citation);
+	    			//System.out.println(r.citation);
 	    			if(r.docType.equals(Name.SRS_LOCATOR)){
 	    				try{
 	    					String tag=r.citation.split("\\[")[1].split("\\]")[0];
@@ -189,6 +189,7 @@ public class Name extends Ginas {
     	});
     	return nameList;
     }
+    
 	public boolean isOfficial() {
 		if(this.type.equals("of"))return true;
 		return false;

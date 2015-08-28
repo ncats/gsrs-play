@@ -8,9 +8,12 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+
 import com.avaje.ebean.*;
 
 import ix.core.controllers.EntityFactory;
+import ix.core.models.Structure;
+import ix.core.models.Value;
 import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
@@ -60,14 +63,16 @@ public class SubstanceFactory extends EntityFactory {
         return filter (new FetchOptions (top, skip, filter), finder);
     }
     
+    public static List<Substance> getSubstancesWithExactName
+    (int top, int skip, String name) {
+		return finder.where().eq("names.name", name).findList();
+	}
+    
     public static List<Substance> getChemicals
     (int top, int skip, String filter) {
 	    return filter (new FetchOptions (top, skip, filter), finder);
 	}
-    public static List<ProteinSubstance> getProteins
-    (int top, int skip, String filter) {
-	    return filter (new FetchOptions (top, skip, filter), protfinder);
-	}
+    
     
      public static Integer getCount () {
         try {
@@ -114,4 +119,15 @@ public class SubstanceFactory extends EntityFactory {
     public static Result update (UUID uuid, String field) {
         return update (uuid, field, Substance.class, finder);
     }
+
+	public static List<Substance> getCollsionChemicalSubstances(int i, int j,
+			ChemicalSubstance cs) {
+		 String hash=null;
+         for (Value val : cs.structure.properties) {
+             if (Structure.H_LyChI_L4.equals(val.label)) {
+             	hash=val.getValue()+"";
+             }
+         }
+         return finder.where().eq("structure.properties.term", hash).findList();
+	}
 }

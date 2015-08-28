@@ -1,0 +1,138 @@
+@import ix.ginas.controllers.GinasApp
+
+<!-- Modal -->
+<div class="modal fade" id="addamount" tabindex="-1" role="dialog"
+aria-labelledby="myModalLabelimport" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"
+        aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <h4 class="modal-title" id="myModalLabelimport">Add an Amount</h4>
+      </div>
+      <div class="modal-body">
+        <!-- Title bits -->
+      <div class = "row header-row">
+        <div class = "col-md-2">
+          <strong>Type</strong>
+        </div>
+        <div class = "col-md-1">
+          <strong>Average</strong>
+        </div>
+        <div class = "col-md-1">
+          <strong>High Limit</strong>
+        </div>
+        <div class = "col-md-1">
+          <strong>High</strong>
+        </div>
+        <div class = "col-md-1">
+          <strong>Low Limit</strong>
+        </div>
+        <div class = "col-md-1">
+          <strong>Low</strong>
+        </div>
+        <div class = "col-md-2">
+          <strong>Units</strong>
+        </div>
+        <div class = "col-md-2">
+          <strong>Referenced Material</strong>
+        </div>
+      </div>
+
+        <!-- Display bits -->
+
+        @*<div class = "row" ng-repeat="name in substance.unofficialNames">
+        <div class="col-md-4">
+        <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
+        </div>
+        <div class = "col-md-2">
+        <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>
+
+        </div>
+        <div class = "col-md-2"><span ng-repeat="n in name.languages">
+        <span ng-show="!name.languages || name.languages.length==0" ng-click="toggle(nameForm.languages)" ><i class="fa fa-plus fa-2x success"></i></span>
+        <span ng-show="!nameForm.languages.selected" ng-click="toggle(nameForm.languages)" >{{n.display}}</span>
+        </span>
+        <tags-input ng-show ="nameForm.languages.selected" ng-blur="toggle(nameForm.languages)" custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="name.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
+        <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+        </tags-input>
+        </div>
+        <div class = "col-md-1 text-center">
+        <span href="#" editable-checkbox="name.preferred"><i class="fa fa-check fa-2x success" ng-show="name.preferred"></i> <i class="fa fa-times fa-2x warning" ng-show="!name.preferred"></i></span>
+
+        </div>
+        <div class = "col-md-2"><span ng-repeat="n in name.references">
+        <span ng-show="!name.references || name.references.length==0" ng-click="toggle(nameForm.references)" ><i class="fa fa-plus fa-2x success"></i></span>
+        <span ng-show="!nameForm.references.selected" ng-click="toggle(nameForm.references)" >{{n.id}} {{n.citation}}</span>
+        </span>
+        <tags-input ng-show ="nameForm.references.selected" ng-blur="toggle(nameForm.references)" custom-class="form-control" title="References" placeholder="References" id="references" name="references" ng-model = "name.references" display-property="citation" key-property="id" addFromAutocompleteOnly="true" >
+        <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+        </tags-input>
+        </div>
+        </div>*@
+        <!-- Adding bits -->
+
+      <form class="form" name="amountForm" id = "add-amount" role="form" novalidate>
+        <div class="row form-row">
+          <div class="col-md-2 err-check" show-errors>
+            <select class="form-control" title="Amount Type" id="type" name = "type" ng-model = "amount.type" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_TYPE") track by r.display" >
+                        </select>
+            <ng-messages for="amountForm.type.$error" ng-if="amountForm.type.$touched">
+              <ng-message when="required" class="help-block">*required</ng-message>
+            </ng-messages>
+          </div>
+          <div class="col-md-1 err-check" id="name-div" show-errors>
+            <input type="text" class="form-control" ng-model ="amount.average" title="Average" id="average" name = "average"/>
+            <ng-messages for="amountForm.average.$error" ng-if="amountForm.average.$touched">
+              <ng-message when="required" class="help-block">Substance name is required</ng-message>
+            </ng-messages>
+          </div>
+          <div class="col-md-1 err-check"  show-errors>
+            <input type="text" class="form-control" ng-model ="amount.highLimit" title="High Limit" id="highLimit" name = "highLimit"/>
+            <ng-messages for="amountForm.highLimit.$error" ng-if="amountForm.highLimit.$touched">
+              <ng-message when="required" class="help-block">Substance name is required</ng-message>
+            </ng-messages>
+          </div>
+          <div class="col-md-1 err-check"  show-errors>
+            <input type="text" class="form-control" ng-model ="amount.high" title="High" id="high" name = "high"/>
+            <ng-messages for="amountForm.high.$error" ng-if="amountForm.high.$touched">
+              <ng-message when="required" class="help-block">Substance name is required</ng-message>
+            </ng-messages>
+          </div>
+          <div class="col-md-1 err-check" show-errors>
+            <input type="text" class="form-control" ng-model ="amount.lowLimit" title="Low Limit" id="lowLimit" name = "lowLimit"/>
+            <ng-messages for="amountForm.lowLimit.$error" ng-if="amountForm.lowLimit.$touched">
+              <ng-message when="required" class="help-block">Substance name is required</ng-message>
+            </ng-messages>
+          </div>
+          <div class="col-md-1 err-check"  show-errors>
+            <input type="text" class="form-control" ng-model ="amount.low" title="Low" id="low" name = "low"/>
+            <ng-messages for="amountForm.low.$error" ng-if="amountForm.low.$touched">
+              <ng-message when="required" class="help-block">Substance name is required</ng-message>
+            </ng-messages>
+          </div>
+          <div class="col-md-2 err-check" show-errors>
+            <input type="text" class="form-control" ng-model ="amount.units" title="Units" id="units" name = "units"/>
+            <ng-messages for="amountForm.units.$error" ng-if="amountForm.units.$touched">
+              <ng-message when="required" class="help-block">Substance name is required</ng-message>
+            </ng-messages>
+          </div>
+
+          @* @referenceselectorform("amountForm", "amount")*@
+        </div>
+        @submitbuttons("amount", "amountForm", "amounts")
+      </form>
+
+
+      </div>
+      <div class = "modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal"
+        aria-label="Close">
+          <span aria-hidden="true">Close</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

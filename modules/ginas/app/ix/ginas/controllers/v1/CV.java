@@ -24,7 +24,8 @@ public class CV {
             JsonNode j = mapper.valueToTree(cv1.terms);
             return j.toString();
         }
-        return "[{display: 'hi', value: 'you suck'}]";
+        
+        return "[{display: 'no values', value: '{null}'}]";
     }
 
     public static String getCV(String domain) {

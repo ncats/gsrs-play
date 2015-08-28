@@ -12,9 +12,16 @@ public class FieldFacet {
 	}
 
 	public String getDisplayField() {
-		String[] fs = field.split("\\.");
-		return fs[fs.length - 2] + "." + fs[fs.length - 1];
+		
+		return getDisplayField(field);
 	}
+	public static String getDisplayField(String field){
+		String[] fs = field.split("\\.");
+		if(fs.length>=2)
+		return fs[fs.length - 2] + "." + fs[fs.length - 1];
+		return field;
+	}
+	
 	public String getIndexedField() {
 		String[] fs = field.split("\\.");
 		return fs[fs.length - 1];

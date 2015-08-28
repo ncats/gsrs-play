@@ -45,6 +45,19 @@
 
                 <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
                 src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 150,chem.getAtomMapsString())'>
+
+                <div class = "row">
+                    <div class = "col-md-12">
+                        <ul class= "list-inline pull-right list-unstyled">
+                            <li>
+                                <export-button structureid ="'@chem.structure.id'" ></export-button></li>
+                            <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click="passStructure('@chem.structure.id')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
+                            </li>
+                            <li>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.wizard("chemical")"  target="_self" ng-click="setEditId('@chem.uuid'); passStructure('@chem.structure.id')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-wrench chem-button"></span></a>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div class = "col-md-6">
                 <div class = "row">
@@ -84,23 +97,6 @@
                         Last modified: <h6>@chem.approved</h6>
                     </div>
                 </div>
-                <div class = "row">
-                    <div class = "col-md-12">
-                        <ul class= "list-inline pull-right list-unstyled">
-                            <li>
-                               <export-button structureid ="'@chem.structure.id'" ></export-button></li>
-                            <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click="passStructure('@chem.structure.id')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
-                            </li>
-                            <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.wizard("chemical")"  target="_self" ng-click="setEditId('@chem.uuid')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-wrench chem-button"></span></a>
-@*
-                                <edit-button structureid ="'@chem.structure.id'" ></edit-button></li>
-*@
-
-                        </ul>
-                    </div>
-                </div>
-
             </div>
         </div>
         

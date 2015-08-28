@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-Thu Jul 30 00:12:44 EDT 2015 (commit: 80c93b4)
-=======
-Wed Aug 26 14:28:55 EDT 2015 (commit: 93c334b)
->>>>>>> 02d8d23a9d5aa0d3cad77a139f7f14d92cb657b1
+Thu Aug 27 23:41:39 EDT 2015 (commit: e6de1a2)
