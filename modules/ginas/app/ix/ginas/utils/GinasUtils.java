@@ -326,8 +326,9 @@ public class GinasUtils {
             }
             return sub;
         }
-        public static void prepareSubstance(GinasProcessingStrategy prc, Substance sub) throws Exception{
-            GinasProcessingStrategy.failIfNecessary(Validation.validateAndPrepare(sub, prc));
+        public static List<GinasProcessingMessage> prepareSubstance(GinasProcessingStrategy prc, Substance sub) throws Exception{
+        	List<GinasProcessingMessage> valid = Validation.validateAndPrepare(sub, prc);
+            GinasProcessingStrategy.failIfNecessary(valid);
         }
         public static void prepareSubstance(Substance sub) throws Exception{
             prepareSubstance(DEFAULT_STRAT,sub);
