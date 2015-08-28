@@ -44,7 +44,7 @@
                 }
 
                 <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 150,chem.getAtomMapsString())'>
+                src='@ix.ginas.controllers.routes.GinasApp.structure(chem.structure.getId, "svg", 150,chem.getAtomMapsString())'>
 
                 <div class = "row">
                     <div class = "col-md-12">
@@ -105,7 +105,7 @@
             <div ng-show="initialized">
                 <div class = "col-md-12">
                 <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                        src='@ix.ncats.controllers.routes.App.structure(chem.structure.getId, "svg", 400,chem.getAtomMapsString())'>
+                        src='@ix.ginas.controllers.routes.GinasApp.structure(chem.structure.getId, "svg", 400,chem.getAtomMapsString())'>
                 </div>
             </div>
         </div>
