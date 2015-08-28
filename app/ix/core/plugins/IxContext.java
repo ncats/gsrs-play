@@ -34,6 +34,9 @@ public class IxContext extends Plugin {
     static final String IX_PAYLOAD_BASE = IX_PAYLOAD+".base";
     static final String IX_STRUCTURE = "ix.structure";
     static final String IX_STRUCTURE_BASE = IX_STRUCTURE+".base";
+    static final String IX_SEQUENCE = "ix.sequence";
+    static final String IX_SEQUENCE_BASE = IX_SEQUENCE+".base";
+    
     static final String APPLICATION_SQL_INIT = "application.sql.init";
     
 
@@ -44,6 +47,7 @@ public class IxContext extends Plugin {
     public File h2;
     public File payload;
     public File structure;
+    public File sequence;
     
     private int debug;
     private int cacheTime;
@@ -76,6 +80,7 @@ public class IxContext extends Plugin {
         h2 = getFile (IX_H2_BASE, "h2");
         payload = getFile (IX_PAYLOAD_BASE, "payload");
         structure = getFile (IX_STRUCTURE_BASE, "structure");
+        sequence = getFile (IX_SEQUENCE_BASE, "sequence");
         
         Integer level = app.configuration().getInt(IX_DEBUG);
         if (level != null)
@@ -89,36 +94,80 @@ public class IxContext extends Plugin {
         String dbName=meta.getDatabaseProductName().toLowerCase();
         Logger.info("Checking for existence of DB schema ... " + dbName);
         if(!dbinitialized(meta)){
-        	Logger.info("Database not initialized, applying scripts");
-        	File f=null;
-        	f=getFile(APPLICATION_SQL_INIT,"../conf/sql/init/");
-        	
-        	if(f.exists()){
-        		Logger.info("Initialization folder exists:" + f.getCanonicalPath());
-        		String path = f.getAbsolutePath()+"/"+dbName+".sql";
-        		File initFile = new File(path);
-        		Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
-        		if(initFile.exists()){
-        			Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
-        			Statement s = DB.getConnection().createStatement();
-        			String sqlRun = readFullFileToString(initFile);
-        			System.out.println(sqlRun);
-        			try{
-        				ResultSet rs1=s.executeQuery(sqlRun);
-        				rs1.close();
-        				Logger.info("SQL initialization applied.");
-        			}catch(Exception e){
-        				e.printStackTrace();
-        			}
-        			
-        		}else{
-        			Logger.info("No SQL initialization present for database:" + dbName);
-        		}
-        	}else{
-        		Logger.info("Initialization folder does not exist:" + f.getCanonicalPath());
-        	}
+            Logger.info("Database not initialized, applying scripts");
+            File f=null;
+            f=getFile(APPLICATION_SQL_INIT,"../conf/sql/init/");
+                
+            if(f.exists()){
+                Logger.info("Initialization folder exists:" + f.getCanonicalPath());
+                String path = f.getAbsolutePath()+"/"+dbName+".sql";
+                File initFile = new File(path);
+                Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
+                if(initFile.exists()){
+                    Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
+                    Statement s = DB.getConnection().createStatement();
+                    String sqlRun = readFullFileToString(initFile);
+                    System.out.println(sqlRun);
+                    try{
+                        ResultSet rs1=s.executeQuery(sqlRun);
+                        rs1.close();
+                        Logger.info("SQL initialization applied.");
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    s.close();
+                                
+                }else{
+                    Logger.info("No SQL initialization present for database:" + dbName);
+                }
+            }else{
+                Logger.info("Initialization folder does not exist:" + f.getCanonicalPath());
+            }
         }else{
-        	Logger.info("Schema exists");
+            Logger.info("Schema exists");
+        }
+        
+        {
+            Logger.info("Teting database configuration");
+            File f=null;
+            f=getFile(APPLICATION_SQL_INIT,"../conf/sql/test/");
+                
+            if(f.exists()){
+                Logger.info("Test folder exists:" + f.getCanonicalPath());
+                String path = f.getAbsolutePath()+"/"+dbName+".sql";
+                File initFile = new File(path);
+                Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
+                if(initFile.exists()){
+                    Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
+                    Statement s = DB.getConnection().createStatement();
+                    String sqlRun = readFullFileToString(initFile);
+                    System.out.println(sqlRun);
+                    boolean working=true;
+                    try{
+                        ResultSet rs1=s.executeQuery(sqlRun);
+                                        
+                        while(rs1.next()){
+                            if(!"worked".equals(rs1.getString("result"))){
+                                working=false;
+                                Logger.error(rs1.getString("message") + "\n\nTry running the following SQL to fix this:\n\n" + rs1.getString("sql"));
+                            }
+                        }
+                        rs1.close();
+                                        
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                    if(working){
+                        Logger.debug("Passed configutation test");
+                    }
+                    s.close();
+                }else{
+                    Logger.info("No SQL test present for database:" + dbName);
+                }
+            }else{
+                Logger.info("Test folder does not exist:" + f.getCanonicalPath());
+            }
+                
         }
         //meta.
 
@@ -166,18 +215,18 @@ public class IxContext extends Plugin {
      * @return
      */
     private static String readFullFileToString(File f){
-    	
-		try {
-			StringBuffer sb = new StringBuffer();
-	    	BufferedReader br;
-			br = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
-	    	for (int c = br.read(); c != -1; c = br.read()) sb.append((char)c);
-	    	return sb.toString();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	return null;
+        
+        try {
+            StringBuffer sb = new StringBuffer();
+            BufferedReader br;
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(f), "UTF-8"));
+            for (int c = br.read(); c != -1; c = br.read()) sb.append((char)c);
+            return sb.toString();
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
     }
     
     /**
@@ -190,26 +239,37 @@ public class IxContext extends Plugin {
      * @return
      */
     private static boolean dbinitialized(DatabaseMetaData meta){
-    	try {
-			ResultSet rs = meta.getTables(null,null, "play_evolutions", null);
-			boolean exists=rs.next();
-			if(exists) return true;
-			rs.close();
-			rs = meta.getTables(null,null, "%", null);
-			while(rs.next()){
-				if(rs.getString(3).toLowerCase().contains("play_evolutions")){
-					rs.close();
-					return true;
-				}
-			}
-			rs.close();
-			return exists;
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}    
-    	return true;
+        ResultSet rs=null;
+        try {
+            rs = meta.getTables(null,null, "play_evolutions", null);
+            boolean exists=rs.next();
+            if(exists){
+                rs.close();
+                return true;
+            }
+            rs.close();
+            rs = meta.getTables(null,null, "%", null);
+            while(rs.next()){
+                if(rs.getString(3).toLowerCase().contains("play_evolutions")){
+                    rs.close();
+                    return true;
+                }
+            }
+            rs.close();
+            return exists;
+                        
+        } catch (SQLException e) {
+            // TODO Auto-generated catch block
+            if(rs!=null)
+                try {
+                    rs.close();
+                } catch (SQLException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
+            e.printStackTrace();
+        }    
+        return true;
     }
 
     File getFile (String var, String def) throws IOException {

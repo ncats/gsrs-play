@@ -232,6 +232,9 @@ public class TextIndexer {
     }
 
     public static class SearchResult {
+        
+        SearchContextAnalyzer searchAnalyzer = new LazySearchAnalyzer();
+        
         String query;
         List<Facet> facets = new ArrayList<Facet>();
         final List matches = new CopyOnWriteArrayList ();
@@ -243,7 +246,7 @@ public class TextIndexer {
         SearchResult () {}
         SearchResult (SearchOptions options, String query) {
             this.options = options;
-            this.query = query;
+            this.query = query;            
         }
 
         public String getQuery () { return query; }
@@ -259,9 +262,12 @@ public class TextIndexer {
         public long getTimestamp () { return timestamp; }
         public long ellapsed () { return stop.get() - timestamp; }
         public boolean finished () { return stop.get() >= timestamp; }
+        
+        public SearchContextAnalyzer getSearchContextAnalyzer(){ return searchAnalyzer; };
 
         protected void add (Object obj) {
             matches.add(obj);
+            //searchAnalyzer.updateFieldQueryFacets(obj, query);
         }
         
         protected void done () {
@@ -399,7 +405,7 @@ public class TextIndexer {
         Map<String, Model.Finder> finders =
             new HashMap<String, Model.Finder>();
         SearchOptions options;
-        int total;
+        int total, offset;
         
         SearchResultPayload () {}
         SearchResultPayload (SearchResult result, TopDocs hits,
@@ -409,7 +415,8 @@ public class TextIndexer {
             this.searcher = searcher;
             this.options = result.options;
             result.count = hits.totalHits; 
-            total = Math.max(0, Math.min(options.max(), result.count));  
+            total = Math.max(0, Math.min(options.max(), result.count));
+            offset = Math.min(options.skip, total);
         }
 
         void fetch () throws IOException {
@@ -459,8 +466,9 @@ public class TextIndexer {
         
             
         void fetch (int size)  throws IOException {
-            for (int i = result.size(); i < Math.min(total, size); ++i) {
-                Document doc = searcher.doc(hits.scoreDocs[i].doc);
+            size = Math.min(options.top, Math.min(total - offset, size));
+            for (int i = result.size(); i < size; ++i) {
+                Document doc = searcher.doc(hits.scoreDocs[i+offset].doc);
                 final IndexableField kind = doc.getField(FIELD_KIND);
                 if (kind != null) {
                     String field = kind.stringValue()+"._id";

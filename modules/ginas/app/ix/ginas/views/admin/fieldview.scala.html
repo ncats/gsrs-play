@@ -1,0 +1,83 @@
+@import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics
+
+@(field: FieldStatistics)
+
+@code(value: String) = {
+  <code data-toggle="tooltip" data-original-title="@value"><small>@value</small></code>
+}
+
+<div class="panel panel-default sub-list" ng-controller="SDFieldController" ng-init="init('@field.path',@ix.ginas.utils.GinasSDFUtils.PATH_TYPES())">
+    <div class="panel-heading sub-title">
+        <div class = "row field-values">
+            
+            <div class = "col-md-3">
+                <h4>Property Path</h4>
+                @code("{{path}}") 
+            </div>
+            <div class = "col-md-1">
+                <h4>Type</h4>
+                @code(field.getPredictedType().toString()) 
+            </div>
+            <div class = "col-md-3">
+                <h4>First Value</h4>
+                @code(field.firstValues.get(0))  
+            </div>
+            <div class = "col-md-2">
+                <h4>Unique</h4>
+                @code(field.getCardinalityString())   
+            </div>
+            <div class = "col-md-1">
+                <h4>References</h4>
+                @code(field.recordReferences+"")
+            </div>
+            <div class = "col-md-2">
+                <h4>&nbsp;</h4> 
+                 <a href="#" ng-hide="showstats" ng-click="showstats=true">
+                           <button class="btn btn-sm btn-primary">
+                            Show Statistics
+                           </button>
+                 </a>
+                 <a href="#" ng-show="showstats" ng-click="showstats=false">
+                           <button class="btn btn-sm btn-primary">
+                            Hide Statistics
+                           </button>
+                 </a>
+            </div>
+        </div>
+        
+        
+        <div class = "row" ng-show="showstats">
+           <div class = "col-md-4">
+                 <h4>First Values:</h4>
+                 @for(value <- field.firstValues) {
+                       <div><pre style="max-height: 50px">@value</pre></div>
+                  }
+            </div>
+            <div class = "col-md-8">
+                 <div class = "row">                       
+                       <div class = "col-md-8"><h4>Value</h4></div>
+                       <div class = "col-md-4"><h4>Count</h4></div>
+                 </div>
+                 @for(value <- field.counts.values()) {
+                    <div class = "row">                       
+                       <div class = "col-md-8"><pre style="max-height: 50px">@value.value</pre></div>
+                       <div class = "col-md-4"><pre style="max-height: 50px">@value.count</pre></div>
+                    </div>
+                  }
+            </div>
+        </div>
+        <div class = "row">
+            <div class = "col-md-12">
+                Field Import:
+                <div class="btn-group" >
+                 <label class="btn btn-primary" ng-model="radio.model" ng-repeat="m in checkModel" btn-radio="m" uncheckable>{{m}}</label>
+                      
+                </div>
+            </div>
+        </div>
+        
+        
+        
+        
+    </div>    
+</div>

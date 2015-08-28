@@ -21,7 +21,8 @@ object ApplicationBuild extends Build {
     "com.zaxxer" % "HikariCP-java6" % "2.3.8"
       ,"com.edulify" %% "play-hikaricp" % "2.0.6"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
-      ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"      
+      ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"     
+      ,"com.hazelcast" % "hazelcast" % "3.5.1" 
       ,"commons-codec" % "commons-codec" % "1.9"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
       ,"org.apache.lucene" % "lucene-analyzers-common" % "4.10.0"
@@ -37,8 +38,8 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "handlebars" % "2.0.0-1"
       ,"org.webjars" % "jquery-ui" % "1.11.2"
       ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
-      ,"org.webjars" % "angularjs" % "1.3.16"
-      ,"org.webjars" % "angular-ui-bootstrap" % "0.11.0-2"
+      ,"org.webjars" % "angularjs" % "1.4.3-1"
+      ,"org.webjars" % "angular-ui-bootstrap" % "0.13.3"
       ,"org.webjars" % "font-awesome" % "4.2.0"
       ,"org.webjars" % "html5shiv" % "3.7.2"
       ,"org.webjars" % "requirejs" % "2.1.15"
@@ -101,13 +102,21 @@ object ApplicationBuild extends Build {
     buildInfoPackage := "ix"
   )
 
+  val seqaln = Project("seqaln", file("modules/seqaln")).settings(
+    version := appVersion,
+    libraryDependencies ++= commonDependencies,
+    javacOptions ++= javaBuildOptions,
+    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
+  )
+  
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(
-    resolvers += Resolver.url("Edulify Repository", url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
+    resolvers += Resolver.url("Edulify Repository",
+      url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
     version := appVersion,
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  )
+  ).dependsOn(seqaln).aggregate(seqaln)
 
   val ncats = Project("ncats", file("modules/ncats"))
     .enablePlugins(PlayJava).settings(
@@ -142,6 +151,8 @@ object ApplicationBuild extends Build {
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       libraryDependencies += "org.webjars" % "momentjs" % "2.10.3",
       libraryDependencies += "org.webjars" % "angular-bootstrap-datetimepicker" % "0.3.8",
+      libraryDependencies += "org.webjars" % "angular-ui-select" % "0.11.2",
+      libraryDependencies += "org.webjars" % "lodash" % "3.9.0",
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
@@ -194,11 +205,4 @@ object ApplicationBuild extends Build {
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
-
-  val seqaln = Project("seqaln", file("modules/seqaln")).settings(
-    version := appVersion,
-    libraryDependencies ++= commonDependencies,
-    javacOptions ++= javaBuildOptions,
-    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
-  )
 }

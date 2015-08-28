@@ -1,76 +1,45 @@
 @import ix.ginas.controllers.GinasApp
 
-<div class = "row info" ng-controller="NoteController as NoteCtrl" >
+<div class = "row info" >
     <button class="btn btn-primary label-offset det">
                         Notes&nbsp;<span class="badge" ng-show="substance.notes.length>0">
                         {{substance.notes.length}}</span> </button>
-    <a ng-show="!addingNotes" ng-click="NoteCtrl.addNotes()" aria-label="Add Notes"><i class = "fa fa-plus fa-2x success"></i></a>
-    <a ng-show="addingNotes" ng-click="NoteCtrl.addNotes()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
+    <a ng-show="!addingNotes" ng-click="addNotes()" aria-label="Add Notes"><i class = "fa fa-plus fa-2x success"></i></a>
+    <a ng-show="addingNotes" ng-click="addNotes()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
     <div class="col-md-12">
         <div class = "row header-row">
             <div class = "col-md-9">
                 <strong>Note</strong>
             </div>
-            <div class = "col-md-2">
+            <div class = "col-md-2 text-right" >
                 <strong>Reference ID</strong>
             </div>
         </div>
 
-        <div class = "row" ng-repeat="obj in ginasCtrl.substance.notes">
+        <div class = "row" ng-repeat="obj in substance.notes">
             <div class = "col-md-9">
-                                    {{obj.note}}
+                    <span href="#" editable-textarea="obj.note" blur="submit">{{obj.note}}</span>
             </div>
-            <div class = "col-md-2">
+                <div class = "col-md-2"><span ng-repeat="n in onj.references">
+                    <span ng-show="!note.references || note.references.length==0" ng-click="toggle(noteForm.references)" ><i class="fa fa-plus fa-2x success"></i></span>
+                    <span ng-show="!noteForm.references.selected" ng-click="toggle(noteForm.references)" >{{n.id}} {{n.citation}}</span>
+                </span>
+                    <tags-input ng-show ="noteForm.references.selected" ng-blur="toggle(noteForm.references)" custom-class="form-control" title="References" placeholder="References" id="references" name="references" ng-model = "note.references" display-property="citation" key-property="id" addFromAutocompleteOnly="true" >
+                        <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                    </tags-input>
+                </div>
                     {{obj.references.id}} {{obj.references.citation}}
             </div>
-            <div class = "col-md-1 pull-right">
-                <a ng-show="!isEditingNote" ng-click="NoteCtrl.setEditedNote(obj); NoteCtrl.toggleEditNote();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
-                <a ng-show="!isEditingNote" ng-click="NoteCtrl.removeNote(note)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
-            </div>
-        </div>
-        <div class="row form-row" ng-show="isEditingNote">
-            <form class="form" name="editNoteForm" id = "edit-noteForm" role="form" ng-submit="NoteCtrl.validateNote(editNote); NoteCtrl.addNotes()" novalidate>
-                <div class ="row">
-                    <div class="col-md-9 err-check" id="note-div" show-errors>
-                        <textarea type="text" class="form-control" ng-model ="editNote.note" title="Note" id="note" name = "note" required></textarea>
-                   
-                    </div>
-                    
-                   @referenceselectorform("editNoteForm","editNote")
-                   
-                    <div class="col-md-1 pull-right" ng-show="addingNotes">
-                        <a id ="name-submit" ng-click="NoteCtrl.updateNote(editNote)" arial-label="Save">
-                            <i class="fa fa-floppy-o fa-2x success"></i></a>
-                        <a type="submit" ng-click="NoteCtrl.toggleEditNote();" aria-label="Cancel">
-                            <i class="fa fa-ban fa-2x danger"></i></a>
-                    </div>
 
-                </div>
-            </form>
-        </div>
-
-        <div class="row form-row" ng-show="!isEditingNote && addingNotes">
-            <form class="form-horizontal" name="noteForm" id = "add-note" role="form" novalidate>
+        <form class="form-horizontal" name="noteForm" id = "add-note" role="form" novalidate>
+        <div class="row form-row" >
                 <div class="col-md-9 err-check" id="note-div" show-errors>
                     <textarea type="text" class="form-control" ng-model ="note.note" title="Note" id="note" name = "note" required></textarea>
                 </div>
-                
-                <div class="col-md-2 err-check" show-errors>
-                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-                    <p class="danger" ng-if="!ginasCtrl.substance.references && noteForm.reference.$error">*required</p>
-                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "note.references = ginasCtrl.substance.references[0]" ng-model = "note.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references"></select>
-                    <ng-messages for="noteForm.reference.$error" ng-if="noteForm.reference.$pristine">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-1 pull-right" ng-show="addingNotes">
-                        <a ng-click="NoteCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                        <a ng-click="NoteCtrl.validateNote(note)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
-            </form>
+                @referenceselectorform("noteForm", "note")
         </div>
+        @submitbuttons("note", "noteForm", "notes")
+        </form>
     </div>
 </div>
 
-<!-- Modal -->
-    @referencemodalform()

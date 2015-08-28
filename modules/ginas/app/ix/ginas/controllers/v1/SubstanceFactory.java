@@ -44,7 +44,6 @@ public class SubstanceFactory extends EntityFactory {
     }
     
     private static Substance getSubstanceByApprovalIDOrUUID (String approvalID, String uuid) {
-        Logger.debug("###################Fetching:" + approvalID + " : " + uuid);
         Substance s=getSubstance(uuid);
         if(s!=null)return s;
         
@@ -61,14 +60,14 @@ public class SubstanceFactory extends EntityFactory {
         return filter (new FetchOptions (top, skip, filter), finder);
     }
     
-    public static List<ChemicalSubstance> getChemicals
+    public static List<Substance> getChemicals
     (int top, int skip, String filter) {
-    return filter (new FetchOptions (top, skip, filter), chemfinder);
-}
+	    return filter (new FetchOptions (top, skip, filter), finder);
+	}
     public static List<ProteinSubstance> getProteins
     (int top, int skip, String filter) {
-    return filter (new FetchOptions (top, skip, filter), protfinder);
-}
+	    return filter (new FetchOptions (top, skip, filter), protfinder);
+	}
     
      public static Integer getCount () {
         try {

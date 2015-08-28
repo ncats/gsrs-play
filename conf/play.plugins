@@ -12,6 +12,7 @@
 2020:ix.core.plugins.EutilsPlugin
 2025:ix.core.plugins.PayloadPlugin
 3000:ix.core.plugins.StructureIndexerPlugin
+3001:ix.core.plugins.SequenceIndexerPlugin
 3005:ix.core.plugins.StructureProcessorPlugin
 3010:ix.core.plugins.GinasRecordProcessorPlugin
 4000:ix.core.plugins.SchedulerPlugin

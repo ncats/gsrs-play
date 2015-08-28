@@ -11,24 +11,24 @@
 
         <div class="collapse navbar-collapse navbar-default" id="menubar">
             <ul class="nav navbar-nav pull-left">
-                <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()"><span>Home</span></a></li>
+                <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self"><span>Home</span></a></li>
                 <li><a href="http://ginas.hres.ca/ginas/#view=register"><span>Register Substance</span></a></li>
                 <li><a href="http://tripod.nih.gov/pub/ginasISO/"><span>Download</span></a></li>
-                <li><a id = "bug-link" data-toggle="modal" data-target="#screenshot" role="button">Report a Bug</a></li>
+                <li><a id = "bug-link" data-toggle="modal" data-target="#screenshot" role="button"><i class="fa fa-bug"></i>Report a Bug</a></li>
                 @*<li><button type="button" class="btn navbar-btn btn-default"
                 data-toggle="modal"
                 data-target="#strucModal">Structure Search</button> &nbsp;
                 </li>*@
-                <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" ng-click="ginasCtrl.clearStructure()"><span>Structure Search</span></a></li>
+                <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" ng-click="clearStructure()" target="_self"><span>Structure Search</span></a></li>
                
             </ul>
             <div class="nav navbar-nav pull-right" id ="menu-login">
                 <ul class="nav navbar-nav pull-right">
                     @if(!play.Play.isProd()) {
-                        <li><a href= "@ix.ginas.controllers.routes.GinasLoad.load()" id ="load-button"><button class="btn btn-default">
+                        <li><a href= "@ix.ginas.controllers.routes.GinasLoad.load()" id ="load-button" target="_self"><button class="btn btn-default">
                             Load Data</button></a></li>
                     }
-                <li><a href= "@ix.ginas.controllers.routes.GinasFactory.login()" id ="login-button"><button class="btn btn-default">Login</button></a></li>
+                <li><a href= "@ix.ginas.controllers.routes.GinasFactory.login()" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a></li>
                 </ul>
             </div>
         </div>

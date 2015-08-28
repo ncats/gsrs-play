@@ -70,9 +70,23 @@ public class PayloadFactory extends EntityFactory {
         return null;
     }
     
+    /**
+     * Get an input stream based on the payload, uncompressing
+     * if necessary
+     *  
+     * @param payload
+     * @return
+     */
     public static InputStream getStream (Payload payload) {
         if (payload.id != null)
             return getStream (payload.id);
         throw new IllegalArgumentException ("Invalid payload with no id!");
+    }   
+    
+    public static InputStream getStreamAsIs (Payload payload) {
+    	Payload payload2 = getPayload (payload.id);
+        if (payload2 != null)
+            return payloadPlugin.getPayloadAsStream(payload2);
+        return null;
     }   
 }

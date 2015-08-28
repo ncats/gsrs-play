@@ -1,11 +1,12 @@
-@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.GinasApp;
 
-<div class = "row info" ng-controller="CodeController as CodeCtrl" >
+<div class = "row info" >
     <button class="btn btn-primary label-offset det">
                         Codes&nbsp;<span class="badge" ng-show="substance.codes.length>0">
                         {{substance.codes.length}}</span> </button>
-    <a ng-show="!addingCodes" ng-click="CodeCtrl.addCodes()" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
-    <a ng-show="addingCodes" ng-click="CodeCtrl.addCodes()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
+    <a ng-show="!addingCodes" ng-click="toggleForm(codeForm)" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
+    <a ng-show="addingCodes" ng-click="toggleForm(codeForm)" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
+
     <div class="col-md-12">
         <div class = "row header-row">
             <div class = "col-md-3">
@@ -17,121 +18,69 @@
             <div class = "col-md-2">
                 <strong>Type</strong>
             </div>
-            <div class = "col-md-2">
+            <div class = "col-md-3">
                 <strong>Description</strong>
             </div>
-            <div class = "col-md-2">
+            <div class = "col-md-2 text-right">
                 <strong>Reference ID</strong>
             </div>
         </div>
 
-        <div class = "row" ng-repeat="obj in ginasCtrl.substance.codes">
-            <div class = "col-md-3">
-                                    {{obj.code}}
+        <div class = "row" ng-repeat="obj in substance.codes">
+            <div class="col-md-3">
+                <span href="#" editable-text="obj.code" blur="submit">{{obj.code}}</span>
             </div>
             <div class = "col-md-2">
-                                    {{obj.codeSystem.display}}
+                <span href="#" editable-select="obj.system" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" blur="submit">{{obj.system.display}}</span>
             </div>
             <div class = "col-md-2">
-                                    {{obj.type.display}}
+                <span href="#" editable-select="obj.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" blur="submit">{{obj.type.display}}</span>
             </div>
-            <div class = "col-md-2">
-                                    {{ obj.description}}
+            <div class="col-md-3">
+                <span href="#" editable-text="obj.description" blur="submit">{{obj.description}}</span>
             </div>
-            <div class = "col-md-2">
-                    {{obj.references.id}} {{obj.references.citation}}
+            <div class = "col-md-2"><span ng-repeat="n in code.references">
+                <span ng-show="!code.references || code.references.length==0" ng-click="toggle(codeForm.references)" ><i class="fa fa-plus fa-2x success"></i></span>
+                <span ng-show="!codeForm.references.selected" ng-click="toggle(codeForm.references)" >{{n.id}} {{n.citation}}</span>
+            </span>
+                <tags-input ng-show ="codeForm.references.selected" ng-blur="toggle(codeForm.references)" custom-class="form-control" title="References" placeholder="References" id="references" name="references" ng-model = "name.references" display-property="citation" key-property="id" addFromAutocompleteOnly="true" >
+                    <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                </tags-input>
             </div>
-            <div class = "col-md-1 pull-right">
-                <a ng-show="!isEditingCode" ng-click="CodeCtrl.setEditedCode(obj); CodeCtrl.toggleEditCode();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
-                <a ng-show="!isEditingCode" ng-click="CodeCtrl.removeCode(code)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
-            </div>
-        </div>
-        
-        <!-- Editing bits -->
-        
-        <div class="row form-row" ng-show="isEditingCode">
-            <form class="form" name="editCodeForm" id = "edit-codeForm" role="form" ng-submit="CodeCtrl.validateCode(editCode); CodeCtrl.addCodes()" novalidate>
-                <div class ="row">
-                    <div class="col-md-3 err-check" id="code-div" show-errors>
-                        <input type="text" class="form-control" ng-model ="editCode.code" title="Code" id="code" name = "code" required/>
-                        <ng-messages for="editCodeForm.code.$error" ng-if="editCodeForm.code.$touched">
-                            <ng-message when="duplicate" class="help-block">Code already exists in Ginas</ng-message>
-                            <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                        </ng-messages>
-                    </div>
-                    <div class="col-md-2 err-check" show-errors>
-                        <select class="form-control" title="Code System" id="codeSystem" name = "codeSystem" ng-model = "editCode.codeSystem" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
-                        </select>
-                        <ng-messages for="editCodeForm.codeSystem.$error" ng-if="editCodeForm.codeSystem.$touched">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
-                    <div class="col-md-2 err-check" show-errors>
-                        <select class="form-control" title="Code Type" id="type" name = "type" ng-model = "editCode.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" required>
-                        </select>
-                        <ng-messages for="editCodeForm.type.$error" ng-if="editCodeForm.type.$touched">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
-                    <div class="col-md-2 err-check" show-errors>
-                        <input type="text" class="form-control" ng-model ="editCode.description" title="Description" id="edit-description" name = "description" required/>
-                        <ng-messages for="editCodeForm.description.$error" ng-if="editCodeForm.description.$dirty">
-                            <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                        </ng-messages>
-                    </div>
-                    @referenceselectorform("editCodeForm","editCode")
-                    <div class="col-md-1 pull-right" ng-show="addingCodes">
-                        <a id ="name-submit" ng-click="CodeCtrl.updateCode(editCode)" arial-label="Save">
-                            <i class="fa fa-floppy-o fa-2x success"></i></a>
-                        <a type="submit" ng-click="CodeCtrl.toggleEditCode();" aria-label="Cancel">
-                            <i class="fa fa-ban fa-2x danger"></i></a>
-                    </div>
-                </div>
-            </form>
         </div>
 
-        <div class="row form-row" ng-show="!isEditingCode && addingCodes">
-            <form class="form-horizontal" name="codeForm" id = "add-code" role="form" novalidate>
+            <!-- Adding bits -->
+
+        <form class="form-horizontal" name="codeForm" id = "add-code" role="form" novalidate>
+            <div class="row form-row">
                 <div class="col-md-3 err-check" id="code-div" show-errors>
                     <input type="text" class="form-control" ng-model ="code.code" title="Code" id="code" name = "code" required/>
                     <ng-messages for="codeForm.code.$error" ng-if="codeForm.code.$touched">
-                        <ng-message when="duplicate" class="help-block">Code already exists in Ginas</ng-message>
-                        <ng-message when="required" class="help-block">*required</ng-message>
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Code Type" id="type" name = "codeSystem" ng-model = "code.codeSystem" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.system" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
                         </select>
-                    <ng-messages for="codeForm.codeSystem.$error" ng-if="codeForm.codeSystem.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Code Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" required>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" required>
                         </select>
-                    <ng-messages for="codeForm.type.$error" ng-if="codeForm.type.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
                 </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <input type="text" class="form-control" ng-model ="code.description" title="Description" id="edit-description" name = "description" required/>
-                    <ng-messages for="codeForm.description.$error" ng-if="codeForm.description.$dirty">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" ng-model ="code.description" title="Description" id="description" name = "description"/>
                 </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <a ng-show="!ginasCtrl.substance.references" data-toggle="modal" data-target="#addref" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
-                    <p class="danger" ng-if="!ginasCtrl.substance.references && codeForm.reference.$error">*required</p>
-                    <select class="form-control" title="Reference" id="reference" name = "reference" ng-hide="!ginasCtrl.substance.references" ng-init= "code.references = ginasCtrl.substance.references[0]" ng-model = "code.references" ng-options="ref.citation for ref in  ginasCtrl.substance.references" required></select>
-                    <ng-messages for="codeForm.reference.$error" ng-if="codeForm.reference.$pristine">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-1 pull-right" ng-show="addingCodes">
-                        <a ng-click="CodeCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                        <a ng-click="CodeCtrl.validateCode(code)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
-            </form>
-        </div>
+                @referenceselectorform("codeForm", "code")
+            </div>
+            @submitbuttons("code", "codeForm", "codes")
+        </form>
     </div>
 </div>
+
+
+
+
+
+
+
+        

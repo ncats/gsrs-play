@@ -1,0 +1,71 @@
+@import ix.ncats.controllers.App
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int])(trailer: Html)
+
+@item(page: Int) = {
+  <li><a href="@HtmlFormat.raw(App.page(rows,page))" target="_self">
+    <span aria-hidden="true">@page</span>
+  </a></li>
+}
+
+
+<nav>
+  <div class="btn-toolbar" role="toolbar">
+    <div class="btn-group" role="group">
+      <h3><span class="label label-default">@total</span></h3>
+    </div>
+    @if(pages.length > 1) {
+      <div class="btn-group" role="group">
+        <ul class="pagination">
+          @if(current <= 1) {
+            <li class="disabled">
+              <a href='@HtmlFormat.raw(App.page(rows,current))' aria-label="Previous" target="_self">
+                <span aria-hidden="true" class="fa fa-angle-double-left"></span>
+              </a>
+            </li>
+          } else {
+            <li>
+              <a href='@HtmlFormat.raw(App.page(rows, current-1))' aria-label="Previous" target="_self">
+                <span aria-hidden="true" class="fa fa-angle-double-left"></span>
+              </a>
+            </li>
+          }
+          @for(i <- pages) {
+            @if(i == 0) {
+              <li class="disabled">
+                <a href="#" target="_self"><span><i class="fa fa-ellipsis-h"></i></span></a>
+              </li>
+            } else {
+              @if(i == current) {
+                <li class="active">
+                  <a href='@HtmlFormat.raw(App.page(rows,current))' target="_self">@current</a>
+                </li>
+              } else {
+                @item(i)
+              }
+            }
+          }
+          @if(current >= pages(pages.length-1)) {
+            <li class="disabled">
+              <a href='@HtmlFormat.raw(App.page(rows,current))' aria-label="Next" target="_self">
+                <span aria-hidden="true" class="fa fa-angle-double-right"></span>
+              </a>
+            </li>
+          } else {
+            <li>
+              <a href='@HtmlFormat.raw(App.page(rows,current+1))' aria-label="Next" target="_self">
+                <span aria-hidden="true" class="fa fa-angle-double-right"></span>
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+      @if(trailer.body.nonEmpty) {
+        <div class="btn-group pull-right" role="group">
+        @trailer
+        </div>
+      }
+    }
+  </div>
+</nav>
+

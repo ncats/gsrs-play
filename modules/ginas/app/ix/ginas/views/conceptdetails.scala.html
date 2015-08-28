@@ -1,14 +1,22 @@
 @(sub: ix.ginas.models.v1.Substance)
 
 @substancedetails(sub) {
-    <li role="presentation" class="active"><a href="#structureDetails">Definition</a></li>
+    <li role="presentation" class="active"><a href="#definition">Definition</a></li>
 } {
     <div class = "row">
         <div class = "col-md-9">
             <h4>Concept</h4>
         </div>
+        <div class = "col-md-3">
+        @if(sub.isSubstanceVariant()) {
+            <h3 class= "pull-right subconcept"> @sub.getApprovalIDDisplay()</h3>
+        } else {
+            <h3 class= "pull-right"> @sub.getApprovalIDDisplay()</h3>
+        }
+
+        </div>
     </div>
-    <div class="row info" id="details">
+    <div class="row info" id="definition">
         <div class = "col-md-12">
         @if(sub.isNonSubstanceConcept()) {
             This is a non-substance concept

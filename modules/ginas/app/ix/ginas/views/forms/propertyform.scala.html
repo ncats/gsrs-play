@@ -1,7 +1,7 @@
 @import ix.ginas.controllers.GinasApp
 
 <div class = "row info" ng-controller="PropertyController as PropertyCtrl" >
-    <button class="btn btn-primary label-offset det">
+   @* <button class="btn btn-primary label-offset det">
                         Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                         {{substance.properties.length}}</span> </button>
     <a ng-show="!addingProperties" ng-click="PropertyCtrl.addProperties()" aria-label="Add Properties"><i class = "fa fa-plus fa-2x success"></i></a>
@@ -56,7 +56,7 @@
         </div>
         
         
-        
+*@@*
         <div class="row form-row" ng-show="isEditingProperty">
             <form class="form" name="editPropertyForm" id = "edit-propertyForm" role="form" ng-submit="PropertyCtrl.validateProperty(editProperty); PropertyCtrl.addProperties()" novalidate>
                 <div class ="row">
@@ -67,14 +67,14 @@
                     <div class="col-md-2 err-check" id="property-div" show-errors>
                         <select class="form-control" title="Property Name" id="name" name = "name" ng-model = "editProperty.name" ng-options="r.display for r in @GinasApp.getCV.getField("PROPERTY_NAME") track by r.display" required>
                         </select>
-                    </div>
-                    
+                    </div>*@@*
+ *@@*
                    
                     @referenceselectorform("editPropertyForm","editProperty")
                     @editcontrolsform("PropertyCtrl","editProperty","toggleEditProperty","updateProperty","addingProperties")
                     
                 </div>
-            </form>
+            </form>*@@*
         </div>
 
         <div class="row form-row" ng-show="!isEditingProperty && addingProperties">
@@ -163,6 +163,6 @@
 				</div>
             </form>
         </div>
-    </div>
+    </div>*@
 </div>
 

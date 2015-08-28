@@ -12,11 +12,11 @@
         <div class="panel-heading">
 
             <p class="text-right" data-toggle="tooltip" title="Approval ID">
-                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self">
                     <code> @sub.approvalID</code></a></p>
         </div>
         <div class="panel-body struc-img">
-            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self">
                 <div class = "row">
                     <div class = "col-md-1 pour">
                         <i class="fa fa-flask fa-4x fa-rotate-90"></i>
@@ -31,7 +31,7 @@
             </a>
         </div>
         <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@sub.getName()">
-            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub))" target="_self">
             @GinasApp.truncate(sub.getName())
             </a>
         </div>

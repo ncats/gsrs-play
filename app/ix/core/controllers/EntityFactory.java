@@ -107,18 +107,22 @@ public class EntityFactory extends Controller {
         }
         
         public FetchOptions (int top, int skip, String filter) {
-            for (Map.Entry<String, String[]> me
-                     : request().queryString().entrySet()) {
-                String param = me.getKey();
-                if ("order".equalsIgnoreCase(param)) {
-                    for (String s : me.getValue())
-                        order.add(s);
-                }
-                else if ("expand".equalsIgnoreCase(me.getKey())) {
-                    for (String s : me.getValue())
-                        expand.add(s);
-                }
-            }
+        	try{
+	            for (Map.Entry<String, String[]> me
+	                     : request().queryString().entrySet()) {
+	                String param = me.getKey();
+	                if ("order".equalsIgnoreCase(param)) {
+	                    for (String s : me.getValue())
+	                        order.add(s);
+	                }
+	                else if ("expand".equalsIgnoreCase(me.getKey())) {
+	                    for (String s : me.getValue())
+	                        expand.add(s);
+	                }
+	            }
+        	}catch(Exception e){
+        		
+        	}
             this.top = top;
             this.skip = skip;
             this.filter = filter;
@@ -168,7 +172,11 @@ public class EntityFactory extends Controller {
     protected static <K,T> List<T> filter (FetchOptions options,
                                            Model.Finder<K, T> finder) {
 
-        Logger.debug(request().uri()+": "+options);
+    	try{
+    		Logger.debug(request().uri()+": "+options);
+    	}catch(Exception e){
+    		Logger.debug("non-request-bound: "+options);
+    	}
         Query<T> query = finder.query();
         
         
@@ -219,7 +227,7 @@ public class EntityFactory extends Controller {
         //if (select != null) finder.select(select);
         final FetchOptions options = new FetchOptions (top, skip, filter);
         List<T> results = filter (options, finder);
-
+        
         
         final ETag etag = new ETag ();
         etag.top = options.top;
@@ -288,6 +296,7 @@ public class EntityFactory extends Controller {
         ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
         obj.put("content", mapper.valueToTree(results));
 
+        Logger.debug("TEST DONE");
         return ok (obj);
     }
 
@@ -457,6 +466,12 @@ public class EntityFactory extends Controller {
         FutureRowCount<T> count = finder.findFutureRowCount();
         return count.get();
     }
+    
+//    protected static Integer getCount () 
+//            throws InterruptedException, ExecutionException {
+//            //FutureRowCount<T> count = finder.findFutureRowCount();
+//            return 0;
+//    }
 
     protected static <K,T> Result field (K id, String field, 
                                          Model.Finder<K, T> finder) {
@@ -1228,4 +1243,6 @@ public class EntityFactory extends Controller {
         }
         return UUID.fromString(id);
     }
+    
+    
 }

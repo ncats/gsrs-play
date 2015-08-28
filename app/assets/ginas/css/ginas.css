@@ -9,11 +9,6 @@ body, html {
     height: 100%;
 }
 
-body, html {
-    min-height: 100%;
-    height: 100%;
-}
-
 @-moz-document url-prefix(){
     fieldset {
         display: table-cell;
@@ -47,7 +42,7 @@ body, html {
 }
 
 #content {
-    padding-top: 195px;
+    padding-top: 190px;
 }
 
 #pub-history {
@@ -144,14 +139,6 @@ div.box .on {
 
 }
 
-#searching {
-    /* 	padding-top: 100px; */
-}
-
-#bug-link {
-    cursor: pointer;
-}
-
 #login-button {
     padding: 0px;
 }
@@ -166,11 +153,6 @@ div.box .on {
     font-weight: 600;
 }
 
-button#strucSearch {
-    margin-top: 0px;
-    margin-left: 10px;
-}
-
 #grid {
     background-color: #F8F8F8;
 }
@@ -180,53 +162,6 @@ button#strucSearch {
     border: 1px solid #e8e8e8;
     padding-top: 15px;
     padding-bottom: 15px;
-}
-
-/*Register tiles */
-.row.pad {
-    padding-top: 25px;
-    padding-bottom: 25px;
-}
-
-/*END Register tiles */
-#trail {
-    padding-left: 0px;
-    padding-right: 0px;
-    padding-top: 25px;
-    padding-bottom: 0px;
-}
-
-#crumb-list {
-    margin-bottom: 5px;
-    margin-left: -15px;
-    background: none;
-}
-
-#wizard {
-    /* background-color: #e7e7e7; */
-    border: 1px solid rgb(136, 136, 136);
-    border-radius: 4px;
-    height: 630px;
-}
-
-.button-row {
-    padding-top: 15px;
-    padding-bottom: 15px;
-}
-
-.wizard-panel {
-    padding: 30px;
-    height: auto;
-    background-color: white;
-    border: 1px solid rgb(136, 136, 136);
-    border-radius: 4px;
-}
-
-#chem-search {
-    height: 500px;
-    background-color: white;
-    border: 1px solid rgb(136, 136, 136);
-    border-radius: 4px;
 }
 
 #menu-login {
@@ -255,10 +190,6 @@ nav#main-pagination {
 nav#main-pagination {
     margin-top: -15px;
     margin-bottom: -20px;
-}
-
-#pages-right {
-    float: right;
 }
 
 .pagination-list {
@@ -313,23 +244,9 @@ nav#main-pagination {
 
 /* END TYPEAHEAD CSS */
 
-/* WIZARD CSS */
-#labels {
-    height: 235px;
-}
-
-/* END WIZARD CSS */
-#canvas {
-    background: none;
-}
-
 .thumb-col {
     padding-left: 0px;
     padding-right: 0px;
-}
-
-.struc-img {
-
 }
 
 .struc-thumb {
@@ -353,10 +270,6 @@ nav#main-pagination {
 
 .modal {
     top: 17%;
-}
-
-.export {
-    /*top: 25%;*/
 }
 
 .row.stereo {
@@ -419,24 +332,11 @@ nav#main-pagination {
     word-wrap: initial;
     padding: 0px;
     background-color: #f8f8f8;
+    white-space: pre;
 }
 
 #strucThumbSearch {
     z-index: 9;
-}
-
-.thumbs {
-    font-size: 18px;
-    position: relative;
-    margin-top: -1px;
-}
-
-.approveID {
-    font-family: "Lucida Console", Monaco, monospace;
-}
-
-.nameDiv {
-    margin-top: -20px;
 }
 
 .thumbs{
@@ -453,76 +353,12 @@ nav#main-pagination {
     margin-top: -20px;
 }
 
-#canvas {
-    -webkit-transform: scale(20);
-    -moz-transform: scale(20);
-    -o-transform: scale(20);
-    transform: scale(20);
-}
-
-#strucModal {
-    position: relative;
-    /*top: -80%;*/
-
-}
-
 #draw-box {
     width: 113%;
 }
 
 samp {
     font-family: "Lucida Console", Monaco, monospace;
-}
-
-.highlight {
-    padding-left: 3px;
-    padding-right: 3px;
-    margin-left: -10px;
-}
-
-.highlight:hover {
-    background-color: yellow;
-    font-weight: bold;
-    cursor: default;
-    color: black;
-}
-
-.string {
-    line-height: 1;
-    font-size: 15px;
-    font-family: "Lucida Console", Monaco, monospace;
-
-}
-
-span.count {
-    font-size: 10px;
-    margin-right: 20%;
-}
-
-.tooltip {
-    letter-spacing: 0px;
-}
-
-.site {
-    background: blue;
-    color: white;
-}
-
-.blue {
-    color: #337ab7;
-}
-
-.disulfide {
-    background: purple;
-}
-
-.nglycosylation, .oglycosylation, .cglycosylation {
-    background: green;
-}
-
-.structuralModification {
-    background: black;
-    color: white;
 }
 
 .prot-list {
@@ -536,117 +372,6 @@ span.count {
 .prot-approvID {
     margin-top: 15px;
 }
-
-i#numbers-off {
-    position: absolute;
-    left: 30px;
-    display: none;
-}
-
-i#grid-view-off {
-    position: absolute;
-    left: 30px;
-    display: none;
-}
-
-/*TOGGLE */
-
-.switch {
-    /*   margin-top: 38%; */
-}
-
-.cmn-toggle {
-    position: absolute;
-    margin-left: -9999px;
-    visibility: hidden;
-}
-
-.cmn-toggle + label {
-    display: block;
-    position: relative;
-    cursor: pointer;
-    outline: none;
-    user-select: none;
-    top: 25px;
-    right: 15px;
-}
-
-label#view-label {
-    margin-top: -15px;
-}
-
-div#list-view {
-    margin-right: -90px;
-}
-
-i#grid-view {
-    margin-left: -15px;
-    margin-top: 10px;
-}
-
-i#list-view {
-    margin-right: -15px;
-    margin-top: 10px;
-}
-
-input.cmn-toggle-round + label {
-    padding: 2px;
-    width: 50px;
-    height: 25px;
-    background-color: #dddddd;
-    border-radius: 60px;
-    float: right;
-}
-
-input.cmn-toggle-round + label:before,
-input.cmn-toggle-round + label:after {
-    display: block;
-    position: absolute;
-    top: 1px;
-    left: 1px;
-    bottom: 1px;
-    content: "";
-}
-
-input.cmn-toggle-round + label:before {
-    right: 1px;
-    background-color: #f1f1f1;
-    border-radius: 60px;
-    transition: background 0.2s;
-}
-
-input.cmn-toggle-round + label:after {
-    width: 25px;
-    background-color: #fff;
-    border-radius: 100%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    transition: margin 0.2s;
-}
-
-input.cmn-toggle-round:checked + label:before {
-    background-color: #337ab7;
-}
-
-input.cmn-toggle-round:checked + label:after {
-    margin-left: 25px;
-}
-
-input.cmn-toggle-round + label#view-label:before {
-    background-color: #337ab7;
-}
-
-.cmn-toggle + label#view-label {
-    top: 6px;
-    right: 0;
-}
-
-div#num {
-    font-size: 12px;
-    margin-top: 30px;
-    margin-left: 25px;
-}
-
-/* END TOGGLE */
 
 .collapse.width {
     height: auto;
@@ -749,7 +474,7 @@ i#numbers-off {
 
 /*TOGGLE SWITCH*/
 
-.switch {
+.toggleSwitch {
     background-color: #337ab7;
     border: 1px solid #337ab7;
     position: relative;
@@ -769,7 +494,7 @@ i#numbers-off {
     left: -25px;
 }
 
-.switch small {
+.toggleSwitch small {
     background: #fff;
     border-radius: 100%;
     box-shadow: 0 1px 3px rgba(0,0,0,0.4);
@@ -782,12 +507,12 @@ i#numbers-off {
     -webkit-transition: 0.3s ease-out all;
 }
 
-.switch.checked small {
+.toggleSwitch.checked small {
     left: 27px;
 
 }
 
-.switch .off {
+.toggleSwitch .off {
     display:block;
     position: absolute;
     right: -72%;
@@ -796,7 +521,7 @@ i#numbers-off {
     color:#333333;
 }
 
-.switch .on {
+.toggleSwitch .on {
     display:block;
     z-index: 0;
     position: absolute;
@@ -805,20 +530,13 @@ i#numbers-off {
     color:#333333;
 }
 
-.switch.checked .off {
+.toggleSwitch.checked .off {
     display:block;
 }
 
-.switch.checked .on {
+.toggleSwitch.checked .on {
     display:block;
 }
-
-
-
-
-
-
-
 
 i#grid-view-off {
     position: absolute;
@@ -826,111 +544,6 @@ i#grid-view-off {
     display: none;
 }
 /*TOGGLE */
-
-.switch {
-    /*   margin-top: 38%; */
-}
-
-.cmn-toggle {
-    position: absolute;
-    margin-left: -9999px;
-    visibility: hidden;
-}
-.cmn-toggle + label {
-    display: block;
-    position: relative;
-    cursor: pointer;
-    outline: none;
-    user-select: none;
-    top: 25px;
-    right: 15px;
-}
-
-label#view-label {
-    margin-top: -15px;
-}
-
-div#list-view {
-    margin-right: -90px;
-}
-
-i#grid-view {
-    margin-left: -15px;
-    margin-top: 10px;
-}
-
-i#list-view {
-    margin-right: -15px;
-    margin-top: 10px;
-}
-
-input.cmn-toggle-round + label {
-    padding: 2px;
-    width: 50px;
-    height: 25px;
-    background-color: #dddddd;
-    border-radius: 60px;
-    float: right;
-}
-input.cmn-toggle-round + label:before,
-input.cmn-toggle-round + label:after {
-    display: block;
-    position: absolute;
-    top: 1px;
-    left: 1px;
-    bottom: 1px;
-    content: "";
-}
-input.cmn-toggle-round + label:before {
-    right: 1px;
-    background-color: #f1f1f1;
-    border-radius: 60px;
-    transition: background 0.2s;
-}
-input.cmn-toggle-round + label:after {
-    width: 25px;
-    background-color: #fff;
-    border-radius: 100%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    transition: margin 0.2s;
-}
-input.cmn-toggle-round:checked + label:before {
-    background-color: #337ab7;
-}
-input.cmn-toggle-round:checked + label:after {
-    margin-left: 25px;
-}
-
-input.cmn-toggle-round + label#view-label:before {
-    background-color: #337ab7;
-}
-
-.cmn-toggle + label#view-label {
-    top:6px;
-    right:0;
-}
-
-div#num {
-    font-size: 12px;
-    margin-top: 30px;
-    margin-left: 25px;
-}
-/* END TOGGLE */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .collapse.width {
     height: auto;
@@ -1036,4 +649,52 @@ div#jsdraw {
 
 a{
 	cursor:pointer;
+}
+
+h2.display-name {
+    padding-right: 25px;
+    margin-top: 5px;
+}
+
+.holder{
+    min-height:20px;
+}
+.progress-text{
+    white-space: nowrap;
+    font-weight: bold;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+.field-values div{
+}
+.field-values code{
+    white-space: nowrap;
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor:pointer;
+}
+.field-values .tooltip-inner{
+    max-width:500px !important;    
+}
+.revealable.row.ng-hide {
+    height: 0;
+}
+.revealable.row {
+    transition: .2s linear all;
+    height: 400px; 
+    overflow: hidden;
+    display: block !important;
+    background: rgb(240, 240, 240) none repeat scroll 0% 0%;
+}
+.list-item .struc-thumb{
+    cursor:  pointer;
+}
+.fieldfacet{
+	background: #EBF6E7 none repeat scroll 0% 0%;
+	padding: 10px;
+}
+.spacer{
+	clear: both;
 }

@@ -1,0 +1,27 @@
+@import ix.ncats.controllers.App.FacetDecorator
+@import ix.ncats.controllers.App
+@import ix.core.models.ProcessingJob
+
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+        facets: Array[FacetDecorator], jobList: List[ProcessingJob])
+
+@ix.ginas.views.html.content("Jobs", "ix.core.models.ProcessingJob", ix.ginas.controllers.routes.GinasLoad.jobs().url,
+    current, rows, total, pages, facets) {
+    @ix.ginas.views.html.menu()
+} {
+    <div></div>
+} {
+    <div class= "panel-body">
+        <div class = "row hidden-xs" ng-show="enabled" id ="grid">
+               @for(sub <- jobList) {
+                    @joblist(sub)
+                }
+        </div>
+
+        <div class = "row in" ng-show="!enabled" id ="list">
+            @for(sub <- jobList) {
+                    @joblist(sub)
+                }
+        </div>
+    </div>
+}

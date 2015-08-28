@@ -1,0 +1,139 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.GinasLoad
+@import ix.core.models.ProcessingJob
+
+@(job: ProcessingJob, poll: String = "false")
+
+<div class="panel panel-default sub-list">
+    <div class="panel-heading sub-title">
+        <div class = "row">
+            <div class = "col-md-10">
+                <h3><a href="@ix.ginas.controllers.routes.GinasLoad.monitorProcess(GinasLoad.getJobKey(job))" target="_self">@job.getName()</a></h3>
+            </div>
+            <div class = "col-md-2 prot-approvID">
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasLoad.monitorProcess(GinasLoad.getJobKey(job))" target="_self"><code>@job.status</code></a></h4>
+            </div>
+        </div>
+    </div>
+    
+    <div class= "panel-body list-item">
+        <div class = "row">
+            <div class = "col-md-3">
+                <div class ="row">
+                    <div class = "col-md-1 col-md-offset-1">
+                          @if(job.status == ix.core.models.ProcessingJob.Status.RUNNING){
+                                <i class="fa fa-cog fa-5x fa-spin"></i>
+                          }else{
+                            @if(job.status == ix.core.models.ProcessingJob.Status.COMPLETE){
+                                <i class="fa fa-check-square fa-5x"></i>
+                            }else{
+                                <i class="fa fa-question-circle fa-5x"></i>
+                            }
+                          }
+                    </div>
+                </div>
+                <div class ="row">
+                <div class = "col-md-1 col-md-offset-1">
+                  <a href="@ix.ginas.controllers.routes.GinasApp.substances(GinasLoad.getJobKey(job))" id="load-button" target="_blank">
+                           <button class="btn btn-sm btn-primary">
+                            View Records
+                           </button>
+                        </a>
+                        </div>
+                </div>
+                </div>
+            <div class = "col-md-7">
+		<div class = "row">
+			@job.message
+		</div>
+                <div class = "row">
+                     <div ng-controller="ProgressJobController" ng-init="init(@job.id, @poll, '@job.status')">
+                            <hr/>
+                            <h3><em>Progress</em></h3>
+                            
+                            
+                            <progressbar class="{{mclass}}" max="max" value="dynamic">
+                            	<span class="progress-text">{{dynamic}} / {{max}}</span>
+                            </progressbar>
+                            <button ng-hide="details" type="button" class="btn btn-sm btn-primary" ng-click="details=true">Show Details</button>
+                            <button ng-show="details" type="button" class="btn btn-sm btn-primary" ng-click="details=false">Hide Details</button>
+                            <div ng-show="details">
+                            <small><em>Extracted Records</em></small>
+                            <progress class="{{mclass}}" max="max" >
+                            
+	                            <bar value="stat.recordsExtractedSuccess" type="success">
+	                            <span class="progress-text">
+	                            {{stat.recordsExtractedSuccess}}
+	                            </span>
+	                            </bar>
+	                            
+	                            <bar value="stat.recordsExtractedFailed" type="danger">
+	                            <span ng-hide="stat.recordsExtractedFailed < 1" class="progress-text">
+	                            {{stat.recordsExtractedFailed}}
+	                            </span>
+	                            </bar>
+                            
+                            </progress>
+                            
+                            <small><em>Processed Records</em></small>
+                            
+                            <progress class="{{mclass}}" max="max" >
+                            
+	                            <bar value="stat.recordsProcessedSuccess" type="success">
+	                            <span class="progress-text">
+	                            {{stat.recordsProcessedSuccess}}
+	                            </span>
+	                            </bar>
+	                            
+	                            <bar value="stat.recordsProcessedFailed" type="danger">
+	                            <span ng-hide="stat.recordsProcessedFailed < 1" class="progress-text">
+	                            {{stat.recordsProcessedFailed}}
+	                            </span>
+	                            </bar>
+                            
+                            </progress>
+                            
+                            <small><em>Persisted Records</em></small>
+                            
+                            <progress class="{{mclass}}" max="max" >
+                            
+	                            <bar value="stat.recordsPersistedSuccess" type="success">
+	                            <span class="progress-text">
+	                            {{stat.recordsPersistedSuccess}}
+	                            </span>
+	                            </bar>
+	                            
+	                            <bar value="stat.recordsPersistedFailed" type="danger">
+	                            <span ng-hide="stat.recordsPersistedFailed < 1" class="progress-text">
+	                            {{stat.recordsPersistedFailed}}
+	                            </span>
+	                            </bar>
+                            
+                            </progress>
+                            </div>
+                            <div class = "col-md-10">
+                            {{mess}}
+                            </div>
+                            <div class = "col-md-2">
+                            <button ng-hide="monitor" type="button" class="btn btn-sm btn-primary" ng-click="refresh(@job.id,true)">Update</button>
+                            <button ng-show="monitor" type="button" class="btn btn-sm btn-primary" ng-click="stopMonitor()">Stop Updating</button>
+                            </div>
+                        </div>
+                </div>
+            </div>
+            <div class = "col-md-2">
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date started: <h6>@job._getStartAsDate()</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date ended: <h6>@job._getStoppedAsDate()</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>

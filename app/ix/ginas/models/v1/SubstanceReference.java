@@ -18,7 +18,7 @@ public class SubstanceReference extends Ginas {
     public String refPname;
     
     @JSONEntity(isRequired = true)
-    @Column(nullable=false, length=128)
+    @Column(length=128)
     public String refuuid;
     
     @JSONEntity(values = "JSONConstants.ENUM_REFERENCE")

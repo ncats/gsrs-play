@@ -46,7 +46,7 @@ public class Name extends Ginas {
     
     @JSONEntity(title = "Name Type", format = JSONConstants.CV_NAME_TYPE, values = "JSONConstants.ENUM_NAMETYPE")
     @Column(length=32)
-    public String type;
+    public String type="cn";
     
     @JSONEntity(title = "Domains", format = "table", itemsTitle = "Domain", itemsFormat = JSONConstants.CV_NAME_DOMAIN)
     @ManyToMany(cascade=CascadeType.ALL)

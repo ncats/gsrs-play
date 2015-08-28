@@ -3,7 +3,8 @@ package ix.core.models;
 import javax.persistence.*;
 
 @Entity
-@Table(name="ix_core_principal")
+//@Table(name="ix_core_a")
+@Table(name="ix_prin")
 @Inheritance
 @DiscriminatorValue("PRI")
 public class Principal extends IxModel {
@@ -11,6 +12,7 @@ public class Principal extends IxModel {
     public String provider; 
     
     @Indexable(facet=true,name="Principal")
+    @Column(unique=true)
     public String username;
     public String email;
     public boolean admin = false;
