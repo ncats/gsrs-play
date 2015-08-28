@@ -388,6 +388,13 @@ public class GinasLoad extends App {
     
     public static String extractSubstanceJSON(){
     	 String mappingsjson = null;
+//    	 try {
+//    		System.out.println("This is what I got:" );
+//			System.out.write(request().body().asRaw().asBytes());
+//		} catch (IOException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
          try{
              mappingsjson = request().body().asJson().toString();
          }catch(Exception e){
