@@ -30,12 +30,12 @@
             <!-- Display bits -->
 
         <div class = "row" ng-repeat="name in substance.unofficialNames">
-
+            <hr>
             <div class="col-md-4">
                 <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="name.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>
+                <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>
 
             </div>
             <div class = "col-md-2"><span ng-repeat="n in name.languages">
@@ -48,16 +48,8 @@
             </div>
             <div class = "col-md-1 text-center">
                 <span href="#" editable-checkbox="name.preferred"><i class="fa fa-check fa-2x success" ng-show="name.preferred"></i> <i class="fa fa-times fa-2x warning" ng-show="!name.preferred"></i></span>
-
             </div>
-            <div class = "col-md-2"><span ng-repeat="n in name.references">
-                <span ng-show="!name.references || name.references.length==0" ng-click="toggle(nameForm.references)" ><i class="fa fa-plus fa-2x success"></i></span>
-                <span ng-show="!nameForm.references.selected" ng-click="toggle(nameForm.references)" >{{n.id}} {{n.citation}}</span>
-            </span>
-                <tags-input ng-show ="nameForm.references.selected" ng-blur="toggle(nameForm.references)" custom-class="form-control" title="References" placeholder="References" id="references" name="references" ng-model = "name.references" display-property="citation" key-property="id" addFromAutocompleteOnly="true" >
-                    <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-            </div>
+            @referenceview("nameForm", "name")
         </div>
 
             <!-- Adding bits -->
@@ -72,7 +64,7 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                   <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "name.type" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" required>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "name.type" ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" required>
                         </select>
                     <ng-messages for="nameForm.type.$error" ng-if="nameForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

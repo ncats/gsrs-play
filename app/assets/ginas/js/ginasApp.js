@@ -326,7 +326,6 @@
 
                 if (newcv !== null) {
                     var w = getDisplayFromCV(newcv.domain, newcv.value);
-                    console.log("##### display:" + w);
                     newcv.display = w;
                     sub[v] = newcv;
 
