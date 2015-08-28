@@ -59,6 +59,8 @@ public class GinasUtils {
     public static Substance makeSubstance(JsonNode tree) throws Exception {
         JsonNode subclass = tree.get("substanceClass");
         ObjectMapper mapper = new ObjectMapper();
+
+        Logger.debug("####### trying :" + tree.toString());
         mapper.addHandler(new GinasV1ProblemHandler ());
         Substance sub=null;
         if (subclass != null && !subclass.isNull()) {
@@ -96,7 +98,7 @@ public class GinasUtils {
                 Logger.warn("Skipping substance class " + type);
             }
         } else {
-            Logger.error("Not a valid JSON substance!");
+            Logger.error("Not a valid JSON substance! \"substanceClass\" cannot be null!");
         }
         return null;
     }
