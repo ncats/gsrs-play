@@ -884,7 +884,7 @@ public class App extends Authentication {
     	final int[] amap = stringToIntArray(atomMap);
         if (format.equals("svg") || format.equals("png")) {
             final String key =
-                Structure.class.getName()+"/"+size+"/"+id+"."+format;
+                Structure.class.getName()+"/"+size+"/"+id+"."+format + ":" + atomMap;
             String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
                 Result result = getOrElse (key, new Callable<Result> () {

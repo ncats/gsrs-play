@@ -6,7 +6,7 @@
 
 @structureImage(s: Structure, size: Integer) = {
     <img class="struc-thumb img-responsive" alt="Structure of @sub.getName" title="Structure of @sub.getName"
-    src='@ix.ncats.controllers.routes.App.structure(s.getId(), "svg", size)'>
+    src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size)'>
 }
 
 @makeTable(s: Structure, stype: String) = {

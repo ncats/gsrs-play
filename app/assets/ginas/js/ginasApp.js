@@ -548,7 +548,7 @@
             link: function(scope, element) {
                 $http({
                     method: 'GET',
-                    url: 'app/structure/' + scope.id + '.svg',
+                    url: 'app/img/' + scope.id + '.svg',
                     headers: {
                         'Content-Type': 'text/plain'
                     }

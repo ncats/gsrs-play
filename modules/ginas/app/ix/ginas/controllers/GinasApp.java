@@ -1,5 +1,6 @@
 package ix.ginas.controllers;
 
+import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
@@ -12,6 +13,7 @@ import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.*;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
+import ix.ncats.controllers.auth.Authentication;
 import ix.utils.Util;
 
 import java.io.IOException;
@@ -38,8 +40,8 @@ import play.mvc.*;
 import play.libs.ws.*;
 import play.libs.F;
 import tripod.chem.indexer.StructureIndexer;
-
 import chemaxon.struc.MolAtom;
+import chemaxon.util.MolHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -1257,4 +1259,38 @@ public class GinasApp extends App {
 		return ok(terms);
 	}
 
+	
+	
+	
+	/**
+     * Renders a chemical structure from structure ID
+     * atom map can be provided for highlighting
+     * 
+     * @param id
+     * @param format
+     * @param size
+     * @param atomMap
+     * @return
+     */
+    public static Result structure (final String id,
+                                    final String format, final int size, final String atomMap) {
+    	Logger.debug("Fetching structure");
+    	Result r1 = App.structure(id, format, size, atomMap);
+    	int httpStat =  r1.toScala().header().status();
+    	if(httpStat == NOT_FOUND){
+    		Substance s = SubstanceFactory.getSubstance(id);
+    		if(s instanceof ChemicalSubstance){
+    			String sid1= ((ChemicalSubstance) s).structure.id.toString();
+    			return App.structure(sid1, format, size, atomMap);
+    		}
+    	}
+    	return r1;
+    	
+    }
+	
+	
+	
+	
+	
+	
 }
