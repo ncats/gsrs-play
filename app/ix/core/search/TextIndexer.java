@@ -27,6 +27,7 @@ import org.apache.lucene.document.IntDocValuesField;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.FloatDocValuesField;
 import org.apache.lucene.document.DoubleDocValuesField;
+
 import static org.apache.lucene.document.Field.Store.*;
 
 import org.apache.lucene.index.IndexWriter;
@@ -37,7 +38,6 @@ import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.FieldInfo.IndexOptions;
-
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.NIOFSDirectory;
@@ -46,12 +46,10 @@ import org.apache.lucene.store.NoLockFactory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.util.BytesRef;
-
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanQuery;
@@ -65,20 +63,17 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.FieldCacheTermsFilter;
-
 import org.apache.lucene.queries.TermsFilter;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
-
 import org.apache.lucene.facet.*;
 import org.apache.lucene.facet.range.*;
 import org.apache.lucene.facet.taxonomy.*;
 import org.apache.lucene.facet.taxonomy.directory.*;
 import org.apache.lucene.facet.sortedset.*;
-
 import org.apache.lucene.search.suggest.DocumentDictionary;
 import org.apache.lucene.search.suggest.Lookup;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingSuggester;
@@ -92,12 +87,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import org.reflections.Reflections;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
 import play.Logger;
 import play.cache.Cache;
 import play.db.ebean.Model;
-
 import ix.utils.Global;
 import ix.core.models.Indexable;
 import ix.core.models.DynamicFacet;
@@ -233,7 +229,7 @@ public class TextIndexer {
 
     public static class SearchResult {
     	
-    	SearchContextAnalyzer searchAnalyzer = new LazySearchAnalyzer();
+    	SearchContextAnalyzer searchAnalyzer = new GinasSearchAnalyzer();
     	
     	String query;
         List<Facet> facets = new ArrayList<Facet>();
@@ -267,7 +263,10 @@ public class TextIndexer {
 
         protected void add (Object obj) {
             matches.add(obj);
-            searchAnalyzer.updateFieldQueryFacets(obj, query);
+            //Logger.debug("added" + matches.size());
+//          long start=System.currentTimeMillis();
+//          searchAnalyzer.updateFieldQueryFacets(obj, query);
+//    		Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
         }
         
         protected void done () {

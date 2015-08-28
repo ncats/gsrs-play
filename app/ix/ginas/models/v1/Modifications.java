@@ -42,6 +42,7 @@ public class Modifications extends Ginas {
 
     public Modifications () {}
     
+    @JsonIgnore
     public int getLength(){
         Logger.info("agent " + this.agentModifications.size());
         Logger.info("phy " + this.physicalModifications.size());

@@ -340,6 +340,22 @@ public class GinasApp extends App {
 				substances.add((Substance) result.get(i));
 			}
 		}
+		long starttime = System.currentTimeMillis();
+		
+		
+//		ObjectMapper om = new ObjectMapper();
+//		om.valueToTree(substances);
+//		int k=0;
+//		for(Substance s:substances){
+//			for(Name n:s.getAllNames()){
+//				k+=n.name.hashCode();
+//			}
+//		}
+		
+		String tt=(-(starttime-System.currentTimeMillis())/1000.)  + "s";
+		
+		Logger.debug("############## serialization time:" + tt);
+		
 
 		return ok(ix.ginas.views.html.substances.render(page, rows,
 				result.count(), pages, decorate(facets), substances, result.getSearchContextAnalyzer().getFieldFacets()));

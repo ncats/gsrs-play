@@ -39,6 +39,23 @@ public class Validation {
 			}
 		}
 		
+		
+		for(Name n : s.names){
+			List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstancesWithExactName(100, 0, n.name);
+			if(sr!=null && !sr.isEmpty()){
+				Substance s2=sr.iterator().next();
+				GinasProcessingMessage mes = GinasProcessingMessage
+						.WARNING_MESSAGE("Name '"
+								+ n.name
+								+ "' collides with existing name for substance:"
+								+ s2.getName() + " [" + s2.getApprovalID()
+								+ "]");
+				gpm.add(mes);
+				strat.processMessage(mes);
+			}
+		}
+		
+		
 		switch(s.substanceClass){
 			case chemical:
 				gpm.addAll(validateAndPrepareChemical((ChemicalSubstance) s,strat));
@@ -125,15 +142,10 @@ public class Validation {
 					break;
             	}
             }
-            String hash=null;
-            for (Value val : struc.properties) {
-                if (Structure.H_LyChI_L4.equals(val.label)) {
-                	hash=val.getValue()+"";
-                }
-            }
+           
             
             try {
-            	List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstances(100, 0, "structure.properties.term='"+ hash+"'");
+            	List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getCollsionChemicalSubstances(100, 0, cs);
 				
 				if(sr.size()>0){
 					
