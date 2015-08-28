@@ -1,0 +1,38 @@
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.Property
+
+@(properties: List[Property])
+
+<button class="btn btn-primary label-offset det">Properties&nbsp;<span class="badge"> @properties.length</span></button>
+<div class="col-md-12">
+    <table class="table table-striped" id="propertiesTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Property Type</th>
+                <th>Amount</th>
+                <th>Defining</th>
+                <th>Parameters</th>
+                <th>References</th>
+            </tr>
+        </thead>
+        @for(n <- properties) {
+            <tr>
+                <td>@n.name</td>
+                <td>@GinasApp.getCV.getDisplay("NAME_TYPE", {n.`type`})</td>
+                <td>@GinasApp.getCV.getDisplay("Property_TYPE", {n.propertyType})</td>
+
+                <td>AMOUNT
+                </td>
+
+
+                <td>@if(n.defining == true) {
+                    <i class="fa fa-check fa-2x success"></i>
+                } else {}</td>
+                <td>PARAMETERS</td>
+                @referencetable(n.references, n.uuid.toString(), 7)
+            </tr>
+        }
+    </table>
+</div>
