@@ -308,6 +308,7 @@ public class IxContext extends Plugin {
     public File h2 () { return h2; }
     public File payload () { return payload; }
     public File structure () { return structure; }
+    public File sequence () { return sequence; }    
     
     public int cacheTime () { return cacheTime; }
     public boolean debug (int level) { return debug >= level; }

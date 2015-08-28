@@ -65,16 +65,16 @@ public class SubstanceFactory extends EntityFactory {
     
     public static List<Substance> getSubstancesWithExactName
     (int top, int skip, String name) {
-		return finder.where().eq("names.name", name).findList();
-	}
+                return finder.where().eq("names.name", name).findList();
+        }
     
     public static List<Substance> getChemicals
-    (int top, int skip, String filter) {
-	    return filter (new FetchOptions (top, skip, filter), finder);
-	}
+        (int top, int skip, String filter) {
+        return filter (new FetchOptions (top, skip, filter), finder);
+    }
     
     
-     public static Integer getCount () {
+    public static Integer getCount () {
         try {
             return getCount (finder);
         }
@@ -120,14 +120,14 @@ public class SubstanceFactory extends EntityFactory {
         return update (uuid, field, Substance.class, finder);
     }
 
-	public static List<Substance> getCollsionChemicalSubstances(int i, int j,
-			ChemicalSubstance cs) {
-		 String hash=null;
-         for (Value val : cs.structure.properties) {
-             if (Structure.H_LyChI_L4.equals(val.label)) {
-             	hash=val.getValue()+"";
-             }
-         }
-         return finder.where().eq("structure.properties.term", hash).findList();
-	}
+    public static List<Substance> getCollsionChemicalSubstances(int i, int j,
+                                                                ChemicalSubstance cs) {
+        String hash=null;
+        for (Value val : cs.structure.properties) {
+            if (Structure.H_LyChI_L4.equals(val.label)) {
+                hash=val.getValue()+"";
+            }
+        }
+        return finder.where().eq("structure.properties.term", hash).findList();
+    }
 }

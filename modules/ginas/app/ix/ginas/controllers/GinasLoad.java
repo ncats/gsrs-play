@@ -73,22 +73,18 @@ import java.util.Date;
 
 
 public class GinasLoad extends App {
-	public static boolean OLD_LOAD = false;
-	
-	public static final String[] ALL_FACETS = {
-		"Job Status"
-	};
-	
-	
-	static final GinasRecordProcessorPlugin ginasRecordProcessorPlugin =
-	        Play.application().plugin(GinasRecordProcessorPlugin.class);
-	    static final PayloadPlugin payloadPlugin =
-	        Play.application().plugin(PayloadPlugin.class);
-	    
-	    
-       
-	
-	
+    public static boolean OLD_LOAD = false;
+        
+    public static final String[] ALL_FACETS = {
+        "Job Status"
+    };
+        
+        
+    static final GinasRecordProcessorPlugin ginasRecordProcessorPlugin =
+        Play.application().plugin(GinasRecordProcessorPlugin.class);
+    static final PayloadPlugin payloadPlugin =
+        Play.application().plugin(PayloadPlugin.class);
+    
     public static Result error (int code, String mesg) {
         return ok (ix.ginas.views.html.error.render(code, mesg));
     }
@@ -141,11 +137,6 @@ public class GinasLoad extends App {
         }
     }
 
-
-   
-
-   
-    
     public static Result load () {
         if (Play.isProd()) {
             return redirect (ix.ginas.controllers.routes.GinasFactory.index());
@@ -154,128 +145,128 @@ public class GinasLoad extends App {
     }
     
     public static Result loadJSON () {
-    	
+        
         if (Play.isProd()) {
             return badRequest ("Invalid request!");
         }
         
         DynamicForm requestData = Form.form().bindFromRequest();
         
-		try {
+        try {
 
-			Payload sdpayload = payloadPlugin.parseMultiPart("sd-file",
-					request());
+            Payload sdpayload = payloadPlugin.parseMultiPart("sd-file",
+                                                             request());
 
-			if (sdpayload != null) {
-				sdpayload.save();
-				Map<String, FieldStatistics> m = GinasSDFExtractor
-						.getFieldStatistics(sdpayload, 100);
-				return ok(ix.ginas.views.html.admin.sdfimportmapping.render(
-						sdpayload, new ArrayList<FieldStatistics>(m.values())));
-			} else {
-				Payload payload = payloadPlugin.parseMultiPart("json-dump",
-						request());
+            if (sdpayload != null) {
+                sdpayload.save();
+                Map<String, FieldStatistics> m = GinasSDFExtractor
+                    .getFieldStatistics(sdpayload, 100);
+                return ok(ix.ginas.views.html.admin.sdfimportmapping.render(
+                                                                            sdpayload, new ArrayList<FieldStatistics>(m.values())));
+            } else {
+                Payload payload = payloadPlugin.parseMultiPart("json-dump",
+                                                               request());
 
-				if (payload != null) {
-					// New way:
-					if (!GinasLoad.OLD_LOAD) {
-						String id = ginasRecordProcessorPlugin
-								.submit(payload,
-										ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
-						    			ix.ginas.utils.GinasUtils.GinasSubstancePersister.class);
-						return redirect(ix.ginas.controllers.routes.GinasLoad
-								.monitorProcess(id));
-						// return ok("Running job " + id + " payload is " +
-						// payload.name + " also " + payload.id);
-					} else {
-						// Old way
-						return GinasLegacyUtils
-								.processDump(
-										ix.utils.Util
-												.getUncompressedInputStreamRecursive(payloadPlugin
-														.getPayloadAsStream(payload)),
-										false);
-					}
-				} else {
-					return badRequest("Neither json-dump nor "
-							+ "sd-file is specified!");
-				}
-			}
-		} catch (Exception ex) {
-			return _internalServerError(ex);
-		}
+                if (payload != null) {
+                    // New way:
+                    if (!GinasLoad.OLD_LOAD) {
+                        String id = ginasRecordProcessorPlugin
+                            .submit(payload,
+                                    ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
+                                    ix.ginas.utils.GinasUtils.GinasSubstancePersister.class);
+                        return redirect(ix.ginas.controllers.routes.GinasLoad
+                                        .monitorProcess(id));
+                        // return ok("Running job " + id + " payload is " +
+                        // payload.name + " also " + payload.id);
+                    } else {
+                        // Old way
+                        return GinasLegacyUtils
+                            .processDump(
+                                         ix.utils.Util
+                                         .getUncompressedInputStreamRecursive(payloadPlugin
+                                                                              .getPayloadAsStream(payload)),
+                                         false);
+                    }
+                } else {
+                    return badRequest("Neither json-dump nor "
+                                      + "sd-file is specified!");
+                }
+            }
+        } catch (Exception ex) {
+            return _internalServerError(ex);
+        }
     }
 
     public static Result loadSDF (String payloadUUID) {
-    	Payload sdpayload=PayloadFactory.getPayload(UUID.fromString(payloadUUID));
-    	DynamicForm requestData = Form.form().bindFromRequest();
-    	String mappingsjson = requestData.get("mappings");
-    	ObjectMapper om = new ObjectMapper();
-    	System.out.println(mappingsjson);
-    	List<GinasSDFUtils.PATH_MAPPER> mappers=null;
-    	try{
-    		mappers= new ArrayList<GinasSDFUtils.PATH_MAPPER>();
-    		List<GinasSDFUtils.PATH_MAPPER> mappers2= om.readValue(mappingsjson, new TypeReference<List<GinasSDFUtils.PATH_MAPPER>>(){});
-    		for(GinasSDFUtils.PATH_MAPPER pm:mappers2){
-    			if(pm.method!=GinasSDFUtils.PATH_MAPPER.ADD_METHODS.NULL_TYPE){
-    				mappers.add(pm);
-    			}
-    		}
-    	}catch(Exception e){
-    		e.printStackTrace();
-    	}
-    	GinasSDFUtils.setPathMappers(payloadUUID, mappers);
-    	
-    	System.out.println("##################################");
-    	System.out.println("mapper rules:" + mappers.size());
-    	for(GinasSDFUtils.PATH_MAPPER pth:mappers){
-    		System.out.println("path:" + pth.path);
-    	}
-    	
-//    	return ok("test");
-		
-    	
-    	String id = ginasRecordProcessorPlugin.submit(sdpayload, 
-    			ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.class,
-    			ix.ginas.utils.GinasUtils.GinasSubstancePersister.class
-    			);
-		return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
-    	
+        Payload sdpayload=PayloadFactory.getPayload(UUID.fromString(payloadUUID));
+        DynamicForm requestData = Form.form().bindFromRequest();
+        String mappingsjson = requestData.get("mappings");
+        ObjectMapper om = new ObjectMapper();
+        System.out.println(mappingsjson);
+        List<GinasSDFUtils.PATH_MAPPER> mappers=null;
+        try{
+            mappers= new ArrayList<GinasSDFUtils.PATH_MAPPER>();
+            List<GinasSDFUtils.PATH_MAPPER> mappers2= om.readValue(mappingsjson, new TypeReference<List<GinasSDFUtils.PATH_MAPPER>>(){});
+            for(GinasSDFUtils.PATH_MAPPER pm:mappers2){
+                if(pm.method!=GinasSDFUtils.PATH_MAPPER.ADD_METHODS.NULL_TYPE){
+                    mappers.add(pm);
+                }
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        GinasSDFUtils.setPathMappers(payloadUUID, mappers);
+        
+        System.out.println("##################################");
+        System.out.println("mapper rules:" + mappers.size());
+        for(GinasSDFUtils.PATH_MAPPER pth:mappers){
+            System.out.println("path:" + pth.path);
+        }
+        
+        //      return ok("test");
+                
+        
+        String id = ginasRecordProcessorPlugin.submit(sdpayload, 
+                                                      ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.class,
+                                                      ix.ginas.utils.GinasUtils.GinasSubstancePersister.class
+                                                      );
+        return redirect(ix.ginas.controllers.routes.GinasLoad.monitorProcess(id));
+        
     }
    
     
     
     public static String getJobKey(ProcessingJob job){
-    	return job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+        return job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
     }
     public static Result monitorProcess(ProcessingJob job){
-    	return monitorProcess(getJobKey(job));
+        return monitorProcess(getJobKey(job));
     }
 
     public static Result monitorProcess(Long jobID){
-    	return monitorProcess(ProcessingJobFactory.getJob(jobID));
+        return monitorProcess(ProcessingJobFactory.getJob(jobID));
     }
     
     public static Result monitorProcess(String processID){
-    	if(!GinasLoad.OLD_LOAD){
-    		String msg="";
-	    	ProcessingJob job = ProcessingJobFactory.getJob(processID);
-	    	if(job!=null){
-	    		return ok(ix.ginas.views.html.admin.job.render(job));
-	    	}else{
-	    		msg = "[not yet started]";
-	    	}
-	    	msg +="\n\n refresh page for status";
-	    	return ok("Processing job:" + processID + "\n\n" + msg);
-    	}else{
-    		//OLD WAY:
-    		GinasLegacyUtils.Process p =GinasLegacyUtils.processes.get(processID);
-	    	if(p==null){
-	    		return _internalServerError (new IllegalArgumentException("Process \"" + processID + "\" does not exist."));
-	    	}else{
-	    		return ok(p.statusMessage());
-	    	}
-    	}
+        if(!GinasLoad.OLD_LOAD){
+            String msg="";
+            ProcessingJob job = ProcessingJobFactory.getJob(processID);
+            if(job!=null){
+                return ok(ix.ginas.views.html.admin.job.render(job));
+            }else{
+                msg = "[not yet started]";
+            }
+            msg +="\n\n refresh page for status";
+            return ok("Processing job:" + processID + "\n\n" + msg);
+        }else{
+            //OLD WAY:
+            GinasLegacyUtils.Process p =GinasLegacyUtils.processes.get(processID);
+            if(p==null){
+                return _internalServerError (new IllegalArgumentException("Process \"" + processID + "\" does not exist."));
+            }else{
+                return ok(p.statusMessage());
+            }
+        }
     }
     
     
@@ -304,95 +295,95 @@ public class GinasLoad extends App {
         }
         else {
             return getOrElse (key, new Callable<Result> () {
-                public Result call () throws Exception {
-                    Logger.debug("Cache missed: "+key);
-                    TextIndexer.Facet[] facets =
+                    public Result call () throws Exception {
+                        Logger.debug("Cache missed: "+key);
+                        TextIndexer.Facet[] facets =
                             filter(getFacets(ProcessingJob.class, 30),
-                                    ALL_FACETS);
-                    int nrows = Math.max(Math.min(total, Math.max(1, rows)),1);
-                    int[] pages = paging(nrows, page, total);
+                                   ALL_FACETS);
+                        int nrows = Math.max(Math.min(total, Math.max(1, rows)),1);
+                        int[] pages = paging(nrows, page, total);
 
-                    List<ProcessingJob> substances =
+                        List<ProcessingJob> substances =
                             ProcessingJobFactory.getProcessingJobs(nrows, (page - 1) * rows, null);
 
-                    return ok(ix.ginas.views.html.admin.jobs.render
-                            (page, nrows, total, pages,
-                                    decorate(facets), substances));
-                }
+                        return ok(ix.ginas.views.html.admin.jobs.render
+                                  (page, nrows, total, pages,
+                                   decorate(facets), substances));
+                    }
             });
         }
     }
 
-	static Result createJobResult(TextIndexer.SearchResult result,
-			int rows, int page) {
-		TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
+    static Result createJobResult(TextIndexer.SearchResult result,
+                                  int rows, int page) {
+        TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
 
-		List<ProcessingJob> substances = new ArrayList<ProcessingJob>();
-		int[] pages = new int[0];
-		if (result.count() > 0) {
-			rows = Math.min(result.count(), Math.max(1, rows));
-			pages = paging(rows, page, result.count());
-			for (int i = (page - 1) * rows, j = 0; j < rows
-					&& i < result.size(); ++j, ++i) {
-				substances.add((ProcessingJob) result.get(i));
-			}
-		}
+        List<ProcessingJob> substances = new ArrayList<ProcessingJob>();
+        int[] pages = new int[0];
+        if (result.count() > 0) {
+            rows = Math.min(result.count(), Math.max(1, rows));
+            pages = paging(rows, page, result.count());
+            for (int i = (page - 1) * rows, j = 0; j < rows
+                     && i < result.size(); ++j, ++i) {
+                substances.add((ProcessingJob) result.get(i));
+            }
+        }
 
-		return ok(ix.ginas.views.html.admin.jobs.render(page, rows,
-				result.count(), pages, decorate(facets), substances));
+        return ok(ix.ginas.views.html.admin.jobs.render(page, rows,
+                                                        result.count(), pages, decorate(facets), substances));
 
-	}
-	public static Result testSubmit(){
-		return ok(ix.ginas.views.html.test.testsubmit.render());		
-	}
-	public static Result submitSubstance(){
-		String mappingsjson = null;
-		try{
-			mappingsjson = request().body().asJson().toString();
-		}catch(Exception e){
-			DynamicForm requestData = Form.form().bindFromRequest();
-		    mappingsjson = requestData.get("substance");			
-		}
-		Logger.debug("################# got submission");
-		Logger.debug(mappingsjson);
-		
-    	Substance sub=null;
-    	
-    	try{
-    		System.out.println(mappingsjson);
-    		GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
-	    	JsonNode jn=ex.getNextRecord();
-	    	GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
-	    	sub = trans.transformSubstance(jn);
-	    	GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
-	    	List<String> errors = new ArrayList<String>();
-	    	if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
-	    		throw new IllegalStateException(errors.toString());
-	    	}
-    	}catch(Throwable e){
-    		return _internalServerError(e);
-    	}
-		return redirect(ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub)));
-	}
-	
-	public static Result updateSubstance(){
-		DynamicForm requestData = Form.form().bindFromRequest();
-    	String mappingsjson = requestData.get("substance");
-    	Substance sub=null;
-    	try{
-    		System.out.println(mappingsjson);
-    		GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
-	    	JsonNode jn=ex.getNextRecord();
-	    	GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
-	    	sub = trans.transformSubstance(jn);
-	    	GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
-	    	List<String> errors = new ArrayList<String>();
-	    	if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
-	    		throw new IllegalStateException(errors.toString());
-	    	}
-    	}catch(Throwable e){
-    		return _internalServerError(e);
-    	}
-		return ok("worked:" + sub.uuid);
-	}
+    }
+    public static Result testSubmit(){
+        return ok(ix.ginas.views.html.test.testsubmit.render());                
+    }
+    public static Result submitSubstance(){
+        String mappingsjson = null;
+        try{
+            mappingsjson = request().body().asJson().toString();
+        }catch(Exception e){
+            DynamicForm requestData = Form.form().bindFromRequest();
+            mappingsjson = requestData.get("substance");                        
+        }
+        Logger.debug("################# got submission");
+        Logger.debug(mappingsjson);
+                
+        Substance sub=null;
+        
+        try{
+            System.out.println(mappingsjson);
+            GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
+            JsonNode jn=ex.getNextRecord();
+            GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
+            sub = trans.transformSubstance(jn);
+            GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
+            List<String> errors = new ArrayList<String>();
+            if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
+                throw new IllegalStateException(errors.toString());
+            }
+        }catch(Throwable e){
+            return _internalServerError(e);
+        }
+        return redirect(ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub)));
+    }
+        
+    public static Result updateSubstance(){
+        DynamicForm requestData = Form.form().bindFromRequest();
+        String mappingsjson = requestData.get("substance");
+        Substance sub=null;
+        try{
+            System.out.println(mappingsjson);
+            GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
+            JsonNode jn=ex.getNextRecord();
+            GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
+            sub = trans.transformSubstance(jn);
+            GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
+            List<String> errors = new ArrayList<String>();
+            if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
+                throw new IllegalStateException(errors.toString());
+            }
+        }catch(Throwable e){
+            return _internalServerError(e);
+        }
+        return ok("worked:" + sub.uuid);
+    }
 }
