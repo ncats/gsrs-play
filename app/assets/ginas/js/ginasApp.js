@@ -1,7 +1,7 @@
 (function() {
     var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-            'ui.bootstrap.datetimepicker', 'LocalStorageModule', 'ngTagsInput', 'xeditable', 'ui.select'
-        ])
+        'ui.bootstrap.datetimepicker', 'LocalStorageModule', 'ngTagsInput', 'xeditable', 'ui.select'
+    ])
         .config(function(showErrorsConfigProvider, localStorageServiceProvider, $locationProvider) {
             showErrorsConfigProvider.showSuccess(true);
             localStorageServiceProvider
@@ -83,7 +83,6 @@
 
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
-
             for (var i in apiSub.names) {
                 if (typeof apiSub.names[i].nameOrgs != "undefined") {
                     for (var j in apiSub.names[i].nameOrgs) {
@@ -95,8 +94,17 @@
                 }
             }
 
+
+
             apiSub = $scope.expandCV(apiSub, "");
             apiSub = $scope.splitNames(apiSub);
+
+            var references = {};
+            for(var v in apiSub.references){
+                references[apiSub.references[v].uuid]=apiSub.references[v];
+                apiSub.references[v].id=v-1+2;
+            }
+            apiSub = $scope.expandReferences(apiSub,references,0);
 
 
 
@@ -121,15 +129,14 @@
         }
 
         /*        function setdata($scope){
-                    console.log("getting substance");
+         console.log("getting substance");
 
-                }*/
+         }*/
 
         /*
-                $scope.substance = $scope.getSubstance();
-        */
+         $scope.substance = $scope.getSubstance();
+         */
 
-        console.log($scope);
         $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
@@ -195,12 +202,18 @@
             if (form.$valid) {
                 if (this.substance[type]) {
                     if (type == 'references') {
+                        if(typeof obj.uuid == "undefined"){
+                            obj.uuid = uuid();
+                        }
                         obj.id = this.substance.references.length + 1;
                     }
                     this.substance[type].push(obj);
                 } else {
                     this.substance[type] = [];
                     if (type == 'references') {
+                        if (typeof obj.uuid == "undefined") {
+                            obj.uuid = uuid();
+                        }
                         obj.id = 1;
                     }
                     this.substance[type].push(obj);
@@ -326,6 +339,39 @@
             return sub;
         };
 
+        $scope.expandReferences = function(sub, referenceMap, depth) {
+            for (var v in sub) {
+                if(depth>0) {
+                    if (v === "references") {
+                        for (var r in sub[v]) {
+                            sub[v][r] = referenceMap[sub[v][r]];
+                        }
+                    }
+                }
+                if(typeof sub[v] === "object"){
+                    $scope.expandReferences(sub[v],referenceMap, depth+1);
+                }
+            }
+            return sub;
+        };
+
+        $scope.collapseReferences = function(sub, depth) {
+            for (var v in sub) {
+                if(depth>0) {
+                    if (v === "references") {
+                        for (var r in sub[v]) {
+                            //console.log(r + " is a reference");
+                            sub[v][r] = sub[v][r].uuid;
+                        }
+                    }
+                }
+                if(typeof sub[v] === "object"){
+                    $scope.collapseReferences(sub[v], depth+1);
+                }
+            }
+            return sub;
+        };
+
 
         $scope.flattenCV = function(sub) {
             for (var v in sub) {
@@ -369,6 +415,8 @@
                 delete sub.subref;
             }
             data = $scope.flattenCV(JSON.parse(JSON.stringify(sub)));
+            data = $scope.collapseReferences(data,0);
+            console.log(data);
             $http.post('app/submit', data).success(function() {
                 console.log("success");
                 alert("submitted!");
@@ -395,7 +443,18 @@
             localStorageService.set('editID', editid);
         };
 
+
     });
+
+    var uuid = function uuid() {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    };
 
     ginasApp.directive('scrollSpy', function($timeout) {
         return function(scope, elem, attr) {
@@ -541,8 +600,8 @@
             replace: true,
             scope: {
                 id: '='
-                    /*                size: '=',
-                                    amap :'='*/
+                /*                size: '=',
+                 amap :'='*/
 
             },
             link: function(scope, element) {
@@ -1172,3 +1231,4 @@ function getDisplayFromCV(domain, value) {
     }
     return value;
 }
+
