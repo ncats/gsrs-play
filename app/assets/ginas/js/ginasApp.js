@@ -111,6 +111,29 @@
             return apiSub;
         };
 
+    $scope.fromFormSubstance = function(formSub) {
+
+           if (formSub.officialNames || formSub.unofficialNames) {
+                for (var n in formSub.officialNames) {
+                    var name = formSub.officialNames[n];
+                    name.type = "of";
+                }
+                formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
+                delete formSub.officialNames;
+                delete formSub.unofficialNames;
+            }
+            if (formSub.q) {
+                delete formSub.q;
+            }
+            if (formSub.subref) {
+                delete formSub.subref;
+            }
+            
+            formSub = $scope.flattenCV(formSub);
+            formSub = $scope.collapseReferences(formSub,0);
+            return formSub;
+        };
+
         var ginasCtrl = this;
         //localStorageService.set('substance', Substance);
 
@@ -326,7 +349,6 @@
 
                 if (newcv !== null) {
                     var w = getDisplayFromCV(newcv.domain, newcv.value);
-                    console.log("##### display:" + w);
                     newcv.display = w;
                     sub[v] = newcv;
 
@@ -360,7 +382,7 @@
                 if(depth>0) {
                     if (v === "references") {
                         for (var r in sub[v]) {
-                            //console.log(r + " is a reference");
+                            
                             sub[v][r] = sub[v][r].uuid;
                         }
                     }
@@ -397,29 +419,22 @@
             return false;
         };
 
-        $scope.submit = function() {
+        $scope.submitSubstance = function() {
             var sub = angular.copy($scope.substance);
-            if (sub.officialNames || sub.unofficialNames) {
-                for (var n in sub.officialNames) {
-                    var name = sub.officialNames[n];
-                    name.type = "of";
-                }
-                sub.names = sub.officialNames.concat(sub.unofficialNames);
-                delete sub.officialNames;
-                delete sub.unofficialNames;
-            }
-            if (sub.q) {
-                delete sub.q;
-            }
-            if (sub.subref) {
-                delete sub.subref;
-            }
-            data = $scope.flattenCV(JSON.parse(JSON.stringify(sub)));
-            data = $scope.collapseReferences(data,0);
-            console.log(data);
-            $http.post('app/submit', data).success(function() {
+            sub = $scope.fromFormSubstance(sub);
+            $http.post('app/submit', sub).success(function() {
                 console.log("success");
                 alert("submitted!");
+            });
+        };
+
+        $scope.validateSubstance = function() {
+            var sub = angular.copy($scope.substance);
+            console.log(angular.copy(sub));
+            sub = $scope.fromFormSubstance(sub);
+            console.log(sub);
+            $http.post('app/register/validate', sub).success(function(response) {
+                console.log(response);                
             });
         };
 
