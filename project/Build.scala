@@ -76,7 +76,7 @@ object ApplicationBuild extends Build {
 
   val javaBuildOptions = Seq(
     "-encoding", "UTF-8"
-      ,"-Xlint:-options"
+      //,"-Xlint:-options"
       //,"-Xlint:deprecation"
   )
 
