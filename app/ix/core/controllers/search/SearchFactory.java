@@ -159,10 +159,10 @@ public class SearchFactory extends EntityFactory {
                         if (kind == null)
                             node.put("kind", obj.getClass().getName());
                         
-                        if(added>=skip)
-                        	nodes.add(node);
+                        //if(added>=skip)
+                                nodes.add(node);
                         added++;
-                        Logger.debug("Using search function");
+                        //Logger.debug("Using search function");
                     }
                     catch (Exception ex) {
                         Logger.trace("Unable to serialize object to Json", ex);

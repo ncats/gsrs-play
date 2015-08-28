@@ -103,13 +103,21 @@ object ApplicationBuild extends Build {
     buildInfoPackage := "ix"
   )
 
+  val seqaln = Project("seqaln", file("modules/seqaln")).settings(
+    version := appVersion,
+    libraryDependencies ++= commonDependencies,
+    javacOptions ++= javaBuildOptions,
+    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
+  )
+  
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(
-    resolvers += Resolver.url("Edulify Repository", url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
+    resolvers += Resolver.url("Edulify Repository",
+      url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
     version := appVersion,
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  )
+  ).dependsOn(seqaln).aggregate(seqaln)
 
   val ncats = Project("ncats", file("modules/ncats"))
     .enablePlugins(PlayJava).settings(

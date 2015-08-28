@@ -57,6 +57,7 @@ public class StructureIndexerPlugin extends Plugin {
         
         try {
             indexer = StructureIndexer.open(ctx.structure());
+            Logger.info("Plugin "+getClass().getName()+" started!");
         }
         catch (IOException ex) {
             throw new RuntimeException
