@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import play.Play;
 import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -37,11 +38,13 @@ import akka.event.Logging;
 import akka.event.LoggingAdapter;
 
 import ix.core.search.TextIndexer;
+import ix.seqaln.SequenceIndexer;
 import static ix.core.search.TextIndexer.*;
 import tripod.chem.indexer.StructureIndexer;
 import static tripod.chem.indexer.StructureIndexer.*;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
@@ -98,14 +101,17 @@ public class App extends Authentication {
     public static final int MAX_SEARCH_RESULTS = 1000;
 
     public static final TextIndexer _textIndexer = 
-        play.Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
     public static final StructureIndexer _strucIndexer =
-        play.Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+        Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+    public static final SequenceIndexer _seqIndexer =
+        Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+        
     public static final IxContext _ix =
-        play.Play.application().plugin(IxContext.class);
+        Play.application().plugin(IxContext.class);
 
     public static final PersistenceQueue _pq =
-        play.Play.application().plugin(PersistenceQueue.class);
+        Play.application().plugin(PersistenceQueue.class);
 
     /**
      * interface for rendering a result page
@@ -160,8 +166,8 @@ public class App extends Authentication {
      * @return
      */
     public static int[] paging (int rowsPerPage, int page, int total) {
-    	
-    	//last page
+        
+        //last page
         int max = (total+ rowsPerPage-1)/rowsPerPage;
         if (page < 0 || page > max) {
             throw new IllegalArgumentException ("Bogus page "+page);
@@ -801,16 +807,16 @@ public class App extends Authentication {
         DisplayParams dp = DisplayParams.DEFAULT();
         
         if(amap!=null){
-	        ChemicalAtom[] atoms = chem.getAtomArray();
-	        for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
-	            atoms[i].setAtomMap(amap[i]);
-	            if(amap[i]!=0){
-	            	dp = dp.withSubstructureHighlight();
-	            	
-	            }
-	        }
+                ChemicalAtom[] atoms = chem.getAtomArray();
+                for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
+                    atoms[i].setAtomMap(amap[i]);
+                    if(amap[i]!=0){
+                        dp = dp.withSubstructureHighlight();
+                        
+                    }
+                }
         }else{
-        	dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+                dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
 
         /*
@@ -852,20 +858,20 @@ public class App extends Authentication {
     }
 
     public static int[] stringToIntArray(String amapString){
-    	int[] amap=null;
-    	if(amapString!=null){
-    		String[] amapb = null;
-    		amapb = amapString.split(",");
-    		amap = new int[amapb.length];
-    		for(int i=0;i<amap.length;i++){
-    			try{
-    				amap[i]=Integer.parseInt(amapb[i]);
-    			}catch(Exception e){
-    				
-    			}
-    		}
-    	}
-    	return amap;
+        int[] amap=null;
+        if(amapString!=null){
+                String[] amapb = null;
+                amapb = amapString.split(",");
+                amap = new int[amapb.length];
+                for(int i=0;i<amap.length;i++){
+                        try{
+                                amap[i]=Integer.parseInt(amapb[i]);
+                        }catch(Exception e){
+                                
+                        }
+                }
+        }
+        return amap;
     }
     
     /**
@@ -879,12 +885,14 @@ public class App extends Authentication {
      * @return
      */
     public static Result structure (final String id,
-                                    final String format, final int size, final String atomMap) {
-    	
-    	final int[] amap = stringToIntArray(atomMap);
+                                    final String format, final int size,
+                                    final String atomMap) {
+        
+        final int[] amap = stringToIntArray(atomMap);
         if (format.equals("svg") || format.equals("png")) {
             final String key =
-                Structure.class.getName()+"/"+size+"/"+id+"."+format + ":" + atomMap;
+                Structure.class.getName()+"/"+size+"/"+id+"."+format
+                + ":" + atomMap;
             String mime = format.equals("svg") ? "image/svg+xml" : "image/png";
             try {
                 Result result = getOrElse (key, new Callable<Result> () {
@@ -957,14 +965,14 @@ public class App extends Authentication {
     /**
      * Structure searching
      */
-    public static abstract class SearchResultProcessor {
-        protected ResultEnumeration results;
+    public static abstract class SearchResultProcessor<T> {
+        protected Enumeration<T> results;
         final SearchResultContext context = new SearchResultContext ();
         
         public SearchResultProcessor () {
         }
 
-        public void setResults (int rows, ResultEnumeration results)
+        public void setResults (int rows, Enumeration<T> results)
             throws Exception {
             this.results = results;
             // the idea is to generate enough results for 1.5 pages (enough
@@ -990,7 +998,7 @@ public class App extends Authentication {
         public int process (int max) throws Exception {
             while (results.hasMoreElements()
                    && !isDone () && (max <= 0 || context.getCount() < max)) {
-                StructureIndexer.Result r = results.nextElement();
+                T r = results.nextElement();
                 try {
                     long start = System.currentTimeMillis();
                     Object obj = instrument (r);
@@ -1000,16 +1008,14 @@ public class App extends Authentication {
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
-                    Logger.error("Can't process structure search result "
-                                 +r.getId(), ex);
+                    Logger.error("Can't process structure search result", ex);
                 }
             }
             return context.getCount();
         }
         
         //public abstract int process (int max) throws Exception;
-        protected abstract Object instrument (StructureIndexer.Result r)
-            throws Exception;
+        protected abstract Object instrument (T r) throws Exception;
     }
 
     public static class SearchResultContext {
@@ -1183,6 +1189,29 @@ public class App extends Authentication {
         return notFound ("No key found: "+key+"!");
     }
 
+    public static SearchResultContext sequence
+        (final String seq, final double identity, final int rows,
+         final int page, final SearchResultProcessor processor) {
+        try {
+            final String key = "sequence/"+getKey (seq, identity);
+            final int size = (page+1)*rows;
+            return getOrElse
+                (_seqIndexer.lastModified(), key,
+                 new Callable<SearchResultContext> () {
+                     public SearchResultContext call () throws Exception {
+                         processor.setResults
+                             (rows, _seqIndexer.search(seq, identity));
+                         return processor.getContext();
+                     }
+                 });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform sequence identity search", ex);
+        }
+        return null;
+    }
+
     public static SearchResultContext substructure
         (final String query, final int rows,
          final int page, final SearchResultProcessor processor) {
@@ -1210,7 +1239,7 @@ public class App extends Authentication {
     static String getKey (String q, double t) {
         return Util.sha1(q) + "/"+String.format("%1$d", (int)(1000*t+.5));
     }
-    
+
     public static SearchResultContext similarity
         (final String query, final double threshold,
          final int rows, final int page,

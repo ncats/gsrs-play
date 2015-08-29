@@ -216,6 +216,8 @@ public class SequenceIndexer {
 
     private ExecutorService threadPool;
     private boolean localThreadPool = false;
+
+    private AtomicLong lastModified = new AtomicLong (0);
     
     public static SequenceIndexer openReadOnly (File dir) throws IOException {
         return new SequenceIndexer (dir);
@@ -334,40 +336,52 @@ public class SequenceIndexer {
         if (indexWriter == null)
             throw new RuntimeException ("Index is read-only!");
 
-        //System.err.println(id+": indexing "+seq+"...");
-        Document doc = new Document ();
-        StringField idf = new StringField (FIELD_ID, id, YES);
-        doc.add(idf);
-        doc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
-        doc.add(new StringField (FIELD_SEQ, seq.toString(), YES));
-        indexWriter.addDocument(doc);
-        
-        Kmers kmers = Kmers.create(seq);
-        for (String kmer : kmers.kmers()) {
-            BitSet positions = kmers.positions(kmer);
-            StringField kmerf = new StringField (FIELD_KMER, kmer, YES);
-            doc = new Document ();
+        try {
+            //System.err.println(id+": indexing "+seq+"...");
+            Document doc = new Document ();
+            StringField idf = new StringField (FIELD_ID, id, YES);
             doc.add(idf);
-            doc.add(kmerf);
-            //System.err.println(kmer+": "+positions);
-            for (int i = positions.nextSetBit(0);
-                 i>=0; i = positions.nextSetBit(i+1)) {
-                doc.add(new IntField (FIELD_POSITION, i, YES));
+            doc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
+            doc.add(new StringField (FIELD_SEQ, seq.toString(), YES));
+            indexWriter.addDocument(doc);
+            
+            Kmers kmers = Kmers.create(seq);
+            for (String kmer : kmers.kmers()) {
+                BitSet positions = kmers.positions(kmer);
+                StringField kmerf = new StringField (FIELD_KMER, kmer, YES);
+                doc = new Document ();
+                doc.add(idf);
+                doc.add(kmerf);
+                //System.err.println(kmer+": "+positions);
+                for (int i = positions.nextSetBit(0);
+                     i>=0; i = positions.nextSetBit(i+1)) {
+                    doc.add(new IntField (FIELD_POSITION, i, YES));
+                }
+                kmerWriter.addDocument(doc);
             }
-            kmerWriter.addDocument(doc);
+        }
+        finally {
+            lastModified.set(System.currentTimeMillis());
         }
     }
 
+    public long lastModified () { return lastModified.get(); }
+    
     public ResultEnumeration search (CharSequence query) {
-        return search (query, 3);
+        return search (query, 0.4);
+    }
+
+    public ResultEnumeration search (CharSequence query, double identity) {
+        return search (query, identity, 3);
     }
     
-    public ResultEnumeration search (final CharSequence query, final int gap) {
+    public ResultEnumeration search (final CharSequence query,
+                                     final double identity, final int gap) {
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
         threadPool.submit(new Runnable () {
                 public void run () {
                     try {
-                        search (out, query, gap);
+                        search (out, query, identity, gap);
                         out.put(POISON_RESULT); // finish
                     }
                     catch (Exception ex) {
@@ -380,7 +394,8 @@ public class SequenceIndexer {
     }
 
     protected void search (BlockingQueue<Result> results,
-                           CharSequence query, int gap) throws Exception {
+                           CharSequence query, double identity, int gap)
+        throws Exception {
 
         final IndexSearcher searcher = getKmerSearcher ();
         Kmers kmers = Kmers.create(query);
@@ -418,15 +433,16 @@ public class SequenceIndexer {
         for (Map.Entry<String, List<HSP>> me : hsp.entrySet()) {
             String seq = getSeq (me.getKey());
             Result result = new Result (me.getKey(), qs, seq);
-            /*
+
               System.err.println(" Query: "+query);
               System.err.println("Target: "+seq);
-            */
+
             Collections.sort(me.getValue());
             
             HSP bgn = null, end = null;
+            int score = 0;
             for (HSP h : me.getValue()) {
-                //System.err.println("  "+h);
+                System.err.println("  "+h);
                 if (end == null) {
                     bgn = h;
                 }
@@ -437,23 +453,32 @@ public class SequenceIndexer {
                             && (h.j - (end.j+K)) > gap)
                         || h.gap() - end.gap() > gap
                         ) {
-                        //System.err.println(" ** start: "+bgn+" end: "+end);
-                        // now do global alignment of
-                        // the subsequence
+                        System.err.println(" ** start: "+bgn+" end: "+end);
+                        // now do global alignment of the subsequence
                         Alignment aln = align
                             (qs, bgn.i, end.i+K, seq, bgn.j, end.j+K);
+                        if (aln.score > score)
+                            score = aln.score;
                         result.alignments.add(aln);
                         bgn = h;
                     }
                 }
                 end = h;
             }
-            //System.err.println(" ** start: "+bgn+" end: "+end);
+            System.err.println(" ** start: "+bgn+" end: "+end);
             Alignment aln = align (qs, bgn.i, end.i+K, seq, bgn.j, end.j+K);
             result.alignments.add(aln);
-            Collections.sort(result.alignments);
-            
-            results.put(result);
+            if (aln.score > score)
+                score = aln.score;
+
+            double sim = (double)score/Math.min(seq.length(), query.length());
+            if (sim >= identity) {
+                Collections.sort(result.alignments);
+                results.put(result);
+            }
+            else {
+                //System.err.println(me.getKey()+": "+sim);
+            }
         }
     }
 

@@ -9,7 +9,8 @@ GET         /substance/:name            ix.ginas.controllers.GinasApp.substance(
 GET         /substances                 ix.ginas.controllers.GinasApp.substances(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET         /chemicals                  ix.ginas.controllers.GinasApp.chemicals(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET         /proteins                   ix.ginas.controllers.GinasApp.proteins(q: String ?= null, rows: Int ?= 32, page: Int ?= 1)
-GET         /sequence                   ix.ginas.controllers.GinasFactory.sequence(kind: String ?= null)
+GET         /sequence                   ix.ginas.controllers.GinasFactory.sequence(id: String ?= null)
+POST        /sequence			ix.ginas.controllers.GinasApp.sequenceSearch
 GET         /report                     ix.ginas.controllers.GinasFactory.report
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON

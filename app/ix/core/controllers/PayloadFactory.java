@@ -63,6 +63,10 @@ public class PayloadFactory extends EntityFactory {
         return payloadPlugin.getPayload(payload);
     }
 
+    public static InputStream getStream (String id) {
+        return getStream (UUID.fromString(id));
+    }
+    
     public static InputStream getStream (UUID id) {
         Payload payload = getPayload (id);
         if (payload != null)
@@ -84,9 +88,33 @@ public class PayloadFactory extends EntityFactory {
     }   
     
     public static InputStream getStreamAsIs (Payload payload) {
-    	Payload payload2 = getPayload (payload.id);
+        Payload payload2 = getPayload (payload.id);
         if (payload2 != null)
             return payloadPlugin.getPayloadAsStream(payload2);
         return null;
-    }   
+    }
+
+    public static String getString (String id) {
+        return id != null ? getString (UUID.fromString(id)) : null;
+    }
+    
+    public static String getString (UUID id) {
+        InputStream is = getStream (id);
+        if (is != null) {
+            try {
+                StringBuilder sb = new StringBuilder ();
+                byte[] buf = new byte[1024];
+                for (int nb; (nb = is.read(buf, 0, buf.length)) > 0; ) {
+                    sb.append(new String (buf, 0, nb));
+                }
+                is.close();
+                
+                return sb.toString();
+            }
+            catch (IOException ex) {
+                Logger.trace("Can't process stream for payload "+id, ex);
+            }
+        }
+        return null;
+    }
 }

@@ -113,9 +113,12 @@ public class GinasUtils {
             else if (theRecordToPersist instanceof ProteinSubstance) {
                 Protein protein =
                     ((ProteinSubstance)theRecordToPersist).protein;
-                protein.save(); // persist so that we get the uuid
                 for (Subunit su : protein.subunits) {
-                    _seqIndexer.add(protein.uuid.toString(), su.sequence);
+                    if (su.sequence != null && su.sequence.length() > 0) {
+                        su.save();
+                        _seqIndexer.add(su.uuid.toString(),
+                                        su.sequence);
+                    }
                 }
             }
             theRecordToPersist.save();

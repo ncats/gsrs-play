@@ -1,11 +1,14 @@
 package ix.ginas.controllers;
 
+import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
+import ix.core.models.Payload;
 import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.PayloadPlugin;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.IxCache;
 import ix.core.search.TextIndexer;
@@ -40,14 +43,15 @@ import play.mvc.*;
 import play.libs.ws.*;
 import play.libs.F;
 import tripod.chem.indexer.StructureIndexer;
+import ix.seqaln.SequenceIndexer;
+
 import chemaxon.struc.MolAtom;
 import chemaxon.util.MolHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
-<<<<<<< HEAD
-        // substance finder
+    // substance finder
     static final Model.Finder<UUID, Substance> SUBFINDER =
         new Model.Finder(UUID.class, Substance.class);
     
@@ -70,6 +74,37 @@ public class GinasApp extends App {
         "GInAS Tag", "Sequence Type", "Material Class", "Material Type",
         "Family", "Parts", "Code System" };
 
+    static final PayloadPlugin _payload =
+        Play.application().plugin(PayloadPlugin.class);
+
+    static class SubstanceResultRenderer
+        extends DefaultResultRenderer<Substance> {
+
+        final String[] facets;
+        SubstanceResultRenderer () {
+            this (ALL_FACETS);
+        }
+        SubstanceResultRenderer (String[] facets) {
+            this.facets = facets;
+        }
+        
+        public Result render
+            (int page, int rows, int total,
+             int[] pages, List<TextIndexer.Facet> facets,
+             List<Substance> substances) {
+
+            process (substances);
+            return ok(ix.ginas.views.html.substances.render
+                      (page, rows, total, pages,
+                       decorate(filter(facets, this.facets)),
+                       substances,null));
+        }
+
+        // override to process before rendering
+        protected void process (List<Substance> substances) {
+        }
+    }
+    
     static <T> List<T> filter(Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
         for (Object v : values) {
@@ -238,17 +273,48 @@ public class GinasApp extends App {
         return StringUtils.arrayToDelimitedString(arr, "; ");
     }
 
+    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
+                   maxLength = 100000)
+    public static Result sequenceSearch () {
+        if (request().body().isMaxSizeExceeded()) {
+            return badRequest ("Sequence is too large!");
+        }
+        
+        Map<String, String[]> params = request().body().asFormUrlEncoded();
+        String[] values = params.get("sequence");
+        if (values != null && values.length > 0) {
+            String seq = values[0];
+            try {
+                Payload payload = _payload.createPayload
+                    ("Sequence Search", "text/plain", seq);
+                Call call = routes.GinasApp.substances
+                (payload.id.toString(), 16, 1);
+                return redirect (call.url()+"&type=sequence");
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                return _internalServerError (ex);
+            }
+        }
+        
+        return badRequest ("Invalid \"sequence\" parameter specified!");
+    }
+    
     public static Result substances(final String q, final int rows,
                                     final int page) {
-        System.out.println("Test");
+        //System.out.println("Test");
         String type = request().getQueryString("type");
         Logger.debug("Substances: rows=" + rows + " page=" + page);
 
         try {
-
-            if (type != null
-                && (type.equalsIgnoreCase("substructure") || type
-                    .equalsIgnoreCase("similarity"))) {
+            if (type == null) {
+            }
+            else if (type.equalsIgnoreCase("sequence")) {
+                // the query is the uuid of the payload
+                return sequences (q, rows, page);
+            }
+            else if (type.equalsIgnoreCase("substructure")
+                     || type.equalsIgnoreCase("similarity")) {
                 // structure search
                 String cutoff = request().getQueryString("cutoff");
                 Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
@@ -264,17 +330,63 @@ public class GinasApp extends App {
                     ex.printStackTrace();
                 }
 
-                return notFound(ix.ginas.views.html.error.render(400,
-                                                                 "Invalid search parameters: type=\"" + type
-                                                                 + "\"; q=\"" + q + "\" cutoff=\"" + cutoff
-                                                                 + "\"!"));
-            } else {
-                return _substances(q, rows, page);
+                return notFound(ix.ginas.views.html.error.render
+                                (400,"Invalid search parameters: type=\""
+                                 + type+ "\"; q=\"" + q + "\" cutoff=\""
+                                 + cutoff + "\"!"));
             }
-        } catch (Exception ex) {
+
+            return _substances (q, rows, page);
+        }
+        catch (Exception ex) {
             ex.printStackTrace();
             return _internalServerError(ex);
         }
+    }
+
+    public static Result sequences (final String q,
+                                    final int rows, final int page) {
+        String param = request().getQueryString("identity");
+        double identity = 0.5;
+        if (param != null) {
+            try {
+                identity = Double.parseDouble(param);
+            }
+            catch (NumberFormatException ex) {
+                Logger.error("Bogus identity value: "+param);
+            }
+        }
+        
+        String seq = GinasFactory.getSequence(q);
+        if (seq != null) {
+            Logger.debug("sequence: "
+                         +seq.substring(0, Math.min(seq.length(), 20))
+                         +"; identity="+identity);
+            return _sequences (seq, identity, rows, page);
+        }
+        
+        return internalServerError ("Unable to retrieve sequence for "+q);
+    }
+
+    public static Result _sequences (final String seq, final double identity,
+                                     final int rows, final int page) {
+        try {
+            SearchResultContext context = sequence
+                (seq, identity, rows,
+                 page, new GinasSequenceResultProcessor ());
+            
+            // TODO: rename structureResult to something less specific!
+            return App.structureResult
+                (context, rows, page, new SubstanceResultRenderer ());
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform sequence search", ex);
+        }
+        
+        return internalServerError
+            (ix.ginas.views.html.error.render
+             (500, "Unable to perform squence search!"));
     }
 
     /**
@@ -295,8 +407,8 @@ public class GinasApp extends App {
         // if there's a provided query, or there's a facet specified,
         // do a text search
         if (request().queryString().containsKey("facet") || q != null) {
-            final TextIndexer.SearchResult result = getSearchResult(
-                                                                    Substance.class, q, total);
+            final TextIndexer.SearchResult result =
+                getSearchResult (Substance.class, q, total);
             // if(true)throw new IllegalStateException("one two");
             Logger.debug("_substance: q=" + q + " rows=" + rows + " page="
                          + page + " => " + result + " finished? "
@@ -538,51 +650,53 @@ public class GinasApp extends App {
     public static Result similarity(final String query, final double threshold,
                                     int rows, int page) {
         try {
-            SearchResultContext context = similarity(query, threshold, rows,
-                                                     page, new GinasSearchResultProcessor());
+            SearchResultContext context = similarity
+                (query, threshold, rows,
+                 page, new GinasSearchResultProcessor());
             return structureResult(context, rows, page);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't perform similarity search: " + query, ex);
         }
-        return internalServerError(ix.ginas.views.html.error.render(500,
-                                                                    "Unable to perform similarity search: " + query));
+        
+        return internalServerError
+            (ix.ginas.views.html.error.render
+             (500, "Unable to perform similarity search: " + query));
     }
 
     public static Result substructure(final String query, final int rows,
                                       final int page) {
-        final GinasSearchResultProcessor processor = new GinasSearchResultProcessor();
+        final GinasSearchResultProcessor processor =
+            new GinasSearchResultProcessor();
         try {
-            SearchResultContext context = substructure(query, rows, page,
-                                                       processor);
+            SearchResultContext context = substructure
+                (query, rows, page, processor);
 
             return structureResultAndProcess(context, rows, page, processor);
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't perform substructure search", ex);
         }
-        return internalServerError(ix.ginas.views.html.error.render(500,
-                                                                    "Unable to perform substructure search: " + query));
+        return internalServerError
+            (ix.ginas.views.html.error.render
+             (500, "Unable to perform substructure search: " + query));
     }
 
     public static Result structureResultAndProcess
         (final SearchResultContext context, int rows, int page,
          final GinasSearchResultProcessor processor) throws Exception {
 
-        return structureResult(context, rows, page,
-                               new DefaultResultRenderer<Substance>() {
-                                   public Result render(int page, int rows, int total,
-                                                        int[] pages, List<TextIndexer.Facet> facets,
-                                                        List<Substance> substances) {
-                                       if (processor != null)
-                                           processor.postProcess(substances);
-
-                                       return ok(ix.ginas.views.html.substances.render(page,
-                                                                                       rows, total, pages,
-                                                                                       decorate(filter(facets, CHEMICAL_FACETS)),
-                                                                                       substances,null));
-                                   }
-                               });
+        return structureResult
+            (context, rows, page, 
+             new SubstanceResultRenderer (CHEMICAL_FACETS) {
+                 @Override
+                 protected void process (List<Substance> substances) {
+                     if (processor != null)
+                         processor.postProcess(substances);
+                 }
+             });
+             
     }
 
     public static Result structureResult(final SearchResultContext context,
@@ -1046,8 +1160,8 @@ public class GinasApp extends App {
 
         // sigh ... this is the best of a bunch of bad options now
 
-    public static class GinasSearchResultProcessor extends
-                                                       SearchResultProcessor {
+    public static class GinasSearchResultProcessor
+        extends SearchResultProcessor<StructureIndexer.Result> {
         final public Set<String> processed = new HashSet<String>();
         final public Map<String, int[]> atomMaps = new ConcurrentHashMap<String, int[]>();
         int count;
@@ -1076,6 +1190,19 @@ public class GinasApp extends App {
                 atomMaps.put(chemicals.get(0).uuid + "", amap);
             }
             return chemicals.isEmpty() ? null : chemicals.iterator().next();
+        }
+    }
+
+    public static class GinasSequenceResultProcessor
+        extends SearchResultProcessor<SequenceIndexer.Result> {
+        GinasSequenceResultProcessor () {}
+        
+        @Override
+        protected Object instrument (SequenceIndexer.Result r)
+            throws Exception {
+            List<ProteinSubstance> proteins = SubstanceFactory.protfinder
+                .where().eq("protein.subunits.uuid", r.id).findList();
+            return proteins.isEmpty() ? null : proteins.iterator().next();
         }
     }
 
@@ -1278,8 +1405,9 @@ public class GinasApp extends App {
      * @return
      */
     public static Result structure (final String id,
-                                    final String format, final int size, final String atomMap) {
-        Logger.debug("Fetching structure");
+                                    final String format, final int size,
+                                    final String atomMap) {
+        //Logger.debug("Fetching structure");
         Result r1 = App.structure(id, format, size, atomMap);
         int httpStat =  r1.toScala().header().status();
         if(httpStat == NOT_FOUND){

@@ -1,6 +1,7 @@
 package ix.ginas.controllers;
 
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.PayloadFactory;
 import ix.core.models.Principal;
 import play.Logger;
 import play.db.ebean.Model;
@@ -26,13 +27,30 @@ public class GinasFactory extends EntityFactory {
         return ok (ix.ginas.views.html.register.render());
     }
 
-   public static Result sequence (String kind) {
-        return ok (ix.ginas.views.html.sequence.render(kind));
+    public static String getSequence (String id) {
+        return getSequence (id, 0);
+    }
+    
+    public static String getSequence (String id, int max) {
+        String seq = PayloadFactory.getString(id);
+        if (seq != null) {
+            seq = seq.replaceAll("[\n\t\\s]", "");
+            if (max > 0 && max+3 < seq.length()) {
+                return seq.substring(0, max)+"...";
+            }
+            return seq;
+        }
+        return null;
+    }
+    
+    public static Result sequence (String id) {
+        return ok (ix.ginas.views.html.sequence.render(id));
     }
 
     public static Result structuresearch () {
         return ok (ix.ginas.views.html.structuresearch.render());
     }
+
     public static Result report () {
         return ok (ix.ginas.views.html.report.render());
     }

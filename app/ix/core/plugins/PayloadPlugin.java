@@ -141,7 +141,7 @@ public class PayloadPlugin extends Plugin {
         File file = getPayload (pl);
         if (file != null) {
             try {
-            	
+                
                 return new FileInputStream (file);
             }
             catch (IOException ex) {
@@ -151,37 +151,37 @@ public class PayloadPlugin extends Plugin {
         return null;
     }
     public static void qq(InputStream is) throws IOException{
-		System.out.println("########## SDF");
-		BufferedReader buff = new BufferedReader(new InputStreamReader(is));
-		String line;
-		int c=0;
-		
-		while((line=buff.readLine())!=null){
-			System.out.println(line);
-			c++;
-			if(c>10)break;
-		}
-	}
+        System.out.println("########## SDF");
+        BufferedReader buff = new BufferedReader(new InputStreamReader(is));
+        String line;
+        int c=0;
+                
+        while((line=buff.readLine())!=null){
+            System.out.println(line);
+            c++;
+            if(c>10)break;
+        }
+    }
     
     public InputStream getPayloadAsStreamUncompressed(Payload pl){
-    	try{
-    		return getPayloadAsStreamUncompressedT(pl);
-    	}catch(Exception e){
+        try{
+            return getPayloadAsStreamUncompressedT(pl);
+        }catch(Exception e){
 
-    	}
-    	return null;
+        }
+        return null;
     }
     public InputStream getPayloadAsStreamUncompressedT(Payload pl){
-	
+        
 
-    	InputStream is = getPayloadAsStream(pl);
-    	if(is==null)return null;
-    	try {
+        InputStream is = getPayloadAsStream(pl);
+        if(is==null)return null;
+        try {
 
-			return ix.utils.Util.getUncompressedInputStreamRecursive(is);
-		} catch (IOException e) {
-			Logger.trace("Problem uncompressing stream", e);
-		}
-    	return null;
+            return ix.utils.Util.getUncompressedInputStreamRecursive(is);
+        } catch (IOException e) {
+            Logger.trace("Problem uncompressing stream", e);
+        }
+        return null;
     }
 }
