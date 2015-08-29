@@ -88,19 +88,13 @@ public class GinasApp extends App {
         }
         
         public Result render
-            (int page, int rows, int total,
+            (SearchResultContext context, int page, int rows, int total,
              int[] pages, List<TextIndexer.Facet> facets,
              List<Substance> substances) {
-
-            process (substances);
             return ok(ix.ginas.views.html.substances.render
                       (page, rows, total, pages,
                        decorate(filter(facets, this.facets)),
-                       substances,null));
-        }
-
-        // override to process before rendering
-        protected void process (List<Substance> substances) {
+                       substances, context.getId(), null));
         }
     }
     
@@ -137,8 +131,8 @@ public class GinasApp extends App {
     }
     
     public static Result lastUnicorn(String name) {
-        return notFound(ix.ginas.views.html.error.render(404,
-                                                         "Unknown resource: " + request().uri()));
+        return notFound(ix.ginas.views.html.error.render
+                        (404, "Unknown resource: " + request().uri()));
     }
     
     public static Result _notFound(String mesg) {
@@ -188,10 +182,10 @@ public class GinasApp extends App {
                         if (!ControlledVocabularyFactory.isloaded()) {
                             Call call = controllers.routes.Assets
                                 .at("ginas/CV.txt");
-                            F.Promise<WSResponse> ws = WS.url(
-                                                              call.absoluteURL(request())).get();
-                            ControlledVocabularyFactory.loadSeedCV(ws.get(1000)
-                                                                   .getBodyAsStream());
+                            F.Promise<WSResponse> ws =
+                                WS.url(call.absoluteURL(request())).get();
+                            ControlledVocabularyFactory.loadSeedCV
+                                (ws.get(1000).getBodyAsStream());
                         }
 
                         CV cv = new CV();
@@ -212,8 +206,8 @@ public class GinasApp extends App {
             decors.add(new GinasFacetDecorator(facets[i]));
         }
 
-        GinasFacetDecorator f = new GinasFacetDecorator(new TextIndexer.Facet(
-                                                                              "ChemicalSubstance"));
+        GinasFacetDecorator f = new GinasFacetDecorator
+            (new TextIndexer.Facet("ChemicalSubstance"));
         f.hidden = true;
         decors.add(f);
 
@@ -429,16 +423,18 @@ public class GinasApp extends App {
             return getOrElse(key, new Callable<Result>() {
                     public Result call() throws Exception {
                         Logger.debug("Cache missed: " + key);
-                        TextIndexer.Facet[] facets = filter(
-                                                            getFacets(Substance.class, 30), ALL_FACETS);
-                        int nrows = Math.max(Math.min(total, Math.max(1, rows)), 1);
+                        TextIndexer.Facet[] facets = filter
+                            (getFacets(Substance.class, 30), ALL_FACETS);
+                        int nrows = Math.max(Math.min
+                                             (total, Math.max(1, rows)), 1);
                         int[] pages = paging(nrows, page, total);
 
                         List<Substance> substances = SubstanceFactory
                             .getSubstances(nrows, (page - 1) * rows, null);
 
-                        return ok(ix.ginas.views.html.substances.render(page,
-                                                                        nrows, total, pages, decorate(facets), substances,null));
+                        return ok(ix.ginas.views.html.substances.render
+                                  (page, nrows, total, pages, decorate(facets),
+                                   substances, null, null));
                     }
                 });
         }
@@ -475,8 +471,9 @@ public class GinasApp extends App {
         Logger.debug("############## serialization time:" + tt);
                 
 
-        return ok(ix.ginas.views.html.substances.render(page, rows,
-                                                        result.count(), pages, decorate(facets), substances, result.getSearchContextAnalyzer().getFieldFacets()));
+        return ok(ix.ginas.views.html.substances.render
+                  (page, rows, result.count(), pages, decorate(facets),
+                   substances, null, result.getSearchContextAnalyzer().getFieldFacets()));
 
     }
 
@@ -537,8 +534,9 @@ public class GinasApp extends App {
             TextIndexer.Facet[] facets = filter(result.getFacets(), ALL_FACETS);
             indexer.shutdown();
 
-            return ok(ix.ginas.views.html.substances.render(1, result.count(),
-                                                            result.count(), new int[0], decorate(facets), substances,null));
+            return ok(ix.ginas.views.html.substances.render
+                      (1, result.count(), result.count(), new int[0],
+                       decorate(facets), substances, null, null));
         }
     }
 
@@ -596,8 +594,9 @@ public class GinasApp extends App {
             }
         }
 
-        return ok(ix.ginas.views.html.substances.render(page, rows,
-                                                        result.count(), pages, decorate(facets), chemicals,null));
+        return ok(ix.ginas.views.html.substances.render
+                  (page, rows, result.count(), pages,
+                   decorate(facets), chemicals, null, null));
 
     }
 
@@ -636,11 +635,13 @@ public class GinasApp extends App {
                         int nrows = Math.min(total, Math.max(1, rows));
                         int[] pages = paging(nrows, page, total);
 
-                        List<Substance> chemicals = SubstanceFactory.getSubstances(
-                                                                                   nrows, (page - 1) * rows, null);
+                        List<Substance> chemicals =
+                            SubstanceFactory.getSubstances
+                            (nrows, (page - 1) * rows, null);
 
-                        return ok(ix.ginas.views.html.substances.render(page,
-                                                                        nrows, total, pages, decorate(facets), chemicals,null));
+                        return ok(ix.ginas.views.html.substances.render
+                                  (page, nrows, total, pages,
+                                   decorate(facets), chemicals, null, null));
                     }
                 });
         }
@@ -672,7 +673,7 @@ public class GinasApp extends App {
             SearchResultContext context = substructure
                 (query, rows, page, processor);
 
-            return structureResultAndProcess(context, rows, page, processor);
+            return structureResultAndProcess (context, rows, page, processor);
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't perform substructure search", ex);
@@ -688,14 +689,7 @@ public class GinasApp extends App {
 
         return structureResult
             (context, rows, page, 
-             new SubstanceResultRenderer (CHEMICAL_FACETS) {
-                 @Override
-                 protected void process (List<Substance> substances) {
-                     if (processor != null)
-                         processor.postProcess(substances);
-                 }
-             });
-             
+             new SubstanceResultRenderer (CHEMICAL_FACETS));
     }
 
     public static Result structureResult(final SearchResultContext context,
@@ -736,8 +730,9 @@ public class GinasApp extends App {
                                                 CHEMICAL_FACETS);
             indexer.shutdown();
 
-            return ok(ix.ginas.views.html.substances.render(1, result.count(),
-                                                            result.count(), new int[0], decorate(facets), chemicals,null));
+            return ok(ix.ginas.views.html.substances.render
+                      (1, result.count(),result.count(), new int[0],
+                       decorate(facets), chemicals, null, null));
         }
     }
 
@@ -941,8 +936,9 @@ public class GinasApp extends App {
                 }
             }
 
-            return ok(ix.ginas.views.html.substances.render(page, rows,
-                                                            result.count(), pages, decorate(facets), proteins,null));
+            return ok(ix.ginas.views.html.substances.render
+                      (page, rows, result.count(), pages,
+                       decorate(facets), proteins, null, null));
         } else {
             final String key = ProteinSubstance.class.getName() + ".facets";
             TextIndexer.Facet[] facets = getOrElse(key,
@@ -960,8 +956,9 @@ public class GinasApp extends App {
             List<Substance> proteins = SubstanceFactory.getSubstances(rows,
                                                                       (page - 1) * rows, null);
             Logger.info("protein list length: " + proteins.size());
-            return ok(ix.ginas.views.html.substances.render(page, rows, total,
-                                                            pages, decorate(facets), proteins,null));
+            return ok(ix.ginas.views.html.substances.render
+                      (page, rows, total, pages, decorate(facets),
+                       proteins, null, null));
         }
     }
 
@@ -999,8 +996,9 @@ public class GinasApp extends App {
                                                 PROTEIN_FACETS);
             indexer.shutdown();
             
-            return ok(ix.ginas.views.html.substances.render(1, result.count(),
-                                                            result.count(), new int[0], decorate(facets), proteins,null));
+            return ok(ix.ginas.views.html.substances.render
+                      (1, result.count(), result.count(), new int[0],
+                       decorate(facets), proteins, null, null));
         }
     }
     
@@ -1161,34 +1159,33 @@ public class GinasApp extends App {
 
     public static class GinasSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result> {
-        final public Set<String> processed = new HashSet<String>();
-        final public Map<String, int[]> atomMaps = new ConcurrentHashMap<String, int[]>();
-        int count;
         
         GinasSearchResultProcessor() {
         }
-        
-        public void postProcess(List<Substance> lsub) {
-            for (Substance s : lsub) {
-                int[] am = atomMaps.get(s.uuid + "");
-                if (am != null) {
-                    ((ChemicalSubstance) s).setAtomMaps(am);
-                }
-            }
-        }
             
-        protected Object instrument(StructureIndexer.Result r) throws Exception {
+        protected Object instrument(StructureIndexer.Result r)
+            throws Exception {
             List<ChemicalSubstance> chemicals = SubstanceFactory.chemfinder
                 .where().eq("structure.id", r.getId()).findList();
+            
+            ChemicalSubstance chem = null;
             if (!chemicals.isEmpty()) {
                 int[] amap = new int[r.getMol().getAtomCount()];
-                int i = 0;
+                int i = 0, nmaps = 0;
                 for (MolAtom ma : r.getMol().getAtomArray()) {
-                    amap[i++] = ma.getAtomMap();
+                    amap[i] = ma.getAtomMap();
+                    if (amap[i] > 0)
+                        ++nmaps;
+                    ++i;
                 }
-                atomMaps.put(chemicals.get(0).uuid + "", amap);
+
+                chem = chemicals.iterator().next();             
+                if (nmaps > 0) {
+                    IxCache.set("AtomMaps/"+getContext().getId()+"/"
+                                +r.getId(), amap);
+                }
             }
-            return chemicals.isEmpty() ? null : chemicals.iterator().next();
+            return chem;
         }
     }
 
@@ -1405,8 +1402,25 @@ public class GinasApp extends App {
      */
     public static Result structure (final String id,
                                     final String format, final int size,
-                                    final String atomMap) {
+                                    final String context) {
         //Logger.debug("Fetching structure");
+        String atomMap = "";
+        if (context != null) {
+            int[] amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
+            //Logger.debug("AtomMaps/"+context+" => "+amap);
+            if (amap != null && amap.length > 0) {
+                StringBuilder sb = new StringBuilder ();
+                sb.append(amap[0]);
+                for (int i = 1; i < amap.length; ++i)
+                    sb.append(","+amap[i]);
+                atomMap = sb.toString();
+            }
+            else {
+                atomMap = context;
+            }
+        }
+        //Logger.debug("structure: id="+id+" context="+context+" amap="+atomMap); 
+        
         Result r1 = App.structure(id, format, size, atomMap);
         int httpStat =  r1.toScala().header().status();
         if(httpStat == NOT_FOUND){

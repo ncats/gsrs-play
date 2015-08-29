@@ -4,7 +4,7 @@
 
 
 
-@(chem: ChemicalSubstance)
+@(chem: ChemicalSubstance, ctx: String = null)
 
 <div class = "col-md-3 thumb-col">
     <div class="panel panel-default">
@@ -17,7 +17,7 @@
         <div class="panel-body struc-img">
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
                 <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                src='@ix.ginas.controllers.routes.GinasApp.structure(chem.structure.getId, "svg", 200,chem.getAtomMapsString())'>
+                src='@ix.ginas.controllers.routes.GinasApp.structure(chem.structure.getId, "svg", 200, ctx)'>
             </a>
             <div class = "row stereo">
                 <div class = "col-md-10">

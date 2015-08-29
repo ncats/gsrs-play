@@ -81,20 +81,20 @@ public class ChemicalSubstance extends Substance {
     @JsonIgnore
     @Transient 
     public int[] getAtomMaps(){
-    	if(atomMaps==null)return new int[0];
-    	return atomMaps;
+        if(atomMaps==null)return new int[0];
+        return atomMaps;
     }
     
-	@JsonIgnore
-	 @Transient 
-	public String getAtomMapsString() {
-		return Arrays.toString(getAtomMaps()).replace("[", "").replace("]", "")
-				.replace(" ", "");
-	}
+    @JsonIgnore
+    @Transient 
+    public String getAtomMapsString() {
+        return Arrays.toString(getAtomMaps()).replace("[", "").replace("]", "")
+            .replace(" ", "");
+    }
     
     @JsonIgnore
     @Transient 
     public void setAtomMaps(int[] am){
-    	atomMaps=am;
+        atomMaps=am;
     }
 }

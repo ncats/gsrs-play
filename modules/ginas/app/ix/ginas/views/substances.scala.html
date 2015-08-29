@@ -4,11 +4,14 @@
 @import ix.core.search.FieldFacet
 
 @import ix.ginas.models.v1.StructurallyDiverseSubstance
-@(current: Int, rows: Int, total: Int, pages: Array[Int],
-        facets: Array[FacetDecorator], substancesList: List[Substance], searchFacets : List[FieldFacet] = null)
 
-@content("Substances", "ix.ginas.models.v1.Substance", ix.ginas.controllers.routes.GinasApp.substances().url,
-    current, rows, total, pages, facets,searchFacets) {
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+facets: Array[FacetDecorator], substancesList: List[Substance],
+ctx: String = null, searchFacets : List[FieldFacet] = null)
+
+@content("Substances", "ix.ginas.models.v1.Substance",
+ix.ginas.controllers.routes.GinasApp.substances().url,
+current, rows, total, pages, facets, searchFacets) {
     @menu()
 } {
     <div></div>
@@ -20,7 +23,7 @@
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {
-                    @chemthumb(chem)
+                    @chemthumb(chem, ctx)
                 }
                 case prot: ProteinSubstance => {
                     @proteinthumb(prot)
@@ -51,7 +54,7 @@
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {
-                    @chemlist(chem)
+                    @chemlist(chem, ctx)
                 }
                 case prot: ProteinSubstance => {
                     @proteinlist(prot)

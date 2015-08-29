@@ -117,7 +117,8 @@ public class App extends Authentication {
      * interface for rendering a result page
      */
     public interface ResultRenderer<T> {
-        Result render (int page, int rows, int total, int[] pages,
+        Result render (SearchResultContext context,
+                       int page, int rows, int total, int[] pages,
                        List<TextIndexer.Facet> facets, List<T> results);
         int getFacetDim ();
     }
@@ -516,7 +517,9 @@ public class App extends Authentication {
 
     public static String randvar (int size) {
         Random rand = new Random ();
-        char[] alpha = {'a','b','c','x','y','z'};
+        char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
+                        'l','m','n','o','p','q','r','s','t','u','v',
+                        'x','y','z'};
         StringBuilder sb = new StringBuilder ();
         for (int i = 0; i < size; ++i)
             sb.append(alpha[rand.nextInt(alpha.length)]);
@@ -1130,6 +1133,13 @@ public class App extends Authentication {
                     String c = request().getQueryString("cutoff");
                     key = "similarity/"+getKey (query, Double.parseDouble(c));
                 }
+                else if (type.equalsIgnoreCase("sequence")) {
+                    String iden = request().getQueryString("identity");
+                    if (iden == null) {
+                        iden = "0.5";
+                    }
+                    key = "sequence/"+getKey (query, Double.parseDouble(iden));
+                }
                 else {
                 }
 
@@ -1325,13 +1335,14 @@ public class App extends Authentication {
             return getOrElse (k, new Callable<Result> () {
                     public Result call () throws Exception {
                         return renderer.render
-                            (_page, _rows, _count, _pages,
+                            (context, _page, _rows, _count, _pages,
                              facets, results);
                     }
                 });
         }
         
-        return renderer.render(page, rows, count, pages, facets, results);
+        return renderer.render(context, page, rows, count,
+                               pages, facets, results);
     }
 
     static ObjectNode toJson (Element elm) {
