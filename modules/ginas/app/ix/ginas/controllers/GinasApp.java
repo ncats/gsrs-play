@@ -51,7 +51,6 @@ import chemaxon.util.MolHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
-    // substance finder
     static final Model.Finder<UUID, Substance> SUBFINDER =
         new Model.Finder(UUID.class, Substance.class);
     

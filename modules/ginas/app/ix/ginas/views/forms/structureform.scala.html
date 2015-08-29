@@ -40,7 +40,12 @@
                     <div class = "col-md-1">
                     {{substance.charge}}
                     </div>
+                    <div ng-show="substance.structure.references.length > 0">
+                    @referenceview("structureForm", "structure")
+                    </div>
+                    <div ng-hide="substance.structure.references.length > 0">
                     @referenceselectorform("structureForm", "structure")
+                        </div>
                 </div>
             </form>
         </div>

@@ -22,7 +22,7 @@ object ApplicationBuild extends Build {
       ,"com.edulify" %% "play-hikaricp" % "2.0.6"
       ,"mysql" % "mysql-connector-java" % "5.1.31"
       ,"org.postgresql" % "postgresql" % "9.4-1201-jdbc41"     
-      ,"com.hazelcast" % "hazelcast" % "3.5.1" 
+      ,"com.hazelcast" % "hazelcast" % "3.5.2" 
       ,"org.julienrf" %% "play-jsonp-filter" % "1.2"
       ,"commons-codec" % "commons-codec" % "1.9"
       ,"org.apache.lucene" % "lucene-core" % "4.10.0"
@@ -76,7 +76,7 @@ object ApplicationBuild extends Build {
 
   val javaBuildOptions = Seq(
     "-encoding", "UTF-8"
-      ,"-Xlint:-options"
+      //,"-Xlint:-options"
       //,"-Xlint:deprecation"
   )
 

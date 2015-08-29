@@ -28,7 +28,7 @@
                         <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
                     </tags-input>
                 </div>
-                    {{obj.references.id}} {{obj.references.citation}}
+            @referenceview("noteForm", "obj")
             </div>
 
         <form class="form-horizontal" name="noteForm" id = "add-note" role="form" novalidate>

@@ -72,14 +72,7 @@
                 <span href="#" editable-checkbox="officialName.preferred"><i class="fa fa-check fa-2x success" ng-show="officialName.preferred"></i> <i class="fa fa-times fa-2x warning" ng-show="!officialName.preferred"></i></span>
 
             </div>
-            <div class = "col-md-1"><span ng-repeat="n in officialName.references">
-                <span ng-show="!officialName.references || officialName.references.length==0" ng-click="toggle(officialNameForm.references)" ><i class="fa fa-plus fa-2x success"></i></span>
-                <span ng-show="!officialNameForm.references.selected" ng-click="toggle(officialNameForm.references)" >{{n.id}} {{n.citation}}</span>
-            </span>
-                <tags-input ng-show ="officialNameForm.references.selected" ng-blur="toggle(officialNameForm.references)" custom-class="form-control" title="References" placeholder="References" id="references" name="references" ng-model = "officialName.references" display-property="citation" key-property="id" addFromAutocompleteOnly="true" >
-                    <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-            </div>
+            @referenceview("officialNameForm", "officialName")
         </div>
 
 

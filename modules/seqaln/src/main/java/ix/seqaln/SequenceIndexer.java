@@ -433,16 +433,16 @@ public class SequenceIndexer {
         for (Map.Entry<String, List<HSP>> me : hsp.entrySet()) {
             String seq = getSeq (me.getKey());
             Result result = new Result (me.getKey(), qs, seq);
-
+            /*
               System.err.println(" Query: "+query);
               System.err.println("Target: "+seq);
-
+            */
             Collections.sort(me.getValue());
             
             HSP bgn = null, end = null;
             int score = 0;
             for (HSP h : me.getValue()) {
-                System.err.println("  "+h);
+                //System.err.println("  "+h);
                 if (end == null) {
                     bgn = h;
                 }
@@ -453,7 +453,7 @@ public class SequenceIndexer {
                             && (h.j - (end.j+K)) > gap)
                         || h.gap() - end.gap() > gap
                         ) {
-                        System.err.println(" ** start: "+bgn+" end: "+end);
+                        //System.err.println(" ** start: "+bgn+" end: "+end);
                         // now do global alignment of the subsequence
                         Alignment aln = align
                             (qs, bgn.i, end.i+K, seq, bgn.j, end.j+K);
@@ -465,7 +465,7 @@ public class SequenceIndexer {
                 }
                 end = h;
             }
-            System.err.println(" ** start: "+bgn+" end: "+end);
+            //System.err.println(" ** start: "+bgn+" end: "+end);
             Alignment aln = align (qs, bgn.i, end.i+K, seq, bgn.j, end.j+K);
             result.alignments.add(aln);
             if (aln.score > score)
@@ -475,6 +475,13 @@ public class SequenceIndexer {
             if (sim >= identity) {
                 Collections.sort(result.alignments);
                 results.put(result);
+
+                System.err.println("+++++ "+result.query);
+                System.err.println("----- "+result.refseq);
+                System.err.println();
+                for (Alignment a : result.alignments) 
+                    System.err.println(a);
+                System.err.println();
             }
             else {
                 //System.err.println(me.getKey()+": "+sim);

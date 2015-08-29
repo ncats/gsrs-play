@@ -15,7 +15,7 @@ GET         /report                     ix.ginas.controllers.GinasFactory.report
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON
 GET         /load                       ix.ginas.controllers.GinasLoad.load
-POST        /submit                     ix.ginas.controllers.GinasLoad.submitSubstance
+POST        /register/submit            ix.ginas.controllers.GinasLoad.submitSubstance
 POST        /loadSDF/:payloadID         ix.ginas.controllers.GinasLoad.loadSDF(payloadID : String)
 GET         /monitor                    ix.ginas.controllers.GinasLoad.jobs(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET         /monitor/:processID         ix.ginas.controllers.GinasLoad.monitorProcess(processID : String)
@@ -25,6 +25,7 @@ GET         /login                      ix.ginas.controllers.GinasFactory.login
 GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationships(uuid: String)
 GET         /cv/:field                  ix.ginas.controllers.GinasApp.getCVField(field: String)
 GET         /img/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structure(id: String, format: String, size: Int ?= 150, atomMap: String ?= null)
+POST        /register/validate          ix.ginas.controllers.GinasLoad.validateSubstance
 
 ->      /   ix.ncats.Routes
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

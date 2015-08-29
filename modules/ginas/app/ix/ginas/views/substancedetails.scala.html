@@ -30,6 +30,14 @@
                                 <li role="presentation" ><a href="#relationships" prevent-default="" ng-click="scrollTo('relationships')" id = "relation">
                                     Relationships <span class="badge">@sub.relationships.size()</span></a></li>
                             }
+                            @if(sub.properties.size() > 0) {
+                                <li role="presentation"><a href="properties" prevent-default="" ng-click="scrollTo('properties')">
+                                    Properties <span class="badge">@sub.properties.size()</span></a></li>
+                            }
+                            @if(sub.notes.size() > 0) {
+                                <li role="presentation"><a href="notes" prevent-default="" ng-click="scrollTo('notes')">
+                                    Notes <span class="badge">@sub.notes.size()</span></a></li>
+                            }
                             <li role="presentation"><a href="#refs" prevent-default="" ng-click="scrollTo('refs')">
                                 References <span class="badge">@sub.references.size()</span></a></li>
                         </ul>
@@ -96,18 +104,14 @@
             @relationships(sub.relationships)
             </div>
         }
+    @if(sub.properties != null && sub.properties.size() > 0) {
+        <div class="row info" id="properties">
+        @properties(sub.properties)
+        </div>
+    }
         @if(sub.notes != null && sub.notes.size() > 0) {
             <div class="row info" id="notes">
-                <button class="btn btn-primary label-offset det ">
-                    Notes&nbsp;<span class="badge head"> @sub.notes.size()</span></button>
-                <table class="table table-striped" id="notes-Table">
-                @for(n <- sub.notes) {
-                    <tr><td>
-                    @n.note
-                    </td>
-                    </tr>
-                }
-                </table>
+            @notes(sub.notes)
             </div>
         }
 

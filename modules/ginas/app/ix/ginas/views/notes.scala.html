@@ -1,0 +1,23 @@
+
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.Note
+
+
+@(notes: List[Note])
+<button class="btn btn-primary label-offset det">Notes&nbsp;<span class="badge"> @notes.length</span></button>
+<div class="col-md-12">
+  <table class="table table-striped" id="notesTable">
+    <thead>
+      <tr>
+        <th>Note</th>
+        <th>References</th>
+      </tr>
+    </thead>
+    @for(n <- notes) {
+      <tr>
+        <td>@n.note</td>
+        @referencetable(n.references, n.note, 2)
+      </tr>
+    }
+  </table>
+</div>

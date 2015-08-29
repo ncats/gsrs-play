@@ -1,0 +1,19 @@
+@(formName: String, propertyName: String)
+
+
+
+<div class = "col-md-1 pull-right">
+    <span ng-repeat="n in @(propertyName).references">
+        <span ng-show="@(propertyName).references.length==0" ng-click="toggle(@(formName).references)" ><i class="fa fa-plus fa-2x success"></i></span>
+        <span ng-show="!@(formName).references.selected" ng-click="toggle(@(formName).references)"  tooltip="{{n.citation}}">
+            <button class="btn btn-primary">{{n.id}}</button>
+           </span>
+    </span>
+    <tags-input ng-show ="@(formName).references.selected" ng-blur="toggle(@(formName).references)" custom-class="form-control"
+    title="References" placeholder="References" id="references" name="references" ng-model = "@(propertyName).references"
+    display-property="id" key-property="id"
+    template="tag-template-script"
+    addFromAutocompleteOnly="true" >
+        <auto-complete source="substance.references" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+    </tags-input>
+</div>

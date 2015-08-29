@@ -59,6 +59,8 @@ public class GinasUtils {
     public static Substance makeSubstance(JsonNode tree) throws Exception {
         JsonNode subclass = tree.get("substanceClass");
         ObjectMapper mapper = new ObjectMapper();
+
+        Logger.debug("####### trying :" + tree.toString());
         mapper.addHandler(new GinasV1ProblemHandler ());
         Substance sub=null;
         if (subclass != null && !subclass.isNull()) {
@@ -96,7 +98,7 @@ public class GinasUtils {
                 Logger.warn("Skipping substance class " + type);
             }
         } else {
-            Logger.error("Not a valid JSON substance!");
+            Logger.error("Not a valid JSON substance! \"substanceClass\" cannot be null!");
         }
         return null;
     }
@@ -329,8 +331,10 @@ public class GinasUtils {
             }
             return sub;
         }
-        public static void prepareSubstance(GinasProcessingStrategy prc, Substance sub) throws Exception{
-            GinasProcessingStrategy.failIfNecessary(Validation.validateAndPrepare(sub, prc));
+        public static List<GinasProcessingMessage> prepareSubstance(GinasProcessingStrategy prc, Substance sub) throws Exception{
+        	List<GinasProcessingMessage> valid = Validation.validateAndPrepare(sub, prc);
+            GinasProcessingStrategy.failIfNecessary(valid);
+            return valid;
         }
         public static void prepareSubstance(Substance sub) throws Exception{
             prepareSubstance(DEFAULT_STRAT,sub);

@@ -2,7 +2,6 @@ package ix.ginas.utils;
 
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
-import ix.core.models.Value;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
@@ -44,14 +43,16 @@ public class Validation {
 			List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstancesWithExactName(100, 0, n.name);
 			if(sr!=null && !sr.isEmpty()){
 				Substance s2=sr.iterator().next();
-				GinasProcessingMessage mes = GinasProcessingMessage
-						.WARNING_MESSAGE("Name '"
-								+ n.name
-								+ "' collides with existing name for substance:"
-								+ s2.getName() + " [" + s2.getApprovalID()
-								+ "]");
-				gpm.add(mes);
-				strat.processMessage(mes);
+				if(!s2.uuid.toString().equals(s.uuid.toString())){
+					GinasProcessingMessage mes = GinasProcessingMessage
+							.WARNING_MESSAGE("Name '"
+									+ n.name
+									+ "' collides with existing name for substance:"
+									+ s2.getName() + " [" + s2.getApprovalID()
+									+ "]");
+					gpm.add(mes);
+					strat.processMessage(mes);
+				}
 			}
 		}
 		
@@ -147,28 +148,36 @@ public class Validation {
             try {
             	List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getCollsionChemicalSubstances(100, 0, cs);
 				
-				if(sr.size()>0){
+            	if(sr!=null && !sr.isEmpty()){
 					
-					GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has " + sr.size() +" possible duplicate(s)").appliableChange(true);
-	            	gpm.add(mes);
-	            	strat.processMessage(mes);
-	            	switch(mes.actionType){
-					case APPLY_CHANGE:
-						cs.status="FAILED";
-						cs.addPropertyNote(mes.message, "FAIL_REASON");
-						cs.addRestrictGroup("admin");
-						mes.appliedChange=true;
-						break;
-					case DO_NOTHING:
-						break;
-					case FAIL:
-						break;
-					case IGNORE:
-						break;
-					default:
-						break;
-					
-	            	}
+            		int dupes=0;
+            		for(Substance s:sr){
+            			if(!s.uuid.toString().equals(cs.uuid.toString()))
+            				dupes++;
+            		}
+            		if(dupes>0){
+						GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has " + dupes +" possible duplicate(s)").appliableChange(true);
+		            	gpm.add(mes);
+		            	
+		            	strat.processMessage(mes);
+		            	switch(mes.actionType){
+						case APPLY_CHANGE:
+							cs.status="FAILED";
+							cs.addPropertyNote(mes.message, "FAIL_REASON");
+							cs.addRestrictGroup("admin");
+							mes.appliedChange=true;
+							break;
+						case DO_NOTHING:
+							break;
+						case FAIL:
+							break;
+						case IGNORE:
+							break;
+						default:
+							break;
+						
+		            	}
+            		}
 				}
 			} catch (Exception e) {
 				e.printStackTrace();

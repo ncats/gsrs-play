@@ -24,7 +24,10 @@ import ix.core.chem.Chem;
 import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.ginas.models.utils.*;
+import ix.ginas.utils.GinasProcessingMessage;
+import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasSDFUtils;
+import ix.ginas.utils.Validation;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
 import ix.ginas.utils.GinasUtils;
@@ -336,16 +339,30 @@ public class GinasLoad extends App {
     public static Result testSubmit(){
         return ok(ix.ginas.views.html.test.testsubmit.render());                
     }
-    public static Result submitSubstance(){
-        String mappingsjson = null;
-        try{
-            mappingsjson = request().body().asJson().toString();
-        }catch(Exception e){
-            DynamicForm requestData = Form.form().bindFromRequest();
-            mappingsjson = requestData.get("substance");                        
+    
+    public static Result validateSubstance(){
+    	String mappingsjson = extractSubstanceJSON();
+    	Substance sub=null;
+    	List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
+    	
+    	try{
+            System.out.println(mappingsjson);
+            GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
+            JsonNode jn=ex.getNextRecord();
+            //GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
+            sub = GinasUtils.makeSubstance(jn);
+            GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
+            messages = Validation.validateAndPrepare(sub, GinasProcessingStrategy.ACCEPT_APPLY_ALL());
+                        
+        }catch(Throwable e){
+        	messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
         }
-        Logger.debug("################# got submission");
-        Logger.debug(mappingsjson);
+    	ObjectMapper om = new ObjectMapper();
+    	
+        return ok(om.valueToTree(messages));
+    }
+    public static Result submitSubstance(){
+        String mappingsjson = extractSubstanceJSON();
                 
         Substance sub=null;
         
@@ -356,14 +373,35 @@ public class GinasLoad extends App {
             GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
             sub = trans.transformSubstance(jn);
             GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
+            
+            List<GinasProcessingMessage> messages = Validation.validateAndPrepare(sub, GinasProcessingStrategy.ACCEPT_APPLY_ALL());
+            
             List<String> errors = new ArrayList<String>();
             if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
                 throw new IllegalStateException(errors.toString());
-            }
+            }   
         }catch(Throwable e){
             return _internalServerError(e);
         }
         return redirect(ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub)));
+    }
+    
+    public static String extractSubstanceJSON(){
+    	 String mappingsjson = null;
+//    	 try {
+//    		System.out.println("This is what I got:" );
+//			System.out.write(request().body().asRaw().asBytes());
+//		} catch (IOException e1) {
+//			// TODO Auto-generated catch block
+//			e1.printStackTrace();
+//		}
+         try{
+             mappingsjson = request().body().asJson().toString();
+         }catch(Exception e){
+             DynamicForm requestData = Form.form().bindFromRequest();
+             mappingsjson = requestData.get("substance");                        
+         }
+         return mappingsjson;
     }
         
     public static Result updateSubstance(){
