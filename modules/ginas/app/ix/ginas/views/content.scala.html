@@ -38,11 +38,11 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                         @request().getQueryString("type") match {
-			    case "sequence" => {
-			    <span><h4>Sequence Query:&nbsp;
-			     <a href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a></h4>
-                                </span> <div id="searching"></div>
-			    }
+						    case "sequence" => {
+							    <span><h4>Sequence Query:&nbsp;
+							     <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a></h4>
+				                                </span> <div id="searching"></div>
+							    }
                             case "Substructure" => {
                                 <span><h4>Substructure Query:&nbsp; <a href="#"
                                 tabindex="-1"
