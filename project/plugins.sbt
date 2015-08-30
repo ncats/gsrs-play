@@ -3,7 +3,7 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 // The Play plugin
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.3.9")
 
-addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.3.2")
+//addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.3.2")
 
 //addSbtPlugin("com.typesafe.sbt" % "sbt-play-ebean" % "1.0.0")
 

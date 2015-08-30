@@ -2,15 +2,14 @@ import sbt._
 import Keys._
 import play._
 import play.PlayImport._
-import sbtbuildinfo.Plugin._
 
 object ApplicationBuild extends Build {
-
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
   val commit = "git rev-parse --short HEAD".!!.trim
-  val buildTime = (new java.text.SimpleDateFormat("yyyyMMdd"))
+  val author = s"git show --format=%an -s $commit".!!.trim
+  val buildDate = (new java.text.SimpleDateFormat("yyyyMMdd"))
     .format(new java.util.Date())
-  val appVersion = "%s-%s-%s".format(branch, buildTime, commit)
+  val appVersion = "%s-%s-%s".format(branch, buildDate, commit)
 
   val commonDependencies = Seq(
     javaWs,
@@ -80,27 +79,10 @@ object ApplicationBuild extends Build {
       //,"-Xlint:deprecation"
   )
 
-
   val buildSettings = Seq(
     version := appVersion,
     organization := "NCATS",
     homepage := Some(url("https://www.ncats.nih.gov"))
-  )
-
-  val appSettings = buildSettings ++ buildInfoSettings ++ Seq (
-    sourceGenerators in Compile <+= buildInfo,
-    buildInfoKeys := Seq(
-      BuildInfoKey.action("branch") {
-        "git rev-parse --abbrev-ref HEAD".!!.trim
-      },
-      BuildInfoKey.action("commit") {
-        "git rev-parse --short HEAD".!!.trim
-      },
-      BuildInfoKey.action("buildTime") {
-        System.currentTimeMillis
-      }
-    ),
-    buildInfoPackage := "ix"
   )
 
   val seqaln = Project("seqaln", file("modules/seqaln")).settings(
@@ -109,15 +91,32 @@ object ApplicationBuild extends Build {
     javacOptions ++= javaBuildOptions,
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
   )
+
+  val build = Project("build", file("modules/build")).settings(
+    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+      val file = dir / "BuildInfo.java"
+      IO.write(file, """
+package ix;
+public class BuildInfo { 
+   public static final String BRANCH = "%s";
+   public static final String DATE = "%s";
+   public static final String COMMIT = "%s";
+   public static final String TIME = "%s";
+   public static final String AUTHOR = "%s";
+}
+""".format(branch, buildDate, commit, new java.util.Date(), author))
+      Seq(file)
+    }
+  )
   
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(
     resolvers += Resolver.url("Edulify Repository",
       url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
-    version := appVersion,
+      version := appVersion,
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  ).dependsOn(seqaln).aggregate(seqaln)
+  ).dependsOn(build,seqaln).aggregate(build,seqaln)
 
   val ncats = Project("ncats", file("modules/ncats"))
     .enablePlugins(PlayJava).settings(
