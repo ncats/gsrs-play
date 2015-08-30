@@ -591,7 +591,10 @@ public class SequenceIndexer {
         */
         
         return new Alignment (qi, qj, si, sj, qa.toString(), qs.toString(),
-                              qa+"\n"+qq+"\n"+qs, M[q.length()][s.length()]);
+                              qa+String.format("%1$4d - %2$d", qi,qj)+"\n"
+                              +qq+"\n"
+                              +qs+String.format("%1$4d - %2$d", si,sj),
+                              M[q.length()][s.length()]);
     }
 
     static <T> T getOrElse (String key, Callable<T> generator)

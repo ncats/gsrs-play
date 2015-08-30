@@ -478,8 +478,7 @@ public class GinasApp extends App {
     }
 
     public static final GetResult<Substance> SubstanceResult =
-        new GetResult<Substance>(
-                                 Substance.class, SubstanceFactory.finder) {
+        new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
             public Result getResult(List<Substance> substances) throws Exception {
                 return _getSubstanceResult(substances);
             }
@@ -517,14 +516,15 @@ public class GinasApp extends App {
             default:
                 return _badRequest("type not found");
             }
-        } else {
+        }
+        else {
             TextIndexer indexer = _textIndexer.createEmptyInstance();
             for (Substance sub : substances)
                 indexer.add(sub);
 
-            TextIndexer.SearchResult result = SearchFactory.search(indexer,
-                                                                   Substance.class, null, null, indexer.size(), 0, FACET_DIM,
-                                                                   request().queryString());
+            TextIndexer.SearchResult result = SearchFactory.search
+                (indexer, Substance.class, null, null, indexer.size(),
+                 0, FACET_DIM, request().queryString());
             if (result.count() < substances.size()) {
                 substances.clear();
                 for (int i = 0; i < result.count(); ++i) {
@@ -567,10 +567,10 @@ public class GinasApp extends App {
                     ex.printStackTrace();
                 }
 
-                return notFound(ix.ginas.views.html.error.render(400,
-                                                                 "Invalid search parameters: type=\"" + type
-                                                                 + "\"; q=\"" + q + "\" cutoff=\"" + cutoff
-                                                                 + "\"!"));
+                return notFound(ix.ginas.views.html.error.render
+                                (400, "Invalid search parameters: type=\""
+                                 + type + "\"; q=\"" + q + "\" cutoff=\""
+                                 + cutoff + "\"!"));
             } else {
                 return _chemicals(q, rows, page);
             }
@@ -1198,8 +1198,21 @@ public class GinasApp extends App {
             throws Exception {
             List<ProteinSubstance> proteins = SubstanceFactory.protfinder
                 .where().eq("protein.subunits.uuid", r.id).findList();
-            return proteins.isEmpty() ? null : proteins.iterator().next();
+            ProteinSubstance protein =
+                proteins.isEmpty() ? null : proteins.iterator().next();
+            if (protein != null) {
+                IxCache.set("Alignment/"+getContext().getId()+"/"+r.id, r);
+            }
+            else {
+                Logger.warn("Can't retrieve protein for subunit "+r.id);
+            }
+            return protein;
         }
+    }
+
+    public static SequenceIndexer.Result
+        getSeqAlignment (String context, String id) {
+        return (SequenceIndexer.Result)IxCache.get("Alignment/"+context+"/"+id);
     }
 
     public static Result search(String kind) {

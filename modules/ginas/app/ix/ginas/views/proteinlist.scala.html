@@ -4,9 +4,9 @@
 
 
 @import ix.ginas.models.v1.ProteinSubstance
-@(prot: ProteinSubstance)
+@(prot: ProteinSubstance, ctx: String = null)
 
-<div class="panel panel-default prot-list">
+<div class="panel panel-default prot-list" ng-controller="SubstanceListController">
     <div class="panel-heading prot-title">
         <div class = "row">
             <div class = "col-md-10">
@@ -22,7 +22,7 @@
     <div class= "panel-body list-item">
         <div class = "row">
             <div class = "col-md-3">
-                <img src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="img-responsive" id="" />
+                <img ng-click="toggle()" src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="struc-thumb img-responsive" id="" />
             </div>
             <div class = "col-md-6">
 
@@ -62,5 +62,24 @@
                 </div>
             </div>
         </div>
+	@if(ctx != null) {
+        <div ng-show="bigview" class = "revealable row">
+            <div ng-show="initialized">
+              <div class = "col-md-12">
+		  @for(subunit <- prot.protein.subunits) {
+		      @defining(GinasApp.getSeqAlignment(ctx,subunit.uuid.toString)){ r =>
+  		         @if(r != null) {
+			 <br>
+			 <em>Subunit @subunit.subunitIndex</em> <code>@subunit.uuid</code>
+			     <pre ng-click="toggle()" class = "struc-thumb img-responsive">
+@r.alignments(0).alignment
+</pre>
+		      	  }
+		      }
+		  }
+              </div>
+            </div>
+        </div>
+	}
     </div>
 </div>
