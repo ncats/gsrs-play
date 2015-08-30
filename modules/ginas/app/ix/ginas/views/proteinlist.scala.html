@@ -72,6 +72,7 @@
 			 <br>
 			 <em>Subunit @subunit.subunitIndex</em> <code>@subunit.uuid</code>
 			     <pre ng-click="toggle()" class = "struc-thumb img-responsive">
+@{"identity = %.3f".format(r.alignments(0).iden)}
 @r.alignments(0).alignment
 </pre>
 		      	  }

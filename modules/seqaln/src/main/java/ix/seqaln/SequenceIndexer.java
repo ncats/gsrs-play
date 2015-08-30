@@ -105,27 +105,73 @@ public class SequenceIndexer {
         }
     }
 
+    public static class SEG implements Comparable<SEG> {
+        public int qi, qj;
+        public int ti, tj;
+
+        SEG (int qi, int qj, int ti, int tj) {
+            this.qi = qi;
+            this.qj = qj;
+            this.ti = ti;
+            this.tj = tj;
+        }
+
+        public boolean overlap (SEG seg) {
+            return overlap (seg, 0);
+        }
+        
+        public boolean overlap (SEG seg, int gap) {
+            /*
+             * a_i ------ a_j
+             *       b_i ---------- b_j
+             *
+             *            a_i ------ a_j
+             * b_i ---------- b_j
+             */
+
+            return (Math.abs(qi - seg.qj) <= gap
+                    && Math.abs(ti - seg.tj) <= gap)
+                || (Math.abs(seg.qi - qj) <= gap
+                    && Math.abs(seg.ti - tj) <= gap);
+        }
+
+        public SEG merge (SEG seg, int gap) {
+            if (overlap (seg, gap)) {
+                qi = Math.min(qi, seg.qi);
+                qj = Math.max(qj, seg.qj);
+                ti = Math.min(ti, seg.ti);
+                tj = Math.max(tj, seg.tj);
+                return this;
+            }
+            return null;
+        }
+
+        public int compareTo (SEG seg) {
+            return qi - seg.qi;
+        }
+
+        public String toString () {
+            return "q=["+qi+","+qj+"] t=["+ti+","+tj+"]";
+        }
+    }
+
     public static class Alignment implements Comparable<Alignment> {
-        public final int qi, qj; // coordinate of query
-        public final int si, sj; // coordinate of database sequence
-        public final String qseg; // segment of query
-        public final String sseg; // segment of sequence
+        public final SEG segment; // coordinate of query
+        public final String query; // segment of query
+        public final String target; // segment of sequence
         public final String alignment; // full alignment string
         public final int score;
         public final double iden;
 
-        Alignment (int qi, int qj, int si, int sj,
-                   String qseg, String sseg,
-                   String alignment, int score) {
-            this.qi = qi;
-            this.qj = qj;
-            this.si = si;
-            this.sj = sj;
-            this.qseg = qseg;
-            this.sseg = sseg;
+        Alignment (SEG segment,
+                   String query, String target,
+                   String alignment, int score, double iden) {
+            this.segment = segment;
+            this.query = query;
+            this.target = target;
             this.alignment = alignment;
             this.score = score;
-            iden = (double)score/Math.max(qj-qi, sj-si);
+            this.iden = iden;
         }
         
         public int compareTo (Alignment aln) {
@@ -135,7 +181,7 @@ public class SequenceIndexer {
                 else if (iden > aln.iden) d = -1;
             }
             if (d == 0)
-                d = qi - aln.qi;
+                d = segment.qi - aln.segment.qi;
             
             return d;
         }
@@ -150,18 +196,18 @@ public class SequenceIndexer {
     public static class Result {
         public final CharSequence query;
         public final String id;
-        public final CharSequence refseq;
+        public final CharSequence target;
         public final List<Alignment> alignments = new ArrayList<Alignment>();
 
         Result () {
             query = null;
             id = null;
-            refseq = null;
+            target = null;
         }
-        Result (String id, CharSequence query, CharSequence refseq) {
+        Result (String id, CharSequence query, CharSequence target) {
             this.id = id;
             this.query = query;
-            this.refseq = refseq;
+            this.target = target;
         }
     }
 
@@ -440,14 +486,13 @@ public class SequenceIndexer {
             Collections.sort(me.getValue());
             
             HSP bgn = null, end = null;
-            int score = 0;
+            List<SEG> segments = new ArrayList<SEG>();
             for (HSP h : me.getValue()) {
                 //System.err.println("  "+h);
                 if (end == null) {
                     bgn = h;
                 }
                 else {
-                    //System.err.println("    ^"+end);
                     if (h.i < end.i || h.j < end.j
                         || ((h.i - (end.i+K)) > gap
                             && (h.j - (end.j+K)) > gap)
@@ -455,36 +500,58 @@ public class SequenceIndexer {
                         ) {
                         //System.err.println(" ** start: "+bgn+" end: "+end);
                         // now do global alignment of the subsequence
-                        Alignment aln = align
-                            (qs, bgn.i, end.i+K, seq, bgn.j, end.j+K);
-                        if (aln.score > score)
-                            score = aln.score;
-                        result.alignments.add(aln);
+                        segments.add(new SEG (bgn.i, end.i+K, bgn.j, end.j+K));
                         bgn = h;
                     }
                 }
                 end = h;
             }
             //System.err.println(" ** start: "+bgn+" end: "+end);
-            Alignment aln = align (qs, bgn.i, end.i+K, seq, bgn.j, end.j+K);
-            result.alignments.add(aln);
-            if (aln.score > score)
-                score = aln.score;
+            segments.add(new SEG (bgn.i, end.i+K, bgn.j, end.j+K));
 
-            double sim = (double)score/Math.min(seq.length(), query.length());
-            if (sim >= identity) {
+            // now check to see if the segments can be merged
+            Collections.sort(segments);
+            /*
+            System.err.println("** SEGMENTS **");
+            for (SEG seg : segments) {
+                System.err.println(seg);
+            }
+            */
+            
+            List<SEG> remove = new ArrayList<SEG>();
+            for (int i = 0; i < segments.size(); ++i) {
+                SEG seg = segments.get(i);
+                for (int j = i+1; j < segments.size(); ++j) {
+                    SEG s = segments.get(j);
+                    if (null != seg.merge(s, gap)) {
+                        //System.err.println("merging "+seg+" and "+s);
+                        remove.add(s);
+                    }
+                }
+            }
+
+            for (SEG s : remove)
+                segments.remove(s);
+
+            System.err.println("** ALIGNMENTS for "+me.getKey()+" **");
+            int max = 0;
+            for (SEG seg : segments) {
+                //System.err.println(seg);
+                Alignment aln = align (seg, qs, seq);
+                if (aln.score > max) {
+                    System.err.println(aln);
+                    max = aln.score;
+                }
+                result.alignments.add(aln);
+            }
+
+            double score = (double)max/Math.min(query.length(), seq.length());
+            if (score >= identity) {
                 Collections.sort(result.alignments);
                 results.put(result);
-
-                System.err.println("+++++ "+result.query);
-                System.err.println("----- "+result.refseq);
-                System.err.println();
-                for (Alignment a : result.alignments) 
-                    System.err.println(a);
-                System.err.println();
             }
             else {
-                //System.err.println(me.getKey()+": "+sim);
+                //System.err.println(me.getKey()+": "+score);
             }
         }
     }
@@ -514,20 +581,18 @@ public class SequenceIndexer {
         return null;
     }
 
-    static Alignment align (String q, int i, int j,
-                            String s, int k, int l) {
-        return align (q, i, j, s, k, l, 1, -1);
+    static Alignment align (SEG seg, String query, String target) {
+        return align (seg, query, target, 1, -1);
     }
 
     /**
      * do global alignment on subsequences that have been extracted
      * by the HSP segments
      */
-    static Alignment align (String query, int qi, int qj,
-                            String refseq, int si, int sj,
+    static Alignment align (SEG seg, String query, String target, 
                             int match, int gap) {
-        String q = query.substring(qi, qj);
-        String s = refseq.substring(si, sj);
+        String q = query.substring(seg.qi, seg.qj);
+        String s = target.substring(seg.ti, seg.tj);
 
         /*
         System.err.println("** aligning subsequences...");
@@ -589,12 +654,14 @@ public class SequenceIndexer {
         System.err.println(qq);
         System.err.println(qs);
         */
-        
-        return new Alignment (qi, qj, si, sj, qa.toString(), qs.toString(),
-                              qa+String.format("%1$4d - %2$d", qi,qj)+"\n"
-                              +qq+"\n"
-                              +qs+String.format("%1$4d - %2$d", si,sj),
-                              M[q.length()][s.length()]);
+
+        int score = M[q.length()][s.length()];
+        return new Alignment (seg, qa.toString(), qs.toString(),
+                              qa+String.format("%1$5d - %2$d", seg.qi, seg.qj)
+                              +"\n"+qq+"\n"
+                              +qs+String.format("%1$5d - %2$d", seg.ti,seg.tj),
+                              score, (double)score/Math.max(q.length(),
+                                                            s.length()));
     }
 
     static <T> T getOrElse (String key, Callable<T> generator)
@@ -615,7 +682,7 @@ public class SequenceIndexer {
         while (results.hasMoreElements()) {
             Result res = results.nextElement();
             System.err.println("+++++ "+res.query);
-            System.err.println("----- "+res.refseq);
+            System.err.println("----- "+res.target);
             System.err.println();
             for (Alignment aln : res.alignments) {
                 System.err.println(aln);
@@ -646,13 +713,14 @@ public class SequenceIndexer {
 "HHGNSSHHHHHHHHHHHHHGQQALGNRTRPRVYNSPTNSSSTQDSMEVGHSHHSMTSLSS"+
 "STTSSSTSSSSTGNQGNQAYQNRPVAANTLDFGQNGAMDVNLTVYSNPRQETGIAGHPTY"+
 "QFSANTGPAHYMTEGHLTMRQGADREESPMTGVCVQQSPVASS");
-            
-            ResultEnumeration results = seqidx.search("abcdelghilmn");
+
+            ResultEnumeration results;      
+            results = seqidx.search("abcdelghilmn");
             dump (results);
             
             results = seqidx.search("testosterone undecanoate");
             dump (results);
-            
+
             results = seqidx.search(
 "MRHSKRTHCPDWDSRESWGHESYRGSHKRKRRSHSSTQENRHCKPHHQFKESDCHYLEAR"+
 "SLNERDYRDRRYVDEYRNDYCEGYVPRHYHRDIESGYRIHCSKSSVRSRRSSPKRKRNRH"+
@@ -663,6 +731,9 @@ public class SequenceIndexer {
 "WSIGCILIEYYLGFTVFQTHDSKEHLAMMERILGPIPQHMIQKTRKRKYFHHNQLDWDEH"+
 "SSAGRYVRRRCKPLKEFMLCHDEEHEKLFDLVRRMLEYDPTQRITLDEALQHPFFDLLKK"+
 "K");
+            dump (results);
+            
+            results = seqidx.search("qmagphshqysdrrqvqpnisdqq");
             dump (results);
         }
         finally {
