@@ -460,6 +460,7 @@ public class Substance extends Ginas {
 				r.uuid+""
 		));
 		this.references.add(r);
+		this.notes.add(n);
 		return n;
 	}
 	public Note addNote(String note) {
