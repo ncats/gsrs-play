@@ -60,7 +60,7 @@ public class GinasUtils {
         JsonNode subclass = tree.get("substanceClass");
         ObjectMapper mapper = new ObjectMapper();
 
-        Logger.debug("####### trying :" + tree.toString());
+        //Logger.debug("####### trying :" + tree.toString());
         mapper.addHandler(new GinasV1ProblemHandler ());
         Substance sub=null;
         if (subclass != null && !subclass.isNull()) {
@@ -332,7 +332,7 @@ public class GinasUtils {
             return sub;
         }
         public static List<GinasProcessingMessage> prepareSubstance(GinasProcessingStrategy prc, Substance sub) throws Exception{
-        	List<GinasProcessingMessage> valid = Validation.validateAndPrepare(sub, prc);
+                List<GinasProcessingMessage> valid = Validation.validateAndPrepare(sub, prc);
             GinasProcessingStrategy.failIfNecessary(valid);
             return valid;
         }

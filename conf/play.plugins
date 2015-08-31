@@ -15,4 +15,4 @@
 3001:ix.core.plugins.SequenceIndexerPlugin
 3005:ix.core.plugins.StructureProcessorPlugin
 3010:ix.core.plugins.GinasRecordProcessorPlugin
-4000:ix.core.plugins.SchedulerPlugin
+#4000:ix.core.plugins.SchedulerPlugin
