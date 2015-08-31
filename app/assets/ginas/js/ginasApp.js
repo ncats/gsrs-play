@@ -430,11 +430,12 @@
 
         $scope.validateSubstance = function() {
             var sub = angular.copy($scope.substance);
-            console.log(angular.copy(sub));
+           // console.log(angular.copy(sub));
             sub = $scope.fromFormSubstance(sub);
-            console.log(sub);
+         //   console.log(sub);
             $http.post('app/register/validate', sub).success(function(response) {
-                console.log(response);                
+                $scope.errorsArray = response;
+                console.log(  $scope.errorsArray);
             });
         };
 
@@ -742,6 +743,16 @@
                 structureid: '='
             },
             template: '<button type="button" class="btn btn-primary" structureid = structureid  export><i class="fa fa-external-link chem-button"></i></button>'
+        };
+    });
+
+    ginasApp.directive('errorWindow', function() {
+        return {
+            restrict: 'E',
+            scope: {
+                error: '='
+            },
+            templateUrl: "app/assets/ginas/templates/errorwindow.html"
         };
     });
 
