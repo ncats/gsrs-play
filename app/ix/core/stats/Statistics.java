@@ -42,7 +42,7 @@ public class Statistics implements Serializable{
 		 
 		
 		public int totalFailedAndPersisted() {
-			return recordsExtractedFailed+recordsProcessedFailed+recordsPersistedFailed+recordsProcessedSuccess;
+			return recordsExtractedFailed+recordsProcessedFailed+recordsPersistedFailed+recordsPersistedSuccess;
 		}
 		
 		public void markExtractionDone(){

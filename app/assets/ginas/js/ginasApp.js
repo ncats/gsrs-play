@@ -993,6 +993,7 @@
         };
         $scope.refresh = function(id, pollin) {
             $scope.id = id;
+            $scope.monitor=pollin;
             var responsePromise = $http.get("/ginas/app/api/v1/jobs/" + id + "/");
             responsePromise.success(function(data, status, headers, config) {
                 //$scope.myData.fromServer = data.title;
@@ -1006,7 +1007,7 @@
                     if ($scope.stopnext) {
                         $scope.mclass = "";
                         $scope.monitor = false;
-                        $scope.mess = "Process complete.";
+                        $scope.mess = "Process : " + data.status;
                     } else {
                         $scope.stopnext = true;
                     }
@@ -1022,15 +1023,19 @@
                 $scope.allPersisted = $scope.max;
                 $scope.allProcessed = $scope.max;
 
+                if ($scope.monitor) {
+                      $scope.monitor = true;
+                      $scope.mess = "Polling ... " + data.status;
+                      $scope.refresh(id,$scope.monitor);
+                }
             });
             responsePromise.error(function(data, status, headers, config) {
-                //alert("AJAX failed!");
+                      $scope.monitor = false;
+                      $scope.mess = "Polling error!";
+                      $scope.monitor = false;
+//                      refresh(id,pollin);
             });
-            if (pollin) {
-                $scope.monitor = true;
-                $scope.mess = "Polling ...";
-                poll();
-            }
+           
         };
         $scope.stopMonitor = function() {
             $scope.monitor = false;
