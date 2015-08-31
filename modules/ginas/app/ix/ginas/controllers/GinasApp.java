@@ -457,14 +457,14 @@ public class GinasApp extends App {
         long starttime = System.currentTimeMillis();
                 
                 
-        //              ObjectMapper om = new ObjectMapper();
-        //              om.valueToTree(substances);
-        //              int k=0;
-        //              for(Substance s:substances){
-        //                      for(Name n:s.getAllNames()){
-        //                              k+=n.name.hashCode();
-        //                      }
-        //              }
+                      ObjectMapper om = new ObjectMapper();
+                      om.valueToTree(substances);
+                      int k=0;
+                      for(Substance s:substances){
+                              for(Name n:s.getAllNames()){
+                                      k+=n.name.hashCode();
+                              }
+                      }
                 
         String tt=(-(starttime-System.currentTimeMillis())/1000.)  + "s";
                 
@@ -741,18 +741,18 @@ public class GinasApp extends App {
     }
 
     /**
-     * return the canonical/default chemical id
+     * return the canonical/default substance id
      * 
      * This needs to be re-evaluated. It is possible for there to be duplicated
      * names, and there is no check here for this.
      * 
-     * While it's not as pretty, I'm defaulting to using the uuid or approvalID.
+     * While it's not as pretty, I'm defaulting to using the uuid
      * 
      * 
      */
     public static String getId(Substance substance) {
-        if (substance.approvalID != null)
-            return substance.approvalID;
+//        if (substance.approvalID != null)
+//            return substance.approvalID;
 
         /**
          * proper permission should be checked here
