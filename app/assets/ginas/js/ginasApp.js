@@ -762,14 +762,30 @@
                 var modal = angular.element(document.getElementById('export-mol'));
                 $http({
                     method: 'GET',
-                    url: 'app/structure/' + scope.structureid + '.mol',
+                    url: 'app/export/' + scope.structureid + '.sdf',
                     headers: {
                         'Content-Type': 'text/plain'
                     }
-                }).success(function(data) {
-                    modal.find('#inputExport').text(data);
-                });
-                modal.modal('show');
+                }).then(function(response) {
+                var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
+                    console.log(warnHead);
+                    var warnings = JSON.parse(warnHead);
+                
+                    modal.find('#inputExport').text(response.data);
+                   if(warnings.length>0){
+                  var html="<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">\n" + 
+                    "                        <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"> <span aria-hidden=\"true\">&times;</span>\n" + 
+                    "                        </button>\n" + 
+                    "                        <span><h4 class=\"warntype\"></h4><span class=\"message\">" +warnings[0].message + "</span></span>";
+                          modal.find('.warn').html(html);
+                  }else{
+ modal.find('.warn').html("");
+            }
+
+                    modal.modal('show');
+                }, function(response){
+                    alert("ERROR exporting data");
+            });
 
             });
         };

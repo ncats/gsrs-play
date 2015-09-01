@@ -1,22 +1,29 @@
 package ix.ginas.utils;
 
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalFactory;
+import gov.nih.ncgc.jchemical.JchemicalReader;
 import ix.core.chem.Chem;
 import ix.core.models.ProcessingRecord;
+import ix.core.models.Structure;
 import ix.core.models.XRef;
 import ix.core.plugins.GinasRecordProcessorPlugin.PayloadExtractedRecord;
 import ix.core.plugins.GinasRecordProcessorPlugin.TransformedRecord;
+import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
 import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Moiety;
+import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.PolymerSubstance;
+import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.Subunit;
 
 import java.io.BufferedReader;
@@ -27,12 +34,11 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import ix.seqaln.SequenceIndexer;
 
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
-import ix.seqaln.SequenceIndexer;
-import ix.core.plugins.SequenceIndexerPlugin;
 
 import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
@@ -41,9 +47,107 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasUtils {
+	public static ChemicalFactory DEFAULT_FACTORY = new JchemicalReader();
+	public static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
+	
 	public static final SequenceIndexer _seqIndexer = Play.application()
 			.plugin(SequenceIndexerPlugin.class).getIndexer();
 
+	public static Chemical substanceToChemical(Substance s, List<GinasProcessingMessage> messages){
+		Chemical c;
+		if(s instanceof ChemicalSubstance){
+			c=structureToChemical(((ChemicalSubstance) s).structure, messages);
+		}else{
+			c=DEFAULT_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
+			messages.add(GinasProcessingMessage.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
+		}
+		c.setProperty("APPROVAL_ID", s.approvalID);
+		c.setProperty("NAME", s.getName());
+		c.setName(s.getName());
+		StringBuilder sb = new StringBuilder();
+		
+		for(Name n:s.getOfficialNames()){
+			String name=n.name;
+			sb.append(name + "\n");
+			
+			for(String loc:n.getLocators(s)){
+				sb.append(name + " [" + loc + "]\n");
+			}
+			
+		}
+		if(sb.length()>0){
+			c.setProperty("OFFICIAL_NAMES", sb.toString());
+		}
+		//clear builder
+		sb.setLength(0);
+		for(Name n:s.getNonOfficialNames()){
+			String name=n.name;
+			sb.append(name + "\n");
+			
+			for(String loc:n.getLocators(s)){
+				sb.append(name + " [" + loc + "]\n");
+			}
+		}
+		if(sb.length()>0){
+			c.setProperty("OTHER_NAMES", sb.toString());
+		}
+		//clear builder
+		sb.setLength(0);
+		
+		for(Code cd:s.codes){
+			String codesset = c.getProperty(cd.codeSystem);
+			if(codesset == null || codesset.trim().equals("")){
+				codesset="";
+			}else{
+				codesset = codesset + "\n";
+			}
+			codesset+=cd.code;
+			if(!cd.type.equals("PRIMARY")){
+				codesset+=" [" + cd.type + "]";
+			}
+			c.setProperty(cd.codeSystem, codesset);
+		}
+		for(GinasProcessingMessage gpm : messages){
+			String codesset = c.getProperty("EXPORT-WARNINGS");
+			if(codesset == null || codesset.trim().equals("")){
+				codesset="";
+			}else{
+				codesset = codesset + "\n";
+			}
+			codesset+=gpm.message;
+			c.setProperty("EXPORT-WARNINGS", codesset);
+		}
+		return c;
+	}
+	
+	public static Chemical structureToChemical(Structure s, List<GinasProcessingMessage> messages){
+		Chemical c;
+		String mfile =s.molfile;
+		c = DEFAULT_FACTORY.createChemical(mfile, Chemical.FORMAT_SDF);
+		if(s.stereoChemistry!=null)
+			c.setProperty("STEREOCHEMISTRY", s.stereoChemistry.toString());
+		if(s.opticalActivity!=null)
+			c.setProperty("OPTICAL_ACTIVITY", s.opticalActivity.toString());
+		if(s.stereoComments!=null)
+			c.setProperty("STEREOCHEMISTRY_COMMENTS", s.stereoComments);
+		switch(s.stereoChemistry){
+		case ABSOLUTE:
+		case ACHIRAL:
+			break;
+		case EPIMERIC:
+		case MIXED:
+		case RACEMIC:			
+		case UNKNOWN:
+			messages.add(GinasProcessingMessage.WARNING_MESSAGE("Structure format may not encode full stereochemical information"));
+			break;
+		default:
+			break;		
+		}
+		c.setProperty("SMILES", s.smiles);
+		return c;
+		
+	}
+	
 	public static Substance makeSubstance(InputStream bis) throws Exception {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode tree = mapper.readTree(bis);
@@ -369,4 +473,6 @@ public class GinasUtils {
 
 		public abstract Substance transformSubstance(K rec) throws Throwable;
 	}
+	
+	
 }

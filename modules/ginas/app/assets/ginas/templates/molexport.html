@@ -6,14 +6,20 @@
                 <h4 class="modal-title" id="myModalLabelExport">Export</h4>
             </div>
             <div class="modal-body">
-                <div class = "row">
- 					<textarea class="col-md-12" id = "inputExport">
+                <div class = "row">   
+                <div class="col-md-12 warn">
+                    <div class="alert alert-danger alert-dismissible" role="alert">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
+                        </button>
+                        <span><h4 class="warntype"></h4><span class="message"></span></span>
+                    </div>
+                </div>       
+                    <textarea class="col-md-12" id = "inputExport">
 
  					</textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button"  class="btn btn-primary" data-dismiss="modal">Save</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
