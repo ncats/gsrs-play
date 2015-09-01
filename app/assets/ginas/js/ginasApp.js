@@ -435,7 +435,7 @@
          //   console.log(sub);
             $http.post('app/register/validate', sub).success(function(response) {
                 $scope.errorsArray = response;
-                console.log(  $scope.errorsArray);
+                console.log(  $scope);
             });
         };
 

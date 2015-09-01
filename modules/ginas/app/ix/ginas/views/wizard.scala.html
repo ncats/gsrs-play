@@ -77,19 +77,20 @@
     <script src="/ginas/app/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
     <div ng-cloak>
         @wizardfields(kind)
-        <div class = "row">
+        <div class = "row info">
             <div class="col-md-4">
-                <button class="btn btn-primary" ng-click="showJSON=true" >Show JSON</button>
+                <button class="btn btn-primary" ng-hide="showJSON" ng-click="showJSON=true" >Show JSON</button>
+                <button class="btn btn-primary" ng-show="showJSON" ng-click="showJSON=false" >Hide JSON</button>
                 <button class="btn btn-primary" ng-click="validateSubstance(substance)">Validate</button></div>
             <div class="col-md-1 pull-right">
                 <button class="btn btn-primary" ng-click="submitSubstance(substance)">Submit</button>
             </div>
         </div>
-        <div class = "row" ng-repeat="err in errorArray">
+        <div class = "row" ng-repeat="err in errorsArray">
             @*
             // <error-window error = error></error-window>
             *@
-            <div class="col-md-9">
+            <div class="col-md-12">
                 <div class="alert alert-danger alert-dismissible" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
                     </button>
@@ -99,14 +100,14 @@
 
         </div>
     </div>
-    <div class ="row" ng-show="showJSON">
+    <div class ="row info" ng-show="showJSON">
         <pre>{{substance | json}}</pre>
     </div>
-    <div class="row"><div class = "col-md-12">
+    <div class="row info"><div class = "col-md-12">
         <textarea class="form-control" rows="10" ng-model="paste"></textarea>
     </div>
     </div>
-    <div class ="row">
+    <div class ="row info">
         <button ng-click="submitpaster(paste)">paste</button>
 
         <script>
