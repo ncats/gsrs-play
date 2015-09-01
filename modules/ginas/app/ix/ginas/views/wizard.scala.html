@@ -78,49 +78,51 @@
     <div ng-cloak>
         @wizardfields(kind)
         <div class = "row">
-        <button ng-click="submitSubstance(substance)">Submit</button>
-        <button ng-click="validateSubstance(substance)">Validate</button>
+            <div class="col-md-4">
+                <button class="btn btn-primary" ng-click="showJSON=true" >Show JSON</button>
+                <button class="btn btn-primary" ng-click="validateSubstance(substance)">Validate</button></div>
+            <div class="col-md-1 pull-right">
+                <button class="btn btn-primary" ng-click="submitSubstance(substance)">Submit</button>
             </div>
+        </div>
         <div class = "row" ng-repeat="err in errorArray">
-@*
-          //  <error-window error = error></error-window>
-*@
-              <div class="col-md-9">
-                  <div class="alert alert-danger alert-dismissible" role="alert">
-                      <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
-                      </button>
-                      <span><h4>{{err.messageType}}</h4>&nbsp;{{err.message}} </span>
-
-
-
-
-                  </div>
-              </div>
-
-        </div>
-        <div class="row"><div class = "col-md-12">
-            <textarea class="form-control" rows="10" ng-model="paste"></textarea>
+            @*
+            // <error-window error = error></error-window>
+            *@
+            <div class="col-md-9">
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
+                    </button>
+                    <span><h4>{{err.messageType}}</h4>&nbsp;{{err.message}} </span>
+                </div>
             </div>
+
         </div>
-
-        <button ng-click="submitpaster(paste)">paste</button>
-
+    </div>
+    <div class ="row" ng-show="showJSON">
         <pre>{{substance | json}}</pre>
     </div>
-    <script>
-        @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
+    <div class="row"><div class = "col-md-12">
+        <textarea class="form-control" rows="10" ng-model="paste"></textarea>
+    </div>
+    </div>
+    <div class ="row">
+        <button ng-click="submitpaster(paste)">paste</button>
+
+        <script>
+            @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
         var strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
         var envurl='@ix.ncats.controllers.routes.App.smiles';
     </script>
 
-    <script type="text/ng-template" id="tag-template-script">
-    <div class="tag-template" >
-    <div tooltip="{{data.citation}}">
-    <span>{{$getDisplayText()}}</span>
-    <a class="remove-button" ng-click="$removeTag()">&#10006;</a>
-    </div>
-    </div>
-    </script>
+        <script type="text/ng-template" id="tag-template-script">
+        <div class="tag-template" >
+        <div tooltip="{{data.citation}}">
+        <span>{{$getDisplayText()}}</span>
+        <a class="remove-button" ng-click="$removeTag()">&#10006;</a>
+        </div>
+        </div>
+        </script>
 
     @fileimport() @addnamelist()
 }

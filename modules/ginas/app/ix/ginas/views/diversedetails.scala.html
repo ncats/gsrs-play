@@ -6,19 +6,6 @@
 @substancedetails(sub) {
     <li role="presentation" class="active"><a ng-click="scrollTo('definition')">Definition</a></li>
 } {
-    <div class = "row">
-        <div class = "col-md-9">
-            <h4>Structurally Diverse Substance</h4>
-        </div>
-        <div class = "col-md-3">
-        @if(sub.isSubstanceVariant()) {
-            <h3 class= "pull-right subconcept"> @sub.getApprovalIDDisplay()</h3>
-        } else {
-            <h3 class= "pull-right"> @sub.getApprovalIDDisplay()</h3>
-        }
-
-        </div>
-    </div>
     <div class="row info" id="definition">
     	<div class="col-md-5">
     	<br>

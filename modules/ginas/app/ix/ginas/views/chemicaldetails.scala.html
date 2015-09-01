@@ -67,19 +67,6 @@
     @if(sub.moieties.length>0){
         <li role="presentation"><a href="#moieties" prevent-default=""  ng-click="scrollTo('moieties')" >Moieties <span class="badge">@sub.moieties.length</span></a></li> }
 } {
-    <div class = "row">
-        <div class = "col-md-9">
-            <h4>Chemical Substance</h4>
-        </div>
-        <div class = "col-md-3">
-        @if(sub.isSubstanceVariant()) {
-            <h3 class= "pull-right subconcept"> @sub.getApprovalIDDisplay()</h3>
-        } else {
-            <h3 class= "pull-right"> @sub.getApprovalIDDisplay()</h3>
-        }
-
-        </div>
-    </div>
     <div class="row info" id="structureDetails">
         <h3>
             <span class="label label-primary label-offset" id = "struc-label">Structure</span>
