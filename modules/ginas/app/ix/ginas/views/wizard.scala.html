@@ -104,9 +104,7 @@
         <pre>{{substance | json}}</pre>
     </div>
     <div class="row info"><div class = "col-md-12">
-        <textarea class="form-control" rows="10" ng-model="paste">
-        @json
-        </textarea>
+        <textarea class="form-control" rows="10" ng-model="paste">@json</textarea>
     </div>
     </div>
     <div class ="row info">
@@ -116,6 +114,7 @@
             @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
         var strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
         var envurl='@ix.ncats.controllers.routes.App.smiles';
+        var loadjson = @Html(json);
     </script>
 
         <script type="text/ng-template" id="tag-template-script">

@@ -95,7 +95,7 @@
             }
 
 
-
+            console.log($scope);
             apiSub = $scope.expandCV(apiSub, "");
             apiSub = $scope.splitNames(apiSub);
 
@@ -137,19 +137,7 @@
         var ginasCtrl = this;
         //localStorageService.set('substance', Substance);
 
-        var edit = localStorageService.get('editID');
-        if (edit) {
-            localStorageService.remove('structureid');
-            substanceIDRetriever.getSubstances(edit).then(function(data) {
-                var sub = $scope.toFormSubstance(data);
-                
-                
-                $scope.substance = sub;
-                localStorageService.remove('editID');
-            });
-        } else {
-            $scope.substance = Substance;
-        }
+       
 
         /*        function setdata($scope){
          console.log("getting substance");
@@ -459,7 +447,22 @@
             localStorageService.set('editID', editid);
         };
 
-
+        if(window.loadjson !== null){
+                var sub = $scope.toFormSubstance(window.loadjson);
+                $scope.substance = sub;
+        }else{
+                var edit = localStorageService.get('editID');
+                if (edit) {
+                    localStorageService.remove('structureid');
+                    substanceIDRetriever.getSubstances(edit).then(function(data) {
+                        var sub = $scope.toFormSubstance(data);
+                        $scope.substance = sub;
+                        localStorageService.remove('editID');
+                    });
+                } else {
+                    $scope.substance = Substance;
+                }
+        }
     });
 
     var uuid = function uuid() {
@@ -1295,5 +1298,10 @@ function getDisplayFromCV(domain, value) {
         }
     }
     return value;
+}
+
+function vocabsetup(cv){
+        window.CV_REQUEST=cv;
+        console.log("finished");
 }
 
