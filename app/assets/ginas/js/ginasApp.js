@@ -447,7 +447,8 @@
             localStorageService.set('editID', editid);
         };
 
-        if(JSON.stringify(window.loadjson) !== "{}"){
+        if(typeof window.loadjson !== "undefined" && 
+                JSON.stringify(window.loadjson) !== "{}"){
                 var sub = $scope.toFormSubstance(window.loadjson);
                 $scope.substance = sub;
         }else{
