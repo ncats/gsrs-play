@@ -692,8 +692,9 @@ h2.display-name {
     cursor:  pointer;
 }
 .fieldfacet{
-	background: #EBF6E7 none repeat scroll 0% 0%;
-	padding: 10px;
+        background: #EBF6E7 none repeat scroll 0% 0%;
+        padding-left: 10px;
+        margin-left: 0px;
 }
 .spacer{
 	clear: both;
