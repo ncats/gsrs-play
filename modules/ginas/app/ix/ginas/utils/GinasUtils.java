@@ -461,7 +461,8 @@ public class GinasUtils {
 				GinasProcessingStrategy prc, Substance sub) throws Exception {
 			List<GinasProcessingMessage> valid = Validation.validateAndPrepare(
 					sub, prc);
-			prc.failIfNecessary(sub, valid);
+			prc.handleMessages(sub, valid);
+			prc.addWarnings(sub, valid);
 			return valid;
 		}
 

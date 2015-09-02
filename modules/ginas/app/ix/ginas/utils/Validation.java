@@ -146,14 +146,28 @@ public class Validation {
             }
             
             if(!newhash.equals(oldhash)){
-            	GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
+            	GinasProcessingMessage mes=GinasProcessingMessage.INFO_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
             	gpm.add(mes);
             	strat.processMessage(mes);
             	switch(mes.actionType){
 				case APPLY_CHANGE:
-					String omol = cs.structure.molfile;
+					Structure struc2=cs.structure;
+					//String omol = cs.structure.molfile;
 					cs.structure=struc;
-					cs.structure.molfile=omol;
+					cs.structure.molfile=struc2.molfile;
+					if(struc2.stereoChemistry!=null){
+						cs.structure.stereoChemistry=struc2.stereoChemistry;
+					}
+					if(struc2.opticalActivity!=null){
+						cs.structure.opticalActivity=struc2.opticalActivity;
+					}
+					if(struc2.stereoComments!=null){
+						cs.structure.stereoComments=struc2.stereoComments;
+					}
+					if(struc2.atropisomerism!=null){
+						cs.structure.atropisomerism=struc2.atropisomerism;
+					}
+					
 					mes.appliedChange=true;
 					break;
 				case FAIL:

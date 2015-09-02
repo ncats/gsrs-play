@@ -31,6 +31,7 @@ public class SubstanceFactory extends EntityFactory {
             new Model.Finder(UUID.class, ProteinSubstance.class);
     
     public static Substance getSubstance (String id) {
+    	if(id==null)return null;
         return getSubstance (UUID.fromString(id));
     }
 
