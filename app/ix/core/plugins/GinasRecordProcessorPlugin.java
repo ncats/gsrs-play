@@ -321,10 +321,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
         Statistics stat = getStatisticsForJob(job);
         if (stat != null) {
             if (stat._isDone()) {
+            	Logger.debug("I think it's done:" + stat.toString());
                 ObjectMapper om = new ObjectMapper();
                 job.stop = System.currentTimeMillis();
                 job.status = ProcessingJob.Status.COMPLETE;
                 job.statistics = om.valueToTree(stat).toString();
+               // job.
                 PersistModel pm = PersistModel.Update(job);
                 pm.persists();
             }
@@ -552,18 +554,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     getInstance().decrementExtractionQueue();
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
                 }finally{
-                    Statistics stat = getStatisticsForJob(k);
-                    if(stat!=null){
-                        if(stat._isDone()){
-                            ObjectMapper om = new ObjectMapper();
-                            rec.job.stop=System.currentTimeMillis();
-                            rec.job.status=ProcessingJob.Status.COMPLETE;
-                            rec.job.statistics=om.valueToTree(stat).toString();
-                            PersistModel.Update(rec.job).persists();
-                        }
-                    }else{
-                        Logger.error("Can't find statistics on job");
-                    }
+                	updateJobIfNecessary(pr.job);
                 }
                                 
             } else if (mesg instanceof Terminated) {

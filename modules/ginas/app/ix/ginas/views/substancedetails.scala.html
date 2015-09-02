@@ -23,7 +23,7 @@
                                 }
                             }
                             @if(sub.codes.size() > 0) {
-                                <li role="presentation"><a href="codes" prevent-default="" ng-click="scrollTo('codes')">
+                                <li role="presentation"><a href="#codes" prevent-default="" ng-click="scrollTo('codes')">
                                     Codes <span class="badge">@sub.codes.size()</span></a></li>
                             }
                             @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
@@ -31,11 +31,11 @@
                                     Relationships <span class="badge">@sub.relationships.size()</span></a></li>
                             }
                             @if(sub.properties.size() > 0) {
-                                <li role="presentation"><a href="properties" prevent-default="" ng-click="scrollTo('properties')">
+                                <li role="presentation"><a href="#properties" prevent-default="" ng-click="scrollTo('properties')">
                                     Properties <span class="badge">@sub.properties.size()</span></a></li>
                             }
                             @if(sub.notes.size() > 0) {
-                                <li role="presentation"><a href="notes" prevent-default="" ng-click="scrollTo('notes')">
+                                <li role="presentation"><a href="#notes" prevent-default="" ng-click="scrollTo('notes')">
                                     Notes <span class="badge">@sub.notes.size()</span></a></li>
                             }
                             <li role="presentation"><a href="#refs" prevent-default="" ng-click="scrollTo('refs')">
@@ -48,19 +48,20 @@
             </div>
         </nav>
     } {
-@*        <div class = "row">
-            <div class = "col-md-9">
-                <h1>@sub.getName()</h1>
-            </div>
-            <div class = "col-md-3">
-            @if(sub.isSubstanceVariant()) {
-                <h2 class= "pull-right subconcept"> @sub.getApprovalIDDisplay()</h2>
-            } else {
-                <h2 class= "pull-right"> @sub.getApprovalIDDisplay()</h2>
-            }
+    <div class = "row">
+        <div class = "col-md-9">
+            <h4 class="text-capitalize">@sub.substanceClass</h4>
+            <code>@sub.status : version: @sub.version</code>
+        </div>
+        <div class = "col-md-3">
+        @if(sub.isSubstanceVariant()) {
+            <h3 class= "pull-right subconcept"> @sub.getApprovalIDDisplay()</h3>
+        } else {
+            <h3 class= "pull-right"> @sub.getApprovalIDDisplay()</h3>
+        }
 
-            </div>
-        </div>*@
+        </div>
+    </div>
         @content
 
         @if(sub.hasModifications()) {

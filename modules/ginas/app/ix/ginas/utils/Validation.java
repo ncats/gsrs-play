@@ -14,6 +14,10 @@ public class Validation {
 	
 	public static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
 		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+		if(s==null){
+			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance cannot be parsed"));
+			return gpm;
+		}
 		if(s.names.size()<=0){
 			GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Substances must have names");
 			gpm.add(mes);
@@ -156,27 +160,9 @@ public class Validation {
             				dupes++;
             		}
             		if(dupes>0){
-						GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has " + dupes +" possible duplicate(s)").appliableChange(true);
+						GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has " + dupes +" possible duplicate(s)");
 		            	gpm.add(mes);
-		            	
-		            	strat.processMessage(mes);
-		            	switch(mes.actionType){
-						case APPLY_CHANGE:
-							cs.status="FAILED";
-							cs.addPropertyNote(mes.message, "FAIL_REASON");
-							cs.addRestrictGroup("admin");
-							mes.appliedChange=true;
-							break;
-						case DO_NOTHING:
-							break;
-						case FAIL:
-							break;
-						case IGNORE:
-							break;
-						default:
-							break;
-						
-		            	}
+		            	strat.processMessage(mes);		            	
             		}
 				}
 			} catch (Exception e) {

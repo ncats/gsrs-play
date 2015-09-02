@@ -77,31 +77,53 @@
     <script src="/ginas/app/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
     <div ng-cloak>
         @wizardfields(kind)
-        <button ng-click="submitSubstance(substance)">Submit</button>
-        <button ng-click="validateSubstance(substance)">Validate</button>
-        <div class="row"><div class = "col-md-12">
-            <textarea class="form-control" rows="10" ng-model="paste"></textarea>
+        <div class = "row info">
+            <div class="col-md-4">
+                <button class="btn btn-primary" ng-hide="showJSON" ng-click="showJSON=true" >Show JSON</button>
+                <button class="btn btn-primary" ng-show="showJSON" ng-click="showJSON=false" >Hide JSON</button>
+                <button class="btn btn-primary" ng-click="validateSubstance(substance)">Validate</button></div>
+            <div class="col-md-1 pull-right">
+                <button class="btn btn-primary" ng-click="submitSubstance(substance)">Submit</button>
             </div>
         </div>
+        <div class = "row" ng-repeat="err in errorsArray">
+            @*
+            // <error-window error = error></error-window>
+            *@
+            <div class="col-md-12">
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
+                    </button>
+                    <span><h4>{{err.messageType}}</h4>&nbsp;{{err.message}} </span>
+                </div>
+            </div>
 
-        <button ng-click="submitpaster(paste)">paste</button>
-
+        </div>
+    </div>
+    <div class ="row info" ng-show="showJSON">
         <pre>{{substance | json}}</pre>
     </div>
-    <script>
-        @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
+    <div class="row info"><div class = "col-md-12">
+        <textarea class="form-control" rows="10" ng-model="paste"></textarea>
+    </div>
+    </div>
+    <div class ="row info">
+        <button ng-click="submitpaster(paste)">paste</button>
+
+        <script>
+            @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
         var strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
         var envurl='@ix.ncats.controllers.routes.App.smiles';
     </script>
 
-    <script type="text/ng-template" id="tag-template-script">
-    <div class="tag-template" >
-    <div tooltip="{{data.citation}}">
-    <span>{{$getDisplayText()}}</span>
-    <a class="remove-button" ng-click="$removeTag()">&#10006;</a>
-    </div>
-    </div>
-    </script>
+        <script type="text/ng-template" id="tag-template-script">
+        <div class="tag-template" >
+        <div tooltip="{{data.citation}}">
+        <span>{{$getDisplayText()}}</span>
+        <a class="remove-button" ng-click="$removeTag()">&#10006;</a>
+        </div>
+        </div>
+        </script>
 
     @fileimport() @addnamelist()
 }

@@ -1,11 +1,13 @@
-package ix.ginas.models.utils;
+package ix.ginas.utils;
 
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
 import ix.ginas.models.Ginas;
+import ix.ginas.utils.GinasProcessingMessage;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import play.Logger;
@@ -18,7 +20,14 @@ import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 
 public class GinasV1ProblemHandler
         extends  DeserializationProblemHandler {
-        public GinasV1ProblemHandler () {
+        
+		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
+		
+		public GinasV1ProblemHandler () {
+        }
+        public GinasV1ProblemHandler (List<GinasProcessingMessage> messages ) {
+        	if(messages!=null)
+        		this.messages=messages;
         }
         
         public boolean handleUnknownProperty
@@ -55,6 +64,10 @@ public class GinasV1ProblemHandler
                 }
 
                 if (!parsed) {
+                	messages.add(GinasProcessingMessage.WARNING_MESSAGE("Unknown property \""
+                            +property+"\" while parsing "
+                            +bean+"; skipping it.."));
+                	
                     Logger.warn("Unknown property \""
                                 +property+"\" while parsing "
                                 +bean+"; skipping it..");
@@ -63,6 +76,7 @@ public class GinasV1ProblemHandler
                 }
             }
             catch (Exception ex) {
+            	messages.add(GinasProcessingMessage.ERROR_MESSAGE("Error parsing substance JSON:" + ex.getMessage()));
                 ex.printStackTrace();
             }
             return true;
@@ -79,5 +93,5 @@ public class GinasV1ProblemHandler
                 }
             }
             return nrefs;
-        }
+        }        
     }

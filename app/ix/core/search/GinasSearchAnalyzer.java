@@ -56,12 +56,13 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			translationCache.put(q, POISON);
 			return;
 		}
+
+		if(qterms == null || qterms.size()<=0)return ;
 		
 		try {
-			Logger.debug("About to analyze");
 			updateFieldQueryFacets(o, qterms, ffacet);
 		} catch (Exception e) {
-
+			Logger.error(e.getMessage());
 		}
 	}
 	
@@ -177,42 +178,42 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			}
 		}
 		
-//		{
-//			int i=0;
-//			for(Reference n: o.references){
-//				m2.put( "references[" + i + "].citation", n.citation);
-//				m2.put( "references[" + i + "].docType", n.docType);
-//				i++;			
-//			}
-//		}
+		{
+			int i=0;
+			for(Reference n: o.references){
+				m2.put( "references[" + i + "].citation", n.citation);
+				m2.put( "references[" + i + "].docType", n.docType);
+				i++;			
+			}
+		}
+
+		{
+			int i=0;
+			for(Relationship n: o.relationships){
+				m2.put( "relationships[" + i + "].qualification", n.qualification);
+				m2.put( "relationships[" + i + "].comments", n.comments);
+				m2.put( "relationships[" + i + "].interactionType", n.interactionType);
+				m2.put( "relationships[" + i + "].relatedSubstance.refPname", n.relatedSubstance.refPname);
+				m2.put( "relationships[" + i + "].relatedSubstance.approvalID", n.relatedSubstance.approvalID);
+				i++;			
+			}
+		}
 		
-//		{
-//			int i=0;
-//			for(Relationship n: o.relationships){
-//				m2.put( "relationships[" + i + "].qualification", n.qualification);
-//				m2.put( "relationships[" + i + "].comments", n.comments);
-//				m2.put( "relationships[" + i + "].interactionType", n.interactionType);
-//				m2.put( "relationships[" + i + "].relatedSubstance.refPname", n.relatedSubstance.refPname);
-//				m2.put( "relationships[" + i + "].relatedSubstance.approvalID", n.relatedSubstance.approvalID);
-//				i++;			
-//			}
-//		}
+		{
+			int i=0;
+			for(Note n: o.notes){
+				m2.put( "notes[" + i + "].note", n.note);
+				i++;			
+			}
+		}
 		
-//		{
-//			int i=0;
-//			for(Note n: o.notes){
-//				m2.put( "notes[" + i + "].note", n.note);
-//				i++;			
-//			}
-//		}
-		
-//		{
-//			int i=0;
-//			for(Keyword n: o.tags){
-//				m2.put( "tags[" + i + "]", n.getValue());
-//				i++;			
-//			}
-//		}
+		{
+			int i=0;
+			for(Keyword n: o.tags){
+				m2.put( "tags[" + i + "]", n.getValue());
+				i++;			
+			}
+		}
 		
 		
 		Set<String> matchedFields = new HashSet<String>();
@@ -222,15 +223,20 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		for (Object key : m2.keySet()) {
 			//Logger.debug("About to simplify:" + key);
 			String realkey = MapObjectUtils.simplifyKeyPath(key + "");
+			if (matchedFields.contains(realkey))continue;
 			
 			if(ignoreField(realkey))continue;
-			if (matchedFields.contains(realkey))continue;
+			
 			for(Term t:realterms){
 				MATCH_TYPE match = getMatchType(m2.get(key),t.text());
-				if(match==MATCH_TYPE.NO_MATCH)continue;
-				//if(match==MATCH_TYPE.CONTAINS)continue;
+				if(match==MATCH_TYPE.NO_MATCH){
+					
+					continue;
+				}
+				if(match==MATCH_TYPE.CONTAINS)continue;
 				
-				matchedFields.add(realkey);
+				
+				//matchedFields.add(realkey);
 				String q = t.text();
 				if(match==MATCH_TYPE.WORD_STARTS_WITH)
 					q= q + "*";
@@ -245,6 +251,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	}
 	
 	public static MATCH_TYPE getMatchType(String tterm, String q) {
+		if(tterm==null) return MATCH_TYPE.NO_MATCH;
 		String term = tterm.toUpperCase();
 		
 		if (term.equals(q))
@@ -252,8 +259,10 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		
 		int i = term.indexOf(q);
 
-		if (i < 0)
+		if (i < 0){
+//			System.out.println("\"" + term + "\" doesn't match \"" + q + "\"");
 			return MATCH_TYPE.NO_MATCH;
+		}
 		
 		if (i == 0) {
 			if (term.charAt(i + 1) == ' ')

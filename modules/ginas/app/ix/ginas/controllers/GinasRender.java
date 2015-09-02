@@ -1,7 +1,7 @@
 package ix.ginas.controllers;
 
-import ix.ginas.models.utils.GinasV1ProblemHandler;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.GinasV1ProblemHandler;
 import play.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;

@@ -40,6 +40,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.UUID;
 import java.util.ArrayList;
@@ -351,12 +352,12 @@ public class GinasLoad extends App {
             JsonNode jn=ex.getNextRecord();
             //GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
             sub = GinasUtils.makeSubstance(jn);
-            GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
-            messages = Validation.validateAndPrepare(sub, GinasProcessingStrategy.ACCEPT_APPLY_ALL());
-                        
-        }catch(Throwable e){
+            messages.addAll(Validation.validateAndPrepare(sub, GinasProcessingStrategy.ACCEPT_APPLY_ALL()));
+        }catch(IllegalStateException e){
         	messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
-        }
+        } catch (UnsupportedEncodingException e) {
+        	messages.add(GinasProcessingMessage.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
+		}
     	ObjectMapper om = new ObjectMapper();
     	
         return ok(om.valueToTree(messages));
