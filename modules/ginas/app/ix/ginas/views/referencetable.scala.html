@@ -24,7 +24,7 @@
          @for(ref <- refs){
          @defining(ReferenceFactory.getReference(ref.term)) { r =>
          <tr>
-           <td>
+           <td class="trungcate">
 	     @if(r.url != null) {
 	     <a href="@r.url">@r.citation</a>
 	     }else {
