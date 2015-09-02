@@ -2,6 +2,7 @@ package ix.ginas.utils;
 
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
+import ix.core.models.Value;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
@@ -104,7 +105,7 @@ public class Validation {
             List<Structure> moieties = new ArrayList<Structure>();
             Structure struc = StructureProcessor.instrument
                 (payload, moieties);
-            cs.structure=struc;
+            
             //struc.count
             for(Structure m: moieties){
             	Moiety m2= new Moiety();
@@ -130,13 +131,29 @@ public class Validation {
 					break;
             	}            	
             }
-            if(!struc.digest.equals(cs.structure.digest)){
-            	GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Given structure digest disagrees with computed").appliableChange(true);
+            String oldhash=null;
+            for (Value val : cs.structure.properties) {
+                if (Structure.H_LyChI_L4.equals(val.label)) {
+                	oldhash=val.getValue()+"";
+                }
+            }
+            
+            String newhash=null;
+            for (Value val : struc.properties) {
+                if (Structure.H_LyChI_L4.equals(val.label)) {
+                	newhash=val.getValue()+"";
+                }
+            }
+            
+            if(!newhash.equals(oldhash)){
+            	GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
             	gpm.add(mes);
             	strat.processMessage(mes);
             	switch(mes.actionType){
 				case APPLY_CHANGE:
+					String omol = cs.structure.molfile;
 					cs.structure=struc;
+					cs.structure.molfile=omol;
 					mes.appliedChange=true;
 					break;
 				case FAIL:

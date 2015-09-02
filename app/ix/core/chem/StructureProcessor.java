@@ -1,30 +1,26 @@
 package ix.core.chem;
 
-import java.util.*;
-import java.net.URL;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+import ix.core.models.Keyword;
+import ix.core.models.Structure;
+import ix.core.models.Text;
+import ix.core.models.Value;
 
+import java.security.MessageDigest;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.security.MessageDigest;
 
+import lychi.LyChIStandardizer;
+import lychi.util.ChemUtil;
+import chemaxon.formats.MolImporter;
 import chemaxon.struc.MolAtom;
 import chemaxon.struc.MolBond;
 import chemaxon.struc.Molecule;
 import chemaxon.util.MolHandler;
-import chemaxon.formats.MolImporter;
-
-import lychi.LyChIStandardizer;
-import lychi.util.ChemUtil;
-
-import ix.core.models.Keyword;
-import ix.core.models.Text;
-import ix.core.models.Value;
-import ix.core.models.XRef;
-import ix.core.models.BeanViews;
-import ix.core.models.Structure;
 
 
 public class StructureProcessor {
@@ -121,7 +117,9 @@ public class StructureProcessor {
     /**
      * This should return a decomposed version of a structure for G-SRS.
      * 
-     * This means that a molfile should come back with
+     * This means that a molfile should come back with moieties
+     * and a structure, with statistics and predicted stereo
+     * 
      * @param struc
      * @param components
      * @param mol

@@ -808,7 +808,7 @@ public class App extends Authentication {
         throws Exception {
         Chemical chem = new Jchemical (mol);
         DisplayParams dp = DisplayParams.DEFAULT();
-        
+        //chem.reduceMultiples();
         if(amap!=null){
                 ChemicalAtom[] atoms = chem.getAtomArray();
                 for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
