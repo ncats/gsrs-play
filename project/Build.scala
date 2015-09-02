@@ -1,7 +1,9 @@
 import sbt._
 import Keys._
 import play._
-import play.PlayImport._
+//import play.PlayImport._
+import play.Play.autoImport._
+import PlayKeys._
 
 object ApplicationBuild extends Build {
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
@@ -11,6 +13,18 @@ object ApplicationBuild extends Build {
     .format(new java.util.Date())
   val appVersion = "%s-%s-%s".format(branch, buildDate, commit)
 
+  val commonSettings = Seq(
+    version := appVersion,    
+//    scalaVersion := "2.11.7",
+//    crossScalaVersions := Seq("2.10.2", "2.10.3", "2.10.4", "2.10.5",
+//      "2.11.0", "2.11.1", "2.11.2", "2.11.3", "2.11.4",
+//      "2.11.5", "2.11.6", "2.11.7"),
+    resolvers += Resolver.sonatypeRepo("snapshots"),
+    resolvers += Resolver.sonatypeRepo("releases"),
+    resolvers += Resolver.url("Edulify Repository",
+        url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns)
+  )
+  
   val commonDependencies = Seq(
     javaWs,
     javaJdbc,
@@ -79,20 +93,8 @@ object ApplicationBuild extends Build {
       //,"-Xlint:deprecation"
   )
 
-  val buildSettings = Seq(
-    version := appVersion,
-    organization := "NCATS",
-    homepage := Some(url("https://www.ncats.nih.gov"))
-  )
-
-  val seqaln = Project("seqaln", file("modules/seqaln")).settings(
-    version := appVersion,
-    libraryDependencies ++= commonDependencies,
-    javacOptions ++= javaBuildOptions,
-    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
-  )
-
-  val build = Project("build", file("modules/build")).settings(
+  val build = Project("build", file("modules/build"))
+    .settings(commonSettings:_*).settings(
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
       val file = dir / "BuildInfo.java"
       IO.write(file, """
@@ -108,19 +110,22 @@ public class BuildInfo {
       Seq(file)
     }
   )
+
+  val seqaln = Project("seqaln", file("modules/seqaln"))
+    .settings(commonSettings:_*).settings(
+    libraryDependencies ++= commonDependencies,
+    javacOptions ++= javaBuildOptions,
+    mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
+  )
   
   val core = Project("core", file("."))
-    .enablePlugins(PlayJava).settings(
-    resolvers += Resolver.url("Edulify Repository",
-      url("https://edulify.github.io/modules/releases/"))(Resolver.ivyStylePatterns),
-      version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(build,seqaln).aggregate(build,seqaln)
 
   val ncats = Project("ncats", file("modules/ncats"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
         //javaOptions in Runtime += "-Dconfig.resource=ncats.conf"
@@ -129,24 +134,21 @@ public class BuildInfo {
   // needs to specify on the commandline during development and dist
   //  sbt -Dconfig.file=modules/granite/conf/granite.conf granite/run
   val granite = Project("granite", file("modules/granite"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=granite.conf"
   ).dependsOn(ncats).aggregate(ncats)
 
   val idg = Project("idg", file("modules/idg"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)
 
   val ginas = Project("ginas", file("modules/ginas"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       libraryDependencies += "org.webjars" % "momentjs" % "2.10.3",
@@ -157,51 +159,44 @@ public class BuildInfo {
   ).dependsOn(ncats).aggregate(ncats)
 
   val hcs = Project("hcs", file("modules/hcs"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
   val srs = Project("srs", file("modules/srs"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
   val reach = Project("reach", file("modules/reach"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
   val qhts = Project("qhts", file("modules/qhts"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
   val tox21 = Project("tox21", file("modules/tox21"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(qhts).aggregate(qhts)
 
   val ntd = Project("ntd", file("modules/ntd"))
-    .enablePlugins(PlayJava).settings(
-      version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
     ).dependsOn(ncats).aggregate(ncats)
 
   val cbc = Project("cbc", file("modules/cbc"))
-    .enablePlugins(PlayJava).settings(
-    version := appVersion,
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)

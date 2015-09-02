@@ -92,6 +92,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import play.Logger;
+import play.Play;
 import play.cache.Cache;
 import play.db.ebean.Model;
 import ix.utils.Global;
@@ -264,8 +265,13 @@ public class TextIndexer {
             matches.add(obj);
             //Logger.debug("added" + matches.size());
 //          long start=System.currentTimeMillis();
-//          searchAnalyzer.updateFieldQueryFacets(obj, query);
-//              Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
+            if(query!=null && query.length()>0){
+            if(Play.application().configuration().getBoolean("ix.ginas.textanalyzer",false)){
+            	searchAnalyzer.updateFieldQueryFacets(obj, query);
+//            	Logger.debug("added" + matches.size());
+            }
+            }
+//          Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
         }
         
         protected void done () {

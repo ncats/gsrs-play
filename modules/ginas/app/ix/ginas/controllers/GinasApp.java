@@ -1,62 +1,76 @@
 package ix.ginas.controllers;
 
-import ix.core.controllers.PayloadFactory;
+import gov.nih.ncgc.chemical.Chemical;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Keyword;
+import ix.core.models.Payload;
 import ix.core.models.Structure;
 import ix.core.models.Value;
-import ix.core.models.Payload;
-import ix.core.plugins.StructureIndexerPlugin;
-import ix.core.plugins.PayloadPlugin;
-import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.IxCache;
+import ix.core.plugins.PayloadPlugin;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
-import ix.ginas.controllers.v1.*;
-import ix.ginas.models.v1.*;
+import ix.ginas.controllers.v1.CV;
+import ix.ginas.controllers.v1.ControlledVocabularyFactory;
+import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Code;
+import ix.ginas.models.v1.Component;
+import ix.ginas.models.v1.DisulfideLink;
+import ix.ginas.models.v1.Glycosylation;
+import ix.ginas.models.v1.MixtureSubstance;
+import ix.ginas.models.v1.Modifications;
+import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Polymer;
+import ix.ginas.models.v1.PolymerSubstance;
+import ix.ginas.models.v1.Protein;
+import ix.ginas.models.v1.ProteinSubstance;
+import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.Site;
+import ix.ginas.models.v1.SpecifiedSubstanceGroup1;
+import ix.ginas.models.v1.StructuralModification;
+import ix.ginas.models.v1.StructurallyDiverseSubstance;
+import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.GinasProcessingMessage;
+import ix.ginas.utils.GinasUtils;
 import ix.ncats.controllers.App;
-import ix.ncats.controllers.auth.Authentication;
 import ix.utils.Util;
 
-import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.util.StringUtils;
 
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
-import play.mvc.*;
-import play.libs.ws.*;
 import play.libs.F;
+import play.libs.ws.WS;
+import play.libs.ws.WSResponse;
+import play.mvc.BodyParser;
+import play.mvc.Call;
+import play.mvc.Result;
 import tripod.chem.indexer.StructureIndexer;
-import ix.seqaln.SequenceIndexer;
-
 import chemaxon.struc.MolAtom;
-import chemaxon.util.MolHandler;
+import ix.seqaln.SequenceIndexer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
-    static final Model.Finder<UUID, Substance> SUBFINDER =
-        new Model.Finder(UUID.class, Substance.class);
-    
-    // relationship finder
-    static final Model.Finder<UUID, Relationship> RELFINDER =
-        new Model.Finder(UUID.class, Relationship.class);
+	static final Model.Finder<UUID, Substance> SUBFINDER = new Model.Finder<UUID, Substance>(
+			UUID.class, Substance.class);
+
+	// relationship finder
+	static final Model.Finder<UUID, Relationship> RELFINDER = new Model.Finder<UUID, Relationship>(
+			UUID.class, Relationship.class);
     
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
@@ -98,7 +112,8 @@ public class GinasApp extends App {
         }
     }
     
-    static <T> List<T> filter(Class<T> cls, List values, int max) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	static <T> List<T> filter(Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
         for (Object v : values) {
             if (cls.isAssignableFrom(v.getClass())) {
@@ -114,7 +129,7 @@ public class GinasApp extends App {
      * return a field named type to get around scala's template reserved keyword
      */
     public static String getType(Object obj) {
-        Class cls = obj.getClass();
+        Class<? extends Object> cls = obj.getClass();
         String type = null;
         try {
             Field f = cls.getField("type");
@@ -230,7 +245,7 @@ public class GinasApp extends App {
         @Override
         public String label(final int i) {
             final String label = super.label(i);
-            final String name = super.name();
+            //final String name = super.name();
             if ("StructurallyDiverse".equalsIgnoreCase(label))
                 return "Structurally Diverse";
             
@@ -457,14 +472,14 @@ public class GinasApp extends App {
         long starttime = System.currentTimeMillis();
                 
                 
-                      ObjectMapper om = new ObjectMapper();
-                      om.valueToTree(substances);
-                      int k=0;
-                      for(Substance s:substances){
-                              for(Name n:s.getAllNames()){
-                                      k+=n.name.hashCode();
-                              }
-                      }
+//                      ObjectMapper om = new ObjectMapper();
+//                      om.valueToTree(substances);
+//                      int k=0;
+//                      for(Substance s:substances){
+//                              for(Name n:s.getAllNames()){
+//                                      k+=n.name.hashCode();
+//                              }
+//                      }
                 
         String tt=(-(starttime-System.currentTimeMillis())/1000.)  + "s";
                 
@@ -1444,6 +1459,52 @@ public class GinasApp extends App {
             }
         }
         return r1;
+        
+    }
+    
+    /**
+     * Converts a structure of substance to a chemical structure
+     * format. Warnings are put into the header at "EXPORT-WARNINGS"
+     * 
+     * @param id
+     * @param format
+     * @param context
+     * @return
+     */
+    public static Result structureExport (final String id,
+                                    final String format, final String context) {
+        List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
+        
+        Chemical c;
+        
+        Substance s = SubstanceFactory.getSubstance(id);
+        
+        if(s==null){
+        	Structure struc = StructureFactory.getStructure(id);
+        	c = GinasUtils.structureToChemical(struc, messages);
+        }else{
+        	c = GinasUtils.substanceToChemical(s, messages);
+        }
+        
+        
+        ObjectMapper om = new ObjectMapper();
+        Logger.debug("SERIALIZED:" + om.valueToTree(messages).toString());
+        response().setHeader("EXPORT-WARNINGS",om.valueToTree(messages).toString() +"___");
+		try {
+			if (format.equalsIgnoreCase("mol"))
+				return ok(c.export(Chemical.FORMAT_MOL));
+			else if (format.equalsIgnoreCase("sdf"))
+				return ok(c.export(Chemical.FORMAT_SDF));
+			else if (format.equalsIgnoreCase("smiles"))
+				return ok(c.export(Chemical.FORMAT_SMILES));
+			else if (format.equalsIgnoreCase("cdx"))
+				return ok(c.export(Chemical.FORMAT_CDX));
+			else
+				return _badRequest("unknown format:" + format);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return _badRequest(e.getMessage());
+		} 
         
     }
 }

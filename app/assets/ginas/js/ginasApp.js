@@ -75,40 +75,43 @@
         return lookup;
     });
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
+    ginasApp.controller("GinasController", function ($scope, $resource, $location, $modal, $http, $window, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
+
+
+        var ginasCtrl = this;
+
+        $scope.select = ['Substructure', 'Similarity'];
+        $scope.type = 'Substructure';
+        $scope.cutoff = 0.8;
 
         $scope.toFormSubstance = function (apiSub) {
-
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
-            for (var i in apiSub.names) {
-                if (typeof apiSub.names[i].nameOrgs != "undefined") {
-                    for (var j in apiSub.names[i].nameOrgs) {
-                        if (apiSub.names[i].nameOrgs[j].deprecated) {
-                            apiSub.destructive = true;
+            if (apiSub) {
+                for (var i in apiSub.names) {
+                    if (typeof apiSub.names[i].nameOrgs != "undefined") {
+                        for (var j in apiSub.names[i].nameOrgs) {
+                            if (apiSub.names[i].nameOrgs[j].deprecated) {
+                                apiSub.destructive = true;
+                            }
+                            apiSub.names[i].nameOrgs[j] = apiSub.names[i].nameOrgs[j].nameOrg;
                         }
-                        apiSub.names[i].nameOrgs[j] = apiSub.names[i].nameOrgs[j].nameOrg;
                     }
                 }
             }
-
-
+            //console.log($scope);
             apiSub = $scope.expandCV(apiSub, "");
             apiSub = $scope.splitNames(apiSub);
-
             var references = {};
             for (var v in apiSub.references) {
                 references[apiSub.references[v].uuid] = apiSub.references[v];
                 apiSub.references[v].id = v - 1 + 2;
             }
             apiSub = $scope.expandReferences(apiSub, references, 0);
-
-
             return apiSub;
         };
 
         $scope.fromFormSubstance = function (formSub) {
-
             if (formSub.officialNames || formSub.unofficialNames) {
                 for (var n in formSub.officialNames) {
                     var name = formSub.officialNames[n];
@@ -129,27 +132,6 @@
             formSub = $scope.collapseReferences(formSub, 0);
             return formSub;
         };
-
-        var ginasCtrl = this;
-
-         var edit = localStorageService.get('editID');
-        // var edit = $location.$$search.edit;
-        if (edit) {
-            substanceIDRetriever.getSubstances(edit).then(function (data) {
-                var sub = $scope.toFormSubstance(data);
-                //   sub = $scope.expandCV(data);
-                //  console.log(angular.copy(sub));
-                $scope.substance = sub;
-
-                localStorageService.remove('editID');
-            });
-        } else {
-            $scope.substance = Substance;
-        }
-
-        $scope.select = ['Substructure', 'Similarity'];
-        $scope.type = 'Substructure';
-        $scope.cutoff = 0.8;
 
         //date picker
         $scope.open = function ($event) {
@@ -446,7 +428,22 @@
             localStorageService.set('editID', editid);
         };
 
-
+        if ($window.loadjson !== {}) {
+            var sub = $scope.toFormSubstance($window.loadjson);
+            $scope.substance = sub;
+        } else {
+            var edit = localStorageService.get('editID');
+            if (edit) {
+                localStorageService.remove('structureid');
+                substanceIDRetriever.getSubstances(edit).then(function (data) {
+                    var sub = $scope.toFormSubstance(data);
+                    $scope.substance = sub;
+                    localStorageService.remove('editID');
+                });
+            } else {
+                $scope.substance = Substance;
+            }
+        }
     });
 
     var uuid = function uuid() {
@@ -646,29 +643,26 @@
         };
     });
 
-    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance) {
+    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService) {
         return {
             restrict: 'E',
             require: "ngModel",
             scope: {
-                structureQuery: '='
+                formsubstance: '=structure'
             },
             template: "<div id='sketcherForm' dataformat='molfile' ondatachange='setMol(this)'></div>",
-
-            link: function (scope, element, attrs, ngModelCtrl) {
-                console.log(scope);
-                console.log(element);
-                console.log(attrs);
-                console.log(ngModelCtrl);
-
+            link: function (scope) {
                 sketcher = new JSDraw("sketcherForm");
                 var url = window.strucUrl; //'/ginas/app/smiles';
                 var structureid = (localStorageService.get('structureid') || false);
-                //var structureid = attrs.strucId;
-                console.log(structureid);
-                this.setMol = function () {
-                    console.log("changed");
-                    var mol = sketcher.getMolfile();
+                if (localStorageService.get('editID'))
+                    structureid = false;
+                var lastmol = "";
+                var ignorechange = false;
+                window.setMol = function (sk) {
+                    if (ignorechange)return;
+                    var mol = sk.getMolfile();
+                    if (lastmol === mol)return;
                     $http({
                         method: 'POST',
                         url: url,
@@ -677,27 +671,44 @@
                             'Content-Type': 'text/plain'
                         }
                     }).success(function (data) {
-                        console.log(data);
-                        Substance.structure = data.structure;
-                        Substance.moieties = data.moieties;
-                        Substance.q = data.structure.smiles;
-                        console.log(Substance);
+                        lastmol = data.structure.molfile;
+                        scope.formsubstance.structure = data.structure;
+                        scope.formsubstance.moieties = data.moieties;
+                        scope.formsubstance.q = data.structure.smiles;
                     });
                 };
-                if (!structureid) {
-                    this.setMol();
-                } else {
+
+                scope.$watch(function (scope) {
+                    if (typeof scope.formsubstance == "undefined") {
+                        return "undefined";
+                    }
+                    if (typeof scope.formsubstance.structure == "undefined") {
+                        return "undefined";
+                    }
+                    return scope.formsubstance.structure.molfile;
+
+                }, function (value) {
+                    if (lastmol !== value) {
+                        ignorechange = true;
+                        sketcher.setMolfile(value);
+                        ignorechange = false;
+                        lastmol = sketcher.getMolfile();
+                    }
+                });
+                if (structureid) {
+                    console.log("There is an id, it's:" + structureid);
                     $http({
                         method: 'GET',
                         url: '/ginas/app/api/v1/structures/' + structureid
                     }).success(function (data) {
                         console.log(data);
+                        lastmol = data.molfile;
                         sketcher.setMolfile(data.molfile);
-                        Substance.q = data.smiles;
-                        console.log(Substance);
+                        scope.formsubstance.q = data.smiles;
                         localStorageService.remove('structureid');
                     });
                 }
+
             }
         };
     });
@@ -758,15 +769,33 @@
                 var modal = angular.element(document.getElementById('export-mol'));
                 $http({
                     method: 'GET',
-                    url: 'app/structure/' + scope.structureid + '.mol',
+                    url: 'app/export/' + scope.structureid + '.sdf',
                     headers: {
                         'Content-Type': 'text/plain'
                     }
                 }).success(function (data) {
                     modal.find('#inputExport').text(data);
+                    modal.modal('show');
                 });
-                modal.modal('show');
+            }).then(function (response) {
+                var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
+                console.log(warnHead);
+                var warnings = JSON.parse(warnHead);
 
+                modal.find('#inputExport').text(response.data);
+                if (warnings.length > 0) {
+                    var html = "<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">\n" +
+                        "                        <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"> <span aria-hidden=\"true\">&times;</span>\n" +
+                        "                        </button>\n" +
+                        "                        <span><h4 class=\"warntype\"></h4><span class=\"message\">" + warnings[0].message + "</span></span>";
+                    modal.find('.warn').html(html);
+                } else {
+                    modal.find('.warn').html("");
+                }
+
+                modal.modal('show');
+            }, function (response) {
+                alert("ERROR exporting data");
             });
         };
     });
@@ -779,120 +808,120 @@
     });
 
     ginasApp.controller('SubunitController', function ($scope, Substance) {
-        $scope.editReference = null;
-        this.adding = false;
-        this.editing = false;
-        this.display = [];
-        this.subunit = {};
-        this.toggleEdit = function () {
-            this.editing = !this.editing;
-        };
+            $scope.editReference = null;
+            this.adding = false;
+            this.editing = false;
+            this.display = [];
+            this.subunit = {};
+            this.toggleEdit = function () {
+                this.editing = !this.editing;
+            };
 
-        this.toggleAdd = function () {
-            this.adding = !this.adding;
-        };
+            this.toggleAdd = function () {
+                this.adding = !this.adding;
+            };
 
-        this.clean = function (sequence) {
-            console.log("clean");
-            return sequence.replace(/[^A-Za-z]/g, '');
-        };
+            this.clean = function (sequence) {
+                console.log("clean");
+                return sequence.replace(/[^A-Za-z]/g, '');
+            };
 
-        this.parseSubunit = function (sequence) {
-            console.log(sequence);
-            var split = sequence.replace(/[^A-Za-z]/g, '').split('');
-            var display = [];
-            console.log(split);
-            var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
-            for (var i in split) {
-                var obj = {};
-                console.log(split[i]);
-                var valid = dojo.indexOf(invalid, split[i].toUpperCase());
-                console.log(valid);
-                if (valid >= 0) {
-                    obj.value = split[i];
-                    obj.valid = false;
-                    display.push(obj);
-                    obj = {};
-                } else {
-                    obj.value = split[i];
-                    obj.valid = true;
-                    display.push(obj);
-                    obj = {};
+            this.parseSubunit = function (sequence) {
+                console.log(sequence);
+                var split = sequence.replace(/[^A-Za-z]/g, '').split('');
+                var display = [];
+                console.log(split);
+                var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
+                for (var i in split) {
+                    var obj = {};
+                    console.log(split[i]);
+                    var valid = dojo.indexOf(invalid, split[i].toUpperCase());
+                    console.log(valid);
+                    if (valid >= 0) {
+                        obj.value = split[i];
+                        obj.valid = false;
+                        display.push(obj);
+                        obj = {};
+                    } else {
+                        obj.value = split[i];
+                        obj.valid = true;
+                        display.push(obj);
+                        obj = {};
+                    }
+
                 }
 
-            }
+                this.display = display;
+                console.log(display);
+                return display;
+            };
+            /*        this.validate = function (obj) {
+             $scope.$broadcast('show-errors-check-validity');
+             if ($scope.refForm.$valid) {
+             //new array if object doesn't already have one
+             if (!Substance.references) {
+             Substance.references = [];
+             }
+             obj.id = Substance.references.length + 1;
+             Substance.references.push(obj);
+             $scope.ref = {};
+             $rootScope.refAdded = true;
+             }
+             };*/
+            /*                this.validate = function (obj) {
+             console.log(obj);
+             };*/
 
-            this.display = display;
-            console.log(display);
-            return display;
-        };
-
-        /*        this.validate = function (obj) {
-         $scope.$broadcast('show-errors-check-validity');
-         if ($scope.refForm.$valid) {
-         //new array if object doesn't already have one
-         if (!Substance.references) {
-         Substance.references = [];
-         }
-         obj.id = Substance.references.length + 1;
-         Substance.references.push(obj);
-         $scope.ref = {};
-         $rootScope.refAdded = true;
-         }
-         };*/
-
-        this.validate = function (obj) {
-            console.log(obj);
-        };
-
-        $scope.validateSubunit = function (subunit) {
-            console.log(subunit);
+            $scope.validateSubunit = function (subunit) {
+                console.log(subunit);
 
 
-        };
+            };
 
 
-        /*
-         $scope.validateSubunit = function (subunit) {
-         console.log(subunit);
-         $scope.editorEnabled = false;
-         //new array if object doesn't already have one
-         if (!$scope.substance.protein.subunits) {
-         console.log("new array");
-         $scope.substance.protein.subunits = [];
-         }
-         var j = subunit.sequence.length / 10;
-         for (var i = 0; i < subunit.sequence.length / 10; i++) {
-         console.log("Start: " + (i * 10) + subunit.sequence.substring((i * 10), ((i + 1) * 10)) + " end: " + ((i + 1) * 10));
+            /*
+             $scope.validateSubunit = function (subunit) {
+             console.log(subunit);
+             $scope.editorEnabled = false;
+             //new array if object doesn't already have one
+             if (!$scope.substance.protein.subunits) {
+             console.log("new array");
+             $scope.substance.protein.subunits = [];
+             }
+             var j = subunit.sequence.length / 10;
+             for (var i = 0; i < subunit.sequence.length / 10; i++) {
+             console.log("Start: " + (i * 10) + subunit.sequence.substring((i * 10), ((i + 1) * 10)) + " end: " + ((i + 1) * 10));
 
-         }
+             }
 
-         //  console.log(subunit.sequence.split(''));
-         $scope.substance.protein.subunits.push(subunit);
-         $scope.subunit = {};
-         console.log($scope.substance);
+             //  console.log(subunit.sequence.split(''));
+             $scope.substance.protein.subunits.push(subunit);
+             $scope.subunit = {};
+             console.log($scope.substance);
 
-         };
-         */
+             };
+             */
 
-        $scope.setEditedSubunit = function (subunit) {
-            console.log("clicked");
-            $scope.editSubunit = subunit;
-            $scope.tempCopy = angular.copy(subunit);
-        };
+            $scope.setEditedSubunit = function (subunit) {
+                console.log("clicked");
+                $scope.editSubunit = subunit;
+                $scope.tempCopy = angular.copy(subunit);
+            };
 
-        $scope.updateSubunit = function (subunit) {
-            var index = $scope.substance.protein.subunits.indexOf(subunit);
-            $scope.substance.protein.subunits[index] = subunit;
-            $scope.editSubunit = null;
-            $scope.isEditingSubunit = false;
-        };
+            $scope.updateSubunit = function (subunit) {
+                var index = $scope.substance.protein.subunits.indexOf(subunit);
+                $scope.substance.protein.subunits[index] = subunit;
+                $scope.editSubunit = null;
+                $scope.isEditingSubunit = false;
+            };
 
-        $scope.removeSubunit = function (subunit) {
-            var index = $scope.substance.protein.subunits.indexOf(subunit);
-            $scope.substance.protein.subunits.splice(index, 1);
-        };
-    });
+            $scope.removeSubunit = function (subunit) {
+                var index = $scope.substance.protein.subunits.indexOf(subunit);
+                $scope.substance.protein.subunits.splice(index, 1);
+            };
+        }
+    )
+    ;
 
     ginasApp.controller('DetailsController', function ($scope, Substance) {
         $scope.protein = null;
@@ -1251,5 +1280,10 @@ function getDisplayFromCV(domain, value) {
         }
     }
     return value;
+}
+
+function vocabsetup(cv) {
+    window.CV_REQUEST = cv;
+    console.log("finished");
 }
 

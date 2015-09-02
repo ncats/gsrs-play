@@ -63,7 +63,8 @@ import static ix.core.search.TextIndexer.Facet;
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
 
-    static class IDGSearchResultProcessor extends SearchResultProcessor {
+    static class IDGSearchResultProcessor
+        extends SearchResultProcessor<StructureIndexer.Result> {
         final public Set<Long> processed = new HashSet<Long>();
         int count;
 
@@ -1606,7 +1607,8 @@ public class IDGApp extends App implements Commons {
         throws Exception {
         return structureResult
             (context, rows, page, new DefaultResultRenderer<Ligand> () {
-                    public Result render (int page, int rows,
+                    public Result render (SearchResultContext context,
+                                          int page, int rows,
                                           int total, int[] pages,
                                           List<TextIndexer.Facet> facets,
                                           List<Ligand> ligands) {

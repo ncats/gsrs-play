@@ -6,11 +6,12 @@ GET         /register                   ix.ginas.controllers.GinasFactory.regist
 GET         /test/submit                ix.ginas.controllers.GinasLoad.testSubmit
 GET         /structure                  ix.ginas.controllers.GinasFactory.structuresearch
 GET         /substance/:name            ix.ginas.controllers.GinasApp.substance(name: String)
+GET         /substance/:name/edit       ix.ginas.controllers.GinasFactory.edit(name: String)
 GET         /substances                 ix.ginas.controllers.GinasApp.substances(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET         /chemicals                  ix.ginas.controllers.GinasApp.chemicals(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)
 GET         /proteins                   ix.ginas.controllers.GinasApp.proteins(q: String ?= null, rows: Int ?= 32, page: Int ?= 1)
 GET         /sequence                   ix.ginas.controllers.GinasFactory.sequence(id: String ?= null)
-POST        /sequence			ix.ginas.controllers.GinasApp.sequenceSearch
+POST        /sequence			        ix.ginas.controllers.GinasApp.sequenceSearch
 GET         /report                     ix.ginas.controllers.GinasFactory.report
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON
@@ -25,6 +26,7 @@ GET         /login                      ix.ginas.controllers.GinasFactory.login
 GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationships(uuid: String)
 GET         /cv/:field                  ix.ginas.controllers.GinasApp.getCVField(field: String)
 GET         /img/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structure(id: String, format: String, size: Int ?= 150, context: String ?= null)
+GET         /export/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structureExport(id: String, format: String, context: String ?= null)
 POST        /register/validate          ix.ginas.controllers.GinasLoad.validateSubstance
 
 ->      /   ix.ncats.Routes
