@@ -1,6 +1,7 @@
 package ix.core.search;
 
 import ix.core.models.Keyword;
+import ix.core.search.FieldFacet.MATCH_TYPE;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Note;
@@ -63,6 +64,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			updateFieldQueryFacets(o, qterms, ffacet);
 		} catch (Exception e) {
 			Logger.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 	
@@ -162,8 +164,10 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		Map<String,String> m2 = new TreeMap<String,String>();		
 		{
 			int i=0;
-			for(Name n: o.getAllNames()){
+			for(Name n: o.names){
 				m2.put("names[" + i++ + "].name", n.name);
+				
+				System.out.println("\"" + n.name + "\"");
 				//m2.put( ".names[" + i + "].name", n.name);			
 			}
 		}
@@ -229,21 +233,20 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			
 			for(Term t:realterms){
 				MATCH_TYPE match = getMatchType(m2.get(key),t.text());
-				if(match==MATCH_TYPE.NO_MATCH){
-					
-					continue;
-				}
+				if(match==MATCH_TYPE.NO_MATCH)continue;
 				if(match==MATCH_TYPE.CONTAINS)continue;
+				if(match==MATCH_TYPE.WORD_STARTS_WITH)continue;
 				
 				
 				//matchedFields.add(realkey);
 				String q = t.text();
-				if(match==MATCH_TYPE.WORD_STARTS_WITH)
-					q= q + "*";
-				FieldFacet ff = ffacet.get(realkey);
+				//if(match==MATCH_TYPE.WORD_STARTS_WITH)
+				//	q= q + "*";
+				FieldFacet ff = ffacet.get(realkey + match);
 				if (ff == null) {
-					ff = new FieldFacet(realkey, q);
-					ffacet.put(realkey, ff);
+					System.out.println(match);
+					ff = new FieldFacet(realkey, q, match);
+					ffacet.put(realkey + match, ff);
 				}
 				ff.count++;
 			}
@@ -252,10 +255,12 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 	
 	public static MATCH_TYPE getMatchType(String tterm, String q) {
 		if(tterm==null) return MATCH_TYPE.NO_MATCH;
-		String term = tterm.toUpperCase();
+		String term = tterm.toUpperCase().trim();
 		
-		if (term.equals(q))
+		if (term.equals(q)){
+			
 			return MATCH_TYPE.FULL;
+		}
 		
 		int i = term.indexOf(q);
 
@@ -265,32 +270,29 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		}
 		
 		if (i == 0) {
-			if (term.charAt(i + 1) == ' ')
+			if (term.charAt(i + q.length()) == ' ')
 				return MATCH_TYPE.WORD;
 			return MATCH_TYPE.WORD_STARTS_WITH;
 		}
 		
-		if (term.length() == i + 1) {
-			if (term.charAt(i + q.length() + 1) == ' ')
+		
+		//ends the value
+		if (term.length() == i + q.length()) {
+			//System.out.println(tterm + " -> " + q);
+			if (term.charAt(i-1) == ' ')
 				return MATCH_TYPE.WORD;
 		}
+		
 		
 		if (term.charAt(i - 1) == ' '){
-			if(term.charAt(i + q.length() + 1) == ' ')
+			if(term.charAt(i + q.length()) == ' ')
 				return MATCH_TYPE.WORD;
 			return MATCH_TYPE.WORD_STARTS_WITH;
 		}
-		System.out.println("\"" + term + "\" contains \"" + q + "\"");
 		return MATCH_TYPE.CONTAINS;
 	}
 
-	public static enum MATCH_TYPE{
-		FULL,
-		WORD,
-		WORD_STARTS_WITH,
-		CONTAINS,
-		NO_MATCH
-	};
+	
 	
 	public static boolean ignoreField(String field){
 		if(field.contains("._"))return true;

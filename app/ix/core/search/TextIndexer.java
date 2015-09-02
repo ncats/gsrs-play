@@ -104,7 +104,12 @@ import ix.core.plugins.IxCache;
  * Singleton class that responsible for all entity indexing
  */
 public class TextIndexer {
-    @Indexable
+    protected static final String STOP_WORD = " THE_STOP";
+    protected static final String START_WORD = "THE_START ";
+    protected static final String GIVEN_STOP_WORD = "$";
+    protected static final String GIVEN_START_WORD = "^";
+
+	@Indexable
     static final class DefaultIndexable {}
     static final Indexable defaultIndexable = 
         (Indexable)DefaultIndexable.class.getAnnotation(Indexable.class);
@@ -266,10 +271,13 @@ public class TextIndexer {
             //Logger.debug("added" + matches.size());
 //          long start=System.currentTimeMillis();
             if(query!=null && query.length()>0){
-            if(Play.application().configuration().getBoolean("ix.ginas.textanalyzer",false)){
-            	searchAnalyzer.updateFieldQueryFacets(obj, query);
-//            	Logger.debug("added" + matches.size());
-            }
+				if (matches.size() < Play.application().configuration()
+						.getInt("ix.ginas.maxanalyze", 100)) {
+					if (Play.application().configuration()
+							.getBoolean("ix.ginas.textanalyzer", false)) {
+						searchAnalyzer.updateFieldQueryFacets(obj, query);
+					}
+				}
             }
 //          Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
         }
@@ -779,6 +787,12 @@ public class TextIndexer {
     public SearchResult search 
         (SearchOptions options, String text, Collection subset)
         throws IOException {
+    	//this is a quick and dirty way to have a cleaner-looking
+    	//query for display
+		String qtext = text.replace(TextIndexer.GIVEN_START_WORD,
+				TextIndexer.START_WORD);
+		qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
+				TextIndexer.STOP_WORD);
         SearchResult searchResult = new SearchResult (options, text);
 
         Query query = null;
@@ -789,10 +803,10 @@ public class TextIndexer {
             try {
                 QueryParser parser = new QueryParser
                     ("text", indexAnalyzer);
-                query = parser.parse(text);
+                query = parser.parse(qtext);
             }
             catch (ParseException ex) {
-                Logger.warn("Can't parse query expression: "+text, ex);
+                Logger.warn("Can't parse query expression: "+qtext, ex);
             }
         }
 
@@ -1567,12 +1581,12 @@ public class TextIndexer {
 
             if (!(value instanceof Number)) {
                 if (!name.equals(full))
-                    fields.add(new TextField (full, text, NO));
+                    fields.add(new TextField (full, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, NO));
             }
 
             if (indexable.sortable() && !sorters.containsKey(name))
                 sorters.put(name, SortField.Type.STRING);
-            fields.add(new TextField (name, text, store));
+            fields.add(new TextField (name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
         }
     }
 
