@@ -20,7 +20,7 @@
         </thead>
         @for(n <- names) {
             <tr>
-                <td>@n.name @for(l <- n.getLocators(substance)) {
+                <td class="trungcate">@n.name @for(l <- n.getLocators(substance)) {
                     <span class="badge">@GinasApp.getCV.getDisplay("LOCATOR", l)</span> &nbsp;
                 	}</td>
                 <td>

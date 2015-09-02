@@ -702,3 +702,9 @@ h2.display-name {
 .break-text{
     overflow-wrap: break-word;
 }
+
+.trungcate{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
