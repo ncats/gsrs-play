@@ -4,51 +4,53 @@
     <h3></h3>
 } {
     <div class="container">
-        <div class="row">
-            <div class ="col-md-9 col-md-offset-3 text-center">
-                <h1>Demo registration forms:</h1>
-                <div class = "row pad">
-                    <div class="col-xs-4 col-sm-3 box">
-                        <a href= "@ix.ginas.controllers.routes.GinasFactory.wizard("chemical")"  target="_self">
-                            <div class="rounded" id="chemical">
-                                <img src="@routes.Assets.at("ginas/images/chemicals_active.png")" alt="Register a chemical" class = "img-responsive"/>
-@*
-                                <img src="@routes.Assets.at("ginas/images/chemicals.png")" alt="Register a chemical" class = "img-responsive off"/>
-*@
-                            </div>
-                        </a>
+        <div class="row text-center">
+            <h1>Demo registration forms:</h1>
+            <div class="col-xs-4 col-md-4 box text-center">
+                <a href= "@ix.ginas.controllers.routes.GinasFactory.wizard("chemical")" target="_self">
+                    <div class="rounded" id="chemical">
+                        <img src="@routes.Assets.at("ginas/images/Chemicals.svg")" alt="Register a chemical" class = "img-responsive"/>
+                        <h3>Register a Chemical</h3>
+                        @*
+                        <img src="@routes.Assets.at("ginas/images/chemicals.png")" alt="Register a chemical" class = "img-responsive off"/>
+                        *@
                     </div>
-                    <div class="col-xs-4 col-sm-3 box">
-                        <a href= "@ix.ginas.controllers.routes.GinasFactory.wizard("protein")"  target="_self">
-                            <div class="rounded" id="protein">
-                                <img src="@routes.Assets.at("ginas/images/proteins_active.png")" alt="Register a protein" class = "img-responsive"/>
-@*
-                                <img src="@routes.Assets.at("ginas/images/proteins.png")" alt="Register a protein" class = "img-responsive off"/>
-*@
-                            </div>
-                        </a>
+                </a>
+            </div>
+            <div class="col-xs-4 col-md-4 box text-center">
+                <a href= "@ix.ginas.controllers.routes.GinasFactory.wizard("protein")" target="_self">
+                    <div class="rounded" id="protein">
+                        <img src="@routes.Assets.at("ginas/images/Proteins.svg")" alt="Register a protein" class = "img-responsive"/>
+                        <h3>Register a Protein</h3>
+
+                        @*
+                        <img src="@routes.Assets.at("ginas/images/proteins.png")" alt="Register a protein" class = "img-responsive off"/>
+                        *@
                     </div>
-                    <div class="col-xs-4 col-sm-3 box">
-                        <a href= "@ix.ginas.controllers.routes.GinasFactory.wizard("nucleicAcid")"  target="_self">
-                            <div class="rounded" id="nucleic">
-                                <img src="@routes.Assets.at("ginas/images/nucleicacids_active.png")" alt="Register a nucleic acid" class = "img-responsive"/>
-@*
+                </a>
+            </div>
+            <div class="col-xs-4 col-md-4 box text-center">
+                <a href= "@ix.ginas.controllers.routes.GinasFactory.wizard("structurallyDiverse")" target="_self">
+                    <div class="rounded" id="struc">
+                        <img src="@routes.Assets.at("ginas/images/Structurally_diverse.svg")" alt="Register a Structurally Diverse Substance" class = "img-responsive"/>
+                        <h3>Register a Structurally Diverse Substance</h3>
 
-                                <img src="@routes.Assets.at("ginas/images/nucleicacids.png")" alt="Register a nucleic acid" class = "img-responsive off"/>
-*@
+                        @*
 
-                            </div>
-                        </a>
+                        <img src="@routes.Assets.at("ginas/images/nucleicacids.png")" alt="Register a nucleic acid" class = "img-responsive off"/>
+                        *@
+
                     </div>
-                </div>
-
+                </a>
             </div>
         </div>
+
+
         <div class="row">
-            <div class ="col-md-9 col-md-offset-3 text-center">
-            <h1>The current ginas registration pages can be accessed here:</h1>
+            <div class ="col-md-8 col-md-offset-2 text-center">
+                <h1>The current ginas registration pages can be accessed here:</h1>
                 <a href = "http://ginas.hres.ca/ginas/#view=register"><h1>GINAS</h1></a>
             </div>
-            </div>
+        </div>
     </div>
 }
