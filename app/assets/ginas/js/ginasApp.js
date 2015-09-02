@@ -77,7 +77,7 @@
         return lookup;
     });
 
-    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
+    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $window, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
 
         $scope.toFormSubstance = function(apiSub) {
 
@@ -443,13 +443,17 @@
             console.log($scope);
         };
 
+        $scope.bugSubmit= function(bugForm){
+          console.log(bugForm);
+        };
+
         $scope.setEditId = function(editid) {
             localStorageService.set('editID', editid);
         };
 
-        if(typeof window.loadjson !== "undefined" && 
-                JSON.stringify(window.loadjson) !== "{}"){
-                var sub = $scope.toFormSubstance(window.loadjson);
+        if(typeof $window.loadjson !== "undefined" &&
+                JSON.stringify($window.loadjson) !== "{}"){
+                var sub = $scope.toFormSubstance($window.loadjson);
                 $scope.substance = sub;
         }else{
                 var edit = localStorageService.get('editID');

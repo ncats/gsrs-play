@@ -13,10 +13,10 @@ aria-labelledby="myModalLabel" aria-hidden="true">
             <div class="modal-body">
                 <h5>This will need to be changed to post to submit the email</h5>
 
-                <form class="form-horizontal">
+                <form class="form-horizontal" name = "bugForm">
                     <div class="form-group">
                         <div class="col-md-4">
-                            <label for="type">Type</label> <select class="form-control"
+                            <label for="type">Type</label> <select class="form-control" ng-model="bug.type"
                         id="type">
                             <option>Bug</option>
                             <option>Feature Request</option>
@@ -24,7 +24,7 @@ aria-labelledby="myModalLabel" aria-hidden="true">
                         </select>
                         </div>
                         <div class="col-md-8">
-                            <label for="email">Email</label> <input type="email"
+                            <label for="email">Email</label> <input type="email" ng-model="bug.email"
                         class="form-control" id="email"
                         placeholder="Enter Email Address">
                         </div>
@@ -32,21 +32,21 @@ aria-labelledby="myModalLabel" aria-hidden="true">
                     <div class="form-group">
                         <div class="col-md-12">
                             <label for="description-short">Short Description</label> <input
-                        type="text" class="form-control" id="description-short"
+                        type="text" class="form-control" ng-model="bug.descriptionshort" id="description-short"
                         placeholder="Short Description">
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-md-12">
                             <label for="description-det">Detailed Description</label>
-                            <textarea class="form-control" rows="6" id="description-det"></textarea>
+                            <textarea class="form-control" ng-model="bug.descriptionlong" rows="6" id="description-det"></textarea>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-md-4 ">
 
                             <label for="exampleInputFile" class = "file-button">Include Image?</label>
-                            <input type='file' onchange="readURL(this);" class = "file-button" />
+                            <input type='file' ng-model="bug.file" onchange="readURL(this);" class = "file-button" />
                             <img id="thumb" src="#" alt="your image" />
                                 <!-- 							<input -->
                                 <!-- 								type="button" value="Choose File" -->
@@ -54,7 +54,7 @@ aria-labelledby="myModalLabel" aria-hidden="true">
                                 <!-- 								id="exampleInputFile"> -->
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-default">Submit</button>
+                    <button type="submit" ng-click="bugSubmit(bug)" class="btn btn-default">Submit</button>
                 </form>
             </div>
         </div>
