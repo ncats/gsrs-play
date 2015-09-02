@@ -350,7 +350,9 @@ nav#main-pagination {
 }
 
 .nameDiv {
-    margin-top: -20px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow-x: hidden; 
 }
 
 #draw-box {
