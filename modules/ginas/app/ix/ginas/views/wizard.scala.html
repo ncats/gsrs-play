@@ -1,4 +1,4 @@
-@(kind: String)
+@(kind: String, json: String)
 
 
 @wizardfields(kind: String) = {
@@ -104,7 +104,9 @@
         <pre>{{substance | json}}</pre>
     </div>
     <div class="row info"><div class = "col-md-12">
-        <textarea class="form-control" rows="10" ng-model="paste"></textarea>
+        <textarea class="form-control" rows="10" ng-model="paste">
+        @json
+        </textarea>
     </div>
     </div>
     <div class ="row info">
