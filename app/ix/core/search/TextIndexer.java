@@ -265,8 +265,11 @@ public class TextIndexer {
             matches.add(obj);
             //Logger.debug("added" + matches.size());
 //          long start=System.currentTimeMillis();
+            if(query!=null && query.length()>0){
             if(Play.application().configuration().getBoolean("ix.ginas.textanalyzer",false)){
             	searchAnalyzer.updateFieldQueryFacets(obj, query);
+//            	Logger.debug("added" + matches.size());
+            }
             }
 //          Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
         }

@@ -111,7 +111,7 @@
             return apiSub;
         };
 
-    $scope.fromFormSubstance = function(formSub) {
+        $scope.fromFormSubstance = function(formSub) {
 
            if (formSub.officialNames || formSub.unofficialNames) {
                 for (var n in formSub.officialNames) {
@@ -139,12 +139,12 @@
 
         var edit = localStorageService.get('editID');
         if (edit) {
+            localStorageService.remove('structureid');
             substanceIDRetriever.getSubstances(edit).then(function(data) {
                 var sub = $scope.toFormSubstance(data);
-                //   sub = $scope.expandCV(data);
-                //  console.log(angular.copy(sub));
+                
+                
                 $scope.substance = sub;
-
                 localStorageService.remove('editID');
             });
         } else {
@@ -664,17 +664,26 @@
             restrict: 'E',
             require: "ngModel",
             scope: {
-                structureQuery: '='
+                formsubstance: '=structure'
             },
             template: "<div id='sketcherForm' dataformat='molfile' ondatachange='setMol(this)'></div>",
-
             link: function(scope, element, attrs, ngModelCtrl) {
+                //console.log("LINKING");
                 sketcher = new JSDraw("sketcherForm");
                 var url = window.strucUrl; //'/ginas/app/smiles';
                 var structureid = (localStorageService.get('structureid') || false);
-                if (!structureid) {
-                    this.setMol = function() {
-                        var mol = sketcher.getMolfile();
+                if(localStorageService.get('editID'))
+                        structureid=false;
+                var lastmol="";
+                var ignorechange=false;
+                window.setMol = function(sk) {
+                        if(ignorechange)return;
+                        //console.log(scope);
+
+                        var mol = sk.getMolfile();
+                        if(lastmol===mol)return;
+                        
+                        //console.log("CHANGING");
                         $http({
                             method: 'POST',
                             url: url,
@@ -683,25 +692,48 @@
                                 'Content-Type': 'text/plain'
                             }
                         }).success(function(data) {
-                            Substance.structure = data.structure;
-                            Substance.moieties = data.moieties;
-                            Substance.q = data.structure.smiles;
-                            console.log(Substance);
+                            lastmol=data.structure.molfile;
+                            scope.formsubstance.structure = data.structure;                            
+                            scope.formsubstance.moieties = data.moieties;
+                            scope.formsubstance.q = data.structure.smiles;
                         });
                     };
-                } else {
+                    
+                scope.$watch(function(scope){
+                        if(typeof scope.formsubstance == "undefined"){
+                                return "undefined";
+                        }
+                        if(typeof scope.formsubstance.structure == "undefined"){
+                                return "undefined";
+                        }
+                        return scope.formsubstance.structure.molfile;
+                
+                }, function(value) {
+                    //console.log("I SEE A CHANGE!");
+                    if(lastmol!==value){
+                       
+                        ignorechange=true;
+                        sketcher.setMolfile(value);
+                        ignorechange=false;
+                        lastmol=sketcher.getMolfile();
+                    }
+                });
+                if (structureid) {
+                    console.log("There is an id, it's:" + structureid);
                     $http({
                         method: 'GET',
                         url: '/ginas/app/api/v1/structures/' + structureid
                     }).success(function(data) {
                         console.log(data);
-
+                        console.log("fetched");
+                        lastmol=data.molfile;
                         sketcher.setMolfile(data.molfile);
-                        Substance.q = data.smiles;
+                        scope.formsubstance.q = data.smiles;
                         console.log(Substance);
                         localStorageService.remove('structureid');
                     });
                 }
+                
             }
         };
     });
@@ -772,15 +804,15 @@
                     var warnings = JSON.parse(warnHead);
                 
                     modal.find('#inputExport').text(response.data);
-                   if(warnings.length>0){
-                  var html="<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">\n" + 
-                    "                        <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"> <span aria-hidden=\"true\">&times;</span>\n" + 
-                    "                        </button>\n" + 
-                    "                        <span><h4 class=\"warntype\"></h4><span class=\"message\">" +warnings[0].message + "</span></span>";
-                          modal.find('.warn').html(html);
-                  }else{
- modal.find('.warn').html("");
-            }
+                    if(warnings.length>0){
+                        var html="<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">\n" + 
+                            "                        <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"> <span aria-hidden=\"true\">&times;</span>\n" + 
+                            "                        </button>\n" + 
+                            "                        <span><h4 class=\"warntype\"></h4><span class=\"message\">" +warnings[0].message + "</span></span>";
+                                  modal.find('.warn').html(html);
+                    }else{
+                        modal.find('.warn').html("");
+                    }
 
                     modal.modal('show');
                 }, function(response){
@@ -846,20 +878,6 @@
             console.log(display);
             return display;
         };
-
-        /*        this.validate = function (obj) {
-         $scope.$broadcast('show-errors-check-validity');
-         if ($scope.refForm.$valid) {
-         //new array if object doesn't already have one
-         if (!Substance.references) {
-         Substance.references = [];
-         }
-         obj.id = Substance.references.length + 1;
-         Substance.references.push(obj);
-         $scope.ref = {};
-         $rootScope.refAdded = true;
-         }
-         };*/
 
         this.validate = function(obj) {
             console.log(obj);
