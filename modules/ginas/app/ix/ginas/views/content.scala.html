@@ -79,33 +79,48 @@
                                 }
                             }
                         }
-                        
-                        
-                          @if(searchFacets!=null && searchFacets.size()>0){
-                                <h5>Restrict query to field:</h5>
-                                 @for(searchField <- searchFacets) {
-                                    <div class = "col-md-4 fieldfacet">
-                                        <div class="row" style="display:block">
-                                            <div class = "col-md-1">
-                                                <input 
-                                                    type="checkbox"
-                                                    onclick="location.assign('@ix.ginas.controllers.routes.GinasApp.substances().url' + '?q=@searchField.getLuceneQuery()')"
-                                                />
-                                            </div>                                       
-                                            <div class = "col-md-8">
-                                                <span>@searchField.getDisplayField()</span>
-                                            </div>
-                                            <div class = "col-md-1">
-                                                <span class="badge" >@searchField.count</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                 }
-                                 
-                                <div class="spacer">&nbsp;</div>
-                          }
                     </div>
                 }
+                  @if(searchFacets!=null && searchFacets.size()>0){
+                           <div
+                        @if(total > 0) {
+                            class="alert alert-success alert-dismissible"
+                        } else {
+                            class="alert alert-danger alert-dismissible"
+                        }
+                    role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
+                        </button>
+                              <h4>Restrict query to field:</h4>
+                              @searchFacets.groupBy(_.matchType).map {
+                                    case (group, items) => {
+                                        @if(group.toString() == "FULL"){
+                                            <h5 style="font-style:italic">Exact Match:</h5>
+                                        }else{
+                                            <h5 style="font-style:italic">Contains Match:</h5>
+                                        }
+                                        <div class = "row fieldfacet">
+                                        @items.map { item =>
+                                         <button class="btn btn-primary" >  
+                                                  <div class = "col-md-4">
+                                                  <div class = "row">
+                                                    
+                                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.getLuceneQuery()'>
+                                                            <span style="color:white">
+                                                                @item.getDisplayField()
+                                                            </span>
+                                                        </a>
+                                                        <span class="badge">@item.count</span>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        }
+                                        </div>
+                                    }
+                                }
+                                            <div class="spacer">&nbsp;</div>
+                    </div>
+                          }
             }
 
             <div class="panel panel-default">
@@ -145,63 +160,30 @@ function dismissQuery () {
     location.assign('@resetAction');
 }
 
-$(document).ready(function () {  
+$(document).ready(function () {
    @defining(App.checkStatus()) { status =>
-                @if(status != null) {
-      
-         $('#searching')
-	     .html('<i class="fa fa-spinner fa-spin"></i> searching...');
-			
+      @if(status != null) {
+         $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
          var delay = 2000; // 2s
          var checkStatus;
 
-         $('#loading').on('hidden.bs.modal', function (e) {
-	     console.log('closing load dialog');
- 	     window.clearInterval(checkStatus);
-	     location.reload(true);
-         });
-
          checkStatus = window.setInterval(function () {
-      	     $.get('@status
-
-
-                                                            '+'@App.queryString("cutoff")
-
-                                        ',
-                                                    function(data) {
-                                                          if (data.status == 'Done' || data.status == 'Failed') {
-                                                             window.clearInterval(checkStatus);
-                                                             $('#searching').html('');
-                                                     $('#loading-progress').html('');
-                                                             if(data.count >= @total
-
-
-                                                            ) {
-                                                                                    //location.reload(true);
-                                                                        $('#loading').modal('hide');
-                                                                                 }
-                                                                              } else {
-                                                                                 //console.log(data.status + ' '+data.count+' '+data.total);
-                                                                                 $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
-                                                                         if (@{
-                        (current - 1) * rows
-                    }
-
-
-                                                            > data.count){
-                                                                           $('#loading').modal('show');
-                                                                         }
-                                                                         if (data.total) {
-                                                                              var pct = Math.floor(100.0*data.count / data.total+0.5);
-                                                                            $('#loading-progress').html('<p align="right">('+data.count+'/'+data.total+')</p><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">'+pct+'%</div></div>');
-                                                                         }
-                                                                              }
-                                                                            }).error(function () {
-                                                                       window.clearInterval(checkStatus);
-                                                                    });
-                                                                      }, delay);
-                                                                   }
-            }
+             $.get('@status'+'@App.queryString("cutoff")', function(data) {
+                  if (data.status == 'Done' || data.status == 'Failed') {
+                     window.clearInterval(checkStatus);
+                     $('#searching').html('');
+                     if(data.count > @total) {
+                        location.reload(true);
+                     }
+                  } else {
+                     console.log(data.status);
+                     console.log('status '+data.count);
+                     $('#searching').html('<i class="fa fa-spinner fa-spin"></i>searching... '+data.count+' matches');
+                  }
+              });
+          }, delay);
+       }
+  }
 });
 </script>
     }
