@@ -62,7 +62,7 @@ public class GinasFactory extends EntityFactory {
 
 	public static Result wizard(String kind) {
 		Logger.info(kind);
-		return ok(ix.ginas.views.html.wizard.render(kind,null));
+		return ok(ix.ginas.views.html.wizard.render(kind,"{}"));
 	}
 
 	public static Result edit(String substanceId) {
