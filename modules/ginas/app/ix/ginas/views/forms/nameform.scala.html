@@ -31,8 +31,8 @@
 
         <div class = "row" ng-repeat="name in substance.unofficialNames">
             <hr>
-            <div class="col-md-4">
-                <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
+            <div class="col-md-4 trungcate" >
+            <a href="#" editable-text="name.name">{{name.name}}</a>
             </div>
             <div class = "col-md-2">
                 <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>

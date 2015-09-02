@@ -51,7 +51,8 @@
     <div class = "row">
         <div class = "col-md-9">
             <h4 class="text-capitalize">@sub.substanceClass</h4>
-            <code class="text-uppercase">@sub.status : version: <select><option selected>@sub.version</option></select></code>
+            <code class="text-uppercase">Record Status: @sub.status</code> <br>
+            <code class ="text-uppercase"> version: <select><option selected>@sub.version</option></select></code>
         </div>
         <div class = "col-md-3">
         @if(sub.isSubstanceVariant()) {
