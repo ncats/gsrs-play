@@ -166,8 +166,6 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			int i=0;
 			for(Name n: o.names){
 				m2.put("names[" + i++ + "].name", n.name);
-				
-				System.out.println("\"" + n.name + "\"");
 				//m2.put( ".names[" + i + "].name", n.name);			
 			}
 		}
@@ -227,7 +225,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		for (Object key : m2.keySet()) {
 			//Logger.debug("About to simplify:" + key);
 			String realkey = MapObjectUtils.simplifyKeyPath(key + "");
-			if (matchedFields.contains(realkey))continue;
+			
 			
 			if(ignoreField(realkey))continue;
 			
@@ -242,13 +240,14 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 				String q = t.text();
 				//if(match==MATCH_TYPE.WORD_STARTS_WITH)
 				//	q= q + "*";
+				if (matchedFields.contains(realkey + match))continue;
 				FieldFacet ff = ffacet.get(realkey + match);
 				if (ff == null) {
-					System.out.println(match);
 					ff = new FieldFacet(realkey, q, match);
 					ffacet.put(realkey + match, ff);
 				}
 				ff.count++;
+				matchedFields.add(realkey + match);
 			}
 		}
 	}
