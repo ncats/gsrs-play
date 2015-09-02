@@ -4,8 +4,8 @@
 @(sub: ix.ginas.models.v1.MixtureSubstance)
 
 @substancedetails(sub){
-    @if(sub.components.length>0){
-        <li role="presentation"><a href="#components" prevent-default=""  ng-click="scrollTo('components')" >Components <span class="badge">@sub.components.length</span></a></li> }
+    @if(sub.mixture.components.length>0){
+        <li role="presentation"><a href="#components" prevent-default=""  ng-click="scrollTo('components')" >Components <span class="badge">@sub.mixture.components.length</span></a></li> }
 }  {
     <div class="row info" id="components">
     @components(sub.mixture.getMixture())
