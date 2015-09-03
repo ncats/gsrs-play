@@ -10,7 +10,7 @@
         <nav class="navbar navbar-default" id="breadcrumb">
             <div class="container-fluid">
                 <div class="row-fluid" >
-                    <div class="col-md-6">
+                    <div class="col-md-8">
                         <ul class="nav nav-pills" id="breadcrumb-list">
                             @breadcrumb
                             <li role="presentation" ><a href="#names" prevent-default="" ng-click="scrollTo('names')">
@@ -56,9 +56,9 @@
         </div>
         <div class = "col-md-3">
         @if(sub.isSubstanceVariant()) {
-            <h3 class= "pull-right subconcept"> @sub.getApprovalIDDisplay()</h3>
+            <h3 class= "pull-right appid subconcept"> @sub.getApprovalIDDisplay()</h3>
         } else {
-            <h3 class= "pull-right">@sub.getApprovalIDDisplay()</h3>
+            <h3 class= "pull-right appid">@sub.getApprovalIDDisplay()</h3>
         }
 
         </div>

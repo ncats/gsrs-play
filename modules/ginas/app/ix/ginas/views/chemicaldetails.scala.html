@@ -10,6 +10,7 @@
 }
 
 @makeTable(s: Structure, stype: String) = {
+    <div class="table-responsive">
     <table class="table @stype-Table">
         <thead>
             <tr>
@@ -32,6 +33,7 @@
         </thead>
         @fillTable(s, stype)
     </table>
+        </div>
 }
 
 @fillTable(s: Structure, stype: String) = {
