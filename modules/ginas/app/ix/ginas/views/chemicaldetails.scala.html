@@ -52,7 +52,7 @@
             <td><span class="badge badge-primary">@m.count</span></td>
             <td><span class="badge">@m.structure.stereoChemistry</span></td>
             <td><span class="badge">
-            @if(@m.structure.opticalActivity!=null){
+            @if(m.structure.opticalActivity!=null){
                 @m.structure.opticalActivity.toValue()
             }else{
                 @m.structure.opticalActivity
