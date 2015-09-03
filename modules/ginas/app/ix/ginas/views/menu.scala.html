@@ -2,11 +2,15 @@
 <nav class="navbar navbar-default">
     <div class="container-fluid" id="full">
         <div class="navbar-header">
+
             <button type="button" class="navbar-toggle collapsed"
             data-toggle="collapse" data-target="#menubar">
                 <span class="sr-only">Toggle Navigation</span> <i class="fa fa-bars"
             id="menuicon"></i>
             </button>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#searchbarmobile" aria-expanded="false"> <span class="sr-only">Toggle Search</span>  <i class="fa fa-search"></i>
+            </button>
+            
         </div>
 
         <div class="collapse navbar-collapse navbar-default" id="menubar">
@@ -33,7 +37,22 @@
                 </ul>
             </div>
         </div>
-            <!-- close input group  -->
+        <div class="hidden-sm hidden-md hidden-lg">
+            <div class="navbar-collapse collapse" id="searchbarmobile" aria-expanded="false">
+                <form class="form-inline main-search ng-pristine ng-valid" role="search" method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id="mobilesearch">
+                    <div class="input-group">
+                            <input type="text" class="form-control typeahead" id="searchboxmobile"
+                            title="Search" placeholder="Search ..." name="q">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" id="search" type="search"
+                                value="submit">
+                                    <span class="fa fa-search"></span>
+                                </button>
+                            </span>
+                        </div>
+                </form>
+            </div>
+        </div>
     </div>
     @ix.ncats.views.html.typeahead(Array("Name", "Substance_Class"))
     @screenshot()

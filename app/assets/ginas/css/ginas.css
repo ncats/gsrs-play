@@ -711,3 +711,24 @@ h2.display-name {
     white-space: nowrap;
     text-overflow: ellipsis;
 }*/
+input#search{
+-webkit-transition: all 0.3s ease 0s;
+    -moz-transition: all 0.3s ease 0s;
+    -o-transition: all 0.3s ease 0s;
+    transition: all 0.3s ease 0s;
+    width:200px;
+    margin-right:-1px;
+   
+}
+input#search:focus{
+    width:400px;
+}
+#searchtop{
+    position:absolute;
+    top:0px;
+    right:0px;
+    
+}
+div#searchbarmobile {
+    height: 300px;
+}

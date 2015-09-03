@@ -102,12 +102,12 @@
                 <img src="@routes.Assets.at("ginas/images/logo.png")" class="img-responsive" id="logo" height="50"/>
                     </a>
             </div>
-            <div class="col-md-2 hidden-xs" id="version">
+            <div class="col-md-2 hidden-xs hidden-sm" id="version">
                 <code data-toggle="tooltip"
                       title="Built on @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT)"
                 data-placement="bottom"><small>alpha version</small></code>
             </div>
-            <div class="collapse navbar-collapse pull-right pull-down">
+            <div class="collapse navbar-collapse pull-right pull-down" id="searchtop">
                 <ul class="nav navbar-nav pull-right"><li>
              <form class="form-inline main-search" role="search" method="GET"
                     action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id = "search-bar">

@@ -13,9 +13,37 @@
     } {
         <div class="row">
             @if(total > 0 && facets.length > 0) {
-                <div class="col-md-3" id = "facet-col">
-                @ix.ncats.views.html.filters(facets)
+                <div class="col-md-3 accordion" id="facet-col">
+    <div class="panel-group" id="accordion">
+        <div class="panel panel-default" id="panel1" style="
+    border: none;
+">
+            <div class="panel-heading hidden-lg hidden-md" style="
+    border: 1px solid #E4E4E4;
+">
+                 <h4 class="panel-title">
+        <i class="fa fa-filter"></i><a data-toggle="collapse" data-target="#collapseOne" href="#collapseOne" aria-expanded="true" class=""><span style="
+    margin-left: 10px;
+">Filters</span></a>
+      </h4>
+
+            </div>
+            <div id="collapseOne" class="panel-collapse collapse in" aria-expanded="true" style="
+">
+                <div class="panel-body" style="
+    margin: 0px;
+    padding: 0px;
+    border: none;
+">
+                    <div class="panel-group">
+                        @ix.ncats.views.html.filters(facets)                        
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+                
                 <div class="col-md-9">
                 } else {
                 <div class="col-md-12">
