@@ -73,19 +73,6 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		return new ArrayList<FieldFacet>(ffacet.values());
 	}
 
-	/**
-	 * This is an exceedingly lazy method for analyzing search result.
-	 * 
-	 * All it does is look through the objects for the query, and returns what
-	 * path the query matched.
-	 * 
-	 * It does this very stupidly, by serializing the objects to a json object,
-	 * flattening them, and listing the paths.
-	 * 
-	 * @param obj
-	 * @return
-	 * @throws JsonProcessingException
-	 */
 	public static List<FieldFacet> getFieldMathingList(Iterator<? extends Substance> it, String q)
 			throws Exception {
 		Map<String, FieldFacet> ffacet = new HashMap<String, FieldFacet>();
@@ -209,13 +196,13 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			}
 		}
 		
-		{
-			int i=0;
-			for(Keyword n: o.tags){
-				m2.put( "tags[" + i + "]", n.getValue());
-				i++;			
-			}
-		}
+//		{
+//			int i=0;
+//			for(Keyword n: o.tags){
+//				m2.put( "tags[" + i + "]", n.getValue());
+//				i++;			
+//			}
+//		}
 		
 		
 		Set<String> matchedFields = new HashSet<String>();

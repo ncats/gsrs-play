@@ -51,7 +51,13 @@
             <td>@structureImage(m.structure, 150)</td>
             <td><span class="badge badge-primary">@m.count</span></td>
             <td><span class="badge">@m.structure.stereoChemistry</span></td>
-            <td><span class="badge">@m.structure.opticalActivity.toValue()</span></td>
+            <td><span class="badge">
+            @if(m.structure.opticalActivity!=null){
+                @m.structure.opticalActivity.toValue()
+            }else{
+                @m.structure.opticalActivity
+            }
+            </span></td>
             <td><span class="badge">@m.structure.atropisomerism</span></td>
             <td>@m.structure.formula</td>
             <td>@m.structure.mwt</td>
@@ -97,3 +103,4 @@
         </div>
     }
 }
+

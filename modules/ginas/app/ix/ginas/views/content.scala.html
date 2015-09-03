@@ -129,19 +129,21 @@
                                         }
                                         <div class = "row fieldfacet">
                                         @items.map { item =>
+                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.getLuceneQuery()'>
                                          <button class="btn btn-primary" >  
                                                   <div class = "col-md-4">
                                                   <div class = "row">
                                                     
-                                                        <a target="_self" href='@ix.ginas.controllers.routes.GinasApp.substances().url?q=@item.getLuceneQuery()'>
+                                                        
                                                             <span style="color:white">
                                                                 @item.getDisplayField()
                                                             </span>
-                                                        </a>
+                                                        
                                                         <span class="badge">@item.count</span>
                                                     </div>
                                                 </div>
                                             </button>
+                                            </a>
                                         }
                                         </div>
                                     }
