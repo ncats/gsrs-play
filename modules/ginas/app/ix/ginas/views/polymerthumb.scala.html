@@ -1,0 +1,44 @@
+@import ix.core.models.Structure
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.PolymerSubstance
+
+
+
+@(chem: PolymerSubstance, ctx: String = null)
+
+<div class = "col-md-3 thumb-col">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+
+            <p class="text-right" data-toggle="tooltip" title="Approval ID">
+                <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
+                    <code>@chem.approvalID</code></a></p>
+        </div>
+        <div class="panel-body struc-img">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
+                <img class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+                src='@ix.ginas.controllers.routes.GinasApp.structure(chem.polymer.displayStructure.getId, "svg", 200, ctx)'>
+            </a>
+            <div class = "row stereo">
+                <div class = "col-md-10">
+                   <span class="label label-primary label-offset">POLYMER</span>
+                </div>
+
+            </div>
+        </div>
+        <div class = "panel-footer nameDiv" data-toggle="tooltip" title="@chem.getName()">
+            <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">
+                @chem.getName()
+            </a>
+            <div class = "row">
+                <div class = "col-md-12">
+                    <ul class= "list-inline pull-right list-unstyled">
+                        <li>
+                            <export-button structureid ="'@chem.uuid'" ></export-button>
+                        </li>                        
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

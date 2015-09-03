@@ -235,11 +235,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 				if(match==MATCH_TYPE.CONTAINS)continue;
 				if(match==MATCH_TYPE.WORD_STARTS_WITH)continue;
 				
-				
-				//matchedFields.add(realkey);
 				String q = t.text();
-				//if(match==MATCH_TYPE.WORD_STARTS_WITH)
-				//	q= q + "*";
 				if (matchedFields.contains(realkey + match))continue;
 				FieldFacet ff = ffacet.get(realkey + match);
 				if (ff == null) {

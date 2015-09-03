@@ -57,6 +57,9 @@ public class GinasUtils {
 		Chemical c;
 		if(s instanceof ChemicalSubstance){
 			c=structureToChemical(((ChemicalSubstance) s).structure, messages);
+		}else if(s instanceof PolymerSubstance){
+			messages.add(GinasProcessingMessage.WARNING_MESSAGE("Polymer substance structure is for display, and is not complete in definition"));
+			c=structureToChemical(((PolymerSubstance) s).polymer.displayStructure, messages);
 		}else{
 			c=DEFAULT_FACTORY.createChemical(NULL_MOLFILE, Chemical.FORMAT_SDF);
 			messages.add(GinasProcessingMessage.WARNING_MESSAGE("Structure is non-chemical. Structure format is largely meaningless."));
@@ -130,20 +133,23 @@ public class GinasUtils {
 			c.setProperty("OPTICAL_ACTIVITY", s.opticalActivity.toString());
 		if(s.stereoComments!=null)
 			c.setProperty("STEREOCHEMISTRY_COMMENTS", s.stereoComments);
+		if(s.stereoChemistry!=null){
 		switch(s.stereoChemistry){
-		case ABSOLUTE:
-		case ACHIRAL:
-			break;
-		case EPIMERIC:
-		case MIXED:
-		case RACEMIC:			
-		case UNKNOWN:
-			messages.add(GinasProcessingMessage.WARNING_MESSAGE("Structure format may not encode full stereochemical information"));
-			break;
-		default:
-			break;		
+			case ABSOLUTE:
+			case ACHIRAL:
+				break;
+			case EPIMERIC:
+			case MIXED:
+			case RACEMIC:			
+			case UNKNOWN:
+				messages.add(GinasProcessingMessage.WARNING_MESSAGE("Structure format may not encode full stereochemical information"));
+				break;
+			default:
+				break;		
+			}
 		}
-		c.setProperty("SMILES", s.smiles);
+		if(s.smiles!=null)
+			c.setProperty("SMILES", s.smiles);
 		return c;
 		
 	}

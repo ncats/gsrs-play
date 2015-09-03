@@ -1482,6 +1482,7 @@ public class GinasApp extends App {
         if(s==null){
         	Structure struc = StructureFactory.getStructure(id);
         	c = GinasUtils.structureToChemical(struc, messages);
+        	
         }else{
         	c = GinasUtils.substanceToChemical(s, messages);
         }
