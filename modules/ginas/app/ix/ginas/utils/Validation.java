@@ -19,17 +19,30 @@ public class Validation {
 			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance cannot be parsed"));
 			return gpm;
 		}
+		boolean preferred=false;
+		List<Name> remnames = new ArrayList<Name>();
+		for(Name n : s.names){
+			if(n == null){
+				GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Null name objects are not allowed").appliableChange(true);
+				gpm.add(mes);
+				strat.processMessage(mes);
+				if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+					remnames.add(n);
+					mes.appliedChange=true;
+				}
+			}else{
+				if(n.preferred){
+					preferred=true;
+				}
+			}
+		}
+		s.names.removeAll(remnames);
 		if(s.names.size()<=0){
 			GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Substances must have names");
 			gpm.add(mes);
 			strat.processMessage(mes);
 		}
-		boolean preferred=false;
-		for(Name n : s.names){
-			if(n.preferred){
-				preferred=true;
-			}
-		}
+		
 		if(!preferred){
 			GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have at least one (1) preferred name").appliableChange(true);
 			gpm.add(mes);
@@ -187,8 +200,10 @@ public class Validation {
 					
             		int dupes=0;
             		for(Substance s:sr){
-            			if(!s.uuid.toString().equals(cs.uuid.toString()))
+            			
+            			if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
             				dupes++;
+            			}
             		}
             		if(dupes>0){
 						GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has " + dupes +" possible duplicate(s)");

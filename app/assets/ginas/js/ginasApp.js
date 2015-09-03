@@ -297,14 +297,14 @@
                     template = "";
                     break;
                 case "structuresearch":
-                    template = 'app/assets/ginas/templates/substanceselector.html';
+                    template = baseurl + 'assets/ginas/templates/substanceselector.html';
                     break;
             }
             var modalInstance = $modal.open({
                 animation: true,
-                //templateUrl: 'app/assets/ginas/templates/substanceselector.html',
+                //templateUrl: baseurl + 'assets/ginas/templates/substanceselector.html',
                 templateUrl: template,
-                // windowTemplateUrl: 'app/assets/ginas/templates/modal-window.html',
+                // windowTemplateUrl: baseurl + 'assets/ginas/templates/modal-window.html',
                 controller: 'ModalController',
                 size: 'lg'
             });
@@ -410,7 +410,7 @@
         $scope.submitSubstance = function() {
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
-            $http.post('app/submit', sub).success(function() {
+            $http.post(baseurl + 'submit', sub).success(function() {
                 console.log("success");
                 alert("submitted!");
             });
@@ -421,9 +421,17 @@
            // console.log(angular.copy(sub));
             sub = $scope.fromFormSubstance(sub);
          //   console.log(sub);
-            $http.post('app/register/validate', sub).success(function(response) {
-                $scope.errorsArray = response;
-                console.log(  $scope);
+            $http.post(baseurl + 'register/validate', sub).success(function(response) {
+                var arr=[];
+                for(var i in response){
+                  if(response[i].messageType != "INFO")
+                    arr.push(response[i]);
+                  if(response[i].messageType == "WARNING")               
+                    response[i].class="alert-warning";
+                  if(response[i].messageType == "ERROR")               
+                    response[i].class="alert-danger";
+                }
+                $scope.errorsArray = arr;
             });
         };
 
@@ -517,7 +525,7 @@
     });
 
     ginasApp.factory('substanceFactory', ['$http', function($http) {
-        var url = "app/api/v1/substances?filter=names.name='";
+        var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceFactory = {};
         substanceFactory.getSubstances = function(name) {
             return $http.get(url + name.toUpperCase() + "'", {
@@ -530,7 +538,7 @@
     }]);
 
     ginasApp.service('substanceIDRetriever', ['$http', function($http) {
-        var url = "app/api/v1/substances(";
+        var url = baseurl + "api/v1/substances(";
         var substanceIDRet = {
             getSubstances: function(editId) {
                 console.log(editId);
@@ -549,7 +557,7 @@
     }]);
 
     ginasApp.service('substanceRetriever', ['$http', function($http) {
-        var url = "app/api/v1/substances?filter=names.name='";
+        var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceRet = {
             getSubstances: function(name) {
                 var promise = $http.get(url + name.toUpperCase() + "'", {
@@ -567,7 +575,7 @@
 
     ginasApp.service('data', function($http) {
         var options = {};
-        var url = "app/api/v1/vocabularies?filter=domain='";
+        var url = baseurl + "api/v1/vocabularies?filter=domain='";
 
         this.load = function(field) {
             $http.get(url + field.toUpperCase() + "'", {
@@ -601,7 +609,7 @@
 
     ginasApp.service('substanceSearch', function($http) {
         var options = {};
-        var url = "app/api/v1/suggest/Name?q=";
+        var url = baseurl + "api/v1/suggest/Name?q=";
 
         this.load = function(field) {
             $http.get(url + field.toUpperCase(), {
@@ -631,7 +639,7 @@
             link: function(scope, element) {
                 $http({
                     method: 'GET',
-                    url: 'app/img/' + scope.id + '.svg',
+                    url: baseurl + 'img/' + scope.id + '.svg',
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -678,7 +686,7 @@
             link: function(scope, element, attrs, ngModelCtrl) {
                 //console.log("LINKING");
                 sketcher = new JSDraw("sketcherForm");
-                var url = window.strucUrl; //'/ginas/app/smiles';
+                var url = window.strucUrl; //baseurl + 'smiles';
                 var structureid = (localStorageService.get('structureid') || false);
                 if(localStorageService.get('editID'))
                         structureid=false;
@@ -730,7 +738,7 @@
                     console.log("There is an id, it's:" + structureid);
                     $http({
                         method: 'GET',
-                        url: '/ginas/app/api/v1/structures/' + structureid
+                        url: baseurl + 'api/v1/structures/' + structureid
                     }).success(function(data) {
                         console.log(data);
                         console.log("fetched");
@@ -792,7 +800,7 @@
             scope: {
                 error: '='
             },
-            templateUrl: "app/assets/ginas/templates/errorwindow.html"
+            templateUrl: baseurl + "assets/ginas/templates/errorwindow.html"
         };
     });
 
@@ -802,7 +810,7 @@
                 var modal = angular.element(document.getElementById('export-mol'));
                 $http({
                     method: 'GET',
-                    url: 'app/export/' + scope.structureid + '.sdf',
+                    url: baseurl + 'export/' + scope.structureid + '.sdf',
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -834,7 +842,7 @@
     ginasApp.directive('molExport', function($http) {
         return {
             restrict: 'E',
-            templateUrl: "app/assets/ginas/templates/molexport.html"
+            templateUrl: baseurl + "assets/ginas/templates/molexport.html"
         };
     });
 
@@ -1047,7 +1055,7 @@
         $scope.refresh = function(id, pollin) {
             $scope.id = id;
             $scope.monitor=pollin;
-            var responsePromise = $http.get("/ginas/app/api/v1/jobs/" + id + "/");
+            var responsePromise = $http.get(baseurl + "api/v1/jobs/" + id + "/");
             responsePromise.success(function(data, status, headers, config) {
                 //$scope.myData.fromServer = data.title;
                 if ($scope.status != data.status) {
@@ -1252,7 +1260,7 @@
         };
 
         $scope.fetch = function(term, skip) {
-            var url = "/ginas/app/api/v1/substances/search?q=" +
+            var url = baseurl + "api/v1/substances/search?q=" +
                 term + "*&top=" + $scope.top + "&skip=" + skip;
             console.log(url);
             var responsePromise = $http.get(url);
@@ -1309,4 +1317,5 @@ function vocabsetup(cv){
         window.CV_REQUEST=cv;
         console.log("finished");
 }
+
 
