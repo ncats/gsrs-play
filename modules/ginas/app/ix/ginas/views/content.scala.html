@@ -14,9 +14,12 @@
         <div class="row">
             @if(total > 0 && facets.length > 0) {
                 <div class="col-md-3" id="facet-col">
-            <div class="btn btn-primary hidden-md hidden-lg" ng-click ='isCollapsed = !isCollapsed'>
-              <i class="fa fa-filter"></i> Toggle Filters
+            <div class="btn btn-primary hidden-md hidden-lg" ng-show="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
+              <i class="fa fa-filter"></i> Show Filters
             </div>
+                    <div class="btn btn-primary hidden-md hidden-lg" ng-hide="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
+                        <i class="fa fa-filter"></i> Hide Filters
+                    </div>
             <div collapse="isCollapsed" class="panel-group">
                         @ix.ncats.views.html.filters(facets)                        
                     </div>
