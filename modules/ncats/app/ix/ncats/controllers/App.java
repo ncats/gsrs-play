@@ -809,17 +809,22 @@ public class App extends Authentication {
         Chemical chem = new Jchemical (mol);
         DisplayParams dp = DisplayParams.DEFAULT();
         //chem.reduceMultiples();
-        if(amap!=null){
+        boolean highlight=false;
+        if(amap!=null && amap.length>0){
                 ChemicalAtom[] atoms = chem.getAtomArray();
                 for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
                     atoms[i].setAtomMap(amap[i]);
                     if(amap[i]!=0){
                         dp = dp.withSubstructureHighlight();
-                        
+                        highlight=true;
                     }
                 }
         }else{
-                dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+                
+        }
+        if(size>250 && !highlight){
+        	if(chem.hasStereoIsomers())
+        		dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
 
         /*
