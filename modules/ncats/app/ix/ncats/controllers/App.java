@@ -1171,11 +1171,11 @@ public class App extends Authentication {
                 SearchResultContext ctx
                     = new SearchResultContext ((SearchResult)value);
                 
-                if (ctx.finished())
-                    return null;
+                if (!ctx.finished()) {
+                    Logger.debug("status: key="+key);
+                    return routes.App.status(key);
+                }
             }
-            Logger.debug("status: key="+key);
-            return routes.App.status(key);
         }
         return null;
     }
@@ -1299,7 +1299,7 @@ public class App extends Authentication {
         int count = 0;
         if (result != null) {
             Long stop = context.getStop();
-            if (!context.finished() || 
+            if (!context.finished() ||
                 (stop != null && stop >= result.getTimestamp()))
                 IxCache.remove(key);
             
