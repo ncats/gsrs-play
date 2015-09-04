@@ -1,0 +1,27 @@
+				Source Code Use License 
+
+The subject software (including source code, binary code and associated documentation hereinafter collectively is “Software”) of this Source Code Use License entitled, Global Ingredient Archival System; and was developed by staff at the National Institutes of Health’s National Center for Advancing Translational Sciences.  The individual developers of the Software on behalf of NCATS are Dac-Trung Nguyen, Tyler Peryea, Timothy Sheils, Tongan Zhao, Noel Southall and Ajit Jadhav.  
+
+By downloading or otherwise receiving the Software, Recipient agrees to abide by the following terms:
+
+1. Permission is hereby granted to Recipient, free of charge, to use, copy, modify, make derivatives, merge, publish, display or distribute the Software and to permit others to do so, subject to the conditions herein.
+
+2. THE SOFTWARE SHALL NOT BE USED IN THE TREATMENT OR DIAGNOSIS OF HUMANS.
+
+3.  The following notice and this Source Code Use License shall be included in all copies or substantial portions of the Software.
+
+“This Software was developed at the National Center for Advancing Translational Sciences (NCATS) as a work of the United States Government. Source code produced by the United States Government is in the public domain and may be reproduced or copied without permission from NCATS. Citation of the source is appreciated.”
+
+4. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE NCI, SAIC-F OR THE INDIVIDUAL DEVELOPERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY OF ANY KIND.  USE OF THE SOFTWARE BY RECIPIENT IS AT RECIPIENT’S OWN RISK.
+
+5. By conveying the Software herein, NCATS and the individual developers shall be under no obligation to provide to the Recipient or any other party support in any form nor be under an obligation to replace Software should it become erased or otherwise destroyed.  Accordingly, NCATS and the individual developers shall be under no obligation to provide Recipient any service, guidance, updates or assistance.
+
+6. The United States Government explicitly retains all rights to use the Software for any purpose, to have it used on the Government’s behalf or to allow others to use it.
+
+
+
+
+
+
+
+
