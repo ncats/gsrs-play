@@ -1147,12 +1147,13 @@
 
     });
 
-    ginasApp.controller('SubstanceListController', function($scope) {
+     ginasApp.controller('SubstanceListController', function($scope) {
         $scope.bigview = false;
         $scope.initialized = false;
-        $scope.toggle = function() {
+        $scope.toggle = function(src) {
             $scope.initialized = true;
             $scope.bigview = !$scope.bigview;
+            $scope.src=src;
         };
 
     });

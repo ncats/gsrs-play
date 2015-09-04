@@ -25,7 +25,7 @@
         <div class = "row">
             <div class = "col-md-3">
                 <span class="label label-primary label-offset list-view-badge">POLYMER</span>
-                <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+                <img ng-click="toggle('@ix.ginas.controllers.routes.GinasApp.structure(chem.polymer.displayStructure.getId, "svg", 400,ctx)')"  class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
                 src='@ix.ginas.controllers.routes.GinasApp.structure(chem.polymer.displayStructure.getId, "svg", 150, ctx)'>
                 <div class = "row">
                     <div class = "col-md-12">
@@ -81,8 +81,9 @@
         <div ng-show="bigview" class = "revealable row">
             <div ng-show="initialized">
                 <div class = "col-md-12">
-                <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                        src='@ix.ginas.controllers.routes.GinasApp.structure(chem.polymer.displayStructure.getId, "svg", 400,ctx)'>
+                <img ng-src="{{src}}" ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+                        >
+                        
                 </div>
             </div>
         </div>
