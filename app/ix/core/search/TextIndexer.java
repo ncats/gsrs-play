@@ -109,7 +109,7 @@ public class TextIndexer {
     protected static final String GIVEN_STOP_WORD = "$";
     protected static final String GIVEN_START_WORD = "^";
 
-	@Indexable
+        @Indexable
     static final class DefaultIndexable {}
     static final Indexable defaultIndexable = 
         (Indexable)DefaultIndexable.class.getAnnotation(Indexable.class);
@@ -118,6 +118,7 @@ public class TextIndexer {
      * well known fields
      */
     public static final String FIELD_KIND = "__kind";
+    public static final String FIELD_ID = "id";
 
     /**
      * these default parameters should be configurable!
@@ -148,7 +149,6 @@ public class TextIndexer {
         }
         public String getLabel () { return label; }
         public Integer getCount () { return count; }
-       
     }
 
     public interface FacetFilter {
@@ -269,17 +269,17 @@ public class TextIndexer {
         protected void add (Object obj) {
             matches.add(obj);
             //Logger.debug("added" + matches.size());
-//          long start=System.currentTimeMillis();
+            //          long start=System.currentTimeMillis();
             if(query!=null && query.length()>0){
-				if (matches.size() < Play.application().configuration()
-						.getInt("ix.ginas.maxanalyze", 100)) {
-					if (Play.application().configuration()
-							.getBoolean("ix.ginas.textanalyzer", false)) {
-						searchAnalyzer.updateFieldQueryFacets(obj, query);
-					}
-				}
+                if (matches.size() < Play.application().configuration()
+                    .getInt("ix.ginas.maxanalyze", 100)) {
+                    if (Play.application().configuration()
+                        .getBoolean("ix.ginas.textanalyzer", false)) {
+                        searchAnalyzer.updateFieldQueryFacets(obj, query);
+                    }
+                }
             }
-//          Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
+            //          Logger.debug("############## analyzed:" + (System.currentTimeMillis()-start) + " ms");
         }
         
         protected void done () {
@@ -536,7 +536,7 @@ public class TextIndexer {
 
                         payload.fetch();
                         Logger.debug(Thread.currentThread()+": ## fetched "
-                                     +payload.result.count
+                                     +payload.result.size()
                                      +" for result "+payload.result
                                      +" in "+String.format
                                      ("%1$dms", 
@@ -691,7 +691,7 @@ public class TextIndexer {
 
     static Analyzer createIndexAnalyzer () {
         Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
-        fields.put("id", new KeywordAnalyzer ());
+        fields.put(FIELD_ID, new KeywordAnalyzer ());
         fields.put(FIELD_KIND, new KeywordAnalyzer ());
         return  new PerFieldAnalyzerWrapper 
             (new StandardAnalyzer (LUCENE_VERSION), fields);
@@ -787,15 +787,15 @@ public class TextIndexer {
     public SearchResult search 
         (SearchOptions options, String text, Collection subset)
         throws IOException {
-    	//this is a quick and dirty way to have a cleaner-looking
-    	//query for display
-		String qtext =text;
-		if(qtext!=null){
-			qtext= text.replace(TextIndexer.GIVEN_START_WORD,
-					TextIndexer.START_WORD);
-			qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
-					TextIndexer.STOP_WORD);
-		}
+        //this is a quick and dirty way to have a cleaner-looking
+        //query for display
+        String qtext =text;
+        if (qtext!=null){
+            qtext= text.replace(TextIndexer.GIVEN_START_WORD,
+                                TextIndexer.START_WORD);
+            qtext = qtext.replace(TextIndexer.GIVEN_STOP_WORD,
+                                  TextIndexer.STOP_WORD);
+        }
         SearchResult searchResult = new SearchResult (options, text);
 
         Query query = null;
@@ -1584,12 +1584,16 @@ public class TextIndexer {
 
             if (!(value instanceof Number)) {
                 if (!name.equals(full))
-                    fields.add(new TextField (full, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, NO));
+                    fields.add(new TextField
+                               (full, TextIndexer.START_WORD
+                                + text + TextIndexer.STOP_WORD, NO));
             }
 
             if (indexable.sortable() && !sorters.containsKey(name))
                 sorters.put(name, SortField.Type.STRING);
-            fields.add(new TextField (name, TextIndexer.START_WORD + text + TextIndexer.STOP_WORD, store));
+            fields.add(new TextField
+                       (name, TextIndexer.START_WORD
+                        + text + TextIndexer.STOP_WORD, store));
         }
     }
 

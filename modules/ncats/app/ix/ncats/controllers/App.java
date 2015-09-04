@@ -823,8 +823,8 @@ public class App extends Authentication {
                 
         }
         if(size>250 && !highlight){
-        	if(chem.hasStereoIsomers())
-        		dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+                if(chem.hasStereoIsomers())
+                        dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
 
         /*
@@ -868,16 +868,16 @@ public class App extends Authentication {
     public static int[] stringToIntArray(String amapString){
         int[] amap=null;
         if(amapString!=null){
-                String[] amapb = null;
-                amapb = amapString.split(",");
-                amap = new int[amapb.length];
-                for(int i=0;i<amap.length;i++){
-                        try{
-                                amap[i]=Integer.parseInt(amapb[i]);
-                        }catch(Exception e){
+            String[] amapb = null;
+            amapb = amapString.split(",");
+            amap = new int[amapb.length];
+            for(int i=0;i<amap.length;i++){
+                try{
+                    amap[i]=Integer.parseInt(amapb[i]);
+                }catch(Exception e){
                                 
-                        }
                 }
+            }
         }
         return amap;
     }
@@ -1051,7 +1051,9 @@ public class App extends Authentication {
                 status = Status.Done;
                 stop = start+result.ellapsed();
             }
-            else if (result.size() > 0) status = Status.Running;
+            else if (result.size() > 0)
+                status = Status.Running;
+            
             if (status != Status.Done) {
                 mesg = String.format
                     ("Loading...%1$d%%",
@@ -1127,6 +1129,7 @@ public class App extends Authentication {
     public static Call checkStatus () {
         String query = request().getQueryString("q");
         String type = request().getQueryString("type");
+
         Logger.debug("checkStatus: q="+query+" type="+type);
         if (type != null && query != null) {
             try {
@@ -1172,22 +1175,24 @@ public class App extends Authentication {
         else {
             String key = signature (query, request().queryString());
             Object value = IxCache.get(key);
+            Logger.debug("checkStatus: key="+key+" value="+value);
+            
             if (value != null) {
-                SearchResultContext ctx
-                    = new SearchResultContext ((SearchResult)value);
+                SearchResult result = (SearchResult)value;
+                SearchResultContext ctx = new SearchResultContext (result);
+                Logger.debug("status: key="+key+" finished="+ctx.finished());
                 
-                if (ctx.finished())
-                    return null;
+                if (!ctx.finished()) {
+                    return routes.App.status(key);
+                }
             }
-            Logger.debug("status: key="+key);
-            return routes.App.status(key);
         }
         return null;
     }
 
     public static Result status (String key) {
         Object value = IxCache.get(key);
-        //Logger.debug("status["+key+"] => "+value);
+        Logger.debug("status["+key+"] => "+value);
         if (value != null) {
             if (value instanceof SearchResult) {
                 // wrap SearchResult into SearchResultContext..
@@ -1197,6 +1202,11 @@ public class App extends Authentication {
                 ctx.id = key;
                 value = ctx;
             }
+            else if (value instanceof SearchResultContext) {
+                SearchResultContext ctx = (SearchResultContext)value;
+                Logger.debug(" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
+            }
+            
             ObjectMapper mapper = new ObjectMapper ();
             return ok (mapper.valueToTree(value));
         }
@@ -1291,20 +1301,26 @@ public class App extends Authentication {
             (key, new Callable<TextIndexer.SearchResult> () {
                     public TextIndexer.SearchResult call () throws Exception {
                         List results = context.getResults();
-                        return results.isEmpty() ? null : SearchFactory.search
+                        TextIndexer.SearchResult searchResult =
+                        results.isEmpty() ? null : SearchFactory.search
                         (results, null, results.size(), 0,
                          renderer.getFacetDim(),
                          request().queryString());
+                        Logger.debug("Cache misses: "
+                                     +key+" size="+results.size()
+                                     +" class="+searchResult);
+                        return searchResult;
                     }
                 });
 
         final List<T> results = new ArrayList<T>();
-        
+        final List<TextIndexer.Facet> facets =
+            new ArrayList<TextIndexer.Facet>();
         int[] pages = new int[0];
         int count = 0;
         if (result != null) {
             Long stop = context.getStop();
-            if (!context.finished() || 
+            if (!context.finished() ||
                 (stop != null && stop >= result.getTimestamp()))
                 IxCache.remove(key);
             
@@ -1323,27 +1339,28 @@ public class App extends Authentication {
 
             for (int j = 0; j < rows && i < count; ++j, ++i) 
                 results.add((T)result.get(i));
-        }
+        
+            facets.addAll(result.getFacets());
 
-        final List<TextIndexer.Facet> facets = result != null
-            ? result.getFacets() : new ArrayList<TextIndexer.Facet>();
-
-        if (IxCache.contains(key)) {
-            final String k = "structureResult/"
-                +context.getId()+"/"+Util.sha1(request());
-            final int _page = page;
-            final int _rows = rows;
-            final int _count = count;
-            final int[] _pages = pages;
+            if (result.finished()) {
+                final String k = "structureResult/"
+                    +context.getId()+"/"+Util.sha1(request());
+                final int _page = page;
+                final int _rows = rows;
+                final int _count = count;
+                final int[] _pages = pages;
             
-            // result is cached
-            return getOrElse (k, new Callable<Result> () {
-                    public Result call () throws Exception {
-                        return renderer.render
-                            (context, _page, _rows, _count, _pages,
-                             facets, results);
-                    }
-                });
+                // result is cached
+                return getOrElse (k, new Callable<Result> () {
+                        public Result call () throws Exception {
+                            Logger.debug("Cache misses: "+k+" count="+_count
+                                         +" rows="+_rows+" page="+_page);
+                            return renderer.render
+                                (context, _page, _rows, _count, _pages,
+                                 facets, results);
+                        }
+                    });
+            }
         }
         
         return renderer.render(context, page, rows, count,
@@ -1455,7 +1472,7 @@ public class App extends Authentication {
         return ups;
     }
 
-    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 10)
+    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
     public static Result molinstrument () {
         //String mime = request().getHeader("Content-Type");
         //Logger.debug("molinstrument: content-type: "+mime);
@@ -1467,7 +1484,7 @@ public class App extends Authentication {
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
                 Structure struc = StructureProcessor.instrument
-                    (payload, moieties);
+                    (payload, moieties, false); // don't standardize!
                 // we should be really use the PersistenceQueue to do this
                 // so that it doesn't block
                 struc.save();

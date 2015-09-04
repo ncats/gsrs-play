@@ -15,14 +15,13 @@
 
         <div class="collapse navbar-collapse navbar-default" id="menubar">
             <ul class="nav navbar-nav pull-left">
-                <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self"><span>Home</span></a></li>
-                <li><a href="http://ginas.hres.ca/ginas/#view=register"><span>Register Substance</span></a></li>
-                <li><a href="http://tripod.nih.gov/pub/ginasISO/"><span>Download</span></a></li>
-          @*      <li><a id = "bug-link" data-toggle="modal" data-target="#screenshot" role="button"><i class="fa fa-bug"></i> Report a Bug</a></li>*@
-                @*<li><button type="button" class="btn navbar-btn btn-default"
-                data-toggle="modal"
-                data-target="#strucModal">Structure Search</button> &nbsp;
-                </li>*@
+              <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self"><span>Home</span></a></li>
+              <li><a href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>	      
+              <li><a href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>Register Substance</span></a></li>
+              <li><a href="http://tripod.nih.gov/pub/ginasISO/"><span>Download</span></a></li>
+	      @**
+              <li><a id = "bug-link" data-toggle="modal" data-target="#screenshot" role="button"><i class="fa fa-bug"></i> Report a Bug</a></li>
+	      **@
                 <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" ng-click="clearStructure()" target="_self"><span>Structure Search</span></a></li>
                 <li><a ng-href="@ix.ginas.controllers.routes.GinasApp.sequenceSearch" ng-click="clearStructure()" target="_self"><span>Sequence Search</span></a></li>
                
@@ -57,6 +56,4 @@
     @ix.ncats.views.html.typeahead(Array("Name", "Substance_Class"))
     @screenshot()
     @report()
-
-
 </nav>

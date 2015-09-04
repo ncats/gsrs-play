@@ -40,8 +40,6 @@
                             class="alert alert-danger alert-dismissible"
                         }
                     role="alert">
-                    
-                          
                              
                         <button type="button" class="close" data-dismiss="alert"
                         onclick="location.assign('@ix.ginas.controllers.routes.GinasApp.substances().url')"
@@ -49,11 +47,11 @@
                             <span aria-hidden="true">&times;</span>
                         </button>
                         @request().getQueryString("type") match {
-						    case "sequence" => {
-							    <span><h4>Sequence Query:&nbsp;
-							     <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a></h4>
-				                                </span> <div id="searching"></div>
-							    }
+			    case "sequence" => {
+			      <span><h4>Sequence Query:&nbsp;
+				  <a target="_self" href='@ix.ginas.controllers.routes.GinasFactory.sequence(request().getQueryString("q"))'><code>@ix.ginas.controllers.GinasFactory.getSequence(request().getQueryString("q"), 15)</code></a></h4>
+			      </span> <div id="searching"></div>
+			    }
                             case "Substructure" => {
                                 <span><h4>Substructure Query:&nbsp; <a href="#"
                                 tabindex="-1"
@@ -175,28 +173,63 @@ function dismissQuery () {
 
 $(document).ready(function () {
    @defining(App.checkStatus()) { status =>
-      @if(status != null) {
-         $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching...');
-         var delay = 2000; // 2s
+     @if(status != null) {
+         console.log('status=@status');
+         $('#searching')
+	     .html('<i class="fa fa-spinner fa-spin"></i> searching...');
+			
+         var delay = 0;
          var checkStatus;
+	 var timer;
 
-         checkStatus = window.setInterval(function () {
-             $.get('@status'+'@App.queryString("cutoff")', function(data) {
-                  if (data.status == 'Done' || data.status == 'Failed') {
-                     window.clearInterval(checkStatus);
-                     $('#searching').html('');
-                     if(data.count > @total) {
-                        location.reload(true);
-                     }
+         $('#loading').on('hidden.bs.modal', function (e) {
+	     console.log('closing load dialog');
+ 	     window.clearInterval(timer);
+	     location.reload(true);
+         });
+
+	 checkStatus = function () {
+	     if (delay == 0) {
+	        console.log('Starting timer...');
+		window.clearInterval(timer);
+		delay = 2000;
+	        timer = window.setInterval(checkStatus, delay);
+	     }
+
+	     var url = '@status'+'@App.queryString("cutoff")';
+	     //console.log(url);
+             $.ajax(url, {
+	         dataType: 'json',
+	     }).done(function(data) {
+                 console.log(data.status + ' '+data.count+' '+data.total);
+                 if (data.status == 'Done' || data.status == 'Failed') {
+                       window.clearInterval(timer);
+                       $('#searching').html('');
+                       $('#loading-progress').html('');
+                       if(data.count >= @total) {
+                           //location.reload(true);
+                           $('#loading').modal('hide');
+                       }
                   } else {
-                     console.log(data.status);
-                     console.log('status '+data.count);
-                     $('#searching').html('<i class="fa fa-spinner fa-spin"></i>searching... '+data.count+' matches');
+                       $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
+ 	               if (@Math.min(current*rows,total) > data.count) {
+  	                   $('#loading').modal('show');
+		       }
+			  
+                       if (data.total) {
+ 		           var pct = Math.floor(100.0*data.count
+						/ data.total+0.5);
+                           $('#loading-progress').html('<p align="right">('+data.count+'/'+data.total+')</p><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">'+pct+'%</div></div>');
+                       }
                   }
+              }).error(function () {
+                  window.clearInterval(timer);
               });
-          }, delay);
-       }
-  }
+         };
+	   
+	 timer = window.setInterval(checkStatus, delay);
+      }
+   }
 });
 </script>
-    }
+}

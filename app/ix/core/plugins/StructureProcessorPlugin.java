@@ -65,7 +65,7 @@ import tripod.chem.indexer.StructureIndexer;
 
 public class StructureProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
-	private final Application app;
+        private final Application app;
     private StructureIndexer indexer;
     private PersistenceQueue PQ;
     private IxContext ctx;
@@ -535,23 +535,23 @@ public class StructureProcessorPlugin extends Plugin {
              (new FromConfig().withFallback(config)), "processor");
         system.actorOf(Props.create(Reporter.class, PQ), "reporter");
         
-		long start= System.currentTimeMillis();
-		while(true){
-			try{
-				inbox = Inbox.create(system);
-				break;
-			}catch(Exception e){
-				Logger.error(e.getMessage() + " retrying");
-			}
-			if(System.currentTimeMillis()>start+StructureProcessorPlugin.AKKA_TIMEOUT){
-				throw new IllegalStateException("Couldn't start akka");
-			}
-			try{
-				Thread.sleep(10);
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
+        long start= System.currentTimeMillis();
+        while(true){
+            try{
+                inbox = Inbox.create(system);
+                break;
+            }catch(Exception e){
+                Logger.error(e.getMessage() + " retrying");
+            }
+            if(System.currentTimeMillis()>start+StructureProcessorPlugin.AKKA_TIMEOUT){
+                throw new IllegalStateException("Couldn't start akka");
+            }
+            try{
+                Thread.sleep(10);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
