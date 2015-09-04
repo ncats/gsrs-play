@@ -153,7 +153,7 @@ public class StructureProcessor {
         if (struc.digest == null) {
             struc.digest = digest (mol);
         }
-        
+
         if (mol.getDim() < 2) {
             mol.clean(2, null);
         }
@@ -275,6 +275,7 @@ public class StructureProcessor {
             
             try {
                 mstd.standardize(stdmol);
+                /*
                 if (mstd.getFragmentCount() > 1) {
                     Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
                     // break this structure into its individual components
@@ -287,7 +288,7 @@ public class StructureProcessor {
                         instrument (moieties[i], null, frags[i], false);
                     }
                 }
-
+                */
                 // use this to indicate that the structure has
                 //  been standardized!
                 struc.properties.add
@@ -300,21 +301,22 @@ public class StructureProcessor {
                            "Can't standardize structure", ex);
             }
         }
-        else {
-            // TP: commented out standardization, and 2 moiety limit.
-            // the unfortunate side effect was to strip waters
-            
-            // Also, probably better to be err on the side of 
-            // preserving user input
-            
-            // break this structure into its individual components
-            Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
-            // used to not duplicate moieties
-            Map<String, Structure> moietiesMap =
-                new HashMap<String,Structure>();
-                    
+
+        // TP: commented out standardization, and 2 moiety limit.
+        // the unfortunate side effect was to strip waters
+        
+        // Also, probably better to be err on the side of 
+        // preserving user input
+        
+        // break this structure into its individual components
+        Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
+        // used to not duplicate moieties
+        Map<String, Structure> moietiesMap = new HashMap<String,Structure>();
+        //System.err.println("+++++++++ "+frags.length+" components!");
+        if (frags.length > 1) {
             for (int i = 0; i < frags.length; ++i) {
                 Structure moiety = new Structure ();
+                //System.err.println("+++++++++++++ component "+i+"!");
                 instrument (moiety, null, frags[i], false);
                 for(Value v:moiety.properties){
                     if(v instanceof Keyword){
