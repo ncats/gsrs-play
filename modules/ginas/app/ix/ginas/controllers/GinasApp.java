@@ -65,12 +65,12 @@ import ix.seqaln.SequenceIndexer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
-	static final Model.Finder<UUID, Substance> SUBFINDER = new Model.Finder<UUID, Substance>(
-			UUID.class, Substance.class);
+        static final Model.Finder<UUID, Substance> SUBFINDER = new Model.Finder<UUID, Substance>(
+                        UUID.class, Substance.class);
 
-	// relationship finder
-	static final Model.Finder<UUID, Relationship> RELFINDER = new Model.Finder<UUID, Relationship>(
-			UUID.class, Relationship.class);
+        // relationship finder
+        static final Model.Finder<UUID, Relationship> RELFINDER = new Model.Finder<UUID, Relationship>(
+                        UUID.class, Relationship.class);
     
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
@@ -113,7 +113,7 @@ public class GinasApp extends App {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	static <T> List<T> filter(Class<T> cls, List values, int max) {
+    static <T> List<T> filter(Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
         for (Object v : values) {
             if (cls.isAssignableFrom(v.getClass())) {
@@ -685,7 +685,7 @@ public class GinasApp extends App {
         final GinasSearchResultProcessor processor =
             new GinasSearchResultProcessor();
         try {
-            SearchResultContext context = substructure
+            SearchResultContext context = App.substructure
                 (query, rows, page, processor);
 
             return structureResultAndProcess (context, rows, page, processor);
@@ -1480,31 +1480,32 @@ public class GinasApp extends App {
         Substance s = SubstanceFactory.getSubstance(id);
         
         if(s==null){
-        	Structure struc = StructureFactory.getStructure(id);
-        	c = GinasUtils.structureToChemical(struc, messages);
+                Structure struc = StructureFactory.getStructure(id);
+                c = GinasUtils.structureToChemical(struc, messages);
+                
         }else{
-        	c = GinasUtils.substanceToChemical(s, messages);
+                c = GinasUtils.substanceToChemical(s, messages);
         }
         
         
         ObjectMapper om = new ObjectMapper();
         Logger.debug("SERIALIZED:" + om.valueToTree(messages).toString());
         response().setHeader("EXPORT-WARNINGS",om.valueToTree(messages).toString() +"___");
-		try {
-			if (format.equalsIgnoreCase("mol"))
-				return ok(c.export(Chemical.FORMAT_MOL));
-			else if (format.equalsIgnoreCase("sdf"))
-				return ok(c.export(Chemical.FORMAT_SDF));
-			else if (format.equalsIgnoreCase("smiles"))
-				return ok(c.export(Chemical.FORMAT_SMILES));
-			else if (format.equalsIgnoreCase("cdx"))
-				return ok(c.export(Chemical.FORMAT_CDX));
-			else
-				return _badRequest("unknown format:" + format);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return _badRequest(e.getMessage());
-		} 
+                try {
+                        if (format.equalsIgnoreCase("mol"))
+                                return ok(c.export(Chemical.FORMAT_MOL));
+                        else if (format.equalsIgnoreCase("sdf"))
+                                return ok(c.export(Chemical.FORMAT_SDF));
+                        else if (format.equalsIgnoreCase("smiles"))
+                                return ok(c.export(Chemical.FORMAT_SMILES));
+                        else if (format.equalsIgnoreCase("cdx"))
+                                return ok(c.export(Chemical.FORMAT_CDX));
+                        else
+                                return _badRequest("unknown format:" + format);
+                } catch (Exception e) {
+                        e.printStackTrace();
+                        return _badRequest(e.getMessage());
+                } 
         
     }
 }

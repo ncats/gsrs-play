@@ -2,11 +2,15 @@
 <nav class="navbar navbar-default">
     <div class="container-fluid" id="full">
         <div class="navbar-header">
+
             <button type="button" class="navbar-toggle collapsed"
             data-toggle="collapse" data-target="#menubar">
                 <span class="sr-only">Toggle Navigation</span> <i class="fa fa-bars"
             id="menuicon"></i>
             </button>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#searchbarmobile" aria-expanded="false"> <span class="sr-only">Toggle Search</span>  <i class="fa fa-search"></i>
+            </button>
+            
         </div>
 
         <div class="collapse navbar-collapse navbar-default" id="menubar">
@@ -15,11 +19,9 @@
               <li><a href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>	      
               <li><a href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>Register Substance</span></a></li>
               <li><a href="http://tripod.nih.gov/pub/ginasISO/"><span>Download</span></a></li>
+	      @**
               <li><a id = "bug-link" data-toggle="modal" data-target="#screenshot" role="button"><i class="fa fa-bug"></i> Report a Bug</a></li>
-              @*<li><button type="button" class="btn navbar-btn btn-default"
-                data-toggle="modal"
-                data-target="#strucModal">Structure Search</button> &nbsp;
-                </li>*@
+	      **@
                 <li><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" ng-click="clearStructure()" target="_self"><span>Structure Search</span></a></li>
                 <li><a ng-href="@ix.ginas.controllers.routes.GinasApp.sequenceSearch" ng-click="clearStructure()" target="_self"><span>Sequence Search</span></a></li>
                
@@ -34,11 +36,24 @@
                 </ul>
             </div>
         </div>
-            <!-- close input group  -->
+        <div class="hidden-sm hidden-md hidden-lg">
+            <div class="navbar-collapse collapse" id="searchbarmobile" aria-expanded="false">
+                <form class="form-inline main-search ng-pristine ng-valid" role="search" method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id="mobilesearch">
+                    <div class="input-group">
+                            <input type="text" class="form-control typeahead" id="searchboxmobile"
+                            title="Search" placeholder="Search ..." name="q">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" id="search" type="search"
+                                value="submit">
+                                    <span class="fa fa-search"></span>
+                                </button>
+                            </span>
+                        </div>
+                </form>
+            </div>
+        </div>
     </div>
     @ix.ncats.views.html.typeahead(Array("Name", "Substance_Class"))
     @screenshot()
     @report()
-
-
 </nav>

@@ -62,7 +62,7 @@
                                                 @defining(s.sequence.subSequence((j * 10), ((j + 1) * 10))) { subArr =>
                                                     @for(k <- 0 until subArr.length) {
                                                         @defining(k + (j * 10) + 1) { index =>
-                                                            <span class = "highlight @GinasApp.siteCheck(sub.protein, s.subunitIndex, index)" data-toggle="tooltip" data-placement="top" title="@s.subunitIndex-@index @subArr.charAt(k):@GinasApp.getAAName(subArr.charAt(k))">@subArr.charAt(k)</span>
+                                                            <span class = "highlight @GinasApp.siteCheck(sub.protein, s.subunitIndex, index)" tooltip="@s.subunitIndex-@index @subArr.charAt(k):@GinasApp.getAAName(subArr.charAt(k))">@subArr.charAt(k)</span>
                                                         }
                                                     }
                                                 }
@@ -82,7 +82,7 @@
                                         @defining(s.sequence.subSequence((length - length % 10), (length))) { subArr =>
                                             @for(k <- 0 until subArr.length) {
                                                 @defining(length - length % 10) { index =>
-                                                    <span class = "highlight @GinasApp.siteCheck(sub.protein, s.subunitIndex, (index + k + 1))" data-toggle="tooltip" data-placement="top" title="@s.subunitIndex-@(index + k + 1) @subArr.charAt(k):@GinasApp.getAAName(subArr.charAt(k))">@subArr.charAt(k)</span>
+                                                    <span class = "highlight @GinasApp.siteCheck(sub.protein, s.subunitIndex, (index + k + 1))" tooltip="@s.subunitIndex-@(index + k + 1) @subArr.charAt(k):@GinasApp.getAAName(subArr.charAt(k))">@subArr.charAt(k)</span>
 
                                                 }
                                             }

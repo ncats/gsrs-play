@@ -77,7 +77,9 @@ import java.util.Date;
 
 
 public class GinasLoad extends App {
-    public static boolean OLD_LOAD = false;
+    public static boolean OLD_LOAD =
+        Play.application().configuration()
+        .getString("ix.ginas.loader", "new").equalsIgnoreCase("old");
         
     public static final String[] ALL_FACETS = {
         "Job Status"
@@ -342,11 +344,11 @@ public class GinasLoad extends App {
     }
     
     public static Result validateSubstance(){
-    	String mappingsjson = extractSubstanceJSON();
-    	Substance sub=null;
-    	List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
-    	
-    	try{
+        String mappingsjson = extractSubstanceJSON();
+        Substance sub=null;
+        List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
+        
+        try{
             System.out.println(mappingsjson);
             GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
             JsonNode jn=ex.getNextRecord();
@@ -354,12 +356,12 @@ public class GinasLoad extends App {
             sub = GinasUtils.makeSubstance(jn);
             messages.addAll(Validation.validateAndPrepare(sub, GinasProcessingStrategy.ACCEPT_APPLY_ALL()));
         }catch(IllegalStateException e){
-        	messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
+                messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
         } catch (UnsupportedEncodingException e) {
-        	messages.add(GinasProcessingMessage.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
-		}
-    	ObjectMapper om = new ObjectMapper();
-    	
+                messages.add(GinasProcessingMessage.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
+                }
+        ObjectMapper om = new ObjectMapper();
+        
         return ok(om.valueToTree(messages));
     }
     public static Result submitSubstance(){
@@ -388,14 +390,14 @@ public class GinasLoad extends App {
     }
     
     public static String extractSubstanceJSON(){
-    	 String mappingsjson = null;
-//    	 try {
-//    		System.out.println("This is what I got:" );
-//			System.out.write(request().body().asRaw().asBytes());
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
+         String mappingsjson = null;
+//       try {
+//              System.out.println("This is what I got:" );
+//                      System.out.write(request().body().asRaw().asBytes());
+//              } catch (IOException e1) {
+//                      // TODO Auto-generated catch block
+//                      e1.printStackTrace();
+//              }
          try{
              mappingsjson = request().body().asJson().toString();
          }catch(Exception e){

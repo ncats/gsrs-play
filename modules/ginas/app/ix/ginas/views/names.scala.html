@@ -18,7 +18,7 @@
         </thead>
         @for(n <- names) {
             <tr>
-                <td class="trungcate">@n.name
+                <td><span tooltip ="@n.name">@n.name</span>
                 
                 @for(l <- n.getLocators(substance)) {
                     <span class="badge">@GinasApp.getCV.getDisplay("LOCATOR", l)</span> &nbsp;

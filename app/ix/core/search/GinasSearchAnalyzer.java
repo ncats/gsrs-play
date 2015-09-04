@@ -1,6 +1,7 @@
 package ix.core.search;
 
 import ix.core.models.Keyword;
+import ix.core.search.FieldFacet.MATCH_TYPE;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Note;
@@ -63,6 +64,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			updateFieldQueryFacets(o, qterms, ffacet);
 		} catch (Exception e) {
 			Logger.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 	
@@ -71,19 +73,6 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		return new ArrayList<FieldFacet>(ffacet.values());
 	}
 
-	/**
-	 * This is an exceedingly lazy method for analyzing search result.
-	 * 
-	 * All it does is look through the objects for the query, and returns what
-	 * path the query matched.
-	 * 
-	 * It does this very stupidly, by serializing the objects to a json object,
-	 * flattening them, and listing the paths.
-	 * 
-	 * @param obj
-	 * @return
-	 * @throws JsonProcessingException
-	 */
 	public static List<FieldFacet> getFieldMathingList(Iterator<? extends Substance> it, String q)
 			throws Exception {
 		Map<String, FieldFacet> ffacet = new HashMap<String, FieldFacet>();
@@ -162,7 +151,7 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		Map<String,String> m2 = new TreeMap<String,String>();		
 		{
 			int i=0;
-			for(Name n: o.getAllNames()){
+			for(Name n: o.names){
 				m2.put("names[" + i++ + "].name", n.name);
 				//m2.put( ".names[" + i + "].name", n.name);			
 			}
@@ -207,13 +196,13 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 			}
 		}
 		
-		{
-			int i=0;
-			for(Keyword n: o.tags){
-				m2.put( "tags[" + i + "]", n.getValue());
-				i++;			
-			}
-		}
+//		{
+//			int i=0;
+//			for(Keyword n: o.tags){
+//				m2.put( "tags[" + i + "]", n.getValue());
+//				i++;			
+//			}
+//		}
 		
 		
 		Set<String> matchedFields = new HashSet<String>();
@@ -223,39 +212,37 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		for (Object key : m2.keySet()) {
 			//Logger.debug("About to simplify:" + key);
 			String realkey = MapObjectUtils.simplifyKeyPath(key + "");
-			if (matchedFields.contains(realkey))continue;
+			
 			
 			if(ignoreField(realkey))continue;
 			
 			for(Term t:realterms){
 				MATCH_TYPE match = getMatchType(m2.get(key),t.text());
-				if(match==MATCH_TYPE.NO_MATCH){
-					
-					continue;
-				}
+				if(match==MATCH_TYPE.NO_MATCH)continue;
 				if(match==MATCH_TYPE.CONTAINS)continue;
+				if(match==MATCH_TYPE.WORD_STARTS_WITH)continue;
 				
-				
-				//matchedFields.add(realkey);
 				String q = t.text();
-				if(match==MATCH_TYPE.WORD_STARTS_WITH)
-					q= q + "*";
-				FieldFacet ff = ffacet.get(realkey);
+				if (matchedFields.contains(realkey + match))continue;
+				FieldFacet ff = ffacet.get(realkey + match);
 				if (ff == null) {
-					ff = new FieldFacet(realkey, q);
-					ffacet.put(realkey, ff);
+					ff = new FieldFacet(realkey, q, match);
+					ffacet.put(realkey + match, ff);
 				}
 				ff.count++;
+				matchedFields.add(realkey + match);
 			}
 		}
 	}
 	
 	public static MATCH_TYPE getMatchType(String tterm, String q) {
 		if(tterm==null) return MATCH_TYPE.NO_MATCH;
-		String term = tterm.toUpperCase();
+		String term = tterm.toUpperCase().trim();
 		
-		if (term.equals(q))
+		if (term.equals(q)){
+			
 			return MATCH_TYPE.FULL;
+		}
 		
 		int i = term.indexOf(q);
 
@@ -265,32 +252,29 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 		}
 		
 		if (i == 0) {
-			if (term.charAt(i + 1) == ' ')
+			if (term.charAt(i + q.length()) == ' ')
 				return MATCH_TYPE.WORD;
 			return MATCH_TYPE.WORD_STARTS_WITH;
 		}
 		
-		if (term.length() == i + 1) {
-			if (term.charAt(i + q.length() + 1) == ' ')
+		
+		//ends the value
+		if (term.length() == i + q.length()) {
+			//System.out.println(tterm + " -> " + q);
+			if (term.charAt(i-1) == ' ')
 				return MATCH_TYPE.WORD;
 		}
+		
 		
 		if (term.charAt(i - 1) == ' '){
-			if(term.charAt(i + q.length() + 1) == ' ')
+			if(term.charAt(i + q.length()) == ' ')
 				return MATCH_TYPE.WORD;
 			return MATCH_TYPE.WORD_STARTS_WITH;
 		}
-		System.out.println("\"" + term + "\" contains \"" + q + "\"");
 		return MATCH_TYPE.CONTAINS;
 	}
 
-	public static enum MATCH_TYPE{
-		FULL,
-		WORD,
-		WORD_STARTS_WITH,
-		CONTAINS,
-		NO_MATCH
-	};
+	
 	
 	public static boolean ignoreField(String field){
 		if(field.contains("._"))return true;

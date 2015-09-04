@@ -1,9 +1,11 @@
+@import play.api.Play.current
+
 @(title: String, kind: String)(menu: Html)(breadcrumb: Html)(content: Html)
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app ="ginas">
 <head>
-    <base href="/ginas/app">
+    <base href="@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -40,7 +42,9 @@
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/xeditable.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ginas/css/ginas.css")'>
 
-
+    <script>
+        var baseurl = "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/";
+    </script>
     <script
     src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'
     type='text/javascript'></script>
@@ -92,20 +96,23 @@
     <script
     src='@routes.Assets.at("javascripts/JSDraw3.2.3/Scilligence.JSDraw2.Pro.js")'></script>
     @*<!-- <script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script> -->*@
+   
 
 </head>
 <body scroll-spy="breadcrumb" data-target="#breadcrumb" ng-controller ="GinasController as GinasCtrl">
         <div class="container-fluid" id="logo-banner">
         <div class="row-fluid" id="main-banner">
             <div class="col-md-2">
+                <a href ="http://tripod.nih.gov/ginas/">
                 <img src="@routes.Assets.at("ginas/images/logo.png")" class="img-responsive" id="logo" height="50"/>
+                    </a>
             </div>
-            <div class="col-md-2 hidden-xs" id="version">
+            <div class="col-md-2 hidden-xs hidden-sm" id="version">
                 <code data-toggle="tooltip"
                       title="Built on @ix.BuildInfo.TIME (commit: @ix.BuildInfo.COMMIT)"
-                data-placement="bottom"><small>alpha version 0.0.2</small></code>
+                data-placement="bottom"><small>alpha version</small></code>
             </div>
-            <div class="collapse navbar-collapse pull-right pull-down">
+            <div class="collapse navbar-collapse pull-right pull-down" id="searchtop">
                 <ul class="nav navbar-nav pull-right"><li>
              <form class="form-inline main-search" role="search" method="GET"
                     action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id = "search-bar">
@@ -152,3 +159,4 @@
 
 </body>
 </html>
+

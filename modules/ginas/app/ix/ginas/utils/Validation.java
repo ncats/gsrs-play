@@ -2,6 +2,7 @@ package ix.ginas.utils;
 
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
+import ix.core.models.Value;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
@@ -18,17 +19,30 @@ public class Validation {
 			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance cannot be parsed"));
 			return gpm;
 		}
+		boolean preferred=false;
+		List<Name> remnames = new ArrayList<Name>();
+		for(Name n : s.names){
+			if(n == null){
+				GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Null name objects are not allowed").appliableChange(true);
+				gpm.add(mes);
+				strat.processMessage(mes);
+				if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+					remnames.add(n);
+					mes.appliedChange=true;
+				}
+			}else{
+				if(n.preferred){
+					preferred=true;
+				}
+			}
+		}
+		s.names.removeAll(remnames);
 		if(s.names.size()<=0){
 			GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Substances must have names");
 			gpm.add(mes);
 			strat.processMessage(mes);
 		}
-		boolean preferred=false;
-		for(Name n : s.names){
-			if(n.preferred){
-				preferred=true;
-			}
-		}
+		
 		if(!preferred){
 			GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have at least one (1) preferred name").appliableChange(true);
 			gpm.add(mes);
@@ -104,7 +118,7 @@ public class Validation {
             List<Structure> moieties = new ArrayList<Structure>();
             Structure struc = StructureProcessor.instrument
                 (payload, moieties);
-            cs.structure=struc;
+            
             //struc.count
             for(Structure m: moieties){
             	Moiety m2= new Moiety();
@@ -130,13 +144,43 @@ public class Validation {
 					break;
             	}            	
             }
-            if(!struc.digest.equals(cs.structure.digest)){
-            	GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Given structure digest disagrees with computed").appliableChange(true);
+            String oldhash=null;
+            for (Value val : cs.structure.properties) {
+                if (Structure.H_LyChI_L4.equals(val.label)) {
+                	oldhash=val.getValue()+"";
+                }
+            }
+            
+            String newhash=null;
+            for (Value val : struc.properties) {
+                if (Structure.H_LyChI_L4.equals(val.label)) {
+                	newhash=val.getValue()+"";
+                }
+            }
+            
+            if(!newhash.equals(oldhash)){
+            	GinasProcessingMessage mes=GinasProcessingMessage.INFO_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
             	gpm.add(mes);
             	strat.processMessage(mes);
             	switch(mes.actionType){
 				case APPLY_CHANGE:
+					Structure struc2=cs.structure;
+					//String omol = cs.structure.molfile;
 					cs.structure=struc;
+					cs.structure.molfile=struc2.molfile;
+					if(struc2.stereoChemistry!=null){
+						cs.structure.stereoChemistry=struc2.stereoChemistry;
+					}
+					if(struc2.opticalActivity!=null){
+						cs.structure.opticalActivity=struc2.opticalActivity;
+					}
+					if(struc2.stereoComments!=null){
+						cs.structure.stereoComments=struc2.stereoComments;
+					}
+					if(struc2.atropisomerism!=null){
+						cs.structure.atropisomerism=struc2.atropisomerism;
+					}
+					
 					mes.appliedChange=true;
 					break;
 				case FAIL:
@@ -156,8 +200,10 @@ public class Validation {
 					
             		int dupes=0;
             		for(Substance s:sr){
-            			if(!s.uuid.toString().equals(cs.uuid.toString()))
+            			
+            			if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
             				dupes++;
+            			}
             		}
             		if(dupes>0){
 						GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has " + dupes +" possible duplicate(s)");

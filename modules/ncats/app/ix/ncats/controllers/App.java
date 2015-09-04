@@ -808,18 +808,23 @@ public class App extends Authentication {
         throws Exception {
         Chemical chem = new Jchemical (mol);
         DisplayParams dp = DisplayParams.DEFAULT();
-        
-        if(amap!=null){
+        //chem.reduceMultiples();
+        boolean highlight=false;
+        if(amap!=null && amap.length>0){
                 ChemicalAtom[] atoms = chem.getAtomArray();
                 for (int i = 0; i < Math.min(atoms.length, amap.length); ++i) {
                     atoms[i].setAtomMap(amap[i]);
                     if(amap[i]!=0){
                         dp = dp.withSubstructureHighlight();
-                        
+                        highlight=true;
                     }
                 }
         }else{
-                dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+                
+        }
+        if(size>250 && !highlight){
+                if(chem.hasStereoIsomers())
+                        dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
 
         /*
@@ -1182,7 +1187,7 @@ public class App extends Authentication {
 
     public static Result status (String key) {
         Object value = IxCache.get(key);
-        //Logger.debug("status["+key+"] => "+value);
+        Logger.debug("status["+key+"] => "+value);
         if (value != null) {
             if (value instanceof SearchResult) {
                 // wrap SearchResult into SearchResultContext..
@@ -1192,6 +1197,11 @@ public class App extends Authentication {
                 ctx.id = key;
                 value = ctx;
             }
+            else if (value instanceof SearchResultContext) {
+                SearchResultContext ctx = (SearchResultContext)value;
+                Logger.debug(" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
+            }
+            
             ObjectMapper mapper = new ObjectMapper ();
             return ok (mapper.valueToTree(value));
         }
@@ -1286,10 +1296,15 @@ public class App extends Authentication {
             (key, new Callable<TextIndexer.SearchResult> () {
                     public TextIndexer.SearchResult call () throws Exception {
                         List results = context.getResults();
-                        return results.isEmpty() ? null : SearchFactory.search
+                        TextIndexer.SearchResult searchResult =
+                        results.isEmpty() ? null : SearchFactory.search
                         (results, null, results.size(), 0,
                          renderer.getFacetDim(),
                          request().queryString());
+                        Logger.debug("Cache misses: "
+                                     +key+" size="+results.size()
+                                     +" class="+searchResult);
+                        return searchResult;
                     }
                 });
 
@@ -1334,6 +1349,8 @@ public class App extends Authentication {
             // result is cached
             return getOrElse (k, new Callable<Result> () {
                     public Result call () throws Exception {
+                        Logger.debug("Cache misses: "+k+" count="+_count
+                                     +" rows="+_rows);
                         return renderer.render
                             (context, _page, _rows, _count, _pages,
                              facets, results);
@@ -1462,7 +1479,7 @@ public class App extends Authentication {
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
                 Structure struc = StructureProcessor.instrument
-                    (payload, moieties);
+                    (payload, moieties, false); // don't standardize!
                 // we should be really use the PersistenceQueue to do this
                 // so that it doesn't block
                 struc.save();

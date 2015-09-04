@@ -16,7 +16,7 @@ GET	/structure/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>	ix.nca
 POST	/structure	ix.ncats.controllers.App.molinstrument
 
 # return the status of a previous query
-GET	/status/:key	ix.ncats.controllers.App.status(key: String)
+GET	/status/*key	ix.ncats.controllers.App.status(key: String)
 
 # cache methods
 GET	/cache/@summary	ix.ncats.controllers.App.cacheSummary

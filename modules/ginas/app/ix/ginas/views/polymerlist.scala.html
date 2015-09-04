@@ -1,0 +1,91 @@
+@import ix.core.models.Structure
+@import ix.ginas.controllers.GinasApp
+@import ix.ginas.models.v1.PolymerSubstance
+
+
+
+@(chem: PolymerSubstance, ctx: String = null)
+
+<div class="panel panel-default prot-list" ng-controller="SubstanceListController">
+    <div class="panel-heading prot-title">
+    	
+        <div class = "row">
+            <div class = "col-md-10">
+                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self">@chem.getName()</a></h3>
+            </div>
+            <div class = "col-md-2 prot-approvID">
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(chem))" target="_self"><code>@chem.approvalID</code></a></h4>
+            </div>
+        </div>
+    </div>
+
+    <div class= "panel-body list-item">
+    	
+
+        <div class = "row">
+            <div class = "col-md-3">
+                <span class="label label-primary label-offset list-view-badge">POLYMER</span>
+                <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+                src='@ix.ginas.controllers.routes.GinasApp.structure(chem.polymer.displayStructure.getId, "svg", 150, ctx)'>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        <ul class= "list-inline pull-right list-unstyled">
+                            <li>
+                                <export-button structureid ="'@chem.uuid'" ></export-button></li>
+                            <li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class = "col-md-6">
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5>Other Names:</h5>
+                    </div>
+                    <div class = "col-md-10 break-text">
+                        <h5>@ix.ginas.controllers.GinasApp.namesList(chem.names)</h5>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-2">
+                        <h5>Codes:</h5>
+                    </div>
+                    <div class = "col-md-10">
+                        <h5>@ix.ginas.controllers.GinasApp.codesList(chem.codes)</h5>
+                    </div>
+                </div>
+                <h5>Relationships: @chem.relationships.size()</h5>
+
+            </div>
+
+            <div class = "col-md-2">
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Date approved: <h6>@chem.approved</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        Last modified: <h6>@chem.approved</h6>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                <code>@chem.status  version: @chem.version</code>
+                </div>
+                    </div>
+            </div>
+        </div>
+        
+        
+        <div ng-show="bigview" class = "revealable row">
+            <div ng-show="initialized">
+                <div class = "col-md-12">
+                <img ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
+                        src='@ix.ginas.controllers.routes.GinasApp.structure(chem.polymer.displayStructure.getId, "svg", 400,ctx)'>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div><!--END panel panel-primary-->

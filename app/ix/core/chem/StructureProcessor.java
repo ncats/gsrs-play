@@ -1,30 +1,26 @@
 package ix.core.chem;
 
-import java.util.*;
-import java.net.URL;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
+import ix.core.models.Keyword;
+import ix.core.models.Structure;
+import ix.core.models.Text;
+import ix.core.models.Value;
 
+import java.security.MessageDigest;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.security.MessageDigest;
 
+import lychi.LyChIStandardizer;
+import lychi.util.ChemUtil;
+import chemaxon.formats.MolImporter;
 import chemaxon.struc.MolAtom;
 import chemaxon.struc.MolBond;
 import chemaxon.struc.Molecule;
 import chemaxon.util.MolHandler;
-import chemaxon.formats.MolImporter;
-
-import lychi.LyChIStandardizer;
-import lychi.util.ChemUtil;
-
-import ix.core.models.Keyword;
-import ix.core.models.Text;
-import ix.core.models.Value;
-import ix.core.models.XRef;
-import ix.core.models.BeanViews;
-import ix.core.models.Structure;
 
 
 public class StructureProcessor {
@@ -72,11 +68,18 @@ public class StructureProcessor {
     public static Structure instrument (byte[] buf) {
         return instrument (buf, null);
     }
-    
+
     public static Structure instrument (byte[] buf,
                                         Collection<Structure> components) {
+        return instrument (buf, components, true);
+    }
+    
+    public static Structure instrument (byte[] buf,
+                                        Collection<Structure> components,
+                                        boolean standardize) {
         try {
-            return instrument (MolImporter.importMol(buf), components);
+            return instrument (MolImporter.importMol(buf),
+                               components, standardize);
         }
         catch (Exception ex) {
             throw new IllegalArgumentException (ex);
@@ -84,31 +87,46 @@ public class StructureProcessor {
     }
     
     public static Structure instrument (String mol) {
-        return instrument (mol, null);
+        return instrument (mol, null, true);
+    }
+
+    public static Structure instrument
+        (String mol, Collection<Structure> components) {
+        return instrument (mol, components, true);
     }
     
     public static Structure instrument
-        (String mol, Collection<Structure> components) {
+        (String mol, Collection<Structure> components, boolean standardize) {
         Structure struc = new Structure ();
         struc.digest = digest (mol);
         try {
             MolHandler mh = new MolHandler (mol);
-            instrument (struc, components, mh.getMolecule());
+            instrument (struc, components, mh.getMolecule(), standardize);
         }
         catch (Exception ex) {
             throw new IllegalArgumentException (ex);
         }
         return struc;
     }
- 
+
     public static Structure instrument (Molecule mol) {
-        return instrument (mol, null);
+        return instrument (mol, true);
     }
-   
+    
+    public static Structure instrument (Molecule mol, boolean standardize) {
+        return instrument (mol, null, standardize);
+    }
+
     public static Structure instrument (Molecule mol,
                                         Collection<Structure> components) {
+        return instrument (mol, components, true);
+    }
+    
+    public static Structure instrument (Molecule mol,
+                                        Collection<Structure> components,
+                                        boolean standardize) {
         Structure struc = new Structure ();
-        instrument (struc, components, mol);
+        instrument (struc, components, mol, standardize);
         return struc;
     }
 
@@ -121,7 +139,9 @@ public class StructureProcessor {
     /**
      * This should return a decomposed version of a structure for G-SRS.
      * 
-     * This means that a molfile should come back with
+     * This means that a molfile should come back with moieties
+     * and a structure, with statistics and predicted stereo
+     * 
      * @param struc
      * @param components
      * @param mol
@@ -254,54 +274,64 @@ public class StructureProcessor {
             mstd.removeSaltOrSolvent(false);
             
             try {
-            	
-               // TP: commented out standardization, and 2 moiety limit.
-               // the unfortunate side effect was to strip waters
-
-            	// Also, probably better to be err on the side of 
-            	// preserving user input
-            	
-            	
-               //mstd.standardize(stdmol);
-               // if (mstd.getFragmentCount() >= 1) {
-            	
-            	
-            	
+                mstd.standardize(stdmol);
+                if (mstd.getFragmentCount() > 1) {
+                    Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
                     // break this structure into its individual components
-            		Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
-                    // used to not duplicate moieties
-                    Map<String, Structure> moietiesMap = new HashMap<String,Structure>();
-                    
+                    Structure[] moieties = new Structure[frags.length];
                     for (int i = 0; i < frags.length; ++i) {
-                    	
-                    	Structure moiety = new Structure ();
-                    	instrument (moiety, null, frags[i], false);
-                    	for(Value v:moiety.properties){
-                    		if(v instanceof Keyword){
-                    			if(((Keyword)v).label.equals(Structure.H_LyChI_L4)){
-                    				String hash=((Keyword) v).term;
-                    				Structure s = moietiesMap.get(hash);
-                    				if(s!=null){
-                    					s.count++;
-                    				}else{
-                    					moiety.count=1;
-                    					moietiesMap.put(hash,moiety);
-                    					components.add(moiety);
-                    				}
-                    				break;
-                    			}
-                    		}
-                    	}
-                    	
-                   // }
-                    
-//                    if (components != null)
-//                        components.add(moieties[i]);
+                        moieties[i] = new Structure ();
+                        if (components != null)
+                            components.add(moieties[i]);
+                        // sigh.. recurse
+                        instrument (moieties[i], null, frags[i], false);
+                    }
                 }
+
+                // use this to indicate that the structure has
+                //  been standardized!
+                struc.properties.add
+                    (new Text (Structure.F_LyChI_SMILES,
+                               ChemUtil.canonicalSMILES(stdmol)));
             }
             catch (Exception ex) {
+                mol.clonecopy(stdmol);
                 logger.log(Level.SEVERE, 
                            "Can't standardize structure", ex);
+            }
+        }
+        else {
+            // TP: commented out standardization, and 2 moiety limit.
+            // the unfortunate side effect was to strip waters
+            
+            // Also, probably better to be err on the side of 
+            // preserving user input
+            
+            // break this structure into its individual components
+            Molecule[] frags = stdmol.cloneMolecule().convertToFrags();
+            // used to not duplicate moieties
+            Map<String, Structure> moietiesMap =
+                new HashMap<String,Structure>();
+                    
+            for (int i = 0; i < frags.length; ++i) {
+                Structure moiety = new Structure ();
+                instrument (moiety, null, frags[i], false);
+                for(Value v:moiety.properties){
+                    if(v instanceof Keyword){
+                        if(((Keyword)v).label.equals(Structure.H_LyChI_L4)){
+                            String hash=((Keyword) v).term;
+                            Structure s = moietiesMap.get(hash);
+                            if(s!=null){
+                                s.count++;
+                            }else{
+                                moiety.count=1;
+                                moietiesMap.put(hash,moiety);
+                                components.add(moiety);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
         }
         //System.out.print(mol.toFormat("mol"));
@@ -311,8 +341,7 @@ public class StructureProcessor {
         struc.properties.add(new Keyword (Structure.H_LyChI_L2, hash[1]));
         struc.properties.add(new Keyword (Structure.H_LyChI_L3, hash[2]));
         struc.properties.add(new Keyword (Structure.H_LyChI_L4, hash[3]));
-        struc.properties.add(new Text (Structure.F_LyChI_SMILES,
-                                       ChemUtil.canonicalSMILES(stdmol)));
+
         struc.definedStereo = def;
         struc.stereoCenters = stereo;
         struc.ezCenters = ez;

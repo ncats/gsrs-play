@@ -1,3 +1,5 @@
+@import play.api.Play.current
+
 @(kind: String, json: String)
 
 
@@ -74,7 +76,7 @@
     <h3></h3>
 } {
     <h3></h3>
-    <script src="/ginas/app/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
+    <script src="@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
     <div ng-cloak>
         @wizardfields(kind)
         <div class = "row info">
@@ -91,7 +93,7 @@
             // <error-window error = error></error-window>
             *@
             <div class="col-md-12">
-                <div class="alert alert-danger alert-dismissible" role="alert">
+                <div class="alert {{err.class}} alert-dismissible" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
                     </button>
                     <span><h4>{{err.messageType}}</h4>&nbsp;{{err.message}} </span>
