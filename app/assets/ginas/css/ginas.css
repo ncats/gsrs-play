@@ -706,11 +706,6 @@ h2.display-name {
     overflow-wrap: break-word;
 }
 
-/*.trungcate{
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}*/
 input#search{
 -webkit-transition: all 0.3s ease 0s;
     -moz-transition: all 0.3s ease 0s;
@@ -731,4 +726,8 @@ input#search:focus{
 }
 div#searchbarmobile {
     height: 300px;
+}
+
+.appid{
+    margin-top:45px;
 }
