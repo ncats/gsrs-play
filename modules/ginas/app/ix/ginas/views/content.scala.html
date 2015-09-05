@@ -211,15 +211,18 @@ $(document).ready(function () {
                            $('#loading').modal('hide');
                        }
                   } else {
-                       $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
- 	               if (@Math.min(current*rows,total) > data.count) {
-  	                   $('#loading').modal('show');
-		       }
-			  
+		       // loading vs searhing..
                        if (data.total) {
+ 	                   if (data.count < @{current*rows}) {
+  	                      $('#loading').modal('show');
+		           }
+
  		           var pct = Math.floor(100.0*data.count
 						/ data.total+0.5);
                            $('#loading-progress').html('<p align="right">('+data.count+'/'+data.total+')</p><div class="progress"><div class="progress-bar" role="progressbar" aria-valuenow="'+pct+'" aria-valuemin="0" aria-valuemax="100" style="width: '+pct+'%;">'+pct+'%</div></div>');
+                       }
+		       else {
+                           $('#searching').html('<i class="fa fa-spinner fa-spin"></i> searching... '+data.count+' matches');
                        }
                   }
               }).error(function () {

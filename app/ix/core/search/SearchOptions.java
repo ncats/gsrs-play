@@ -10,7 +10,7 @@ public class SearchOptions {
     public static final int DEFAULT_TOP = 10;
     public static final int DEFAULT_FDIM = 10;
     // default number of elements to fetch while blocking
-    public static final int DEFAULT_FETCH_SIZE = 50;
+    public static final int DEFAULT_FETCH_SIZE = 100; // 0 means all
     
     public Class<?> kind; // filter by type
 
