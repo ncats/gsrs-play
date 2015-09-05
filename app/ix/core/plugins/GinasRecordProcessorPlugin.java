@@ -321,7 +321,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         Statistics stat = getStatisticsForJob(job);
         if (stat != null) {
             if (stat._isDone()) {
-            	Logger.debug("I think it's done:" + stat.toString());
+                Logger.debug("I think it's done:" + stat.toString());
                 ObjectMapper om = new ObjectMapper();
                 job.stop = System.currentTimeMillis();
                 job.status = ProcessingJob.Status.COMPLETE;
@@ -554,7 +554,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     getInstance().decrementExtractionQueue();
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
                 }finally{
-                	updateJobIfNecessary(pr.job);
+                        updateJobIfNecessary(pr.job);
                 }
                                 
             } else if (mesg instanceof Terminated) {
@@ -597,9 +597,12 @@ public class GinasRecordProcessorPlugin extends Plugin {
     @Override
     public void onStart() {
         Config cfg = new Config();
-        HazelcastInstance instance = Hazelcast.newHazelcastInstance(cfg);
-        jobCacheStatistics = instance.getMap("jobStatistics");
-        queueStatistics= instance.getMap("queueStatistics");
+        if (play.Play.application().configuration()
+            .getBoolean("ix.ginas.hazelcast", false)) {
+            HazelcastInstance instance = Hazelcast.newHazelcastInstance(cfg);
+            jobCacheStatistics = instance.getMap("jobStatistics");
+            queueStatistics= instance.getMap("queueStatistics");
+        }
         
         try {
             persistFailures = new PrintWriter("fail.persist.log");
