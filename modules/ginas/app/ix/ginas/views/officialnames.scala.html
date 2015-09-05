@@ -20,9 +20,12 @@
         </thead>
         @for(n <- names) {
             <tr>
-                <td><span tooltip ="@n.name">@n.name </span> @for(l <- n.getLocators(substance)) {
-                    <span class="badge">@GinasApp.getCV.getDisplay("LOCATOR", l)</span> &nbsp;
-                	}</td>
+                 <td><span tooltip ="@n.name">@n.name</span>
+                
+                @for(l <- n.getLocators(substance)) {
+                    <span tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)" class="badge" >@l</span> &nbsp;
+                    }
+                </td>
                 <td>
                 @for(d <- n.domains) {
                     @GinasApp.getCV.getDisplay("NAME_DOMAIN", d.term) &nbsp;

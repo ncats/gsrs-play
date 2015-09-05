@@ -256,6 +256,7 @@ nav#main-pagination {
     display: block;
     margin: auto;
     margin-top: 5px;
+    font-family: monospace;
 }
 
 #local-menu {
@@ -731,3 +732,8 @@ div#searchbarmobile {
 .appid{
     margin-top:45px;
 }
+
+sketcher text {
+    display: none;
+}
+
