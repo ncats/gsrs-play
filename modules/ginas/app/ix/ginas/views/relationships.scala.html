@@ -29,10 +29,9 @@
                     
                     @defining(SubstanceFactory.getFullSubstance(r.relatedSubstance)) { ref =>
 	                    <td>
-								@if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
+			      @if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")){
 	                            	<img class="struc-thumb img-responsive" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
 	                                src='@ix.ginas.controllers.routes.GinasApp.structure(ref.asInstanceOf[ChemicalSubstance].structure.getId, "svg", 150)'>
-	                            		
 	                            }else{
 	                             	@if(ref.getClass.toString.equals("class ix.ginas.models.v1.StructurallyDiverseSubstance")){
 	                                   
@@ -71,10 +70,14 @@
                     <td><i>Substance not yet imported</i></td>
                     
                 }
-            <td>
-            	<a href="@ix.ginas.controllers.routes.GinasApp.substance(r.relatedSubstance.getLinkingID())"  target="_self">
-            	@r.relatedSubstance.refPname
-            	</a>
+	    <td>
+	      @defining(r.relatedSubstance) { sub =>
+	         @if(sub != null && sub.getLinkingID() != null) {
+            	   <a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())"  target="_self">
+            	    @sub.refPname
+            	   </a>
+		  }
+	      }
             </td>
 
             <td>@r.getDisplayType()</td>
@@ -92,7 +95,6 @@
                     @referencetable(r.references, "refs", 8)
                 }
             </tr>
-
         }
     </table>
         </div>
