@@ -1181,10 +1181,9 @@ public class App extends Authentication {
                 SearchResult result = (SearchResult)value;
                 SearchResultContext ctx = new SearchResultContext (result);
                 Logger.debug("status: key="+key+" finished="+ctx.finished());
-                
-                if (!ctx.finished()) {
+
+                if (!ctx.finished())
                     return routes.App.status(key);
-                }
             }
         }
         return null;

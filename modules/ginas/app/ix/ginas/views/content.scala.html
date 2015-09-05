@@ -180,7 +180,7 @@ $(document).ready(function () {
 			
          var delay = 0;
          var checkStatus;
-	 var timer;
+ 	 var timer;
 
          $('#loading').on('hidden.bs.modal', function (e) {
 	     console.log('closing load dialog');
@@ -205,11 +205,11 @@ $(document).ready(function () {
                  if (data.status == 'Done' || data.status == 'Failed') {
                        window.clearInterval(timer);
                        $('#searching').html('');
-                       $('#loading-progress').html('');
-                       if(data.count >= @total) {
-                           //location.reload(true);
+                       //$('#loading-progress').html('');
+                       //if(data.count >= @total) {
                            $('#loading').modal('hide');
-                       }
+                           location.reload(true);			   
+                       //}
                   } else {
 		       // loading vs searhing..
                        if (data.total) {
