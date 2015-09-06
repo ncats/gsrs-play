@@ -732,8 +732,7 @@ div#searchbarmobile {
 .appid{
     margin-top:45px;
 }
-
-sketcher text {
-    display: none;
+sketcher svg>text{
+	display:none
+	
 }
-
