@@ -90,9 +90,6 @@ public class SearchFactory extends EntityFactory {
                 String q, int top, int skip, int fdim,
                 Map<String, String[]> queryParams) throws IOException {
         SearchOptions options = new SearchOptions (kind, top, skip, fdim);
-        if (subset != null) {
-            options.fetch = 0;
-        }
         
         StringBuilder filter = new StringBuilder ();
         if (queryParams != null) {

@@ -180,12 +180,12 @@ $(document).ready(function () {
 			
          var delay = 0;
          var checkStatus;
- 	 var timer;
+	 var timer;
 
          $('#loading').on('hidden.bs.modal', function (e) {
 	     console.log('closing load dialog');
  	     window.clearInterval(timer);
-	     location.reload(true);
+	     //location.reload(true);
          });
 
 	 checkStatus = function () {

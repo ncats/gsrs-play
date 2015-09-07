@@ -650,10 +650,7 @@ public class App extends Authentication {
     public static <T> T getOrElse (long modified,
                                    String key, Callable<T> callable)
         throws Exception {
-        if (System.currentTimeMillis() <= (modified + CACHE_TIMEOUT)) {
-            IxCache.remove(key);
-        }
-        return IxCache.getOrElse(key, callable);
+        return IxCache.getOrElse(modified, key, callable);
     }
 
     public static Result marvin () {
@@ -1049,7 +1046,7 @@ public class App extends Authentication {
             start = result.getTimestamp();          
             if (result.finished()) {
                 status = Status.Done;
-                stop = start+result.ellapsed();
+                stop = result.getStopTime();
             }
             else if (result.size() > 0)
                 status = Status.Running;
@@ -1156,7 +1153,8 @@ public class App extends Authentication {
                 if (value != null) {
                     SearchResultContext context = (SearchResultContext)value;
                     Logger.debug("checkStatus: status="+context.getStatus()
-                                 +" count="+context.getCount());
+                                 +" count="+context.getCount()
+                                 +" total="+context.getTotal());
                     switch (context.getStatus()) {
                     case Done:
                     case Failed:
@@ -1201,10 +1199,10 @@ public class App extends Authentication {
                 ctx.id = key;
                 value = ctx;
             }
-            else if (value instanceof SearchResultContext) {
-                SearchResultContext ctx = (SearchResultContext)value;
-                Logger.debug(" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
-            }
+
+            SearchResultContext ctx = (SearchResultContext)value;
+            Logger.debug
+                (" ++ status:"+ctx.getStatus()+" count="+ctx.getCount());
             
             ObjectMapper mapper = new ObjectMapper ();
             return ok (mapper.valueToTree(value));
@@ -1218,7 +1216,6 @@ public class App extends Authentication {
          final int page, final SearchResultProcessor processor) {
         try {
             final String key = "sequence/"+getKey (seq, identity);
-            final int size = (page+1)*rows;
             return getOrElse
                 (_seqIndexer.lastModified(), key,
                  new Callable<SearchResultContext> () {
@@ -1249,7 +1246,9 @@ public class App extends Authentication {
                          public SearchResultContext call () throws Exception {
                              processor.setResults
                                  (rows, _strucIndexer.substructure(query, 0));
-                             return processor.getContext();
+                             SearchResultContext ctx = processor.getContext();
+                             Logger.debug("## cache missed: "+key+" => "+ctx);
+                             return ctx;
                          }
                      });
         }
@@ -1270,7 +1269,6 @@ public class App extends Authentication {
          final SearchResultProcessor processor) {
         try {
             final String key = "similarity/"+getKey (query, threshold);
-            final int size = (page+1)*rows;
             return getOrElse
                 (_strucIndexer.lastModified(),
                  key, new Callable<SearchResultContext> () {
@@ -1289,13 +1287,16 @@ public class App extends Authentication {
         return null;
     }
 
-    public static <T> Result structureResult
+    static String getKey (SearchResultContext context, String... params) {
+        return "fetchResult/"+context.getId()
+            +"/"+Util.sha1(request (), params);
+    }
+
+    public static <T> Result fetchResult
         (final SearchResultContext context, int rows,
          int page, final ResultRenderer<T> renderer) throws Exception {
 
-        final String key = "structureResult/"+context.getId()
-            +"/"+Util.sha1(request (), "facet");
-        
+        final String key = getKey (context, "facet");
         final TextIndexer.SearchResult result = getOrElse
             (key, new Callable<TextIndexer.SearchResult> () {
                     public TextIndexer.SearchResult call () throws Exception {
@@ -1320,8 +1321,10 @@ public class App extends Authentication {
         if (result != null) {
             Long stop = context.getStop();
             if (!context.finished() ||
-                (stop != null && stop >= result.getTimestamp()))
+                (stop != null && stop >= result.getTimestamp())) {
+                Logger.debug("** removing cache "+key);
                 IxCache.remove(key);
+            }
             
             count = result.size();
             Logger.debug(key+": "+count+"/"+result.count()
@@ -1342,15 +1345,15 @@ public class App extends Authentication {
             facets.addAll(result.getFacets());
 
             if (result.finished()) {
-                final String k = "structureResult/"
-                    +context.getId()+"/"+Util.sha1(request());
+                final String k = getKey (context);
                 final int _page = page;
                 final int _rows = rows;
                 final int _count = count;
                 final int[] _pages = pages;
             
                 // result is cached
-                return getOrElse (k, new Callable<Result> () {
+                return getOrElse(result.getStopTime(),
+                                 k, new Callable<Result> () {
                         public Result call () throws Exception {
                             Logger.debug("Cache misses: "+k+" count="+_count
                                          +" rows="+_rows+" page="+_page);

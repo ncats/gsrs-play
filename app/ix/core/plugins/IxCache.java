@@ -101,6 +101,23 @@ public class IxCache extends Plugin {
         return elm != null ? elm.isExpired() : false;
     }
 
+    /**
+     * apply generator if the cache was created before epoch
+     */
+    public static <T> T getOrElse (long epoch,
+                                   String key, Callable<T> generator)
+        throws Exception {
+        if (_instance == null)
+            throw new IllegalStateException ("Cache hasn't been initialized!");
+        Element elm = _instance.cache.get(key);
+        if (elm == null || elm.getCreationTime() < epoch) {
+            T v = generator.call();
+            elm = new Element (key, v);
+            _instance.cache.put(elm);
+        }
+        return (T)elm.getObjectValue();
+    }
+    
     public static <T> T getOrElse (String key, Callable<T> generator)
         throws Exception {
         if (_instance == null)

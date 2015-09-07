@@ -261,7 +261,8 @@ public class TextIndexer {
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
         public long getTimestamp () { return timestamp; }
-        public long ellapsed () { return stop.get() - timestamp; }
+        public long elapsed () { return stop.get() - timestamp; }
+        public long getStopTime () { return stop.get(); }
         public boolean finished () { return stop.get() >= timestamp; }
         
         public SearchContextAnalyzer getSearchContextAnalyzer(){ return searchAnalyzer; };

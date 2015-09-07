@@ -383,8 +383,7 @@ public class GinasApp extends App {
                 (seq, identity, rows,
                  page, new GinasSequenceResultProcessor ());
             
-            // TODO: rename structureResult to something less specific!
-            return App.structureResult
+            return App.fetchResult
                 (context, rows, page, new SubstanceResultRenderer ());
         }
         catch (Exception ex) {
@@ -668,7 +667,8 @@ public class GinasApp extends App {
             SearchResultContext context = similarity
                 (query, threshold, rows,
                  page, new GinasSearchResultProcessor());
-            return structureResult(context, rows, page);
+            return fetchResult (context, rows, page,
+                                new SubstanceResultRenderer (CHEMICAL_FACETS));
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -687,8 +687,10 @@ public class GinasApp extends App {
         try {
             SearchResultContext context = App.substructure
                 (query, rows, page, processor);
-
-            return structureResultAndProcess (context, rows, page, processor);
+            
+            return App.fetchResult
+                (context, rows, page, 
+                 new SubstanceResultRenderer (CHEMICAL_FACETS));
         } catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Can't perform substructure search", ex);
@@ -696,20 +698,6 @@ public class GinasApp extends App {
         return internalServerError
             (ix.ginas.views.html.error.render
              (500, "Unable to perform substructure search: " + query));
-    }
-
-    public static Result structureResultAndProcess
-        (final SearchResultContext context, int rows, int page,
-         final GinasSearchResultProcessor processor) throws Exception {
-
-        return structureResult
-            (context, rows, page, 
-             new SubstanceResultRenderer (CHEMICAL_FACETS));
-    }
-
-    public static Result structureResult(final SearchResultContext context,
-                                         int rows, int page) throws Exception {
-        return structureResultAndProcess(context, rows, page, null);
     }
 
     static final GetResult<Substance> ChemicalResult = new GetResult<Substance>(
