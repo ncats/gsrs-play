@@ -282,188 +282,183 @@ JURISDICTION	ES	SPAIN
 JURISDICTION	SE	SWEDEN			
 JURISDICTION	CH	SWITZERLAND			
 JURISDICTION	GB	UNITED KINGDOM			
-LANGUAGE	aa	Afar	Afaraf		
-LANGUAGE	ab	Abkhaz	аҧсуа бызшәа, аҧсшәа		
-LANGUAGE	ae	Avestan	avesta		
-LANGUAGE	af	Afrikaans	Afrikaans		
-LANGUAGE	ak	Akan	Akan		
-LANGUAGE	am	Amharic	አማርኛ		
-LANGUAGE	an	Aragonese	aragonés		
-LANGUAGE	ar	Arabic	العربية		
-LANGUAGE	as	Assamese	অসমীয়া		
-LANGUAGE	av	Avaric	авар мацӀ, магӀарул мацӀ		
-LANGUAGE	ay	Aymara	aymar aru		
-LANGUAGE	az	Azerbaijani	azərbaycan dili		
-LANGUAGE	ba	Bashkir	башҡорт теле		
-LANGUAGE	be	BELGIUM			
-LANGUAGE	bg	Bulgarian	български език		
-LANGUAGE	bh	Bihari	भोजपुरी		
-LANGUAGE	bi	Bislama	Bislama		
-LANGUAGE	bm	Bambara	bamanankan		
-LANGUAGE	bn	Brand Name			
-LANGUAGE	bo	Tibetan Standard, Tibetan, Central	བོད་ཡིག		
-LANGUAGE	br	BRAZIL			
-LANGUAGE	bs	Bosnian	bosanski jezik		
-LANGUAGE	ca	CANADA			
-LANGUAGE	ce	Chechen	нохчийн мотт		
-LANGUAGE	ch	SWITZERLAND			
-LANGUAGE	co	Corsican	corsu, lingua corsa		
-LANGUAGE	cr	Cree	ᓀᐦᐃᔭᐍᐏᐣ		
-LANGUAGE	cs	Czech	čeština, český jazyk		
-LANGUAGE	cu	Old Church Slavonic, Church Slavonic, Old Bulgarian	ѩзыкъ словѣньскъ		
-LANGUAGE	cv	Chuvash	чӑваш чӗлхи		
-LANGUAGE	cy	Welsh	Cymraeg		
-LANGUAGE	da	Danish	dansk		
-LANGUAGE	de	GERMANY			
-LANGUAGE	dz	Dzongkha	རྫོང་ཁ		
-LANGUAGE	ee	Ewe	Eʋegbe		
-LANGUAGE	el	Greek (modern)	ελληνικά		
-LANGUAGE	en	English	English		
-LANGUAGE	eo	Esperanto	Esperanto		
-LANGUAGE	es	SPAIN			
-LANGUAGE	et	Estonian	eesti, eesti keel		
-LANGUAGE	eu	Basque	euskara, euskera		
-LANGUAGE	ff	Fula, Fulah, Pulaar, Pular	Fulfulde, Pulaar, Pular		
-LANGUAGE	fi	FINLAND			
-LANGUAGE	fj	Fijian	vosa Vakaviti		
-LANGUAGE	fo	Faroese	føroyskt		
-LANGUAGE	fr	FRANCE			
-LANGUAGE	fy	Western Frisian	Frysk		
-LANGUAGE	ga	Irish	Gaeilge		
-LANGUAGE	gd	Scottish Gaelic, Gaelic	Gàidhlig		
-LANGUAGE	gl	Galician	galego		
-LANGUAGE	gn	Guaraní	Avañe'ẽ		
-LANGUAGE	gu	Gujarati	ગુજરાતી		
-LANGUAGE	gv	Manx	Gaelg, Gailck		
-LANGUAGE	hau	hau	hau		
-LANGUAGE	heb	heb	heb		
-LANGUAGE	hi	Hindi	हिन्दी, हिंदी		
-LANGUAGE	ho	Hiri Motu	Hiri Motu		
-LANGUAGE	hr	Croatian	hrvatski jezik		
-LANGUAGE	ht	Haitian, Haitian Creole	Kreyòl ayisyen		
-LANGUAGE	hu	HUNGARY			
-LANGUAGE	hy	Armenian	Հայերեն		
-LANGUAGE	hz	Herero	Otjiherero		
-LANGUAGE	ia	Interlingua	Interlingua		
-LANGUAGE	id	Indonesian	Bahasa Indonesia		
-LANGUAGE	ie	IRELAND			
-LANGUAGE	ig	Igbo	Asụsụ Igbo		
-LANGUAGE	ii	Nuosu	ꆈꌠ꒿ Nuosuhxop		
-LANGUAGE	ik	Inupiaq	Iñupiaq, Iñupiatun		
-LANGUAGE	io	Ido	Ido		
-LANGUAGE	is	ICELAND			
-LANGUAGE	it	ITALY			
-LANGUAGE	iu	Inuktitut	ᐃᓄᒃᑎᑐᑦ		
-LANGUAGE	ja	JOURNAL ARTICLE			
-LANGUAGE	jv	Javanese	basa Jawa		
-LANGUAGE	ka	Georgian	ქართული		
-LANGUAGE	kg	Kongo	Kikongo		
-LANGUAGE	ki	Kikuyu, Gikuyu	Gĩkũyũ		
-LANGUAGE	kj	Kwanyama, Kuanyama	Kuanyama		
-LANGUAGE	kk	Kazakh	қазақ тілі		
-LANGUAGE	kl	Kalaallisut, Greenlandic	kalaallisut, kalaallit oqaasii		
-LANGUAGE	km	Khmer	ខ្មែរ, ខេមរភាសា, ភាសាខ្មែរ		
-LANGUAGE	kn	Kannada	ಕನ್ನಡ		
-LANGUAGE	ko	Korean	한국어, 조선어		
-LANGUAGE	kr	Kanuri	Kanuri		
-LANGUAGE	ks	Kashmiri	कश्मीरी, كشميري‎		
-LANGUAGE	ku	Kurdish	Kurdî, كوردی‎		
-LANGUAGE	kv	Komi	коми кыв		
-LANGUAGE	kw	Cornish	Kernewek		
-LANGUAGE	ky	Kyrgyz	Кыргызча, Кыргыз тили		
-LANGUAGE	la	Latin	latine, lingua latina		
-LANGUAGE	lb	Luxembourgish, Letzeburgesch	Lëtzebuergesch		
-LANGUAGE	lg	Ganda	Luganda		
-LANGUAGE	li	Limburgish, Limburgan, Limburger	Limburgs		
-LANGUAGE	ln	Lingala	Lingála		
-LANGUAGE	lo	Lao	ພາສາລາວ		
-LANGUAGE	lt	Lithuanian	lietuvių kalba		
-LANGUAGE	lu	LUXEMBOURG			
-LANGUAGE	lv	Latvian	latviešu valoda		
-LANGUAGE	mg	MG			
-LANGUAGE	mh	Marshallese	Kajin M̧ajeļ		
-LANGUAGE	mi	Māori	te reo Māori		
-LANGUAGE	mk	Macedonian	македонски јазик		
-LANGUAGE	ml	Malayalam	മലയാളം		
-LANGUAGE	mn	Mongolian	монгол		
-LANGUAGE	mr	Marathi (Marāṭhī)	मराठी		
-LANGUAGE	ms	Malay	bahasa Melayu, بهاس ملايو‎		
-LANGUAGE	mt	Maltese	Malti		
-LANGUAGE	my	Burmese	ဗမာစာ		
-LANGUAGE	na	Nauru	Ekakairũ Naoero		
-LANGUAGE	nb	Norwegian Bokmål	Norsk bokmål		
-LANGUAGE	nd	Northern Ndebele	isiNdebele		
-LANGUAGE	ne	Nepali	नेपाली		
-LANGUAGE	ng	Ndonga	Owambo		
-LANGUAGE	nl	NETHERLANDS			
-LANGUAGE	nn	Norwegian Nynorsk	Norsk nynorsk		
-LANGUAGE	no	NORWAY			
-LANGUAGE	nr	Southern Ndebele	isiNdebele		
-LANGUAGE	nv	Navajo, Navaho	Diné bizaad, Dinékʼehǰí		
-LANGUAGE	ny	Chichewa, Chewa, Nyanja	chiCheŵa, chinyanja		
-LANGUAGE	oc	Occitan	occitan, lenga d'òc		
-LANGUAGE	oj	Ojibwe, Ojibwa	ᐊᓂᔑᓈᐯᒧᐎᓐ		
-LANGUAGE	om	Oromo	Afaan Oromoo		
-LANGUAGE	or	Oriya	ଓଡ଼ିଆ		
-LANGUAGE	os	Ossetian, Ossetic	ирон æвзаг		
-LANGUAGE	pa	Panjabi, Punjabi	ਪੰਜਾਬੀ, پنجابی‎		
-LANGUAGE	pi	Pāli	पाऴि		
-LANGUAGE	pl	POLAND			
-LANGUAGE	pt	PORTUGAL			
-LANGUAGE	pus + 3	pus	pus		
-LANGUAGE	qu	Quechua	Runa Simi, Kichwa		
-LANGUAGE	rm	Romansh	rumantsch grischun		
-LANGUAGE	rn	Kirundi	Ikirundi		
-LANGUAGE	ro	ROMANIA			
-LANGUAGE	ru	RUSSIAN FEDERATION			
-LANGUAGE	rw	Kinyarwanda	Ikinyarwanda		
-LANGUAGE	sa	Sanskrit (Saṁskṛta)	संस्कृतम्		
-LANGUAGE	sc	Sardinian	sardu		
-LANGUAGE	sd	Sindhi	सिन्धी, سنڌي، سندھی‎		
-LANGUAGE	se	SWEDEN			
-LANGUAGE	sg	Sango	yângâ tî sängö		
-LANGUAGE	si	Sinhala, Sinhalese	සිංහල		
-LANGUAGE	sk	Slovak	slovenčina, slovenský jazyk		
-LANGUAGE	sl	Slovene	slovenski jezik, slovenščina		
-LANGUAGE	sm	Samoan	gagana fa'a Samoa		
-LANGUAGE	sn	Shona	chiShona		
-LANGUAGE	so	Somali	Soomaaliga, af Soomaali		
-LANGUAGE	sq	Albanian	Shqip		
-LANGUAGE	sr	Serbian	српски језик		
-LANGUAGE	ss	Swati	SiSwati		
-LANGUAGE	st	Southern Sotho	Sesotho		
-LANGUAGE	su	Sundanese	Basa Sunda		
-LANGUAGE	sv	Swedish	Svenska		
-LANGUAGE	sw	Swahili	Kiswahili		
-LANGUAGE	ta	Tamil	தமிழ்		
-LANGUAGE	te	Telugu	తెలుగు		
-LANGUAGE	tg	Tajik	тоҷикӣ, toğikī, تاجیکی‎		
-LANGUAGE	th	Thai	ไทย		
-LANGUAGE	ti	Tigrinya	ትግርኛ		
-LANGUAGE	tk	Turkmen	Türkmen, Түркмен		
-LANGUAGE	tl	Tagalog	Wikang Tagalog, ᜏᜒᜃᜅ᜔ ᜆᜄᜎᜓᜄ᜔		
-LANGUAGE	tn	Tswana	Setswana		
-LANGUAGE	to	Tonga (Tonga Islands)	faka Tonga		
-LANGUAGE	tr	Turkish	Türkçe		
-LANGUAGE	ts	Tsonga	Xitsonga		
-LANGUAGE	tt	Tatar	татар теле, tatar tele		
-LANGUAGE	tw	Twi	Twi		
-LANGUAGE	ty	Tahitian	Reo Tahiti		
-LANGUAGE	ug	Uyghur, Uighur	Uyƣurqə, ئۇيغۇرچە‎		
-LANGUAGE	uk	Ukrainian	українська мова		
-LANGUAGE	urd	urd	urd		
-LANGUAGE	uz	Uzbek	O‘zbek, Ўзбек, أۇزبېك‎		
-LANGUAGE	ve	Venda	Tshivenḓa		
-LANGUAGE	vi	Vietnamese	Tiếng Việt		
-LANGUAGE	vo	Volapük	Volapük		
-LANGUAGE	wa	Walloon	walon		
-LANGUAGE	wo	Wolof	Wollof		
-LANGUAGE	xh	Xhosa	isiXhosa		
-LANGUAGE	yid + 2	yid	yid		
-LANGUAGE	yo	Yoruba	Yorùbá		
-LANGUAGE	za	Zhuang, Chuang	Saɯ cueŋƅ, Saw cuengh		
-LANGUAGE	zh	Chinese	中文 (Zhōngwén), 汉语, 漢語		
-LANGUAGE	zu	Zulu	isiZulu		
+LANGUAGE	aa	Afar		 	
+LANGUAGE	ab	Abkhaz			
+LANGUAGE	ae	Avestan			
+LANGUAGE	af	Afrikaans			
+LANGUAGE	ak	Akan			
+LANGUAGE	am	Amharic			
+LANGUAGE	an	Aragonese			
+LANGUAGE	ar	Arabic			
+LANGUAGE	as	Assamese		  	
+LANGUAGE	av	Avaric			
+LANGUAGE	ay	Aymara			
+LANGUAGE	az	Azerbaijani		 	
+LANGUAGE	ba	Bashkir			
+LANGUAGE	be	Belarusian			
+LANGUAGE	bg	Bulgarian		 	
+LANGUAGE	bh	Bihari			
+LANGUAGE	bi	Bislama			
+LANGUAGE	bm	Bambara			
+LANGUAGE	bn	Bengali, Bangla			
+LANGUAGE	bo	Tibetan Standard, Tibetan, Central		  	
+LANGUAGE	br	Breton			
+LANGUAGE	bs	Bosnian			
+LANGUAGE	ca	Catalan			
+LANGUAGE	ce	Chechen			
+LANGUAGE	ch	Chamorro			
+LANGUAGE	co	Corsican		 	
+LANGUAGE	cr	Cree		  	
+LANGUAGE	cs	Czech		 	
+LANGUAGE	cu	Old Church Slavonic, Church Slavonic, Old Bulgarian			
+LANGUAGE	cv	Chuvash			
+LANGUAGE	cy	Welsh			
+LANGUAGE	da	Danish			
+LANGUAGE	de	German			
+LANGUAGE	dz	Dzongkha		  	
+LANGUAGE	ee	Ewe			
+LANGUAGE	el	Greek (modern)			
+LANGUAGE	en	English			
+LANGUAGE	eo	Esperanto			
+LANGUAGE	es	Spanish			
+LANGUAGE	et	Estonian			
+LANGUAGE	eu	Basque			
+LANGUAGE	ff	Fula, Fulah, Pulaar, Pular			
+LANGUAGE	fi	Finnish			
+LANGUAGE	fj	Fijian			
+LANGUAGE	fo	Faroese			
+LANGUAGE	fr	French			
+LANGUAGE	fy	Western Frisian			
+LANGUAGE	ga	Irish			
+LANGUAGE	gd	Scottish Gaelic, Gaelic			
+LANGUAGE	gl	Galician		 	
+LANGUAGE	gn	Guaraní		  	
+LANGUAGE	gu	Gujarati		  	
+LANGUAGE	gv	Manx		  	
+LANGUAGE	hi	Hindi		 	
+LANGUAGE	ho	Hiri Motu			
+LANGUAGE	hr	Croatian		 	
+LANGUAGE	ht	Haitian, Haitian Creole			
+LANGUAGE	hu	Hungarian			
+LANGUAGE	hy	Armenian		 	
+LANGUAGE	hz	Herero			
+LANGUAGE	ia	Interlingua		 	
+LANGUAGE	id	Indonesian		 	
+LANGUAGE	ie	Interlingue			
+LANGUAGE	ig	Igbo		 	
+LANGUAGE	ii	Nuosu		 	
+LANGUAGE	ik	Inupiaq			
+LANGUAGE	io	Ido		 	
+LANGUAGE	is	Icelandic			
+LANGUAGE	it	Italian			
+LANGUAGE	iu	Inuktitut		  	
+LANGUAGE	ja	Japanese			
+LANGUAGE	jv	Javanese			
+LANGUAGE	ka	Georgian		  	
+LANGUAGE	kg	Kongo			
+LANGUAGE	ki	Kikuyu, Gikuyu			
+LANGUAGE	kj	Kwanyama, Kuanyama		 	
+LANGUAGE	kk	Kazakh			
+LANGUAGE	kl	Kalaallisut, Greenlandic		 	
+LANGUAGE	km	Khmer		 	
+LANGUAGE	kn	Kannada			
+LANGUAGE	ko	Korean			
+LANGUAGE	kr	Kanuri			
+LANGUAGE	ks	Kashmiri		 	
+LANGUAGE	ku	Kurdish			
+LANGUAGE	kv	Komi			
+LANGUAGE	kw	Cornish			
+LANGUAGE	ky	Kyrgyz			
+LANGUAGE	la	Latin		  	
+LANGUAGE	lb	Luxembourgish, Letzeburgesch			
+LANGUAGE	lg	Ganda			
+LANGUAGE	li	Limburgish, Limburgan, Limburger		 	
+LANGUAGE	ln	Lingala			
+LANGUAGE	lo	Lao		  	
+LANGUAGE	lt	Lithuanian			
+LANGUAGE	lu	Luba-Katanga			
+LANGUAGE	lv	Latvian			
+LANGUAGE	mg	Malagasy			
+LANGUAGE	mh	Marshallese		 	
+LANGUAGE	mi	Māori			
+LANGUAGE	mk	Macedonian			
+LANGUAGE	ml	Malayalam		  	
+LANGUAGE	mn	Mongolian			
+LANGUAGE	mr	Marathi (Marāṭhī)			
+LANGUAGE	ms	Malay		  	
+LANGUAGE	mt	Maltese			
+LANGUAGE	my	Burmese			
+LANGUAGE	na	Nauru		 	
+LANGUAGE	nb	Norwegian Bokmål		  	
+LANGUAGE	nd	Northern Ndebele		  	
+LANGUAGE	ne	Nepali			
+LANGUAGE	ng	Ndonga			
+LANGUAGE	nl	Dutch			
+LANGUAGE	nn	Norwegian Nynorsk		  	
+LANGUAGE	no	Norwegian			
+LANGUAGE	nr	Southern Ndebele		  	
+LANGUAGE	nv	Navajo, Navaho			
+LANGUAGE	ny	Chichewa, Chewa, Nyanja			
+LANGUAGE	oc	Occitan			
+LANGUAGE	oj	Ojibwe, Ojibwa			
+LANGUAGE	om	Oromo			
+LANGUAGE	or	Oriya			
+LANGUAGE	os	Ossetian, Ossetic		 	
+LANGUAGE	pa	Panjabi, Punjabi		 	
+LANGUAGE	pi	Pāli			
+LANGUAGE	pl	Polish			
+LANGUAGE	pt	Portuguese			
+LANGUAGE	qu	Quechua			
+LANGUAGE	rm	Romansh			
+LANGUAGE	rn	Kirundi			
+LANGUAGE	ro	Romanian			
+LANGUAGE	ru	Russian			
+LANGUAGE	rw	Kinyarwanda			
+LANGUAGE	sa	Sanskrit (Saṁskṛta)			
+LANGUAGE	sc	Sardinian		  	
+LANGUAGE	sd	Sindhi			
+LANGUAGE	se	Northern Sami			
+LANGUAGE	sg	Sango		 	
+LANGUAGE	si	Sinhala, Sinhalese			
+LANGUAGE	sk	Slovak			
+LANGUAGE	sl	Slovene			
+LANGUAGE	sm	Samoan			
+LANGUAGE	sn	Shona		 	
+LANGUAGE	so	Somali			
+LANGUAGE	sq	Albanian		  	
+LANGUAGE	sr	Serbian			
+LANGUAGE	ss	Swati			
+LANGUAGE	st	Southern Sotho			
+LANGUAGE	su	Sundanese		  	
+LANGUAGE	sv	Swedish			
+LANGUAGE	sw	Swahili			
+LANGUAGE	ta	Tamil			
+LANGUAGE	te	Telugu			
+LANGUAGE	tg	Tajik			
+LANGUAGE	th	Thai			
+LANGUAGE	ti	Tigrinya			
+LANGUAGE	tk	Turkmen			
+LANGUAGE	tl	Tagalog			
+LANGUAGE	tn	Tswana			
+LANGUAGE	to	Tonga (Tonga Islands)		  	
+LANGUAGE	tr	Turkish			
+LANGUAGE	ts	Tsonga			
+LANGUAGE	tt	Tatar			
+LANGUAGE	tw	Twi		 	
+LANGUAGE	ty	Tahitian		  	
+LANGUAGE	ug	Uyghur			
+LANGUAGE	uk	Ukrainian		  	
+LANGUAGE	uz	Uzbek		  	
+LANGUAGE	ve	Venda		 	
+LANGUAGE	vi	Vietnamese		 	
+LANGUAGE	vo	Volapük		 	
+LANGUAGE	wa	Walloon			
+LANGUAGE	wo	Wolof		 	
+LANGUAGE	xh	Xhosa		 	
+LANGUAGE	yo	Yoruba			
+LANGUAGE	za	Zhuang, Chuang			
+LANGUAGE	zh	Chinese			
+LANGUAGE	zu	Zulu			
 LOCATION_TYPE	SITE_SPECIFIC	SITE-SPECIFIC			
 LOCATION_TYPE	RESIDUE_SPECIFIC	RESIDUE-SPECIFIC			
 LOCATION_TYPE	C-TERMINUS	C-TERMINUS			
