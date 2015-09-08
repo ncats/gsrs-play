@@ -238,7 +238,8 @@ public class TextIndexer {
         
         String query;
         List<Facet> facets = new ArrayList<Facet>();
-        final List matches = new CopyOnWriteArrayList ();
+        //final List matches = new CopyOnWriteArrayList ();
+        final BlockingQueue matches = new LinkedBlockingQueue ();
         int count;
         SearchOptions options;
         final long timestamp = System.currentTimeMillis();
@@ -254,9 +255,29 @@ public class TextIndexer {
         public SearchOptions getOptions () { return options; }
         public List<Facet> getFacets () { return facets; }
         public int size () { return matches.size(); }
-        public Object get (int index) { return matches.get(index); }
+        public Object get (int index) {
+            throw new UnsupportedOperationException
+                ("get(index) is no longer supported; please use copyTo()");
+        }
+        // fill the given list with value starting at start up to start+count
+        public int copyTo (List list, int start, int count) {
+            if (start >= matches.size()) {
+                return 0;
+            }
+                
+            Iterator it = matches.iterator();
+            for (int i = 0; i < start && it.hasNext(); ++i)
+                it.next(); // skip
+            
+            int i = 0;
+            for (; i < count && it.hasNext(); ++i) {
+                list.add(it.next());
+            }
+            return i;
+        }
+        
         public List getMatches () {
-            return Collections.unmodifiableList(matches);
+            return new ArrayList (matches);
         }
         public boolean isEmpty () { return matches.isEmpty(); }
         public int count () { return count; }
@@ -265,7 +286,9 @@ public class TextIndexer {
         public long getStopTime () { return stop.get(); }
         public boolean finished () { return stop.get() >= timestamp; }
         
-        public SearchContextAnalyzer getSearchContextAnalyzer(){ return searchAnalyzer; };
+        public SearchContextAnalyzer getSearchContextAnalyzer(){
+            return searchAnalyzer;
+        }
 
         protected void add (Object obj) {
             matches.add(obj);
@@ -1080,10 +1103,12 @@ public class TextIndexer {
                 payload.fetch();
             }
             else {
-                // we first block until we have enough result to show
-                payload.fetch(options.fetch);
+                // we first block until we have enough result to show; simulate
+                //  with a random number of fetch
+                int fetch = 20 + new Random().nextInt(options.fetch);
+                payload.fetch(fetch);
 
-                if (hits.totalHits > options.fetch) {
+                if (hits.totalHits > fetch) {
                     // now queue the payload so the remainder is fetched in
                     // the background
                     fetchQueue.put(payload);

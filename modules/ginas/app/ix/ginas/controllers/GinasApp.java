@@ -463,10 +463,13 @@ public class GinasApp extends App {
         if (result.count() > 0) {
             rows = Math.min(result.count(), Math.max(1, rows));
             pages = paging(rows, page, result.count());
+            /*
             for (int i = (page - 1) * rows, j = 0; j < rows
                      && i < result.size(); ++j, ++i) {
                 substances.add((Substance) result.get(i));
             }
+            */
+            result.copyTo(substances, (page-1)*rows, rows);
         }
         long starttime = System.currentTimeMillis();
                 

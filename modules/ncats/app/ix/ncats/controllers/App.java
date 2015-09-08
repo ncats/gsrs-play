@@ -1339,8 +1339,11 @@ public class App extends Authentication {
             }
             pages = paging (rows, page, count);
 
+            /*
             for (int j = 0; j < rows && i < count; ++j, ++i) 
                 results.add((T)result.get(i));
+            */
+            result.copyTo(results, i, rows);
         
             facets.addAll(result.getFacets());
 
