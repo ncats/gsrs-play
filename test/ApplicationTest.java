@@ -1,8 +1,5 @@
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ix.idg.controllers.DrugTargetOntology;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 
 import static org.fest.assertions.Assertions.assertThat;
@@ -29,15 +26,15 @@ public class ApplicationTest {
 
     @Test
     public void dtoTest() throws IOException {
-        File f = new File("/Users/guhar/dto.json");
-        ObjectMapper mapper = new ObjectMapper();
-        DrugTargetOntology dto = new DrugTargetOntology();
-        dto.setRoot(mapper.readTree(f));
-        System.out.println("dto.rootTerm = " + dto.rootTerm);
-        for (DrugTargetOntology.DtoTerm child : dto.rootTerm.children) System.out.println("child = " + child);
-
-        DrugTargetOntology.DtoTerm term = dto.findTerm("holocarboxylase synthetase deficiency");
-        System.out.println("term = " + term);
+//        File f = new File("/Users/guhar/dto.json");
+//        ObjectMapper mapper = new ObjectMapper();
+//        DrugTargetOntology dto = new DrugTargetOntology();
+//        dto.setRoot(mapper.readTree(f));
+//        System.out.println("dto.rootTerm = " + dto.rootTerm);
+//        for (DrugTargetOntology.DtoTerm child : dto.rootTerm.children) System.out.println("child = " + child);
+//
+//        DrugTargetOntology.DtoTerm term = dto.findTerm("holocarboxylase synthetase deficiency");
+//        System.out.println("term = " + term);
     }
 
 }
