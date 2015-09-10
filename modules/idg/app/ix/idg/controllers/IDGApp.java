@@ -1602,10 +1602,10 @@ public class IDGApp extends App implements Commons {
         return topics;
     }
 
-    public static Result structureResult
+    public static Result fetchResult
         (final SearchResultContext context, int rows, int page)
         throws Exception {
-        return structureResult
+        return App.fetchResult
             (context, rows, page, new DefaultResultRenderer<Ligand> () {
                     public Result render (SearchResultContext context,
                                           int page, int rows,
@@ -1629,7 +1629,7 @@ public class IDGApp extends App implements Commons {
             SearchResultContext context = similarity
                 (query, threshold, rows, page, new IDGSearchResultProcessor ());
             if (context != null) {
-                return structureResult (context, rows, page);
+                return fetchResult (context, rows, page);
             }
         }
         catch (Exception ex) {
@@ -1647,7 +1647,7 @@ public class IDGApp extends App implements Commons {
             SearchResultContext context = substructure
                 (query, rows, page, new IDGSearchResultProcessor ());
             if (context != null) {
-                return structureResult (context, rows, page);
+                return fetchResult (context, rows, page);
             }
         }
         catch (Exception ex) {
