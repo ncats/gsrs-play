@@ -64,23 +64,6 @@ function _tinx_target_plot(json, selector) {
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide);
 
-    //.on("mouseover", function (d) {
-        //    div.transition()
-        //        .duration(200)
-        //        .style("opacity", .9);
-        //    div .html(d.doid + "<br/>")
-        //        .style("left", (d3.event.pageX) + "px")
-        //        .style("top", (d3.event.pageY - 28) + "px");
-        //})
-        //.on("mouseout", function () {
-        //    div.transition()
-        //        .duration(500)
-        //        .style("opacity", 0);
-        //});
-        //.append("svg:title").text(function (d) {
-        //    return d.doid;
-        //});
-
     // axes
     var xaxis = d3.svg.axis().scale(x).orient("bottom").ticks(0);
     var yaxis = d3.svg.axis().scale(y).orient("left").ticks(0);
