@@ -92,12 +92,18 @@ function _tinx_target_plot(json, selector) {
         .attr("transform", "translate(" + (padding + (width - padding) / 2) + "," + (height + padding * 0.8) + ")")
         .attr("text-anchor", "middle")
         .text("Novelty").style('font-size', axisLabelFontSize + 'em')
-        .style('font-family', 'sans-serif').style("fill", "#000000");
+        .style('font-family', 'sans-serif').style("fill", "#000000")
+        .append("svg:title").text(function(d) {
+            return "A greater novelty score implies that less has been published about the disease";
+        });
     svg.append("text")
         .attr("transform", "translate(" + (padding * 0.3) + "," + ((height + padding) / 2) + ")rotate(-90)")
         .attr("text-anchor", "middle")
         .text("Importance").style('font-size', axisLabelFontSize + 'em')
-        .style('font-family', 'sans-serif').style("fill", "#000000");
+        .style('font-family', 'sans-serif').style("fill", "#000000")
+        .append("svg:title").text(function(d) {
+            return "A greater score implies that more has been published about the association between the target and disease";
+        });
 
 }
 
