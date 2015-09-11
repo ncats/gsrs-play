@@ -868,10 +868,7 @@ public class IDGApp extends App implements Commons {
         if (result.count() > 0) {
             rows = Math.min(result.count(), Math.max(1, rows));
             pages = paging (rows, page, result.count());
-            for (int i = (page - 1) * rows, j = 0; j < rows
-                    && i < result.size(); ++j, ++i) {
-                targets.add((Target) result.get(i));
-            }
+            result.copyTo(targets, (page-1)*rows, rows);
         }
 
         return ok(ix.idg.views.html.targets.render
@@ -890,10 +887,7 @@ public class IDGApp extends App implements Commons {
         if (result.count() > 0) {
             rows = Math.min(result.count(), Math.max(1, rows));
             pages = paging (rows, page, result.count());
-            for (int i = (page - 1) * rows, j = 0; j < rows
-                    && i < result.size(); ++j, ++i) {
-                ligands.add((Ligand) result.get(i));
-            }
+            result.copyTo(ligands, (page-1)*rows, rows);
         }
 
         return ok(ix.idg.views.html.ligandsmedia.render
@@ -911,10 +905,7 @@ public class IDGApp extends App implements Commons {
         if (result.count() > 0) {
             rows = Math.min(result.count(), Math.max(1, rows));
             pages = paging (rows, page, result.count());
-            for (int i = (page - 1) * rows, j = 0; j < rows
-                    && i < result.size(); ++j, ++i) {
-                diseases.add((Disease) result.get(i));
-            }
+            result.copyTo(diseases, (page-1)*rows, rows);
         }
 
         return ok(ix.idg.views.html.diseases.render
