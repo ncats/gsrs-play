@@ -10,8 +10,9 @@ function unhighlightTargetTable(elem) {
 
 function _tinx_target_plot(json, selector) {
 
+    // TODO for now we just jitter novelty values until we get proper ones from TCRD
     var nFn = function (d) {
-        return json.novelty;
+        return json.novelty + Math.random() * json.novelty*5.0;
     };
     var iFn = function (d) {
         return d.imp;
@@ -33,9 +34,14 @@ function _tinx_target_plot(json, selector) {
         .attr("height", height + padding)
         .append("g");
 
-    var div = d3.select("body").append("div")
-        .attr("class", "tooltip")
-        .style("opacity", 0);
+    var tip = d3.tip()
+        .attr('class', 'd3-tip')
+        .offset([-10, 0])
+        .html(function (d) {
+            return "<strong>" + d.doid + "</strong> <span style='color:red'>" + d.dname + "</span>";
+        });
+    svg.call(tip);
+
 
     // points
     svg.selectAll("circles")
@@ -55,7 +61,10 @@ function _tinx_target_plot(json, selector) {
             return y(iFn(d));
         })
         .attr("r", radius)
-        //.on("mouseover", function (d) {
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide);
+
+    //.on("mouseover", function (d) {
         //    div.transition()
         //        .duration(200)
         //        .style("opacity", .9);
@@ -68,19 +77,9 @@ function _tinx_target_plot(json, selector) {
         //        .duration(500)
         //        .style("opacity", 0);
         //});
-        .append("svg:title").text(function (d) {
-            return d.doid;
-        });
-
-    // TODO get better tooltips for the point
-    //$('svg circle').tipsy({
-    //    gravity: 'w',
-    //    html: true,
-    //    title: function() {
-    //        var d = this.__data__;
-    //        return '<span>'+ d.doid+'</span>';
-    //    }
-    //});
+        //.append("svg:title").text(function (d) {
+        //    return d.doid;
+        //});
 
     // axes
     var xaxis = d3.svg.axis().scale(x).orient("bottom").ticks(0);
@@ -179,7 +178,6 @@ function _tinx_plot(json, selector, accsInPage, mouseOverFn, mouseOutFn) {
 
 function tinx_target_plot(selector, acc) {
     d3.json("/idg/tinx/target/"+acc, function(json) {
-        console.log(json);
         _tinx_target_plot(json, selector);
     });
 }
