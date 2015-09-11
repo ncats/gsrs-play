@@ -943,12 +943,30 @@ public class IDGApp extends App implements Commons {
             else if (v.label.equals("function")) function = v.getValue();
         }
 
+        // get classifications
+        String chemblClass = "";
+        String dtoClass = "";
+        String pantherClass = "";
+        for (Value v : t.properties) {
+            if (v.label == null) continue;
+            if (v.label.startsWith(DTO_PROTEIN_CLASS))
+                dtoClass = ((Keyword) v).getValue();
+            else if (v.label.startsWith(PANTHER_PROTEIN_CLASS))
+                pantherClass = ((Keyword) v).getValue();
+            else if (v.label.startsWith(ChEMBL_PROTEIN_CLASS))
+                chemblClass = ((Keyword) v).getValue();
+        }
+
+
         StringBuilder sb = new StringBuilder();
         sb.append(routes.IDGApp.target(getId(t))).append(",").
                 append(getId(t)).append(",").
                 append(t.getName()).append(",").
                 append(csvQuote(t.getDescription())).append(",").
                 append(t.idgTDL.toString()).append(",").
+                append(dtoClass).append(",").
+                append(pantherClass).append(",").
+                append(chemblClass).append(",").
                 append(novelty).append(",").
                 append(t.idgFamily).append(",").
                 append(csvQuote(function.toString())).append(",").
@@ -992,7 +1010,7 @@ public class IDGApp extends App implements Commons {
 
             if (action.toLowerCase().equals("download")) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("URL,Uniprot ID,Name,Description,Development Level,Novelty,Target Family,Function,PMIDs\n");
+                sb.append("URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function,PMIDs\n");
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) {
                         Target t = (Target) result.getMatches().get(i);
