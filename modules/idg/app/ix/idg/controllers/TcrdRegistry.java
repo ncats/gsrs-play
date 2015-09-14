@@ -11,10 +11,7 @@ import ix.core.plugins.StructureProcessorPlugin;
 import ix.core.plugins.StructureReceiver;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
-import ix.idg.models.Disease;
-import ix.idg.models.Ligand;
-import ix.idg.models.TINX;
-import ix.idg.models.Target;
+import ix.idg.models.*;
 import play.Logger;
 import play.Play;
 import play.cache.Cache;
@@ -144,7 +141,6 @@ public class TcrdRegistry extends Controller implements Commons {
         }
     }
 
-
     static class PersistRegistration
         extends PersistenceQueue.AbstractPersistenceContext {
         final Connection con;
@@ -152,7 +148,7 @@ public class TcrdRegistry extends Controller implements Commons {
         final ChemblRegistry chembl;
         final Collection<TcrdTarget> targets;
         PreparedStatement pstm, pstm2, pstm3, pstm4,
-            pstm5, pstm6, pstm7, pstm8, pstm9, pstm10, pstm11;
+            pstm5, pstm6, pstm7, pstm8, pstm9, pstm10, pstm11, pstm12;
         Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
         
         PersistRegistration (Connection con, Http.Context ctx,
@@ -194,6 +190,9 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"where a.id = b.panther_class_id and b.protein_id = ?");
             pstm11 = con.prepareStatement
                 ("select * from target2pathway where target_id = ?");
+            pstm12 = con.prepareStatement("select p.sym, p.uniprot, hg.* from target t, t2tc, protein p, hgram_cdf hg " +
+                    "WHERE t.id = t2tc.target_id AND t2tc.protein_id = p.id AND p.id = hg.protein_id " +
+                    "and hg.protein_id = ?");
             this.chembl = chembl;
         }
 
@@ -240,7 +239,24 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             rset.close();
         }
-        
+
+        void addHarmonogram(Target target, long protein) throws Exception {
+            pstm12.setLong(1, protein);
+            ResultSet rset = pstm12.executeQuery();
+            int n = 0;
+            while (rset.next()) {
+                HarmonogramCDF hg = new HarmonogramCDF(
+                        rset.getString("uniprot"),
+                        rset.getString("sym"),
+                        rset.getString("type"),
+                        "UNKNOWN",
+                        rset.getDouble("attr_cdf"));
+                hg.save();
+                n++;
+            }
+            Logger.debug(n+" harmonogram entries for "+target.id);
+        }
+
         void addGO (Target target, long protein) throws Exception {
             pstm9.setLong(1, protein);
             ResultSet rset = pstm9.executeQuery();
@@ -582,6 +598,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addGO (target, t.protein);
             addPathway (target, t.id);
             addPanther (target, t.protein);
+            addHarmonogram(target, t.protein);
             
             TARGETS.add(target);
             
