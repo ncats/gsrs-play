@@ -38,6 +38,11 @@ public class HarmonogramApp extends App {
     }
 
 
+    public static Result view(String q) {
+        if (q == null) return _badRequest("Must specify a comma separated list of Uniprot ID's");
+        return (ok(ix.idg.views.html.harmonogram.render(q.split(","))));
+    }
+
     public static Result hgForTarget(final String q, final String format) {
         return _handleHgRequest(q, format);
     }
@@ -116,7 +121,7 @@ public class HarmonogramApp extends App {
 
         String page = null;
         if (format != null && format.toLowerCase().equals("tsv")) {
-            return(ok(_hgmapToTsv(allValues, header)));
+            return (ok(_hgmapToTsv(allValues, header)));
         } else {
 
             ArrayNode rowNodes = mapper.createArrayNode();
@@ -157,7 +162,7 @@ public class HarmonogramApp extends App {
             root.put("row_nodes", rowNodes);
             root.put("col_nodes", colNodes);
             root.put("links", links);
-            return(ok(root));
+            return (ok(root));
         }
     }
 

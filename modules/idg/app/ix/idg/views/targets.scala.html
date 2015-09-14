@@ -5,6 +5,7 @@
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int], facets: Array[FacetDecorator], targets: List[Target])
 
+
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><a id='load' onclick="showLoadModal()" 
@@ -58,6 +59,9 @@
         }
     </ol>
 } {
+    @* TODO REMOVE after testing *@
+    <a target="_blank" href="@{ix.idg.controllers.routes.HarmonogramApp.view()+"?q=" + targets.map(x => IDGApp.getId(x)).mkString(",")}">Harmonogram</a>
+
     <table id="target-table" class="table table-hover">
         <tr>
             <th>Name</th>
