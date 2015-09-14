@@ -1,6 +1,7 @@
 @import ix.idg.models.Target
 @import ix.idg.models.Disease
 @import ix.idg.models.Ligand
+@import ix.core.models.Publication
 @import ix.idg.controllers.IDGApp
 @import ix.ncats.controllers.App
 @import ix.core.search.TextIndexer
@@ -11,7 +12,8 @@
 @(query: String, total: Int, facets: Array[FacetDecorator],
 targets: List[Target], totalTargets: Int,
 ligands: List[Ligand], totalLigands: Int,
-diseases: List[Disease], totalDiseases: Int)
+diseases: List[Disease], totalDiseases: Int,
+publications: List[Publication], totalPubs: Int)
 
 @tabrow(t: Target) = {
 <tr>
@@ -55,12 +57,13 @@ diseases: List[Disease], totalDiseases: Int)
       </div>
       <div class="btn-group" role="group">
 	@if(total == 1) {
-	<h3><span class="label label-default">@total result found.</span> <a class="btn btn-default" href="@request.uri&action=download" role="button">Download</a> </h3>
+	<h3><span class="label label-default">@total result found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download}' role="button">Download</a> </h3>
 	} else {
-        <h3><span class="label label-default">@total results found.</span> <a class="btn btn-default" href="@request.uri&action=download" role="button">Download</a> </h3>
+        <h3><span class="label label-default">@total results found.</span> <a class="btn btn-default" href='@if(!request.uri.contains("download")) {@request.uri&action=download}' role="button">Download</a> </h3>
 	}
       </div>
-      <div class="panel panel-default">
+      <div class="panel panel-default" id="panel-targets">
+          <div class="panel-heading">Targets</div>
 	<div class="panel-body">
 	  <table class="table table-striped">
 	    <tr>
@@ -80,7 +83,8 @@ diseases: List[Disease], totalDiseases: Int)
 	  <a href="@{ix.idg.controllers.routes.IDGApp.targets()+"?"+App.queryString(request().queryString())}">@totalTargets target(s)</a>
 	</div>
       </div>
-      <div class="panel panel-default">
+      <div class="panel panel-default" id='panel-ligands'>
+          <div class="panel-heading">Ligands</div>
 	<div class="panel-body">
 	  <table class="table table-striped">
 	    <tr>
@@ -136,28 +140,62 @@ diseases: List[Disease], totalDiseases: Int)
 	  <a href="@{ix.idg.controllers.routes.IDGApp.ligands()+"?"+App.queryString(request().queryString())}">@totalLigands ligand(s)</a>
 	</div>
       </div>
-      <div class="panel panel-default">
-	<div class="panel-body">
-	  <table class="table table-striped">
-	    <tr>
-	      <th>Name</th>
-	      <th>Description</th>
-	    </tr>
-	    @for(d <- diseases) {
-	    <tr>
-	      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(d))">@d.name</a></td>
-	      <td>@d.description</td>
-	    </tr>
-            }
-	  </table>
-	   @if(diseases.length < totalDiseases) {
-	    <span><i class="fa fa-ellipsis-h"></i></span>
-	    }
-	</div>
-	<div class="panel-footer">
-	  <a href="@{ix.idg.controllers.routes.IDGApp.diseases()+"?"+App.queryString(request().queryString())}">@totalDiseases disease(s)</a>
-	</div>
-    </div>
+
+      <div class="panel panel-default" id='panel-disease'>
+          <div class="panel-heading">Diseases</div>
+          <div class="panel-body">
+              <table class="table table-striped">
+                  <tr>
+                      <th>Name</th>
+                      <th>Description</th>
+                  </tr>
+                  @for(d <- diseases) {
+                      <tr>
+                          <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(d))">@d.name</a></td>
+                          <td>@d.description</td>
+                      </tr>
+                  }
+              </table>
+              @if(diseases.length < totalDiseases) {
+                  <span><i class="fa fa-ellipsis-h"></i></span>
+              }
+          </div>
+          <div class="panel-footer">
+              <a href="@{
+                  ix.idg.controllers.routes.IDGApp.diseases() + "?" + App.queryString(request().queryString())
+              }">@totalDiseases disease(s)</a>
+          </div>
+      </div>
+
+      <div class="panel panel-default" id='panel-pubs'>
+          <div class="panel-heading">Publications</div>
+          <div class="panel-body">
+              <table class="table table-striped">
+                  <tr>
+                      <th>Title</th>
+                      <th>ID</th>
+                  </tr>
+                  @for(p <- publications) {
+                      <tr>
+                          <td>@p.title</td>
+                          <td><a href='@if(p.pmid != null) {
+                              "http://www.ncbi.nlm.nih.gov/pubmed/@p.pmid'>PMID:@p.pmid</a>
+                              }
+                          </td>
+                      </tr>
+                  }
+              </table>
+              @if(publications.length < totalPubs) {
+                  <span><i class="fa fa-ellipsis-h"></i></span>
+              }
+          </div>
+          <div class="panel-footer">
+              <a href="@{
+                  ix.idg.controllers.routes.IDGApp.diseases() + "?" + App.queryString(request().queryString())
+              }">@totalPubs publications(s)</a>
+          </div>
+      </div>
+
       </div>
     </div>
 </div>

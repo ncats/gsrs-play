@@ -943,12 +943,30 @@ public class IDGApp extends App implements Commons {
             else if (v.label.equals("function")) function = v.getValue();
         }
 
+        // get classifications
+        String chemblClass = "";
+        String dtoClass = "";
+        String pantherClass = "";
+        for (Value v : t.properties) {
+            if (v.label == null) continue;
+            if (v.label.startsWith(DTO_PROTEIN_CLASS))
+                dtoClass = ((Keyword) v).getValue();
+            else if (v.label.startsWith(PANTHER_PROTEIN_CLASS))
+                pantherClass = ((Keyword) v).getValue();
+            else if (v.label.startsWith(ChEMBL_PROTEIN_CLASS))
+                chemblClass = ((Keyword) v).getValue();
+        }
+
+
         StringBuilder sb = new StringBuilder();
         sb.append(routes.IDGApp.target(getId(t))).append(",").
                 append(getId(t)).append(",").
                 append(t.getName()).append(",").
                 append(csvQuote(t.getDescription())).append(",").
                 append(t.idgTDL.toString()).append(",").
+                append(dtoClass).append(",").
+                append(pantherClass).append(",").
+                append(chemblClass).append(",").
                 append(novelty).append(",").
                 append(t.idgFamily).append(",").
                 append(csvQuote(function.toString())).append(",").
@@ -992,7 +1010,7 @@ public class IDGApp extends App implements Commons {
 
             if (action.toLowerCase().equals("download")) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("URL,Uniprot ID,Name,Description,Development Level,Novelty,Target Family,Function,PMIDs\n");
+                sb.append("URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function,PMIDs\n");
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) {
                         Target t = (Target) result.getMatches().get(i);
@@ -1270,7 +1288,7 @@ public class IDGApp extends App implements Commons {
             (result.getFacets(), ALL_FACETS);
         
         int max = Math.min(rows, Math.max(1,result.count()));
-        int total = 0, totalTargets = 0, totalDiseases = 0, totalLigands = 0;
+        int total = 0, totalTargets = 0, totalDiseases = 0, totalLigands = 0, totalPubs = 0;
         for (TextIndexer.Facet f : result.getFacets()) {
             if (f.getName().equals("ix.Class")) {
                 for (TextIndexer.FV fv : f.getValues()) {
@@ -1287,6 +1305,10 @@ public class IDGApp extends App implements Commons {
                         totalLigands = fv.getCount();
                         total += totalLigands;
                     }
+                    else if (Publication.class.getName().equals(fv.getLabel())) {
+                        totalPubs = fv.getCount();
+                        total += totalPubs;
+                    }
                 }
             }
         }
@@ -1296,12 +1318,14 @@ public class IDGApp extends App implements Commons {
         List<Disease> diseases =
             filter (Disease.class, result.getMatches(), max);
         List<Ligand> ligands = filter (Ligand.class, result.getMatches(), max);
-        
-        return ok (ix.idg.views.html.search.render
-                   (query, total, decorate (facets),
-                    targets, totalTargets,
-                    ligands, totalLigands,
-                    diseases, totalDiseases));
+        List<Publication> publications = filter (Publication.class, result.getMatches(), max);
+
+        return ok(ix.idg.views.html.search.render
+                (query, total, decorate(facets),
+                        targets, totalTargets,
+                        ligands, totalLigands,
+                        diseases, totalDiseases,
+                        publications, totalPubs));
     }
 
     public static Keyword getATC (final String term) throws Exception {
