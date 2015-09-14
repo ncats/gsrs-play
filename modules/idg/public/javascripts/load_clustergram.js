@@ -4,6 +4,8 @@ function load_clustergram(json_url) {
     // load network
     d3.json(json_url, function (network_data) {
 
+        console.log(network_data);
+
         // define the outer margins of the visualization
         var outer_margins = {
             'top': 5,
