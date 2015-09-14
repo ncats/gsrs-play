@@ -3,8 +3,7 @@ package ix.core.models;
 import javax.persistence.*;
 
 @Entity
-//@Table(name="ix_core_a")
-@Table(name="ix_prin")
+@Table(name="ix_core_principal")
 @Inheritance
 @DiscriminatorValue("PRI")
 public class Principal extends IxModel {

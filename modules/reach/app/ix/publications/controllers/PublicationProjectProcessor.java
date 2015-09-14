@@ -322,7 +322,7 @@ public class PublicationProjectProcessor extends Controller {
     }
     
     static class PublicationProcessor {
-        PreparedStatement pstm, pstm2, pstm3, pstm4;
+        PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5;
 
         public PublicationProcessor (Connection con) throws SQLException {
             pstm = con.prepareStatement
@@ -334,6 +334,8 @@ public class PublicationProjectProcessor extends Controller {
                 ("select * from pub_program where db_pub_id = ?");
             pstm4 = con.prepareStatement
                 ("select * from publication where db_pub_id = ?");
+            pstm5 = con.prepareStatement
+                ("select * from pub_author where db_pub_id = ?");
         }
 
         public void shutdown () {
@@ -342,6 +344,7 @@ public class PublicationProjectProcessor extends Controller {
                 pstm2.close();
                 pstm3.close();
                 pstm4.close();
+                pstm5.close();
             }
             catch (SQLException ex) {
                 ex.printStackTrace();
@@ -360,7 +363,30 @@ public class PublicationProjectProcessor extends Controller {
                 Logger.warn("Can't locate PMID "+pmid);
                 return pub;
             }
-            
+
+            if (pub.authors.isEmpty()) {
+                try {
+                    pstm5.setLong(1, id);
+                    ResultSet rset = pstm5.executeQuery();
+                    while (rset.next()) {
+                        Author author = new Author ();
+                        author.lastname = rset.getString("last_name");
+                        author.forename = rset.getString("first_name");
+                        author.initials = rset.getString("initials");
+                        if (author.forename == null)
+                            author.forename = author.initials;
+                        pub.authors.add(new PubAuthor
+                                        (rset.getInt("author_order"), author));
+                    }
+                    rset.close();
+                    Logger.warn("PMID "+pmid+" has no author list; "
+                                +"checking internal author list");
+                }
+                catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
             for (PubAuthor p : pub.authors) {
                 p.author = instrument (p.author);
             }
@@ -945,6 +971,9 @@ public class PublicationProjectProcessor extends Controller {
             else if ("nguyen".equalsIgnoreCase(lastname)
                      && "D-T".equalsIgnoreCase(firstname))
                 firstname = "trung";
+            else if ("tagle".equalsIgnoreCase(lastname)
+                     && "DA".equalsIgnoreCase(firstname))
+                firstname = "danilo";
             else if ("steve".equalsIgnoreCase(firstname) 
                      || "steven".equalsIgnoreCase(firstname))
                 firstname = "(steve steven)";
