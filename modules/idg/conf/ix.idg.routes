@@ -26,6 +26,8 @@ GET	/ligands/:name	ix.idg.controllers.IDGApp.ligand(name: String)
 GET	/search		ix.idg.controllers.IDGApp.search(kind: String ?= null)
 GET	/tinx		ix.idg.controllers.TINXApp.tinx()
 GET	/tinx/target/:acc		ix.idg.controllers.TINXApp.tinxForTarget(acc: String)
+GET /hg/target ix.idg.controllers.HarmonogramApp.hgForTarget(q: String ?= null, format: String ?= null)
+POST /hg/target ix.idg.controllers.HarmonogramApp.hgForTargetPost()
 
 ->	/	ix.ncats.Routes
 
