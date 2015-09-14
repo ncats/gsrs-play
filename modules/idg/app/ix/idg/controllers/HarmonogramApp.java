@@ -1,6 +1,8 @@
 package ix.idg.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.idg.models.HarmonogramCDF;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
@@ -89,7 +91,7 @@ public class HarmonogramApp extends App {
         return sb.toString();
     }
 
-    public static Result _hgForTargets(final String[] accs, final String format) {
+    public static Result _hgForTargets(String[] accs, String format) {
         List<HarmonogramCDF> hg = HarmonogramFactory.finder
                 .where().in("uniprotId", accs).findList();
         if (hg.isEmpty()) {
@@ -108,14 +110,55 @@ public class HarmonogramApp extends App {
             colNames.add(acdf.getDataSource());
         }
 
-        String page = null;
-        if (format.toLowerCase().equals("tsv")) {
-            String[] header = colNames.toArray(new String[]{});
-            Arrays.sort(header);
-            page = _hgmapToTsv(allValues, header);
-        }
+        // Arrange column names in a default ordering - needs to be updated
+        String[] header = colNames.toArray(new String[]{});
+        Arrays.sort(header);
 
-        return (ok(page));
+        String page = null;
+        if (format != null && format.toLowerCase().equals("tsv")) {
+            return(ok(_hgmapToTsv(allValues, header)));
+        } else {
+
+            ArrayNode rowNodes = mapper.createArrayNode();
+            ArrayNode colNodes = mapper.createArrayNode();
+            ArrayNode links = mapper.createArrayNode();
+
+            int rank = 1;
+            for (String sym : allValues.keySet()) {
+                ObjectNode aRowNode = mapper.createObjectNode();
+                aRowNode.put("clust", 1);
+                aRowNode.put("rank", rank++);
+                aRowNode.put("name", sym);
+                rowNodes.add(aRowNode);
+            }
+
+            rank = 1;
+            for (String aColName : header) {
+                ObjectNode aColNode = mapper.createObjectNode();
+                aColNode.put("name", aColName);
+                aColNode.put("cluster", 1);
+                aColNode.put("rank", rank++);
+                colNodes.add(aColNode);
+            }
+
+            int row = 0;
+            for (String sym : allValues.keySet()) {
+                for (int col = 0; col < header.length; col++) {
+                    Double value = allValues.get(sym).get(header[col]);
+                    ObjectNode node = mapper.createObjectNode();
+                    node.put("source", row);
+                    node.put("target", col);
+                    node.put("value", value);
+                    links.add(node);
+                }
+            }
+
+            ObjectNode root = mapper.createObjectNode();
+            root.put("row_nodes", rowNodes);
+            root.put("col_nodes", colNodes);
+            root.put("links", links);
+            return(ok(root));
+        }
     }
 
 }
