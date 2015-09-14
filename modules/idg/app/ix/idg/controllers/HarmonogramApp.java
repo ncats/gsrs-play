@@ -156,6 +156,7 @@ public class HarmonogramApp extends App {
                     node.put("value", value);
                     links.add(node);
                 }
+                row++;
             }
 
             ObjectNode root = mapper.createObjectNode();
