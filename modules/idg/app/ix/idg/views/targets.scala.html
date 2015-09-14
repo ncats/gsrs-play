@@ -70,8 +70,6 @@
         }
     </table>
 } {
-    <div id="tinx-map"></div>
-    <p></p>
     <div id="word-cloud"></div>
 }
 
@@ -87,30 +85,9 @@
 
 <head>
     <style type="text/css">
-    .axis path,
-    .axis line {
-        fill: none;
-        stroke: black;
-        shape-rendering: crispEdges;
-    }
-
-    .axis text {
-        font-family: sans-serif;
-        font-size: 11px;
-    }
-
-    .point:hover {
-        opacity: 0.5;
-      }
-
-    .tick text {
-        visibility:inherit;
-    }
-
     </style>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
 </head>
 
 <script>
@@ -119,30 +96,7 @@ $(function() {
    $('[data-toggle="tooltip"]').tooltip ();
 });
 
-var tinx = function() {
-    var accsInPage = [];
-    @for(t <- targets) {
-        accsInPage.push("@IDGApp.getId(t)");
-    }
 
-    tinx_plot("#tinx-map", accsInPage, highlightTargetTable, unhighlightTargetTable);
-
-    $("#target-table tr" ).mouseover(function() {
-        var id = $(this ).attr("id");
-        if (id == undefined) return;
-        var acc = id.split("-")[1];
-        var pt = $("#point-"+acc);
-        $(pt).attr("oldfill", $(pt ).css("fill"));
-        $(pt).css("fill", "green");
-    });
-    $ ( "#target-table tr" ).mouseout ( function ( ) {
-        var id = $ ( this ).attr ( "id" ) ;
-        if ( id == undefined ) return ;
-        var acc = id.split ( "-" )[ 1 ] ;
-        var pt = $ ( "#point-" + acc ) ;
-        $ ( pt ).css ( "fill", $ ( pt ).attr ( "oldfill" ) ) ;
-    });
-}
 
 
 $(document).ready(function () {
@@ -152,7 +106,6 @@ $(document).ready(function () {
       // Added this line to force NVD3 to redraw the chart
       //jQuery(window).trigger('resize');
       d3.select('svg').remove();
-      tinx();
       //window.dispatchEvent(new Event('resize'));
 	      console.log('tab shown: '+e.target);
    });

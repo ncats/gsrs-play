@@ -470,43 +470,61 @@
             <h3 class="panel-title">IDG Disease Relevance (@diseases.size())</h3>
           </div>
           <div class="panel-body">
-            <table class="tree table">
-              <tr>
-                <th>Disease</th>
-                <th>Z-score <i class="fa fa-info-circle"
-		data-toggle="tooltip" data-placement="top" data-html="true"
-                title="<p align='left'>A normalized version of the co-occurence (of the disease and this target) score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
-                <th>Confidence <i class="fa fa-info-circle"
-		data-toggle="tooltip" data-placement="top" data-html="true"
-                title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
-	        <th>Importance <i class="fa fa-info-circle"
-		data-toggle="tooltip" data-placement="top" data-html="true"
-                title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
-              </tr>
-	      @defining(request().getQueryString("view")) { view =>
-	        @view match {
-	          case "full" => {
-                    @for(dr <- diseases) {
-		      @diseaserow(dr)
-	            }
-		  }
-  		  case _ => {
-		    @for(i <- 0 until Math.min(10, diseases.size())) {
-		       @diseaserow(diseases(i))
-		    }
-		    @if(diseases.size() > 10) {
-		      <tr>
-		        <td><a href="@request().uri?view=full">More...</a></td>
-		        <td></td>
-		        <td></td>
-			<td></td>
-		      </tr>
-		    }
-		  }
- 	        }
-	      }
-            </table>
-          </div>
+
+              <ul class="nav nav-tabs" role="tablist">
+                  <li role="presentation" class="active">
+                      <a href="#tinx" aria-controls="tinx" role="tab" data-toggle="tab">Novelty / Importance</a>
+                  </li>
+                  <li role="presentation">
+                      <a href="#dtable" aria-controls="dtable" role="tab" data-toggle="tab">Relevance Table</a>
+                  </li>
+              </ul>
+
+              <div class="tab-content">
+                  <div role="tabpanel" class="tab-pane active" id="tinx">
+                      <div id="tinx-plot"></div>
+                  </div>
+                  <div role="tabpanel" class="tab-pane" id="dtable">
+                      <table class="tree table">
+                          <tr>
+                              <th>Disease</th>
+                              <th>Z-score <i class="fa fa-info-circle"
+                              data-toggle="tooltip" data-placement="top" data-html="true"
+                              title="<p align='left'>A normalized version of the co-occurence (of the disease and this target) score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
+                              <th>Confidence <i class="fa fa-info-circle"
+                              data-toggle="tooltip" data-placement="top" data-html="true"
+                              title="<p align='left'>Half the Z-score, described in <a href='http://www.sciencedirect.com/science/article/pii/S1046202314003831'>Franklid et al, Methods, 2015, 83-89</a></p>"></i></th>
+                              <th>Importance <i class="fa fa-info-circle"
+                              data-toggle="tooltip" data-placement="top" data-html="true"
+                              title="<p align='left'>A score characterizing the importance of the target, based on occurences in the published literature.</p>"></i></th>
+                          </tr>
+                          @defining(request().getQueryString("view")) { view =>
+                              @view match {
+                                  case "full" => {
+                                      @for(dr <- diseases) {
+                                          @diseaserow(dr)
+                                      }
+                                  }
+                                  case _ => {
+                                      @for(i <- 0 until Math.min(10, diseases.size())) {
+                                          @diseaserow(diseases(i))
+                                      }
+                                      @if(diseases.size() > 10) {
+                                          <tr>
+                                              <td><a href="@request().uri?view=full">More...</a></td>
+                                              <td></td>
+                                              <td></td>
+                                              <td></td>
+                                          </tr>
+                                      }
+                                  }
+                              }
+                          }
+                      </table>
+                  </div>  @* tab-pane *@
+              </div>  @* tab-content *@
+          </div>  @* panel-body *@
+
          </div>
        </div>
       </div>
@@ -650,6 +668,36 @@
   </div>
 </div>
 
+<head>
+    <style type="text/css">
+    .axis path,
+    .axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+    }
+
+    .axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+    }
+
+    .point:hover {
+    opacity: 0.5;
+    }
+
+    .tick text {
+    visibility:inherit;
+    }
+
+    </style>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
+</head>
+
 <script>
 $(function () {
   $('[data-toggle="popover"]').popover();
@@ -665,6 +713,8 @@ $(document).ready(function () {
   $('#keyword').on('click touchstart', function () {
      showLoadModal();
   });
+
+  tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
 function showLoadModal () {
