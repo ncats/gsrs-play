@@ -3,8 +3,8 @@ text.active {
 }
 
 #svg_div {
-    width: 600px;
-    height: 400px;
+    /*width: 600px;*/
+    height: 500px;
 }
 
 /* stylize the sidebar instructions */
