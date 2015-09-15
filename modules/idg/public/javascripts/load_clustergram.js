@@ -34,7 +34,7 @@ function load_clustergram(json_url) {
             'svg_div_id': 'svg_div',
             'row_label': '',
             'col_label': '',
-            'outer_margins': outer_margins
+            'outer_margins': outer_margins,
             //'force_square': 0
             // 'opacity_scale':'log',
             // 'input_domain':7,
@@ -46,7 +46,7 @@ function load_clustergram(json_url) {
             // 'tile_title': true,
             // 'click_tile': click_tile_callback,
             // 'click_group': click_group_callback
-            // 'resize':false
+             'resize':false
             // 'order':'rank'
         };
 
