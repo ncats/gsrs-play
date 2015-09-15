@@ -190,9 +190,10 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"where a.id = b.panther_class_id and b.protein_id = ?");
             pstm11 = con.prepareStatement
                 ("select * from target2pathway where target_id = ?");
-            pstm12 = con.prepareStatement("select p.sym, p.uniprot, hg.* from target t, t2tc, protein p, hgram_cdf hg " +
+            pstm12 = con.prepareStatement("select p.sym, p.uniprot, t.idgfam, t.tdl, gat.resource_group, hg.* " +
+                    "from target t, t2tc, protein p, hgram_cdf hg, gene_attribute_type gat " +
                     "WHERE t.id = t2tc.target_id AND t2tc.protein_id = p.id AND p.id = hg.protein_id " +
-                    "and hg.protein_id = ?");
+                    "AND gat.name = hg.type and hg.protein_id = ?");
             this.chembl = chembl;
         }
 
@@ -249,7 +250,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         rset.getString("uniprot"),
                         rset.getString("sym"),
                         rset.getString("type"),
-                        "UNKNOWN",
+                        rset.getString("resource_group"),
                         rset.getDouble("attr_cdf"));
                 hg.save();
                 n++;

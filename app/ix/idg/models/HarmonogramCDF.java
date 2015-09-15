@@ -20,6 +20,11 @@ public class HarmonogramCDF extends play.db.ebean.Model {
     @Column(nullable = true)
     public String dataType;
 
+    @Column(nullable = false)
+    public String IDGFamily;
+    @Column(nullable = true)
+    public String TDL;
+
     public Double cdf;
 
 
@@ -46,18 +51,21 @@ public class HarmonogramCDF extends play.db.ebean.Model {
         return symbol;
     }
 
-    public HarmonogramCDF(String uniprotId, String dataSource, String dataType, Double cdf) {
-        this.uniprotId = uniprotId;
-        this.dataSource = dataSource;
-        this.dataType = dataType;
-        this.cdf = cdf;
+    public String getIDGFamily() {
+        return IDGFamily;
     }
 
-    public HarmonogramCDF(String uniprotId, String symbol, String dataSource, String dataType, Double cdf) {
+    public String getTDL() {
+        return TDL;
+    }
+
+    public HarmonogramCDF(String uniprotId, String symbol, String dataSource, String dataType, String IDGFamily, String TDL, Double cdf) {
         this.uniprotId = uniprotId;
         this.symbol = symbol;
         this.dataSource = dataSource;
         this.dataType = dataType;
+        this.IDGFamily = IDGFamily;
+        this.TDL = TDL;
         this.cdf = cdf;
     }
 
