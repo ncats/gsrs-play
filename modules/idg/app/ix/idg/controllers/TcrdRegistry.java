@@ -201,7 +201,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from xref where protein_id = ?");
             pstm13 = con.prepareStatement("select p.sym, p.uniprot, hg.* from target t, t2tc, protein p, hgram_cdf hg " +
                     "WHERE t.id = t2tc.target_id AND t2tc.protein_id = p.id AND p.id = hg.protein_id " +
-                    "and hg.protein_id = ?");
+                    "AND gat.name = hg.type and hg.protein_id = ?");
             this.chembl = chembl;
         }
 
@@ -261,7 +261,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         rset.getString("uniprot"),
                         rset.getString("sym"),
                         rset.getString("type"),
-                        "UNKNOWN",
+                        rset.getString("resource_group"),
                         rset.getDouble("attr_cdf"));
                 hg.save();
                 n++;
