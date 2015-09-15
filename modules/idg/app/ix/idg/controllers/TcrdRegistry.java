@@ -262,6 +262,8 @@ public class TcrdRegistry extends Controller implements Commons {
                         rset.getString("sym"),
                         rset.getString("type"),
                         rset.getString("resource_group"),
+                        target.idgFamily,
+                        target.idgTDL.name,
                         rset.getDouble("attr_cdf"));
                 hg.save();
                 n++;
