@@ -16,8 +16,12 @@ public interface Commons {
     public static final String IDG_SMILES = "IDG SMILES";
     public static final String IDG_TISSUE = "IDG Tissue";
 
+    public static final String OMIM_GENE = "OMIM Gene";
+
     public static final String GWAS_TRAIT = "GWAS Trait";
     public static final String IMPC_TERM = "IMPC Term";
+    public static final String MGI_TERM = "MGI Term";
+    public static final String OMIM_TERM = "OMIM Term";
 
     public static final String GO_COMPONENT = "GO Component";
     public static final String GO_PROCESS = "GO Process";

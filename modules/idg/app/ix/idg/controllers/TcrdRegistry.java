@@ -38,6 +38,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.regex.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -235,7 +236,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     (source+" Pathway", name, null);
                 if (!target.properties.contains(term)) {
                     target.properties.add(term);
-                    Logger.debug("Target "+target.id+" pathway: "+term);
+                    Logger.debug("Target "+target.id+" pathway: "+term.term);
                 }
             }
             rset.close();
@@ -294,6 +295,59 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
             }
             rset.close();
+        }
+
+        static Pattern OmimRegex = Pattern.compile("([^\\s]+)\\s\\(([1-4])\\)");
+        static void parseOMIMPhenotype (String trait, Target target) {
+            String[] tokens  = trait.split(";");
+            int pos = tokens[0].indexOf(':');
+            if (pos > 0) {
+                String mim = tokens[0].substring(pos+1).trim();
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (OMIM_GENE, "MIM:"+mim,"http://omim.org/entry/"+mim);
+                target.synonyms.add(kw);
+            }
+
+            /*
+             * MIM Number: 114208; Disorder: Hypokalemic periodic paralysis, type 1, 170400 (3); {Malignant hyperthermia susceptibility 5}, 601887 (3); {Thyrotoxic periodic paralysis, susceptibility to, 1}, 188580 (3); Comments: in mouse, mutation causes muscular dysgenesis
+             */
+            
+            for (int i = 1; i < tokens.length; ++i) {
+                String disorder = tokens[i].trim();
+                if (disorder.startsWith("Comments:")) {
+                    // do nothing..
+                }
+                else {
+                    if (disorder.startsWith("Disorder:")) {
+                        disorder = disorder.substring(9);
+                    }
+                    pos = disorder.lastIndexOf(',');
+                    if (pos > 0) {
+                        String pheno = disorder.substring(pos+1);
+                        if (disorder.charAt(0) == '{') {
+                            pos = disorder.indexOf('}');
+                            disorder = disorder.substring(1, pos);
+                        }
+                        else {
+                            disorder = disorder.substring(0, pos);
+                        }
+                        
+                        Matcher m = OmimRegex.matcher(pheno);
+                        if (m.find()) {
+                            String id = m.group(1);
+                            String key = m.group(2);
+                            Logger.debug
+                                ("OMIM: "+disorder+" ["+id+"] ("+key+")");
+                            if (key.charAt(0) == '3') {
+                                Keyword kw = KeywordFactory.registerIfAbsent
+                                    (OMIM_TERM, disorder,
+                                     "http://omim.org/entry/"+id);
+                                target.properties.add(kw);
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         void addPhenotype (Target target, long protein) throws Exception {
@@ -359,6 +413,35 @@ public class TcrdRegistry extends Controller implements Commons {
                                             "for target "+target.id);
                             }
                         }
+                    }
+                }
+                else if ("JAX/MGI Human Ortholog Phenotype"
+                         .equalsIgnoreCase(type)) {
+                    Keyword source = phenotypeSource.get(type);             
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type,
+                             "http://www.informatics.jax.org/");
+                        phenotypeSource.put(type, source);
+                    }
+                    String pheno = rset.getString("term_name");
+                    String termId = rset.getString("term_id");
+                    if (pheno != null) {
+                        Keyword kw = KeywordFactory.registerIfAbsent
+                            (MGI_TERM, pheno, "http://www.informatics.jax.org/searches/Phat.cgi?id="+termId);
+                        target.properties.add(kw);
+                    }
+                }
+                else if ("OMIM".equalsIgnoreCase(type)) {
+                    Keyword source = phenotypeSource.get(type);             
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type, "http://omim.org/");
+                        phenotypeSource.put(type, source);
+                    }
+                    String trait = rset.getString("trait");
+                    if (trait != null) {
+                        parseOMIMPhenotype (trait, target);
                     }
                 }
                 else {
@@ -1312,6 +1395,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
+                 +"where c.id in (2006,8719,11177)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl = 'Tclin'\n"
                  //+" where c.uniprot = 'P25089'\n"
