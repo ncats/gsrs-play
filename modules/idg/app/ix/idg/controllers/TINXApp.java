@@ -1,18 +1,19 @@
 package ix.idg.controllers;
 
+import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.Keyword;
 import ix.core.models.Value;
-import ix.core.models.XRef;
 import ix.idg.models.Disease;
 import ix.idg.models.TINX;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
-import play.mvc.Result;
 import play.Logger;
+import play.db.ebean.Model;
+import play.mvc.Result;
 
 import java.util.HashMap;
 import java.util.List;
@@ -151,13 +152,18 @@ public class TINXApp extends App {
 
         for (TINX tx : tinx) {
             if (novelty == null) {
-                // should be the same for all
+                // TODO Daniel will updated TCRD with per-disease novelty values
                 novelty = tx.novelty;
             }
             meanImportance += tx.importance;
+            List<Disease> diseases = DiseaseFactory.finder
+                    .where(Expr.and(Expr.eq("synonyms.label", "DOID"),
+                            Expr.eq("synonyms.term", tx.doid)))
+                    .findList();
             ObjectNode node = mapper.createObjectNode();
             node.put("doid", tx.doid);
             node.put("imp", tx.importance);
+            if (!diseases.isEmpty()) node.put("dname", diseases.get(0).getName());
             imps.add(node);
         }
         
