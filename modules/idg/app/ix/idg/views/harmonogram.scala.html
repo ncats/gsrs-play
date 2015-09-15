@@ -17,7 +17,7 @@
     }
 } {
 } {
-    <div id='clust_instruct_container' >
+    <div id='clust_instruct_container'>
 
         <div id='viz_gmt_labels'></div>
 
@@ -55,24 +55,28 @@
     <div id='svg_div' class='svg_div' ></div>
 }
 
-    <head>
-        <style type="text/css">
-        </style>
-        <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
-        <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
-        <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
-        <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
-        <script type="text/javascript" src='@routes.Assets.at("javascripts/d3_clustergram.js")'></script>
-        <script type="text/javascript" src='@routes.Assets.at("javascripts/load_clustergram.js")'></script>
-    </head>
+<head>
+    <style type="text/css">
 
-    <script>
-    $ ( function ( ) {
-    $ ( '[data-toggle="popover"]' ).popover ( ) ;
-    $ ( '[data-toggle="tooltip"]' ).tooltip ( ) ;
-    } ) ;
+    </style>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3_clustergram.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/load_clustergram.js")'></script>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />
+</head>
 
-    $(document ).ready(function() {
-        load_clustergram("@{ix.idg.controllers.routes.HarmonogramApp.hgForTarget()+"?q=" + accs.mkString(",")}");
-    });
-    </script>
+<script>
+$ ( function ( ) {
+$ ( '[data-toggle="popover"]' ).popover ( ) ;
+$ ( '[data-toggle="tooltip"]' ).tooltip ( ) ;
+} ) ;
+
+$(document ).ready ( function ( ) {
+load_clustergram ("@{
+    ix.idg.controllers.routes.HarmonogramApp.hgForTarget() + "?q=" + accs.mkString(",")
+}");
+}) ;
+</script>
