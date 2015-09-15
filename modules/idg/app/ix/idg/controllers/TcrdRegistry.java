@@ -153,8 +153,12 @@ public class TcrdRegistry extends Controller implements Commons {
         final ChemblRegistry chembl;
         final Collection<TcrdTarget> targets;
         PreparedStatement pstm, pstm2, pstm3, pstm4,
-            pstm5, pstm6, pstm7, pstm8, pstm9, pstm10, pstm11;
-        Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
+            pstm5, pstm6, pstm7, pstm8, pstm9, pstm10, pstm11, pstm12;
+        Map<String, Keyword> datasources = new HashMap<String, Keyword>();
+
+        // xrefs for the current target
+        Map<String, List<String>> xrefs =
+            new HashMap<String, List<String>>();
         
         PersistRegistration (Connection con, Http.Context ctx,
                              Collection<TcrdTarget> targets,
@@ -187,7 +191,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from phenotype where protein_id = ?");
             pstm8 = con.prepareStatement
                 ("select * from expression where protein_id = ? "
-                 +"and evidence = 'CURATED'");
+                 //+"and evidence = 'CURATED'"
+                 );
             pstm9 = con.prepareStatement
                 ("select * from goa where protein_id = ?");
             pstm10 = con.prepareStatement
@@ -195,6 +200,8 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"where a.id = b.panther_class_id and b.protein_id = ?");
             pstm11 = con.prepareStatement
                 ("select * from target2pathway where target_id = ?");
+            pstm12 = con.prepareStatement
+                ("select * from xref where protein_id = ?");
             this.chembl = chembl;
         }
 
@@ -223,6 +230,8 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm9.close();
             pstm10.close();
             pstm11.close();
+            pstm12.close();
+            
             chembl.shutdown();
         }
 
@@ -282,19 +291,113 @@ public class TcrdRegistry extends Controller implements Commons {
             rset.close();
         }
         
-        void addTissue (Target target, long protein) throws Exception {
+        void addExpression (Target target, long protein) throws Exception {
+            
             pstm8.setLong(1, protein);
             ResultSet rset = pstm8.executeQuery();
+            Map<String, Keyword> sources = new HashMap<String, Keyword>();
             while (rset.next()) {
-                String tissue = rset.getString("tissue");
-                Keyword t = KeywordFactory.registerIfAbsent
-                    (IDG_TISSUE, tissue, null);
-                if (!target.properties.contains(t)) {
-                    target.properties.add(t);
-                    Logger.debug("Target "+target.id+" tissue: "+tissue);
+                String type = rset.getString("etype");
+                String tissue = rset.getString("tissue");               
+                if ("GTEx V4 RNA-SeQCv1.1.8 Gene Median RPKM"
+                    .equalsIgnoreCase(type)) {
+                    Keyword source = datasources.get(type);
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type, "http://www.gtexportal.org/");
+                        datasources.put(type, source);
+                    }
+                    sources.put(type, source);
+                    double value = rset.getDouble("number_value");
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (GTEx_TISSUE, tissue, null);
+                    target.properties.add(kw);
+                    VNum val = new VNum (GTEx_EXPR, value);
+                    val.unit = tissue;
+                    target.properties.add(val);
+                    Logger.debug("Target "+target.id+" "+type+": "+tissue);
+                }
+                else if ("HPM Protein".equalsIgnoreCase(type)) {
+                }
+                else if ("HPM Gene".equalsIgnoreCase(type)) {
+                    Keyword source = datasources.get(type);
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type, "http://www.humanproteomemap.org");
+                        datasources.put(type, source);
+                    }
+                    sources.put(type, source);
+                    double value = rset.getDouble("number_value");
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (HPM_TISSUE, tissue, null);
+                    target.properties.add(kw);
+                    VNum val = new VNum (HPM_EXPR, value);
+                    val.unit = tissue;
+                    target.properties.add(val);
+                    Logger.debug("Target "+target.id+" "+type+": "+tissue);
+                }
+                else if ("JensenLab Text Mining".equalsIgnoreCase(type)) {
+                }
+                else if ("JensenLab Knowledge UniProtKB-RC"
+                         .equalsIgnoreCase(type)) {
+                    Keyword source = datasources.get(type);
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type,
+                             "http://tissues.jensenlab.org");
+                        datasources.put(type, source);
+                    }
+                    sources.put(type, source);
+                    
+                    String evidence = rset.getString("evidence");
+                    if ("CURATED".equalsIgnoreCase(evidence)) {
+                        Keyword t = KeywordFactory.registerIfAbsent
+                            (IDG_TISSUE, tissue, null);
+                        if (!target.properties.contains(t)) {
+                            target.properties.add(t);
+                            Logger.debug("Target "
+                                         +target.id+" tissue: "+tissue);
+                        }
+                    }
+                }
+                else if (type.startsWith("JensenLab Experiment")) {
+                    Keyword source = datasources.get(type);
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type,
+                             "http://tissues.jensenlab.org");
+                        datasources.put(type, source);
+                    }
+                    sources.put(type, source);
+                    String t = type.substring
+                        ("JensenLab Experiment".length()+1).trim();
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (t+" Tissue", tissue, null);
+                    target.properties.add(kw);
+                    Logger.debug("Target "+target.id+" "+type+": "+tissue);
+                }
+                else {
+                    Logger.warn("Unknown expression \""+type
+                                +"\" for target "+target.id);
                 }
             }
             rset.close();
+
+            for (Keyword source: sources.values()) {
+                target.properties.add(source);
+            }
+
+            List<String> ids = xrefs.get("STRING");
+            if (ids != null && !ids.isEmpty()) {
+                // 9606.ENSP00000000442
+                String id = ids.iterator().next();
+                if (id.startsWith("9606.")) {
+                    id = id.substring(5);
+                    Keyword kw = new Keyword (IDG_TISSUE_REF, id);
+                    kw.href = "http://tissues.jensenlab.org/Entity?figures=tissues_body_human&knowledge=10&experiments=10&textmining=10&type1=9606&type2=-25&id1="+id;
+                    target.properties.add(kw);
+                }
+            }
         }
 
         static Pattern OmimRegex = Pattern.compile("([^\\s]+)\\s\\(([1-4])\\)");
@@ -358,12 +461,12 @@ public class TcrdRegistry extends Controller implements Commons {
             while (rset.next()) {
                 String type = rset.getString("ptype");
                 if ("impc".equalsIgnoreCase(type)) {
-                    Keyword source = phenotypeSource.get(type);
+                    Keyword source = datasources.get(type);
                     if (source == null) {
                         source = KeywordFactory.registerIfAbsent
                             (SOURCE, type,
                              "http://www.mousephenotype.org/data/secondaryproject/idg");
-                        phenotypeSource.put(type, source);
+                        datasources.put(type, source);
                     }
                     sources.put(type, source);
                     String term = rset.getString("term_name");
@@ -374,12 +477,12 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
                 }
                 else if ("gwas catalog".equalsIgnoreCase(type)) {
-                    Keyword source = phenotypeSource.get(type);
+                    Keyword source = datasources.get(type);
                     if (source == null) {
                         source = KeywordFactory.registerIfAbsent
                             (SOURCE, type,
                              "https://www.genome.gov/26525384");
-                        phenotypeSource.put(type, source);
+                        datasources.put(type, source);
                     }
                     sources.put(type, source);
                     String trait = rset.getString("trait");
@@ -417,30 +520,32 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else if ("JAX/MGI Human Ortholog Phenotype"
                          .equalsIgnoreCase(type)) {
-                    Keyword source = phenotypeSource.get(type);             
+                    Keyword source = datasources.get(type);             
                     if (source == null) {
                         source = KeywordFactory.registerIfAbsent
                             (SOURCE, type,
                              "http://www.informatics.jax.org/");
-                        phenotypeSource.put(type, source);
+                        datasources.put(type, source);
                     }
                     String pheno = rset.getString("term_name");
                     String termId = rset.getString("term_id");
                     if (pheno != null) {
+                        sources.put(type, source);
                         Keyword kw = KeywordFactory.registerIfAbsent
                             (MGI_TERM, pheno, "http://www.informatics.jax.org/searches/Phat.cgi?id="+termId);
                         target.properties.add(kw);
                     }
                 }
                 else if ("OMIM".equalsIgnoreCase(type)) {
-                    Keyword source = phenotypeSource.get(type);             
+                    Keyword source = datasources.get(type);             
                     if (source == null) {
                         source = KeywordFactory.registerIfAbsent
                             (SOURCE, type, "http://omim.org/");
-                        phenotypeSource.put(type, source);
+                        datasources.put(type, source);
                     }
                     String trait = rset.getString("trait");
                     if (trait != null) {
+                        sources.put(type, source);
                         parseOMIMPhenotype (trait, target);
                     }
                 }
@@ -541,7 +646,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 else {
                     Keyword kw = KeywordFactory.registerIfAbsent
                         (PANTHER_PROTEIN_CLASS + " ("+d+")",
-                         me.getValue(), null);
+                         me.getValue(), "http://pantherdb.org/panther/category.do?categoryAcc="+me.getKey());
                     target.properties.add(kw);
                     path[d] = kw;
                 }
@@ -654,6 +759,19 @@ public class TcrdRegistry extends Controller implements Commons {
             target.synonyms.add(new Keyword (IDG_TARGET, "TCRD:"+t.id));
             target.properties.add(t.source);
 
+            xrefs.clear();
+            pstm12.setLong(1, t.protein);
+            ResultSet rset = pstm12.executeQuery();
+            while (rset.next()) {
+                String xtype = rset.getString("xtype");
+                List<String> names = xrefs.get(xtype);
+                if (names == null) {
+                    xrefs.put(xtype, names = new ArrayList<String>());
+                }
+                names.add(rset.getString("value"));
+            }
+            rset.close();
+
             Logger.debug("...uniprot registration");
             UniprotRegistry uni = new UniprotRegistry ();
             uni.register(target, t.acc);
@@ -661,7 +779,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addDTO (target, t.protein);
             addTDL (target, t.protein);
             addPhenotype (target, t.protein);
-            addTissue (target, t.protein);
+            addExpression (target, t.protein);
             addGO (target, t.protein);
             addPathway (target, t.id);
             addPanther (target, t.protein);
@@ -1395,9 +1513,9 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
-                 +"where c.id in (2006,8719,11177)\n"
+                 //+"where c.id in (2006,8719,11177)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 //+"where b.tdl = 'Tclin'\n"
+                 +"where b.tdl = 'Tclin'\n"
                  //+" where c.uniprot = 'P25089'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('P42685')\n"

@@ -15,6 +15,7 @@ public interface Commons {
     public static final String IDG_TARGET = "IDG Target";
     public static final String IDG_SMILES = "IDG SMILES";
     public static final String IDG_TISSUE = "IDG Tissue";
+    public static final String IDG_TISSUE_REF = "IDG Tissue Ref";
 
     public static final String OMIM_GENE = "OMIM Gene";
 
@@ -22,6 +23,13 @@ public interface Commons {
     public static final String IMPC_TERM = "IMPC Term";
     public static final String MGI_TERM = "MGI Term";
     public static final String OMIM_TERM = "OMIM Term";
+    
+    public static final String GTEx_TISSUE = "GTEx Tissue";
+    public static final String GTEx_EXPR = "GTEx Expression";
+    public static final String HPM_TISSUE = "HPM Tissue";
+    public static final String HPM_EXPR = "HPM Expression";
+    public static final String HPA_RNA_TISSUE = "HPA-RNA Tissue";
+    public static final String HPA_IHC_TISSUE = "HPA-IHC Tissue";
 
     public static final String GO_COMPONENT = "GO Component";
     public static final String GO_PROCESS = "GO Process";

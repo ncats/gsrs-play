@@ -16,7 +16,7 @@
 
 @(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
 
-@facet(label: String, value: String, max: Int = 40) = {
+@facet(label: String, value: String, href: String = null, max: Int = 40) = {
   @if(max > 0 && value.length > max) {
     <a id="keyword" class="label label-primary"
        data-toggle="popover"
@@ -31,10 +31,13 @@
     <a id="keyword" class="label label-primary" onclick="showLoadModal()"
        href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value</a>
   }
+  @if(href != null) {
+     <a href="@href"><i class="fa fa-share-square"></i></a>
+  }
 }
 
 @keyword(kw: Keyword, max: Int = 40) = {
-  @facet(kw.label, kw.term, max)
+  @facet(kw.label, kw.term, kw.href, max)
 }
 
 @disease = {
@@ -103,7 +106,7 @@
   }
 }
 
-@property(name: String, dir: Int = 0) = {
+@property(name: String, href: String = null, dir: Int = 0) = {
  @defining(IDGApp.getProperties(target, name, dir)) { props =>
     @if(!props.isEmpty()) {
        @if(props.length > 10) {
@@ -134,7 +137,11 @@
        </div>
        <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">@name (@props.length)</h3>
+	    @if(href != null) {
+	      <h3 class="panel-title"><a href="@href">@name <i class="fa fa-share-square"></i></a> (@props.length)</h3>
+	    } else {
+              <h3 class="panel-title">@name (@props.length)</h3>
+	    }
           </div>
 	  <div class="panel-body">
 	    @for(p <- props.subList(0,10)) {
@@ -155,7 +162,11 @@
        } else {
        <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">@name (@props.length)</h3>
+	    @if(href != null) {
+	      <h3 class="panel-title"><a href="@href">@name <i class="fa fa-share-square"></i></a> (@props.length)</h3>
+	    } else {
+              <h3 class="panel-title">@name (@props.length)</h3>
+	    }
           </div>
 	  <div class="panel-body">
 	    @for(p <- props) {
@@ -283,7 +294,7 @@
       <div class="col-md-4">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Synonyms</h3>
+            <h3 class="panel-title">Synonyms <i class="fa fa-share-square"></i> </h3>
           </div>
           <div class="panel-body">
             <table class="table">
@@ -325,7 +336,7 @@
         -->
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Gene</h3>
+            <h3 class="panel-title">Gene <i class="fa fa-share-square"></i></h3>
           </div>
           <div class="panel-body">
             @for(kw <- target.synonyms) {
@@ -415,18 +426,27 @@
 	    }
 	 }
       </div>
-      <div class="col-md-4">      
-	@property(IDG_TISSUE)
+      <div class="col-md-4">
+        @defining(target.getProperty(IDG_TISSUE_REF)) { ref =>
+	   @ref match {
+	     case kw: Keyword => {
+	       @property(IDG_TISSUE, kw.href)
+	     }
+	     case _ => {
+	       @property(IDG_TISSUE)
+	     }
+	   }
+	}
 	@disease
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
       </div>
       <div class="col-md-4">
-        @property(PANTHER_PROTEIN_CLASS, -1)
-        @property(ChEMBL_PROTEIN_CLASS, -1)
+        @property(PANTHER_PROTEIN_CLASS, null, -1)
+        @property(ChEMBL_PROTEIN_CLASS, null, -1)
 	@property(IMPC_TERM)
-	@property("Pathway", 1)
+	@property("Pathway", null, 1)
         @property(UNIPROT_KEYWORD)
        </div>
     </div> <!-- row -->
@@ -554,6 +574,11 @@
 		    }
 		    id="keyword"
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
+		    @if(m.majorTopic) {
+		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MAJR]'><i class="fa fa-share-square"></i></a>
+	            } else {
+		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MeSH Terms]'><i class="fa fa-share-square"></i></a>
+		    }
 		  }
 		</div>
              </div>
@@ -576,6 +601,11 @@
 		    id="keyword"
 		    onclick="showLoadModal()"   
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
+    		    @if(m.majorTopic) {
+		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MAJR]'><i class="fa fa-share-square"></i></a>
+	            } else {
+		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MeSH Terms]'><i class="fa fa-share-square"></i></a>
+		    }
 		  }
 		  <a class="label label-danger"
 	             data-toggle="modal"
@@ -611,7 +641,7 @@
             <div class="panel-body">
               <table class="table table-striped">
                 <tr>
-                  <th>PMID</th>
+                  <th>PMID <i class="fa fa-share-square"></i></th>
                   <th>Title</th>
                   <th>Relevance</th>
                 </tr>
