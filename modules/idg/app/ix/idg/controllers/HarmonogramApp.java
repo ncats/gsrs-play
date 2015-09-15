@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.idg.models.HarmonogramCDF;
+import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
+import play.db.ebean.Model;
 import play.mvc.Result;
 
 import java.util.*;
@@ -71,7 +73,7 @@ public class HarmonogramApp extends App {
         }
     }
 
-    static String _hgmapToTsv(Map<String, Map<String, Double>> map, String[] header) {
+    static String _hgmapToTsv(Map<String, Map<String, HarmonogramCDF>> map, String[] header) {
         StringBuilder sb = new StringBuilder();
         sb.append("Sym");
         for (String aHeader : header) sb.append("\t").append(aHeader);
@@ -86,11 +88,11 @@ public class HarmonogramApp extends App {
         return sb.toString();
     }
 
-    static String _hgmapToTsvRow(Map<String, Double> map, String[] keys) {
+    static String _hgmapToTsvRow(Map<String, HarmonogramCDF> map, String[] keys) {
         StringBuilder sb = new StringBuilder();
         String delimiter = "";
         for (String akey : keys) {
-            sb.append(delimiter).append(map.get(akey));
+            sb.append(delimiter).append(map.get(akey).getCdf());
             delimiter = "\t";
         }
         return sb.toString();
@@ -98,22 +100,23 @@ public class HarmonogramApp extends App {
 
     public static Result _hgForTargets(String[] accs, String format) {
         List<HarmonogramCDF> hg = HarmonogramFactory.finder
-                .where().in("uniprotId", accs).findList();
+                .where().in("uniprotId", Arrays.asList(accs)).findList();
         if (hg.isEmpty()) {
             return _notFound("No harmonogram data found for targets");
         }
 
-        Map<String, Map<String, Double>> allValues = new HashMap<>();
+        Map<String, Map<String, HarmonogramCDF>> allValues = new HashMap<>();
         Set<String> colNames = new HashSet<>();
         for (HarmonogramCDF acdf : hg) {
             String sym = acdf.getSymbol();
-            Map<String, Double> values;
+            Map<String, HarmonogramCDF> values;
             if (!allValues.containsKey(sym)) values = new HashMap<>();
             else values = allValues.get(sym);
-            values.put(acdf.getDataSource(), acdf.getCdf());
+            values.put(acdf.getDataSource(), acdf);
             allValues.put(sym, values);
             colNames.add(acdf.getDataSource());
         }
+        Logger.debug("Retrieved Harmonogram data for "+allValues.size()+" targets");
 
         // Arrange column names in a default ordering - needs to be updated
         String[] header = colNames.toArray(new String[]{});
@@ -131,29 +134,48 @@ public class HarmonogramApp extends App {
             int rank = 1;
             for (String sym : allValues.keySet()) {
                 ObjectNode aRowNode = mapper.createObjectNode();
+                Map<String, HarmonogramCDF> cdfs = allValues.get(sym);
+                // get any CDF object for this symbol - they all have the same target info
+                HarmonogramCDF acdf = cdfs.values().iterator().next();
+
                 aRowNode.put("clust", 1);
                 aRowNode.put("rank", rank++);
                 aRowNode.put("name", sym);
+                aRowNode.put("cl", Math.random() > 0.5 ? 1 : 2);
+                aRowNode.put("cl", acdf.getIDGFamily());
                 rowNodes.add(aRowNode);
             }
 
+            // create a map of column name to data type
+            Map<String, String> colNameTypeMap = new HashMap<>();
+            for (String col : header) {
+                for (String key : allValues.keySet()) {
+                    Map<String, HarmonogramCDF> cdfs = allValues.get(key);
+                    HarmonogramCDF cdf = cdfs.get(col);
+                    if (cdf != null) {
+                        colNameTypeMap.put(col, cdf.getDataType());
+                        break;
+                    }
+                }
+            }
             rank = 1;
             for (String aColName : header) {
                 ObjectNode aColNode = mapper.createObjectNode();
                 aColNode.put("name", aColName);
                 aColNode.put("cluster", 1);
                 aColNode.put("rank", rank++);
+                aColNode.put("cl", colNameTypeMap.get(aColName));
                 colNodes.add(aColNode);
             }
 
             int row = 0;
             for (String sym : allValues.keySet()) {
                 for (int col = 0; col < header.length; col++) {
-                    Double value = allValues.get(sym).get(header[col]);
+                    HarmonogramCDF cdf = allValues.get(sym).get(header[col]);
                     ObjectNode node = mapper.createObjectNode();
                     node.put("source", row);
                     node.put("target", col);
-                    node.put("value", value);
+                    node.put("value", cdf == null ? null : cdf.getCdf());
                     links.add(node);
                 }
                 row++;

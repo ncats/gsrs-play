@@ -9,7 +9,7 @@ function load_clustergram(json_url) {
         // define the outer margins of the visualization
         var outer_margins = {
             'top': 5,
-            'bottom': 33,
+            'bottom': 5,
             'left': 225,
             'right': 2
         };
@@ -34,13 +34,13 @@ function load_clustergram(json_url) {
             'svg_div_id': 'svg_div',
             'row_label': '',
             'col_label': '',
-            'outer_margins': outer_margins,
-            'force_square': 1
+            'outer_margins': outer_margins
+            //'force_square': 0
             // 'opacity_scale':'log',
             // 'input_domain':7,
             // 'col_overflow':1
             // 'transpose':true,
-            // 'do_zoom':false,
+             //'do_zoom':true
             // 'tile_colors':['#ED9124','#1C86EE'],
             // 'background_color':'orange',
             // 'tile_title': true,
