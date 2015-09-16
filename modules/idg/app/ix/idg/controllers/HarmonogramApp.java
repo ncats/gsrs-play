@@ -4,13 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.idg.models.HarmonogramCDF;
-import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
-import play.db.ebean.Model;
 import play.mvc.Result;
 
 import java.util.*;
@@ -79,9 +77,7 @@ public class HarmonogramApp extends App {
         for (String aHeader : header) sb.append("\t").append(aHeader);
         sb.append("\n");
 
-        String[] syms = map.keySet().toArray(new String[]{});
-        Arrays.sort(syms);
-        for (String asym : syms) {
+        for (String asym : map.keySet()) {
             sb.append(asym).append("\t").append(_hgmapToTsvRow(map.get(asym), header));
             sb.append("\n");
         }
@@ -98,14 +94,29 @@ public class HarmonogramApp extends App {
         return sb.toString();
     }
 
-    public static Result _hgForTargets(String[] accs, String format) {
+    static int getKeyIndex(Set<String> keys, String key) {
+        int i = 0;
+        for (String k : keys) {
+            if (k.equals(key)) return i;
+            i++;
+        }
+        return -1;
+    }
+
+    static ArrayNode arrayToArrayNode(Integer[] a) {
+        ArrayNode node = mapper.createArrayNode();
+        for (Integer elem : a) node.add(elem);
+        return node;
+    }
+
+    public static Result _hgForTargets(String[] accs, String format) throws Exception {
         List<HarmonogramCDF> hg = HarmonogramFactory.finder
                 .where().in("uniprotId", Arrays.asList(accs)).findList();
         if (hg.isEmpty()) {
             return _notFound("No harmonogram data found for targets");
         }
 
-        Map<String, Map<String, HarmonogramCDF>> allValues = new HashMap<>();
+        Map<String, Map<String, HarmonogramCDF>> allValues = new TreeMap<>();
         Set<String> colNames = new HashSet<>();
         for (HarmonogramCDF acdf : hg) {
             String sym = acdf.getSymbol();
@@ -116,16 +127,53 @@ public class HarmonogramApp extends App {
             allValues.put(sym, values);
             colNames.add(acdf.getDataSource());
         }
-        Logger.debug("Retrieved Harmonogram data for "+allValues.size()+" targets");
+        Logger.debug("Retrieved Harmonogram data for " + allValues.size() + " targets");
 
         // Arrange column names in a default ordering - needs to be updated
         String[] header = colNames.toArray(new String[]{});
         Arrays.sort(header);
 
-        String page = null;
+
         if (format != null && format.toLowerCase().equals("tsv")) {
             return (ok(_hgmapToTsv(allValues, header)));
         } else {
+
+            // Construct data matrix for clustering
+            int r = 0;
+            Double[][] matrix = new Double[allValues.size()][header.length];
+            for (String sym : allValues.keySet()) {
+                Double[] row = new Double[header.length];
+                Map<String, HarmonogramCDF> cdfs = allValues.get(sym);
+                for (int i = 0; i < header.length; i++) {
+                    HarmonogramCDF cdf = cdfs.get(header[i]);
+                    row[i] = cdf == null ? null : cdf.getCdf();
+                }
+                matrix[r++] = row;
+            }
+            HClust hc = new HClust();
+            hc.setData(matrix, header, allValues.keySet().toArray(new String[]{}));
+            hc.run();
+
+            // construct the membership matrix, each column is cluster membership
+            // for a given height. Each row is a target. So [i,j] indicates cluster
+            // id for target i at the j'th height. Thus the group parameter in the
+            // hgram json is simply the row of the matrix for that target
+            double[] rowHeights = hc.getRowClusteringHeights();
+            Integer[][] clusmem = new Integer[matrix.length][rowHeights.length];
+            for (int i = 0; i < rowHeights.length; i++) {
+                System.out.println("rowHeights = " + rowHeights[i]);
+                TreeMap<String, Integer> memberships = hc.getClusterMemberships(hc.rcluster, rowHeights[i]);
+                int j = 0;
+                for (String key : memberships.keySet()) clusmem[j++][i] = memberships.get(key);
+            }
+
+
+//            for (int i = 0; i < clusmem.length; i++) {
+//                for (int j = 0; j < clusmem[0].length; j++) {
+//                    System.out.print(clusmem[i][j]+" ");
+//                }
+//                System.out.println();
+//            }
 
             ArrayNode rowNodes = mapper.createArrayNode();
             ArrayNode colNodes = mapper.createArrayNode();
@@ -138,11 +186,14 @@ public class HarmonogramApp extends App {
                 // get any CDF object for this symbol - they all have the same target info
                 HarmonogramCDF acdf = cdfs.values().iterator().next();
 
-                aRowNode.put("clust", 1);
+                // extract the group vector
+                int idx = getKeyIndex(allValues.keySet(), sym);
+                aRowNode.put("group", arrayToArrayNode(clusmem[idx]));
+                aRowNode.put("clust", clusmem[idx][0]);
                 aRowNode.put("rank", rank++);
                 aRowNode.put("name", sym);
-                aRowNode.put("cl", Math.random() > 0.5 ? 1 : 2);
                 aRowNode.put("cl", acdf.getIDGFamily());
+
                 rowNodes.add(aRowNode);
             }
 
