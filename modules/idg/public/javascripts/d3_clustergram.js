@@ -287,20 +287,22 @@ function Dendrogram(type, params, elem) {
       });
   }
 
-  function build_col_dendro() {
-    elem
-      .append('rect')
-      .attr('class', dom_class)
-      .attr('width', params.matrix.x_scale.rangeBand())
-      .attr('height', function() {
-        var inst_height = params.class_room.col - 1;
-        return inst_height;
-      })
-      .style('fill', function(d) {
-        var inst_level = params.group_level.col;
-        return get_group_color(d.group[inst_level]);
-      });
-  }
+    function build_col_dendro() {
+        elem
+            .append('rect')
+            .attr('class', dom_class)
+            .attr('width', params.matrix.x_scale.rangeBand())
+            .attr('height', function () {
+                var inst_height = params.class_room.col - 1;
+                return inst_height;
+            })
+            .style('fill', function (d) {
+                var inst_level = params.group_level.col;
+                if (Utils.has(d, 'group'))
+                    return get_group_color(d.group[inst_level]);
+                else return '#000000';
+            });
+    }
 
   // add callback functions 
   /////////////////////////////
@@ -2093,7 +2095,7 @@ function Reorder(params){
 
     // define the t variable as the transition function
     var t = viz.get_clust_group()
-      .transition().duration(2500);
+      .transition().duration(1500);
 
     // reorder matrix
     t.selectAll('.row')
