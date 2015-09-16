@@ -153,7 +153,9 @@ public class TcrdRegistry extends Controller implements Commons {
         final ChemblRegistry chembl;
         final Collection<TcrdTarget> targets;
         PreparedStatement pstm, pstm2, pstm3, pstm4,
-            pstm5, pstm6, pstm7, pstm8, pstm9, pstm10, pstm11, pstm12;
+            pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
+            pstm11, pstm12, pstm13
+            ;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -202,6 +204,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from target2pathway where target_id = ?");
             pstm12 = con.prepareStatement
                 ("select * from xref where protein_id = ?");
+            pstm13 = con.prepareStatement
+                ("select * from patent_count where "
+                 +"protein_id = ? order by year");
+            
             this.chembl = chembl;
         }
 
@@ -231,10 +237,34 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm10.close();
             pstm11.close();
             pstm12.close();
+            pstm13.close();
             
             chembl.shutdown();
         }
 
+        void addPatent (Target target, long protein) throws Exception {
+            pstm13.setLong(1, protein);
+            ResultSet rset = pstm13.executeQuery();
+            Timeline timeline = null;
+            while (rset.next()) {
+                long year = rset.getLong("year");
+                long count = rset.getLong("count");
+                if (timeline == null) {
+                    timeline = new Timeline ("Patent Count");
+                }
+                Event event = new Event ();
+                event.start = year;
+                event.end = count; // abusing notation
+                event.unit = Event.Resolution.YEARS;
+                timeline.events.add(event);
+            }
+
+            if (timeline != null) {
+                timeline.save();
+                target.links.add(new XRef (timeline));
+            }
+        }
+        
         void addPathway (Target target, long tid) throws Exception {
             pstm11.setLong(1, tid);
             ResultSet rset = pstm11.executeQuery();
@@ -245,10 +275,20 @@ public class TcrdRegistry extends Controller implements Commons {
                     (source+" Pathway", name, null);
                 if (!target.properties.contains(term)) {
                     target.properties.add(term);
-                    Logger.debug("Target "+target.id+" pathway: "+term.term);
+                    Logger.debug("Target "+target.id
+                                 +" pathway ("+source+"): "+term.term);
                 }
             }
             rset.close();
+            
+            List<String> refs = xrefs.get("Reactome");
+            if (refs != null) {
+                String id = refs.iterator().next();
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (REACTOME_REF, id,
+                     "http://www.reactome.org/content/query?cluster=true&q="+id);
+                target.properties.add(kw);
+            }
         }
         
         void addGO (Target target, long protein) throws Exception {
@@ -783,6 +823,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addGO (target, t.protein);
             addPathway (target, t.id);
             addPanther (target, t.protein);
+            addPatent (target, t.protein);
             
             TARGETS.add(target);
             
@@ -1513,9 +1554,10 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
+                 +"where d.protein_id in (189,9506,279,280,337)\n"
                  //+"where c.id in (2006,8719,11177)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 +"where b.tdl = 'Tclin'\n"
+                 //+"where b.tdl = 'Tclin'\n"
                  //+" where c.uniprot = 'P25089'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('P42685')\n"
