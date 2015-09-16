@@ -31,11 +31,11 @@
         @if(kind == "protein") {
             @forms.subunitform()
             @forms.proteindetailsform()
-            <div ng-show="uniqueName">@forms.disulfideform()</div>
-            <div ng-show="uniqueName">@forms.modificationform()</div>
-            <div ng-show="uniqueName">@forms.glycosylationform()</div>
+@*            <div >@forms.disulfideform()</div>
+            <div >@forms.modificationform()</div>
+            <div >@forms.glycosylationform()</div>*@
             @forms.nameform()
-            <div ng-show="uniqueName">@forms.codeform()</div>
+            <div >@forms.codeform()</div>
             <div ng-show="substance.references"> @forms.referenceform()</div>
             @forms.referencemodalform()
         } else {

@@ -1,79 +1,40 @@
-<div class="row info" id="subunits-form" ng-controller="SubunitController as SubunitCtrl">
+<div class="row info" id="subunits-form">
     <button class="btn btn-primary label-offset det">
                         Subunits&nbsp;<span class="badge" ng-show="substance.protein.subunits.length>0">
                         {{substance.subunits.length}}</span> </button>
-    <a ng-show="!adding" ng-click="SubunitCtrl.toggleAdd()" aria-label="Add Subunits"><i class = "fa fa-plus fa-2x success"></i></a>
-@*    <div class="col-md-12">
-        <div class = "row string text-uppercase" >
-            <span ng-repeat="char in SubunitCtrl.display" ng-class="char.valid ? 'success' : 'danger' ">{{char.value}}</span>
-            </div>
-        <div class="panel panel-default subunit-panel" ng-repeat="prop in substance.protein.subunits">
-            <div class="panel-heading">
-                <h3 class="panel-title">Subunit {{substance.protein.subunits.indexOf(prop)+1}}</h3>
-            </div>
-            <div class="panel-body">
-                <div class = "row string text-uppercase" >
+    <a aria-label="Add Subunits"><i class = "fa fa-plus fa-2x success"></i></a>
 
-*@@*                    <div class = "aaBlock" ng-repeat="n in [] | range:1:prop.length">
-                        *@@**@@*for(j <- 0 until (length / 10)) {*@@**@@*
-                        *@@**@@*<div class = "col-md-2 aaBlock">*@@**@@*
-                        *@@**@@*<div class = "row">*@@**@@*
-                        *@@**@@*<div class = "col-md-12 text-right">*@@**@@*
-                        *@@**@@*<span class = "count">@((j + 1) * 10)</span>*@@**@@*
-                        *@@**@@*</div>*@@**@@*
-                        *@@**@@*</div>*@@**@@*
-                        {{n}}
-                    </div>*@@*
+    <form class="form-horizontal" name="subunitForm" id = "add-subunit" role="form" novalidate>
+        <div class="row form-row">
+            <div class = "col-md-12">
+                <div ng-repeat="su in substance.subunits">
+                    <span ng-repeat ="aa in su.display">
+
+                    <amino-acid acid=aa></amino-acid>
+</span>
+              </div>
+
+                {{subunit.display}}
+
                 </div>
+  @*          <div class ="row">
+                <div class="col-md-2">
+            <input class="form-control" type="number"
+            min="0"
+            name="subunits"
+            id="subunits"
+            title="Number of Subunits"
+            ng-model="substance.subunitCount"
+                ng-blur="setCount()"
+            >*@
+
+            <div class = "col-md-12" >
+                <subunit ng-model="subunit.sequence" subIndex=""></subunit>
+                @*<textarea class="form-control string text-uppercase" rows="5" ng-model = "subunit.sequence" ng-model-options='{ debounce: 1000 }' ng-change = "SubunitCtrl.clean(subunit.sequence); SubunitCtrl.parseSubunit(subunit.sequence)" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>*@
             </div>
-            <div class = "row">
-                <div class = "col-md-3 pull-right text-right">
-                    <a ng-show="!isEditingSubunit" ng-click="setEditedSubunit(prop); toggleEditSubunit();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
-                    <a ng-show="!isEditingSubunit" ng-click="removeSubunit(prop)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>
-                </div>
-            </div>
+            @* @referenceselectorform("subunitForm", "subunit")*@
         </div>
-    </div>*@
-@*    <div class="col-md-12" id="allSubunitsTable" ng-show="isEditingSubunit">
-        <form name="subunitEdit" id = "edit-subunit" role="form" ng-submit="updateSubunit(editSubunit)" novalidate>
-            <div class="row">
-                <div class = "col-md-12">
-                    <label for=add-subunit">Subunit</label>
-                </div>
-            </div>
-            <div class = "row">
-                <div class = "col-md-12">
-                    <textarea class="form-control string text-uppercase" ng-model = "editSubunit.sequence" placeholder="Subunit" title="Subunit" id="edit-subunit" required></textarea>
-                </div>
-            </div>
-            <div class = "row">
-                <div class = "col-md-2 pull-right text-right">
-                    <a id ="subunit-submit" ng-show="subunitEdit.$valid" ng-click="updateSubunit(editSubunit)" arial-label="Save">
-                        <i class="fa fa-floppy-o fa-2x success"></i></a>
-                    <a ng-click="toggleEditSubunit();" aria-label="Cancel">
-                        <i class="fa fa-ban fa-2x danger"></i></a>
-                </div>
-            </div>
-        </form>
-    </div>*@
-    <div class ="col-md-12" ng-show="!SubunitCtrl.editing && SubunitCtrl.adding">
-        <form name="subunitForm" id = "add-subunit" role="form" novalidate >
-            <div class = "row">
-                <div class = "col-md-12">
-                    <subunit ng-model="subunit" ng-change = "SubunitCtrl.clean(subunit)"></subunit>
-                    @*<textarea class="form-control string text-uppercase" rows="5" ng-model = "subunit.sequence" ng-model-options='{ debounce: 1000 }' ng-change = "SubunitCtrl.clean(subunit.sequence); SubunitCtrl.parseSubunit(subunit.sequence)" name="sequence"  placeholder="Sequence" title="sequence" id="sequence" required></textarea>*@
-                </div>
-            </div>
-@*            <div class="row">
-                <div class = "col-md-1 pull-right text-right" ng-show="subunitForm.$valid">
-                    <button class="btn btn-default" type="submit" id="ref-submit">
-                                                    Validate</button>
-                </div>*@
-            @*</div>*@
-        </form>
-    </div>
-    <div class="col-md-1 pull-right" ng-show="SubunitCtrl.adding">
-        <a ng-click="SubunitCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-        <a ng-click="SubunitCtrl.validate(subunit)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
-    </div>
+
+        @submitbuttons("subunit", "subunitForm", "subunits")
+    </form>
 </div>

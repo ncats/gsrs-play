@@ -736,3 +736,23 @@ sketcher svg>text{
 	display:none
 	
 }
+
+.aminoAcid{
+    color: black;
+    font-family: "Lucida Console", Monaco, monospace;
+}
+
+.invalidAA{
+ color: red;
+ font-family: "Lucida Console", Monaco, monospace;
+
+}
+
+.tooltip.invalidTool .tooltip-inner {
+    color: black;
+    background-color: red;
+    box-shadow: 0 6px 12px rgba(0,0,0,.175);
+}
+.tooltip.invalidTool .tooltip-arrow {
+    display: none;
+}
