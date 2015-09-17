@@ -596,15 +596,17 @@ public class App extends Authentication {
                      total, 0, FACET_DIM, query);
             }
             else {
-                Logger.debug("request sha1: "+sha1+" cached? "
+                Logger.debug("Search request sha1: "+sha1+" cached? "
                              +IxCache.contains(sha1));
 
                 result = getOrElse
                     (sha1, new Callable<SearchResult>() {
                             public SearchResult call () throws Exception {
-                                return SearchFactory.search
+                                SearchResult result = SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
+                                result.setKey(sha1);
+                                return result;
                             }
                         });
 
@@ -642,7 +644,7 @@ public class App extends Authentication {
         return null;
     }
 
-    public static <T> T getOrElse (String key, Callable<T> callable)
+    public static <T> T getOrElse(String key, Callable<T> callable)
         throws Exception {
         return getOrElse (_textIndexer.lastModified(), key, callable);
     }

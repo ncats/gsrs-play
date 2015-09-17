@@ -3,12 +3,12 @@ package ix.idg.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import ix.core.search.TextIndexer;
 import ix.idg.models.HarmonogramCDF;
+import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
-import play.data.DynamicForm;
-import play.data.Form;
 import play.mvc.Result;
 
 import java.util.*;
@@ -38,30 +38,45 @@ public class HarmonogramApp extends App {
     }
 
 
-    public static Result view(String q) {
-        if (q == null) return _badRequest("Must specify a comma separated list of Uniprot ID's");
-        return (ok(ix.idg.views.html.harmonogram.render(q.split(","))));
+    public static Result view(String q, final String cache) {
+        if (q == null && cache == null)
+            return _badRequest("Must specify a comma separated list of Uniprot ID's or a target search cache key");
+        String[] accs = new String[0];
+        if (q != null) accs = q.split(",");
+        // if cache key is specified, this takes precedence over query string
+        if (cache != null) {
+            try {
+                TextIndexer.SearchResult result =
+                        getOrElse(cache, new Callable<TextIndexer.SearchResult>() {
+                            public TextIndexer.SearchResult call() throws Exception {
+                                return null;
+                            }
+                        });
+                if (result == null) return _notFound("No cache entry for key: "+cache);
+                List matches = result.getMatches();
+                List<String> sq = new ArrayList<>();
+                for (Object o : matches) {
+                    if (o instanceof Target) sq.add(IDGApp.getId((Target)o));
+                }
+                accs = sq.toArray(new String[]{});
+                Logger.debug("Got "+accs.length+" targets from cache using key: "+cache);
+            } catch (Exception e) {
+                return _internalServerError(e);
+            }
+        }
+        return (ok(ix.idg.views.html.harmonogram.render(accs)));
     }
 
     public static Result hgForTarget(final String q, final String format) {
         return _handleHgRequest(q, format);
     }
 
-    public static Result hgForTargetPost() {
-        DynamicForm requestData = Form.form().bindFromRequest();
-        final String q = requestData.get("q");
-        if (q == null) return _badRequest("Must specify one or more targets via the q query parameter");
-        final String format = requestData.get("format");
-        return _handleHgRequest(q, format);
-    }
-
     static Result _handleHgRequest(final String q, final String format) {
         if (q == null) return _badRequest("Must specify one or more targets via the q query parameter");
         try {
-            final String key = "hg/target/" + q + "/" + format + "/" + Util.sha1(request());
+            final String key = "hg/" + q + "/" + format + "/" + Util.sha1(request());
             return getOrElse(key, new Callable<Result>() {
                 public Result call() throws Exception {
-                    Logger.debug("Cache missed: " + key);
                     if (q.contains(",")) return _hgForTargets(q.split(","), format);
                     return _hgForTargets(new String[]{q}, format);
                 }
@@ -161,7 +176,6 @@ public class HarmonogramApp extends App {
             double[] rowHeights = hc.getRowClusteringHeights();
             Integer[][] clusmem = new Integer[matrix.length][rowHeights.length];
             for (int i = 0; i < rowHeights.length; i++) {
-                System.out.println("rowHeights = " + rowHeights[i]);
                 TreeMap<String, Integer> memberships = hc.getClusterMemberships(hc.rcluster, rowHeights[i]);
                 int j = 0;
                 for (String key : memberships.keySet()) clusmem[j++][i] = memberships.get(key);

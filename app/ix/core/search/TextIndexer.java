@@ -194,7 +194,8 @@ public class TextIndexer {
 
     public static class SearchResult {
         SearchContextAnalyzer searchAnalyzer = new GinasSearchAnalyzer();
-        
+
+        String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
         //final List matches = new CopyOnWriteArrayList ();
@@ -210,6 +211,8 @@ public class TextIndexer {
             this.query = query;            
         }
 
+        public String getKey() { return key; }
+        public void setKey(String key) { this.key = key; }
         public String getQuery () { return query; }
         public SearchOptions getOptions () { return options; }
         public List<Facet> getFacets () { return facets; }
