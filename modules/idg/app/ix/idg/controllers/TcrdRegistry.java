@@ -6,16 +6,10 @@ import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.PublicationFactory;
 import ix.core.models.*;
-import ix.core.plugins.PersistenceQueue;
-import ix.core.plugins.StructureProcessorPlugin;
-import ix.core.plugins.StructureReceiver;
-import ix.core.plugins.TextIndexerPlugin;
+import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
-import ix.idg.models.Disease;
-import ix.idg.models.Ligand;
-import ix.idg.models.TINX;
-import ix.idg.models.Target;
-import ix.idg.models.Gene;
+import ix.idg.models.*;
+import ix.seqaln.SequenceIndexer;
 import play.Logger;
 import play.Play;
 import play.cache.Cache;
@@ -26,25 +20,16 @@ import play.db.ebean.Model;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
-import ix.core.plugins.SequenceIndexerPlugin;
-import ix.seqaln.SequenceIndexer;
 
 import javax.sql.DataSource;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.io.*;
+import java.sql.*;
 import java.util.*;
-import java.util.regex.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
     
 public class TcrdRegistry extends Controller implements Commons {
 
@@ -150,7 +135,6 @@ public class TcrdRegistry extends Controller implements Commons {
         }
     }
 
-
     static class PersistRegistration
         extends PersistenceQueue.AbstractPersistenceContext {
         final Connection con;
@@ -159,13 +143,14 @@ public class TcrdRegistry extends Controller implements Commons {
         final Collection<TcrdTarget> targets;
         PreparedStatement pstm, pstm2, pstm3, pstm4,
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
-            pstm11, pstm12, pstm13, pstm14, pstm15
+            pstm11, pstm12, pstm13, pstm14, pstm15, pstm16
             ;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
         Map<String, List<String>> xrefs =
             new HashMap<String, List<String>>();
+        Map<String, Keyword> phenotypeSource = new HashMap<String, Keyword>();
         
         PersistRegistration (Connection con, Http.Context ctx,
                              Collection<TcrdTarget> targets,
@@ -216,7 +201,9 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from protein where id = ?");
             pstm15 = con.prepareStatement
                 ("select * from alias where protein_id = ?");
-            
+            pstm16 = con.prepareStatement("select p.sym, p.uniprot, hg.*,gat.resource_group from target t, t2tc, protein p, hgram_cdf hg, gene_attribute_type gat " +
+                    "WHERE t.id = t2tc.target_id AND t2tc.protein_id = p.id AND p.id = hg.protein_id " +
+                    "AND gat.name = hg.type and hg.protein_id = ?");
             this.chembl = chembl;
         }
 
@@ -249,7 +236,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm13.close();
             pstm14.close();
             pstm15.close();
-            
+            pstm16.close();
             chembl.shutdown();
         }
 
@@ -381,7 +368,26 @@ public class TcrdRegistry extends Controller implements Commons {
                 target.properties.add(kw);
             }
         }
-        
+
+        void addHarmonogram(Target target, long protein) throws Exception {
+            pstm16.setLong(1, protein);
+            ResultSet rset = pstm16.executeQuery();
+            int n = 0;
+            while (rset.next()) {
+                HarmonogramCDF hg = new HarmonogramCDF(
+                        rset.getString("uniprot"),
+                        rset.getString("sym"),
+                        rset.getString("type"),
+                        rset.getString("resource_group"),
+                        target.idgFamily,
+                        target.idgTDL.name,
+                        rset.getDouble("attr_cdf"));
+                hg.save();
+                n++;
+            }
+            Logger.debug(n+" harmonogram entries for "+target.id);
+        }
+
         void addGO (Target target, long protein) throws Exception {
             pstm9.setLong(1, protein);
             ResultSet rset = pstm9.executeQuery();
@@ -903,14 +909,15 @@ public class TcrdRegistry extends Controller implements Commons {
             instrument (target, t);
             
             addDTO (target, t.protein);
-            addTDL (target, t.protein);
-            addPhenotype (target, t.protein);
-            addExpression (target, t.protein);
-            addGO (target, t.protein);
+            addTDL(target, t.protein);
+            addPhenotype(target, t.protein);
+            addExpression(target, t.protein);
+            addGO(target, t.protein);
             addPathway (target, t.id);
             addPanther (target, t.protein);
             addPatent (target, t.protein);
-            
+            addHarmonogram(target, t.protein);
+
             TARGETS.add(target);
             
             if (t.novelty != null) {

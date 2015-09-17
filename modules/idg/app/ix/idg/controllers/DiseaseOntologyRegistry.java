@@ -1,8 +1,8 @@
 package ix.idg.controllers;
 
 import com.avaje.ebean.Expr;
-import ix.core.controllers.NamespaceFactory;
 import ix.core.controllers.KeywordFactory;
+import ix.core.controllers.NamespaceFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Namespace;
 import ix.core.models.Text;
@@ -12,14 +12,10 @@ import play.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
-
-import ix.core.search.TextIndexer;
-import ix.core.search.SearchOptions;
-import ix.core.plugins.TextIndexerPlugin;
 
 public class DiseaseOntologyRegistry {
     public static final String DOID = "DOID";
@@ -47,7 +43,8 @@ public class DiseaseOntologyRegistry {
         source = KeywordFactory.registerIfAbsent
             (Commons.SOURCE, "DiseaseOntology v"+obo.version,
              "http://www.disease-ontology.org");
-        
+
+        int n = 0;
         while (obo.next()) {
             if (obo.obsolete)
                 continue;
@@ -116,8 +113,9 @@ public class DiseaseOntologyRegistry {
                     kw = new Keyword(ns, xref);
                     disease.synonyms.add(kw);
                 }
-                Logger.debug(disease.id+": "+obo.id
-                             +" "+obo.name+ " with "+nxref+" xref's");
+                if (n % 100 == 0)
+                    Logger.debug(disease.id + ": " + obo.id
+                            + " " + obo.name + " with " + nxref + " xref's");
             }
         }
 
@@ -150,11 +148,12 @@ public class DiseaseOntologyRegistry {
         }
         */
 
+        Logger.debug("Computing lineages for "+diseaseMap.size()+" disease");
         for (Map.Entry<String, Disease> me : diseaseMap.entrySet()) {
             List<Disease> lineage = getLineage (me.getKey());
             Disease disease = me.getValue();
-            Logger.debug(me.getKey()+": "+disease.name
-                         +" has "+lineage.size()+" lineage");
+//            Logger.debug(me.getKey()+": "+disease.name
+//                         +" has "+lineage.size()+" lineage");
             StringBuilder path = new StringBuilder ();
             for (int i = lineage.size(); --i >= 0;) {
                 Disease d = lineage.get(i);
