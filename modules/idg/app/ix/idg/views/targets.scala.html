@@ -60,9 +60,6 @@
         }
     </ol>
 } {
-    @* TODO REMOVE after testing *@
-    <a target="_blank" href='@{ix.idg.controllers.routes.HarmonogramApp.view()+"?cache=" + searchCacheKey}'>Harmonogram</a>
-
     <table id="target-table" class="table table-hover">
         <tr>
             <th>Name</th>
@@ -74,9 +71,19 @@
             @tabrow(t)
         }
     </table>
-} {
-    <div id="word-cloud"></div>
+} {  @* viz *@
+
+    <button type="button" class="btn btn-default dropdown-toggle @if(!request.uri.contains("?")) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Tools<span class="caret"></span>&nbsp;
+    </button>
+    <ul class="dropdown-menu">
+        <li><a  href='@{ix.idg.controllers.routes.HarmonogramApp.view()+"?cache=" + searchCacheKey}'><i class="fa fa-cubes"></i>Harmonogram</a></li>
+        <li><a  href="#"><i class="fa fa-sitemap"></i>Kinase networks</a></li>
+    </ul>
+
 }
+
+
 
 <div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
