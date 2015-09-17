@@ -135,18 +135,6 @@
         };
 
         var ginasCtrl = this;
-        //localStorageService.set('substance', Substance);
-
-       
-
-        /*        function setdata($scope){
-         console.log("getting substance");
-
-         }*/
-
-        /*
-         $scope.substance = $scope.getSubstance();
-         */
 
         $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
@@ -206,30 +194,48 @@
         };
         ///
 
+        $scope.proteinDetails = function(obj, form){
+            $scope.$broadcast('show-errors-check-validity');
+            console.log(obj);
+            if (form.$valid) {
+                this.substance.protein.proteinType = obj.proteinType;
+                this.substance.protein.proteinSubType = obj.proteinSubType;
+                this.substance.protein.sequenceOrigin = obj.sequenceOrigin;
+                this.substance.protein.sequenceType = obj.sequenceType;
+                $scope.detailsSet = true;
+            }
+            $scope.$broadcast('show-errors-reset');
+        };
 
         //main submission method
         $scope.validate = function(obj, form, type) {
-            $scope.$broadcast('show-errors-check-validity');
-            if (form.$valid) {
-                if (this.substance[type]) {
-                    if (type == 'references') {
-                        if(typeof obj.uuid == "undefined"){
-                            obj.uuid = uuid();
+            console.log(type);
+
+            if(type =='protein'){
+                $scope.proteinDetails(obj, form);
+            }else {
+                $scope.$broadcast('show-errors-check-validity');
+                if (form.$valid) {
+                    if (this.substance[type]) {
+                        if (type == 'references') {
+                            if (typeof obj.uuid == "undefined") {
+                                obj.uuid = uuid();
+                            }
+                            obj.id = this.substance.references.length + 1;
                         }
-                        obj.id = this.substance.references.length + 1;
-                    }
-                    this.substance[type].push(obj);
-                } else {
-                    this.substance[type] = [];
-                    if (type == 'references') {
-                        if (typeof obj.uuid == "undefined") {
-                            obj.uuid = uuid();
+                        this.substance[type].push(obj);
+                    } else {
+                        this.substance[type] = [];
+                        if (type == 'references') {
+                            if (typeof obj.uuid == "undefined") {
+                                obj.uuid = uuid();
+                            }
+                            obj.id = 1;
                         }
-                        obj.id = 1;
+                        this.substance[type].push(obj);
                     }
-                    this.substance[type].push(obj);
+                    $scope.$broadcast('show-errors-reset');
                 }
-                $scope.$broadcast('show-errors-reset');
             }
         };
 
@@ -476,6 +482,7 @@
                     $scope.substance = Substance;
                 }
         }
+
     });
 
     var uuid = function uuid() {
@@ -651,6 +658,7 @@
     });
 
     ginasApp.directive('amount', function() {
+
         return {
             restrict: 'E',
             replace: true,
@@ -664,14 +672,159 @@
         };
     });
 
-    ginasApp.directive('subunit', function() {
+    ginasApp.directive('aminoAcid', function($compile) {
+        var validTool = '<a href="#" class= "aminoAcid" tooltip="{{acid.subunitIndex}}-{{acid.index}} : {{acid.value}} ({{acid.type}}-{{acid.name}})">{{acid.value}}</a>';
+        var invalidTool = '<a href="#" class= "invalidAA" tooltip-class="invalidTool" tooltip="INVALID">{{acid.value}}</a>';
+
+       getTemplate = function(valid) {
+           console.log(valid);
+            var template = '';
+            if(valid){
+               template= validTool;
+            }else{
+                template= invalidTool;
+            }
+            return template;
+        };
+
+
         return {
             restrict: 'E',
-            require: '^ngModel',
             scope: {
-                sequence: '=',
+                acid: '='
             },
-            template: '<textarea class="form-control string text-uppercase" rows="5" ng-model = "sequence" ng-change = "clean(sequence)" name="sequence"  placeholder="Sequence" title="sequence" id="sequence" required></textarea>',
+            link: function(scope, element, attrs){
+                console.log(scope);
+                var validity = scope.acid.valid;
+                console.log(validity);
+                element.html(getTemplate(validity)).show();
+
+                $compile(element.contents())(scope);
+            }
+        };
+
+    });
+
+    ginasApp.directive('subunit', function() {
+        clean = function(s) {
+            return s.replace(/[^A-Za-z]/g, '');
+        };
+
+        parseSubunit = function(sequence, subunit) {
+            var split = sequence.replace(/[^A-Za-z]/g, '').split('');
+            var display = [];
+            var obj = {};
+            var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
+            for (var i in split) {
+                var aa = split[i];
+                var valid = _.indexOf(invalid, aa.toUpperCase());
+                if (valid >= 0) {
+                    obj.value = aa;
+                    obj.valid = false;
+                    obj.subunitIndex= subunit;
+                    obj.index = i-1+2;
+                    display.push(obj);
+                    obj = {};
+                } else {
+                    obj.value = aa;
+                    obj.valid = true;
+                    obj.name = findName(aa);
+                    obj.type = getType(aa);
+                    obj.subunitIndex= subunit;
+                    obj.index = i-1+2;
+                    display.push(obj);
+                    obj = {};
+                }
+
+            }
+            this.display = display;
+            return display;
+        };
+
+        findName = function(aa){
+            switch (aa.toUpperCase()) {
+                case 'A':
+                return "Alanine";
+                case 'C':
+                    return "Cysteine";
+                case 'D':
+                    return "Aspartic acid";
+                case 'E':
+                    return "Glutamic acid";
+                case 'F':
+                    return "Phenylalanine";
+                case 'G':
+                    return "Glycine";
+                case 'H':
+                    return "Histidine";
+                case 'I':
+                    return "Isoleucine";
+                case 'K':
+                    return "Lysine";
+                case 'L':
+                    return "Leucine";
+                case 'M':
+                    return "Methionine";
+                case 'N':
+                    return "Asparagine";
+                case 'P':
+                    return "Proline";
+                case 'Q':
+                    return "Glutamine";
+                case 'R':
+                    return "Arginine";
+                case 'S':
+                    return "Serine";
+                case 'T':
+                    return "Threonine";
+                case 'V':
+                    return "Valine";
+                case 'W':
+                    return "Tryptophan";
+                case 'Y':
+                    return "Tyrosine";
+
+                default:
+                    return "Tim forgot one";
+            }
+
+        };
+
+        getType=function(aa){
+            if (aa == aa.toLowerCase())
+            {
+               return 'D';
+            }
+            else
+            {
+               return 'L';
+            }
+        };
+
+
+
+        return {
+            restrict: 'E',
+            require: 'ngModel',
+            scope: '&',
+            link: function(scope, element, attr, ngModel){
+                console.log(scope);
+                console.log(element);
+                console.log(attr);
+                console.log(ngModel);
+
+                scope.$watch(function(){
+                    var seq = ngModel.$modelValue;
+                    if(typeof seq !== "undefined") {
+                        seq = clean(seq);
+                        scope.subunit.display = parseSubunit(seq, 1);
+                        ngModel.$setViewValue(seq);
+                        // console.log(scope);
+                    }
+                });
+
+            },
+            template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" ng-model-options="{ debounce: 1000 }" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>',
         };
     });
 
@@ -846,147 +999,6 @@
         };
     });
 
-    ginasApp.controller('SubunitController', function($scope, Substance) {
-        $scope.editReference = null;
-        this.adding = false;
-        this.editing = false;
-        this.display = [];
-        this.subunit = {};
-        this.toggleEdit = function() {
-            this.editing = !this.editing;
-        };
-
-        this.toggleAdd = function() {
-            this.adding = !this.adding;
-        };
-
-        this.clean = function(sequence) {
-            console.log("clean");
-            return sequence.replace(/[^A-Za-z]/g, '');
-        };
-
-        this.parseSubunit = function(sequence) {
-            console.log(sequence);
-            var split = sequence.replace(/[^A-Za-z]/g, '').split('');
-            var display = [];
-            console.log(split);
-            var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
-            for (var i in split) {
-                var obj = {};
-                console.log(split[i]);
-                var valid = dojo.indexOf(invalid, split[i].toUpperCase());
-                console.log(valid);
-                if (valid >= 0) {
-                    obj.value = split[i];
-                    obj.valid = false;
-                    display.push(obj);
-                    obj = {};
-                } else {
-                    obj.value = split[i];
-                    obj.valid = true;
-                    display.push(obj);
-                    obj = {};
-                }
-
-            }
-
-            this.display = display;
-            console.log(display);
-            return display;
-        };
-
-        this.validate = function(obj) {
-            console.log(obj);
-        };
-
-        $scope.validateSubunit = function(subunit) {
-            console.log(subunit);
-
-
-        };
-
-
-        /*
-         $scope.validateSubunit = function (subunit) {
-         console.log(subunit);
-         $scope.editorEnabled = false;
-         //new array if object doesn't already have one
-         if (!$scope.substance.protein.subunits) {
-         console.log("new array");
-         $scope.substance.protein.subunits = [];
-         }
-         var j = subunit.sequence.length / 10;
-         for (var i = 0; i < subunit.sequence.length / 10; i++) {
-         console.log("Start: " + (i * 10) + subunit.sequence.substring((i * 10), ((i + 1) * 10)) + " end: " + ((i + 1) * 10));
-
-         }
-
-         //  console.log(subunit.sequence.split(''));
-         $scope.substance.protein.subunits.push(subunit);
-         $scope.subunit = {};
-         console.log($scope.substance);
-
-         };
-         */
-
-        $scope.setEditedSubunit = function(subunit) {
-            console.log("clicked");
-            $scope.editSubunit = subunit;
-            $scope.tempCopy = angular.copy(subunit);
-        };
-
-        $scope.updateSubunit = function(subunit) {
-            var index = $scope.substance.protein.subunits.indexOf(subunit);
-            $scope.substance.protein.subunits[index] = subunit;
-            $scope.editSubunit = null;
-            $scope.isEditingSubunit = false;
-        };
-
-        $scope.removeSubunit = function(subunit) {
-            var index = $scope.substance.protein.subunits.indexOf(subunit);
-            $scope.substance.protein.subunits.splice(index, 1);
-        };
-    });
-
-    ginasApp.controller('DetailsController', function($scope, Substance) {
-        $scope.protein = null;
-        this.added = false;
-        this.editing = false;
-
-        this.toggleAdd = function() {
-            this.added = !this.added;
-        };
-
-        this.toggleEdit = function() {
-            this.editing = !this.editing;
-            this.added = false;
-        };
-
-        this.validate = function(obj) {
-            console.log(obj);
-            $scope.$broadcast('show-errors-check-validity');
-            if ($scope.detForm.$valid) {
-                $scope.editorEnabled = false;
-                Substance.protein.proteinType = obj.proteinType;
-                Substance.protein.proteinSubType = obj.proteinSubType;
-                Substance.protein.sequenceOrigin = obj.sequenceOrigin;
-                Substance.protein.sequenceType = obj.sequenceType;
-                this.added = true;
-                $scope.detailsSet = true;
-            }
-        };
-
-        this.setEdited = function(obj) {
-            $scope.editObj = obj;
-            $scope.tempCopy = angular.copy(obj);
-        };
-
-        this.reset = function() {
-            $scope.protein = {};
-            $scope.$broadcast('show-errors-reset');
-        };
-
-    });
 
 
     ginasApp.controller('DiverseController', function($scope, Substance, $rootScope) {
