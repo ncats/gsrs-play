@@ -28,6 +28,7 @@ GET	/tinx		ix.idg.controllers.TINXApp.tinx()
 GET	/tinx/target/:acc		ix.idg.controllers.TINXApp.tinxForTarget(acc: String)
 
 ->	/	ix.ncats.Routes
+->	/	ix.core.test.Routes
 
 GET	/warm/targets	ix.idg.controllers.IDGApp.targetWarmCache(secret: String)
 GET	/:any	ix.idg.controllers.IDGApp.lastUnicorn(any: String)
