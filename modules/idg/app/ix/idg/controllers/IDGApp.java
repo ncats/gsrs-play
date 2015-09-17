@@ -1,62 +1,33 @@
 package ix.idg.controllers;
 
-import akka.routing.Router;
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.QueryIterator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.search.SearchFactory;
-import ix.core.models.EntityModel;
-import ix.core.models.Keyword;
-import ix.core.models.Mesh;
-import ix.core.models.Predicate;
-import ix.core.models.Publication;
-import ix.core.models.Structure;
-import ix.core.models.Text;
-import ix.core.models.VNum;
-import ix.core.models.Value;
-import ix.core.models.XRef;
-import ix.core.search.TextIndexer;
-import ix.core.search.SearchOptions;
+import ix.core.models.*;
 import ix.core.plugins.IxCache;
+import ix.core.search.SearchOptions;
+import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
-
-import play.Play;
 import play.Logger;
+import play.Play;
+import play.cache.Cached;
 import play.db.ebean.Model;
 import play.mvc.Result;
-import play.cache.Cached;
-import play.mvc.Http;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import tripod.chem.indexer.StructureIndexer;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.TreeMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
 import java.net.URLEncoder;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static ix.core.search.TextIndexer.Facet;
 
@@ -873,7 +844,7 @@ public class IDGApp extends App implements Commons {
 
         return ok(ix.idg.views.html.targets.render
                   (page, rows, result.count(),
-                   pages, decorate (facets), targets));
+                   pages, decorate (facets), targets, result.getKey()));
 
     }
 
@@ -1047,7 +1018,7 @@ public class IDGApp extends App implements Commons {
                         
                         return ok (ix.idg.views.html.targets.render
                                    (page, _rows, total, pages,
-                                    decorate (facets), targets));
+                                    decorate (facets), targets, null));
                     }
                 });
         }
