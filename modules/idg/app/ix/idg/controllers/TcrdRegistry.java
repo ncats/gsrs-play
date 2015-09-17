@@ -199,7 +199,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from target2pathway where target_id = ?");
             pstm12 = con.prepareStatement
                 ("select * from xref where protein_id = ?");
-            pstm13 = con.prepareStatement("select p.sym, p.uniprot, hg.* from target t, t2tc, protein p, hgram_cdf hg, gene_attribute_type gat " +
+            pstm13 = con.prepareStatement("select p.sym, p.uniprot, hg.*,gat.resource_group from target t, t2tc, protein p, hgram_cdf hg, gene_attribute_type gat " +
                     "WHERE t.id = t2tc.target_id AND t2tc.protein_id = p.id AND p.id = hg.protein_id " +
                     "AND gat.name = hg.type and hg.protein_id = ?");
             this.chembl = chembl;
