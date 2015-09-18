@@ -20,6 +20,12 @@ public class HClust {
     public HClust() {
     }
 
+    Double[] getColumn(Double[][] matrix, int col) {
+        Double[] ret = new Double[matrix.length];
+        for (int i = 0; i < matrix.length; i++) ret[i] = matrix[i][col];
+        return ret;
+    }
+
     public void setData(Double[][] matrix, String[] colNames, String[] rowNames) {
         this.colNames = colNames;
         this.rowNames = rowNames;
@@ -30,6 +36,13 @@ public class HClust {
             rdm[i][i] = 0.0;
             for (int j = i + 1; j < matrix.length; j++)
                 rdm[i][j] = distance(matrix[i], matrix[j]) ;
+        }
+
+        cdm = new double[colNames.length][colNames.length];
+        for (int i = 0; i < matrix[0].length - 1; i++) {
+            cdm[i][i] = 0.0;
+            for (int j = i + 1; j < matrix[0].length; j++)
+                cdm[i][j] = distance(getColumn(matrix, i),getColumn(matrix, j)) ;
         }
 
     }
@@ -76,6 +89,7 @@ public class HClust {
     public void run() throws Exception {
         ClusteringAlgorithm alg = new DefaultClusteringAlgorithm();
         rcluster = alg.performClustering(rdm, rowNames, new AverageLinkageStrategy());
+        ccluster = alg.performClustering(cdm, colNames, new AverageLinkageStrategy());
 
 //        DendrogramPanel dp = new DendrogramPanel();
 //        dp.setModel(rcluster);
