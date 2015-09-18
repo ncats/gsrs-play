@@ -1,40 +1,41 @@
 <div class="row info" id="subunits-form">
     <button class="btn btn-primary label-offset det">
-                        Subunits&nbsp;<span class="badge" ng-show="substance.protein.subunits.length>0">
+                        Subunits&nbsp;<span class="badge" ng-show="substance.subunits.length>0">
                         {{substance.subunits.length}}</span> </button>
     <a aria-label="Add Subunits"><i class = "fa fa-plus fa-2x success"></i></a>
+    <div class="col-md-12">
+
+    <div class = "row"  ng-repeat="sunit in substance.subunits">
+        <hr>
+        Subunit {{sunit.index}}
+        <div class="col-md-12">
+            <div class = "row">
+              <div class = "col-xs-2" ng-repeat="su in sunit.display">
+        <span ng-repeat ="aa in su">
+            <amino-acid acid=aa></amino-acid>
+        </span>
+            </div>
+        </div>
+@*        <div class="col-md-12">
+            <span href="#" editable-textarea="su.sequence" blur="submit">{{su.sequence}}</span>
+        </div>*@
+</div>
+</div>
+
+
 
     <form class="form-horizontal" name="subunitForm" id = "add-subunit" role="form" novalidate>
         <div class="row form-row">
             <div class = "col-md-12">
-                <div ng-repeat="su in substance.subunits">
-                    <span ng-repeat ="aa in su.display">
-
-                    <amino-acid acid=aa></amino-acid>
-</span>
-              </div>
-
-                {{subunit.display}}
-
-                </div>
-  @*          <div class ="row">
-                <div class="col-md-2">
-            <input class="form-control" type="number"
-            min="0"
-            name="subunits"
-            id="subunits"
-            title="Number of Subunits"
-            ng-model="substance.subunitCount"
-                ng-blur="setCount()"
-            >*@
-
-            <div class = "col-md-12" >
-                <subunit ng-model="subunit.sequence" subIndex=""></subunit>
-                @*<textarea class="form-control string text-uppercase" rows="5" ng-model = "subunit.sequence" ng-model-options='{ debounce: 1000 }' ng-change = "SubunitCtrl.clean(subunit.sequence); SubunitCtrl.parseSubunit(subunit.sequence)" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>*@
+                <subunit ng-model="subunit.sequence" subindex={{substance.subunits.length}}></subunit>
             </div>
-            @* @referenceselectorform("subunitForm", "subunit")*@
         </div>
-
+        <div ng-hide=true>
+            <input ng-model="subunit.index">
+        </div>
+        <div >
         @submitbuttons("subunit", "subunitForm", "subunits")
+        </div>
     </form>
 </div>
+        </div>

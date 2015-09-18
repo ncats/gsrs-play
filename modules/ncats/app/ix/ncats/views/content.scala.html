@@ -9,33 +9,10 @@
 <div class="container-fluid">
   <div class="row">
     @if(total > 0 && facets.length > 0) {
-    <div class="col-md-3">
-      <p></p>
-      @if(viz.body.nonEmpty) {
-        <div role="tabpanel">
-	  <ul class="nav nav-pills" role="tablist" id="content-tab">
-	    <li role="presentation" class="active">
-	       <a href="#filter" aria-controls="filter"
-	          role="tab" data-toggle="tab">Filters</a></li>
-            <li role="presentation">
-	       <a href="#viz" aria-controls="viz"
-	          role="tab" data-toggle="tab">Visualizations</a>
-	    </li>
-	  </ul>
-	  <div class="tab-content">
-	    <div role="tabpanel" class="tab-pane active" id="filter">
-	       <p></p>
-               @filters(facets)
-	    </div>
-	    <div role="tabpanel" class="tab-pane" id="viz">
-               @viz
-	    </div>
-	  </div>
-	</div>
-      } else {
-         @filters(facets)
-      }
-    </div>
+        <div class="col-md-3">
+            <p></p>
+            @filters(facets)
+        </div>
     <div class="col-md-9">
       } else {
       <div class="col-md-12">
@@ -92,6 +69,7 @@
       }
       @pagination(current, rows, total, pages){
           <h3>
+              @viz
           @if(request.uri.contains("?")) {
               <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)&action=download" role="button">
                   <i class="fa fa-download fa-lg "></i></a>

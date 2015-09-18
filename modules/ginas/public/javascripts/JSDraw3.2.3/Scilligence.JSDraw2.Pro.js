@@ -22,10 +22,10 @@ eval(function (p, a, c, k, e, r) { e = function (c) { return (c < a ? '' : e(par
 
 
 
-//////////////////////////////////////////////////////////////////////////////////
-// Place the license code below
-
-JSDraw2.licensecode = null;
+// Licensed to: FDA
+// Product: JSDraw
+// Expiration Date: 2018-Jun-05
+JSDraw2.licensecode="405575847916781761723242424242425131213141512181";
 
 
 

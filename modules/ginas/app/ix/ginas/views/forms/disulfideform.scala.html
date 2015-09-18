@@ -1,80 +1,89 @@
 @import ix.ginas.controllers.GinasApp;
-<div class = "row info"  >
-    <button class="btn btn-primary label-offset det">
-        Disulfide Links&nbsp;<span class="badge" ng-show="substance.codes.length>0">
-                        {{substance.protein.disulfidelinks.length}}</span> </button>
-    <a ng-show="!detailsSet" ng-click="addDetails()" aria-label="Add Details"><i class = "fa fa-plus fa-2x success"></i></a>
-    <div class="col-md-12">
-        <table class="table table-striped" id="detailsTable">
-            <thead>
-            <tr>
-                <th>Protein Type</th>
-                <th>Protein Subtype</th>
-                <th>Sequence Origin</th>
-                <th>Sequence Type</th>
-                <th></th>
-                <th></th>
-            </tr>
-            </thead>
-            <tr>
-                <td>
-                    {{substance.protein.proteinType.display}}
-                </td>
-                <td>
-                    {{substance.protein.proteinSubType.display}}
-                </td>
-                <td>
-                    {{substance.protein.sequenceOrigin.display}}
-                </td>
-                <td>
-                    {{substance.protein.sequenceType.display}}
 
-                </td>
-                <td>
-                    <a ng-show="!isEditingDetails" ng-click="setEditedDetails(protein); toggleEditDetails();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
-                </td>
-                <td>
-                    @*<a ng-show="!isEditingDetails" ng-click="removeDetails(protein)" aria-label="Remove"><i class="fa fa-times fa-2x danger"></i></a>*@
-                </td>
-            </tr>
-            <tr ng-show="isEditingDetails">
-                <form class="form-horizontal" name="editDetailsForm" id = "add-details" role="form" ng-submit="updateDetails(editProtein)" novalidate>
-                    <td> <select class="form-control" title="Details Type" id="protein-type" ng-model = "editProtein.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
-                        </select></td>
-                    <td> <select class="form-control" title="Details Type" id="protein-subtype" ng-model = "editProtein.SubType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
-                        </select></td>
-                    <td> <select class="form-control" title="Details Type" id="protein-origin" ng-model = "editProtein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
-                        </select></td>
-                    <td> <select class="form-control" title="Details Type" id="protein-sequencetype" ng-model = "editProtein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
-                        </select></td>
-                    <td><a id ="name-submit" ng-show="editDetailsForm.$valid" ng-click="updateDetails(editDetails)" arial-label="Save">
-                        <i class="fa fa-floppy-o fa-2x success"></i></a>
-                    </td>
-                    <td><a type="submit" ng-click="toggleEditDetails();" aria-label="Cancel">
-                        <i class="fa fa-ban fa-2x danger"></i></a>
-                    </td>
-                </form>
-            </tr>
-            <tr ng-show="!isEditingDetails && addingDetails">
-                <form class="form-horizontal" name="detailForm" id = "add-detail" role="form" ng-submit="validateDetails(protein)" novalidate>
-                    <td> <select class="form-control" title="Details Type" id="protein-type" ng-model = "protein.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
-                        </select></td>
-                    <td> <select class="form-control" title="Details Type" id="protein-subtype" ng-model = "protein.subType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
-                        </select></td>
-                    <td> <select class="form-control" title="Details Type" id="protein-origin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
-                        </select></td>
-                    <td> <select class="form-control" title="Details Type" id="protein-sequencetype" ng-model = "protein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
-                        </select></td>
-                    <td><a ng-click="clear()" aria-label="Clear">
-                        <i class="fa fa-eraser fa-2x danger"></i></a>
-                    </td>
-                    <td><button class="btn btn-default" type="submit" ng-show="detailForm.$valid">
-                        Validate</button>
-                    </td>
-                </form>
-            </tr>
-        </table>
+<div class = "row info" >
+    <button class="btn btn-primary label-offset det">
+ Disulfide Links&nbsp;<span class="badge" ng-show="substance.codes.length>0">
+                        {{substance.protein.disulfidelinks.length}}</span> </button>
+    @* <a ng-show="!addingCodes" ng-click="toggleForm(codeForm)" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
+    <a ng-show="addingCodes" ng-click="toggleForm(codeForm)" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>*@
+    <div class="col-md-12">
+        <div class = "row header-row">
+            <div class = "col-md-2">
+                <strong>Starting Subunit Index</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Starting Residue Index</strong>
+            </div>
+            <div class ="col-md-1">
+                </div>
+            <div class = "col-md-2">
+                <strong>Ending Subunit Index</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Ending Residue Index</strong>
+            </div>
+        </div>
+
+        <div class = "row" ng-repeat="obj in substance.disulfideLink">
+            <hr>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.subunitIndex}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.residueIndex}}</span>
+            </div>
+            <div class ="col-md-1">
+                <i class="fa fa-link fa-2x fa-rotate-90"></i>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.subunitIndexEnd" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.subunitIndexEnd}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.residueIndexEnd" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.residueIndexEnd}}</span>
+            </div>
+            @referenceview("disForm", "obj")
+        </div>
+
+
+        <form class="form-horizontal" name="disForm" id = "add-code" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2 err-check" id="code-div" show-errors>
+                    <select ng-model="site.subunitIndex" ng-selected="1" class="form-control" name = "year" id = "year">
+                        <option ng-repeat="n in range(substance.subunits.length)">{{n}}</option>
+                    </select>
+                    <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" id="code-div" show-errors>
+                    <select ng-model="site.residueIndex" class="form-control" name = "year" id = "year">
+                        <option ng-repeat="n in range(substance.subunits[site.subunitIndex-1].sequence.length)">{{n}}</option>
+                    </select>
+                    <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class ="col-md-1 text-center">
+                    <i class="fa fa-link fa-rotate-270 fa-2x"></i>
+                </div>
+                <div class="col-md-2 err-check" id="code-div" show-errors>
+                    <select ng-model="site.subunitIndexEnd" class="form-control" name = "year" id = "year">
+                        <option ng-repeat="n in range(substance.subunits.length)">{{n}}</option>
+                    </select>
+                    <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" id="code-div" show-errors>
+                    <select ng-model="site.residueIndexEnd" class="form-control" name = "year" id = "year">
+                        <option ng-repeat="n in range(substance.subunits[site.subunitIndexEnd-1].sequence.length)">{{n}}</option>
+                    </select>
+                    <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                    </ng-messages>
+                </div>
+            </div>
+            @submitbuttons("site", "disForm", "disulfideLink")
+        </form>
     </div>
-    <button class = "btn btn-primary pull-right" ng-show="addingDetails && !isEditing" ng-click="addDetails()">
-        Done</button>
 </div>

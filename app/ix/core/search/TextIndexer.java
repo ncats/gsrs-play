@@ -1,104 +1,63 @@
 package ix.core.search;
 
-import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.lang.reflect.*;
-import java.lang.ref.Reference;
-import java.lang.ref.WeakReference;
-import java.lang.ref.SoftReference;
-import java.lang.annotation.Annotation;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.LongField;
-import org.apache.lucene.document.IntField;
-import org.apache.lucene.document.FloatField;
-import org.apache.lucene.document.DoubleField;
-import org.apache.lucene.document.TextField;
-import org.apache.lucene.document.StoredField;
-import org.apache.lucene.document.FieldType;
-import org.apache.lucene.document.IntDocValuesField;
-import org.apache.lucene.document.NumericDocValuesField;
-import org.apache.lucene.document.FloatDocValuesField;
-import org.apache.lucene.document.DoubleDocValuesField;
-
-import static org.apache.lucene.document.Field.Store.*;
-
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.SerialMergeScheduler;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.FieldInfo.IndexOptions;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.NIOFSDirectory;
-import org.apache.lucene.store.MMapDirectory;
-import org.apache.lucene.store.NoLockFactory;
-import org.apache.lucene.store.RAMDirectory;
-import org.apache.lucene.util.Version;
-import org.apache.lucene.util.BytesRef;
-import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import ix.core.models.DynamicFacet;
+import ix.core.models.Indexable;
+import ix.core.plugins.IxCache;
+import ix.utils.Global;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.RegexpQuery;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.Filter;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.FieldCacheTermsFilter;
-import org.apache.lucene.queries.TermsFilter;
-import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.*;
 import org.apache.lucene.facet.*;
-import org.apache.lucene.facet.range.*;
-import org.apache.lucene.facet.taxonomy.*;
-import org.apache.lucene.facet.taxonomy.directory.*;
-import org.apache.lucene.facet.sortedset.*;
+import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
+import org.apache.lucene.facet.taxonomy.TaxonomyReader;
+import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
+import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
+import org.apache.lucene.index.*;
+import org.apache.lucene.index.FieldInfo.IndexOptions;
+import org.apache.lucene.queries.TermsFilter;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.suggest.DocumentDictionary;
 import org.apache.lucene.search.suggest.Lookup;
-import org.apache.lucene.search.suggest.analyzing.AnalyzingSuggester;
 import org.apache.lucene.search.suggest.analyzing.AnalyzingInfixSuggester;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.ObjectWriter;
-
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.NIOFSDirectory;
+import org.apache.lucene.store.NoLockFactory;
+import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.Version;
 import org.reflections.Reflections;
+import play.Logger;
+import play.Play;
+import play.db.ebean.Model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-import play.Logger;
-import play.Play;
-import play.cache.Cache;
-import play.db.ebean.Model;
-import ix.utils.Global;
-import ix.core.models.Indexable;
-import ix.core.models.DynamicFacet;
-import ix.core.plugins.IxCache;
+import static org.apache.lucene.document.Field.Store.NO;
+import static org.apache.lucene.document.Field.Store.YES;
 
 /**
  * Singleton class that responsible for all entity indexing
@@ -235,7 +194,8 @@ public class TextIndexer {
 
     public static class SearchResult {
         SearchContextAnalyzer searchAnalyzer = new GinasSearchAnalyzer();
-        
+
+        String key;
         String query;
         List<Facet> facets = new ArrayList<Facet>();
         //final List matches = new CopyOnWriteArrayList ();
@@ -251,6 +211,8 @@ public class TextIndexer {
             this.query = query;            
         }
 
+        public String getKey() { return key; }
+        public void setKey(String key) { this.key = key; }
         public String getQuery () { return query; }
         public SearchOptions getOptions () { return options; }
         public List<Facet> getFacets () { return facets; }

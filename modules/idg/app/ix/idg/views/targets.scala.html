@@ -3,7 +3,9 @@
 @import ix.idg.controllers.Commons._
 @import ix.ncats.controllers.App.FacetDecorator
 
-@(current: Int, rows: Int, total: Int, pages: Array[Int], facets: Array[FacetDecorator], targets: List[Target])
+@(current: Int, rows: Int, total: Int, pages: Array[Int],
+        facets: Array[FacetDecorator], targets: List[Target], searchCacheKey: String )
+
 
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
@@ -69,9 +71,19 @@
             @tabrow(t)
         }
     </table>
-} {
-    <div id="word-cloud"></div>
+} {  @* viz *@
+
+    <button type="button" class="btn btn-default dropdown-toggle @if(!request.uri.contains("?")) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Tools<span class="caret"></span>&nbsp;
+    </button>
+    <ul class="dropdown-menu">
+        <li><a  href='@{ix.idg.controllers.routes.HarmonogramApp.view()+"?cache=" + searchCacheKey}'><i class="fa fa-cubes"></i>Harmonogram</a></li>
+        <li><a  href="#"><i class="fa fa-sitemap"></i>Kinase networks</a></li>
+    </ul>
+
 }
+
+
 
 <div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
