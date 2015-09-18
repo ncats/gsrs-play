@@ -22,6 +22,7 @@
         };
     });
 
+
     ginasApp.factory('Substance', function() {
         var Substance = {};
         var substanceClass = window.location.search.split('=')[1];
@@ -78,6 +79,14 @@
     });
 
     ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $window, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
+
+        $scope.range = function(min, step){
+            step = step || 1;
+            var input = [];
+            for (var i = 1; i <= min; i += step) input.push(i);
+            return input;
+        };
+
 
         $scope.toFormSubstance = function(apiSub) {
 
@@ -207,13 +216,48 @@
             $scope.$broadcast('show-errors-reset');
         };
 
+        $scope.parseSite = function(obj, form){
+            var site ={};
+            var site2 ={};
+            var disulfide=[];
+            if(!$scope.substance.protein.disulfideLinks) {
+                $scope.substance.protein.disulfideLinks = [];
+            }
+            console.log(obj);
+            site.subunitIndex = obj.subunitIndex;
+            site.residueIndex = obj.residueIndex;
+            disulfide.push(site);
+            console.log(disulfide);
+            site2.subunitIndex = obj.subunitIndexEnd;
+            site2.residueIndex = obj.residueIndexEnd;
+            disulfide.push(site2);
+/*
+            console.log(_.findWhere($scope.substance.subunits[obj.subunitIndex-1].display[obj.subunitIndex-1], {'residueIndex': obj.residueIndex }),{});
+*/
+            console.log($scope.substance.subunits[obj.subunitIndex-1]);
+            console.log($scope.substance.subunits[obj.subunitIndex-1].display[obj.residueIndex]);
+
+            //console.log($scope.substance.subunits[obj.subunitIndex-1].display[obj.residueIndex].index[obj.residueIndex]);
+
+
+            $scope.substance.protein.disulfideLinks.push(disulfide);
+            console.log($scope.substance);
+
+
+           // console.log($scope.substance.subunits[obj.subunitIndex-1].display[obj.residueIndex-1].index[obj.residueIndex]);
+
+
+        };
+
+
         //main submission method
         $scope.validate = function(obj, form, type) {
             console.log(type);
-
             if(type =='protein'){
                 $scope.proteinDetails(obj, form);
-            }else {
+            }else if(type =='disulfideLink') {
+                $scope.parseSite(obj, form);
+            }else{
                 $scope.$broadcast('show-errors-check-validity');
                 if (form.$valid) {
                     if (this.substance[type]) {
@@ -673,20 +717,26 @@
     });
 
     ginasApp.directive('aminoAcid', function($compile) {
+        var div = '<div class = "col-md-1">';
         var validTool = '<a href="#" class= "aminoAcid" tooltip="{{acid.subunitIndex}}-{{acid.index}} : {{acid.value}} ({{acid.type}}-{{acid.name}})">{{acid.value}}</a>';
         var invalidTool = '<a href="#" class= "invalidAA" tooltip-class="invalidTool" tooltip="INVALID">{{acid.value}}</a>';
-
-       getTemplate = function(valid) {
-           console.log(valid);
-            var template = '';
-            if(valid){
-               template= validTool;
-            }else{
-                template= invalidTool;
-            }
+        var space = '&nbsp;';
+        var close = '</div>';
+       getTemplate = function(aa) {
+           var template = '';
+           var index = aa.index;
+           if(index%10 === 0){
+               template= space;
+           }else {
+               var valid = aa.valid;
+               if (valid) {
+                   template = validTool;
+               } else {
+                   template = invalidTool;
+               }
+           }
             return template;
         };
-
 
         return {
             restrict: 'E',
@@ -694,11 +744,8 @@
                 acid: '='
             },
             link: function(scope, element, attrs){
-                console.log(scope);
-                var validity = scope.acid.valid;
-                console.log(validity);
-                element.html(getTemplate(validity)).show();
-
+                var aa = scope.acid;
+                element.html(getTemplate(aa)).show();
                 $compile(element.contents())(scope);
             }
         };
@@ -732,13 +779,21 @@
                     obj.type = getType(aa);
                     obj.subunitIndex= subunit;
                     obj.index = i-1+2;
+                    if(aa.toUpperCase()=='C'){
+                        obj.cysteine = true;
+                    }
                     display.push(obj);
                     obj = {};
                 }
-
             }
             this.display = display;
+            display = _.chunk(display,10);
             return display;
+        };
+
+        addGlycosylation = function(subunit, index){
+
+
         };
 
         findName = function(aa){
@@ -806,23 +861,18 @@
         return {
             restrict: 'E',
             require: 'ngModel',
-            scope: '&',
+            scope: '=',
             link: function(scope, element, attr, ngModel){
-                console.log(scope);
-                console.log(element);
-                console.log(attr);
-                console.log(ngModel);
-
                 scope.$watch(function(){
                     var seq = ngModel.$modelValue;
                     if(typeof seq !== "undefined") {
                         seq = clean(seq);
-                        scope.subunit.display = parseSubunit(seq, 1);
+                        scope.subunit.display = parseSubunit(seq, attr.subindex-1+2);
+                        scope.subunit.index = attr.subindex-1+2;
                         ngModel.$setViewValue(seq);
                         // console.log(scope);
                     }
                 });
-
             },
             template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" ng-model-options="{ debounce: 1000 }" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>',
         };

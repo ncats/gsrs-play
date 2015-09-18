@@ -24,6 +24,7 @@
         step = step || 1;
         var input = [];
         for (var i = 2015; i >= min; i -= step) input.push(i);
+
         return input;
     };
 
