@@ -377,8 +377,8 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        UNIPROT_TISSUE,
-        "Ligand"        
+        IDG_TISSUE,
+        GWAS_TRAIT
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -392,7 +392,8 @@ public class IDGApp extends App implements Commons {
         //IDG_DRUG,
         IDG_DEVELOPMENT,
         IDG_FAMILY,
-        UNIPROT_TARGET
+        PHARMALOGICAL_ACTION
+        //UNIPROT_TARGET
     };
 
     public static final String[] ALL_FACETS = {

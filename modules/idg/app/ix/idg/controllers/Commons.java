@@ -15,8 +15,10 @@ public interface Commons {
     public static final String IDG_TARGET = "IDG Target";
     public static final String IDG_SMILES = "IDG SMILES";
     public static final String IDG_TISSUE = "IDG Tissue";
+    public static final String IDG_LIGAND = "IDG Ligand";
     public static final String IDG_TISSUE_REF = "IDG Tissue Ref";
-
+    public static final String PHARMALOGICAL_ACTION = "Pharmalogical Action";
+    
     public static final String OMIM_GENE = "OMIM Gene";
     public static final String GWAS_TRAIT = "GWAS Trait";
     public static final String IMPC_TERM = "IMPC Term";

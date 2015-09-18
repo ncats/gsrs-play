@@ -107,22 +107,22 @@ public class EntityFactory extends Controller {
         }
         
         public FetchOptions (int top, int skip, String filter) {
-        	try{
-	            for (Map.Entry<String, String[]> me
-	                     : request().queryString().entrySet()) {
-	                String param = me.getKey();
-	                if ("order".equalsIgnoreCase(param)) {
-	                    for (String s : me.getValue())
-	                        order.add(s);
-	                }
-	                else if ("expand".equalsIgnoreCase(me.getKey())) {
-	                    for (String s : me.getValue())
-	                        expand.add(s);
-	                }
-	            }
-        	}catch(Exception e){
-        		
-        	}
+                try{
+                    for (Map.Entry<String, String[]> me
+                             : request().queryString().entrySet()) {
+                        String param = me.getKey();
+                        if ("order".equalsIgnoreCase(param)) {
+                            for (String s : me.getValue())
+                                order.add(s);
+                        }
+                        else if ("expand".equalsIgnoreCase(me.getKey())) {
+                            for (String s : me.getValue())
+                                expand.add(s);
+                        }
+                    }
+                }catch(Exception e){
+                        
+                }
             this.top = top;
             this.skip = skip;
             this.filter = filter;
@@ -172,11 +172,11 @@ public class EntityFactory extends Controller {
     protected static <K,T> List<T> filter (FetchOptions options,
                                            Model.Finder<K, T> finder) {
 
-    	try{
-    		Logger.debug(request().uri()+": "+options);
-    	}catch(Exception e){
-    		Logger.debug("non-request-bound: "+options);
-    	}
+        try{
+                Logger.debug(request().uri()+": "+options);
+        }catch(Exception e){
+                Logger.debug("non-request-bound: "+options);
+        }
         Query<T> query = finder.query();
         
         
@@ -278,7 +278,7 @@ public class EntityFactory extends Controller {
                                              +ids.size());
                             }
                             catch (Exception ex) {
-                            	ex.printStackTrace();
+                                ex.printStackTrace();
                                 Logger.trace(Thread.currentThread().getName()
                                              +": ETag "+etag.id, ex);
                             }
@@ -286,17 +286,19 @@ public class EntityFactory extends Controller {
                     });
             }
         }
+        
         try{
-        	etag.save();
-        }catch(Exception e){
-        	Logger.error("Error saving etag. This sometimes happens on empty DB");
+            etag.save();
+        }
+        catch (Exception e) {
+            Logger.error
+                ("Error saving etag. This sometimes happens on empty DB");
         }
 
         ObjectMapper mapper = getEntityMapper ();
         ObjectNode obj = (ObjectNode)mapper.valueToTree(etag);
         obj.put("content", mapper.valueToTree(results));
 
-        Logger.debug("TEST DONE");
         return ok (obj);
     }
 

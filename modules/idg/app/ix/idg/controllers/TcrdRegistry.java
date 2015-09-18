@@ -28,6 +28,7 @@ import play.mvc.Http;
 import play.mvc.Result;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.seqaln.SequenceIndexer;
+import ix.core.chem.StructureProcessor;
 
 import javax.sql.DataSource;
 import java.io.BufferedReader;
@@ -65,6 +66,8 @@ public class TcrdRegistry extends Controller implements Commons {
     static final ConcurrentMap<String, Disease> DISEASES =
         new ConcurrentHashMap<String, Disease>();
     static final List<Target> TARGETS = new ArrayList<Target>();
+    static final List<Ligand> LIGS = new ArrayList<Ligand>();
+    
     static final ConcurrentMap<Long, Ligand> LIGANDS =
         new ConcurrentHashMap<Long, Ligand>();
 
@@ -159,8 +162,8 @@ public class TcrdRegistry extends Controller implements Commons {
         final Collection<TcrdTarget> targets;
         PreparedStatement pstm, pstm2, pstm3, pstm4,
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
-            pstm11, pstm12, pstm13, pstm14, pstm15
-            ;
+            pstm11, pstm12, pstm13, pstm14, pstm15,
+            pstm16, pstm17;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -216,6 +219,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from protein where id = ?");
             pstm15 = con.prepareStatement
                 ("select * from alias where protein_id = ?");
+            pstm16 = con.prepareStatement
+                ("select * from chembl_activity where target_id = ?");
+            pstm17 = con.prepareStatement
+                ("select * from drugdb_activity where target_id = ?");
             
             this.chembl = chembl;
         }
@@ -228,9 +235,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 t.update();
                 INDEXER.update(t);
             }
-            
-            // the ligands are handled by the
-            //  ChemblRegistry.LigandStructureReceiver callback
+
+            for (Ligand l : LIGS) {
+                l.update();
+                INDEXER.update(l);
+            }
         }
 
         public void shutdown () throws SQLException {
@@ -249,6 +258,8 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm13.close();
             pstm14.close();
             pstm15.close();
+            pstm16.close();
+            pstm17.close();
             
             chembl.shutdown();
         }
@@ -268,6 +279,12 @@ public class TcrdRegistry extends Controller implements Commons {
                         (UNIPROT_KEYWORD, rset.getString("xtra"),
                          "http://www.uniprot.org/keywords/"+value);
                     target.properties.add(kw);
+                }
+                else if ("pubmed".equalsIgnoreCase(xtype)) {
+                    Publication pub = PublicationFactory.registerIfAbsent
+                        (Long.parseLong(value));
+                    if (pub != null)
+                        target.addIfAbsent(pub);
                 }
                 else {
                     List<String> names = xrefs.get(xtype);
@@ -879,6 +896,195 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addDrugs (Target target, long tid) throws Exception {
+            pstm17.setLong(1, tid);
+            ResultSet rset = pstm17.executeQuery();
+            int count = 0;
+            while (rset.next()) {
+                String chemblId = rset.getString("cmpd_chemblid");
+                String drug = rset.getString("drug");
+                
+                Ligand ligand = null;
+                if (chemblId != null) {
+                    List<Ligand> ligands = LigandFactory.finder.where()
+                        .eq("synonyms.term", chemblId).findList();
+                    ligand = ligands.isEmpty() ? null
+                        : ligands.iterator().next();
+                }
+                else { //
+                    List<Ligand> ligands = LigandFactory.finder.where()
+                        .eq("synonyms.term", drug).findList();
+                    ligand = ligands.isEmpty() ? null
+                        : ligands.iterator().next();
+                }
+
+                if (ligand == null) {
+                    // new ligand
+                    String smiles = rset.getString("smiles");
+                    ligand = new Ligand (drug);
+                    ligand.synonyms.add(KeywordFactory.registerIfAbsent
+                                        (IDG_LIGAND, drug, null));
+                    ligand.description = rset.getString("nlm_drug_info");
+                    if (smiles != null) {
+                        Structure struc = StructureProcessor.instrument
+                            (smiles, null, false);
+                        struc.save();
+                        XRef xref = new XRef (struc);
+                        ligand.links.add(xref);
+                    }
+                                        
+                    ligand.save();
+                    LIGS.add(ligand);
+                    
+                    Logger.debug("New ligand "+ligand.id+" "
+                                 +ligand.getName()+" added!");
+                    
+                }
+                
+                if (chemblId != null) {
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (ChEMBL_ID, chemblId,
+                         "https://www.ebi.ac.uk/chembl/compound/inspect/"
+                         +chemblId);
+                    ligand.addIfAbsent(kw);
+                }
+
+                XRef tref = new XRef (target);
+                tref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     (IDG_DEVELOPMENT, target.idgTDL.name, null));
+                tref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     (IDG_FAMILY, target.idgFamily, null));
+                
+                XRef lref = new XRef (ligand);
+                lref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     (IDG_LIGAND, ligand.getName(), null));
+
+                String actType = rset.getString("act_type");
+                if (actType != null) {
+                    double act = rset.getDouble("act_value");
+                    VNum val = new VNum (actType, act);
+                    tref.properties.add(val);
+                    lref.properties.add(val);
+                }
+
+                String action = rset.getString("action_type");
+                if (action != null) {
+                    String source = rset.getString("source");
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (PHARMALOGICAL_ACTION, action,
+                         // chembl source is for the ligand definition as
+                         // opposed to the pharmalogical data
+                         "CHEMBL".equalsIgnoreCase(source) ? null
+                         : rset.getString("reference"));
+                    
+                    tref.properties.add(kw);
+                    lref.properties.add(kw);
+                }
+                
+                target.links.add(lref);
+                ligand.links.add(tref);
+
+                try {
+                    ligand.update();
+                    target.update();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                ++count;
+            }
+            rset.close();
+            Logger.debug("Target "+target.id+" has "+count+" drug(s)!");
+        }
+
+        void addChembl (Target target, long tid) throws Exception {
+            pstm16.setLong(1, tid);
+            ResultSet rset = pstm16.executeQuery();
+            int count = 0;
+            while (rset.next()) {
+                String chemblId = rset.getString("cmpd_chemblid");
+                List<Ligand> ligands = LigandFactory.finder.where()
+                    .eq("synonyms.term", chemblId).findList();
+                Ligand ligand = null;
+                if (!ligands.isEmpty()) {
+                    ligand = ligands.iterator().next();
+                }
+                else {
+                    ligand = new Ligand (chemblId);
+                    ligand.synonyms.add
+                        (KeywordFactory.registerIfAbsent
+                         (ChEMBL_SYNONYM, chemblId,
+                          "https://www.ebi.ac.uk/chembl/compound/inspect/"
+                          +chemblId));
+                    
+                    String smiles = rset.getString("smiles");
+                    if (smiles != null) {
+                        Structure struc = StructureProcessor.instrument
+                            (smiles, null, false);
+                        struc.save();
+                        XRef xref = new XRef (struc);
+                        ligand.links.add(xref);
+                    }
+                    ligand.save();
+                    LIGS.add(ligand);
+                }
+                
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (ChEMBL_SYNONYM, rset.getString("cmpd_name_in_ref"),
+                     "https://www.ebi.ac.uk/chembl/compound/inspect/"
+                     +chemblId);
+                ligand.addIfAbsent(kw);
+
+                VNum act = new VNum (rset.getString("act_type"),
+                                     rset.getDouble("act_value"));
+                act.save();
+
+                long pmid = rset.getLong("pubmed_id");
+                if (pmid != 0) {
+                    Publication pub = PublicationFactory.registerIfAbsent(pmid);
+                    XRef ref = new XRef (pub);
+                    ref.properties.add(act);
+                    ligand.addIfAbsent(ref);
+                    ligand.addIfAbsent(pub);
+                }
+
+                XRef tref = new XRef (target);
+                tref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     (IDG_DEVELOPMENT, target.idgTDL.name, null));
+                tref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     (IDG_FAMILY, target.idgFamily, null));
+                
+                XRef lref = new XRef (ligand);
+                lref.properties.add
+                    (KeywordFactory.registerIfAbsent
+                     (IDG_LIGAND, ligand.getName(), null));
+                
+                tref.properties.add(act);
+                lref.properties.add(act);
+                
+                target.links.add(lref);
+                ligand.links.add(tref);
+
+                try {
+                    target.update();
+                    ligand.update();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                ++count;
+            }
+            rset.close();
+            Logger.debug("Target "+target.id+" has "+count+" ligand(s)!");
+        }
+        
+
         void persists (TcrdTarget t) throws Exception {
             Http.Context.current.set(ctx);
             Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
@@ -901,6 +1107,7 @@ public class TcrdRegistry extends Controller implements Commons {
             //uni.register(target, t.acc);
 
             instrument (target, t);
+            target.save();
             
             addDTO (target, t.protein);
             addTDL (target, t.protein);
@@ -910,13 +1117,14 @@ public class TcrdRegistry extends Controller implements Commons {
             addPathway (target, t.id);
             addPanther (target, t.protein);
             addPatent (target, t.protein);
+            addDrugs (target, t.id);
+            addChembl (target, t.id);
             
             TARGETS.add(target);
             
             if (t.novelty != null) {
                 target.novelty = t.novelty;
             }
-            target.save();
 
             Logger.debug("...disease linking");
             pstm.setLong(1, t.id);
@@ -929,6 +1137,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm4.setLong(1, t.protein);
             new RegisterGeneRIFs (target, pstm4).persists();
 
+            /*
             Logger.debug("...ligand linking");
             pstm2.setLong(1, t.id);
             pstm3.setLong(1, t.id);
@@ -939,6 +1148,9 @@ public class TcrdRegistry extends Controller implements Commons {
             for (Ligand lig : reglig.getLigands())
                 if (lig.id != null)
                     LIGANDS.put(lig.id, lig);
+            */
+
+            /*
             try {
                 target.update();
             }
@@ -947,6 +1159,7 @@ public class TcrdRegistry extends Controller implements Commons {
                              +IDGApp.getId(target)+")", ex);
                 ex.printStackTrace();
             }
+            */
         }
     }
 
@@ -1187,7 +1400,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     Publication pub = PublicationFactory.registerIfAbsent(pmid);
                     if (pub != null) {
                         try {
-                            target.publications.add(pub);
+                            target.addIfAbsent(pub);
                             XRef xref = new XRef (pub);
                             xref.properties.add
                                 (new Text (IDG_GENERIF, me.getValue()));
