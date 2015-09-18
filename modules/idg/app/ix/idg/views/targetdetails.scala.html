@@ -308,6 +308,7 @@
                   }
                 </td>
               </tr>
+	      @**
               <tr>
                 <td>Fullname</td>
                 <td>
@@ -318,8 +319,9 @@
                   }
                 </td>
               </tr>
+	      **@
               <tr>
-                <td>Shortname</td>
+                <td>Symbols</td>
                 <td>
                   @for(kw <- target.synonyms) {
                      @if("UniProt Shortname".equals(kw.label)) {

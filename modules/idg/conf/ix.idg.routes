@@ -26,8 +26,11 @@ GET	/ligands/:name	ix.idg.controllers.IDGApp.ligand(name: String)
 GET	/search		ix.idg.controllers.IDGApp.search(kind: String ?= null)
 GET	/tinx		ix.idg.controllers.TINXApp.tinx()
 GET	/tinx/target/:acc		ix.idg.controllers.TINXApp.tinxForTarget(acc: String)
+GET /hg/data ix.idg.controllers.HarmonogramApp.hgForTarget(q: String ?= null, format: String ?= null)
+GET /hg/view ix.idg.controllers.HarmonogramApp.view(q: String ?= null, cache: String ?= null)
 
 ->	/	ix.ncats.Routes
+->	/	ix.core.test.Routes
 
 GET	/warm/targets	ix.idg.controllers.IDGApp.targetWarmCache(secret: String)
 GET	/:any	ix.idg.controllers.IDGApp.lastUnicorn(any: String)

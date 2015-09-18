@@ -18,11 +18,12 @@ public interface Commons {
     public static final String IDG_TISSUE_REF = "IDG Tissue Ref";
 
     public static final String OMIM_GENE = "OMIM Gene";
-
     public static final String GWAS_TRAIT = "GWAS Trait";
     public static final String IMPC_TERM = "IMPC Term";
     public static final String MGI_TERM = "MGI Term";
     public static final String OMIM_TERM = "OMIM Term";
+    
+    public static final String REACTOME_REF = "Reactome Pathway Ref";
     
     public static final String GTEx_TISSUE = "GTEx Tissue";
     public static final String GTEx_EXPR = "GTEx Expression";
@@ -30,6 +31,8 @@ public interface Commons {
     public static final String HPM_EXPR = "HPM Expression";
     public static final String HPA_RNA_TISSUE = "HPA-RNA Tissue";
     public static final String HPA_IHC_TISSUE = "HPA-IHC Tissue";
+
+    public static final String PATENT_COUNT = "Patent Count";
 
     public static final String GO_COMPONENT = "GO Component";
     public static final String GO_PROCESS = "GO Process";
@@ -77,4 +80,5 @@ public interface Commons {
     public static final String UNIPROT_FULLNAME = "UniProt Fullname";
     public static final String UNIPROT_NAME = "UniProt Name";
     public static final String UNIPROT_TISSUE = "UniProt Tissue";
+    public static final String UNIPROT_SEQUENCE = "UniProt Sequence";
 }

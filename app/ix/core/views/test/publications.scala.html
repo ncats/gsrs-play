@@ -4,13 +4,21 @@
           <div class="cover-container">
             <div class="inner cover">
               <h1 class="cover-heading">Publication Testing</h1>
-              <form class="form-horizontal" role="form" method="POST" 
-                action="@ix.core.controllers.test.routes.Publications.fetch">
+              <form class="form-horizontal" role="form" method="POST"
+		    enctype="multipart/form-data"
+                    action="@ix.core.controllers.test.routes.Publications.fetch">
               <div class="form-group">
                 <label for="pmid" class="col-sm-2 control-label">PMID</label>
                 <div class="col-sm-10">
                   <input type="text" class="form-control" name="pmid" 
                     id="pmid" placeholder="PubMed ID">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="pmid-file" class="col-sm-2 control-label">File</label>
+                <div class="col-sm-10">
+                  <input type="file" class="form-control" name="pmid-file"
+			 id="pmid-file">
                 </div>
               </div>
               <div class="form-group">

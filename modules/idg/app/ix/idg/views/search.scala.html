@@ -178,8 +178,7 @@ publications: List[Publication], totalPubs: Int)
                   @for(p <- publications) {
                       <tr>
                           <td>@p.title</td>
-                          <td><a href='@if(p.pmid != null) {
-                              "http://www.ncbi.nlm.nih.gov/pubmed/@p.pmid'>PMID:@p.pmid</a>
+                          <td><a href='@if(p.pmid != null) {http://www.ncbi.nlm.nih.gov/pubmed/@p.pmid'>PMID:@p.pmid</a>
                               }
                           </td>
                       </tr>

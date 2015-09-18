@@ -5,30 +5,46 @@ import javax.persistence.*;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Date;
 
 @Entity
 @Table(name="ix_core_event")
 public class Event extends Model {
+    public enum Resolution {
+        CENTURIES,
+        YEARS,
+        MONTHS,
+        WEEKS,
+        DAYS,
+        HOURS,
+        SECONDS,
+        MILLISECONDS
+    }
+    
     @Id
     public Long id;
 
-    @Column(length=1024)
+    @Indexable(facet=true,name="Event")
     public String title;
     @Lob
     public String description;
     @Column(length=1024)
     public String url;
 
-    @Column(name="event_start")
-    public Date start;
-    @Column(name="event_end")
-    public Date end;
-    public boolean isDuration;
+    @Column(name="start_time")
+    public Long start;
+    @Column(name="end_time")
+    public Long end;
+
+    // time unit for start/end    
+    public Resolution unit = Resolution.SECONDS;
 
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_core_event_figure")
-    public List<Figure> figures = new ArrayList<Figure>();
+    @JoinTable(name="ix_core_event_prop")
+    public List<Value> properties = new ArrayList<Value>();
+    
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JoinTable(name="ix_core_event_link")
+    public List<XRef> links = new ArrayList<XRef>();
 
     public Event () {}
     public Event (String title) {
