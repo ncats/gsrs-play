@@ -4,7 +4,7 @@
 @import ix.ncats.controllers.App.FacetDecorator
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-        facets: Array[FacetDecorator], targets: List[Target], searchCacheKey: String )
+facets: Array[FacetDecorator], targets: List[Target], searchCacheKey: String )
 
 
 @tabrow(t: Target) = {
@@ -72,18 +72,17 @@
         }
     </table>
 } {  @* viz *@
-
-    <button type="button" class="btn btn-default dropdown-toggle @if(!request.uri.contains("?")) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        Tools<span class="caret"></span>&nbsp;
-    </button>
-    <ul class="dropdown-menu">
-        <li><a  href='@{ix.idg.controllers.routes.HarmonogramApp.view()+"?cache=" + searchCacheKey}'><i class="fa fa-cubes"></i>Harmonogram</a></li>
-        <li><a  href="#"><i class="fa fa-sitemap"></i>Kinase networks</a></li>
-    </ul>
-
+    <div class="dropdown pull-right">
+      <button type="button" class="btn btn-default dropdown-toggle @if(!request.uri.contains("?")) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa fa-wrench"></i>&nbsp;<span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu pull-left">
+        <li><a  href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>Harmonogram</a></li>
+        <li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>Kinase networks</a></li>
+      </ul>
+    </div>
+    &nbsp;
 }
-
-
 
 <div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
@@ -94,12 +93,70 @@
   </div>
 </div>
 
+<div class="modal fade" id="hgramModal" tabindex="-1"
+     role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close"
+		data-dismiss="modal" aria-label="Close">
+	  <span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="hgramModalLabel">Harmonogram</h4>
+      </div>
+      <div class="modal-body">
+        <div class="embed-responsive embed-responsive-4by3">
+	  <div id='clust_instruct_container'>
+            <div id='viz_gmt_labels'></div>
+
+            <!-- toggle clustergram order -->
+            <div id='toggle_order' class="btn-group" data-toggle="buttons" >
+              <label class="btn btn-primary active order_name">
+                <input type="radio" name="options" id="clust_button" autocomplete="off" checked > Cluster
+              </label>
+              <label class="btn btn-primary order_name">
+                <input type="radio" name="options" id="rank_button" autocomplete="off" > Rank
+              </label>
+              <label class="btn btn-primary order_name">
+                <input type="radio" name="options" id="class_button" autocomplete="off" > Class
+              </label>
+            </div>
+	    
+            <!-- input box for gene search -->
+            <div id='gene_search_container' class='row'>
+              <input id='gene_search_box' type="text" class="form-control" placeholder="Input Gene" aria-describedby="sizing-addon2">
+              <div id='gene_search_button' class="btn-group" data-toggle="buttons" >
+                <label id='submit_gene_button' class="btn btn-primary active">
+                  <input type="radio" name="options" id="" autocomplete="off" checked > Search
+                </label>
+              </div>
+            </div>
+            <p>set column group size</p>
+            <div id="slider_col"></div>
+            <p>set row group size</p>
+            <div id="slider_row"></div>
+	    
+	  </div>
+	  <!-- end clust instruct container -->
+	  
+	  <!-- svg_div - visualization will be put here -->
+	  <div id='svg_div' class='svg_div' ></div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <head>
     <style type="text/css">
     </style>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3_clustergram.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/load_clustergram.js")'></script>
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />    
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.css"))' />
 </head>
 
 <script>
@@ -109,20 +166,13 @@ $(function() {
 });
 
 
-
-
 $(document).ready(function () {
-   jQuery('#content-tab a[href="#viz"]').click(function (e) {
-      e.preventDefault()
-      jQuery(this).tab('show');
-      // Added this line to force NVD3 to redraw the chart
-      //jQuery(window).trigger('resize');
-      d3.select('svg').remove();
-      //window.dispatchEvent(new Event('resize'));
-	      console.log('tab shown: '+e.target);
-   });
    $('#loadmodal').on('shown.bs.modal', function (e) {
       console.log('modal is shown...');
+   });
+   $('#hgramModal').on('shown.bs.modal', function (e) {
+      console.log('hgram modal is shown...');
+      load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, searchCacheKey)');
    });
 });
 

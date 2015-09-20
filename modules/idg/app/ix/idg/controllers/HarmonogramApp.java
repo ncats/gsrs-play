@@ -10,7 +10,7 @@ import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
 import play.mvc.Result;
-
+import ix.core.plugins.IxCache;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -38,36 +38,57 @@ public class HarmonogramApp extends App {
     }
 
 
-    public static Result view(String q, final String cache) {
-        if (q == null && cache == null)
-            return _badRequest("Must specify a comma separated list of Uniprot ID's or a target search cache key");
+    public static Result view(String q, final String ctx) {
+        if (q == null && ctx == null)
+            return _badRequest("Must specify a comma separated list of Uniprot ID's or a target search context");
         String[] accs = new String[0];
         if (q != null) accs = q.split(",");
         // if cache key is specified, this takes precedence over query string
-        if (cache != null) {
+        if (ctx != null) {
             try {
                 TextIndexer.SearchResult result =
-                        getOrElse(cache, new Callable<TextIndexer.SearchResult>() {
+                        getOrElse(ctx, new Callable<TextIndexer.SearchResult>() {
                             public TextIndexer.SearchResult call() throws Exception {
                                 return null;
                             }
                         });
-                if (result == null) return _notFound("No cache entry for key: "+cache);
+                if (result == null)
+                    return _notFound("No cache entry for key: "+ctx);
                 List matches = result.getMatches();
                 List<String> sq = new ArrayList<>();
                 for (Object o : matches) {
                     if (o instanceof Target) sq.add(IDGApp.getId((Target)o));
                 }
                 accs = sq.toArray(new String[]{});
-                Logger.debug("Got "+accs.length+" targets from cache using key: "+cache);
+                Logger.debug("Got "+accs.length
+                             +" targets from cache using key: "+ctx);
             } catch (Exception e) {
                 return _internalServerError(e);
             }
         }
-        return (ok(ix.idg.views.html.harmonogram.render(accs)));
+        return (ok(ix.idg.views.html.harmonogram.render(new String[0], ctx)));
     }
 
-    public static Result hgForTarget(final String q, final String format) {
+    public static Result hgForTarget(String q,
+                                     final String ctx,
+                                     final String format) {
+        if (ctx != null) {
+            TextIndexer.SearchResult result =
+                (TextIndexer.SearchResult)IxCache.get(ctx);
+            if (result  != null) {
+                StringBuilder sb = new StringBuilder ();
+                for (Object obj : result.getMatches()) {
+                    if (obj instanceof Target) {
+                        if (sb.length() > 0) sb.append(",");
+                        sb.append(IDGApp.getId((Target)obj));
+                    }
+                }
+                
+                // override whatever specified in q
+                q = sb.toString();
+            }
+        }
+        
         return _handleHgRequest(q, format);
     }
 

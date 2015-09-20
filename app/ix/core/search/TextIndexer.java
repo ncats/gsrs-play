@@ -68,7 +68,7 @@ public class TextIndexer {
     protected static final String GIVEN_STOP_WORD = "$";
     protected static final String GIVEN_START_WORD = "^";
 
-        @Indexable
+    @Indexable
     static final class DefaultIndexable {}
     static final Indexable defaultIndexable = 
         (Indexable)DefaultIndexable.class.getAnnotation(Indexable.class);
@@ -423,7 +423,6 @@ public class TextIndexer {
             }
             finally {
                 result.done();
-                //searcher.getIndexReader().close();
             }
         }
 

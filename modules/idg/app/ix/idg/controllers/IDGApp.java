@@ -241,8 +241,8 @@ public class IDGApp extends App implements Commons {
                             return values;
                         }
                     });
-            double ellapsed = (System.currentTimeMillis()-start)*1e-3;
-            Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
+            double elapsed = (System.currentTimeMillis()-start)*1e-3;
+            Logger.debug("Elapsed time "+String.format("%1$.3fs", elapsed)
                          +" to retrieve "+e.size()+" matches for "+name);
             return e;
         }
@@ -995,7 +995,7 @@ public class IDGApp extends App implements Commons {
             if (result.finished()) {
                 // now we can cache the result
                 return getOrElse
-                        (key+"/result", new Callable<Result> () {
+                    (key+"/result", new Callable<Result> () {
                             public Result call () throws Exception {
                                 return createTargetResult
                                     (result, rows, page);
@@ -1191,7 +1191,7 @@ public class IDGApp extends App implements Commons {
     public static Result search (final int rows) {
         try {
             final String key = "search/"+Util.sha1(request ());
-            return getOrElse(key, new Callable<Result> () {
+            return getOrElse (key, new Callable<Result> () {
                     public Result call () throws Exception {
                         return _search (rows);
                     }
@@ -1290,7 +1290,8 @@ public class IDGApp extends App implements Commons {
         List<Disease> diseases =
             filter (Disease.class, result.getMatches(), max);
         List<Ligand> ligands = filter (Ligand.class, result.getMatches(), max);
-        List<Publication> publications = filter (Publication.class, result.getMatches(), max);
+        List<Publication> publications = filter
+            (Publication.class, result.getMatches(), max);
 
         return ok(ix.idg.views.html.search.render
                 (query, total, decorate(facets),

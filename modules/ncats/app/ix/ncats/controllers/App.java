@@ -644,11 +644,21 @@ public class App extends Authentication {
         return null;
     }
 
+    public static Result getEtag (String key, Callable<Result> callable)
+        throws Exception {
+        String ifNoneMatch = request().getHeader("If-None-Match");
+        if (ifNoneMatch != null && ifNoneMatch.equals(key))
+            return status (304);
+
+        response().setHeader(ETAG, key);
+        return getOrElse (key, callable);
+    }
+    
     public static <T> T getOrElse(String key, Callable<T> callable)
         throws Exception {
         return getOrElse (_textIndexer.lastModified(), key, callable);
     }
-    
+
     public static <T> T getOrElse (long modified,
                                    String key, Callable<T> callable)
         throws Exception {

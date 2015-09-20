@@ -4,7 +4,7 @@ text.active {
 
 #svg_div {
     /*width: 600px;*/
-    height: 500px;
+    height: 600px;
 }
 
 /* stylize the sidebar instructions */
@@ -47,7 +47,9 @@ text.active {
 }
 
 /*reduce the padding on the buttons*/
+/*
 .btn {
     padding-top: 2px;
     padding-bottom: 2px;
 }
+*/

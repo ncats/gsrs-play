@@ -3,6 +3,8 @@ package ix.idg.models;
 import java.util.List;
 import java.util.EnumSet;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
@@ -22,35 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class Target extends EntityModel {
     public static final String IDG_FAMILY = "IDG Target Family";
     public static final String IDG_DEVELOPMENT =
-        "IDG Target Development";
+        "IDG Development Level";
 
     public enum TDL {
-        Tclin_p("Tclin+",
-                "Targets have activities better than 1μM (10μM for ion channels) in DrugDB involving an approved drug WITH a known mechanism of action",
-                "success"),
         Tclin ("Tclin",
-               "Targets have activities better than 1μM (10μM for ion channels) in DrugDB involving an approved drug",
+               "These targets have activities in DrugDB (i.e., approved drugs) with known mechanism of action that satisfy the activity thresholds detailed below.",
                "primary"),
         Tchem ("Tchem",
-               "Targets have standardizable activities better than 1μM (10μM for ion channels) in ChEMBL involving non-drug small molecule(s)",
+               "These targets have activities in ChEMBL that satisfy the activity thresholds detailed below. In some cases, targets have been manually migrated to Tchem by human curation based on small molecule activities from other sources.",
                "info"),
         Tbio ("Tbio",
-                "Targets do not have ChEMBL activities and are above the cutoffs for Tgray",
+"These targets do not have known drug or small molecule activities that satisfy the activity thresholds detailed below AND satisfy one or more of the following criteria:"+
+"<ul>"+
+"<li><p align='left'>target is above the cutoff criteria for Tdark"+
+"<li><p align='left'>target is annotated with a Gene Ontology Molecular Function or Biological Process leaf term(s) with an Experimental Evidence code"+
+"<li><p align='left'>target has confirmed OMIM phenotype(s)"+
+"<ul>",
                 "warning"),
-        Tgray ("Tgray",
-               "Targets are above the cutoffs for Tdark and have at least 2 of the following:"
-+"<ul>"
-+"    <li><p align='left'>&le; 5 Gene RIFs</p></li>"
-+"    <li><p align='left'>&le; 84 Antibodies available according to http://antibodypedia.com</p></li>"
-+"    <li><p align='left'>A PubMed text-mining score from Jensen Lab of &le; 10.55</p></li>"
-+"</ul>", "default"),
         Tdark ("Tdark",
-               "Targets have at least 2 of the following:"
-+"<ul>"
-+"    <li><p align='left'>&le; 1 Gene RIFs</p></li>"
-+"    <li><p align='left'>&le; 38 Antibodies available according to http://antibodypedia.com</p></li>"
-+"    <li><p align='left'>A PubMed text-mining score from Jensen Lab of &le; 1.23</p></li>"
-+"</ul>", "danger");
+"These are targets about which virtually nothing is known. They do not have known drug or small molecule activities that satisfy the activity thresholds detailed below AND satisfy two or more of the following criteria:"+
+"<ul><li><p align='left'>A PubMed text-mining score from Jensen Lab &lt; 5"+
+"<li><p align='left'>&le; 3 Gene RIFs"+
+"<li><p align='left'>&le; 50 Antibodies available according to http://antibodypedia.com</ul>","danger");
 
         final public String name;
         final public String desc;
@@ -130,5 +125,23 @@ public class Target extends EntityModel {
     @JsonProperty("_organism")
     public String getJsonOrganism () {
         return Global.getRef(organism);
+    }
+
+    @PostLoad
+    public void _sortPublications () {
+        Collections.sort(publications, new Comparator<Publication> () {
+                public int compare (Publication p1, Publication p2) {
+                    if (p2.journal == null
+                        || p1.journal == null
+                        || p2.journal.year == null
+                        || p1.journal.year == null)
+                        return (int)(p2.pmid - p1.pmid);
+                    
+                    int d = p2.journal.year - p1.journal.year;
+                    if (d == 0)
+                        d = (int)(p2.pmid - p1.pmid);
+                    return d;
+                }
+            });
     }
 }
