@@ -4,7 +4,7 @@
 @import ix.ncats.controllers.App.FacetDecorator
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-facets: Array[FacetDecorator], targets: List[Target], searchCacheKey: String )
+facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 
 
 @tabrow(t: Target) = {
@@ -18,16 +18,10 @@ facets: Array[FacetDecorator], targets: List[Target], searchCacheKey: String )
     </tr>
 }
 
-@ix.ncats.views.html.content("Targets", "ix.idg.models.Target",
+@ix.ncats.views.html._content("Targets", "ix.idg.models.Target",
     ix.idg.controllers.routes.IDGApp.targets().url,
     current, rows, total, pages, facets) {
-    @menu("ix.idg.models.Target") {
-        <ul class="nav navbar-nav navbar-left">
-            <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null, 10, 1)">Diseases</a></li>
-            <li role="presentation" class="active"><a href="#">Targets</a></li>
-            <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 8, 1)">Ligands</a></li>
-        </ul>
-    }
+    @targetmenu()
 } {
     <ol class="breadcrumb">
         <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
@@ -73,15 +67,16 @@ facets: Array[FacetDecorator], targets: List[Target], searchCacheKey: String )
     </table>
 } {  @* viz *@
     <div class="dropdown pull-right">
-      <button type="button" class="btn btn-default dropdown-toggle @if(!request.uri.contains("?")) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <i class="fa fa-wrench"></i>&nbsp;<span class="caret"></span>
+      <button type="button" class="btn btn-default dropdown-toggle @if(request.getQueryString("q") == null && request.getQueryString("facet") == null) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <i class="fa fa-navicon"></i>
       </button>
       <ul class="dropdown-menu pull-left">
-        <li><a  href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>Harmonogram</a></li>
-        <li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>Kinase networks</a></li>
+        <li><a  href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
+        <li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>&nbsp;Kinase networks</a></li>
       </ul>
     </div>
-    &nbsp;
+} {
+ @targetcarousel(ctx)
 }
 
 <div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
@@ -155,8 +150,11 @@ facets: Array[FacetDecorator], targets: List[Target], searchCacheKey: String )
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3_clustergram.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/load_clustergram.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>    
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />    
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.css"))' />
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />    
 </head>
 
 <script>
@@ -165,14 +163,13 @@ $(function() {
    $('[data-toggle="tooltip"]').tooltip ();
 });
 
-
 $(document).ready(function () {
    $('#loadmodal').on('shown.bs.modal', function (e) {
-      console.log('modal is shown...');
+      console.log('loadmodal is shown...');
    });
    $('#hgramModal').on('shown.bs.modal', function (e) {
       console.log('hgram modal is shown...');
-      load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, searchCacheKey)');
+      load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx)');
    });
 });
 
@@ -186,6 +183,7 @@ function showLoadModal () {
 }
 
 $(window).unload(function () {
-    $('#loadmodal').modal('hide');    
+    $('#loadmodal').modal('hide');
+    $('#hgramModal').modal('hide');
 });
 </script>
