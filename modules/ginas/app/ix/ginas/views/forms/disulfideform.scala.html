@@ -24,22 +24,22 @@
             </div>
         </div>
 
-        <div class = "row" ng-repeat="obj in substance.disulfideLink">
+        <div class = "row" ng-repeat="obj in substance.protein.disulfideLinks">
             <hr>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj.subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.subunitIndex}}</span>
+                <span href="#" editable-select="obj[0].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[0].subunitIndex}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj.residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.residueIndex}}</span>
+                <span href="#" editable-select="obj[0].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[0].residueIndex}}</span>
             </div>
             <div class ="col-md-1">
                 <i class="fa fa-link fa-2x fa-rotate-90"></i>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj.subunitIndexEnd" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.subunitIndexEnd}}</span>
+                <span href="#" editable-select="obj[1].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[1].subunitIndex}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj.residueIndexEnd" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.residueIndexEnd}}</span>
+                <span href="#" editable-select="obj[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[1].residueIndex}}</span>
             </div>
             @referenceview("disForm", "obj")
         </div>
@@ -83,7 +83,7 @@
                     </ng-messages>
                 </div>
             </div>
-            @submitbuttons("site", "disForm", "disulfideLink")
+            @submitbuttons("site", "disForm", "disulfideLinks")
         </form>
     </div>
 </div>

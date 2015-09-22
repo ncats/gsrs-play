@@ -11,11 +11,32 @@
         <div class="col-md-12">
             <div class = "row">
               <div class = "col-xs-2" ng-repeat="su in sunit.display">
+
+ @*                 the amino acid directive in ginasApp.js has a getTemplate function. This can be used to modify the tooltip
+                  the amino acid has a series of boolean properties for existence of links/modifications. The ng-Class function can be used to
+                  retrieve a class name based on true or false properties, then highlighting can be applied.*@
+
+
+
+
+
+
         <span ng-repeat ="aa in su">
             <amino-acid acid=aa></amino-acid>
         </span>
             </div>
         </div>
+
+           @*
+           Still working on having the sequences editable. The display is currently the sequence convered into an array of objects, so the whole thing cannot be editable.
+           Should there be a string version undermeath? This could take up a lot of space.
+
+
+
+           *@
+
+
+
 @*        <div class="col-md-12">
             <span href="#" editable-textarea="su.sequence" blur="submit">{{su.sequence}}</span>
         </div>*@
