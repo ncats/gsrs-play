@@ -9,6 +9,7 @@ import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
+import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
@@ -21,7 +22,10 @@ import play.Play;
 import play.cache.Cached;
 import play.db.ebean.Model;
 import play.mvc.Result;
+import play.mvc.BodyParser;
+import play.mvc.Call;
 import tripod.chem.indexer.StructureIndexer;
+import ix.seqaln.SequenceIndexer;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -30,6 +34,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static ix.core.search.TextIndexer.Facet;
+import static ix.core.search.TextIndexer.SearchResult;
 
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
@@ -62,6 +67,30 @@ public class IDGApp extends App implements Commons {
         }
     }
 
+    public static class IDGSequenceResultProcessor
+        extends SearchResultProcessor<SequenceIndexer.Result> {
+        
+        IDGSequenceResultProcessor() {
+        }
+            
+        protected Object instrument(SequenceIndexer.Result r)
+            throws Exception {
+            List<Target> targets = TargetFactory.finder.where
+                (Expr.and(Expr.eq("properties.label", UNIPROT_SEQUENCE),
+                          Expr.eq("properties.id", r.id)))
+                .findList();
+            
+            Target target = null;
+            if (!targets.isEmpty()) {
+                target = targets.iterator().next();
+                // cache this alignment for show later
+                IxCache.set("Alignment/"+getContext().getId()+"/"+r.id, r);
+            }
+            
+            return target;
+        }
+    }
+    
     public static class DiseaseRelevance
         implements Comparable<DiseaseRelevance> {
         public Disease disease;
@@ -662,7 +691,7 @@ public class IDGApp extends App implements Commons {
                 try {
                     Keyword kw = (Keyword)v;
                     String url = ix.idg.controllers
-                        .routes.IDGApp.targets(null, 30, 1).url();
+                        .routes.IDGApp.targets(null, 20, 1).url();
                     kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
                         +"facet="+kw.label+"/"
                         +URLEncoder.encode(kw.term, "utf8");
@@ -800,8 +829,8 @@ public class IDGApp extends App implements Commons {
             }
         }
         Collections.sort(diseases);
-        double ellapsed = (System.currentTimeMillis()-start)*1e-3;
-        Logger.debug("Ellapsed time "+String.format("%1$.3fs", ellapsed)
+        double elapsed = (System.currentTimeMillis()-start)*1e-3;
+        Logger.debug("Elapsed time "+String.format("%1$.3fs", elapsed)
                      +" to retrieve disease relevance for target "+t.id);
 
         List<DiseaseRelevance> prune = new ArrayList<DiseaseRelevance>();       
@@ -1006,11 +1035,11 @@ public class IDGApp extends App implements Commons {
             return createTargetResult (result, rows, page);
         }
         else {
-            return getOrElse (key, new Callable<Result> () {
+            final SearchResult result = getSearchFacets (Target.class);
+            return getOrElse (key+"/result", new Callable<Result> () {
                     public Result call () throws Exception {
                         TextIndexer.Facet[] facets = filter
-                            (getFacets(Target.class, FACET_DIM),
-                             TARGET_FACETS);
+                            (result.getFacets(), TARGET_FACETS);
                         int _rows = Math.min(total, Math.max(1, rows));
                         int[] pages = paging (_rows, page, total);
                         
@@ -1019,10 +1048,78 @@ public class IDGApp extends App implements Commons {
                         
                         return ok (ix.idg.views.html.targets.render
                                    (page, _rows, total, pages,
-                                    decorate (facets), targets, null));
+                                    decorate (facets),
+                                    targets, result.getKey()));
                     }
                 });
         }
+    }
+
+    
+    public static Result sequences (final String q,
+                                    final int rows, final int page) {
+        String param = request().getQueryString("identity");
+        double identity = 0.5;
+        if (param != null) {
+            try {
+                identity = Double.parseDouble(param);
+            }
+            catch (NumberFormatException ex) {
+                Logger.error("Bogus identity value: "+param);
+            }
+        }
+        
+        String seq = App.getSequence(q);
+        if (seq != null) {
+            Logger.debug("sequence: "
+                         +seq.substring(0, Math.min(seq.length(), 20))
+                         +"; identity="+identity);
+            return _sequences (seq, identity, rows, page);
+        }
+        
+        return internalServerError ("Unable to retrieve sequence for "+q);
+    }
+
+    public static Result _sequences (final String seq, final double identity,
+                                     final int rows, final int page) {
+        try {
+            SearchResultContext context = sequence
+                (seq, identity, rows,
+                 page, new IDGSequenceResultProcessor ());
+            
+            return fetchResult (context, rows, page);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform sequence search", ex);
+            return _internalServerError (ex);
+        }
+    }
+
+    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class,
+                   maxLength = 20000)
+    public static Result sequence () {
+        if (request().body().isMaxSizeExceeded()) {
+            return badRequest ("Sequence is too large!");
+        }
+        
+        Map<String, String[]> params = request().body().asFormUrlEncoded();
+        String[] values = params.get("sequence");
+        if (values != null && values.length > 0) {
+            String seq = values[0];
+            try {
+                Payload payload = _payloader.createPayload
+                    ("Sequence Search", "text/plain", seq);
+                Call call = routes.IDGApp.targets(payload.id.toString(), 20, 1);
+                return redirect (call.url()+"&type=sequence");
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                return _internalServerError (ex);
+            }
+        }
+        
+        return badRequest ("Invalid \"sequence\" parameter specified!");
     }
 
     public static Keyword[] getAncestry (final String facet,
@@ -1063,7 +1160,7 @@ public class IDGApp extends App implements Commons {
                         if (ref.kind.equals(anchor.getClass().getName())) {
                             Keyword kw = (Keyword)ref.deRef();
                             String url = ix.idg.controllers
-                                .routes.IDGApp.targets(null, 30, 1).url();
+                                .routes.IDGApp.targets(null, 20, 1).url();
                             kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
                                 +"facet="+kw.label+"/"+kw.term;
                             ancestry.add(kw);
@@ -1145,7 +1242,7 @@ public class IDGApp extends App implements Commons {
 
             if (kind != null && !"".equals(kind)) {
                 if (Target.class.getName().equals(kind))
-                    return redirect (routes.IDGApp.targets(q, 30, 1));
+                    return redirect (routes.IDGApp.targets(q, 20, 1));
                 else if (Disease.class.getName().equals(kind))
                     return redirect (routes.IDGApp.diseases(q, 10, 1));
                 else if (Ligand.class.getName().equals(kind))
@@ -1163,6 +1260,15 @@ public class IDGApp extends App implements Commons {
                 }
                 String url = routes.IDGApp.ligands(q, 8, 1).url()
                     +"&type="+t+"&cutoff="+cutoff;
+                return redirect (url);
+            }
+            else if ("sequence".equalsIgnoreCase(t)) {
+                String iden = request().getQueryString("identity");
+                if (iden == null) {
+                    iden = "0.5";
+                }
+                String url = routes.IDGApp.targets(q, 20, 1).url()
+                    +"&type="+t+"&identity="+iden;
                 return redirect (url);
             }
             

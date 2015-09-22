@@ -32,7 +32,7 @@
        href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet="+URLEncoder.encode(label,"utf8")+"/"}@URLEncoder.encode(value, "utf8")'>@value</a>
   }
   @if(href != null) {
-     <a href="@href"><i class="fa fa-share-square"></i></a>
+     <a href="@href"><i class="fa fa-external-link"></i></a>
   }
 }
 
@@ -138,7 +138,7 @@
        <div class="panel panel-default">
           <div class="panel-heading">
 	    @if(href != null) {
-	      <h3 class="panel-title"><a href="@href">@name <i class="fa fa-share-square"></i></a> (@props.length)</h3>
+	      <h3 class="panel-title"><a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length)</h3>
 	    } else {
               <h3 class="panel-title">@name (@props.length)</h3>
 	    }
@@ -163,7 +163,7 @@
        <div class="panel panel-default">
           <div class="panel-heading">
 	    @if(href != null) {
-	      <h3 class="panel-title"><a href="@href">@name <i class="fa fa-share-square"></i></a> (@props.length)</h3>
+	      <h3 class="panel-title"><a href="@href">@name <i class="fa fa-external-link"></i></a> (@props.length)</h3>
 	    } else {
               <h3 class="panel-title">@name (@props.length)</h3>
 	    }
@@ -294,7 +294,7 @@
       <div class="col-md-4">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Synonyms <i class="fa fa-share-square"></i> </h3>
+            <h3 class="panel-title">Synonyms <i class="fa fa-external-link"></i> </h3>
           </div>
           <div class="panel-body">
             <table class="table">
@@ -338,7 +338,7 @@
         -->
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Gene <i class="fa fa-share-square"></i></h3>
+            <h3 class="panel-title">Gene <i class="fa fa-external-link"></i></h3>
           </div>
           <div class="panel-body">
             @for(kw <- target.synonyms) {
@@ -577,9 +577,9 @@
 		    id="keyword"
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
 		    @if(m.majorTopic) {
-		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MAJR]'><i class="fa fa-share-square"></i></a>
+		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MAJR]'><i class="fa fa-external-link"></i></a>
 	            } else {
-		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MeSH Terms]'><i class="fa fa-share-square"></i></a>
+		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MeSH Terms]'><i class="fa fa-external-link"></i></a>
 		    }
 		  }
 		</div>
@@ -604,9 +604,9 @@
 		    onclick="showLoadModal()"   
 		    href='@{ix.idg.controllers.routes.IDGApp.targets()+"?facet=MeSH/"}@URLEncoder.encode(m.heading,"utf8")'>@m.heading</a>
     		    @if(m.majorTopic) {
-		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MAJR]'><i class="fa fa-share-square"></i></a>
+		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MAJR]'><i class="fa fa-external-link"></i></a>
 	            } else {
-		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MeSH Terms]'><i class="fa fa-share-square"></i></a>
+		        <a href='http://www.ncbi.nlm.nih.gov/pubmed?term="@m.heading"[MeSH Terms]'><i class="fa fa-external-link"></i></a>
 		    }
 		  }
 		  <a class="label label-danger"
@@ -643,7 +643,7 @@
             <div class="panel-body">
               <table class="table table-striped">
                 <tr>
-                  <th>PMID <i class="fa fa-share-square"></i></th>
+                  <th>PMID <i class="fa fa-external-link"></i></th>
                   <th>Title</th>
                   <th>Relevance</th>
                 </tr>

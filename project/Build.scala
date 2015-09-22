@@ -143,7 +143,8 @@ public class BuildInfo {
 
   val idg = Project("idg", file("modules/idg"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
-      libraryDependencies ++= commonDependencies,
+    libraryDependencies ++= commonDependencies,
+      libraryDependencies += "org.webjars" % "morrisjs" % "0.5.1",
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)

@@ -216,6 +216,13 @@ public class TextIndexer {
         public String getQuery () { return query; }
         public SearchOptions getOptions () { return options; }
         public List<Facet> getFacets () { return facets; }
+        public Facet getFacet (String name) {
+            for (Facet f : facets) {
+                if (name.equalsIgnoreCase(f.getName()))
+                    return f;
+            }
+            return null;
+        }
         public int size () { return matches.size(); }
         public Object get (int index) {
             throw new UnsupportedOperationException

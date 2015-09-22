@@ -48,11 +48,14 @@ import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
+import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
+import ix.core.search.SearchOptions;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
 import ix.utils.Global;
 
@@ -106,6 +109,8 @@ public class App extends Authentication {
         Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
     public static final SequenceIndexer _seqIndexer =
         Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+    public static final PayloadPlugin _payloader =
+        Play.application().plugin(PayloadPlugin.class);
         
     public static final IxContext _ix =
         Play.application().plugin(IxContext.class);
@@ -577,6 +582,38 @@ public class App extends Authentication {
         return Util.sha1(args.toArray(new String[0]));
     }
 
+    public static SearchResult getSearchContext (String ctx) {
+        Object result = IxCache.get(ctx);
+        if (result != null && result instanceof SearchResult) {
+            return (SearchResult)result;
+        }
+        return null;
+    }
+        
+    public static SearchResult getSearchFacets (final Class kind) {
+        return getSearchFacets (kind, FACET_DIM);
+    }
+    
+    public static SearchResult getSearchFacets (final Class kind,
+                                                final int fdim) {
+        final String sha1 = Util.sha1(kind.getName()+"/"+fdim);
+        try {
+            return getOrElse (sha1, new Callable<SearchResult>() {
+                    public SearchResult call () throws Exception {
+                        SearchResult result = SearchFactory.search
+                            (kind, null, 0, 0, fdim, request().queryString());
+                        result.setKey(sha1);
+                        return result;
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.trace("Can't get search facets!", ex);
+        }
+        return null;
+    }
+    
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
          final String q, final int total, final Map<String, String[]> query) {
@@ -629,10 +666,10 @@ public class App extends Authentication {
                 */
                 Logger.debug(sha1+" => "+result);
             }
-            double ellapsed = (System.currentTimeMillis() - start)*1e-3;
-            Logger.debug(String.format("Ellapsed %1$.3fs to retrieve "
+            double elapsed = (System.currentTimeMillis() - start)*1e-3;
+            Logger.debug(String.format("Elapsed %1$.3fs to retrieve "
                                        +"search %2$d/%3$d results...",
-                                       ellapsed, result.size(),
+                                       elapsed, result.size(),
                                        result.count()));
             
             return result;
@@ -647,7 +684,8 @@ public class App extends Authentication {
     public static Result getEtag (String key, Callable<Result> callable)
         throws Exception {
         String ifNoneMatch = request().getHeader("If-None-Match");
-        if (ifNoneMatch != null && ifNoneMatch.equals(key))
+        if (ifNoneMatch != null
+            && ifNoneMatch.equals(key) && IxCache.contains(key))
             return status (304);
 
         response().setHeader(ETAG, key);
@@ -1516,5 +1554,21 @@ public class App extends Authentication {
             return internalServerError ("Can't process mol payload");       
         }
         return ok (node);
+    }
+
+    public static String getSequence (String id) {
+        return getSequence (id, 0);
+    }
+    
+    public static String getSequence (String id, int max) {
+        String seq = PayloadFactory.getString(id);
+        if (seq != null) {
+            seq = seq.replaceAll("[\n\t\\s]", "");
+            if (max > 0 && max+3 < seq.length()) {
+                return seq.substring(0, max)+"...";
+            }
+            return seq;
+        }
+        return null;
     }
 }
