@@ -22,6 +22,9 @@
             <div class = "col-md-2">
                 <strong>Ending Residue Index</strong>
             </div>
+            <div class = "col-md-2 text-right">
+                <strong>Reference ID</strong>
+            </div>
         </div>
 
         <div class = "row" ng-repeat="obj in substance.protein.disulfideLinks">
@@ -82,6 +85,7 @@
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>
                     </ng-messages>
                 </div>
+                @referenceselectorform("disForm", "site")
             </div>
             @submitbuttons("site", "disForm", "disulfideLinks")
         </form>
