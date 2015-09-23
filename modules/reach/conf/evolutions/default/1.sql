@@ -129,12 +129,13 @@ create table ix_ncats_clinical_eligibility (
 
 create table ix_core_event (
   id                        bigint auto_increment not null,
-  title                     varchar(1024),
+  title                     varchar(255),
   description               longtext,
   url                       varchar(1024),
-  event_start               datetime,
-  event_end                 datetime,
-  is_duration               tinyint(1) default 0,
+  start_time                bigint,
+  end_time                  bigint,
+  unit                      integer,
+  constraint ck_ix_core_event_unit check (unit in (0,1,2,3,4,5,6,7)),
   constraint pk_ix_core_event primary key (id))
 ;
 
@@ -474,6 +475,12 @@ create table ix_core_structure (
   constraint pk_ix_core_structure primary key (id))
 ;
 
+create table ix_core_timeline (
+  id                        bigint auto_increment not null,
+  name                      varchar(255),
+  constraint pk_ix_core_timeline primary key (id))
+;
+
 create table ix_core_userprof (
   id                        bigint auto_increment not null,
   namespace_id              bigint,
@@ -606,10 +613,16 @@ create table _ix_ncats_840372f9_2 (
   constraint pk__ix_ncats_840372f9_2 primary key (ix_ncats_clinical_eligibility_exclusion_id, ix_core_value_id))
 ;
 
-create table ix_core_event_figure (
+create table ix_core_event_prop (
   ix_core_event_id               bigint not null,
-  ix_core_figure_id              bigint not null,
-  constraint pk_ix_core_event_figure primary key (ix_core_event_id, ix_core_figure_id))
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_core_event_prop primary key (ix_core_event_id, ix_core_value_id))
+;
+
+create table ix_core_event_link (
+  ix_core_event_id               bigint not null,
+  ix_core_xref_id                bigint not null,
+  constraint pk_ix_core_event_link primary key (ix_core_event_id, ix_core_xref_id))
 ;
 
 create table ix_ncats_grant_investigator (
@@ -780,6 +793,12 @@ create table ix_core_structure_link (
   constraint pk_ix_core_structure_link primary key (ix_core_structure_id, ix_core_xref_id))
 ;
 
+create table ix_core_timeline_event (
+  ix_core_timeline_id            bigint not null,
+  ix_core_event_id               bigint not null,
+  constraint pk_ix_core_timeline_event primary key (ix_core_timeline_id, ix_core_event_id))
+;
+
 create table ix_core_userprof_prop (
   ix_core_userprof_id            bigint not null,
   ix_core_value_id               bigint not null,
@@ -908,9 +927,13 @@ alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_ncats
 
 alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_core_value_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_core_event_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
+alter table ix_core_event_prop add constraint fk_ix_core_event_prop_ix_core_event_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
 
-alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_core_figure_02 foreign key (ix_core_figure_id) references ix_core_figure (id) on delete restrict on update restrict;
+alter table ix_core_event_prop add constraint fk_ix_core_event_prop_ix_core_value_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_core_event_link add constraint fk_ix_core_event_link_ix_core_event_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
+
+alter table ix_core_event_link add constraint fk_ix_core_event_link_ix_core_xref_02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
 
 alter table ix_ncats_grant_investigator add constraint fk_ix_ncats_grant_investigator_ix_ncats_grant_01 foreign key (ix_ncats_grant_id) references ix_ncats_grant (id) on delete restrict on update restrict;
 
@@ -1024,6 +1047,10 @@ alter table ix_core_structure_link add constraint fk_ix_core_structure_link_ix_c
 
 alter table ix_core_structure_link add constraint fk_ix_core_structure_link_ix_core_xref_02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
 
+alter table ix_core_timeline_event add constraint fk_ix_core_timeline_event_ix_core_timeline_01 foreign key (ix_core_timeline_id) references ix_core_timeline (id) on delete restrict on update restrict;
+
+alter table ix_core_timeline_event add constraint fk_ix_core_timeline_event_ix_core_event_02 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
+
 alter table ix_core_userprof_prop add constraint fk_ix_core_userprof_prop_ix_core_userprof_01 foreign key (ix_core_userprof_id) references ix_core_userprof (id) on delete restrict on update restrict;
 
 alter table ix_core_userprof_prop add constraint fk_ix_core_userprof_prop_ix_core_value_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
@@ -1088,7 +1115,9 @@ drop table _ix_ncats_840372f9_2;
 
 drop table ix_core_event;
 
-drop table ix_core_event_figure;
+drop table ix_core_event_prop;
+
+drop table ix_core_event_link;
 
 drop table ix_core_figure;
 
@@ -1193,6 +1222,10 @@ drop table ix_core_structure;
 drop table ix_core_structure_property;
 
 drop table ix_core_structure_link;
+
+drop table ix_core_timeline;
+
+drop table ix_core_timeline_event;
 
 drop table ix_core_userprof;
 

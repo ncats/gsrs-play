@@ -4,6 +4,8 @@ import com.avaje.ebean.Expr;
 import com.avaje.ebean.QueryIterator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.search.SearchFactory;
@@ -1920,5 +1922,106 @@ public class IDGApp extends App implements Commons {
 
     public static Result lastUnicorn (String url) {
         return _notFound ("Unknown resource: "+url);
+    }
+
+    public static Result getHierarchy (final String ctx, final String facet) {
+        final SearchResult result = getSearchContext (ctx);
+        if (result != null) {
+            try {
+                return getOrElse (ctx+"/hierarchy", new Callable<Result> () {
+                        public Result call () throws Exception {
+                            return ok (getHierarchyAsJson (result, facet));
+                        }
+                    });
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.trace("Can't retrieve hierarchy "+ctx+" for "+facet, ex);
+                return _internalServerError (ex);
+            }
+        }
+        return notFound ("Unknown search context "+ctx);
+    }
+    
+    public static JsonNode getHierarchyAsJson
+        (SearchResult result, String facet) {
+        List<Facet> facets = new ArrayList<Facet>();
+        for (Facet f : result.getFacets()) {
+            if (f.getName().startsWith(facet)) {
+                facets.add(f);
+            }
+        }
+
+        if (facets.isEmpty()) {
+            return null;
+        }
+        
+        // order the facets from child to parent
+        Collections.sort(facets, new Comparator<Facet>() {
+                public int compare (Facet f1, Facet f2) {
+                    return f2.getName().compareTo(f1.getName());
+                }
+            });
+        
+        for (Iterator<Facet> it = facets.iterator(); it.hasNext(); ) {
+            Logger.info("++ "+it.next().getName());
+        }
+        
+        Facet leaf = facets.iterator().next();          
+        String predicate = "";
+        if (DTO_PROTEIN_CLASS.equalsIgnoreCase(facet)) {
+            predicate = DTO_PROTEIN_ANCESTRY;
+            // should really fix this when we pull in the tcrd..
+            leaf = facets.get(1); // skip level (4)
+        }
+        else if (PANTHER_PROTEIN_CLASS.equalsIgnoreCase(facet))
+            predicate = PANTHER_PROTEIN_ANCESTRY;
+        else if (ChEMBL_PROTEIN_CLASS.equalsIgnoreCase(facet))
+            predicate = ChEMBL_PROTEIN_ANCESTRY;
+        
+        Map root = new TreeMap ();
+        root.put("name", facet);
+        root.put("children", new ArrayList<Map>());
+        
+        for (TextIndexer.FV fv : leaf.getValues()) {
+            Keyword[] ancestors = getAncestry
+                (leaf.getName()+"/"+fv.getLabel(), predicate);
+            
+            Map node = root;
+            for (int i = 0; i < ancestors.length; ++i) {
+                String name = ancestors[i].term;
+                List<Map> children = (List<Map>)node.get("children");
+
+                Map child = null;
+                boolean found = false;
+                for (Map c : children) {
+                    if (name.equalsIgnoreCase((String)c.get("name"))) {
+                        child = c;
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    child = new HashMap ();
+                    child.put("name", name);
+                    child.put("children", new ArrayList<Map>());
+                    children.add(child);
+                }
+                node = child;
+            }
+            
+            // leaf
+            List<Map> children = (List<Map>)node.get("children");
+            Map child = new HashMap ();
+            child.put("name", fv.getLabel());
+            child.put("size", fv.getCount());
+            children.add(child);
+        }
+        
+        //Logger.debug(">>> "+ix.core.controllers.EntityFactory.getEntityMapper().toJson(root, true));
+        
+        ObjectMapper mapper = new ObjectMapper ();
+        return mapper.valueToTree(root);
     }
 }

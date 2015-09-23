@@ -17,9 +17,11 @@
 	    {label: '@v.getLabel',
 	     value: @v.getCount},
 	  }
-        ]
+        ],
+	//resize: true,
+	//colors: [ "#00ff00"]
      }).on('click',function (i,data) {
-        console.log('i='+i+' data='+data.label);
+        //console.log('i='+i+' data='+data.label);
         var uri = '@HtmlFormat.raw(request.uri)';
         uri += (uri.indexOf('?') > 0 ? '&' : '?')
            + 'facet=@f.getName()'+'/'+data.label;
@@ -35,7 +37,7 @@
   }*@
 }
 
-@carouselitem(f: Facet, caption: String) = {
+@carouselpie(f: Facet, caption: String) = {
         <div class="container-fluid">
 	    <div class="row">
 	      <div class="col-md-12">
@@ -59,10 +61,43 @@
 	</div>
 }
 
-<div class="collapse" id="carousel-highlight">
+@item(facet: String, caption: String) = {
+  @defining(ctx.getFacet(facet)) { f => 
+    @if(f != null) {
+      <div class="item">
+         @carouselpie(f, caption)
+      </div>
+    }
+  }
+}
+
+@sunburst(id: String, caption: Html) = {
+      <div class="item">
+        <div class="container-fluid">
+	    <div class="row">
+	      <div class="col-md-12">
+	         <div class="col-xs-3 col-md-4"></div>
+		 <div class="col-xs-3 col-md-4">
+		      <div id="@id" style="height: 200px; width: 200px">
+		      </div>
+		 </div>
+		 <div id="@id-tip" class="col-xs-3 col-md-4"></div>
+	      </div>
+	    </div>
+	    <div class="row">
+    	      <div class="col-md-12">
+	        <center><h4>@caption</h4></center>
+	      </div>
+	    </div>
+	 </div>
+      </div>
+}
+
+<div class="collapse in" id="carousel-highlight" aria-expanded="true">
   <div id="target-carousel" class="carousel slide"
        data-ride="carousel" data-interval="false">
     <!-- Indicators -->
+    @**
     <ol class="carousel-indicators">
       <li data-target="#target-carousel" data-slide-to="0" class="active"></li>
       <li data-target="#target-carousel" data-slide-to="1"></li>
@@ -70,28 +105,24 @@
       <li data-target="#target-carousel" data-slide-to="3"></li>
       <li data-target="#target-carousel" data-slide-to="4"></li>
       <li data-target="#target-carousel" data-slide-to="5"></li>
+      <li data-target="#target-carousel" data-slide-to="6"></li>
     </ol>
+    **@
     
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
       <div class="item active">
-         @carouselitem(ctx.getFacet(IDG_DEVELOPMENT), "Distribution of target development level")
+         @carouselpie(ctx.getFacet(IDG_DEVELOPMENT), "Target development level distribution")
       </div>
       <div class="item">
-         @carouselitem(ctx.getFacet(IDG_FAMILY), "Distribution of target family")
+         @carouselpie(ctx.getFacet(IDG_FAMILY), "Target family distribution")
       </div>
-      <div class="item">
-         @carouselitem(ctx.getFacet(IDG_TISSUE), "Distribution of annotated tissues")
-      </div>
-      <div class="item">
-         @carouselitem(ctx.getFacet(IDG_LIGAND), "Distribution of ligands")
-      </div>
-      <div class="item">
-         @carouselitem(ctx.getFacet(PANTHER_PROTEIN_CLASS+" (3)"), "Distribution of PANTHER protein classes")	 
-      </div>
-      <div class="item">
-         @carouselitem(ctx.getFacet(MGI_TERM), "Distribution of JAX/MGI phenotype")
-      </div>      
+      @sunburst("dto", HtmlFormat.raw("<a href='http://drugtargetontology.org/'>Drug Target Ontology</a>"))
+      @sunburst("panther", HtmlFormat.raw("<a href='http://pantherdb.org/panther/prowler.jsp'>PANTHER Protein Ontology</a>"))
+      
+      @item(IDG_TISSUE, "Annotated tissue distribution")
+      @item(IDG_LIGAND, "Ligand distribution")
+      @item(MGI_TERM, "JAX/MGI phenotype distribution")
     </div>
     
     <!-- Controls -->
@@ -105,15 +136,43 @@
     </a>
   </div>
 </div>
+<br>
 
 <script>
+$('#carousel-highlight').on('slide.bs.carousel', function () {
+   console.log('slide advanced...');
+});
+
 $(document).ready(function () {
-@donut(ctx.getFacet(IDG_DEVELOPMENT))
-@donut(ctx.getFacet(IDG_FAMILY))
-@donut(ctx.getFacet(IDG_TISSUE))
-@donut(ctx.getFacet(IDG_LIGAND))
-@donut(ctx.getFacet(PANTHER_PROTEIN_CLASS+" (3)"))
-@donut(ctx.getFacet(MGI_TERM))
+  @donut(ctx.getFacet(IDG_DEVELOPMENT))
+  @donut(ctx.getFacet(IDG_FAMILY))
+  @donut(ctx.getFacet(IDG_TISSUE))
+  @donut(ctx.getFacet(IDG_LIGAND))
+  @donut(ctx.getFacet(MGI_TERM))
+
+  new Sunburst({
+      id: 'dto',
+      json: @HtmlFormat.raw(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS).toString()),
+      click: function(d) {
+         //console.log(d.depth+': click on "'+d.name+'"');
+	 var uri = '@HtmlFormat.raw(request.uri)';
+	 uri += (uri.indexOf('?') > 0 ? '&' : '?')
+	     + 'facet=@DTO_PROTEIN_CLASS ('+(d.depth-1)+')/'+d.name;
+	 location.assign(uri);
+      }
+  });
+
+  new Sunburst({
+     id: 'panther',
+     json: @HtmlFormat.raw(IDGApp.getHierarchyAsJson(ctx, PANTHER_PROTEIN_CLASS).toString()),
+     click: function(d) {
+         //console.log(d.depth+': click on "'+d.name+'"');
+	 var uri = '@HtmlFormat.raw(request.uri)';
+	 uri += (uri.indexOf('?') > 0 ? '&' : '?')
+	     + 'facet=@PANTHER_PROTEIN_CLASS ('+(d.depth-1)+')/'+d.name;
+	 location.assign(uri);
+     }
+  });
 });
 </script>
 

@@ -17,6 +17,7 @@
       } else {
       <div class="col-md-12">
       }
+      @carousel
       @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
          @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
 	  <div
@@ -67,7 +68,7 @@
         </div>
         }
       }
-      @carousel
+
       @pagination(current, rows, total, pages){
           <h3>
 	  @if(!carousel.equals(HtmlFormat.empty)) {
@@ -76,7 +77,7 @@
 	     	     data-toggle="collapse"
 		     data-target="#carousel-highlight"
 		     aria-expanded="true"
-		     aria-controls="collapseExample"
+		     aria-controls="carousel-highlight"
 		     style="margin-right: 5px"><i class="fa fa-dashboard"></i></button>
 	  }
 
