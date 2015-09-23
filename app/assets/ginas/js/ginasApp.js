@@ -320,6 +320,7 @@
                     $scope.parseGlycosylation(obj, type);
                     break;
                 case "agentModification":
+                    break;
                 //    if (!$scope.substance.protein.modifications) {
                 //        $scope.substance.proteinmodifications = {};
                 //    }
