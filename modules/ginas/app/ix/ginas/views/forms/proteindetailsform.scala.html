@@ -19,6 +19,9 @@
             <div class = "col-md-2">
                 <strong>Sequence Type</strong>
             </div>
+            <div class = "col-md-2 text-right">
+                <strong>Reference ID</strong>
+            </div>
         </div>
         <div class = "row">
             <hr>
@@ -35,8 +38,9 @@
                 <span href="#" editable-select="substance.protein.sequenceType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" blur="submit">{{substance.protein.sequenceType.display}}</span>
             </div>
         </div>
-        <div class="row form-row" ng-show="!detailsSet">
-            <form class="form-horizontal" name="detForm" id = "add-ref" role="form" novalidate>
+
+        <form class="form-horizontal" name="detForm" id = "add-ref" role="form" novalidate>
+            <div class="row form-row" ng-show="!detailsSet">
                 <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Protein Type" id="type" name = "type" ng-model = "protein.proteinType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
                         </select>
@@ -65,9 +69,10 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                @submitbuttons("protein", "detForm", "protein")
-            </form>
-        </div>
+                @referenceselectorform("detForm", "protein")
+            </div>
+            @submitbuttons("protein", "detForm", "protein")
+        </form>
     </div>
 </div>
 
