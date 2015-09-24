@@ -140,7 +140,7 @@
 
 <script>
 $('#carousel-highlight').on('slide.bs.carousel', function () {
-   console.log('slide advanced...');
+   //console.log('slide advanced...');
 });
 
 $(document).ready(function () {
@@ -162,7 +162,7 @@ more than one time. This results in multiple paths with weird breadcrumb!
        json: @HtmlFormat.raw(json.toString),
        click: function(d) {
          //console.log(d.depth+': click on "'+d.name+'"');
-	 var uri = '@HtmlFormat.raw(App.url("page"))';
+	 var uri = '@HtmlFormat.raw(App.url(App.removeIfMatch("facet", DTO_PROTEIN_CLASS), "page"))';
 	 uri += (uri.indexOf('?') > 0 ? '&' : '?')
 	     + 'facet=@DTO_PROTEIN_CLASS ('+(d.depth-1)+')/'+d.name;
 	 location.assign(uri);
@@ -178,7 +178,8 @@ more than one time. This results in multiple paths with weird breadcrumb!
        json: @HtmlFormat.raw(json.toString),
        click: function(d) {
          //console.log(d.depth+': click on "'+d.name+'"');
-	 var uri = '@HtmlFormat.raw(App.url("page"))';
+	 var uri =
+	   '@HtmlFormat.raw(App.url(App.removeIfMatch("facet",PANTHER_PROTEIN_CLASS),"page"))';
 	 uri += (uri.indexOf('?') > 0 ? '&' : '?')
 	     + 'facet=@PANTHER_PROTEIN_CLASS ('+(d.depth-1)+')/'+d.name;
 	 location.assign(uri);

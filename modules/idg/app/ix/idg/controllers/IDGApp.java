@@ -1127,7 +1127,8 @@ public class IDGApp extends App implements Commons {
     public static Keyword[] getAncestry (final String facet,
                                          final String predicate) {
         try {
-            final String key = predicate+"/"+facet;
+            final String key = predicate+"/"+facet
+                +"/"+signature (null, request().queryString());
             return getOrElse
                 (key, new Callable<Keyword[]> () {
                         public Keyword[] call () throws Exception {
@@ -1161,8 +1162,11 @@ public class IDGApp extends App implements Commons {
                     for (XRef ref : pred.iterator().next().objects) {
                         if (ref.kind.equals(anchor.getClass().getName())) {
                             Keyword kw = (Keyword)ref.deRef();
+                            /*
                             String url = ix.idg.controllers
                                 .routes.IDGApp.targets(null, 20, 1).url();
+                            */
+                            String url = App.url(App.removeIfMatch("facet", facet));
                             kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
                                 +"facet="+kw.label+"/"+kw.term;
                             ancestry.add(kw);
@@ -2042,10 +2046,42 @@ public class IDGApp extends App implements Commons {
         for (int len = text.length(), i = 1, j = 1; i <= len; ++i) {
             seq.append(text.charAt(i-1));           
             if (i % wrap == 0) {
-                seq.append(String.format("%1$5d - %2$d\n", j, i));
+                seq.append(String.format("%1$7d - %2$d\n", j, i));
                 j = i+1;
             }
         }
         return seq.toString();
+    }
+
+    public static String getTargetTableHeader (String name, String field) {
+        String order = request().getQueryString("order");
+        String sort = "";
+        if (order != null && field.equalsIgnoreCase(order.substring(1))) {
+            char dir = order.charAt(0);
+            if (dir == '^') { // ascending
+                order = "$"+field;
+                sort = "-asc";
+            }
+            else if (dir == '$') {
+                order = "^"+field;
+                sort = "-desc";
+            }
+            else {
+                // default to descending
+                order = "$"+field;
+                sort = "-desc";
+            }
+        }
+        else {
+            // since novelty is the default..
+            order = (order == null && field.equalsIgnoreCase("novelty")
+                     ? "^":"$")+field;
+        }
+        String url = url ("order");
+        if (url.indexOf('?') > 0) url += '&';
+        else url += '?';
+        
+        return "<th><a href='"+url+"order="+order+"'>"+name
+            +"</a>&nbsp;<i class='fa fa-sort"+sort+"'></i></th>";
     }
 }

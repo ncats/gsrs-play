@@ -37,9 +37,14 @@
 	    "#FFBE93",
 	    "#FFDD93",
 	    "#70C39D"
-	   //  "end": "#bbbbbb"
 	];
-	var colors = {};	
+	var colors = {};
+	
+	var tmp0 = ['#000000', '#FF34FF', '#FFFF00', '#FF4A46'];
+	var tmp1 = d3.scale.category20().range().reverse();
+	var tmp2 = d3.scale.category20b().range();
+	var tmp3 = d3.scale.category20c().range();
+	var rand_colors = palette.concat(tmp1).concat(tmp2).concat(tmp3);
 	
        // Total size of all segments; we set this later, after loading the data.
        var totalSize = 0; 
@@ -82,9 +87,10 @@
 		for (var i = 0; i < str.length; i++) {
 		    hash ^= str.charCodeAt(i);
 		}
-		c = palette[hash%palette.length];
+		//c = palette[hash%palette.length];
 		//console.log(str+' ['+hash+'] => '+c);
-		colors[str] = c;
+		//colors[str] = c;
+		colors[str] = c = rand_colors[hash%rand_colors.length];
 	    }
 	    return c;
 	}

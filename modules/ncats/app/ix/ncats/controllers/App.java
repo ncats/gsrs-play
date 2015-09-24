@@ -300,6 +300,10 @@ public class App extends Authentication {
     }
 
     public static String url (String... remove) {
+        return url (true, remove);
+    }
+    
+    public static String url (boolean exact, String... remove) {
         //Logger.debug(">> uri="+request().uri());
 
         StringBuilder uri = new StringBuilder (request().path()+"?");
@@ -307,7 +311,8 @@ public class App extends Authentication {
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             boolean matched = false;
             for (String s : remove)
-                if (s.equals(me.getKey())) {
+                if ((exact && s.equals(me.getKey()))
+                    || me.getKey().startsWith(s)) {
                     matched = true;
                     break;
                 }
@@ -322,6 +327,56 @@ public class App extends Authentication {
         
         return uri.substring(0, uri.length()-1);
     }
+
+    public static Map<String, Collection<String>> removeIfMatch
+        (Map<String, Collection<String>> params, String key, String value) {
+        Collection<String> values = params.get(key);
+        //Logger.debug("removeIfMatch: key="+key+" value="+value+" "+values);
+        if (values != null) {
+            List<String> keep = new ArrayList<String>();
+            for (String v : values) {
+                try {
+                    String dv = URLDecoder.decode(v, "utf8");
+                    //Logger.debug(v+" => "+dv);
+                    if (!dv.startsWith(value)) {
+                        keep.add(v);
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            if (!keep.isEmpty()) {
+                params.put(key, keep);
+            }
+            else {
+                params.remove(key);
+            }
+        }
+        return params;
+    }
+
+    public static Map<String, Collection<String>> removeIfMatch
+        (String key, String value) {
+        Map<String, Collection<String>> params = getQueryParameters ();
+        return removeIfMatch (params, key, value);
+    }
+
+    public static String url (Map<String, Collection<String>> params,
+                              String... remove) {
+        for (String p : remove)
+            params.remove(p);
+        
+        StringBuilder uri = new StringBuilder (request().path()+"?");
+        for (Map.Entry<String, Collection<String>> me : params.entrySet())
+            for (String v : me.getValue())
+                if (v != null)
+                    uri.append(me.getKey()+"="+v+"&");
+        
+        return uri.substring(0, uri.length()-1);
+    }
+    
 
     static Map<String, Collection<String>> getQueryParameters () {
         Map<String, Collection<String>> params =
@@ -577,6 +632,11 @@ public class App extends Authentication {
             args.add(q);
         for (String f : qfacets)
             args.add(f);
+        
+        if (query.get("order") != null) {
+            for (String f : query.get("order"))
+                args.add(f);
+        }
         Collections.sort(args);
         
         return Util.sha1(args.toArray(new String[0]));
