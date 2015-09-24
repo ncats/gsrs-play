@@ -4,6 +4,7 @@
 @import ix.idg.models.Disease
 @import ix.core.models.Value
 @import ix.core.models.Keyword
+@import ix.core.models.Text
 @import ix.core.models.VInt
 @import ix.core.models.Publication
 @import ix.idg.controllers.IDGApp
@@ -237,13 +238,7 @@
 }
       
 @ix.ncats.views.html.main(target.name){
-@menu(target.getClass().getName()){
-<ul class="nav navbar-nav navbar-left">
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null,10,1)">Diseases</a></li>
-  <li role="presentation" class="active"><a href="#">Targets</a></li>
-  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null,8,1)">Ligands</a></li>
-</ul>
-}
+@targetmenu()
 }{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
@@ -366,9 +361,9 @@
            		    data-trigger="click hover focus"
            		    data-title="@lig.getName()"
 	   		    data-html="true"
-           		    data-content="<img src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(lig).getId,"svg",150)'>">
+           		    data-content="<img src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(lig).getId,"svg",150,null)'>">
 			   <img alt="Structure of @IDGApp.getId(lig)"
-			       src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(lig).getId,"svg",80)'></a>
+			       src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(lig).getId,"svg",80,null)'></a>
 		        </td>
 		       <td class="valign-center">
 		          <a class="label label-primary" href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName()</a>
@@ -551,7 +546,26 @@
        </div>
       </div>
      }
-    
+
+    <!--
+      -- sequence
+      -->
+    @defining(IDGApp.getSequence(target)) { seq =>
+       @if(seq != null) {
+         <div class="row">
+      	    <div class="col-md-12">
+            	 <div class="panel panel-default">
+             	      <div class="panel-heading">
+                      	   <h3 class="panel-title">Sequence</h3>
+             	      </div>
+	     	      <div class="panel-body">
+	                <pre class="pre-scrollable">@seq</pre>
+		      </div>
+	         </div>
+            </div>
+         </div>
+       }
+    }
     <!--
       -- MeSH
       -->

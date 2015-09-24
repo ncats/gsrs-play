@@ -14,6 +14,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
         data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
         <td>@IDGApp.format(t.novelty)</td>
+	<td>@t.antibodyCount</td>
+	<td>@t.monoclonalCount</td>
+	<td>@t.pubmedCount</td>
+	<td>@t.patentCount</td>
         <td>@t.idgFamily</td>
     </tr>
 }
@@ -59,6 +63,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
             <th>Name</th>
             <th>Development Level</th>
             <th>Novelty</th>
+	    <th>Antibody Count</th>
+	    <th>Monoclonal Antibody Count</th>
+	    <th>PubMed Count</th>
+	    <th>Patent Count</th>
             <th>Target Family</th>
         </tr>
         @for(t <- targets) {
@@ -147,15 +155,13 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3_clustergram.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/load_clustergram.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/sunburst.js")'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>    
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />    
-    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.css"))' />
-    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />    
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' /> 
 </head>
 
 <script>

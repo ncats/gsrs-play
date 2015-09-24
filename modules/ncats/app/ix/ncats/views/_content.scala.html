@@ -33,6 +33,10 @@
 	  <span aria-hidden="true">&times;</span>
 	</button>
 	@request().getQueryString("type") match {
+           case "sequence" => {
+	      <span><h4>Sequence Query:&nbsp;
+		  <code>@ix.ncats.controllers.App.getSequence(request().getQueryString("q"), 50)</code></h4></span> <div id="searching"></div>
+	    }
   	    case "Substructure" => {
 	      <span><h4>Substructure Query:&nbsp; <a  href="#"
            tabindex="-1"

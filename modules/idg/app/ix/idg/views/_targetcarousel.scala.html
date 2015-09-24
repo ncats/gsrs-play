@@ -22,7 +22,7 @@
 	//colors: [ "#00ff00"]
      }).on('click',function (i,data) {
         //console.log('i='+i+' data='+data.label);
-        var uri = '@HtmlFormat.raw(request.uri)';
+        var uri = '@HtmlFormat.raw(App.url("page"))';
         uri += (uri.indexOf('?') > 0 ? '&' : '?')
            + 'facet=@f.getName()'+'/'+data.label;
         location.assign(uri);
@@ -150,29 +150,42 @@ $(document).ready(function () {
   @donut(ctx.getFacet(IDG_LIGAND))
   @donut(ctx.getFacet(MGI_TERM))
 
-  new Sunburst({
-      id: 'dto',
-      json: @HtmlFormat.raw(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS).toString()),
-      click: function(d) {
+@**
+TODO: Need to fix the case where the same sunburst plot/category is click
+more than one time. This results in multiple paths with weird breadcrumb!
+**@
+
+@defining(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS)) { json =>
+  @if(json != null) {
+    new Sunburst({
+       id: 'dto',
+       json: @HtmlFormat.raw(json.toString),
+       click: function(d) {
          //console.log(d.depth+': click on "'+d.name+'"');
-	 var uri = '@HtmlFormat.raw(request.uri)';
+	 var uri = '@HtmlFormat.raw(App.url("page"))';
 	 uri += (uri.indexOf('?') > 0 ? '&' : '?')
 	     + 'facet=@DTO_PROTEIN_CLASS ('+(d.depth-1)+')/'+d.name;
 	 location.assign(uri);
-      }
-  });
+       }
+    });
+  }
+}
 
-  new Sunburst({
-     id: 'panther',
-     json: @HtmlFormat.raw(IDGApp.getHierarchyAsJson(ctx, PANTHER_PROTEIN_CLASS).toString()),
-     click: function(d) {
+@defining(IDGApp.getHierarchyAsJson(ctx, PANTHER_PROTEIN_CLASS)) { json =>
+  @if(json != null) {
+    new Sunburst({
+       id: 'panther',
+       json: @HtmlFormat.raw(json.toString),
+       click: function(d) {
          //console.log(d.depth+': click on "'+d.name+'"');
-	 var uri = '@HtmlFormat.raw(request.uri)';
+	 var uri = '@HtmlFormat.raw(App.url("page"))';
 	 uri += (uri.indexOf('?') > 0 ? '&' : '?')
 	     + 'facet=@PANTHER_PROTEIN_CLASS ('+(d.depth-1)+')/'+d.name;
 	 location.assign(uri);
-     }
-  });
+       }
+    });
+  }
+}
 });
 </script>
 

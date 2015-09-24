@@ -302,7 +302,7 @@ public class App extends Authentication {
     public static String url (String... remove) {
         //Logger.debug(">> uri="+request().uri());
 
-        StringBuilder uri = new StringBuilder ("?");
+        StringBuilder uri = new StringBuilder (request().path()+"?");
         Map<String, Collection<String>> params = getQueryParameters ();
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             boolean matched = false;

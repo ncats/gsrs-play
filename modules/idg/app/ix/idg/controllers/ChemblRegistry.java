@@ -32,7 +32,8 @@ public class ChemblRegistry implements Commons {
 
     DataSource chembl;
     Connection con;
-    PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6, pstm7, pstm8;
+    PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5,
+        pstm6, pstm7, pstm8, pstm9;
     Map<String, Set<String>> uniprotMap;
     Keyword source;
     Map<Long, Ligand> molregno = new HashMap<Long, Ligand>();
@@ -115,6 +116,11 @@ public class ChemblRegistry implements Commons {
         pstm8 = con.prepareStatement
             ("select * from chembl_id_lookup where entity_type = ? "
              +"and chembl_id = ?");
+
+        pstm9 = con.prepareStatement
+            ("select * from chembl_id_lookup a, compound_structures b "
+             +"where b.molregno = a.entity_id "
+             +"and a.chembl_id = ?");
         
         this.uniprotMap = uniprotMap;           
     }
@@ -129,6 +135,7 @@ public class ChemblRegistry implements Commons {
             pstm6.close();
             pstm7.close();
             pstm8.close();
+            pstm9.close();
         }
         finally {
             con.close();
@@ -298,6 +305,22 @@ public class ChemblRegistry implements Commons {
     
     Long getTID (String chemblId) throws SQLException {
         return resolve (chemblId, "TARGET");
+    }
+
+    public String getMolfile (String chemblId) throws SQLException {
+        pstm9.setString(1, chemblId);
+        ResultSet rset = null;
+        try {
+            rset = pstm9.executeQuery();
+            if (rset.next()) {
+                return rset.getString("molfile");
+            }
+            return null;
+        }
+        finally {
+            if (rset != null)
+                rset.close();
+        }
     }
 
     public boolean instrument (Ligand ligand) {

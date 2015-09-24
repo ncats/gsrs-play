@@ -182,7 +182,7 @@
 	   // Transition each segment to full opacity and then reactivate it.
 	   vis.selectAll("path")
 	       .transition()
-	       .duration(1000)
+	       .duration(500)
 	       .style("opacity", 1)
 	       .each("end", function() {
 		   d3.select(this).on("mouseover", mouseover);

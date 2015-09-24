@@ -547,8 +547,8 @@ public class IDGApp extends App implements Commons {
             if (value < 0.001)
                 return String.format("%1$.5f", value);
             if (value < 10.)
-                return String.format("%1$.3f", value);
-            return String.format("%1$.1f", value);
+                return String.format("%1$.1f", value);
+            return String.format("%1$.0f", value);
         }
         return "";
     }
@@ -1993,16 +1993,14 @@ public class IDGApp extends App implements Commons {
                 List<Map> children = (List<Map>)node.get("children");
 
                 Map child = null;
-                boolean found = false;
                 for (Map c : children) {
                     if (name.equalsIgnoreCase((String)c.get("name"))) {
                         child = c;
-                        found = true;
                         break;
                     }
                 }
                 
-                if (!found) {
+                if (child == null) {
                     child = new HashMap ();
                     child.put("name", name);
                     child.put("children", new ArrayList<Map>());
@@ -2023,5 +2021,31 @@ public class IDGApp extends App implements Commons {
         
         ObjectMapper mapper = new ObjectMapper ();
         return mapper.valueToTree(root);
+    }
+
+    public static String getSequence (Target target) {
+        return getSequence (target, 60);
+    }
+    
+    public static String getSequence (Target target, int wrap) {
+        Value val = target.getProperty(UNIPROT_SEQUENCE);
+        if (val == null) {
+            return null;
+        }
+        
+        String text = ((Text)val).text;
+        return formatSequence (text, wrap);
+    }
+
+    public static String formatSequence (String text, int wrap) {
+        StringBuilder seq = new StringBuilder ();
+        for (int len = text.length(), i = 1, j = 1; i <= len; ++i) {
+            seq.append(text.charAt(i-1));           
+            if (i % wrap == 0) {
+                seq.append(String.format("%1$5d - %2$d\n", j, i));
+                j = i+1;
+            }
+        }
+        return seq.toString();
     }
 }

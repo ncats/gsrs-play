@@ -784,6 +784,24 @@ public class TcrdRegistry extends Controller implements Commons {
                         target.description = (String)val.getValue();
                     }
                     else {
+                        if (type.equalsIgnoreCase("Ab Count")) {
+                            target.antibodyCount =
+                                ((Number)val.getValue()).intValue();
+                        }
+                        else if (type.equalsIgnoreCase("MAb Count")) {
+                            target.monoclonalCount =
+                                ((Number)val.getValue()).intValue();
+                        }
+                        else if (type.equalsIgnoreCase("PubMed Count")) {
+                            target.pubmedCount =
+                                ((Number)val.getValue()).intValue();
+                        }
+                        else if (type.equalsIgnoreCase
+                                 ("EBI Total Patent Count (Relevant)")) {
+                            target.patentCount =
+                                ((Number)val.getValue()).intValue();
+                        }
+
                         target.properties.add(val);
                     }
                 }
@@ -1053,6 +1071,16 @@ public class TcrdRegistry extends Controller implements Commons {
                           +chemblId));
                     
                     String smiles = rset.getString("smiles");
+                    if (smiles == null) {
+                        // grab from chembl schema.. sigh
+                        smiles = chembl.getMolfile(chemblId);
+                        if (smiles == null) {
+                            Logger.error
+                                ("Can't retrieve molfile from chembl: "
+                                 +chemblId);
+                        }
+                    }
+
                     if (smiles != null) {
                         Structure struc = StructureProcessor.instrument
                             (smiles, null, false);
@@ -1060,6 +1088,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         XRef xref = new XRef (struc);
                         ligand.links.add(xref);
                     }
+
                     ligand.save();
                     LIGS.add(ligand);
                 }

@@ -89,6 +89,22 @@ public class Target extends EntityModel {
     @Indexable(sortable=true,name="Novelty")
     public Double novelty;
 
+    @Indexable(sortable=true,name="Antibody Count",
+               ranges={0,40,80,120,160,200,300,400,500,600})
+    public Integer antibodyCount;
+    
+    @Indexable(sortable=true,name="Monoclonal Count",
+               ranges={0,10,20,30,40,50,60,70,80,100})
+    public Integer monoclonalCount;
+
+    @Indexable(sortable=true,name="PubMed Count",
+               ranges={0,20,40,80,160,320,640,1280})
+    public Integer pubmedCount;
+
+    @Indexable(sortable=true,name="Patent Count",
+               ranges={0,20,40,80,160,320,640,1280,2540,5120,10240})
+    public Integer patentCount;
+
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_idg_target_synonym",
