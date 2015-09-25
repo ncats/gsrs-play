@@ -86,6 +86,7 @@ public class IDGApp extends App implements Commons {
             if (!targets.isEmpty()) {
                 target = targets.iterator().next();
                 // cache this alignment for show later
+                Logger.debug("alignment "+getContext().getId()+" => "+r.id);
                 IxCache.set("Alignment/"+getContext().getId()+"/"+r.id, r);
             }
             
@@ -920,6 +921,13 @@ public class IDGApp extends App implements Commons {
         try {
             if (q != null && q.trim().length() == 0)
                 q = null;
+            
+            String type = request().getQueryString("type");
+            if (q != null && type != null
+                && type.equalsIgnoreCase("sequence")) {
+                return sequences (q, rows, page);
+            }
+            
             return _targets (q, rows, page);
         }
         catch (Exception ex) {
@@ -1089,7 +1097,20 @@ public class IDGApp extends App implements Commons {
                 (seq, identity, rows,
                  page, new IDGSequenceResultProcessor ());
             
-            return fetchResult (context, rows, page);
+            return App.fetchResult
+                (context, rows, page, new DefaultResultRenderer<Target> () {
+                        public Result render (SearchResultContext context,
+                                              int page, int rows,
+                                              int total, int[] pages,
+                                              List<Facet> facets,
+                                              List<Target> targets) {
+                            return ok (ix.idg.views.html.targets.render
+                                       (page, rows, total,
+                                        pages, decorate
+                                        (filter (facets, TARGET_FACETS)),
+                                        targets, context.getId()));
+                        }
+                    });
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -2028,7 +2049,7 @@ public class IDGApp extends App implements Commons {
     }
 
     public static String getSequence (Target target) {
-        return getSequence (target, 60);
+        return getSequence (target, 80);
     }
     
     public static String getSequence (Target target, int wrap) {
@@ -2040,6 +2061,19 @@ public class IDGApp extends App implements Commons {
         String text = ((Text)val).text;
         return formatSequence (text, wrap);
     }
+
+    public static SequenceIndexer.Result
+        getSeqAlignment (String context, Target target) {
+        Value seq = target.getProperty(UNIPROT_SEQUENCE);
+        SequenceIndexer.Result r = null;
+        if (seq != null) {
+            r = (SequenceIndexer.Result)IxCache.get
+                ("Alignment/"+context+"/"+seq.id);
+        }
+        //Logger.debug("retrieving alignment "+context+" "+seq.id+" => "+r);
+        return r;
+    }
+    
 
     public static String formatSequence (String text, int wrap) {
         StringBuilder seq = new StringBuilder ();

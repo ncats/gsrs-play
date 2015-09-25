@@ -1407,6 +1407,12 @@ public class App extends Authentication {
          int page, final ResultRenderer<T> renderer) throws Exception {
 
         final String key = getKey (context, "facet");
+
+        /**
+         * we need to connect context.id with this key to have
+         * the results of structure/sequence search context merged
+         * together with facets, sorting, etc.
+         */
         final TextIndexer.SearchResult result = getOrElse
             (key, new Callable<TextIndexer.SearchResult> () {
                     public TextIndexer.SearchResult call () throws Exception {
@@ -1419,6 +1425,10 @@ public class App extends Authentication {
                         Logger.debug("Cache misses: "
                                      +key+" size="+results.size()
                                      +" class="+searchResult);
+                        searchResult.setKey(context.getId());
+                        // make an alias for the context.id to this search
+                        // result
+                        IxCache.set(context.getId(), searchResult);
                         return searchResult;
                     }
                 });

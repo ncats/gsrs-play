@@ -388,7 +388,7 @@ public class SequenceIndexer {
             StringField idf = new StringField (FIELD_ID, id, YES);
             doc.add(idf);
             doc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
-            doc.add(new StringField (FIELD_SEQ, seq.toString(), YES));
+            doc.add(new StoredField (FIELD_SEQ, seq.toString()));
             indexWriter.addDocument(doc);
             
             Kmers kmers = Kmers.create(seq);

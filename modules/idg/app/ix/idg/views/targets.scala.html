@@ -21,6 +21,19 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	<td>@t.monoclonalCount</td>
         <td>@t.idgFamily</td>
     </tr>
+    @if(ctx != null) {
+       @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
+         @if(aln != null) {
+         <tr class="success">
+	    <td colspan="7">
+	      <pre>@{"identity = %.3f".format(aln.alignments(0).iden)}
+@aln.alignments(0).alignment
+</pre>
+	    </td>
+	 </tr>
+	 }
+       }
+    }
 }
 
 @ix.ncats.views.html._content("Targets", "ix.idg.models.Target",
