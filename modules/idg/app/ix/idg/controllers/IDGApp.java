@@ -1987,10 +1987,12 @@ public class IDGApp extends App implements Commons {
                     return f2.getName().compareTo(f1.getName());
                 }
             });
-        
+
+        /*
         for (Iterator<Facet> it = facets.iterator(); it.hasNext(); ) {
             Logger.info("++ "+it.next().getName());
         }
+        */
         
         Facet leaf = facets.iterator().next();          
         String predicate = "";
