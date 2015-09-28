@@ -44,6 +44,17 @@
      }));
 }
 
+@cloud(facet: String) = {
+   @defining(App.scaleFacetCounts(ctx.getFacet(facet), 30, true)) { keywords =>
+      wordcloud('cloud-@Util.sha1(facet)', 400, 200,[
+       @for(v <- keywords) {
+	    {text: '@v.label',
+	     size: @v.intval},
+	 }
+       ]);
+   }
+}
+
 @carouselpie(f: Facet, caption: Html) = {
         <div class="container-fluid">
 	    <div class="row">
@@ -99,6 +110,25 @@
       </div>
 }
 
+@wordcloud(facet: String, caption: Html) = {
+      <div class="item">
+        <div class="container-fluid">
+          <div class="row">
+	     <div class="col-md-6">
+	            <div id="cloud-@Util.sha1(facet)"
+		        style="height:200px;width=400px;padding-left:200px">
+		    </div>
+             </div>
+	  </div>
+          <div class="row">
+    	      <div class="col-md-12">
+	        <center><h4>@caption</h4></center>
+	      </div>
+	   </div>
+        </div>
+      </div>
+}
+
 <div class="collapse in" id="carousel-highlight" aria-expanded="true">
   <div id="target-carousel" class="carousel slide"
        data-ride="carousel" data-interval="false">
@@ -130,22 +160,8 @@
       @item(GRANT_ACTIVITY, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/funding/ac_search_results.htm'>Grant Activity</a>"))
       @item(SOURCE, HtmlFormat.raw("Data Source"))
       @item(KEGG_PATHWAY, HtmlFormat.raw("<a href='http://www.genome.jp/kegg/pathway.html'>KEGG Pathway</a>"))
-      <div class="item">
-        <div class="container-fluid">
-          <div class="row">
-	     <div class="col-md-6">
-	            <div id="uniprot-cloud"
-		        style="height:200px;width=400px;padding-left:200px">
-		    </div>
-             </div>
-	  </div>
-          <div class="row">
-    	      <div class="col-md-12">
-	        <center><h4>UniProt Keywords</h4></center>
-	      </div>
-	   </div>
-        </div>
-      </div>
+      @wordcloud(UNIPROT_KEYWORD, HtmlFormat.raw("UniProt Keywords"))
+      @wordcloud("MeSH", HtmlFormat.raw("Medical Subject Headings"))
     </div>
     
     <!-- Controls -->
@@ -170,27 +186,23 @@ $('#carousel-highlight').on('slid.bs.carousel', function () {
   }
 });
 
-function wordcloud (width, height) {
+function wordcloud (id, width, height, data) {
    var fill = d3.scale.category20();
    
    d3.layout.cloud().size([width, height])
-      .words([
-      @defining(ctx.getFacet(UNIPROT_KEYWORD)) { keyword =>
-         @for(fv <- keyword.getValues()) {
-	    {text: '@fv.getLabel',
-	     size: @fv.getCount},
-	 }
-      }
-      ])
+      .words(data)
       .padding(5)
       .rotate(function() { return ~~(Math.random() * 2) * 90; })
       .font("Impact")
-      .fontSize(function(d) { return d.size/8; })
+      .fontSize(function(d) {
+	 if (d.size < 8) return 8;
+	 return d.size;
+       })
       .on("end", draw)
       .start();
 
    function draw(words) {
-      d3.select("#uniprot-cloud").append("svg")
+      d3.select('#'+id).append("svg")
         .attr("width", width)
         .attr("height", height)
       .append("g")
@@ -220,6 +232,9 @@ $(document).ready(function () {
   @donut(SOURCE)
   @donut(KEGG_PATHWAY)
 
+  @cloud(UNIPROT_KEYWORD)
+  @cloud("MeSH")
+      
 @defining(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS)) { json =>
   @if(json != null) {
     new Sunburst({
@@ -252,7 +267,6 @@ $(document).ready(function () {
     });
   }
 }
-  wordcloud(400, 200);
 });
 </script>
 

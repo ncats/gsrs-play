@@ -52,6 +52,7 @@ import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
+import ix.core.models.VInt;
 import ix.core.search.SearchOptions;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
@@ -1640,5 +1641,34 @@ public class App extends Authentication {
             return seq;
         }
         return null;
+    }
+
+    public static List<VInt> scaleFacetCounts (Facet facet, int scale) {
+        return scaleFacetCounts (facet, scale, false);
+    }
+    
+    public static List<VInt> scaleFacetCounts
+        (Facet facet, int scale, boolean inverse) {
+        int max = 0;
+        for (FV fv : facet.getValues()) {
+            if (fv.getCount() > max)
+                max = fv.getCount();
+        }
+
+        if (max == 0) max = 1;
+        List<VInt> values = new ArrayList<VInt>();
+        for (FV fv : facet.getValues()) {
+            VInt v = new VInt ();
+            v.label = fv.getLabel();
+            if (inverse) {
+                v.intval = (long)(0.5+(1. - (double)fv.getCount()/max)*scale);
+            }
+            else {
+                v.intval = (long)(0.5+(double)fv.getCount()*scale/max);
+            }
+            values.add(v);
+        }
+        
+        return values;
     }
 }
