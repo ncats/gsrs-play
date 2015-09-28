@@ -150,7 +150,7 @@ public class TcrdRegistry extends Controller implements Commons {
         PreparedStatement pstm, pstm2, pstm3, pstm4,
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
             pstm11, pstm12, pstm13, pstm14, pstm15,
-            pstm16, pstm17, pstm18;
+            pstm16, pstm17, pstm18, pstm19;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -215,6 +215,9 @@ public class TcrdRegistry extends Controller implements Commons {
                     "WHERE t.id = t2tc.target_id AND t2tc.protein_id = p.id AND p.id = hg.protein_id " +
                     "AND gat.name = hg.type and hg.protein_id = ?");
 
+            pstm19 = con.prepareStatement
+                ("select * from target2grant where target_id = ?");
+
             this.chembl = chembl;
         }
 
@@ -253,7 +256,8 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm16.close();
             pstm17.close();
             pstm18.close();
-
+            pstm19.close();
+            
             chembl.shutdown();
         }
 
@@ -378,11 +382,57 @@ public class TcrdRegistry extends Controller implements Commons {
                 event.unit = Event.Resolution.YEARS;
                 timeline.events.add(event);
             }
-
+            rset.close();
+            
             if (timeline != null) {
                 timeline.save();
                 target.links.add(new XRef (timeline));
             }
+        }
+
+        void addGrant (Target target, long tid) throws Exception {
+            pstm19.setLong(1, tid);
+            ResultSet rset = pstm19.executeQuery();
+            Set<String> fundingICs = new HashSet<String>();
+            Map<String, Integer> activity = new HashMap<String, Integer>();
+            int count = 0;
+            double cost = 0;
+            while (rset.next()) {
+                String act = rset.getString("activity");
+                if (act != null) {
+                    Integer c = activity.get(act);
+                    activity.put(act, c != null ? (c+1) : 1);
+                }
+                String ics = rset.getString("funding_ics");
+                if (ics != null) {
+                    for (int pos, p = 0; (pos = ics.indexOf('\\', p)) > p; ) {
+                        String s = ics.substring(p, pos);
+                        String[] toks = s.split(":");
+                        if (toks.length == 2) {
+                            fundingICs.add(toks[0]);
+                        }
+                        p = pos;
+                    }
+                }
+                cost += rset.getDouble("cost");
+                ++count;
+            }
+            rset.close();
+
+            for (String a : activity.keySet()) {
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (GRANT_ACTIVITY, a, null);
+                target.properties.add(kw);
+            }
+            target.r01Count = activity.get("R01");
+
+            for (String ic : fundingICs) {
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (GRANT_FUNDING_IC, ic, null);
+                target.properties.add(kw);
+            }
+            target.grantCount = count;
+            target.grantTotalCost = cost;
         }
         
         void addPathway (Target target, long tid) throws Exception {
@@ -478,8 +528,7 @@ public class TcrdRegistry extends Controller implements Commons {
             while (rset.next()) {
                 String type = rset.getString("etype");
                 String tissue = rset.getString("tissue");               
-                if ("GTEx V4 RNA-SeQCv1.1.8 Gene Median RPKM"
-                    .equalsIgnoreCase(type)) {
+                if (type.startsWith("GTEx")) {
                     Keyword source = datasources.get(type);
                     if (source == null) {
                         source = KeywordFactory.registerIfAbsent
@@ -1179,9 +1228,10 @@ public class TcrdRegistry extends Controller implements Commons {
             addPathway (target, t.id);
             addPanther (target, t.protein);
             addPatent (target, t.protein);
+            addGrant (target, t.id);
             addDrugs (target, t.id);
             addChembl (target, t.id);
-            addHarmonogram(target, t.protein);
+            //addHarmonogram(target, t.protein);
 
             TARGETS.add(target);
             

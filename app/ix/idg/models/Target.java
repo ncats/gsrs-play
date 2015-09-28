@@ -105,6 +105,16 @@ public class Target extends EntityModel {
                ranges={0,20,40,80,160,320,640,1280,2540,5120,10240})
     public Integer patentCount;
 
+    @Indexable(sortable=true,name="Grant Count",
+               ranges={0,50,100,150,200,300,500,1000,2000,3000})
+    public Integer grantCount;
+
+    @Indexable(sortable=true,name="Grant Total Cost")
+    public Double grantTotalCost;
+
+    @Indexable(sortable=true,name="R01 Count")
+    public Integer r01Count;
+
     @JsonView(BeanViews.Full.class)
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_idg_target_synonym",

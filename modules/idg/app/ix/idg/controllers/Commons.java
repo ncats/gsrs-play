@@ -19,6 +19,9 @@ public interface Commons {
     public static final String IDG_TISSUE_REF = "IDG Tissue Ref";
     public static final String PHARMALOGICAL_ACTION = "Pharmalogical Action";
     
+    public static final String GRANT_FUNDING_IC = "Grant Funding IC";
+    public static final String GRANT_ACTIVITY = "Grant Activity";
+    
     public static final String OMIM_GENE = "OMIM Gene";
     public static final String GWAS_TRAIT = "GWAS Trait";
     public static final String IMPC_TERM = "IMPC Term";
@@ -34,6 +37,7 @@ public interface Commons {
     public static final String HPA_RNA_TISSUE = "HPA-RNA Tissue";
     public static final String HPA_IHC_TISSUE = "HPA-IHC Tissue";
 
+    public static final String KEGG_PATHWAY = "KEGG Pathway";
     public static final String PATENT_COUNT = "Patent Count";
 
     public static final String GO_COMPONENT = "GO Component";

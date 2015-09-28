@@ -216,6 +216,10 @@ public class IDGApp extends App implements Commons {
                 }
             }
             else if (name.equals(Target.IDG_FAMILY)) {
+                if (label.equalsIgnoreCase("ogpcr")) {
+                    return "<a href='https://en.wikipedia.org/wiki/Olfactory_receptor'>oGPCR</a>";
+                }
+                
                 if (label.equalsIgnoreCase("gpcr")) {
                     return "<a href=\"http://en.wikipedia.org/wiki/G_protein%E2%80%93coupled_receptor\">"+label+"</a>";
                 }

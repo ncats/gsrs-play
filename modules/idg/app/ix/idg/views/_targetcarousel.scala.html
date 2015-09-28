@@ -12,7 +12,11 @@
   var donuts = [];
 </script>
 
-@donut(f: Facet) = {
+@donut(f: String) = {
+  @_donut(ctx.getFacet(f))
+}
+
+@_donut(f: Facet) = {
   @if(f != null) {
      donuts.push(new Morris.Donut({
         element: 'donut-@Util.sha1(f.getName())',
@@ -46,13 +50,13 @@
   }*@
 }
 
-@carouselpie(f: Facet, caption: String) = {
+@carouselpie(f: Facet, caption: Html) = {
         <div class="container-fluid">
 	    <div class="row">
 	      <div class="col-md-12">
 	         <div class="col-xs-3 col-md-4"></div>
 		 <div class="col-xs-3 col-md-4">
-	             <div style="height: 200px; width: 200px;"
+	             <div style="height:200px;width:200px;display:block;margin:auto;"
 		       @if(f != null) {
 	     	     	  id="donut-@Util.sha1(f.getName)"
 		       } else {
@@ -70,7 +74,7 @@
 	</div>
 }
 
-@item(facet: String, caption: String) = {
+@item(facet: String, caption: Html) = {
   @defining(ctx.getFacet(facet)) { f => 
     @if(f != null) {
       <div class="item">
@@ -121,17 +125,18 @@
     <!-- Wrapper for slides -->
     <div class="carousel-inner" role="listbox">
       <div class="item active">
-         @carouselpie(ctx.getFacet(IDG_DEVELOPMENT), "Target development level distribution")
+         @carouselpie(ctx.getFacet(IDG_DEVELOPMENT), HtmlFormat.raw("Target Development Level"))
       </div>
-      <div class="item">
-         @carouselpie(ctx.getFacet(IDG_FAMILY), "Target family distribution")
-      </div>
+      @item(IDG_FAMILY, HtmlFormat.raw("Target Family"))
       @sunburst("dto", HtmlFormat.raw("<a href='http://drugtargetontology.org/'>Drug Target Ontology</a>"))
       @sunburst("panther", HtmlFormat.raw("<a href='http://pantherdb.org/panther/prowler.jsp'>PANTHER Protein Ontology</a>"))
-      
-      @item(IDG_TISSUE, "Annotated tissue distribution")
-      @item(IDG_LIGAND, "Ligand distribution")
-      @item(MGI_TERM, "JAX/MGI phenotype distribution")
+      @item(IDG_TISSUE, HtmlFormat.raw("Annotated Tissue"))
+      @item(IDG_LIGAND, HtmlFormat.raw("Ligand"))
+      @item(MGI_TERM, HtmlFormat.raw("<a href='http://www.informatics.jax.org/searches/MP_form.shtml'>JAX/MGI Phenotype</a>"))
+      @item(GRANT_FUNDING_IC, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/glossary.htm#I14'>Grant Funding IC</a>"))
+      @item(GRANT_ACTIVITY, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/funding/ac_search_results.htm'>Grant Activity</a>"))
+      @item(SOURCE, HtmlFormat.raw("Data Source"))
+      @item(KEGG_PATHWAY, HtmlFormat.raw("<a href='http://www.genome.jp/kegg/pathway.html'>KEGG Pathway</a>"))
     </div>
     
     <!-- Controls -->
@@ -157,16 +162,15 @@ $('#carousel-highlight').on('slid.bs.carousel', function () {
 });
 
 $(document).ready(function () {
-  @donut(ctx.getFacet(IDG_DEVELOPMENT))
-  @donut(ctx.getFacet(IDG_FAMILY))
-  @donut(ctx.getFacet(IDG_TISSUE))
-  @donut(ctx.getFacet(IDG_LIGAND))
-  @donut(ctx.getFacet(MGI_TERM))
-
-@**
-TODO: Need to fix the case where the same sunburst plot/category is click
-more than one time. This results in multiple paths with weird breadcrumb!
-**@
+  @donut(IDG_DEVELOPMENT)
+  @donut(IDG_FAMILY)
+  @donut(IDG_TISSUE)
+  @donut(IDG_LIGAND)
+  @donut(MGI_TERM)
+  @donut(GRANT_FUNDING_IC)
+  @donut(GRANT_ACTIVITY)
+  @donut(SOURCE)
+  @donut(KEGG_PATHWAY)
 
 @defining(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS)) { json =>
   @if(json != null) {
