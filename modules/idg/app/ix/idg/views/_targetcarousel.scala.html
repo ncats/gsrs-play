@@ -209,21 +209,22 @@ function wordcloud (id, width, height, facetName, data) {
         .attr("transform", "translate("+width/2+","+height/2+")")
       .selectAll("text")
         .data(words)
-      .enter().append("text")
+      .enter()
+        .append("svg:a").attr("xlink:href", function(d){
+            var uri = '@HtmlFormat.raw(App.url("page"))';
+            uri += (uri.indexOf('?') > 0 ? '&' : '?')
+                + 'facet='+facetName+'/'+d.text;
+            return uri;
+        })
+        .append("text")
         .style("font-size", function(d) { return d.size + "px"; })
         .style("font-family", "Impact")
         .style("fill", function(d, i) { return fill(i); })
         .attr("text-anchor", "middle")
         .attr("transform", function(d) {
           return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
-        })
-        .text(function(d) { return d.text; })
-        .on("click", function(d) {
-            var uri = '@HtmlFormat.raw(App.url("page"))';
-            uri += (uri.indexOf('?') > 0 ? '&' : '?')
-                + 'facet='+facetName+'/'+d.text;
-            location.assign(uri);
-          });
+        } )
+        .text(function(d) { return d.text; });
    }
 }
 
