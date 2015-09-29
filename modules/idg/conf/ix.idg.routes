@@ -15,6 +15,7 @@ POST    /tcrd   ix.idg.controllers.TcrdRegistry.load
 #
 GET	/	ix.idg.controllers.IDGApp.home
 GET	/about	ix.idg.controllers.IDGApp.about
+GET /help   ix.idg.controllers.IDGApp.help
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/kinome	ix.idg.controllers.IDGApp.kinome
 GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 20, page: Int ?= 1)

@@ -457,6 +457,12 @@ public class IDGApp extends App implements Commons {
         return decors.toArray(new FacetDecorator[0]);
     }
 
+    @Cached(key="_help", duration= Integer.MAX_VALUE)
+    public static Result help() {
+        return ok (ix.idg.views.html.help.render
+                ("Pharos: Illuminating the Druggable Genome"));
+    }
+
     @Cached(key="_about", duration = Integer.MAX_VALUE)
     public static Result about() {
         final String key = "idg/about";
