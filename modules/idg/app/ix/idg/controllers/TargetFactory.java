@@ -24,9 +24,15 @@ public class TargetFactory extends EntityFactory implements Commons {
 
     public static List<Target> getTargets (int top, int skip, String filter) {
         FetchOptions options = new FetchOptions (top, skip, filter);
-        if (request().getQueryString("order") == null) {
-            options.order.add("$novelty");
+        try {
+            if (request().getQueryString("order") == null) {
+                options.order.add("$novelty");
+            }
         }
+        catch (Exception ex) {
+            // not in http context
+        }
+        
         return filter (options, finder);
     }
 

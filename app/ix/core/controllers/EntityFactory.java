@@ -179,7 +179,6 @@ public class EntityFactory extends Controller {
         }
         Query<T> query = finder.query();
         
-        
         for (String path : options.expand) {
             Logger.debug("  -> fetch "+path);
             query = query.fetch(path);

@@ -1649,13 +1649,19 @@ public class App extends Authentication {
     
     public static List<VInt> scaleFacetCounts
         (Facet facet, int scale, boolean inverse) {
-        int max = 0;
+        int max = 0, min = Integer.MAX_VALUE;
         for (FV fv : facet.getValues()) {
             if (fv.getCount() > max)
                 max = fv.getCount();
+            if (fv.getCount() < min)
+                min = fv.getCount();
         }
 
         if (max == 0) max = 1;
+        if ((max-min) <= scale/2) {
+            scale += scale/2;
+        }
+        
         List<VInt> values = new ArrayList<VInt>();
         for (FV fv : facet.getValues()) {
             VInt v = new VInt ();

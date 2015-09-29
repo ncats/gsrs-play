@@ -1994,16 +1994,20 @@ public class IDGApp extends App implements Commons {
 
         /*
         for (Iterator<Facet> it = facets.iterator(); it.hasNext(); ) {
-            Logger.info("++ "+it.next().getName());
+            Facet f = it.next();
+            Logger.info("++ "+f.getName());
+            for (TextIndexer.FV fv : f.getValues()) {
+                Logger.info("++++ "+fv.getLabel()+" ("+fv.getCount()+")");
+            }
         }
         */
-        
-        Facet leaf = facets.iterator().next();          
+
+        Iterator<Facet> nodeIter = facets.iterator();
         String predicate = "";
         if (DTO_PROTEIN_CLASS.equalsIgnoreCase(facet)) {
             predicate = DTO_PROTEIN_ANCESTRY;
             // should really fix this when we pull in the tcrd..
-            leaf = facets.get(1); // skip level (4)
+            nodeIter.next(); // skip level (4)
         }
         else if (PANTHER_PROTEIN_CLASS.equalsIgnoreCase(facet))
             predicate = PANTHER_PROTEIN_ANCESTRY;
@@ -2013,19 +2017,40 @@ public class IDGApp extends App implements Commons {
         Map root = new TreeMap ();
         root.put("name", facet);
         root.put("children", new ArrayList<Map>());
-        
-        for (TextIndexer.FV fv : leaf.getValues()) {
-            Keyword[] ancestors = getAncestry
-                (leaf.getName()+"/"+fv.getLabel(), predicate);
-            
-            Map node = root;
-            for (int i = 0; i < ancestors.length; ++i) {
-                String name = ancestors[i].term;
-                List<Map> children = (List<Map>)node.get("children");
 
+        while (nodeIter.hasNext()) {
+            Facet leaf = nodeIter.next();
+            for (TextIndexer.FV fv : leaf.getValues()) {
+                Keyword[] ancestors = getAncestry
+                    (leaf.getName()+"/"+fv.getLabel(), predicate);
+                
+                Map node = root;
+                for (int i = 0; i < ancestors.length; ++i) {
+                    String name = ancestors[i].term;
+                    List<Map> children = (List<Map>)node.get("children");
+                    
+                    Map child = null;
+                    for (Map c : children) {
+                        if (name.equalsIgnoreCase((String)c.get("name"))) {
+                            child = c;
+                            break;
+                        }
+                    }
+                    
+                    if (child == null) {
+                        child = new HashMap ();
+                        child.put("name", name);
+                        child.put("children", new ArrayList<Map>());
+                        children.add(child);
+                    }
+                    node = child;
+                }
+                
+                // leaf
+                List<Map> children = (List<Map>)node.get("children");
                 Map child = null;
                 for (Map c : children) {
-                    if (name.equalsIgnoreCase((String)c.get("name"))) {
+                    if (fv.getLabel().equalsIgnoreCase((String)c.get("name"))) {
                         child = c;
                         break;
                     }
@@ -2033,19 +2058,11 @@ public class IDGApp extends App implements Commons {
                 
                 if (child == null) {
                     child = new HashMap ();
-                    child.put("name", name);
-                    child.put("children", new ArrayList<Map>());
+                    child.put("name", fv.getLabel());
+                    child.put("size", fv.getCount());
                     children.add(child);
                 }
-                node = child;
             }
-            
-            // leaf
-            List<Map> children = (List<Map>)node.get("children");
-            Map child = new HashMap ();
-            child.put("name", fv.getLabel());
-            child.put("size", fv.getCount());
-            children.add(child);
         }
         
         //Logger.debug(">>> "+ix.core.controllers.EntityFactory.getEntityMapper().toJson(root, true));
