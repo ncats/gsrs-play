@@ -1,8 +1,8 @@
 package ix.idg.controllers;
 
 import com.avaje.ebean.Expr;
-import com.avaje.ebean.Ebean;
 import com.jolbox.bonecp.BoneCPDataSource;
+import ix.core.chem.StructureProcessor;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.PublicationFactory;
@@ -21,9 +21,6 @@ import play.db.ebean.Model;
 import play.mvc.Controller;
 import play.mvc.Http;
 import play.mvc.Result;
-import ix.core.plugins.SequenceIndexerPlugin;
-import ix.seqaln.SequenceIndexer;
-import ix.core.chem.StructureProcessor;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -166,7 +163,7 @@ public class TcrdRegistry extends Controller implements Commons {
             this.ctx = ctx;
             this.targets = targets;
             pstm = con.prepareStatement
-                ("select a.*,c.score,b.protein_id "
+                ("select a.*,c.score,d.novelty_score as diseaseNovelty, b.protein_id "
                  +"from target2disease a, t2tc b, tinx_importance c, "
                  +"tinx_disease d "
                  +"where a.target_id = ? "
@@ -1475,13 +1472,13 @@ public class TcrdRegistry extends Controller implements Commons {
                     double zscore = rs.getDouble("zscore");
                     double conf = rs.getDouble("conf");
                     double tinx = rs.getDouble("score");
+                    double diseaseNovelty = rs.getDouble("diseaseNovelty");
 
                     /**
-                     * TODO: tinx should reference disease and target 
-                     * directly instead of just the uniprot and doid!
+                     * TODO: tinx should reference disease and target directly instead of just the uniprot and doid!
                      */
                     TINX tinxe = new TINX
-                        (tcrdTarget.acc, doid, tcrdTarget.novelty, tinx);
+                        (tcrdTarget.acc, doid, tcrdTarget.novelty, tinx, diseaseNovelty);
                     tinxe.save();
 
                     XRef xref = null;
@@ -1506,6 +1503,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         xref.properties.add(new VNum (IDG_ZSCORE, zscore));
                         xref.properties.add(new VNum (IDG_CONF, conf));
                         xref.properties.add(new VNum (TINX_IMPORTANCE, tinx));
+                        xref.properties.add(new VNum (TINX_DISEASE_NOVELTY, diseaseNovelty));
                         xref.save();
                         target.links.add(xref);
 

@@ -12,7 +12,6 @@ import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
-import play.db.ebean.Model;
 import play.mvc.Result;
 
 import java.util.HashMap;
@@ -152,7 +151,6 @@ public class TINXApp extends App {
 
         for (TINX tx : tinx) {
             if (novelty == null) {
-                // TODO Daniel will updated TCRD with per-disease novelty values
                 novelty = tx.novelty;
             }
             meanImportance += tx.importance;
@@ -163,7 +161,10 @@ public class TINXApp extends App {
             ObjectNode node = mapper.createObjectNode();
             node.put("doid", tx.doid);
             node.put("imp", tx.importance);
-            if (!diseases.isEmpty()) node.put("dname", diseases.get(0).getName());
+            node.put("dnovelty", tx.diseaseNovelty);
+            if (!diseases.isEmpty()) {
+                node.put("dname", diseases.get(0).getName());
+            }
             imps.add(node);
         }
         

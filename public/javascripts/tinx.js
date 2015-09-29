@@ -10,9 +10,8 @@ function unhighlightTargetTable(elem) {
 
 function _tinx_target_plot(json, selector) {
 
-    // TODO for now we just jitter novelty values until we get proper ones from TCRD
     var nFn = function (d) {
-        return json.novelty + Math.random() * json.novelty*5.0;
+        return d.dnovelty;
     };
     var iFn = function (d) {
         return d.imp;
@@ -27,7 +26,7 @@ function _tinx_target_plot(json, selector) {
 
 
     var y = d3.scale.log().domain(d3.extent(json.importances, iFn).reverse()).range([padding, height]).nice();
-    var x = d3.scale.log().domain([json.novelty, json.novelty]).range([padding, width]).nice();
+    var x = d3.scale.log().domain(d3.extent(json.importances, nFn).reverse()).range([padding, width]).nice();
 
     var svg = d3.select(selector).append("svg:svg")
         .attr("width", width + padding)
