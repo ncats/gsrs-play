@@ -11,6 +11,7 @@ public interface Commons {
     public static final String IDG_DRUG = "IDG Drug";
     public static final String IDG_ZSCORE = "IDG Z-score";
     public static final String IDG_CONF = "IDG Confidence";
+    public static final String IDG_EVIDENCE = "IDG Evidence";
     public static final String IDG_GENERIF = "IDG GeneRIF";
     public static final String IDG_TARGET = "IDG Target";
     public static final String IDG_SMILES = "IDG SMILES";
@@ -34,8 +35,9 @@ public interface Commons {
     public static final String GTEx_EXPR = "GTEx Expression";
     public static final String HPM_TISSUE = "HPM Tissue";
     public static final String HPM_EXPR = "HPM Expression";
-    public static final String HPA_RNA_TISSUE = "HPA-RNA Tissue";
-    public static final String HPA_IHC_TISSUE = "HPA-IHC Tissue";
+    public static final String HPA_RNA_TISSUE = "HPA RNA Tissue";
+    public static final String HPA_IHC_TISSUE = "HPA IHC Tissue";
+    public static final String HPA_PROTEIN_TISSUE = "HPA Protein Tissue";
 
     public static final String KEGG_PATHWAY = "KEGG Pathway";
     public static final String PATENT_COUNT = "Patent Count";

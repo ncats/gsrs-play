@@ -150,7 +150,7 @@ public class TcrdRegistry extends Controller implements Commons {
         PreparedStatement pstm, pstm2, pstm3, pstm4,
             pstm5, pstm6, pstm7, pstm8, pstm9, pstm10,
             pstm11, pstm12, pstm13, pstm14, pstm15,
-            pstm16, pstm17, pstm18, pstm19;
+            pstm16, pstm17, pstm18, pstm19, pstm20;
         Map<String, Keyword> datasources = new HashMap<String, Keyword>();
 
         // xrefs for the current target
@@ -189,6 +189,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from phenotype where protein_id = ?");
             pstm8 = con.prepareStatement
                 ("select * from expression where protein_id = ? "
+                 +"and qual_value != 'Not detected'"
                  //+"and evidence = 'CURATED'"
                  );
             pstm9 = con.prepareStatement
@@ -218,6 +219,9 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm19 = con.prepareStatement
                 ("select * from target2grant where target_id = ?");
 
+            pstm20 = con.prepareStatement
+                ("select * from target2disease where target_id = ?");
+
             this.chembl = chembl;
         }
 
@@ -234,6 +238,11 @@ public class TcrdRegistry extends Controller implements Commons {
             for (Ligand l : LIGS) {
                 l.update();
                 INDEXER.update(l);
+            }
+
+            for (Disease d : DISEASES.values()) {
+                d.update();
+                INDEXER.update(d);
             }
         }
 
@@ -257,6 +266,7 @@ public class TcrdRegistry extends Controller implements Commons {
             pstm17.close();
             pstm18.close();
             pstm19.close();
+            pstm20.close();
             
             chembl.shutdown();
         }
@@ -587,6 +597,20 @@ public class TcrdRegistry extends Controller implements Commons {
                                          +target.id+" tissue: "+tissue);
                         }
                     }
+                }
+                else if (type.startsWith("HPA")) {
+                    Keyword source = datasources.get(type);
+                    if (source == null) {
+                        source = KeywordFactory.registerIfAbsent
+                            (SOURCE, type,
+                             "http://tissues.jensenlab.org");
+                        datasources.put(type, source);
+                    }
+                    sources.put(type, source);
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (type+" Tissue", tissue, null);
+                    target.properties.add(kw);
+                    Logger.debug("Target "+target.id+" "+type+": "+tissue);
                 }
                 else if (type.startsWith("JensenLab Experiment")) {
                     Keyword source = datasources.get(type);
@@ -1192,7 +1216,96 @@ public class TcrdRegistry extends Controller implements Commons {
             rset.close();
             Logger.debug("Target "+target.id+" has "+count+" ligand(s)!");
         }
-        
+
+        void addDisease (Target target, long tid) throws Exception {
+            pstm20.setLong(1, tid);
+            ResultSet rset = pstm20.executeQuery();
+            try {
+                while (rset.next()) {
+                    String name = rset.getString("name");
+                    List<Disease> diseases = DiseaseFactory
+                        .finder.where().eq("name", name).findList();
+                    Disease d = null;
+                    if (diseases.isEmpty()) {
+                        d = new Disease ();
+                        d.name = name;
+                        String doid = rset.getString("doid");
+                        d.synonyms.add(KeywordFactory.registerIfAbsent
+                                       ("DOID", doid,
+                                        "http://www.disease-ontology.org/term/"
+                                        +doid));
+                        d.save();
+                        DISEASES.put(doid, d);
+                    }
+                    else {
+                        d = diseases.iterator().next();
+                    }
+                    
+                    XRef xref = target.addIfAbsent(new XRef (d));
+                    
+                    String type = rset.getString("datype");
+                    if ("JensenLab Knowledge UniProtKB-KW"
+                        .equalsIgnoreCase(type)) {
+                        xref.properties.add(KeywordFactory.registerIfAbsent
+                                            (IDG_DISEASE, d.name, null));
+                    }
+
+                    Keyword source = KeywordFactory.registerIfAbsent
+                        (SOURCE, type, null);
+                    xref.properties.add(source);
+                    double zscore = rset.getDouble("zscore");
+                    if (!rset.wasNull()) {
+                        xref.properties.add(new VNum (IDG_ZSCORE, zscore));
+                    }
+                    double conf = rset.getDouble("conf");
+                    if (!rset.wasNull()) {
+                        xref.properties.add(new VNum (IDG_CONF, conf));
+                    }
+                    String evidence = rset.getString("evidence");
+                    if (evidence != null) {
+                        xref.properties.add(new Text (IDG_EVIDENCE, evidence));
+                    }
+
+                    try {
+                        if (xref.id == null) {
+                            xref.save();
+                        }
+                        else {
+                            xref.update();
+                        }
+                        target.update();
+                    }
+                    catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+
+                    xref = d.addIfAbsent(new XRef (target));
+                    xref.properties.add
+                        (KeywordFactory.registerIfAbsent
+                         (IDG_DEVELOPMENT, target.idgTDL.toString(), null));
+                    xref.properties.add
+                        (KeywordFactory.registerIfAbsent
+                         (IDG_FAMILY, target.idgFamily, null));
+                    xref.properties.add(source);
+
+                    try {
+                        if (xref.id == null) {
+                            xref.save();
+                        }
+                        else {
+                            xref.update();
+                        }
+                        d.update();
+                    }
+                    catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            finally {
+                rset.close();
+            }
+        }
 
         void persists (TcrdTarget t) throws Exception {
             Http.Context.current.set(ctx);
@@ -1231,16 +1344,19 @@ public class TcrdRegistry extends Controller implements Commons {
             addGrant (target, t.id);
             addDrugs (target, t.id);
             addChembl (target, t.id);
+            addDisease (target, t.id);
             //addHarmonogram(target, t.protein);
 
             TARGETS.add(target);
-            
+
+            /*
             Logger.debug("...disease linking");
             pstm.setLong(1, t.id);
             long start = System.currentTimeMillis();
             new RegisterDiseaseRefs (target, t, pstm).persists();
             long end = System.currentTimeMillis();
             Logger.debug("..."+(end-start)+"ms to resolve diseases");
+            */
 
             Logger.debug("...gene RIF linking");
             pstm4.setLong(1, t.protein);

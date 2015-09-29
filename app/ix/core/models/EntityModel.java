@@ -109,32 +109,32 @@ public abstract class EntityModel extends IxModel {
         return Global.getRef(this)+"?view=full";
     }
 
-    public boolean addIfAbsent (Keyword syn) {
+    public Keyword addIfAbsent (Keyword syn) {
         for (Keyword kw : getSynonyms ()) {
             if (kw.label.equals(syn.label)
                 && kw.term.equals(syn.term))
-                return false;
+                return kw;
         }
         getSynonyms().add(syn);
-        return true;
+        return syn;
     }
     
-    public boolean addIfAbsent (XRef xref) {
+    public XRef addIfAbsent (XRef xref) {
         for (XRef xr : getLinks()) {
             if (xr.refid.equals(xref.refid)
                 && xr.kind.equals(xref.kind))
-                return false;
+                return xr;
         }
         getLinks().add(xref);
-        return true;
+        return xref;
     }
 
-    public boolean addIfAbsent (Publication pub) {
+    public Publication addIfAbsent (Publication pub) {
         for (Publication p : getPublications ())
             if (p.id.equals(pub.id) || p.pmid.equals(pub.pmid))
-                return false;
+                return p;
         getPublications().add(pub);
-        return true;
+        return pub;
     }
 
     public XRef getLink (Object inst) {
