@@ -53,6 +53,7 @@ public interface Commons {
     
     public static final String TINX_NOVELTY = "TINX Novelty";
     public static final String TINX_IMPORTANCE = "TINX Importance";
+    public static final String TINX_DISEASE_NOVELTY = "TINX Disease Novelty";
     public static final String TINX_PUBLICATION = "TINX Publication";
 
     public static final String WHO_ATC = "WHO ATC";
