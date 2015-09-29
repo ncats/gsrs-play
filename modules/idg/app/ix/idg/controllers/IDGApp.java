@@ -455,7 +455,8 @@ public class IDGApp extends App implements Commons {
 
     @Cached(key="_help", duration= Integer.MAX_VALUE)
     public static Result help() {
-        return null;
+        return ok (ix.idg.views.html.help.render
+                ("Pharos: Illuminating the Druggable Genome"));
     }
 
     @Cached(key="_about", duration = Integer.MAX_VALUE)
