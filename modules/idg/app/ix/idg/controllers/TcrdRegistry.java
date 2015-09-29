@@ -228,18 +228,33 @@ public class TcrdRegistry extends Controller implements Commons {
             }
             
             for (Target t : TARGETS) {
-                t.update();
-                INDEXER.update(t);
+                try {
+                    INDEXER.update(t);
+                    t.update();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
             
             for (Ligand l : LIGS) {
-                l.update();
-                INDEXER.update(l);
+                try {
+                    INDEXER.update(l);              
+                    l.update();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
 
             for (Disease d : DISEASES.values()) {
-                d.update();
-                INDEXER.update(d);
+                try {
+                    INDEXER.update(d);              
+                    d.update();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
             }
         }
 
@@ -1243,13 +1258,13 @@ public class TcrdRegistry extends Controller implements Commons {
                     String type = rset.getString("datype");
                     if ("JensenLab Knowledge UniProtKB-KW"
                         .equalsIgnoreCase(type)) {
-                        xref.properties.add(KeywordFactory.registerIfAbsent
-                                            (IDG_DISEASE, d.name, null));
+                        xref.addIfAbsent(KeywordFactory.registerIfAbsent
+                                         (IDG_DISEASE, d.name, null));
                     }
 
                     Keyword source = KeywordFactory.registerIfAbsent
                         (SOURCE, type, null);
-                    xref.properties.add(source);
+                    xref.addIfAbsent(source);
                     double zscore = rset.getDouble("zscore");
                     if (!rset.wasNull()) {
                         xref.properties.add(new VNum (IDG_ZSCORE, zscore));
@@ -1266,33 +1281,33 @@ public class TcrdRegistry extends Controller implements Commons {
                     try {
                         if (xref.id == null) {
                             xref.save();
+                            //target.update();
                         }
                         else {
                             xref.update();
                         }
-                        target.update();
                     }
                     catch (Exception ex) {
                         ex.printStackTrace();
                     }
 
                     xref = d.addIfAbsent(new XRef (target));
-                    xref.properties.add
+                    xref.addIfAbsent
                         (KeywordFactory.registerIfAbsent
                          (IDG_DEVELOPMENT, target.idgTDL.toString(), null));
-                    xref.properties.add
+                    xref.addIfAbsent
                         (KeywordFactory.registerIfAbsent
                          (IDG_FAMILY, target.idgFamily, null));
-                    xref.properties.add(source);
+                    xref.addIfAbsent(source);
 
                     try {
                         if (xref.id == null) {
                             xref.save();
+                            //d.update();
                         }
                         else {
                             xref.update();
                         }
-                        d.update();
                     }
                     catch (Exception ex) {
                         ex.printStackTrace();

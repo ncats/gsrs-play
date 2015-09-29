@@ -108,7 +108,11 @@ public class IDGApp extends App implements Commons {
 
         DiseaseRelevance () {}
         public int compareTo (DiseaseRelevance dr) {
-            double d = dr.zscore - zscore;
+            double d = 0.;
+            if (dr.zscore != null && zscore != null)
+                d = dr.zscore - zscore;
+            else if (dr.conf != null && conf != null)
+                d = dr.conf - conf;
             if (d < 0) return -1;
             if (d > 0) return 1;
             return 0;
