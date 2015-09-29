@@ -453,6 +453,11 @@ public class IDGApp extends App implements Commons {
         return decors.toArray(new FacetDecorator[0]);
     }
 
+    @Cached(key="_help", duration= Integer.MAX_VALUE)
+    public static Result help() {
+        return null;
+    }
+
     @Cached(key="_about", duration = Integer.MAX_VALUE)
     public static Result about() {
         final String key = "idg/about";
