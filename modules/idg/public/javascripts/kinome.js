@@ -9,7 +9,7 @@
     
     function showKinases (genes, size, color) {
         for (var i = 0; i < genes.length; ++i) {
-	    console.log(genes[i].name+': top='+~~(scaleY*genes[i].y)+' left='+~~(scaleX*genes[i].x));
+	    //console.log(genes[i].name+': top='+~~(scaleY*genes[i].y)+' left='+~~(scaleX*genes[i].x));
             var cir = new fabric.Circle({
                 radius: size,
                 top: ~~(scaleY*genes[i].y),
@@ -48,7 +48,8 @@
             top: 30,
             left: 1,
             fontSize: 10,
-            fill: '#428bca'
+            //fill: '#428bca'
+	    fill: 'gray'
         });
 	tk.set('selectable',false);
         canvas.add(tk);
@@ -60,7 +61,8 @@
             top: 32,
             left: 120,
             fontSize: 10,
-            fill: '#428bca'                
+            //fill: '#428bca'
+	    fill: 'gray'
         });
 	tkl.set('selectable',false);
         canvas.add(tkl);
@@ -71,7 +73,8 @@
             top: 50,
             left: 130,
             fontSize: 10,
-            fill: '#428bca'                
+            //fill: '#428bca'
+	    fill: 'gray'
         });
 	ste.set('selectable',false);
         canvas.add(ste);
@@ -80,9 +83,10 @@
             fontFamily: 'Comic Sans',
             //angle: 45,
             top: 100,
-            left: 130,
+            left: 135,
             fontSize: 10,
-            fill: '#428bca'                
+            //fill: '#428bca'
+	    fill: 'gray'
         });
 	ck1.set('selectable',false);
         canvas.add(ck1);
@@ -93,7 +97,8 @@
             top: 170,
             left: 130,
             fontSize: 10,
-            fill: '#428bca'                 
+            //fill: '#428bca'
+	    fill: 'gray'
         });
 	agc.set('selectable',false);
         canvas.add(agc);
@@ -104,7 +109,8 @@
             top: 185,
             left: 90,
             fontSize: 10,
-            fill: '#428bca'                 
+            //fill: '#428bca'
+	    fill: 'gray'
         });
 	camk.set('selectable', false);	
         canvas.add(camk);
@@ -115,33 +121,50 @@
             top: 135,
             left: 5,
             fontSize: 10,
-            fill: '#428bca'                 
+            //fill: '#428bca'
+	    fill: 'gray'
         });
 	cmgc.set('selectable', false);
         canvas.add(cmgc);        
     }
     
-    Kinome = function(id, image, data) {
+    Kinome = function(id, image, url) {
 	canvas = new fabric.StaticCanvas(id);
 	fabric.Image.fromURL(image, function (img) {
-            //img.setScaleX(scaleX);
-            //img.setScaleY(scaleY);
             canvas.setBackgroundImage(img);
         
-            //console.log('width='+img.getWidth()+' height='+img.getHeight() +' scaleX='+scaleX  +' scaleY='+scaleY);
-	
-            // setup the 5 categories
-            //Tclin = setupKinases (Kinome.Tclin, 10, 'blue');
-            //Tchem = setupKinases (Kinome.Tchem, 10, 'green');
-            //Tmacro = setupKinases (Kinome.Tmacro, 10, 'red');
-            //Tgray = setupKinases (Kinome.Tgray, 10, 'orange');
-            //Tdark = setupKinases (Kinome.Tdark, 10, 'black');
-
-            resetCanvas ();
-	    showKinases (kinases.slice(0,5), 4, 'orange');
-	    showKinases (kinases.slice(10,20), 4, 'red');
-	    showKinases (kinases.slice(100,120), 4, 'blue');
-            canvas.renderAll();
+	    $.get(url, function (data) {
+		resetCanvas ();
+		var selections = {
+		    'Tdark': [],
+		    'Tbio': [],
+		    'Tclin': [],
+		    'Tchem': []
+		};
+		for (var i = 0; i < data.length; ++i) {
+		    //console.log(data[i].name+' '+data[i].tdl);
+		    // sigh.. this is just plain lazy
+		    var j = 0;
+		    for (; j < kinases.length; ++j) {
+			if (data[i].name == kinases[j].name) {
+			    var d = selections[data[i].tdl];
+			    d[d.length] = kinases[j];
+			    break;
+			}
+		    }
+		    
+		    if (j == kinases.length) {
+			console.log('Unknown kinase "'+data[i].name+'"');
+		    }
+		}
+		
+		showKinases (selections['Tdark'], 4, 'red');
+		showKinases (selections['Tbio'], 4, 'orange');
+		showKinases (selections['Tclin'], 4, 'blue');
+		showKinases (selections['Tchem'], 4, '#428bca');
+		
+		canvas.renderAll();
+	    }, "json");
 	});
     }
 

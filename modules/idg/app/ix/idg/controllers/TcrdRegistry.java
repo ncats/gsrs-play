@@ -186,8 +186,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from phenotype where protein_id = ?");
             pstm8 = con.prepareStatement
                 ("select * from expression where protein_id = ? "
-                 +"and qual_value != 'Not detected'"
-                 //+"and evidence = 'CURATED'"
+                 +"and (qual_value != 'Not detected'"
+                 +"or evidence = 'CURATED')"
                  );
             pstm9 = con.prepareStatement
                 ("select * from goa where protein_id = ?");
@@ -499,6 +499,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 hg.save();
                 n++;
             }
+            rset.close();
             Logger.debug(n+" harmonogram entries for "+target.id);
         }
 
@@ -1179,12 +1180,15 @@ public class TcrdRegistry extends Controller implements Commons {
                     ligand.save();
                     LIGS.add(ligand);
                 }
-                
-                Keyword kw = KeywordFactory.registerIfAbsent
-                    (ChEMBL_SYNONYM, rset.getString("cmpd_name_in_ref"),
-                     "https://www.ebi.ac.uk/chembl/compound/inspect/"
-                     +chemblId);
-                ligand.addIfAbsent(kw);
+
+                String syn = rset.getString("cmpd_name_in_ref");
+                if (syn.length() <= 255) {
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (ChEMBL_SYNONYM, syn,
+                         "https://www.ebi.ac.uk/chembl/compound/inspect/"
+                         +chemblId);
+                    ligand.addIfAbsent(kw);
+                }
 
                 VNum act = new VNum (rset.getString("act_type"),
                                      rset.getDouble("act_value"));
@@ -1367,7 +1371,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addDrugs (target, t.id);
             addChembl (target, t.id);
             addDisease (target, t.id);
-            //addHarmonogram(target, t.protein);
+            addHarmonogram(target, t.protein);
 
             TARGETS.add(target);
 
@@ -2108,9 +2112,10 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
                  //+"where d.protein_id in (8721)\n"
-                 //+"where c.id in (8721)\n"
+                 //+"where c.id in (11521)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl = 'Tclin'\n"
+                 +"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
                  //+"where c.uniprot in ('P42685')\n"

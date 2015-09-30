@@ -46,7 +46,7 @@
 
 @cloud(facet: String) = {
    @defining(App.scaleFacetCounts(ctx.getFacet(facet), 30, true)) { keywords =>
-      wordcloud('cloud-@Util.sha1(facet)', 400, 200, '@facet', [
+      wordcloud('cloud-@Util.sha1(facet)', 500, 200, '@facet', [
        @for(v <- keywords) {
 	    {text: '@v.label',
 	     size: @v.intval},
@@ -118,7 +118,7 @@
           <div class="row">
 	     <div class="col-md-6">
 	            <div id="cloud-@Util.sha1(facet)"
-		        style="height:200px;width=400px;padding-left:200px">
+		        style="height:200px;width=500px;padding-left:100px">
 		    </div>
              </div>
 	  </div>
@@ -165,7 +165,7 @@
       @item(GRANT_FUNDING_IC, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/glossary.htm#I14'>Grant Funding IC</a>"))
       @item(GRANT_ACTIVITY, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/funding/ac_search_results.htm'>Grant Activity</a>"))
       @item(SOURCE, HtmlFormat.raw("Data Source"))
-      @item(KEGG_PATHWAY, HtmlFormat.raw("<a href='http://www.genome.jp/kegg/pathway.html'>KEGG Pathway</a>"))
+      @wordcloud(KEGG_PATHWAY, HtmlFormat.raw("<a href='http://www.genome.jp/kegg/pathway.html'>KEGG Pathway</a>"))
       @wordcloud(UNIPROT_KEYWORD, HtmlFormat.raw("<a href='http://www.uniprot.org/keywords/'>UniProt Keywords</a>"))
       @wordcloud("MeSH", HtmlFormat.raw("<a href='http://www.ncbi.nlm.nih.gov/mesh'>Medical Subject Headings</a>"))
       <div class="item">
@@ -174,14 +174,14 @@
 	      <div class="col-md-12">
 	         <div class="col-xs-3 col-md-4" style="text-align:right;"></div>
 		 <div class="col-xs-3 col-md-4">
-		     <canvas id="kinome-canvas" width="150" height="200">
+		     <canvas id="kinome-canvas" width="162" height="200">
 		     </canvas>
 		 </div>
 	      </div>
 	    </div>
 	    <div class="row">
     	      <div class="col-md-12">
-	        <center><h4>Kinome</h4></center>
+	        <center><h4>The Human Kinome</h4></center>
 	      </div>
 	    </div>
 	 </div>
@@ -218,7 +218,14 @@ function wordcloud (id, width, height, facetName, data) {
    d3.layout.cloud().size([width, height])
       .words(data)
       .padding(5)
-      .rotate(function() { return ~~(Math.random() * 2) * 90; })
+      .rotate(function(d) {
+         var h = 0;
+	 for (var i = 0; i < d.text.length; ++i) {
+	    h ^= d.text.charCodeAt(i);
+	 }
+	 return (~~h % 2) * 90;
+         //return ~~(Math.random() * 2) * 90;
+      })
       .font("Impact")
       .fontSize(function(d) {
 	 if (d.size < 8) return 8;
@@ -265,13 +272,15 @@ $(document).ready(function () {
   @donut(GRANT_FUNDING_IC)
   @donut(GRANT_ACTIVITY)
   @donut(SOURCE)
-  @donut(KEGG_PATHWAY)
+  @cloud(KEGG_PATHWAY)
 
   @cloud(UNIPROT_KEYWORD)
   @cloud("MeSH")
 
-  new Kinome('kinome-canvas','@routes.Assets.at("images/kinome200.png")',{
-  });
+  new Kinome('kinome-canvas',
+      '@routes.Assets.at("images/kinome200.png")',
+      '@ix.idg.controllers.routes.IDGApp.getKinases(request.getQueryString("q"))'
+  );
   
 @defining(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS)) { json =>
   @if(json != null) {
