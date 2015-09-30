@@ -1649,30 +1649,37 @@ public class App extends Authentication {
     
     public static List<VInt> scaleFacetCounts
         (Facet facet, int scale, boolean inverse) {
-        int max = 0, min = Integer.MAX_VALUE;
-        for (FV fv : facet.getValues()) {
-            if (fv.getCount() > max)
-                max = fv.getCount();
-            if (fv.getCount() < min)
-                min = fv.getCount();
-        }
-
-        if (max == 0) max = 1;
-        if ((max-min) <= scale/2) {
-            scale += scale/2;
-        }
-        
         List<VInt> values = new ArrayList<VInt>();
-        for (FV fv : facet.getValues()) {
-            VInt v = new VInt ();
-            v.label = fv.getLabel();
-            if (inverse) {
-                v.intval = (long)(0.5+(1. - (double)fv.getCount()/max)*scale);
+        if (facet != null) {
+            int max = 0, min = Integer.MAX_VALUE;
+            for (FV fv : facet.getValues()) {
+                if (fv.getCount() > max)
+                    max = fv.getCount();
+                if (fv.getCount() < min)
+                    min = fv.getCount();
             }
-            else {
-                v.intval = (long)(0.5+(double)fv.getCount()*scale/max);
+            
+            if (max == min) {
+                inverse = false;
+                scale /= 2;
             }
-            values.add(v);
+            else if ((max-min) <= scale/2) {
+                scale += scale/2;
+            }
+            
+            
+            for (FV fv : facet.getValues()) {
+                VInt v = new VInt ();
+                v.label = fv.getLabel();
+                if (inverse) {
+                    v.intval =
+                        (long)(0.5+(1. - (double)fv.getCount()/max)*scale);
+                }
+                else {
+                    v.intval = (long)(0.5+(double)fv.getCount()*scale/max);
+                }
+                values.add(v);
+            }
         }
         
         return values;

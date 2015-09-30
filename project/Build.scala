@@ -71,7 +71,6 @@ object ApplicationBuild extends Build {
       ,"org.freehep" % "freehep-graphicsio-svg" % "2.4"
       ,"org.freehep" % "freehep-graphics2d" % "2.4"
       //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
-      ,"org.webjars" % "fabric.js" % "1.4.12"
       ,"org.webjars.bower" % "spin.js" % "2.0.2"
   )
 
@@ -145,6 +144,7 @@ public class BuildInfo {
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
     libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "morrisjs" % "0.5.1",
+      libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
   ).dependsOn(ncats).aggregate(ncats)

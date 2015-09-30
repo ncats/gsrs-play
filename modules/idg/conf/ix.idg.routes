@@ -31,6 +31,7 @@ GET	/tinx/target/:acc		ix.idg.controllers.TINXApp.tinxForTarget(acc: String)
 GET /hg/data ix.idg.controllers.HarmonogramApp.hgForTarget(q: String ?= null, ctx: String ?= null, format: String ?= null)
 GET /hg/view ix.idg.controllers.HarmonogramApp.view(q: String ?= null, ctx: String ?= null)
 GET	/hierarchy	ix.idg.controllers.IDGApp.getHierarchy(ctx: String, facet: String)
+GET	/kinases	ix.idg.controllers.IDGApp.getKinases(q: String ?= null)
 
 ->	/	ix.ncats.Routes
 ->	/	ix.core.test.Routes

@@ -118,6 +118,19 @@ public abstract class EntityModel extends IxModel {
         getSynonyms().add(syn);
         return syn;
     }
+
+    public Value addIfAbsent (Value value) {
+        if (value != null) {
+            if (value.id != null) {
+                for (Value val : getProperties ()) {
+                    if (value.id.equals(val.id))
+                        return val;
+                }
+            }
+            getProperties().add(value);
+        }
+        return value;
+    }
     
     public XRef addIfAbsent (XRef xref) {
         for (XRef xr : getLinks()) {

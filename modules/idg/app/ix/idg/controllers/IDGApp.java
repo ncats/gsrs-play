@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.search.SearchFactory;
@@ -40,6 +41,10 @@ import static ix.core.search.TextIndexer.SearchResult;
 
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
+
+    public interface Filter<T extends EntityModel> {
+        boolean accept (T e);
+    }
 
     static class IDGSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result> {
@@ -108,7 +113,11 @@ public class IDGApp extends App implements Commons {
 
         DiseaseRelevance () {}
         public int compareTo (DiseaseRelevance dr) {
-            double d = dr.zscore - zscore;
+            double d = 0.;
+            if (dr.zscore != null && zscore != null)
+                d = dr.zscore - zscore;
+            else if (dr.conf != null && conf != null)
+                d = dr.conf - conf;
             if (d < 0) return -1;
             if (d > 0) return 1;
             return 0;
@@ -384,8 +393,7 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        IDG_TISSUE,
-        GWAS_TRAIT
+        IDG_TISSUE
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -2146,5 +2154,102 @@ public class IDGApp extends App implements Commons {
         
         return "<th><a href='"+url+"order="+order+"'>"+name
             +"</a>&nbsp;<i class='fa fa-sort"+sort+"'></i></th>";
+    }
+
+    public static <T extends EntityModel> List<T> filter
+        (SearchResult results, Filter<T> filter) {
+        List<T> matches = new ArrayList<T>();
+        for (Object obj : results.getMatches()) {
+            T e = (T)obj;
+            if (filter.accept(e)) {
+                matches.add(e);
+            }
+        }
+        return matches;
+    }
+
+    static JsonNode getKinases (SearchResult result) {
+        ObjectMapper mapper = new ObjectMapper ();      
+        ArrayNode node = mapper.createArrayNode();
+        for (Target t : filter (result, new Filter<Target> () {
+                public boolean accept (Target t) {
+                    //Logger.debug(t.getName()+" \""+t.idgFamily+"\"");
+                    return "kinase".equalsIgnoreCase(t.idgFamily);
+                }
+            })) {
+            //Logger.debug("Kinase: "+t.getName());
+            for (Keyword kw : t.synonyms) {
+                if (UNIPROT_GENE.equalsIgnoreCase(kw.label)) {
+                    ObjectNode n = mapper.createObjectNode();
+                    n.put("name", kw.term);
+                    n.put("tdl", t.idgTDL.toString());
+                    node.add(n);
+                    break;
+                }
+            }
+        }
+        
+        return node;
+    }
+    
+    public static JsonNode _getKinases (final String q) throws Exception {
+        final Map<String, String[]> query = getRequestQuery ();
+        
+        String[] facets = query.get("facet");
+        if (facets != null) {
+            boolean hasFamily = false;
+            for (String f : facets) {
+                if (f.startsWith(IDG_FAMILY)) {
+                    hasFamily = true;
+                    break;
+                }
+            }
+            
+            if (!hasFamily) {
+                // add kinase facet
+                List<String> values = new ArrayList<String>();
+                for (String f : facets)
+                    values.add(f);
+                values.add(IDG_FAMILY+"/Kinase");
+                query.put("facet", values.toArray(new String[0]));
+            }
+            else {
+                // leave it alone
+            }
+        }
+        else {
+            query.put("facet", new String[]{IDG_FAMILY+"/Kinase"});
+        }
+                
+        final String key = "targets/"+Util.sha1(request (), "q", "facet");
+        final SearchResult result =
+            getOrElse (key, new Callable<SearchResult> () {
+                    public SearchResult call () throws Exception {
+                        int total = TargetFactory.finder.findRowCount();        
+                        return getSearchResult (Target.class, q,
+                                                total, query);
+                    }
+                });
+        
+        if (result.finished()) {
+            return getOrElse (key+"/json", new Callable<JsonNode>() {
+                    public JsonNode call () throws Exception {
+                        return getKinases (result);
+                    }
+                });
+        }
+
+        // not cached because it hasn't finished fetching..
+        return getKinases (result);
+    }
+
+    public static Result getKinases (String q) {
+        try {
+            return ok (_getKinases (q));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
     }
 }
