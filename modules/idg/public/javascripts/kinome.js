@@ -1,10 +1,151 @@
 (function () {
-    var scaleX = null, scaleY = null;
-    var Tclin, Tchem, Tmacro, Tgray, Tdark;
-    var TclinCb, TchemCb, TmacroCb, TgrayCb, TdarkCb, labelCb;
+    var scaleX = 162.0/1591, scaleY = 200.0/1959;
+    var canvas;
+    
+    function resetCanvas () {
+        canvas.clear();
+        annotateFamilies ();
+    }
+    
+    function showKinases (genes, size, color) {
+        for (var i = 0; i < genes.length; ++i) {
+	    console.log(genes[i].name+': top='+~~(scaleY*genes[i].y)+' left='+~~(scaleX*genes[i].x));
+            var cir = new fabric.Circle({
+                radius: size,
+                top: ~~(scaleY*genes[i].y),
+                left: ~~(scaleX*genes[i].x),
+                hasControls: false,
+                //stroke: 'black',
+                strokeWidth: 2,
+		fill: color
+            });
+/*
+            cir.setGradient('fill', {
+                type: 'radial',
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 0,
+                r1: cir.width / 2,
+                r2: 5,
+                colorStops: {
+                    0: color,
+                    1: 'white'
+                }
+            });
+*/
+	    cir.setOpacity(0.6);
+	    canvas.add(cir);
+        }
+    }
+    
+    function annotateFamilies () {
+        // draw the family names
+        var tk = new fabric.Text('TK', {
+            fontFamily: 'Comic Sans',
+            //shadow: 'rgba(0,0,0,0.3) 5px 5px 5px',
+            angle: 0,
+            top: 30,
+            left: 1,
+            fontSize: 10,
+            fill: '#428bca'
+        });
+	tk.set('selectable',false);
+        canvas.add(tk);
+        
+        var tkl = new fabric.Text('TKL', {
+            fontFamily: 'Comic Sans',
+            //shadow: 'rgba(0,0,0,0.3) 5px 5px 5px',
+            //angle: 45,
+            top: 32,
+            left: 120,
+            fontSize: 10,
+            fill: '#428bca'                
+        });
+	tkl.set('selectable',false);
+        canvas.add(tkl);
+        
+        var ste = new fabric.Text('STE', {
+            fontFamily: 'Comic Sans',
+            //angle: 45,
+            top: 50,
+            left: 130,
+            fontSize: 10,
+            fill: '#428bca'                
+        });
+	ste.set('selectable',false);
+        canvas.add(ste);
+        
+        var ck1 = new fabric.Text('CK1', {
+            fontFamily: 'Comic Sans',
+            //angle: 45,
+            top: 100,
+            left: 130,
+            fontSize: 10,
+            fill: '#428bca'                
+        });
+	ck1.set('selectable',false);
+        canvas.add(ck1);
+        
+        var agc = new fabric.Text('AGC', {
+            fontFamily: 'Comic Sans',
+            //angle: 45,
+            top: 170,
+            left: 130,
+            fontSize: 10,
+            fill: '#428bca'                 
+        });
+	agc.set('selectable',false);
+        canvas.add(agc);
+        
+        var camk = new fabric.Text('CAMK', {
+            fontFamily: 'Comic Sans',
+            //angle: 45,
+            top: 185,
+            left: 90,
+            fontSize: 10,
+            fill: '#428bca'                 
+        });
+	camk.set('selectable', false);	
+        canvas.add(camk);
+        
+        var cmgc = new fabric.Text('CMGC', {
+            fontFamily: 'Comic Sans',
+            //angle: 45,
+            top: 135,
+            left: 5,
+            fontSize: 10,
+            fill: '#428bca'                 
+        });
+	cmgc.set('selectable', false);
+        canvas.add(cmgc);        
+    }
+    
+    Kinome = function(id, image, data) {
+	canvas = new fabric.StaticCanvas(id);
+	fabric.Image.fromURL(image, function (img) {
+            //img.setScaleX(scaleX);
+            //img.setScaleY(scaleY);
+            canvas.setBackgroundImage(img);
+        
+            //console.log('width='+img.getWidth()+' height='+img.getHeight() +' scaleX='+scaleX  +' scaleY='+scaleY);
+	
+            // setup the 5 categories
+            //Tclin = setupKinases (Kinome.Tclin, 10, 'blue');
+            //Tchem = setupKinases (Kinome.Tchem, 10, 'green');
+            //Tmacro = setupKinases (Kinome.Tmacro, 10, 'red');
+            //Tgray = setupKinases (Kinome.Tgray, 10, 'orange');
+            //Tdark = setupKinases (Kinome.Tdark, 10, 'black');
 
-    var Kinome = {
-   Tchem: [
+            resetCanvas ();
+	    showKinases (kinases.slice(0,5), 4, 'orange');
+	    showKinases (kinases.slice(10,20), 4, 'red');
+	    showKinases (kinases.slice(100,120), 4, 'blue');
+            canvas.renderAll();
+	});
+    }
+
+    var kinases = [
      {name: 'AKT3',
       x: 1392,
       y: 1278,
@@ -184,9 +325,7 @@
       x: 569,
       y: 412,
       width: 19,
-      height: 19}
-    ],
-    Tclin: [
+      height: 19},
      {name: 'AAK1',
       x: 531,
       y: 1134,
@@ -1736,9 +1875,7 @@
       x: 981,
       y: 456,
       width: 21,
-      height: 20}
-    ],
-    Tdark: [
+      height: 20},
      {name: 'CDKL4',
       x: 247,
       y: 1022,
@@ -1773,9 +1910,7 @@
       x: 710,
       y: 862,
       width: 19,
-      height: 18}
-    ],
-   Tgray: [
+      height: 18},
      {name: 'DYRK4',
       x: 361,
       y: 713,
@@ -1880,9 +2015,7 @@
       x: 1106,
       y: 992,
       width: 18,
-      height: 19}
-    ],
-   Tmacro: [
+      height: 19},
      {name: 'AATK',
       x: 764,
       y: 430,
@@ -2228,12 +2361,8 @@
       y: 737,
       width: 18,
       height: 16}
-   ]};
+   ];
     
-    function resetCanvas () {
-        canvas.clear();
-        annotateFamilies ();
-    }
 
     function highlights (objs, labels, term, color) {
         labelCb = document.getElementById('kinase-cb-show-label');
@@ -2362,136 +2491,4 @@
         canvas.renderAll();
     };
   
-    function setupKinases (kinases, size, color) {
-        var K = [];
-        for (var i = 0; i < kinases.length; ++i) {
-            var cir = new fabric.Circle({
-                radius: size,
-                top: scaleY*kinases[i].y,
-                left: scaleX*kinases[i].x,
-                hasControls: false,
-                //stroke: 'black',
-                strokeWidth: 2
-            });
-            cir.setGradient('fill', {
-                type: 'radial',
-                x1: 0,
-                y1: 0,
-                x2: 0,
-                y2: 0,
-                r1: cir.width / 2,
-                r2: 5,
-                colorStops: {
-                    0: color,
-                    1: 'white'
-                }
-            });
-            cir.setOpacity(0.6);
-            K[K.length] = cir;
-        }
-        return K;
-    }
-    
-    function annotateFamilies () {
-        // draw the family names
-        var tk = new fabric.Text('TK', {
-            fontFamily: 'Comic Sans',
-            //shadow: 'rgba(0,0,0,0.3) 5px 5px 5px',
-            angle: 0,
-            top: 30,
-            left: 30,
-            fontSize: 20,
-            fill: '#428bca'
-        });
-	tk.set('selectable',false);
-        canvas.add(tk);
-        
-        var tkl = new fabric.Text('TKL', {
-            fontFamily: 'Comic Sans',
-            //shadow: 'rgba(0,0,0,0.3) 5px 5px 5px',
-            //angle: 45,
-            top: 60,
-            left: 380,
-            fontSize: 20,
-            fill: '#428bca'                
-        });
-	tkl.set('selectable',false);
-        canvas.add(tkl);
-        
-        var ste = new fabric.Text('STE', {
-            fontFamily: 'Comic Sans',
-            //angle: 45,
-            top: 160,
-            left: 440,
-            fontSize: 20,
-            fill: '#428bca'                
-        });
-	ste.set('selectable',false);
-        canvas.add(ste);
-        
-        var ck1 = new fabric.Text('CK1', {
-            fontFamily: 'Comic Sans',
-            //angle: 45,
-            top: 310,
-            left: 420,
-            fontSize: 20,
-            fill: '#428bca'                
-        });
-	ck1.set('selectable',false);
-        canvas.add(ck1);
-        
-        var agc = new fabric.Text('AGC', {
-            fontFamily: 'Comic Sans',
-            //angle: 45,
-            top: 490,
-            left: 430,
-            fontSize: 20,
-            fill: '#428bca'                 
-        });
-	agc.set('selectable',false);
-        canvas.add(agc);
-        
-        var camk = new fabric.Text('CAMK', {
-            fontFamily: 'Comic Sans',
-            //angle: 45,
-            top: 560,
-            left: 280,
-            fontSize: 20,
-            fill: '#428bca'                 
-        });
-	camk.set('selectable', false);	
-        canvas.add(camk);
-        
-        var cmgc = new fabric.Text('CMGC', {
-            fontFamily: 'Comic Sans',
-            //angle: 45,
-            top: 260,
-            left: 10,
-            fontSize: 20,
-            fill: '#428bca'                 
-        });
-	cmgc.set('selectable', false);
-        canvas.add(cmgc);        
-    }
-  
-    var canvas = new fabric.Canvas('kinome-canvas');
-    fabric.Image.fromURL('/assets/ncats/images/kinome.png', function (img) {
-        scaleX = canvas.getWidth()/img.getWidth();
-        scaleY = canvas.getHeight()/img.getHeight();
-        img.setScaleX(scaleX);
-        img.setScaleY(scaleY);
-        canvas.setBackgroundImage(img);
-        
-        //console.log('width='+img.getWidth()+' height='+img.getHeight() +' scaleX='+scaleX  +' scaleY='+scaleY);
-	
-        // setup the 5 categories
-        Tclin = setupKinases (Kinome.Tclin, 10, 'blue');
-        Tchem = setupKinases (Kinome.Tchem, 10, 'green');
-        Tmacro = setupKinases (Kinome.Tmacro, 10, 'red');
-        Tgray = setupKinases (Kinome.Tgray, 10, 'orange');
-        Tdark = setupKinases (Kinome.Tdark, 10, 'black');
-        
-        annotateFamilies ();
-        canvas.renderAll();
-    });
 })();

@@ -229,8 +229,8 @@ public class TcrdRegistry extends Controller implements Commons {
             
             for (Target t : TARGETS) {
                 try {
-                    INDEXER.update(t);
                     t.update();
+                    INDEXER.update(t);
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -239,8 +239,8 @@ public class TcrdRegistry extends Controller implements Commons {
             
             for (Ligand l : LIGS) {
                 try {
-                    INDEXER.update(l);              
                     l.update();
+                    INDEXER.update(l);              
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -249,8 +249,8 @@ public class TcrdRegistry extends Controller implements Commons {
 
             for (Disease d : DISEASES.values()) {
                 try {
+                    d.update();             
                     INDEXER.update(d);              
-                    d.update();
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -304,7 +304,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     String term = rset.getString("xtra");
                     if (term != null) {
                         Keyword kw = KeywordFactory.registerIfAbsent
-                            (UNIPROT_KEYWORD, term,
+                            (UNIPROT_KEYWORD, term.replaceAll("/","-"),
                              "http://www.uniprot.org/keywords/"+value);
                         
                         Value found = null;
@@ -511,7 +511,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 
                 Keyword go = null;
                 char kind = term.charAt(0);
-                term = term.substring(term.indexOf(':')+1);
+                term = term.substring(term.indexOf(':')+1)
+                    .replaceAll("/","-");
                 String href = "http://amigo.geneontology.org/amigo/term/"+id;
                 
                 switch (kind) {
@@ -704,6 +705,7 @@ public class TcrdRegistry extends Controller implements Commons {
                             Logger.debug
                                 ("OMIM: "+disorder+" ["+id+"] ("+key+")");
                             if (key.charAt(0) == '3') {
+                                disorder = disorder.replaceAll("/", "-");
                                 Keyword kw = KeywordFactory.registerIfAbsent
                                     (OMIM_TERM, disorder,
                                      "http://omim.org/entry/"+id);
@@ -749,6 +751,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     sources.put(type, source);
                     String trait = rset.getString("trait");
                     if (trait != null) {
+                        trait = trait.replaceAll("/", "-");
                         long pmid = rset.getLong("pmid");
                         if (!rset.wasNull()) {
                             Publication pub =
@@ -792,6 +795,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     String pheno = rset.getString("term_name");
                     String termId = rset.getString("term_id");
                     if (pheno != null) {
+                        pheno = pheno.replaceAll("/", "-");
                         sources.put(type, source);
                         Keyword kw = KeywordFactory.registerIfAbsent
                             (MGI_TERM, pheno, "http://www.informatics.jax.org/searches/Phat.cgi?id="+termId);
@@ -821,7 +825,7 @@ public class TcrdRegistry extends Controller implements Commons {
             if (!terms.isEmpty()) {
                 for (String term : terms) {
                     Keyword t = KeywordFactory.registerIfAbsent
-                        (IMPC_TERM, term, null);
+                        (IMPC_TERM, term.replaceAll("/","-"), null);
                     target.properties.add(t);
                 }
                 Logger.debug("Target "+target.id+" has "+terms.size()
@@ -1216,10 +1220,15 @@ public class TcrdRegistry extends Controller implements Commons {
                         tref.save();
                         ligand.update();
                     }
+                    else
+                        tref.update();
+                    
                     if (lref.id == null) {
                         lref.save();
                         target.update();
                     }
+                    else
+                        lref.update();
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -2098,8 +2107,8 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"on (a.target_id = b.id and a.protein_id = c.id)\n"
                  +"left join tinx_novelty d\n"
                  +"    on d.protein_id = a.protein_id \n"
-                 //+"where d.protein_id in (12261,17509)\n"
-                 //+"where c.id in (2006,8719,11177)\n"
+                 //+"where d.protein_id in (8721)\n"
+                 //+"where c.id in (8721)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl = 'Tclin'\n"
                  //+" where c.uniprot = 'Q8N568'\n"

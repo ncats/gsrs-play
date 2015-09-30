@@ -388,8 +388,7 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        IDG_TISSUE,
-        GWAS_TRAIT
+        IDG_TISSUE
     };
 
     public static final String[] DISEASE_FACETS = {

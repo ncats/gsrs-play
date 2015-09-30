@@ -1659,8 +1659,11 @@ public class App extends Authentication {
                     min = fv.getCount();
             }
             
-            if (max == 0) max = 1;
-            if ((max-min) <= scale/2) {
+            if (max == min) {
+                inverse = false;
+                scale /= 2;
+            }
+            else if ((max-min) <= scale/2) {
                 scale += scale/2;
             }
             

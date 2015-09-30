@@ -111,6 +111,8 @@
 }
 
 @wordcloud(facet: String, caption: Html) = {
+  @defining(ctx.getFacet(facet)) { f =>
+    @if(f != null) {
       <div class="item">
         <div class="container-fluid">
           <div class="row">
@@ -127,6 +129,8 @@
 	   </div>
         </div>
       </div>
+    }
+  }
 }
 
 <div class="collapse in" id="carousel-highlight" aria-expanded="true">
@@ -155,13 +159,35 @@
       @sunburst("panther", HtmlFormat.raw("<a href='http://pantherdb.org/panther/prowler.jsp'>PANTHER Protein Ontology</a>"))
       @item(IDG_TISSUE, HtmlFormat.raw("Annotated Tissues"))
       @item(IDG_LIGAND, HtmlFormat.raw("Ligands"))
-      @item(MGI_TERM, HtmlFormat.raw("<a href='http://www.informatics.jax.org/searches/MP_form.shtml'>JAX/MGI Phenotype</a>"))
+      @wordcloud(MGI_TERM, HtmlFormat.raw("<a href='http://www.informatics.jax.org/searches/MP_form.shtml'>JAX/MGI Phenotype</a>"))
+      @wordcloud(OMIM_TERM, HtmlFormat.raw("<a href='http://omim.org'>OMIM Phenotype</a>"))
+      @wordcloud(GWAS_TRAIT, HtmlFormat.raw("<a href='https://www.genome.gov/26525384'>GWAS Trait</a>"))      
       @item(GRANT_FUNDING_IC, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/glossary.htm#I14'>Grant Funding IC</a>"))
       @item(GRANT_ACTIVITY, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/funding/ac_search_results.htm'>Grant Activity</a>"))
       @item(SOURCE, HtmlFormat.raw("Data Source"))
       @item(KEGG_PATHWAY, HtmlFormat.raw("<a href='http://www.genome.jp/kegg/pathway.html'>KEGG Pathway</a>"))
       @wordcloud(UNIPROT_KEYWORD, HtmlFormat.raw("<a href='http://www.uniprot.org/keywords/'>UniProt Keywords</a>"))
       @wordcloud("MeSH", HtmlFormat.raw("<a href='http://www.ncbi.nlm.nih.gov/mesh'>Medical Subject Headings</a>"))
+      <div class="item">
+        <div class="container-fluid">
+	    <div class="row">
+	      <div class="col-md-12">
+	         <div class="col-xs-3 col-md-4" style="text-align:right;"></div>
+		 <div class="col-xs-3 col-md-4">
+		     <canvas id="kinome-canvas" width="150" height="200">
+		     </canvas>
+		 </div>
+	      </div>
+	    </div>
+	    <div class="row">
+    	      <div class="col-md-12">
+	        <center><h4>Kinome</h4></center>
+	      </div>
+	    </div>
+	 </div>
+      </div>
+
+
     </div>
     
     <!-- Controls -->
@@ -233,7 +259,9 @@ $(document).ready(function () {
   @donut(IDG_FAMILY)
   @donut(IDG_TISSUE)
   @donut(IDG_LIGAND)
-  @donut(MGI_TERM)
+  @cloud(MGI_TERM)
+  @cloud(OMIM_TERM)
+  @cloud(GWAS_TRAIT)
   @donut(GRANT_FUNDING_IC)
   @donut(GRANT_ACTIVITY)
   @donut(SOURCE)
@@ -241,7 +269,10 @@ $(document).ready(function () {
 
   @cloud(UNIPROT_KEYWORD)
   @cloud("MeSH")
-      
+
+  new Kinome('kinome-canvas','@routes.Assets.at("images/kinome200.png")',{
+  });
+  
 @defining(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS)) { json =>
   @if(json != null) {
     new Sunburst({
