@@ -209,7 +209,8 @@ public class TcrdRegistry extends Controller implements Commons {
                 ("select * from chembl_activity where target_id = ?");
             pstm17 = con.prepareStatement
                 ("select * from drugdb_activity where target_id = ?");
-            pstm18 = con.prepareStatement("select p.sym, p.uniprot, hg.*,gat.resource_group from target t, t2tc, protein p, hgram_cdf hg, gene_attribute_type gat " +
+            pstm18 = con.prepareStatement("select p.sym, p.uniprot, hg.*, gat.* " +
+                    "from target t, t2tc, protein p, hgram_cdf hg, gene_attribute_type gat " +
                     "WHERE t.id = t2tc.target_id AND t2tc.protein_id = p.id AND p.id = hg.protein_id " +
                     "AND gat.name = hg.type and hg.protein_id = ?");
 
@@ -473,18 +474,21 @@ public class TcrdRegistry extends Controller implements Commons {
             ResultSet rset = pstm18.executeQuery();
             int n = 0;
             while (rset.next()) {
-                HarmonogramCDF hg = new HarmonogramCDF(
-                        rset.getString("uniprot"),
-                        rset.getString("sym"),
-                        rset.getString("type"),
-                        rset.getString("resource_group"),
-                        target.idgFamily,
-                        target.idgTDL.name,
-                        rset.getDouble("attr_cdf"));
+                HarmonogramCDF hg = new HarmonogramCDF();
+                hg.attrGroup = rset.getString("attribute_group");
+                hg.attrType = rset.getString("attribute_type");
+                hg.cdf = rset.getDouble("attr_cdf");
+                hg.dataSource = rset.getString("name");
+                //hg.dataSourceDescription = rset.getString("description");
+                hg.dataType  =rset.getString("resource_group");
+                hg.IDGFamily = target.idgFamily;
+                hg.TDL = target.idgTDL.name;
+                hg.uniprotId = rset.getString("uniprot");
+                hg.symbol = rset.getString("sym");
                 hg.save();
                 n++;
             }
-            Logger.debug(n+" harmonogram entries for "+target.id);
+            Logger.debug(n + " harmonogram entries for " + target.id);
         }
 
         void addGO (Target target, long protein) throws Exception {
@@ -1070,8 +1074,8 @@ public class TcrdRegistry extends Controller implements Commons {
 
                 XRef tref = new XRef (target);
                 tref.properties.add
-                    (KeywordFactory.registerIfAbsent
-                     (IDG_DEVELOPMENT, target.idgTDL.name, null));
+                        (KeywordFactory.registerIfAbsent
+                                (IDG_DEVELOPMENT, target.idgTDL.name, null));
                 tref.properties.add
                     (KeywordFactory.registerIfAbsent
                      (IDG_FAMILY, target.idgFamily, null));
@@ -1342,7 +1346,7 @@ public class TcrdRegistry extends Controller implements Commons {
             addDrugs (target, t.id);
             addChembl (target, t.id);
             addDisease (target, t.id);
-            //addHarmonogram(target, t.protein);
+            addHarmonogram(target, t.protein);
 
             TARGETS.add(target);
 

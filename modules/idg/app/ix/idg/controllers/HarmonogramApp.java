@@ -66,7 +66,7 @@ public class HarmonogramApp extends App {
                 return _internalServerError(e);
             }
         }
-        return (ok(ix.idg.views.html.harmonogram.render(new String[0], ctx)));
+        return (ok(ix.idg.views.html.harmonogram.render(accs, ctx)));
     }
 
     public static Result hgForTarget(String q,
