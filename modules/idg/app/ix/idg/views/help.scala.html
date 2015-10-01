@@ -71,7 +71,7 @@
 
                 <h2>Definitions</h2>
 
-                <h4>Target Development Level</h4>
+                <a name="tdl"></a><h4>Target Development Level</h4>
                 <dl>
                     <dt>Tclin</dt>
                     <dd>These targets have activities in DrugDB (ie. approved drugs) with known mechanism of action that satisfy the activity thresholds detailed below</dd>
@@ -93,10 +93,10 @@
                             <li>&lt;= 50 Antibodies available according to <a href="http://antibodypedia.com">http://antibodypedia.com</a></li>
                         </ul> </dd>
                 </dl>
-                <h4>IDG Family Classification</h4>
+                <a name="idgfam"></a><h4>IDG Family Classification</h4>
 
 
-                <h2>Data Sources</h2>
+                <a name="datasources"></a><h2>Data Sources</h2>
                 The goal of the IDG KMC is to integrate a variety of data sources to shed light on unstudied and understudied
                 targets. To achieve this we have pulled together data on protein targets, small molecule activity, genomic
                 behavior and disease links. For a list of datasources, and their associated entity counts,
@@ -104,16 +104,31 @@
                 of all targets and their representation in all IDG datasources can be viewed <a href="">here</a>. Over
                 time we anticipate incorporating other relevant data sources.
 
-                <h2>Frequently Asked Questions</h2>
-                <ul>
-                    <li><i>How can I download all the data from Pharos?</i><br>Currently we do not allow full downloads of the database.
-                    Any subset (obtained using one or more filters) can be downloaded using the download icon.</li>
-                </ul>
-
+                <a name="harmonogram"></a> <h2>Harmonogram</h2>
+                The Harmonogram visualizes gene appearance in the <a href="http://amp.pharm.mssm.edu/Harmonizome">Harmonizome<a/>
+                resources using interactive clustergrams. Genes are shown as rows and resources are shown as columns.
+                The gene occurrence value is normalized relative to the occurrence of other genes in the resource - the
+                darker the tile the more the gene occurs in the resource. The NIH Reporter Grants Linked to NCBI Genes
+                column shows the number of grants linked to each gene and this column is highlighted in blue. The resources
+                are classified into Resource Groups, e.g. Disease or Phenotype Associations, and they are color coded using the
+                column triangles.
                 <p>
+                You can view clustergrams for different gene classes, e.g. kinases, using the buttons on the sidebar.
+                    The ordering of the clustergram can be changed by clicking the reordering buttons or by double-clicking
+                    the row or column labels. For instance, double-clicking the NIH Reporter Grants column in Kinases view
+                    and zooming into the top of the clustergram reveals that EGFR is the kinase associated with the most grants.
+
+            <h2>Frequently Asked Questions</h2>
+            <ul>
+                <li><i>How can I download all the data from Pharos?</i> <br>Currently we do not allow full downloads of the database.
+                    Any subset (obtained using one or more filters) can be downloaded using the download icon.</li>
+            </ul>
+
+
+            <p>
                     If you have more questions please contact us at
-                    <a href="mailto:pharos@@mail.nih.gov"><code>pharos@@mail.nih.gov</code></a>
-                </p>
+                <a href="mailto:pharos@@mail.nih.gov"><code>pharos@@mail.nih.gov</code></a>
+            </p>
             </div>
             <p></p>
 
