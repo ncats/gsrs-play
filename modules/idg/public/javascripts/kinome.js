@@ -34,7 +34,7 @@
                 }
             });
 */
-	    cir.setOpacity(0.6);
+	    cir.setOpacity(0.75);
 	    canvas.add(cir);
         }
     }

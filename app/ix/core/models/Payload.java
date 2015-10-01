@@ -40,4 +40,15 @@ public class Payload extends Model {
     public List<Value> properties = new ArrayList<Value>();
     
     public Payload () {}
+    public Value addIfAbsent (Value prop) {
+        if (prop != null) {
+            if (prop.id != null) 
+                for (Value p : properties) {
+                    if (p.id.equals(prop.id))
+                        return p;
+                }
+            properties.add(prop);
+        }
+        return prop;
+    }
 }

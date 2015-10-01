@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.KeywordFactory;
 import ix.core.controllers.PredicateFactory;
+import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
@@ -41,6 +43,7 @@ import static ix.core.search.TextIndexer.SearchResult;
 
 public class IDGApp extends App implements Commons {
     static final int MAX_SEARCH_RESULTS = 1000;
+    public static final String IDG_RESOLVER = "IDG Resolver";
 
     public interface Filter<T extends EntityModel> {
         boolean accept (T e);
@@ -1007,14 +1010,6 @@ public class IDGApp extends App implements Commons {
         if (s == null) return s;
         if (s.contains("\"")) s = s.replace("\"", "\\\"");
         return "\""+s+"\"";
-    }
-
-    static Map<String, String[]> getRequestQuery () {
-        Map<String, String[]> query = new HashMap<String, String[]>();
-        query.putAll(request().queryString());
-        // force to fetch everything at once
-        //query.put("fetch", new String[]{"0"});
-        return query;
     }
 
     static Result _targets (final String q, final int rows, final int page)
@@ -2194,6 +2189,15 @@ public class IDGApp extends App implements Commons {
     
     public static JsonNode _getKinases (final String q) throws Exception {
         final Map<String, String[]> query = getRequestQuery ();
+        Logger.debug("** _getKinases: request");
+        for (Map.Entry<String, String[]> me : query.entrySet()) {
+            Logger.debug("["+me.getKey()+"]");
+            String[] values = me.getValue();
+            if (values != null) {
+                for (String v : values)
+                    Logger.debug(" "+v);
+            }
+        }
         
         String[] facets = query.get("facet");
         if (facets != null) {
@@ -2220,8 +2224,16 @@ public class IDGApp extends App implements Commons {
         else {
             query.put("facet", new String[]{IDG_FAMILY+"/Kinase"});
         }
+        List<String> args = new ArrayList<String>();
+        facets = query.get("facet");
+        if (facets != null) {
+            for (String f : facets)
+                args.add(f);
+            Collections.sort(args);
+        }
+        if (q != null) args.add(q);
                 
-        final String key = "targets/"+Util.sha1(request (), "q", "facet");
+        final String key = "kinases/"+Util.sha1(args.toArray(new String[0]));
         final SearchResult result =
             getOrElse (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
@@ -2230,6 +2242,10 @@ public class IDGApp extends App implements Commons {
                                                 total, query);
                     }
                 });
+        for (String s : args) {
+            Logger.debug(" ++ "+s);
+        }
+        Logger.debug("_getKinases: q="+q+" key="+key+" result="+result);
         
         if (result.finished()) {
             return getOrElse (key+"/json", new Callable<JsonNode>() {
@@ -2246,6 +2262,113 @@ public class IDGApp extends App implements Commons {
     public static Result getKinases (String q) {
         try {
             return ok (_getKinases (q));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
+    }
+
+    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, 
+                   maxLength = 100000)
+    public static Result resolveBatch () {
+        if (request().body().isMaxSizeExceeded()) {
+            return badRequest ("Input is too large!");
+        }
+        Map<String, String[]> params = request().body().asFormUrlEncoded();
+        String[] values = params.get("q");
+        if (values != null && values.length > 0) {
+            String content = values[0];
+            try {
+                Payload payload = _payloader.createPayload
+                    ("Resolver Query", "text/plain", content);
+                values = params.get("kind");
+                String kind = null;
+                if (values != null) {
+                    kind = values[0];
+                    if (Target.class.getName().equalsIgnoreCase(kind)
+                        || Ligand.class.getName().equalsIgnoreCase(kind)
+                        || Disease.class.getName().equalsIgnoreCase(kind)) {
+                        payload.addIfAbsent
+                            (KeywordFactory.registerIfAbsent
+                             (IDG_RESOLVER, kind, null));
+                        payload.update();
+                    }
+                    else {
+                        Logger.debug("Bogus kind: "+kind);
+                    }
+                }
+                Logger.debug("batchResolver: kind="+kind
+                             +" => payload "+payload.id);
+                return resolve (payload.id.toString(), kind);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                return _internalServerError (ex);
+            }
+        }
+        return badRequest ("No \"q\" parameter specified!");
+    }
+
+    public static ArrayNode _resolveAsJson (String q, String kind) {
+        ObjectMapper mapper = EntityFactory.getEntityMapper();
+        ArrayNode nodes = mapper.createArrayNode();
+        if (Target.class.getName().equalsIgnoreCase(kind)) {
+            Map<Long, Target> found = new HashMap<Long, Target>();
+            for (String tok : q.split("[\\s;,\n\t]")) {
+                List<Target> targets = TargetFactory.finder.where().eq
+                    ("synonyms.term", tok).findList();
+                for (Target t : targets)
+                    found.put(t.id, t);
+            }
+            Logger.debug("_resolve: "+found.size()+" unique entries resolved!");
+            for (Target t : found.values()) {
+                nodes.add(mapper.valueToTree(t));
+            }
+        }
+        else if (Ligand.class.getName().equalsIgnoreCase(kind)) {
+        }
+        else if (Disease.class.getName().equalsIgnoreCase(kind)) {
+        }
+        return nodes;
+    }
+    
+    public static ArrayNode resolveAsJson (final String q, final String kind)
+        throws Exception {
+        String view = request().getQueryString("view");
+        final String key = "resolve/"+Util.sha1(q)+"/"+kind
+            +(view != null ? "/"+view : "");
+        return getOrElse (key, new Callable<ArrayNode>() {
+                public ArrayNode call () throws Exception {
+                    return _resolveAsJson (q, kind);
+                }
+            });
+    }
+
+    public static Result resolve (String q, String kind) {
+        Logger.debug("resolve: q="+q+" kind="+kind);
+        try {
+            String content = PayloadFactory.getString(q);
+            if (content != null) {
+                ArrayNode nodes = resolveAsJson (content, kind);
+                if (nodes.size() > 0)
+                    return ok (nodes);
+            }
+        }
+        catch (IllegalArgumentException ex) {
+            // not a payload id
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
+        
+        try {
+            ArrayNode nodes = resolveAsJson (q, kind);
+            if (nodes.size() > 0)
+                return ok (nodes);
+
+            return notFound (nodes);
         }
         catch (Exception ex) {
             ex.printStackTrace();

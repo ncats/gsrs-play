@@ -591,6 +591,14 @@ public class App extends Authentication {
         return randvar (5);
     }
 
+    protected static Map<String, String[]> getRequestQuery () {
+        Map<String, String[]> query = new HashMap<String, String[]>();
+        query.putAll(request().queryString());
+        // force to fetch everything at once
+        //query.put("fetch", new String[]{"0"});
+        return query;
+    }
+    
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total) {
         return getSearchResult (_textIndexer, kind, q, total);
@@ -605,10 +613,7 @@ public class App extends Authentication {
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
          final String q, final int total) {
-
-        Map<String, String[]> query =  new HashMap<String, String[]>();
-        query.putAll(request().queryString());
-        return getSearchResult (indexer, kind, q, total, query);
+        return getSearchResult (indexer, kind, q, total, getRequestQuery());
     }
 
     public static String signature (String q, Map<String, String[]> query) {
@@ -662,7 +667,7 @@ public class App extends Authentication {
             return getOrElse (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
-                            (kind, null, 0, 0, fdim, request().queryString());
+                            (kind, null, 0, 0, fdim, getRequestQuery ());
                         result.setKey(sha1);
                         return result;
                     }
@@ -1282,7 +1287,7 @@ public class App extends Authentication {
             }
         }
         else {
-            String key = signature (query, request().queryString());
+            String key = signature (query, getRequestQuery ());
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
             

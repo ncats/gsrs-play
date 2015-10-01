@@ -235,7 +235,7 @@ function wordcloud (id, width, height, facetName, data) {
       })
       .font("Impact")
       .fontSize(function(d) {
-	 if (d.size < 8) return 8;
+	 if (d.size < 10) return 10;
 	 return d.size;
        })
       .on("end", draw)
@@ -290,7 +290,7 @@ $(document).ready(function () {
 
   new Kinome('kinome-canvas',
       '@routes.Assets.at("images/kinome200.png")',
-      '@ix.idg.controllers.routes.IDGApp.getKinases(request.getQueryString("q"))'
+      '@ix.idg.controllers.routes.IDGApp.getKinases(null)'+'@HtmlFormat.raw(App.queryString("q", "facet"))'
   );
   
 @defining(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS)) { json =>
