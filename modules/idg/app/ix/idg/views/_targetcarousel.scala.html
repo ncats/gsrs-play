@@ -157,17 +157,7 @@
       @item(IDG_FAMILY, HtmlFormat.raw("Target Family"))
       @sunburst("dto", HtmlFormat.raw("<a href='http://drugtargetontology.org/'>Drug Target Ontology</a>"))
       @sunburst("panther", HtmlFormat.raw("<a href='http://pantherdb.org/panther/prowler.jsp'>PANTHER Protein Ontology</a>"))
-      @item(IDG_TISSUE, HtmlFormat.raw("Annotated Tissues"))
-      @item(IDG_LIGAND, HtmlFormat.raw("Ligands"))
-      @wordcloud(MGI_TERM, HtmlFormat.raw("<a href='http://www.informatics.jax.org/searches/MP_form.shtml'>JAX/MGI Phenotype</a>"))
-      @wordcloud(OMIM_TERM, HtmlFormat.raw("<a href='http://omim.org'>OMIM Phenotype</a>"))
-      @wordcloud(GWAS_TRAIT, HtmlFormat.raw("<a href='https://www.genome.gov/26525384'>GWAS Trait</a>"))      
-      @item(GRANT_FUNDING_IC, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/glossary.htm#I14'>Grant Funding IC</a>"))
-      @item(GRANT_ACTIVITY, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/funding/ac_search_results.htm'>Grant Activity</a>"))
-      @item(SOURCE, HtmlFormat.raw("Data Source"))
-      @wordcloud(KEGG_PATHWAY, HtmlFormat.raw("<a href='http://www.genome.jp/kegg/pathway.html'>KEGG Pathway</a>"))
-      @wordcloud(UNIPROT_KEYWORD, HtmlFormat.raw("<a href='http://www.uniprot.org/keywords/'>UniProt Keywords</a>"))
-      @wordcloud("MeSH", HtmlFormat.raw("<a href='http://www.ncbi.nlm.nih.gov/mesh'>Medical Subject Headings</a>"))
+
       <div class="item">
         <div class="container-fluid">
 	    <div class="row">
@@ -186,7 +176,24 @@
 	    </div>
 	 </div>
       </div>
+      
+      @item(IDG_TISSUE, HtmlFormat.raw("UniProtKB Tissue"))
+      @item(IDG_LIGAND, HtmlFormat.raw("Ligand"))
+      @wordcloud(GTEx_TISSUE, HtmlFormat.raw("<a href='http://www.gtexportal.org'>GTEx Tissue</a>"))
+      @wordcloud(HPA_RNA_TISSUE, HtmlFormat.raw("HPA RNA Tissue"))
+      @wordcloud(HPA_PROTEIN_TISSUE, HtmlFormat.raw("HPA Protein Tissue"))      
+      @wordcloud(HPM_TISSUE, HtmlFormat.raw("HPM Tissue"))
+      @wordcloud(MGI_TERM, HtmlFormat.raw("<a href='http://www.informatics.jax.org/searches/MP_form.shtml'>JAX/MGI Phenotype</a>"))
+      @wordcloud(OMIM_TERM, HtmlFormat.raw("<a href='http://omim.org'>OMIM Phenotype</a>"))
+      @wordcloud(GWAS_TRAIT, HtmlFormat.raw("<a href='https://www.genome.gov/26525384'>GWAS Trait</a>"))      
+      @*wordcloud(KEGG_PATHWAY, HtmlFormat.raw("<a href='http://www.genome.jp/kegg/pathway.html'>KEGG Pathway</a>"))*@
+      @wordcloud(GO_COMPONENT, HtmlFormat.raw("<a href='http://amigo.geneontology.org'>GO Component</a>"))
+      @wordcloud(UNIPROT_KEYWORD, HtmlFormat.raw("<a href='http://www.uniprot.org/keywords/'>UniProt Keywords</a>"))
+      @wordcloud("MeSH", HtmlFormat.raw("<a href='http://www.ncbi.nlm.nih.gov/mesh'>Medical Subject Headings</a>"))
 
+      @item(GRANT_FUNDING_IC, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/glossary.htm#I14'>Grant Funding IC</a>"))
+      @item(GRANT_ACTIVITY, HtmlFormat.raw("<a href='http://grants.nih.gov/grants/funding/ac_search_results.htm'>Grant Activity</a>"))
+      @item(SOURCE, HtmlFormat.raw("Data Source"))
 
     </div>
     
@@ -266,14 +273,18 @@ $(document).ready(function () {
   @donut(IDG_FAMILY)
   @donut(IDG_TISSUE)
   @donut(IDG_LIGAND)
+  @cloud(GTEx_TISSUE)
+  @cloud(HPA_RNA_TISSUE)
+  @cloud(HPA_PROTEIN_TISSUE)
+  @cloud(HPM_TISSUE)
   @cloud(MGI_TERM)
   @cloud(OMIM_TERM)
   @cloud(GWAS_TRAIT)
   @donut(GRANT_FUNDING_IC)
   @donut(GRANT_ACTIVITY)
   @donut(SOURCE)
-  @cloud(KEGG_PATHWAY)
-
+  @*cloud(KEGG_PATHWAY)*@
+  @cloud(GO_COMPONENT)
   @cloud(UNIPROT_KEYWORD)
   @cloud("MeSH")
 
