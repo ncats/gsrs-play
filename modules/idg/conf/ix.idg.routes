@@ -28,7 +28,7 @@ GET	/search		ix.idg.controllers.IDGApp.search(kind: String ?= null)
 POST	/sequence	ix.idg.controllers.IDGApp.sequence
 GET	/tinx		ix.idg.controllers.TINXApp.tinx()
 GET	/tinx/target/:acc		ix.idg.controllers.TINXApp.tinxForTarget(acc: String)
-GET /hg/data ix.idg.controllers.HarmonogramApp.hgForTarget(q: String ?= null, ctx: String ?= null, format: String ?= null)
+GET /hg/data ix.idg.controllers.HarmonogramApp.hgForTarget(q: String ?= null, ctx: String ?= null, format: String ?= null, type: String ?= null)
 GET /hg/view ix.idg.controllers.HarmonogramApp.view(q: String ?= null, ctx: String ?= null)
 GET	/hierarchy	ix.idg.controllers.IDGApp.getHierarchy(ctx: String, facet: String)
 GET	/kinases	ix.idg.controllers.IDGApp.getKinases(q: String ?= null)

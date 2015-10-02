@@ -15,11 +15,12 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
         data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>*@
         <td>@IDGApp.format(t.novelty)</td>
-	<td>@t.pubmedCount</td>
-	<td>@t.grantCount</td>	
-	<td>@t.patentCount</td>
-	<td>@t.antibodyCount</td>
+        <td>@t.pubmedCount</td>
+        <td>@t.grantCount</td>
+        <td>@t.patentCount</td>
+        <td>@t.antibodyCount</td>
         <td>@t.idgFamily</td>
+        <td><div style="display: inline" class="radar-@IDGApp.getId(t)"></div></td>
     </tr>
     @if(ctx != null) {
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
@@ -72,6 +73,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         }
     </ol>
 } {
+
     <table id="target-table" class="table">
         <tr>
             <th>Name</th>
@@ -83,6 +85,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
 	    @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
             <th>Target Family</th>
+            <th>Data Types</th>
         </tr>
         @for(t <- targets) {
             @tabrow(t)
@@ -174,11 +177,14 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     <script type="text/javascript" src='@routes.Assets.at("javascripts/load_clustergram.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/sunburst.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/kinome.js")'></script>    
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/kinome.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
+    @*<script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("radar.js"))'></script>*@
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>    
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>        
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />    
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' /> 
 </head>
 
@@ -196,6 +202,54 @@ $(document).ready(function () {
       console.log('hgram modal is shown...');
       load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');
    });
+
+//var data = [
+//{
+//className: 'germany', // optional can be used for styling
+//axes: [
+//{axis: "strength", value: 13, yOffset: 10},
+//{axis: "intelligence", value: 6},
+//{axis: "charisma", value: 5},
+//{axis: "dexterity", value: 9},
+//{axis: "luck", value: 2, xOffset: -20}
+//]
+//},
+//{
+//className: 'argentina',
+//axes: [
+//{axis: "strength", value: 6},
+//{axis: "intelligence", value: 7},
+//{axis: "charisma", value: 10},
+//{axis: "dexterity", value: 13},
+//{axis: "luck", value: 9}
+//]
+//}
+//];
+//console.log(JSON.stringify(data));
+
+    // iterate over all .radar-XXX elements and draw the radar chart
+    // currently we pull chart data dynamically, but really should be
+    // generated at compile time
+    $('div[class*="radar-"' ).each(function() {
+        var klass = $(this ).attr("class");
+        var acc = klass.split("-")[1];
+        $.ajax({
+            url: "/idg/hg/data?type=radar&q="+acc,
+            dataType:"json",
+            success:function(data) {
+                var chart = RadarChart.chart();
+                chart.config({
+                    w: 50,
+                    h: 50,
+                    axisText:false, levels:0, circles:false
+                });
+                var svg = d3.select("."+klass).append('svg');
+                svg.append('g').classed('focus', 1).datum(data).call(chart);
+            }
+        });
+
+
+    });
 });
 
 function showLoadModal () {

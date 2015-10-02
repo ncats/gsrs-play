@@ -11,6 +11,7 @@ import ix.utils.Util;
 import play.Logger;
 import play.mvc.Result;
 import ix.core.plugins.IxCache;
+
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -53,15 +54,15 @@ public class HarmonogramApp extends App {
                             }
                         });
                 if (result == null)
-                    return _notFound("No cache entry for key: "+ctx);
+                    return _notFound("No cache entry for key: " + ctx);
                 List matches = result.getMatches();
                 List<String> sq = new ArrayList<>();
                 for (Object o : matches) {
-                    if (o instanceof Target) sq.add(IDGApp.getId((Target)o));
+                    if (o instanceof Target) sq.add(IDGApp.getId((Target) o));
                 }
                 accs = sq.toArray(new String[]{});
-                Logger.debug("Got "+accs.length
-                             +" targets from cache using key: "+ctx);
+                Logger.debug("Got " + accs.length
+                        + " targets from cache using key: " + ctx);
             } catch (Exception e) {
                 return _internalServerError(e);
             }
@@ -71,33 +72,36 @@ public class HarmonogramApp extends App {
 
     public static Result hgForTarget(String q,
                                      final String ctx,
-                                     final String format) {
+                                     final String format,
+                                     final String type) {
         if (ctx != null) {
             TextIndexer.SearchResult result =
-                (TextIndexer.SearchResult)IxCache.get(ctx);
-            if (result  != null) {
-                StringBuilder sb = new StringBuilder ();
+                    (TextIndexer.SearchResult) IxCache.get(ctx);
+            if (result != null) {
+                StringBuilder sb = new StringBuilder();
                 for (Object obj : result.getMatches()) {
                     if (obj instanceof Target) {
                         if (sb.length() > 0) sb.append(",");
-                        sb.append(IDGApp.getId((Target)obj));
+                        sb.append(IDGApp.getId((Target) obj));
                     }
                 }
-                
+
                 // override whatever specified in q
                 q = sb.toString();
             }
         }
-        
-        return _handleHgRequest(q, format);
+
+        return _handleHgRequest(q, format, type);
     }
 
-    static Result _handleHgRequest(final String q, final String format) {
+    static Result _handleHgRequest(final String q, final String format, final String type) {
         if (q == null) return _badRequest("Must specify one or more targets via the q query parameter");
         try {
             final String key = "hg/" + q + "/" + format + "/" + Util.sha1(request());
             return getOrElse(key, new Callable<Result>() {
                 public Result call() throws Exception {
+                    if (type != null && type.toLowerCase().equals("radar"))
+                        return _hgForRadar(q);
                     if (q.contains(",")) return _hgForTargets(q.split(","), format);
                     return _hgForTargets(new String[]{q}, format);
                 }
@@ -143,6 +147,32 @@ public class HarmonogramApp extends App {
         ArrayNode node = mapper.createArrayNode();
         for (Integer elem : a) node.add(elem);
         return node;
+    }
+
+    // only valid for single target
+    public static Result _hgForRadar(String q) {
+        if (q == null || q.contains(","))
+            return _badRequest("Must specify a single Uniprot ID");
+        List<HarmonogramCDF> hg = HarmonogramFactory.finder
+                .where().in("uniprotId", q).findList();
+        if (hg.isEmpty()) {
+            return _notFound("No harmonogram data found for " + q);
+        }
+        String[] axes = {"A", "B", "C", "D", "E"};
+        ArrayNode anode = mapper.createArrayNode();
+        Random rng = new Random();
+        for (String axis : axes) {
+            ObjectNode onode = mapper.createObjectNode();
+            onode.put("axis", axis);
+            onode.put("value", rng.nextInt(10));
+            anode.add(onode);
+        }
+        ObjectNode container = mapper.createObjectNode();
+        container.put("className", q);
+        container.put("axes", anode);
+        ArrayNode root = mapper.createArrayNode();
+        root.add(container);
+        return ok(root);
     }
 
     public static Result _hgForTargets(String[] accs, String format) throws Exception {
