@@ -54,8 +54,6 @@
                     *@
 
                     @selectors.substanceselectorform()
-
-                <span ng-show="substance.subref"><rendered id = substance.subref.refuuid></rendered> </span>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Relationship Type" id="type" name = "type" ng-model = "relationship.type" ng-options="r.display for r in @GinasApp.getCV.getField("RELATIONSHIP_TYPE") track by r.display" required>

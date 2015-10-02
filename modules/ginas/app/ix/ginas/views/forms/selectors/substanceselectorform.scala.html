@@ -7,6 +7,7 @@
         </div>
         <div class="modal-body">
            <div class="input-group">
+                            <form ng-submit="search()">
                             <input type="text"
                             ng-model ="term"
                             ng-change ="test()"
@@ -19,6 +20,7 @@
                                     <span class="fa fa-search"></span>
                                 </button>
                             </span>
+                            </form>
             </div>
             <div class="btn-toolbar" role="toolbar">
              <div class="btn-group" role="group">
@@ -45,14 +47,6 @@
 		      </div>
             <div class= "panel-body">
         		<div class = "row hidden-xs" id ="grid">
-
-
-
-
-
-
-
-
         		<div class = "col-md-3 thumb-col" ng-repeat="item in results.content">
 				    <div class="panel panel-default">
 				        <div class="panel-heading">
@@ -89,9 +83,7 @@
 
        			</div>
         	</div>
-
             Selected: <b><code>{{selected.item.approvalIDDisplay}}</code> {{ selected.item.name }}</b>
-
         </div>
         <div class="modal-footer">
             <button class="btn btn-primary" type="button" ng-click="ok()">OK</button>

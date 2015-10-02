@@ -757,17 +757,7 @@
                  amap :'='*/
 
             },
-            link: function (scope, element) {
-                $http({
-                    method: 'GET',
-                    url: baseurl + 'img/' + scope.id + '.svg',
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).success(function (data) {
-                    element.html(data);
-                });
-            }
+           template: '<img src=\"' + baseurl + 'img/{{id}}.svg\">'
         };
     });
 
@@ -1352,6 +1342,10 @@
                 subref.refPname = selectedItem.name;
                 subref.approvalID = selectedItem.approvalID;
                 subref.substanceClass = "reference";
+              //this part assumes there's only ever 1 substance reference for a whole substance.
+              //However, there are likely to be many (maybe hundreds) in various contexts.
+              //If this is to be used as a stop-gap measure, it at least needs to be a key-value
+              //pair array for later selection. 
                 Substance.subref = subref;
             });
         };

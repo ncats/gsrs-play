@@ -23,8 +23,14 @@
 
 } else {
     @if(kind == "mixture") {
-        @forms.nameform()
-        <div ng-show="uniqueName">@forms.codeform()</div>
+        <div>Mixture selector not implemented yet.</div>
+        <div>@forms.mixturecomponentselectform()</div>
+        <div>@forms.officialnameform()</div>
+        <div>@forms.nameform()</div>
+        <div>@forms.codeform()</div>
+        <div>@forms.relationshipform()</div>
+        <div>@forms.noteform()</div>
+        <div>@forms.propertyform()</div>
         @forms.referenceform()
         @forms.referencemodalform()
     } else {
