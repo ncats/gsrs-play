@@ -160,7 +160,7 @@ public class HarmonogramApp extends App {
         final String fieldName = type.split("-")[1];
 
         // Lets get unique list of field values
-        final String key = "hg/radar" + fieldName;
+        final String key = "hg/radar/distinct-" + fieldName;
         List<String> fieldValues = getOrElse(key, new Callable<List<String>>() {
             public List<String> call() throws Exception {
                 List<String> fieldValues = new ArrayList<>();
