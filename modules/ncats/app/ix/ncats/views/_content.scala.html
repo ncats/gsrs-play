@@ -36,6 +36,10 @@
            case "sequence" => {
 	      <span><h4>Sequence Query:&nbsp;
 		  <code>@ix.ncats.controllers.App.getSequence(request().getQueryString("q"), 50)</code></h4></span> <div id="searching"></div>
+	      }
+           case "batch" => {
+	      <span><h4>Batch Query:&nbsp;
+		  <code>@ix.ncats.controllers.App.getPayload(request().getQueryString("q"), 50)</code></h4></span> <div id="searching"></div>
 	    }
   	    case "Substructure" => {
 	      <span><h4>Substructure Query:&nbsp; <a  href="#"
