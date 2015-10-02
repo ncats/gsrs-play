@@ -1192,7 +1192,7 @@ public class IDGApp extends App implements Commons {
                 Keyword anchor = terms.iterator().next();
                 List<Predicate> pred = PredicateFactory.finder
                     .where().conjunction()
-                    .add(Expr.eq("subject.refid", anchor.id))
+                    .add(Expr.eq("subject.refid", anchor.id.toString()))
                     .add(Expr.eq("subject.kind", anchor.getClass().getName()))
                     .add(Expr.eq("predicate", predicate))
                     .findList();
