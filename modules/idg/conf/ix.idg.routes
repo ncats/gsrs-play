@@ -34,7 +34,7 @@ GET	/hierarchy	ix.idg.controllers.IDGApp.getHierarchy(ctx: String, facet: String
 GET	/kinases	ix.idg.controllers.IDGApp.getKinases(q: String ?= null)
 GET	/resolve/:q	ix.idg.controllers.IDGApp.resolve(q: String, kind: String ?= "ix.idg.models.Target")
 POST	/resolve	ix.idg.controllers.IDGApp.resolveBatch
-
+GET /expression/homunculus ix.idg.controllers.ExpressionApp.homunculus(organs: String ?= null, confs: String ?= null)
 ->	/	ix.ncats.Routes
 ->	/	ix.core.test.Routes
 
