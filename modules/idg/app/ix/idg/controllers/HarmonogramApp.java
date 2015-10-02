@@ -3,6 +3,7 @@ package ix.idg.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import ix.core.plugins.IxCache;
 import ix.core.search.TextIndexer;
 import ix.idg.models.HarmonogramCDF;
 import ix.idg.models.Target;
@@ -10,7 +11,10 @@ import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
 import play.mvc.Result;
-import ix.core.plugins.IxCache;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -53,15 +57,15 @@ public class HarmonogramApp extends App {
                             }
                         });
                 if (result == null)
-                    return _notFound("No cache entry for key: "+ctx);
+                    return _notFound("No cache entry for key: " + ctx);
                 List matches = result.getMatches();
                 List<String> sq = new ArrayList<>();
                 for (Object o : matches) {
-                    if (o instanceof Target) sq.add(IDGApp.getId((Target)o));
+                    if (o instanceof Target) sq.add(IDGApp.getId((Target) o));
                 }
                 accs = sq.toArray(new String[]{});
-                Logger.debug("Got "+accs.length
-                             +" targets from cache using key: "+ctx);
+                Logger.debug("Got " + accs.length
+                        + " targets from cache using key: " + ctx);
             } catch (Exception e) {
                 return _internalServerError(e);
             }
@@ -71,33 +75,36 @@ public class HarmonogramApp extends App {
 
     public static Result hgForTarget(String q,
                                      final String ctx,
-                                     final String format) {
+                                     final String format,
+                                     final String type) {
         if (ctx != null) {
             TextIndexer.SearchResult result =
-                (TextIndexer.SearchResult)IxCache.get(ctx);
-            if (result  != null) {
-                StringBuilder sb = new StringBuilder ();
+                    (TextIndexer.SearchResult) IxCache.get(ctx);
+            if (result != null) {
+                StringBuilder sb = new StringBuilder();
                 for (Object obj : result.getMatches()) {
                     if (obj instanceof Target) {
                         if (sb.length() > 0) sb.append(",");
-                        sb.append(IDGApp.getId((Target)obj));
+                        sb.append(IDGApp.getId((Target) obj));
                     }
                 }
-                
+
                 // override whatever specified in q
                 q = sb.toString();
             }
         }
-        
-        return _handleHgRequest(q, format);
+
+        return _handleHgRequest(q, format, type);
     }
 
-    static Result _handleHgRequest(final String q, final String format) {
+    static Result _handleHgRequest(final String q, final String format, final String type) {
         if (q == null) return _badRequest("Must specify one or more targets via the q query parameter");
         try {
             final String key = "hg/" + q + "/" + format + "/" + Util.sha1(request());
             return getOrElse(key, new Callable<Result>() {
                 public Result call() throws Exception {
+                    if (type != null && type.toLowerCase().contains("radar"))
+                        return _hgForRadar(q, type);
                     if (q.contains(",")) return _hgForTargets(q.split(","), format);
                     return _hgForTargets(new String[]{q}, format);
                 }
@@ -143,6 +150,66 @@ public class HarmonogramApp extends App {
         ArrayNode node = mapper.createArrayNode();
         for (Integer elem : a) node.add(elem);
         return node;
+    }
+
+    // only valid for single target
+    public static Result _hgForRadar(String q, String type) throws Exception {
+        if (q == null || q.contains(",") || !type.contains("-"))
+            return _badRequest("Must specify a single Uniprot ID and/or type must be of the form radar-XXX");
+
+        final String fieldName = type.split("-")[1];
+
+        // Lets get unique list of field values
+        final String key = "hg/radar/distinct-" + fieldName;
+        List<String> fieldValues = getOrElse(key, new Callable<List<String>>() {
+            public List<String> call() throws Exception {
+                List<String> fieldValues = new ArrayList<>();
+                Connection conn = play.db.DB.getConnection();
+                PreparedStatement pst = conn.prepareStatement("select distinct " + fieldName + " from ix_idg_harmonogram");
+                ResultSet rset = pst.executeQuery();
+                while (rset.next()) fieldValues.add(rset.getString(1));
+                rset.close();
+                pst.close();
+                conn.close();
+                return fieldValues;
+            }
+        });
+
+        List<HarmonogramCDF> hgs = HarmonogramFactory.finder
+                .where().in("uniprotId", q).findList();
+        if (hgs.isEmpty()) {
+            return _notFound("No harmonogram data found for " + q);
+        }
+
+        HashMap<String, Double> attrMap = new HashMap<>();
+        for (HarmonogramCDF hg : hgs) {
+            String attrGroup = hg.getAttrGroup();
+            if (fieldName.equals("attr_type"))
+                attrGroup = hg.getAttrType();
+            else if (fieldName.equals("data_type"))
+                attrGroup = hg.getDataType();
+            Double value;
+            if (attrMap.containsKey(attrGroup)) value = attrMap.get(attrGroup) + hg.getCdf();
+            else value = hg.getCdf();
+            attrMap.put(attrGroup, value);
+        }
+
+        ArrayNode anode = mapper.createArrayNode();
+        for (String axis : fieldValues) {
+            ObjectNode onode = mapper.createObjectNode();
+            onode.put("axis", axis);
+            if (attrMap.containsKey(axis))
+                onode.put("value", attrMap.get(axis));
+            else
+                onode.put("value", 0.0);
+            anode.add(onode);
+        }
+        ObjectNode container = mapper.createObjectNode();
+        container.put("className", q);
+        container.put("axes", anode);
+        ArrayNode root = mapper.createArrayNode();
+        root.add(container);
+        return ok(root);
     }
 
     public static Result _hgForTargets(String[] accs, String format) throws Exception {

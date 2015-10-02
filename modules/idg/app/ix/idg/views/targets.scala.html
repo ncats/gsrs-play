@@ -10,16 +10,16 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><a id='load' onclick="showLoadModal()" 
-	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a> <span class="label label-@t.idgTDL.label">@t.idgTDL.name</span></td>
-	   @*
-        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
-        data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>*@
-        <td>@IDGApp.format(t.novelty)</td>
-	<td>@t.pubmedCount</td>
-	<td>@t.grantCount</td>	
-	<td>@t.patentCount</td>
-	<td>@t.antibodyCount</td>
+	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
+
+        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip" data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
         <td>@t.idgFamily</td>
+        <td>@IDGApp.format(t.novelty)</td>
+        <td>@t.pubmedCount</td>
+        <td>@t.grantCount</td>
+        <td>@t.patentCount</td>
+        <td>@t.antibodyCount</td>
+        <td><div style="display: inline; white-space:nowrap" class="radar-@IDGApp.getId(t)"></div></td>
     </tr>
     @if(ctx != null) {
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
@@ -72,17 +72,19 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         }
     </ol>
 } {
-    <table id="target-table" class="table">
+
+    <table id="target-table" class="table table-striped">
         <tr>
             <th>Name</th>
-            @*<th>Development Level</th>*@
+            <th>Development Level</th>
+            <th>Target Family</th>
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Novelty", "novelty"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("PubMed Count", "pubmedCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent Count", "patentCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
 	    @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
-            <th>Target Family</th>
+            <th>Data Types</th>
         </tr>
         @for(t <- targets) {
             @tabrow(t)
@@ -174,11 +176,13 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     <script type="text/javascript" src='@routes.Assets.at("javascripts/load_clustergram.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/sunburst.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/kinome.js")'></script>    
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/kinome.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>    
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>        
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />    
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' /> 
 </head>
 
@@ -196,6 +200,32 @@ $(document).ready(function () {
       console.log('hgram modal is shown...');
       load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');
    });
+
+
+    // iterate over all .radar-XXX elements and draw the radar chart
+    // currently we pull chart data dynamically, but really should be
+    // generated at compile time
+    $('div[class*="radar-"' ).each(function() {
+        var klass = $(this ).attr("class");
+        var acc = klass.split("-")[1];
+        $.ajax({
+            url: "/idg/hg/data?type=radar-attr_type&q="+acc,
+            dataType:"json",
+            success:function(data) {
+                var chart = RadarChart.chart();
+                chart.config({
+                    w:75, h:75,
+                    axisText:false, levels:0, circles:false
+                });
+                var svg = d3.select("."+klass).append('svg' )
+                .attr("width", 75 )
+                .attr("height", 75)
+                .append('g').classed('focus', 1).datum(data).call(chart);
+            }
+        });
+
+
+    });
 });
 
 function showLoadModal () {

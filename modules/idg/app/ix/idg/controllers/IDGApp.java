@@ -715,7 +715,7 @@ public class IDGApp extends App implements Commons {
                 try {
                     Keyword kw = (Keyword)v;
                     String url = ix.idg.controllers
-                        .routes.IDGApp.targets(null, 20, 1).url();
+                        .routes.IDGApp.targets(null, 10, 1).url();
                     kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
                         +"facet="+kw.label+"/"
                         +URLEncoder.encode(kw.term, "utf8");
@@ -1150,7 +1150,7 @@ public class IDGApp extends App implements Commons {
             try {
                 Payload payload = _payloader.createPayload
                     ("Sequence Search", "text/plain", seq);
-                Call call = routes.IDGApp.targets(payload.id.toString(), 20, 1);
+                Call call = routes.IDGApp.targets(payload.id.toString(), 10, 1);
                 return redirect (call.url()+"&type=sequence");
             }
             catch (Exception ex) {
@@ -1286,7 +1286,7 @@ public class IDGApp extends App implements Commons {
 
             if (kind != null && !"".equals(kind)) {
                 if (Target.class.getName().equals(kind))
-                    return redirect (routes.IDGApp.targets(q, 20, 1));
+                    return redirect (routes.IDGApp.targets(q, 10, 1));
                 else if (Disease.class.getName().equals(kind))
                     return redirect (routes.IDGApp.diseases(q, 10, 1));
                 else if (Ligand.class.getName().equals(kind))
@@ -1311,7 +1311,7 @@ public class IDGApp extends App implements Commons {
                 if (iden == null) {
                     iden = "0.5";
                 }
-                String url = routes.IDGApp.targets(q, 20, 1).url()
+                String url = routes.IDGApp.targets(q, 10, 1).url()
                     +"&type="+t+"&identity="+iden;
                 return redirect (url);
             }
@@ -2404,7 +2404,7 @@ public class IDGApp extends App implements Commons {
 
         try {
             Payload payload = getBatchPayload ();
-            Call call = routes.IDGApp.targets(payload.id.toString(), 20, 1);
+            Call call = routes.IDGApp.targets(payload.id.toString(), 10, 1);
             return redirect (call.url()+"&type=batch");
         }
         catch (Exception ex) {
