@@ -19,7 +19,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.grantCount</td>
         <td>@t.patentCount</td>
         <td>@t.antibodyCount</td>
-        <td><div style="display: inline; white-space:nowrap" class="radar-@IDGApp.getId(t)"></div></td>
+        <td><div style="display: inline; white-space:nowrap" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
     </tr>
     @if(ctx != null) {
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
@@ -111,6 +111,23 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
       <center><img src='@routes.Assets.at("ncats/images/spinners/294.GIF")'></center>
     </div>
   </div>
+</div>
+
+<div class="modal fade" id="modal-radar" tabindex="-1" role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalLabelRadar"></h4>
+            </div>
+            <div class="modal-body">
+                <div id="modal-radardiv" class="embed-responsive embed-responsive-4by3">
+                 </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="hgramModal" tabindex="-1"
@@ -205,8 +222,8 @@ $(document).ready(function () {
     // iterate over all .radar-XXX elements and draw the radar chart
     // currently we pull chart data dynamically, but really should be
     // generated at compile time
-    $('div[class*="radar-"' ).each(function() {
-        var klass = $(this ).attr("class");
+    $('div[id*="radar-"' ).each(function() {
+        var klass = $(this ).attr("id");
         var acc = klass.split("-")[1];
         $.ajax({
             url: "/idg/hg/data?type=radar-attr_type&q="+acc,
@@ -217,15 +234,35 @@ $(document).ready(function () {
                     w:75, h:75,
                     axisText:false, levels:0, circles:false
                 });
-                var svg = d3.select("."+klass).append('svg' )
+                var svg = d3.select("#"+klass).append('svg' )
                 .attr("width", 75 )
                 .attr("height", 75)
                 .append('g').classed('focus', 1).datum(data).call(chart);
             }
         });
-
-
     });
+
+    $("#target-table" ).on("click", ".radar-div", function() {
+        var target = $(this ).attr("id" ).split("-")[1];
+        $.ajax({
+            url: "/idg/hg/data?type=radar-attr_type&q="+target,
+            dataType:"json",
+            success:function(data) {
+                var chart = RadarChart.chart();
+                chart.config({
+                    w:600, h:600,
+                    axisText:true, levels:0, circles:true
+                });
+                var svg = d3.select("#modal-radar #modal-radardiv").append('svg' )
+                    .attr("width", 600 )
+                    .attr("height", 600)
+                    .append('g').classed('focus', 1).datum(data).call(chart);
+                $("#modalLabelRadar" ).text("Data type summary for "+target);
+                $("#modal-radar" ).modal("show");
+            }
+        });
+    });
+
 });
 
 function showLoadModal () {
