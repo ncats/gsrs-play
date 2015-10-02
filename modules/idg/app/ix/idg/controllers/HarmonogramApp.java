@@ -154,8 +154,8 @@ public class HarmonogramApp extends App {
 
     // only valid for single target
     public static Result _hgForRadar(String q, String type) throws Exception {
-        if (q == null || q.contains(","))
-            return _badRequest("Must specify a single Uniprot ID");
+        if (q == null || q.contains(",") || !type.contains("-"))
+            return _badRequest("Must specify a single Uniprot ID and/or type must be of the form radar-XXX");
 
         final String fieldName = type.split("-")[1];
 
