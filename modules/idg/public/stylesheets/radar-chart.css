@@ -5,7 +5,7 @@
 
 .radar-chart .axis line {
   stroke: grey;
-  opacity: 0.2;
+  opacity: 0.1;
   stroke-width: 1;
 }
 .radar-chart .axis .legend {

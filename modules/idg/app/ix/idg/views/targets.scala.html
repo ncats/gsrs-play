@@ -25,7 +25,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
          @if(aln != null) {
          <tr class="success">
-	    <td colspan="7">
+	    <td colspan="9">
 	      <pre>@{"identity = %.3f".format(aln.alignments(0).iden)}
 @aln.alignments(0).alignment
 </pre>
