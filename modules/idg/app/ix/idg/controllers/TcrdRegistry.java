@@ -950,7 +950,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 Keyword node = path[k];
                 if (node != null) {
                     List<Predicate> predicates = PredicateFactory.finder.where
-                        (Expr.and(Expr.eq("subject.refid", node.id),
+                        (Expr.and(Expr.eq("subject.refid", node.id.toString()),
                                   Expr.eq("predicate",
                                           PANTHER_PROTEIN_ANCESTRY)))
                         .findList();
@@ -1016,7 +1016,7 @@ public class TcrdRegistry extends Controller implements Commons {
             for (int k = path.size(); --k >= 0; ) {
                 Keyword node = path.get(k);
                 List<Predicate> predicates = PredicateFactory.finder.where
-                    (Expr.and(Expr.eq("subject.refid", node.id),
+                    (Expr.and(Expr.eq("subject.refid", node.id.toString()),
                               Expr.eq("predicate",
                                       DTO_PROTEIN_ANCESTRY)))
                     .findList();

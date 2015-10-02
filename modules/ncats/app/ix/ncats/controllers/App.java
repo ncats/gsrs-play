@@ -133,6 +133,25 @@ public class App extends Authentication {
         implements ResultRenderer<T> {
         public int getFacetDim () { return FACET_DIM; }
     }
+
+    public interface Tokenizer {
+        public Enumeration<String> tokenize (String input);
+    }
+
+    public static class DefaultTokenizer implements Tokenizer {
+        final protected String pattern;
+        public DefaultTokenizer () {
+            this ("[\\s;,\n\t]");
+        }
+        public DefaultTokenizer (String pattern) {
+            this.pattern = pattern;
+        }
+
+        public Enumeration<String> tokenize (String input) {
+            String[] tokens = input.split(pattern);
+            return Collections.enumeration(Arrays.asList(tokens));
+        }
+    }
     
     public static class FacetDecorator {
         final public Facet facet;
@@ -1327,6 +1346,26 @@ public class App extends Authentication {
         return notFound ("No key found: "+key+"!");
     }
 
+    public static SearchResultContext batch
+        (final String q, final int rows, final Tokenizer tokenizer,
+         final SearchResultProcessor processor) {
+        try {
+            final String key = "batch/"+Util.sha1(q);
+            Logger.debug("batch: q="+q+" rows="+rows);
+            return getOrElse (key, new Callable<SearchResultContext> () {
+                    public SearchResultContext call () throws Exception {
+                        processor.setResults(rows, tokenizer.tokenize(q));
+                        return processor.getContext();
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform batch search", ex);
+        }
+        return null;
+    }
+    
     public static SearchResultContext sequence
         (final String seq, final double identity, final int rows,
          final int page, final SearchResultProcessor processor) {
@@ -1648,6 +1687,17 @@ public class App extends Authentication {
         return null;
     }
 
+    public static String getPayload (String id, int max) {
+        String payload = PayloadFactory.getString(id);
+        if (payload != null) {
+            int len = payload.length();
+            if (max <= 0 || len +3 <= max)
+                return payload;
+            return payload.substring(0, max)+"...";
+        }
+        return null;
+    }
+
     public static List<VInt> scaleFacetCounts (Facet facet, int scale) {
         return scaleFacetCounts (facet, scale, false);
     }
@@ -1664,11 +1714,7 @@ public class App extends Authentication {
                     min = fv.getCount();
             }
             
-            if (max == min) {
-                inverse = false;
-                scale /= 2;
-            }
-            else if ((max-min) <= scale/2) {
+            if ((max-min) <= scale/2) {
                 scale += scale/2;
             }
             
@@ -1676,7 +1722,10 @@ public class App extends Authentication {
             for (FV fv : facet.getValues()) {
                 VInt v = new VInt ();
                 v.label = fv.getLabel();
-                if (inverse) {
+                if (max == min) {
+                    v.intval = (long)scale/2;
+                }
+                else if (inverse) {
                     v.intval =
                         (long)(0.5+(1. - (double)fv.getCount()/max)*scale);
                 }

@@ -715,7 +715,7 @@ public class IDGApp extends App implements Commons {
                 try {
                     Keyword kw = (Keyword)v;
                     String url = ix.idg.controllers
-                        .routes.IDGApp.targets(null, 20, 1).url();
+                        .routes.IDGApp.targets(null, 10, 1).url();
                     kw.href = url + (url.indexOf('?') > 0 ? "&":"?")
                         +"facet="+kw.label+"/"
                         +URLEncoder.encode(kw.term, "utf8");
@@ -944,9 +944,13 @@ public class IDGApp extends App implements Commons {
                 q = null;
             
             String type = request().getQueryString("type");
-            if (q != null && type != null
-                && type.equalsIgnoreCase("sequence")) {
-                return sequences (q, rows, page);
+            if (q != null && type != null) {
+                if (type.equalsIgnoreCase("sequence")) {
+                    return sequences (q, rows, page);
+                }
+                else if (type.equalsIgnoreCase("batch")) {
+                    return batchSearch (q, rows, page);
+                }
             }
             
             return _targets (q, rows, page);
@@ -1146,7 +1150,7 @@ public class IDGApp extends App implements Commons {
             try {
                 Payload payload = _payloader.createPayload
                     ("Sequence Search", "text/plain", seq);
-                Call call = routes.IDGApp.targets(payload.id.toString(), 20, 1);
+                Call call = routes.IDGApp.targets(payload.id.toString(), 10, 1);
                 return redirect (call.url()+"&type=sequence");
             }
             catch (Exception ex) {
@@ -1188,7 +1192,7 @@ public class IDGApp extends App implements Commons {
                 Keyword anchor = terms.iterator().next();
                 List<Predicate> pred = PredicateFactory.finder
                     .where().conjunction()
-                    .add(Expr.eq("subject.refid", anchor.id))
+                    .add(Expr.eq("subject.refid", anchor.id.toString()))
                     .add(Expr.eq("subject.kind", anchor.getClass().getName()))
                     .add(Expr.eq("predicate", predicate))
                     .findList();
@@ -1282,7 +1286,7 @@ public class IDGApp extends App implements Commons {
 
             if (kind != null && !"".equals(kind)) {
                 if (Target.class.getName().equals(kind))
-                    return redirect (routes.IDGApp.targets(q, 20, 1));
+                    return redirect (routes.IDGApp.targets(q, 10, 1));
                 else if (Disease.class.getName().equals(kind))
                     return redirect (routes.IDGApp.diseases(q, 10, 1));
                 else if (Ligand.class.getName().equals(kind))
@@ -1307,7 +1311,7 @@ public class IDGApp extends App implements Commons {
                 if (iden == null) {
                     iden = "0.5";
                 }
-                String url = routes.IDGApp.targets(q, 20, 1).url()
+                String url = routes.IDGApp.targets(q, 10, 1).url()
                     +"&type="+t+"&identity="+iden;
                 return redirect (url);
             }
@@ -2269,43 +2273,58 @@ public class IDGApp extends App implements Commons {
         }
     }
 
+    static Payload getBatchPayload () throws Exception {
+        Payload payload = null;
+        Map<String, String[]> params = request().body().asFormUrlEncoded();
+        String[] values = params.get("q");
+        if (values != null && values.length > 0) {
+            String content = values[0];
+            payload = _payloader.createPayload
+                ("Resolver Query", "text/plain", content);
+            values = params.get("kind");
+            String kind = null;
+            if (values != null) {
+                kind = values[0];
+                if (Target.class.getName().equalsIgnoreCase(kind)
+                    || Ligand.class.getName().equalsIgnoreCase(kind)
+                    || Disease.class.getName().equalsIgnoreCase(kind)) {
+                    payload.addIfAbsent
+                        (KeywordFactory.registerIfAbsent
+                         (IDG_RESOLVER, kind, null));
+                    payload.update();
+                }
+                else {
+                    Logger.debug("Bogus kind: "+kind);
+                }
+            }
+            Logger.debug("batchResolver: kind="+kind
+                         +" => payload "+payload.id);
+        }
+        return payload;
+    }
+
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, 
                    maxLength = 100000)
     public static Result resolveBatch () {
         if (request().body().isMaxSizeExceeded()) {
             return badRequest ("Input is too large!");
         }
-        Map<String, String[]> params = request().body().asFormUrlEncoded();
-        String[] values = params.get("q");
-        if (values != null && values.length > 0) {
-            String content = values[0];
-            try {
-                Payload payload = _payloader.createPayload
-                    ("Resolver Query", "text/plain", content);
-                values = params.get("kind");
+
+        try {
+            Payload payload = getBatchPayload ();
+            if (payload != null) {
                 String kind = null;
-                if (values != null) {
-                    kind = values[0];
-                    if (Target.class.getName().equalsIgnoreCase(kind)
-                        || Ligand.class.getName().equalsIgnoreCase(kind)
-                        || Disease.class.getName().equalsIgnoreCase(kind)) {
-                        payload.addIfAbsent
-                            (KeywordFactory.registerIfAbsent
-                             (IDG_RESOLVER, kind, null));
-                        payload.update();
+                for (Value v : payload.properties)
+                    if (v.label.equals(IDG_RESOLVER)) {
+                        kind = ((Keyword)v).term;
+                        break;
                     }
-                    else {
-                        Logger.debug("Bogus kind: "+kind);
-                    }
-                }
-                Logger.debug("batchResolver: kind="+kind
-                             +" => payload "+payload.id);
                 return resolve (payload.id.toString(), kind);
             }
-            catch (Exception ex) {
-                ex.printStackTrace();
-                return _internalServerError (ex);
-            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
         }
         return badRequest ("No \"q\" parameter specified!");
     }
@@ -2374,5 +2393,85 @@ public class IDGApp extends App implements Commons {
             ex.printStackTrace();
             return _internalServerError (ex);
         }
+    }
+
+    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, 
+                   maxLength = 100000)
+    public static Result batch () {
+        if (request().body().isMaxSizeExceeded()) {
+            return badRequest ("Input is too large!");
+        }
+
+        try {
+            Payload payload = getBatchPayload ();
+            Call call = routes.IDGApp.targets(payload.id.toString(), 10, 1);
+            return redirect (call.url()+"&type=batch");
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
+    }
+
+    static class PayloadTokenizer extends DefaultTokenizer {
+        @Override
+        public Enumeration<String> tokenize (String q) {
+            String payload = PayloadFactory.getString(q);
+            if (payload != null) {
+                return super.tokenize(payload);
+            }
+            return Collections.emptyEnumeration();
+        }
+    }
+
+    public static Result batchSearch (final String q,
+                                      final int rows, final int page) {
+        try {
+            SearchResultContext context = batch
+                (q, rows, new PayloadTokenizer (),
+                 new SearchResultProcessor<String> () {
+                        Map<Long, Target> found = new HashMap<Long, Target>();
+                        protected Object instrument (String token)
+                            throws Exception {
+                            // assume for now we're only batch search on
+                            // targets.. will need to generalize it to other
+                            // entities.
+                            List<Target> targets =
+                                TargetFactory.finder.where().eq
+                                ("synonyms.term", token).findList();
+                            if (!targets.isEmpty()) {
+                                Target t = targets.iterator().next();
+                                if (!found.containsKey(t.id)) {
+                                    found.put(t.id, t);
+                                    return t;
+                                }
+                                // dup.. so ignore..
+                            }
+                            return null;
+                        }
+                    });
+            
+            return App.fetchResult
+                (context, rows, page, new DefaultResultRenderer<Target> () {
+                        public Result render (SearchResultContext context,
+                                              int page, int rows,
+                                              int total, int[] pages,
+                                              List<Facet> facets,
+                                              List<Target> targets) {
+                            return ok (ix.idg.views.html.targets.render
+                                       (page, rows, total,
+                                        pages, decorate
+                                        (filter (facets, TARGET_FACETS)),
+                                        targets, context.getId()));
+                        }
+                    });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform batch search", ex);
+        }
+        return internalServerError
+            (ix.idg.views.html.error.render
+             (500, "Unable to perform batch search: "+q));
     }
 }
