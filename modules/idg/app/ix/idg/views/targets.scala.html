@@ -10,16 +10,15 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><a id='load' onclick="showLoadModal()" 
-	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a> <span class="label label-@t.idgTDL.label">@t.idgTDL.name</span></td>
-	   @*
-        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
-        data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>*@
+	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
+
+        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip" data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
+        <td>@t.idgFamily</td>
         <td>@IDGApp.format(t.novelty)</td>
         <td>@t.pubmedCount</td>
         <td>@t.grantCount</td>
         <td>@t.patentCount</td>
         <td>@t.antibodyCount</td>
-        <td>@t.idgFamily</td>
         <td><div style="display: inline; white-space:nowrap" class="radar-@IDGApp.getId(t)"></div></td>
     </tr>
     @if(ctx != null) {
@@ -77,14 +76,14 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     <table id="target-table" class="table">
         <tr>
             <th>Name</th>
-            @*<th>Development Level</th>*@
+            <th>Development Level</th>
+            <th>Target Family</th>
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Novelty", "novelty"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("PubMed Count", "pubmedCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent Count", "patentCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
 	    @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
-            <th>Target Family</th>
             <th>Data Types</th>
         </tr>
         @for(t <- targets) {
