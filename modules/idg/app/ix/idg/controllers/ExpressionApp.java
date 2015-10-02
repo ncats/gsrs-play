@@ -15,7 +15,10 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.StringWriter;
+import java.util.concurrent.Callable;
 
 public class ExpressionApp extends App {
 
@@ -53,35 +56,44 @@ public class ExpressionApp extends App {
         }
     }
 
-    public static Result homunculus(String organs, String confs) throws FileNotFoundException {
+    public static Result homunculus(final String organs, final String confs) throws Exception {
         if (organs == null || confs == null)
             return _badRequest("Must specify an organ name and a valid confidence value");
-
-        String[] confidenceColors = new String[]{
-                "#ffffff", "#EDF8E9", "#BAE4B3", "#74C476", "#31A354", "#006D2C"
-        };
-        File svg = Play.application().getFile("app/assets/tissues_body_human.svg");
-        FileInputStream fis = new FileInputStream(svg);
-        Document doc = XML.fromInputStream(fis, "UTF-8");
-
-        String[] organlist = organs.split(",");
-        String[] tmp = confs.split(",");
-        if (organlist.length != tmp.length)
-            return _badRequest("If specifying multiple organs, must specify equal number of confidences and vice versa");
-        Integer[] conflist = new Integer[tmp.length];
-        for (int i = 0; i < tmp.length; i++) conflist[i] = Integer.valueOf(tmp[i]);
-
-        for (int i = 0; i < organlist.length; i++) {
-            if (conflist[i] < 0 || conflist[i] > 5)
-                return _badRequest("Invalid confidence value was specified: "+conflist[i]);
-            Node node = XPath.selectNode("//*[@id='" + organlist[i] + "']", doc);
-            NamedNodeMap attributes = node.getAttributes();
-            Node attrNode = attributes.getNamedItem("fill");
-            attrNode.setNodeValue(confidenceColors[conflist[i]]);
-            attributes.setNamedItem(attrNode);
-        }
+        final String key = "expression/homunculus/" + organs + "/" + confs;
         response().setContentType("image/svg+xml");
-        return ok(xml2str(doc));
+        return getOrElse(key, new Callable<Result>() {
+            public Result call() throws Exception {
+                String[] confidenceColors = new String[]{
+                        "#ffffff", "#EDF8E9", "#BAE4B3", "#74C476", "#31A354", "#006D2C"
+                };
+                File svg = Play.application().getFile("app/assets/tissues_body_human.svg");
+                FileInputStream fis = new FileInputStream(svg);
+                Document doc = XML.fromInputStream(fis, "UTF-8");
+
+                String[] organlist = organs.split(",");
+                String[] tmp = confs.split(",");
+                if (organlist.length != tmp.length) {
+                    response().setContentType("text/html");
+                    return _badRequest("If specifying multiple organs, must specify equal number of confidences and vice versa");
+                }
+                Integer[] conflist = new Integer[tmp.length];
+                for (int i = 0; i < tmp.length; i++) conflist[i] = Integer.valueOf(tmp[i]);
+
+                for (int i = 0; i < organlist.length; i++) {
+                    if (conflist[i] < 0 || conflist[i] > 5) {
+                        response().setContentType("text/html");
+                        return _badRequest("Invalid confidence value was specified: " + conflist[i]);
+                    }
+                    Node node = XPath.selectNode("//*[@id='" + organlist[i] + "']", doc);
+                    NamedNodeMap attributes = node.getAttributes();
+                    Node attrNode = attributes.getNamedItem("fill");
+                    attrNode.setNodeValue(confidenceColors[conflist[i]]);
+                    attributes.setNamedItem(attrNode);
+                }
+
+                return ok(xml2str(doc));
+            }
+        });
     }
 
 }
