@@ -5,6 +5,7 @@
 
 .radar-chart .axis line {
   stroke: grey;
+  opacity: 0.2;
   stroke-width: 1;
 }
 .radar-chart .axis .legend {
@@ -36,7 +37,7 @@
 
 /* area transition when hovering */
 .radar-chart .area {
-  stroke-width: 2;
+  stroke-width: 1;
   fill-opacity: 0.1;
 }
 .radar-chart.focus .area {

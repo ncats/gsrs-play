@@ -100,8 +100,8 @@ public class HarmonogramApp extends App {
             final String key = "hg/" + q + "/" + format + "/" + Util.sha1(request());
             return getOrElse(key, new Callable<Result>() {
                 public Result call() throws Exception {
-                    if (type != null && type.toLowerCase().equals("radar"))
-                        return _hgForRadar(q);
+                    if (type != null && type.toLowerCase().contains("radar"))
+                        return _hgForRadar(q, type);
                     if (q.contains(",")) return _hgForTargets(q.split(","), format);
                     return _hgForTargets(new String[]{q}, format);
                 }
@@ -150,21 +150,38 @@ public class HarmonogramApp extends App {
     }
 
     // only valid for single target
-    public static Result _hgForRadar(String q) {
+    public static Result _hgForRadar(String q, String type) {
         if (q == null || q.contains(","))
             return _badRequest("Must specify a single Uniprot ID");
-        List<HarmonogramCDF> hg = HarmonogramFactory.finder
+        List<HarmonogramCDF> hgs = HarmonogramFactory.finder
                 .where().in("uniprotId", q).findList();
-        if (hg.isEmpty()) {
+        if (hgs.isEmpty()) {
             return _notFound("No harmonogram data found for " + q);
         }
-        String[] axes = {"A", "B", "C", "D", "E"};
+
+        HashMap<String, Double> attrMap = new HashMap<>();
+        for (HarmonogramCDF hg : hgs) {
+            String attrGroup;
+            if (type.toLowerCase().contains("attr_group"))
+                attrGroup = hg.getAttrGroup();
+            else if (type.toLowerCase().contains("attr_type"))
+                attrGroup = hg.getAttrType();
+            else
+                attrGroup = hg.getAttrGroup();
+            Double value;
+            if (attrMap.containsKey(attrGroup)) value = attrMap.get(attrGroup) + hg.getCdf();
+            else value = hg.getCdf();
+            attrMap.put(attrGroup, value);
+        }
+
+        String[] axes = attrMap.keySet().toArray(new String[0]);
+        Arrays.sort(axes);
         ArrayNode anode = mapper.createArrayNode();
         Random rng = new Random();
         for (String axis : axes) {
             ObjectNode onode = mapper.createObjectNode();
             onode.put("axis", axis);
-            onode.put("value", rng.nextInt(10));
+            onode.put("value", attrMap.get(axis));
             anode.add(onode);
         }
         ObjectNode container = mapper.createObjectNode();

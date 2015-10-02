@@ -179,7 +179,6 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/kinome.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
-    @*<script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("radar.js"))'></script>*@
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>    
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>        
@@ -211,15 +210,18 @@ $(document).ready(function () {
         var klass = $(this ).attr("class");
         var acc = klass.split("-")[1];
         $.ajax({
-            url: "/idg/hg/data?type=radar&q="+acc,
+            url: "/idg/hg/data?type=radar-attr_type&q="+acc,
             dataType:"json",
             success:function(data) {
                 var chart = RadarChart.chart();
                 chart.config({
+                    w:75, h:75,
                     axisText:false, levels:0, circles:false
                 });
-                var svg = d3.select("."+klass).append('svg' ).attr("width", 75 ).attr("height", 75);
-                svg.append('g').classed('focus', 1).datum(data).call(chart);
+                var svg = d3.select("."+klass).append('svg' )
+                .attr("width", 75 )
+                .attr("height", 75)
+                .append('g').classed('focus', 1).datum(data).call(chart);
             }
         });
 
