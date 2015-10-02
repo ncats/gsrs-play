@@ -3,6 +3,7 @@ package ix.idg.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import ix.core.plugins.IxCache;
 import ix.core.search.TextIndexer;
 import ix.idg.models.HarmonogramCDF;
 import ix.idg.models.Target;
@@ -10,8 +11,10 @@ import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
 import play.mvc.Result;
-import ix.core.plugins.IxCache;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -150,9 +153,28 @@ public class HarmonogramApp extends App {
     }
 
     // only valid for single target
-    public static Result _hgForRadar(String q, String type) {
+    public static Result _hgForRadar(String q, String type) throws Exception {
         if (q == null || q.contains(","))
             return _badRequest("Must specify a single Uniprot ID");
+
+        final String fieldName = type.split("-")[1];
+
+        // Lets get unique list of field values
+        final String key = "hg/radar" + fieldName;
+        List<String> fieldValues = getOrElse(key, new Callable<List<String>>() {
+            public List<String> call() throws Exception {
+                List<String> fieldValues = new ArrayList<>();
+                Connection conn = play.db.DB.getConnection();
+                PreparedStatement pst = conn.prepareStatement("select distinct " + fieldName + " from ix_idg_harmonogram");
+                ResultSet rset = pst.executeQuery();
+                while (rset.next()) fieldValues.add(rset.getString(1));
+                rset.close();
+                pst.close();
+                conn.close();
+                return fieldValues;
+            }
+        });
+
         List<HarmonogramCDF> hgs = HarmonogramFactory.finder
                 .where().in("uniprotId", q).findList();
         if (hgs.isEmpty()) {
@@ -161,13 +183,11 @@ public class HarmonogramApp extends App {
 
         HashMap<String, Double> attrMap = new HashMap<>();
         for (HarmonogramCDF hg : hgs) {
-            String attrGroup;
-            if (type.toLowerCase().contains("attr_group"))
-                attrGroup = hg.getAttrGroup();
-            else if (type.toLowerCase().contains("attr_type"))
+            String attrGroup = hg.getAttrGroup();
+            if (fieldName.equals("attr_type"))
                 attrGroup = hg.getAttrType();
-            else
-                attrGroup = hg.getAttrGroup();
+            else if (fieldName.equals("data_type"))
+                attrGroup = hg.getDataType();
             Double value;
             if (attrMap.containsKey(attrGroup)) value = attrMap.get(attrGroup) + hg.getCdf();
             else value = hg.getCdf();
@@ -177,11 +197,13 @@ public class HarmonogramApp extends App {
         String[] axes = attrMap.keySet().toArray(new String[0]);
         Arrays.sort(axes);
         ArrayNode anode = mapper.createArrayNode();
-        Random rng = new Random();
-        for (String axis : axes) {
+        for (String axis : fieldValues) {
             ObjectNode onode = mapper.createObjectNode();
             onode.put("axis", axis);
-            onode.put("value", attrMap.get(axis));
+            if (attrMap.containsKey(axis))
+                onode.put("value", attrMap.get(axis));
+            else
+                onode.put("value", 0.0);
             anode.add(onode);
         }
         ObjectNode container = mapper.createObjectNode();
