@@ -10,7 +10,7 @@
     <div>@forms.moietyform()</div>
     <div>@forms.officialnameform()</div>
     <div>@forms.nameform()</div>
-    <div >@forms.codeform()</div>
+    <div>@forms.codeform()</div>
     <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>
     <div>@forms.propertyform()</div>
@@ -55,8 +55,11 @@
                     @forms.referencemodalform()
                 } else {
                     @if(kind.toLowerCase() == "concept") {
-                        @forms.nameform()
-                        <div ng-show="uniqueName">@forms.codeform()</div>
+                        <div>@forms.officialnameform()</div>
+                        <div>@forms.nameform()</div>
+                        <div>@forms.codeform()</div>
+                        <div>@forms.relationshipform()</div>
+                        <div>@forms.noteform()</div>
                         @forms.referenceform()
                         @forms.referencemodalform()
                     } else {
