@@ -20,7 +20,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.patentCount</td>
         <td>@t.antibodyCount</td>
         <td>@t.idgFamily</td>
-        <td><div style="display: inline" class="radar-@IDGApp.getId(t)"></div></td>
+        <td><div style="display: inline; white-space:nowrap" class="radar-@IDGApp.getId(t)"></div></td>
     </tr>
     @if(ctx != null) {
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
@@ -239,11 +239,9 @@ $(document).ready(function () {
             success:function(data) {
                 var chart = RadarChart.chart();
                 chart.config({
-                    w: 50,
-                    h: 50,
                     axisText:false, levels:0, circles:false
                 });
-                var svg = d3.select("."+klass).append('svg');
+                var svg = d3.select("."+klass).append('svg' ).attr("width", 75 ).attr("height", 75);
                 svg.append('g').classed('focus', 1).datum(data).call(chart);
             }
         });
