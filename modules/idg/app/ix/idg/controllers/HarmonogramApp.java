@@ -194,8 +194,6 @@ public class HarmonogramApp extends App {
             attrMap.put(attrGroup, value);
         }
 
-        String[] axes = attrMap.keySet().toArray(new String[0]);
-        Arrays.sort(axes);
         ArrayNode anode = mapper.createArrayNode();
         for (String axis : fieldValues) {
             ObjectNode onode = mapper.createObjectNode();
