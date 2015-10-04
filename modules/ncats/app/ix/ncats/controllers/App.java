@@ -1462,11 +1462,14 @@ public class App extends Authentication {
             (key, new Callable<TextIndexer.SearchResult> () {
                     public TextIndexer.SearchResult call () throws Exception {
                         List results = context.getResults();
+                        if (results.isEmpty()) {
+                            return null;
+                        }
+                        
                         TextIndexer.SearchResult searchResult =
-                        results.isEmpty() ? null : SearchFactory.search
-                        (results, null, results.size(), 0,
-                         renderer.getFacetDim(),
-                         request().queryString());
+                        SearchFactory.search (results, null, results.size(), 0,
+                                              renderer.getFacetDim(),
+                                              request().queryString());
                         Logger.debug("Cache misses: "
                                      +key+" size="+results.size()
                                      +" class="+searchResult);

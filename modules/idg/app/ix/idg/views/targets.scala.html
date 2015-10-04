@@ -26,7 +26,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
          @if(aln != null) {
          <tr class="success">
-	    <td colspan="7">
+	    <td colspan="9">
 	      <pre>@{"identity = %.3f".format(aln.alignments(0).iden)}
 @aln.alignments(0).alignment
 </pre>
@@ -114,7 +114,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
   </div>
 </div>
 
-<div class="modal fade" id="modal-radar" tabindex="-1" role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
+<div class="modal fade" id="modal-radar" tabindex="-1"
+     role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -124,8 +125,17 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
                 <h4 class="modal-title" id="modalLabelRadar"></h4>
             </div>
             <div class="modal-body">
-                <div id="modal-radardiv" class="embed-responsive embed-responsive-4by3">
-                 </div>
+	      <div class="row">
+		<div class="col-md-2">
+		</div>
+		<div class="col-md-8">
+		  <div id="modal-radardiv"
+		       style="display: inline;"
+		       class="embed-responsive embed-responsive-4by3">
+		  </div>
+		</div>
+		<div class="col-md-2"></div>
+	      </div>
             </div>
         </div>
     </div>
@@ -219,6 +229,9 @@ $(document).ready(function () {
       load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');
    });
 
+   $('#modal-radar').on('hidden.bs.modal', function (e) {
+       d3.select("#modal-radardiv").select('svg').remove();
+   });
 
     // iterate over all .radar-XXX elements and draw the radar chart
     // currently we pull chart data dynamically, but really should be
@@ -227,7 +240,7 @@ $(document).ready(function () {
         var klass = $(this ).attr("id");
         var acc = klass.split("-")[1];
         $.ajax({
-            url: "/idg/hg/data?type=radar-attr_type&q="+acc,
+            url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+acc,
             dataType:"json",
             success:function(data) {
                 var chart = RadarChart.chart();
@@ -246,7 +259,7 @@ $(document).ready(function () {
     $("#target-table" ).on("click", ".radar-div", function() {
         var target = $(this ).attr("id" ).split("-")[1];
         $.ajax({
-            url: "/idg/hg/data?type=radar-attr_type&q="+target,
+            url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+target,
             dataType:"json",
             success:function(data) {
                 var chart = RadarChart.chart();
@@ -254,7 +267,7 @@ $(document).ready(function () {
                     w:600, h:600,
                     axisText:true, levels:0, circles:true
                 });
-                var svg = d3.select("#modal-radar #modal-radardiv").append('svg' )
+                var svg = d3.select("#modal-radardiv").append('svg' )
                     .attr("width", 600 )
                     .attr("height", 600)
                     .append('g').classed('focus', 1).datum(data).call(chart);

@@ -37,6 +37,7 @@ import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import chemaxon.struc.MolAtom;
 
 import static ix.core.search.TextIndexer.Facet;
 import static ix.core.search.TextIndexer.SearchResult;
@@ -70,6 +71,20 @@ public class IDGApp extends App implements Commons {
                 //Logger.debug("matched ligand: "+ligand.id+" "+r.getId());
                 if (!processed.contains(lig.id)) {
                     processed.add(lig.id);
+                    int[] amap = new int[r.getMol().getAtomCount()];
+                    int i = 0, nmaps = 0;
+                    for (MolAtom ma : r.getMol().getAtomArray()) {
+                        amap[i] = ma.getAtomMap();
+                        if (amap[i] > 0)
+                            ++nmaps;
+                        ++i;
+                    }
+
+                    if (nmaps > 0) {
+                        IxCache.set("AtomMaps/"+getContext().getId()+"/"
+                                    +r.getId(), amap);
+                    }
+                    
                     return lig;
                 }
             }
@@ -917,7 +932,7 @@ public class IDGApp extends App implements Commons {
 
         return ok(ix.idg.views.html.ligandsmedia.render
                   (page, rows, result.count(),
-                   pages, decorate (facets), ligands));
+                   pages, decorate (facets), ligands, null));
     }
     
     static Result createDiseaseResult
@@ -1192,7 +1207,7 @@ public class IDGApp extends App implements Commons {
                 Keyword anchor = terms.iterator().next();
                 List<Predicate> pred = PredicateFactory.finder
                     .where().conjunction()
-                    .add(Expr.eq("subject.refid", anchor.id))
+                    .add(Expr.eq("subject.refid", anchor.id.toString()))
                     .add(Expr.eq("subject.kind", anchor.getClass().getName()))
                     .add(Expr.eq("predicate", predicate))
                     .findList();
@@ -1600,7 +1615,7 @@ public class IDGApp extends App implements Commons {
             
                         return ok (ix.idg.views.html.ligandsmedia.render
                                    (page, _rows, total, pages,
-                                    decorate (facets), ligands));
+                                    decorate (facets), ligands, null));
                     }
                 });
         }
@@ -1754,7 +1769,7 @@ public class IDGApp extends App implements Commons {
                                    (page, rows, total,
                                     pages, decorate (filter
                                                      (facets, LIGAND_FACETS)),
-                                    ligands));
+                                    ligands, context.getId()));
                     }
             });
     }
@@ -2473,5 +2488,84 @@ public class IDGApp extends App implements Commons {
         return internalServerError
             (ix.idg.views.html.error.render
              (500, "Unable to perform batch search: "+q));
+    }
+
+    static final String[] TISSUES  = new String[] {
+        "GTEx Tissue Specificity Index",
+        "HPM Protein Tissue Specificity Index",
+        "HPA RNA Tissue Specificity Index",
+        //"HPA Protein Tissue Specificity Index"
+    };
+    static JsonNode _targetTissue (final String name) throws Exception {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode nodes = mapper.createArrayNode();
+
+        List<Target> targets = TargetResult.find(name);
+        for (Target tar: targets) {
+            ArrayNode axes = mapper.createArrayNode();
+            for (String t: TISSUES) {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("axis", t.replaceAll("Tissue Specificity Index",""));
+                Value p = tar.getProperty(t);
+                if (p != null) {
+                    if (p instanceof VNum)
+                        n.put("value", ((VNum)p).numval);
+                    else if (p instanceof VInt)
+                        n.put("value", ((VInt)p).intval);
+                    else {
+                        Logger.warn("Unknown tissue index property: "+p);
+                        n.put("value", 0);
+                    }
+                }
+                else {
+                    n.put("value", 0);
+                }
+                axes.add(n);
+            }
+
+            ObjectNode node = mapper.createObjectNode();
+            node.put("className", name);
+            node.put("axes", axes);
+            nodes.add(node);
+        }
+        
+        return nodes;
+    }
+    
+    public static Result targetTissue (final String name) {
+        try {
+            final String key = Util.sha1(name);
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        return ok (_targetTissue (name));
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
+    }
+
+    public static Result structure (final String id,
+                                    final String format, final int size,
+                                    final String context) {
+        //Logger.debug("Fetching structure");
+        String atomMap = "";
+        if (context != null) {
+            int[] amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
+            //Logger.debug("AtomMaps/"+context+" => "+amap);
+            if (amap != null && amap.length > 0) {
+                StringBuilder sb = new StringBuilder ();
+                sb.append(amap[0]);
+                for (int i = 1; i < amap.length; ++i)
+                    sb.append(","+amap[i]);
+                atomMap = sb.toString();
+            }
+            else {
+                atomMap = context;
+            }
+        }
+        return App.structure(id, format, size, atomMap);        
     }
 }

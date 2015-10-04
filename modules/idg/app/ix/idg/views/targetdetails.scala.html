@@ -406,6 +406,11 @@
 				     data-html="true"
 				     title="<p align='left'>Number of transmembrane helices according to Survey of the Human Transmembrane Proteome (https://modbase.compbio.ucsf.edu/projects/membrane/). At least 2 are required to be in their list.</p>">Transmembrane</span>
 				}
+				case "EBI Total Patent Count (Relevant)" => {
+   				  <span data-toggle="tooltip"
+				     data-html="true"
+				     title="<p align='left'>">Patent Count</span>
+				}
 				case _ => {
 				}
 			     }
@@ -417,6 +422,14 @@
 			}
 		      </tr>
 		   }
+		   <tr>
+		     <td>Grant Count</td>
+		     <td>@target.grantCount</td>
+		   </tr>
+		   <tr>
+		     <td>Grant Cost ($)</td>
+		     <td>@{"%.2f".format(target.grantTotalCost)}</td>
+		   </tr>
 	           </table>
 		 </div>
 	       </div>
@@ -440,6 +453,20 @@
 	@property(GO_PROCESS)
       </div>
       <div class="col-md-4">
+        <div class="panel panel-default">
+	    <div class="panel-heading">
+	      <h3 class="panel-title">Tissue Specificity Index</h3>
+	    </div>
+	    <div class="panel-body">
+	      <div class="row">
+	        <div class="col-md-2"></div>
+		<div class="col-md-8">
+		   <div id="tissue-specificity-radar"></div>
+		</div>
+		<div class="col-md-2"></div>
+	      </div>
+	    </div>
+	</div>
         @property(PANTHER_PROTEIN_CLASS, null, -1)
         @property(ChEMBL_PROTEIN_CLASS, null, -1)
 	@property(IMPC_TERM)
@@ -455,29 +482,10 @@
       <div class="col-md-6">
          <div class="panel panel-default">
             <div class="panel-heading">
-                <h3 class="panel-title">UniProt Disease Relevance</h3>
+                <h3 class="panel-title">TINX Plot</h3>
             </div>
             <div class="panel-body">
-                <table class="table table-striped">
-                  <tr>
-                    <th>Disease</th>
-                    <th>OMIM</th>
-                    <th>Comment</th>
-                  </tr>
-                  @for(dr <- diseases) {
-                    @if(dr.comment != null) {
-                    <tr>
-                      <td><a href="@ix.idg.controllers.routes.IDGApp.disease(IDGApp.getId(dr.disease))">@dr.disease.name</a></td>
-                      @if(dr.omim != null) {
-                      <td><a href="@dr.omim.href">@dr.omim.term</a></td>
-                      } else {
-                      <td></td>
-                      }
-                      <td>@dr.comment</td>
-                    </tr>
-                    }
-                  }
-                </table>
+                <div id="tinx-plot"></div>
             </div>
          </div>
       </div>
@@ -487,22 +495,7 @@
             <h3 class="panel-title">IDG Disease Relevance (@diseases.size())</h3>
           </div>
           <div class="panel-body">
-
-              <ul class="nav nav-tabs" role="tablist">
-                  <li role="presentation" class="active">
-                      <a href="#tinx" aria-controls="tinx" role="tab" data-toggle="tab">Novelty / Importance</a>
-                  </li>
-                  <li role="presentation">
-                      <a href="#dtable" aria-controls="dtable" role="tab" data-toggle="tab">Relevance Table</a>
-                  </li>
-              </ul>
-
-              <div class="tab-content">
-                  <div role="tabpanel" class="tab-pane active" id="tinx">
-                      <div id="tinx-plot"></div>
-                  </div>
-                  <div role="tabpanel" class="tab-pane" id="dtable">
-                      <table class="tree table">
+               <table class="tree table">
                           <tr>
                               <th>Disease</th>
                               <th>Z-score <i class="fa fa-info-circle"
@@ -537,11 +530,8 @@
                                   }
                               }
                           }
-                      </table>
-                  </div>  @* tab-pane *@
-              </div>  @* tab-content *@
+               </table>
           </div>  @* panel-body *@
-
          </div>
        </div>
       </div>
@@ -738,10 +728,11 @@
 
     </style>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
-    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />    
 </head>
 
 <script>
@@ -758,6 +749,23 @@ $(document).ready(function () {
   });
   $('#keyword').on('click touchstart', function () {
      showLoadModal();
+  });
+
+  $.ajax({
+     url: '@ix.idg.controllers.routes.IDGApp.targetTissue(IDGApp.getId(target))',
+     dataType:"json",
+     success:function(data) {
+          var chart = RadarChart.chart();
+          chart.config({
+                    w:150, h:150,
+		    axisText:true, levels:0, circles:true
+          });
+          var svg = d3.select("#tissue-specificity-radar").append('svg' )
+	             .attr("width", 150)
+          	     .attr("height", 150)
+                .append('g') //.attr("transform","rotate(45)")
+		.classed('focus', 1).datum(data).call(chart);
+      }
   });
 
   tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");

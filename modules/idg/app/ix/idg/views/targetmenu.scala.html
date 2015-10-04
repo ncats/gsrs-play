@@ -70,10 +70,10 @@
             <div class="form-group">
               <div class="row">
                 <div class="col-md-12">
-		  <label for="sequence">Enter Search Terms:</label>
+		  <label for="sequence">Enter list of identifiers or symbols:</label>
                   <textarea class="form-control" rows="12" id="batch-area"
 			    style="font-family: monospace"
-                            title="Batch Search" name="q">@ix.ncats.controllers.App.getSequence(request.getQueryString("id"))</textarea>
+                            title="Batch Search" name="q">@ix.ncats.controllers.App.getPayload(request.getQueryString("id"), 1000)</textarea>
                 </div>
               </div>
             </div>
