@@ -19,7 +19,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.grantCount</td>
         <td>@t.patentCount</td>
         <td>@t.antibodyCount</td>
-        <td><div style="display: inline; white-space:nowrap" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
+        @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
+        <td><div id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
     </tr>
     @if(ctx != null) {
        @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
@@ -222,7 +223,7 @@ $(document).ready(function () {
     // iterate over all .radar-XXX elements and draw the radar chart
     // currently we pull chart data dynamically, but really should be
     // generated at compile time
-    $('div[id*="radar-"' ).each(function() {
+    $("div[id^='radar-']" ).each(function() {
         var klass = $(this ).attr("id");
         var acc = klass.split("-")[1];
         $.ajax({
