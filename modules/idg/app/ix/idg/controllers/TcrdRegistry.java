@@ -11,6 +11,8 @@ import ix.core.plugins.*;
 import ix.core.search.TextIndexer;
 import ix.idg.models.*;
 import ix.seqaln.SequenceIndexer;
+import tripod.chem.indexer.StructureIndexer;
+
 import play.Logger;
 import play.Play;
 import play.cache.Cache;
@@ -47,7 +49,9 @@ public class TcrdRegistry extends Controller implements Commons {
         Play.application().plugin(PersistenceQueue.class);
     static final SequenceIndexer SEQIDX = Play.application()
         .plugin(SequenceIndexerPlugin.class).getIndexer();
-
+    static final StructureIndexer MOLIDX = Play.application()
+        .plugin(StructureIndexerPlugin.class).getIndexer();
+    
     static final ConcurrentMap<String, Disease> DISEASES =
         new ConcurrentHashMap<String, Disease>();
     static final List<Target> TARGETS = new ArrayList<Target>();
@@ -300,7 +304,8 @@ public class TcrdRegistry extends Controller implements Commons {
             ResultSet rset = pstm12.executeQuery();
             while (rset.next()) {
                 String xtype = rset.getString("xtype");
-                value = rset.getString("value");         
+                value = rset.getString("value");
+                Logger.info("  + "+xtype+": "+value);
                 if ("uniprot keyword".equalsIgnoreCase(xtype)) {
                     String term = rset.getString("xtra");
                     if (term != null) {
@@ -383,6 +388,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         (UNIPROT_SHORTNAME, value, null);
                     target.addIfAbsent(kw);
                 }
+                Logger.info("  + "+type+": "+value);
             }
             rset.close();
             
@@ -1072,6 +1078,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         struc.save();
                         XRef xref = new XRef (struc);
                         ligand.links.add(xref);
+                        MOLIDX.add(null, struc.id.toString(), struc.molfile);
                     }
                                         
                     ligand.save();
@@ -1088,6 +1095,7 @@ public class TcrdRegistry extends Controller implements Commons {
                          "https://www.ebi.ac.uk/chembl/compound/inspect/"
                          +chemblId);
                     ligand.addIfAbsent(kw);
+                    ligand.addIfAbsent((Value)chembl.getSource());
                 }
 
                 XRef tref = new XRef (target);
@@ -1156,6 +1164,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else {
                     ligand = new Ligand (chemblId);
+                    ligand.properties.add(chembl.getSource());
                     ligand.synonyms.add
                         (KeywordFactory.registerIfAbsent
                          (ChEMBL_SYNONYM, chemblId,
@@ -1179,6 +1188,8 @@ public class TcrdRegistry extends Controller implements Commons {
                         struc.save();
                         XRef xref = new XRef (struc);
                         ligand.links.add(xref);
+                        // now index the structure for searching
+                        MOLIDX.add(null, struc.id.toString(), struc.molfile);
                     }
 
                     ligand.save();
@@ -1208,11 +1219,11 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
 
                 XRef tref = ligand.addIfAbsent(new XRef (target));
-                tref.properties.add
-                    (KeywordFactory.registerIfAbsent
+                tref.addIfAbsent
+                    ((Value)KeywordFactory.registerIfAbsent
                      (IDG_DEVELOPMENT, target.idgTDL.name, null));
-                tref.properties.add
-                    (KeywordFactory.registerIfAbsent
+                tref.addIfAbsent
+                    ((Value)KeywordFactory.registerIfAbsent
                      (IDG_FAMILY, target.idgFamily, null));
                 
                 XRef lref = target.addIfAbsent(new XRef (ligand));
@@ -2118,7 +2129,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where d.protein_id in (8721)\n"
                  //+"where c.id in (11521)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 //+"where b.tdl = 'Tclin'\n"
+                 +"where b.tdl = 'Tclin'\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"

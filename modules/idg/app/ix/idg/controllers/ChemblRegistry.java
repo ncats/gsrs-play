@@ -125,6 +125,7 @@ public class ChemblRegistry implements Commons {
         this.uniprotMap = uniprotMap;           
     }
 
+    public Keyword getSource () { return source; }
     public void shutdown () throws SQLException {
         try {
             pstm.close();
