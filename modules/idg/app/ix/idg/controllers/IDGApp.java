@@ -116,6 +116,22 @@ public class IDGApp extends App implements Commons {
             return target;
         }
     }
+
+    public static class GeneRIF implements Comparable<GeneRIF> {
+        public Long pmid;       
+        public String text;
+
+        GeneRIF (Long pmid, String text) {
+            this.pmid = pmid;
+            this.text = text;
+        }
+
+        public int compareTo (GeneRIF gene) {
+            if (gene.pmid > pmid) return 1;
+            if (gene.pmid < pmid) return -1;
+            return 0;
+        }
+    }
     
     public static class DiseaseRelevance
         implements Comparable<DiseaseRelevance> {
@@ -2567,5 +2583,32 @@ public class IDGApp extends App implements Commons {
             }
         }
         return App.structure(id, format, size, atomMap);        
+    }
+
+    public static List<GeneRIF> getGeneRIFs (Target target) {
+        List<GeneRIF> generifs = new ArrayList<GeneRIF>();
+        for (XRef ref : target.links) {
+            if (Text.class.getName().equals(ref.kind)) {
+                try {
+                    Text text = (Text)ref.deRef();
+                    if (IDG_GENERIF.equals(text.label)) {
+                        for (Value val : ref.properties) {
+                            if (PUBMED_ID.equals(val.label)) {
+                                VInt pmid = (VInt)val;
+                                generifs.add(new GeneRIF
+                                             (pmid.intval, text.getValue()));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.debug("Can't dereference "+ref.kind+":"+ref.refid);
+                }
+            }
+        }
+        
+        Collections.sort(generifs);
+        return generifs;
     }
 }

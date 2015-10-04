@@ -11,15 +11,12 @@
     <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 8, 1)">Ligands</a></li>
 </ul>
 <ul class="nav navbar-nav navbar-right">
-  <button type="button" class="btn navbar-btn btn-default"
-	  data-toggle="modal"
-	  data-target="#strucModal">Structure Search</button>  
   <form class="navbar-form navbar-right" role="search" method="GET"
         action="@ix.idg.controllers.routes.IDGApp.search(null)">
     <div class="form-group">
       <input type="text" id="search-header-field" name="q"
 	     class="typeahead form-control" placeholder="Search..."/>
-      <input type="hidden" name="kind" value="ix.idg.models.Ligand">
+      <input type="hidden" name="kind" value="ix.idg.models.Disease">
     </div>
     <button type="submit" class="btn btn-default">
       <span class="fa fa-search" aria-hidden="true"></span>
@@ -28,33 +25,6 @@
     <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.about()">About</a></li>
     <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.help()">Help</a></li>
 </ul>
-@ix.ncats.views.html.ssearch("GET", ix.idg.controllers.routes.IDGApp.search(null))
-
-<script>
-  var marvinSketcherInstance;
-  $(document).ready(function (e) {
-     MarvinJSUtil.getEditor("#sketcher").then(function (marvin) {
-           marvinSketcherInstance = marvin;
-           initControls();
-        }, function (err) {
-           alert("Can't retrieve sketcher instance from iframe:"+err);
-        });
-  });
-
-  function initControls () {
-     $('#strucModal').on('shown.bs.modal', function (ev) {
-        var button = $(ev.relatedTarget);
-        var url = button.data('molurl');
-        console.log('molurl: '+url);
-        if (url) {
-           $.get(url, function (mol) {
-              //console.log(mol);
-              marvinSketcherInstance.importStructure('mol', mol);
-	   });
-        }
-     });
-  }
-</script>
 }
 
 @**

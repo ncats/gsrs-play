@@ -312,23 +312,19 @@ public class TcrdRegistry extends Controller implements Commons {
                         Keyword kw = KeywordFactory.registerIfAbsent
                             (UNIPROT_KEYWORD, term.replaceAll("/","-"),
                              "http://www.uniprot.org/keywords/"+value);
-                        
-                        Value found = null;
-                        for (Value v : target.properties) 
-                            if (v.id == kw.id) {
-                                found = v;
-                                break;
-                            }
 
-                        if (found == null) 
-                            target.properties.add(kw);
+                        target.addIfAbsent((Value)kw);
                     }
                 }
                 else if ("pubmed".equalsIgnoreCase(xtype)) {
+                    /*
                     Publication pub = PublicationFactory.registerIfAbsent
                         (Long.parseLong(value));
                     if (pub != null)
                         target.addIfAbsent(pub);
+                    */
+                    target.properties.add
+                        (new VInt (PUBMED_ID, Long.parseLong(value)));
                 }
                 else {
                     List<String> names = xrefs.get(xtype);
@@ -763,8 +759,15 @@ public class TcrdRegistry extends Controller implements Commons {
                     String trait = rset.getString("trait");
                     if (trait != null) {
                         trait = trait.replaceAll("/", "-");
+                        Keyword gwas = KeywordFactory.registerIfAbsent
+                            (GWAS_TRAIT, trait, null);
+                        XRef ref = new XRef (gwas);
+                        ref.properties.add(source);
+                        
                         long pmid = rset.getLong("pmid");
                         if (!rset.wasNull()) {
+                            ref.properties.add(new VInt (PUBMED_ID, pmid));
+                            /*
                             Publication pub =
                                 PublicationFactory.registerIfAbsent(pmid);
                             if (pub != null) {
@@ -791,7 +794,9 @@ public class TcrdRegistry extends Controller implements Commons {
                                 Logger.warn("Can't retrieve publication "+pmid+
                                             "for target "+target.id);
                             }
+                            */
                         }
+                        target.links.add(ref);
                     }
                 }
                 else if ("JAX/MGI Human Ortholog Phenotype"
@@ -1211,11 +1216,14 @@ public class TcrdRegistry extends Controller implements Commons {
 
                 long pmid = rset.getLong("pubmed_id");
                 if (pmid != 0) {
+                    /*
                     Publication pub = PublicationFactory.registerIfAbsent(pmid);
                     XRef ref = new XRef (pub);
                     ref.properties.add(act);
                     ligand.addIfAbsent(ref);
                     ligand.addIfAbsent(pub);
+                    */
+                    ligand.properties.add(new VInt (PUBMED_ID, pmid));
                 }
 
                 XRef tref = ligand.addIfAbsent(new XRef (target));
@@ -1348,6 +1356,30 @@ public class TcrdRegistry extends Controller implements Commons {
             }
         }
 
+        void addGeneRIF (Target target, long protein) throws Exception {
+            pstm4.setLong(1, protein);
+            ResultSet rset = pstm4.executeQuery();
+            try {
+                while (rset.next()) {
+                    String desc = rset.getString("text");
+                    Text text = new Text (IDG_GENERIF, desc);
+                    text.save();
+                    XRef ref = new XRef (text);
+                    String pmids = rset.getString("pubmed_ids");
+                    if (pmids != null) {
+                        for (String t : pmids.split("\\|")) {
+                            ref.properties.add(new VInt
+                                               (PUBMED_ID, Long.parseLong(t)));
+                        }
+                    }
+                    target.links.add(ref);
+                }
+            }
+            finally {
+                rset.close();
+            }
+        }
+
         void persists (TcrdTarget t) throws Exception {
             Http.Context.current.set(ctx);
             Logger.debug(t.family+" "+t.tdl+" "+t.acc+" "+t.id);
@@ -1386,8 +1418,9 @@ public class TcrdRegistry extends Controller implements Commons {
             addDrugs (target, t.id);
             addChembl (target, t.id);
             addDisease (target, t.id);
-            addHarmonogram(target, t.protein);
-
+            addHarmonogram (target, t.protein);
+            addGeneRIF (target, t.protein);
+            
             TARGETS.add(target);
 
             /*
@@ -1399,9 +1432,9 @@ public class TcrdRegistry extends Controller implements Commons {
             Logger.debug("..."+(end-start)+"ms to resolve diseases");
             */
 
-            Logger.debug("...gene RIF linking");
-            pstm4.setLong(1, t.protein);
-            new RegisterGeneRIFs (target, pstm4).persists();
+            //Logger.debug("...gene RIF linking");
+            //pstm4.setLong(1, t.protein);
+            //new RegisterGeneRIFs (target, pstm4).persists();
 
             /*
             Logger.debug("...ligand linking");
@@ -2129,7 +2162,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where d.protein_id in (8721)\n"
                  //+"where c.id in (11521)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 +"where b.tdl = 'Tclin'\n"
+                 //+"where b.tdl = 'Tclin'\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"

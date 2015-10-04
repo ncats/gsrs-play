@@ -427,7 +427,7 @@
 		     <td>@target.grantCount</td>
 		   </tr>
 		   <tr>
-		     <td>Grant Cost ($)</td>
+		     <td>Funding ($)</td>
 		     <td>@{"%.2f".format(target.grantTotalCost)}</td>
 		   </tr>
 	           </table>
@@ -492,7 +492,7 @@
       <div class="col-md-6">   
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">IDG Disease Relevance (@diseases.size())</h3>
+            <h3 class="panel-title">Disease Relevance (@diseases.size())</h3>
           </div>
           <div class="panel-body">
                <table class="tree table">
@@ -637,6 +637,7 @@
     <!-- 
       -- Publications
       -->
+   @if(!target.getPublications.isEmpty()) {
     <div class="row">
       <div class="col-md-12">
         <div class="panel panel-default">
@@ -692,6 +693,37 @@
       </div>
     </div>
   </div>
+  }
+
+  @defining(IDGApp.getGeneRIFs(target)) { generifs =>
+    @if(!generifs.isEmpty) {
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title">Gene RIF (@generifs.size)</h3>
+          </div>
+          <div class="panel-body">
+            <div class="panel-body">
+              <table class="table table-striped">
+                <tr>
+                  <th>PMID <i class="fa fa-external-link"></i></th>
+                  <th>Text</th>
+                </tr>
+		@for(x <- generifs) {
+		   <tr>
+		     <td><a href="http://www.ncbi.nlm.nih.gov/pubmed/@x.pmid">@x.pmid</a></td>
+		     <td>@x.text</td>
+		   </tr>
+		}
+  	      </table>
+	    </div>
+	  </div>
+	</div>
+      </div>
+    </div>
+    }
+   }
 </div>
 }
 
