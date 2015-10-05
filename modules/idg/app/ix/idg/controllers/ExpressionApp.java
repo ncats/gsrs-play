@@ -123,8 +123,8 @@ public class ExpressionApp extends App {
                 // may need to update mapping
                 Set<String> organset = new HashSet<>();
                 for (Value v : t.getProperties()) {
-                    if (v.label.equals(Commons.IDG_TISSUE) || v.label.equals(Commons.GTEx_TISSUE) ||
-                            v.label.equals(Commons.HPM_TISSUE) || v.label.equals(Commons.UNIPROT_TISSUE)) {
+                    // candidate sources: IDG_TISSUE, HPM_TISSUE, UNIPROT_TISSUE, GTex_TISSUE
+                    if (v.label.equals(Commons.GTEx_TISSUE)) {
                         String val = (String) v.getValue();
                         for (String key : onm.keySet()) {
                             if (val.toLowerCase().contains(key)) organset.add(onm.get(key));
