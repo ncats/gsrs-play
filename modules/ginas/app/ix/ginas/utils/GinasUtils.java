@@ -34,8 +34,8 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import ix.seqaln.SequenceIndexer;
 
+import ix.seqaln.SequenceIndexer;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
@@ -193,6 +193,15 @@ public class GinasUtils {
                 switch (type) {
                 case chemical:
                     sub = mapper.treeToValue(tree, ChemicalSubstance.class);
+					try {
+						((ChemicalSubstance) sub).structure.smiles = ChemicalFactory
+								.DEFAULT_CHEMICAL_FACTORY()
+								.createChemical(
+										((ChemicalSubstance) sub).structure.molfile,
+										Chemical.FORMAT_MOL)
+								.export(Chemical.FORMAT_SMILES);
+					} catch (Exception e) {
+					}
                     return sub;
                 case protein:
                     sub = mapper.treeToValue(tree, ProteinSubstance.class);

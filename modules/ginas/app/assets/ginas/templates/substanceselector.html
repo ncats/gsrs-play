@@ -8,29 +8,6 @@
         <auto-complete source="fetch($query)" min-length="3" debounce-delay="0"
                        load-on-down-arrow="true"></auto-complete>
     </tags-input>
-<!--    <div class="btn-toolbar" role="toolbar">
-        <div class="btn-group" role="group">
-            <h3><span class="label label-default">{{ results.total }}</span></h3>
-        </div>
-        <div class="btn-group" role="group">
-            <ul class="pagination">
-                <li>
-                    <a href='#' aria-label="Previous"
-                       ng-click="prevPage()"
-                            >
-                        <span aria-hidden="true" class="fa fa-angle-double-left"></span>
-                    </a>
-                </li>
-                <li>
-                    <a href='#' aria-label="Next"
-                       ng-click="nextPage()"
-                            >
-                        <span aria-hidden="true" class="fa fa-angle-double-right"></span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>-->
     <div class="panel-body">
         <div class="row hidden-xs" id="grid">
             <div class="col-md-3 thumb-col">
@@ -54,21 +31,7 @@
                     <div class="panel-footer nameDiv" data-toggle="tooltip" title="{{item.name}}">
                         {{relationship.subref.refPname}}
                     </div>
-<!--                    <a href="#" ng-click="select(item)">
-                        Select
-                    </a>-->
-                </div>
-            </div>
-
-
-        </div>
-<!--
-
-        Selected: <b><code>{{selected.item.approvalIDDisplay}}</code> {{ selected.item.name }}</b>-->
-
     </div>
-
-
 </div>
 <div class="modal-footer">
     <button class="btn btn-primary" ng-click="ok()">OK</button>
