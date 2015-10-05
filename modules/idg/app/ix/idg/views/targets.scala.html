@@ -9,6 +9,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
+        <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
         <td><a id='load' onclick="showLoadModal()" 
 	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
 
@@ -74,8 +75,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     </ol>
 } {
 
+    <form>
     <table id="target-table" class="table table-striped">
         <tr>
+            <th><button id="cb-addall" class="btn btn-default" type="button">Select all</button></th>
             <th>Name</th>
             <th>Development Level</th>
             <th>Target Family</th>
@@ -91,7 +94,18 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
             @tabrow(t)
         }
     </table>
+    </form>
 } {  @* viz *@
+    <div class="dropdown pull-right">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            <i class="fa fa-shopping-cart"></i>
+        </button>
+            <ul class="dropdown-menu pull-left">
+                <li><a href="#" id="sc-add-selected">Add selected</a></li>
+                <li><a href="#" id="sc-add-all">Add all</a></li>
+                <li><a href="#" id="sc-view">View collections</a></li>
+            </ul>
+    </div>
     <div class="dropdown pull-right">
       <button type="button" class="btn btn-default dropdown-toggle @if(request.getQueryString("q") == null && request.getQueryString("facet") == null) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <i class="fa fa-eye"></i>
@@ -232,6 +246,38 @@ $(document).ready(function () {
    $('#modal-radar').on('hidden.bs.modal', function (e) {
        d3.select("#modal-radardiv").select('svg').remove();
    });
+
+    // select all checkboxes in the table
+    $("#cb-addall" ).click(function(e) {
+        var txt = $ ( "#cb-addall" ).html ( ).toLowerCase() ;
+        var table = $("#target-table");
+        if ( txt.indexOf("all") != -1 ) {
+            $ ( 'td input:checkbox',table ).prop ( 'checked', true ) ;
+            $("#cb-addall" ).html("Select None");
+        } else {
+            $ ( 'td input:checkbox',table ).prop ( 'checked', false ) ;
+            $("#cb-addall" ).html("Select All");
+        }
+    });
+    $("#sc-add-selected" ).click(function(e) {
+        addEntitiesToShoppingCart(selectEntities("#target-table  input:checked"));
+    });
+    $("#sc-add-all" ).click(function(e) {
+        addEntitiesToShoppingCart(selectEntities("#target-table  input"));
+    });
+    function selectEntities(sel) {
+       return $(sel).map(function() {
+            var id = $(this ).attr("id");
+            if (id.indexOf("-") != -1) id = id.split("-")[1];
+            return id;
+       });
+    }
+    function addEntitiesToShoppingCart(entities, etype) {
+        var accs = _.map(entities, function(x){
+            return ([etype, x]);
+        });
+        console.log(accs);
+    }
 
     // iterate over all .radar-XXX elements and draw the radar chart
     // currently we pull chart data dynamically, but really should be
