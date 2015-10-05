@@ -167,16 +167,17 @@ public class TcrdRegistry extends Controller implements Commons {
             this.ctx = ctx;
             this.targets = targets;
             pstm = con.prepareStatement
-                ("select a.*,c.score,d.novelty_score as diseaseNovelty, b.protein_id "
-                 +"from target2disease a, t2tc b, tinx_importance c, "
-                 +"tinx_disease d "
-                 +"where a.target_id = ? "
-                 +"and a.target_id = b.target_id "
-                 +"and b.protein_id = c.protein_id "
-                 +"and d.id = c.disease_id "
-                 +"and a.doid = d.doid");
+                    ("select a.*,c.score,d.novelty_score as diseaseNovelty, b.protein_id, e.uniprot, f.score as targetNovelty "
+                            + "from target2disease a, t2tc b, tinx_importance c, tinx_disease d, protein e, tinx_novelty f "
+                            + "where a.target_id = ? "
+                            + "and a.target_id = e.id "
+                            + "and a.target_id = b.target_id "
+                            + "and b.protein_id = c.protein_id "
+                            + "and d.id = c.disease_id "
+                            + "and a.doid = d.doid "
+                            + "and f.protein_id = b.protein_id");
             pstm2 = con.prepareStatement
-                ("select * from chembl_activity where target_id = ?");
+                    ("select * from chembl_activity where target_id = ?");
             pstm3 = con.prepareStatement
                 ("select * from drugdb_activity where target_id = ?");
             pstm4 = con.prepareStatement
@@ -519,7 +520,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 Keyword go = null;
                 char kind = term.charAt(0);
                 term = term.substring(term.indexOf(':')+1)
-                    .replaceAll("/","-");
+                        .replaceAll("/","-");
                 String href = "http://amigo.geneontology.org/amigo/term/"+id;
                 
                 switch (kind) {
@@ -760,7 +761,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     if (trait != null) {
                         trait = trait.replaceAll("/", "-");
                         Keyword gwas = KeywordFactory.registerIfAbsent
-                            (GWAS_TRAIT, trait, null);
+                                (GWAS_TRAIT, trait, null);
                         XRef ref = new XRef (gwas);
                         ref.properties.add(source);
                         
@@ -1152,7 +1153,29 @@ public class TcrdRegistry extends Controller implements Commons {
                 ++count;
             }
             rset.close();
-            Logger.debug("Target "+target.id+" has "+count+" drug(s)!");
+            Logger.debug("Target " + target.id + " has " + count +" drug(s)!");
+        }
+
+        void addTINX(Target target, long tid) throws Exception {
+            pstm.setLong(1, tid);
+            ResultSet rs = pstm.executeQuery();
+            int n = 0;
+            while (rs.next()) {
+                String doid = rs.getString("doid");
+                Disease disease = DISEASES.get(doid);
+                double zscore = rs.getDouble("zscore");
+                double conf = rs.getDouble("conf");
+                double tinx = rs.getDouble("score");
+                double diseaseNovelty = rs.getDouble("diseaseNovelty");
+                String uniprot = rs.getString("uniprot");
+                double targetNovelty = rs.getDouble("targetNovelty");
+                TINX tinxe = new TINX
+                        (uniprot, doid, targetNovelty, tinx, diseaseNovelty);
+                tinxe.save();
+                n++;
+            }
+            rs.close();
+            Logger.debug("Target " + target.id + " has " + n +" TINX entries!");
         }
 
         void addChembl (Target target, long tid) throws Exception {
@@ -1406,20 +1429,21 @@ public class TcrdRegistry extends Controller implements Commons {
                              +" (protein: "+t.protein+")");
             }
             
-            addDTO (target, t.protein);
+            addDTO(target, t.protein);
             addTDL(target, t.protein);
             addPhenotype(target, t.protein);
             addExpression(target, t.protein);
             addGO(target, t.protein);
-            addPathway (target, t.id);
-            addPanther (target, t.protein);
-            addPatent (target, t.protein);
-            addGrant (target, t.id);
-            addDrugs (target, t.id);
-            addChembl (target, t.id);
-            addDisease (target, t.id);
-            addHarmonogram (target, t.protein);
-            addGeneRIF (target, t.protein);
+            addPathway(target, t.id);
+            addPanther(target, t.protein);
+            addPatent(target, t.protein);
+            addGrant(target, t.id);
+            addDrugs(target, t.id);
+            addChembl(target, t.id);
+            addDisease(target, t.id);
+            addHarmonogram(target, t.protein);
+            addGeneRIF(target, t.protein);
+            addTINX(target, t.id);
             
             TARGETS.add(target);
 
@@ -1462,6 +1486,9 @@ public class TcrdRegistry extends Controller implements Commons {
         }
     }
 
+    /**
+     * @deprecated
+     */
     static class RegisterDiseaseRefs
         extends PersistenceQueue.AbstractPersistenceContext {
         final Target target;
@@ -1652,6 +1679,9 @@ public class TcrdRegistry extends Controller implements Commons {
         }
     } // RegisterDiseaseRefs ()
 
+    /**
+     * @deprecated
+     */
     static class RegisterGeneRIFs 
         extends PersistenceQueue.AbstractPersistenceContext {
         final Target target;
@@ -1736,6 +1766,9 @@ public class TcrdRegistry extends Controller implements Commons {
         }
     } // RegisterGeneRIFs
 
+    /**
+     * @deprecated
+     */
     static class RegisterLigands
         extends PersistenceQueue.AbstractPersistenceContext {
         final ChemblRegistry registry;
