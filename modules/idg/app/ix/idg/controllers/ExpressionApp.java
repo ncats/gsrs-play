@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 public class ExpressionApp extends App {
 
     static final Map<String, String> onm;
+
     static {
         onm = new HashMap<>();
         onm.put("brain", "nervous_system");
@@ -62,6 +63,7 @@ public class ExpressionApp extends App {
         onm.put("digest", "intestine");
 
     }
+
     static ObjectMapper mapper = new ObjectMapper();
 
     public static Result error(int code, String mesg) {
@@ -106,10 +108,10 @@ public class ExpressionApp extends App {
         return null;
     }
 
-    public static Result homunculus(final String acc) throws Exception {
+    public static Result homunculus(final String acc, final String source) throws Exception {
         if (acc == null)
             return _badRequest("Must specify a target accession");
-        final String key = "expression/homunculus/" + acc;
+        final String key = "expression/homunculus/" + acc + "/" + source;
         response().setContentType("image/svg+xml");
         return getOrElse(key, new Callable<Result>() {
             public Result call() throws Exception {
@@ -121,10 +123,17 @@ public class ExpressionApp extends App {
 
                 // iterate over tissue names and map them to the SVG id's
                 // may need to update mapping
+                String ds = Commons.GTEx_TISSUE;
+                if (source != null) {
+                    if ("idg".equalsIgnoreCase(source)) ds = Commons.IDG_TISSUE;
+                    else if ("hpm".equalsIgnoreCase(source)) ds = Commons.HPM_TISSUE;
+                    else if ("uniprot".equalsIgnoreCase(source)) ds = Commons.UNIPROT_TISSUE;
+                    else if ("gtex".equalsIgnoreCase(source)) ds = Commons.GTEx_TISSUE;
+                }
                 Set<String> organset = new HashSet<>();
                 for (Value v : t.getProperties()) {
                     // candidate sources: IDG_TISSUE, HPM_TISSUE, UNIPROT_TISSUE, GTex_TISSUE
-                    if (v.label.equals(Commons.GTEx_TISSUE)) {
+                    if (v.label.equals(ds)) {
                         String val = (String) v.getValue();
                         for (String key : onm.keySet()) {
                             if (val.toLowerCase().contains(key)) organset.add(onm.get(key));
