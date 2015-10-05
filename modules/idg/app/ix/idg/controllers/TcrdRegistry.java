@@ -1339,6 +1339,10 @@ public class TcrdRegistry extends Controller implements Commons {
                         xref.properties.add(new Text (IDG_EVIDENCE, evidence));
                     }
 
+                    Keyword kw = KeywordFactory.registerIfAbsent
+                        (IDG_DISEASE, d.name, xref.getHRef());
+                    xref.addIfAbsent(kw);
+                    
                     try {
                         if (xref.id == null) {
                             xref.save();

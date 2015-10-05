@@ -21,3 +21,16 @@ ADD INDEX target_grant_index (grant_count ASC),
 ADD INDEX target_cost_index (grant_total_cost ASC),
 ADD INDEX target_r01_index (r01count ASC)
 ;
+
+ALTER TABLE ix_idg_harmonogram
+ADD INDEX harm_uniprot_index (uniprot_id ASC),
+ADD INDEX harm_symbol_index (symbol ASC),
+ADD INDEX harm_source_index (data_source asc),
+add index harm_type_index (data_type asc),
+add index harm_group_index (attr_group asc),
+add index harm_attr_type_index (attr_type asc),
+add index harm_idgfam_index (idgfamily asc),
+add index harm_tdl_index (tdl asc),
+add index harm_cdf_index (cdf asc)
+;
+

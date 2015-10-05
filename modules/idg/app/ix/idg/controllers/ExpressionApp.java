@@ -129,6 +129,7 @@ public class ExpressionApp extends App {
                     else if ("hpm".equalsIgnoreCase(source)) ds = Commons.HPM_TISSUE;
                     else if ("uniprot".equalsIgnoreCase(source)) ds = Commons.UNIPROT_TISSUE;
                     else if ("gtex".equalsIgnoreCase(source)) ds = Commons.GTEx_TISSUE;
+                    else if ("hpa".equalsIgnoreCase(source)) ds = Commons.HPA_RNA_TISSUE;
                 }
                 Set<String> organset = new HashSet<>();
                 for (Value v : t.getProperties()) {

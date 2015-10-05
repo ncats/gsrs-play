@@ -427,7 +427,10 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        IDG_TISSUE
+        IDG_TISSUE,
+        GTEx_TISSUE,
+        HPM_TISSUE,
+        HPA_RNA_TISSUE
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -2610,5 +2613,15 @@ public class IDGApp extends App implements Commons {
         
         Collections.sort(generifs);
         return generifs;
+    }
+
+    public static List<Long> getPMIDs (Target target) {
+        List<Long> pmids = new ArrayList<Long>();
+        for (Value val : target.properties) {
+            if (PUBMED_ID.equals(val.label)) {
+                pmids.add(((VInt)val).intval);
+            }
+        }
+        return pmids;
     }
 }
