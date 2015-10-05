@@ -451,6 +451,16 @@
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
+
+          <div class="panel panel-default">
+              <div class="panel-heading">
+                  <h3 class="panel-title">Tissue Expression</h3>
+              </div>
+              <div class="panel-body">
+                  <img width=325 src="@ix.idg.controllers.routes.ExpressionApp.homunculus(IDGApp.getId(target))" />
+              </div>
+          </div>
+
       </div>
       <div class="col-md-4">
         <div class="panel panel-default">
@@ -774,6 +784,7 @@ $(function () {
 });
 
 $(document).ready(function () {
+    console.log();
   $('.tree').treegrid({
    expanderExpandedClass: 'fa fa-angle-down',
    expanderCollapsedClass: 'fa fa-angle-right',
