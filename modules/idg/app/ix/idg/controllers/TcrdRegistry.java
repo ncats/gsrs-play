@@ -166,16 +166,20 @@ public class TcrdRegistry extends Controller implements Commons {
             this.con = con;
             this.ctx = ctx;
             this.targets = targets;
+
+            // For some reason it is possible that a target has entries in target2disease and tinx_novelty
+            // but no entries in tinx_importance. Example is Q8WXS5. As a result the SQL below would not
+            // return anything
             pstm = con.prepareStatement
-                    ("select a.*,c.score,d.novelty_score as diseaseNovelty, b.protein_id, e.uniprot, f.score as targetNovelty "
-                            + "from target2disease a, t2tc b, tinx_importance c, tinx_disease d, protein e, tinx_novelty f "
-                            + "where a.target_id = ? "
-                            + "and a.target_id = e.id "
-                            + "and a.target_id = b.target_id "
-                            + "and b.protein_id = c.protein_id "
-                            + "and d.id = c.disease_id "
-                            + "and a.doid = d.doid "
-                            + "and f.protein_id = b.protein_id");
+                    ("select distinct " +
+                            "a.target_id, d.doid, d.name, d.novelty_score as diseaseNovelty, c.score as importance,  " +
+                            "e.uniprot, f.score as targetNovelty " +
+                            "from target2disease a, tinx_disease d, tinx_importance c, protein e, tinx_novelty f " +
+                            "where a.target_id = ? " +
+                            "and a.doid = d.doid " +
+                            "and c.protein_id = a.target_id " +
+                            "and e.id = a.target_id " +
+                            "and f.protein_id = a.target_id");
             pstm2 = con.prepareStatement
                     ("select * from chembl_activity where target_id = ?");
             pstm3 = con.prepareStatement
@@ -1162,10 +1166,7 @@ public class TcrdRegistry extends Controller implements Commons {
             int n = 0;
             while (rs.next()) {
                 String doid = rs.getString("doid");
-                Disease disease = DISEASES.get(doid);
-                double zscore = rs.getDouble("zscore");
-                double conf = rs.getDouble("conf");
-                double tinx = rs.getDouble("score");
+                double tinx = rs.getDouble("importance");
                 double diseaseNovelty = rs.getDouble("diseaseNovelty");
                 String uniprot = rs.getString("uniprot");
                 double targetNovelty = rs.getDouble("targetNovelty");
