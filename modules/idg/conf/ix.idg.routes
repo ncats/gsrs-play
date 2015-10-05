@@ -38,7 +38,9 @@ POST	/batch		ix.idg.controllers.IDGApp.batch
 GET	/expression/homunculus ix.idg.controllers.ExpressionApp.homunculus(acc: String ?= null, source: String ?= null)
 GET	/targets/:name/tissue  ix.idg.controllers.IDGApp.targetTissue(name: String)
 GET	/struc/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.idg.controllers.IDGApp.structure(id: String, format: String, size: Int ?= 150, context: String ?= null)
-
+POST /dossier ix.idg.controllers.DossierApp.addEntities
+GET /dossier/count ix.idg.controllers.DossierApp.count
+GET /dossier/view ix.idg.controllers.DossierApp.view
 ->	/	ix.ncats.Routes
 ->	/	ix.core.test.Routes
 

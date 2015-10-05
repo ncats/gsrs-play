@@ -98,12 +98,12 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 } {  @* viz *@
     <div class="dropdown pull-right">
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-shopping-cart"></i>
+            <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
         </button>
             <ul class="dropdown-menu pull-left">
                 <li><a href="#" id="sc-add-selected">Add selected</a></li>
                 <li><a href="#" id="sc-add-all">Add all</a></li>
-                <li><a href="#" id="sc-view">View collections</a></li>
+                <li><a href="@ix.idg.controllers.routes.DossierApp.view" id="sc-view">View collections</a></li>
             </ul>
     </div>
     <div class="dropdown pull-right">
@@ -247,6 +247,13 @@ $(document).ready(function () {
        d3.select("#modal-radardiv").select('svg').remove();
    });
 
+    $.ajax({
+        url:'@ix.idg.controllers.routes.DossierApp.count',
+        dataType:'text',
+        success:function(d) {
+            $("#sc-count" ).html(d);
+        }
+    });
     // select all checkboxes in the table
     $("#cb-addall" ).click(function(e) {
         var txt = $ ( "#cb-addall" ).html ( ).toLowerCase() ;
@@ -260,10 +267,10 @@ $(document).ready(function () {
         }
     });
     $("#sc-add-selected" ).click(function(e) {
-        addEntitiesToShoppingCart(selectEntities("#target-table  input:checked"));
+        addEntitiesToShoppingCart(selectEntities("#target-table  input:checked"), "target");
     });
     $("#sc-add-all" ).click(function(e) {
-        addEntitiesToShoppingCart(selectEntities("#target-table  input"));
+        addEntitiesToShoppingCart(selectEntities("#target-table  input"), "target");
     });
     function selectEntities(sel) {
        return $(sel).map(function() {
@@ -274,9 +281,21 @@ $(document).ready(function () {
     }
     function addEntitiesToShoppingCart(entities, etype) {
         var accs = _.map(entities, function(x){
-            return ([etype, x]);
+            var o = new Object();
+            o.type = etype;
+            o.entity = x
+            return (o);
         });
-        console.log(accs);
+        console.log(JSON.stringify(accs));
+        $.ajax({
+            url:'@ix.idg.controllers.routes.DossierApp.addEntities',
+            type:"POST",
+            data: {'json':JSON.stringify(accs)},
+            success:function(dat, status, xhr) {
+                console.log(dat);
+                $("#sc-count" ).html(dat.total_entries);
+            }
+        });
     }
 
     // iterate over all .radar-XXX elements and draw the radar chart
