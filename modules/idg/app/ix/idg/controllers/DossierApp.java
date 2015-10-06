@@ -195,6 +195,6 @@ public class DossierApp extends App implements Commons {
             // TODO ligands
         }
 
-        return ok(ix.idg.views.html.cart.render(folderNames, targets, diseases, ligands, null));
+        return ok(ix.idg.views.html.cart.render(folderName, folderNames, targets, diseases, ligands, null));
     }
 }

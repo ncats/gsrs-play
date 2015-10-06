@@ -5,11 +5,15 @@
 @import ix.idg.controllers.Commons._
 @import ix.ncats.controllers.App.FacetDecorator
 
-@(folderNames: List[String],
+@(currentFolder: String, folderNames: List[String],
         targets: List[Target],
         diseases: List[Disease],
         ligands: List[Ligand], ctx: String)
 
+
+@folderItem(f: String) = {
+    <li class="folder-item @if(f.equals(currentFolder)){active}"><i class="fa-li fa fa-folder-open-o"></i>@f</li>
+}
 
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
@@ -34,9 +38,42 @@
 } {
     @HtmlFormat.empty
 } {
+    <div class="container-fluid">
+        <div class="row">
+            <div class="btn-group pull-right" role="group">
+                <a class="btn btn-default" href="@HtmlFormat.raw(request.uri)?folder=@currentFolder&action=download" role="button" style="margin-right: 5px">
+                    <i class="fa fa-download fa-lg "></i></a>
+                <div class="dropdown pull-right">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-eye"></i>
+                    </button>
+                    <ul class="dropdown-menu pull-left">
+                        <li><a  href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
+                        <li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>&nbsp;Kinase networks</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="panel panel-default">
+                    <div class="panel-heading">Folder List</div>
+                    <div class="panel-body">
+                        <ul class='fa-ul' id="ul-folder-list">
+                    @for(f <- folderNames) {
+                        @folderItem(f)
+                    }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9">
 
     <form>
-    <table id="entity-table" class="table table-striped">
+    <table id="target-table" class="table table-striped">
         <tr>
             <th><button id="cb-addall" class="btn btn-default" type="button">Select all</button></th>
             <th>Name</th>
@@ -55,6 +92,10 @@
         }
     </table>
     </form>
+
+    </div>
+    </div>
+    </div>
 }
 
 
