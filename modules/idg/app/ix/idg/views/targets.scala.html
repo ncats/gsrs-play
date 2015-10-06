@@ -272,7 +272,6 @@ $(document).ready(function () {
     $("#sc-add-all" ).click(function(e) {
         addEntitiesToShoppingCart(selectEntities("#target-table  input"), 'ix.idg.models.Target');
     });
-
     function selectEntities(sel) {
        return $(sel).map(function() {
             var id = $(this ).attr("id");
