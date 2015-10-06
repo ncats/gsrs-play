@@ -50,9 +50,11 @@ public class ExpressionApp extends App {
         onm.put("lymph", "lymph_nodes");
         onm.put("thyroid", "thyroid_gland");
         onm.put("eye", "eye");
+        onm.put("retina", "eye");
         onm.put("kidney", "kidney");
         onm.put("adrenal", "adrenal_gland");
         onm.put("bone_marrow", "bone_marrow");
+        onm.put("marrow", "bone_marrow");
         onm.put("stomach", "stomach");
         onm.put("liver", "liver");
         onm.put("heart", "heart");
