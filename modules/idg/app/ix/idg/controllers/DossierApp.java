@@ -1,13 +1,20 @@
 package ix.idg.controllers;
 
+import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import ix.idg.models.Disease;
+import ix.idg.models.Ligand;
+import ix.idg.models.Target;
 import ix.ncats.controllers.App;
+import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Result;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class DossierApp extends App implements Commons {
@@ -88,6 +95,7 @@ public class DossierApp extends App implements Commons {
         }
         return n;
     }
+
     static int _countFolders() throws IOException {
         ArrayNode cart = getCartFromSession();
         return cart.size();
@@ -137,16 +145,56 @@ public class DossierApp extends App implements Commons {
         // write cart back to session
         session().put("cart", mapper.writeValueAsString(cart));
 
-        // send back summary of what we have - bogus data for now
+        // send back summary of what we have
         ObjectNode ret = mapper.createObjectNode();
         ret.put("total_entries", _countEntities());
         ret.put("total_collections", _countFolders());
         return ok(ret);
     }
 
-    public static Result view(String folder) throws IOException {
-        if (folder == null) folder = "Default";
+    public static Result view(String folderName) throws IOException {
+        if (folderName == null) folderName = "Default";
+
         ArrayNode cart = getCartFromSession();
-        return ok(mapper.writeValueAsString(cart));
+
+        // get all folder names
+        List<String> folderNames = new ArrayList<>();
+        folderNames.add("Default");
+        for (int i = 0; i < cart.size(); i++) {
+            ObjectNode folder = (ObjectNode) cart.get(i);
+            String name = folder.get("folder").textValue();
+            if (name.equals("Default")) continue;
+            else folderNames.add(name);
+        }
+
+        if (!folderNames.contains(folderName))
+            return _notFound("No collection found with name " + folderName);
+
+        // for the current folder pull in the various entities into separate arrays
+        ObjectNode folder = getFolderFromCart(cart, folderName);
+        ArrayNode entities = (ArrayNode) folder.get("entities");
+
+        Model.Finder<Long, Target> targetFinder = TargetFactory.finder;
+        Model.Finder<Long, Disease> diseaseFinder = DiseaseFactory.finder;
+        Model.Finder<Long, Ligand> ligandFinder = LigandFactory.finder;
+
+        List<Target> targets = new ArrayList<>();
+        List<Disease> diseases = new ArrayList<>();
+        List<Ligand> ligands = new ArrayList<>();
+        for (int i = 0; i < entities.size(); i++) {
+            ObjectNode node = (ObjectNode) entities.get(i);
+            String type = node.get("type").textValue();
+            String id = node.get("entity").textValue();
+            if (type.equals(Target.class.getName())) {
+                targets.addAll(targetFinder.where(Expr.and(Expr.eq("synonyms.label", Commons.UNIPROT_ACCESSION),
+                        Expr.eq("synonyms.term", id))).findList());
+            }
+//            else if (type.equals(Disease.class.getName()))
+//                diseases.addAll(diseaseFinder.where(Expr.and(Expr.eq("synonyms.label", "DOID"),
+//                        Expr.eq("synonyms.term", id))).findList());
+            // TODO ligands
+        }
+
+        return ok(ix.idg.views.html.cart.render(folderNames, targets, diseases, ligands, null));
     }
 }

@@ -1,10 +1,14 @@
 @import ix.idg.models.Target
+@import ix.idg.models.Disease
+@import ix.idg.models.Ligand
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.Commons._
 @import ix.ncats.controllers.App.FacetDecorator
 
-@(current: Int, rows: Int, total: Int, pages: Array[Int],
-facets: Array[FacetDecorator], targets: List[Target], ctx: String )
+@(folderNames: List[String],
+        targets: List[Target],
+        diseases: List[Disease],
+        ligands: List[Ligand], ctx: String)
 
 
 @tabrow(t: Target) = {
@@ -23,60 +27,16 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
         <td><div id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
     </tr>
-    @if(ctx != null) {
-       @defining(IDGApp.getSeqAlignment(ctx, t)) { aln =>
-         @if(aln != null) {
-         <tr class="success">
-	    <td colspan="9">
-	      <pre>@{"identity = %.3f".format(aln.alignments(0).iden)}
-@aln.alignments(0).alignment
-</pre>
-	    </td>
-	 </tr>
-	 }
-       }
-    }
 }
 
-@ix.ncats.views.html._content("Targets", "ix.idg.models.Target",
-    ix.idg.controllers.routes.IDGApp.targets().url,
-    current, rows, total, pages, facets) {
-    @targetmenu()
+@ix.ncats.views.html.main("Dossiers") {
+    @cartmenu()
 } {
-    <ol class="breadcrumb">
-        <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
-        @defining(request().queryString.get("facet")) { facets =>
-            @if(facets != null) {
-                <li><a href="@ix.idg.controllers.routes.IDGApp.targets()">Targets</a></li>
-                @for(f <- facets) {
-                    @if(f.startsWith(DTO_PROTEIN_CLASS)) {
-                        @for(a <- IDGApp.getProteinAncestry(f)) {
-                            <li><a href="@a.href">@a.term</a></li>
-                        }
-                        <li class="active">@f.substring(f.indexOf('/') + 1)</li>
-		    }
-		    @if(f.startsWith(PANTHER_PROTEIN_CLASS)) {
-                        @for(a <- IDGApp.getAncestry(f, PANTHER_PROTEIN_ANCESTRY)) {
-                            <li><a href="@a.href">@a.term</a></li>
-                        }
-                        <li class="active">@f.substring(f.indexOf('/') + 1)</li>
-		    }
-		    @if(f.startsWith(ChEMBL_PROTEIN_CLASS)) {
-                        @for(a <- IDGApp.getAncestry(f, ChEMBL_PROTEIN_ANCESTRY)) {
-                            <li><a href="@a.href">@a.term</a></li>
-                        }
-                        <li class="active">@f.substring(f.indexOf('/') + 1)</li>
-		    }
-                }
-            } else {
-                <li class="active">Targets</li>
-            }
-        }
-    </ol>
+    @HtmlFormat.empty
 } {
 
     <form>
-    <table id="target-table" class="table table-striped">
+    <table id="entity-table" class="table table-striped">
         <tr>
             <th><button id="cb-addall" class="btn btn-default" type="button">Select all</button></th>
             <th>Name</th>
@@ -95,29 +55,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         }
     </table>
     </form>
-} {  @* viz *@
-    <div class="dropdown pull-right">
-        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-            <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
-        </button>
-            <ul class="dropdown-menu pull-left">
-                <li><a href="#" id="sc-add-selected">Add selected</a></li>
-                <li><a href="#" id="sc-add-all">Add all</a></li>
-                <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View collections</a></li>
-            </ul>
-    </div>
-    <div class="dropdown pull-right">
-      <button type="button" class="btn btn-default dropdown-toggle @if(request.getQueryString("q") == null && request.getQueryString("facet") == null) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <i class="fa fa-eye"></i>
-      </button>
-      <ul class="dropdown-menu pull-left">
-        <li><a  href="#hgramModal" data-toggle="modal" ><i class="fa fa-cubes"></i>&nbsp;Harmonogram</a></li>
-        <li><a href="#" data-toggle="modal"><i class="fa fa-sitemap"></i>&nbsp;Kinase networks</a></li>
-      </ul>
-    </div>
-} {
- @targetcarousel(ctx)
 }
+
 
 <div class="modal fade" tabindex="-1" role="dialog" id="loadmodal"
      aria-labelledby="mySmallModalLabel" aria-hidden="true">
@@ -247,13 +186,13 @@ $(document).ready(function () {
        d3.select("#modal-radardiv").select('svg').remove();
    });
 
-    $.ajax({
-        url:'@ix.idg.controllers.routes.DossierApp.count',
-        dataType:'text',
-        success:function(d) {
-            $("#sc-count" ).html(d);
-        }
-    });
+    @*$.ajax({*@
+        @*url:'@ix.idg.controllers.routes.DossierApp.count',*@
+        @*dataType:'text',*@
+        @*success:function(d) {*@
+            @*$("#sc-count" ).html(d);*@
+        @*}*@
+    @*});*@
     // select all checkboxes in the table
     $("#cb-addall" ).click(function(e) {
         var txt = $ ( "#cb-addall" ).html ( ).toLowerCase() ;
@@ -266,37 +205,12 @@ $(document).ready(function () {
             $("#cb-addall" ).html("Select All");
         }
     });
-    $("#sc-add-selected" ).click(function(e) {
-        addEntitiesToShoppingCart(selectEntities("#target-table  input:checked"), 'ix.idg.models.Target');
-    });
-    $("#sc-add-all" ).click(function(e) {
-        addEntitiesToShoppingCart(selectEntities("#target-table  input"), 'ix.idg.models.Target');
-    });
-
     function selectEntities(sel) {
        return $(sel).map(function() {
             var id = $(this ).attr("id");
             if (id.indexOf("-") != -1) id = id.split("-")[1];
             return id;
        });
-    }
-    function addEntitiesToShoppingCart(entities, etype) {
-        var accs = _.map(entities, function(x){
-            var o = new Object();
-            o.type = etype;
-            o.entity = x
-            return (o);
-        });
-        console.log(JSON.stringify(accs));
-        $.ajax({
-            url:'@ix.idg.controllers.routes.DossierApp.addEntities',
-            type:"POST",
-            data: {'json':JSON.stringify(accs), 'folder':'Default'},
-            success:function(dat, status, xhr) {
-                console.log(dat);
-                $("#sc-count" ).html(dat.total_entries);
-            }
-        });
     }
 
     // iterate over all .radar-XXX elements and draw the radar chart

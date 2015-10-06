@@ -1,0 +1,139 @@
+@ix.ncats.views.html.header{
+<a class="navbar-brand" href="@ix.idg.controllers.routes.IDGApp.index"
+   style="padding: 0px 5px; margin-left: 0px;">
+  <img height="50" alt="Pharos Logo"
+       src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'/>
+</a>
+}{
+<ul class="nav navbar-nav navbar-left">
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null,10,1)">Diseases</a></li>
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.targets(null,10,1)">Targets</a></li>
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 8, 1)">Ligands</a></li>
+</ul>
+
+<div class="modal fade sequence-modal" id="sequence-modal" tabindex="-1"
+     role="dialog" aria-labelledby="sequenceModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close"
+		data-dismiss="modal" aria-label="Close">
+	  <span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="sequenceModalLabel">Sequence Search</h4>
+      </div>
+      <div class="modal-body">
+        <div class="embed-responsive embed-responsive-4by3">
+          <form role="search" method="POST"
+		enctype="application/x-www-form-urlencoded"
+		action="@ix.idg.controllers.routes.IDGApp.sequence"
+                id="search-bar">
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="identity">Search Identity: </label>
+		  <input type="text" class="form-control" id="identity"
+			 name="identity" value="0.5">
+		  <br>
+		  <label for="sequence">Query Sequence:</label>
+                  <textarea class="form-control" rows="6" id="sequence"
+			    style="font-family: monospace"
+                            title="Search" name="sequence">@ix.ncats.controllers.App.getSequence(request.getQueryString("id"))</textarea>
+                </div>
+              </div>
+            </div>
+	    
+            <button type="submit" class="btn btn-default">Search</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade batch-modal" id="batch-modal" tabindex="-1"
+     role="dialog" aria-labelledby="batchModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close"
+		data-dismiss="modal" aria-label="Close">
+	  <span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="batchModalLabel">Batch Search</h4>
+      </div>
+      <div class="modal-body">
+        <div class="embed-responsive embed-responsive-4by3">
+          <form role="search" method="POST"
+		enctype="application/x-www-form-urlencoded"
+		action="@ix.idg.controllers.routes.IDGApp.batch"
+                id="batch-search-bar">
+	    <input type="hidden" name="kind" value="ix.idg.models.Target">
+            <div class="form-group">
+              <div class="row">
+                <div class="col-md-12">
+		  <label for="sequence">Enter list of identifiers or symbols:</label>
+                  <textarea class="form-control" rows="12" id="batch-area"
+			    style="font-family: monospace"
+                            title="Batch Search" name="q">@ix.ncats.controllers.App.getPayload(request.getQueryString("id"), 1000)</textarea>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-default">Search</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ul class="nav navbar-nav navbar-right">
+  @*
+  <button type="button" class="btn navbar-btn btn-default"
+	  data-toggle="modal"
+	  data-target="#sequence-modal">Sequence Search</button>
+  *@
+  <form class="navbar-form navbar-right" role="search" method="GET"
+        action="@ix.idg.controllers.routes.IDGApp.search(null)">
+    <div class="form-group">
+      <input type="text" id="search-header-field" name="q"
+	     class="typeahead form-control" placeholder="Search..."/>
+      <input type="hidden" name="kind" value="ix.idg.models.Target">
+    </div>
+    <button type="submit" class="btn btn-default" style="margin-right: 5px">
+      <span class="fa fa-search" aria-hidden="true"></span>
+    </button>
+    <div class="dropdown pull-right">
+      <button type="button" class="btn btn-default dropdown-toggle"
+	      data-toggle="dropdown" aria-haspopup="true"
+	      aria-expanded="false">
+        <i class="fa fa-navicon"></i>
+      </button>
+      <ul class="dropdown-menu pull-left">
+        <li><a  href="#sequence-modal" data-toggle="modal">
+	    Sequence Search</a></li>
+        <li><a href="#batch-modal" data-toggle="modal">Batch Search</a></li>
+      </ul>
+    </div>
+  </form>
+    <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.about()">About</a></li>
+    <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.help()">Help</a></li>
+</ul>
+@ix.ncats.views.html.ssearch("GET", ix.idg.controllers.routes.IDGApp.search(null))
+}
+
+@**
+** Specify all fields that you want to support autocomplete;
+** Look at /api/v1/suggest/@fields
+** for a list of fields that can be specified!
+**@
+@* TODO Why does this break? *@
+@* @ix.ncats.views.html.typeahead(Array("Target","Disease","Ligand","Gene","MeSH")) *@
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-53774738-1', 'auto');
+ga('send', 'pageview');
+</script>
