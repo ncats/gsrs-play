@@ -12,7 +12,14 @@
 
 
 @folderItem(f: String) = {
-    <li class="folder-item @if(f.equals(currentFolder)){active}"><i class="fa-li fa fa-folder-open-o"></i>@f</li>
+    <li class="folder-item @if(f.equals(currentFolder)){active}">
+        <i class="fa-li fa @if(f.equals(currentFolder)){fa-folder-open-o} else {fa-folder-o}"></i>
+        @if(!f.equals(currentFolder)) {
+            <a href='@ix.idg.controllers.routes.DossierApp.view(f)'>@f</a>
+        } else {
+            @f
+        }
+    </li>
 }
 
 @tabrow(t: Target) = {

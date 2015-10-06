@@ -195,6 +195,11 @@ public class DossierApp extends App implements Commons {
             // TODO ligands
         }
 
+        // for demo purposes
+        folderNames.add("R01 application");
+        folderNames.add("Group meeting");
+        folderNames.add("for John");
+
         return ok(ix.idg.views.html.cart.render(folderName, folderNames, targets, diseases, ligands, null));
     }
 }
