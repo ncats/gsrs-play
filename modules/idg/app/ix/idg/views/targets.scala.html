@@ -103,7 +103,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
             <ul class="dropdown-menu pull-left">
                 <li><a href="#" id="sc-add-selected">Add selected</a></li>
                 <li><a href="#" id="sc-add-all">Add all</a></li>
-                <li><a href="@ix.idg.controllers.routes.DossierApp.view" id="sc-view">View collections</a></li>
+                <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View collections</a></li>
             </ul>
     </div>
     <div class="dropdown pull-right">
@@ -290,7 +290,7 @@ $(document).ready(function () {
         $.ajax({
             url:'@ix.idg.controllers.routes.DossierApp.addEntities',
             type:"POST",
-            data: {'json':JSON.stringify(accs)},
+            data: {'json':JSON.stringify(accs), 'folder':'Default'},
             success:function(dat, status, xhr) {
                 console.log(dat);
                 $("#sc-count" ).html(dat.total_entries);
