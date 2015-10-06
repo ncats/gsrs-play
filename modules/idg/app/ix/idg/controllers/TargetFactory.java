@@ -50,6 +50,10 @@ public class TargetFactory extends EntityFactory implements Commons {
         return edits (id, Target.class);
     }
 
+    public static Result doc (Long id) {
+        return doc (id, finder);
+    }
+
     public static Result get (Long id, String expand) {
         return get (id, expand, finder);
     }
