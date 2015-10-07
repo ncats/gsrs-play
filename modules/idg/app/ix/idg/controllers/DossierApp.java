@@ -1,24 +1,129 @@
 package ix.idg.controllers;
 
+import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import ix.idg.models.Disease;
-import ix.idg.models.Ligand;
-import ix.idg.models.Target;
-import ix.ncats.controllers.App;
 import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Result;
+import play.db.ebean.Model;
+import play.Logger;
 
+import java.util.concurrent.Callable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
+import ix.idg.models.Disease;
+import ix.idg.models.Ligand;
+import ix.idg.models.Target;
+import ix.core.models.Session;
+import ix.core.models.Predicate;
+import ix.core.models.XRef;
+import ix.ncats.controllers.App;
+import ix.core.controllers.PredicateFactory;
+import ix.core.plugins.IxCache;
 
 public class DossierApp extends App implements Commons {
+    public static final String IDG_BUCKET = "IDG BUCKET";
+    
+    static final String SESSION_ID = "idgsession";
+    static final Model.Finder<Long, Session> finder =
+        new Model.Finder(UUID.class, Session.class);
 
+    @Transactional
+    static Session newSession () {
+        Session session = new Session ();
+        String where = request().getHeader("X-Real-IP");
+        if (where == null)
+            where = request().remoteAddress();
+        session.location = where;
+        session.save();
+        session().put(SESSION_ID, session.id.toString());        
+        Logger.debug("New session "+session.id+" created!");
+        return session;
+    }
+
+    public static Session getSession () {
+        final String id = session().get(SESSION_ID);
+        try {
+            Session session = null;
+            if (id == null) {
+                session = newSession ();
+            }
+            else {
+                session = getOrElse (id, new Callable<Session>() {
+                        public Session call () throws Exception {
+                            List<Session> sessions =  finder.where()
+                                .eq("id", id).findList();
+                            Session session = null;
+                            if (!sessions.isEmpty()) {
+                                session = sessions.iterator().next();
+                            }
+                            return session;
+                        }
+                    });
+                
+                if (session == null) {
+                    Logger.warn("Bogus session requested: "+id);
+                    IxCache.remove(id);
+                    session = newSession ();
+                }
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't create session", ex);
+        }
+        return null;
+    }
+
+    @Transactional
+    public static <T> boolean add (final Session session, T entity) {
+        try {
+            Predicate pred = getOrElse
+                (session.id.toString(), new Callable<Predicate>() {
+                        public Predicate call () throws Exception {
+                            List<Predicate> buckets =
+                            PredicateFactory.finder.where
+                            (Expr.and(Expr.eq("predicate", IDG_BUCKET),
+                                      Expr.eq("subject.refid",
+                                              session.id.toString())))
+                            .findList();
+                            Predicate bucket = null;
+                            if (buckets.isEmpty()) {
+                                bucket = new Predicate (IDG_BUCKET);
+                                bucket.subject = new XRef (session);
+                                bucket.save();
+                            }
+                            else {
+                                bucket = buckets.iterator().next();
+                            }
+                            return bucket;
+                        }
+                    });
+            XRef ref = new XRef (entity);
+            if (ref != pred.addIfAbsent(ref)) {
+                Logger.debug(ref.kind+": "+ref.refid
+                             +" already exist in bucket "+pred.id);
+                // already have it
+                return false;
+            }
+            pred.update();
+            Logger.debug(ref.kind+": "+ref.refid+" added to bucket "+pred.id);
+            
+            return true;
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't update bucket", ex);
+        }
+        return false;
+    }
 
     static ObjectMapper mapper = new ObjectMapper();
 
@@ -201,5 +306,10 @@ public class DossierApp extends App implements Commons {
         folderNames.add("for John");
 
         return ok(ix.idg.views.html.cart.render(folderName, folderNames, targets, diseases, ligands, null));
+    }
+
+    public static Result emptyCart () {
+        session().remove("cart");
+        return ok ("Cart emptied");
     }
 }

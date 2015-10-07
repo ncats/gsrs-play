@@ -35,6 +35,7 @@ import ix.seqaln.SequenceIndexer;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.regex.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import chemaxon.struc.MolAtom;
@@ -1050,6 +1051,23 @@ public class IDGApp extends App implements Commons {
         return "\""+s+"\"";
     }
 
+    // check to see if q is format like a range
+    final static Pattern RangeRe = Pattern.compile
+        ("([^:]+):\\[([^,]+),([^\\]]+)\\]");
+    static SearchResult getRangeSearchResult (Class kind, String q, int total,
+                                              Map<String, String[]> params) {
+        if (q != null) {
+            Matcher m = RangeRe.matcher(q);
+            if (m.find()) {
+                String field = m.group(1);
+                String min = m.group(2);
+                String max = m.group(3);
+                Logger.debug("range: field="+field+" min="+min+" max="+max);
+            }
+        }
+        return getSearchResult (kind, q, total, params);
+    }
+
     static Result _targets (final String q, final int rows, final int page)
         throws Exception {
         final String key = "targets/"+Util.sha1(request ());
@@ -1064,8 +1082,8 @@ public class IDGApp extends App implements Commons {
                 query.put("order", new String[]{"$novelty"});
             }
             
-            final TextIndexer.SearchResult result =
-                getSearchResult (Target.class, q, total, query);
+            final SearchResult result =
+                getRangeSearchResult (Target.class, q, total, query);
             
             String action = request().getQueryString("action");
             if (action == null) action = "";

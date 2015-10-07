@@ -855,6 +855,16 @@ public class TextIndexer {
         throws IOException {
         return filter (options, getTermsFilter (subset));
     }
+
+    public SearchResult range (SearchOptions options, String field,
+                               Integer min, Integer max)
+        throws IOException {
+        Query query = NumericRangeQuery.newIntRange
+            (field, min, max, true /* minInclusive?*/, true/*maxInclusive?*/);
+        
+        return search (getSearcher (), new SearchResult (options, null),
+                       query, null);
+    }
     
     protected SearchResult filter (SearchOptions options, Filter filter)
         throws IOException {

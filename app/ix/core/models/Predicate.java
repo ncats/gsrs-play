@@ -30,4 +30,14 @@ public class Predicate extends IxModel {
     public Predicate (String predicate) {
         this.predicate = predicate;
     }
+
+    public XRef addIfAbsent (XRef xref) {
+        for (XRef xr : objects) {
+            if (xr.refid.equals(xref.refid)
+                && xr.kind.equals(xref.kind))
+                return xr;
+        }
+        objects.add(xref);
+        return xref;
+    }
 }

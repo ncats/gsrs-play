@@ -78,7 +78,10 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     <form>
     <table id="target-table" class="table table-striped">
         <tr>
-            <th><button id="cb-addall" class="btn btn-default" type="button">Select all</button></th>
+          <th><button id="cb-addall" alt="Toggle check all"
+	  	      style="padding: 3px"
+	  	      class="btn btn-default" type="button">
+	      <i class="fa fa-check"></i></button></th>
             <th>Name</th>
             <th>Development Level</th>
             <th>Target Family</th>
@@ -101,13 +104,15 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
             <i class="fa fa-shopping-cart"></i>&nbsp;<span id="sc-count"></span>
         </button>
             <ul class="dropdown-menu pull-left">
-                <li><a href="#" id="sc-add-selected">Add selected</a></li>
-                <li><a href="#" id="sc-add-all">Add all</a></li>
-                <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View collections</a></li>
+                <li><a href="#" id="sc-add-selected">Add Selected</a></li>
+                <li><a href="#" id="sc-add-all">Add All</a></li>
+                <li><a href="@ix.idg.controllers.routes.DossierApp.view(null)" id="sc-view">View Collections</a></li>
+		<li><a href="#" id="sc-empty">Empty Collection</a></li>
             </ul>
     </div>
     <div class="dropdown pull-right">
-      <button type="button" class="btn btn-default dropdown-toggle @if(request.getQueryString("q") == null && request.getQueryString("facet") == null) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <button type="button" class="btn btn-default dropdown-toggle @if(request.getQueryString("q") == null && request.getQueryString("facet") == null) { disabled }" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+      style="margin-right: 5px">
         <i class="fa fa-eye"></i>
       </button>
       <ul class="dropdown-menu pull-left">
@@ -256,14 +261,15 @@ $(document).ready(function () {
     });
     // select all checkboxes in the table
     $("#cb-addall" ).click(function(e) {
-        var txt = $ ( "#cb-addall" ).html ( ).toLowerCase() ;
+        var cb = $("#cb-addall").find("i");
+	//console.log('cb-addall clicked: '+cb+' '+cb.attr('class'));
         var table = $("#target-table");
-        if ( txt.indexOf("all") != -1 ) {
+        if (cb.hasClass('fa-check')) {
             $ ( 'td input:checkbox',table ).prop ( 'checked', true ) ;
-            $("#cb-addall" ).html("Select None");
+            $("#cb-addall" ).html('<i class="fa fa-remove"></i>');
         } else {
             $ ( 'td input:checkbox',table ).prop ( 'checked', false ) ;
-            $("#cb-addall" ).html("Select All");
+            $("#cb-addall" ).html('<i class="fa fa-check"></i>');
         }
     });
     $("#sc-add-selected" ).click(function(e) {
@@ -342,6 +348,12 @@ $(document).ready(function () {
         });
     });
 
+    $("#sc-empty").click(function (e) {
+        $.get('@ix.idg.controllers.routes.DossierApp.emptyCart', function (d) {
+	    console.log(d);
+	    $("#sc-count" ).html('');
+	});
+    });
 });
 
 function showLoadModal () {

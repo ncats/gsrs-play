@@ -36,6 +36,9 @@ public class SearchOptions {
         this.skip = Math.max(0, skip);
         this.fdim = Math.max(1, fdim);
     }
+    public SearchOptions (Map<String, String[]> params) {
+        parse (params);
+    }
 
     public void setFacet (String facet, String value) {
         facets.clear();
@@ -86,6 +89,36 @@ public class SearchOptions {
                 for (String s : me.getValue()) {
                     try {
                         fetch = Integer.parseInt(s);
+                    }
+                    catch (NumberFormatException ex) {
+                        Logger.error("Not a valid number: "+s);
+                    }
+                }
+            }
+            else if ("top".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue()) {
+                    try {
+                        top = Integer.parseInt(s);
+                    }
+                    catch (NumberFormatException ex) {
+                        Logger.error("Not a valid number: "+s);
+                    }
+                }
+            }
+            else if ("skip".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue()) {
+                    try {
+                        skip = Integer.parseInt(s);
+                    }
+                    catch (NumberFormatException ex) {
+                        Logger.error("Not a valid number: "+s);
+                    }
+                }
+            }
+            else if ("fdim".equalsIgnoreCase(me.getKey())) {
+                for (String s : me.getValue()) {
+                    try {
+                        fdim = Integer.parseInt(s);
                     }
                     catch (NumberFormatException ex) {
                         Logger.error("Not a valid number: "+s);
