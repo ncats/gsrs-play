@@ -1,13 +1,27 @@
 ALTER TABLE ix_core_xref
 ADD INDEX xref_refid_index (refid ASC),
-ADD INDEX xref_kind_index (kind ASC);
+ADD INDEX xref_kind_index (kind ASC),
+add index refid_kind_index (refid asc, kind asc);
 
 ALTER TABLE ix_core_value
 ADD INDEX value_label_index (label ASC),
-ADD INDEX value_term_index (term ASC);
+ADD INDEX value_term_index (term ASC),
+add index label_term_index (label asc, term asc),
+add index sha1_index (sha1 asc),
+add index intval_index (intval asc),
+add index numval_index (numval asc),
+add index lval_index (lval asc),
+add index rval_index (rval asc)
+;
 
 ALTER TABLE ix_core_predicate
-ADD INDEX predicate_index (predicate ASC);
+ADD INDEX predicate_index (predicate ASC),
+add index subject_pred_index (subject_id asc, predicate asc)
+;
+
+alter table ix_idg_disease
+add index name_index (name asc)
+;
 
 ALTER TABLE ix_idg_target
 ADD INDEX target_family_index (idg_family ASC),
@@ -34,3 +48,9 @@ add index harm_tdl_index (tdl asc),
 add index harm_cdf_index (cdf asc)
 ;
 
+alter table ix_idg_tinx
+add index uniprot_index (uniprot_id asc),
+add index doid_index (doid asc),
+add index importance_index (importance asc),
+add index novelty_index (disease_novelty asc)
+;
