@@ -12,14 +12,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-
 import play.Application;
 import play.Logger;
 import play.Plugin;
 import play.db.DB;
 
 public class IxContext extends Plugin {
-    static final String IX_HOME = "ix.home";
+    private static final String APPLICATION_API = "application.api";
+	private static final String APPLICATION_CONTEXT = "application.context";
+	private static final String APPLICATION_HOST = "application.host";
+	static final String IX_HOME = "ix.home";
     static final String IX_DEBUG = "ix.debug";
     static final String IX_CACHE = "ix.cache";
     static final String IX_CACHE_BASE = IX_CACHE+".base";
@@ -108,6 +110,7 @@ public class IxContext extends Plugin {
                     Statement s = DB.getConnection().createStatement();
                     String sqlRun = readFullFileToString(initFile);
                     System.out.println(sqlRun);
+                    sqlRun = interpretSQL(sqlRun);
                     try{
                         ResultSet rs1=s.executeQuery(sqlRun);
                         rs1.close();
@@ -142,6 +145,7 @@ public class IxContext extends Plugin {
                     Statement s = DB.getConnection().createStatement();
                     String sqlRun = readFullFileToString(initFile);
                     System.out.println(sqlRun);
+                    sqlRun = interpretSQL(sqlRun);
                     boolean working=true;
                     try{
                         ResultSet rs1=s.executeQuery(sqlRun);
@@ -171,7 +175,7 @@ public class IxContext extends Plugin {
         }
         //meta.
 
-        host = app.configuration().getString("application.host");
+        host = app.configuration().getString(IxContext.APPLICATION_HOST);
         if (host == null || host.length() == 0) {
             host = null;
         }
@@ -183,7 +187,7 @@ public class IxContext extends Plugin {
         }
         Logger.info("## Application host: "+host);
 
-        context = app.configuration().getString("application.context");
+        context = app.configuration().getString(IxContext.APPLICATION_CONTEXT);
         if (context == null) {
             context = "";
         }
@@ -195,13 +199,47 @@ public class IxContext extends Plugin {
         }
         Logger.info("## Application context: "+context);
 
-        api = app.configuration().getString("application.api");
+        api = app.configuration().getString(IxContext.APPLICATION_API);
         if (api == null)
             api = "/api";
         else if (api.charAt(0) != '/')
             api = "/"+api;
         Logger.info("## Application api context: "
                     +((host != null ? host : "") + context+api));
+    }
+    
+    public String interpretSQL(String rawSQL){
+    	StringBuilder sb=new StringBuilder();
+    	for(String line:rawSQL.split("\n")){
+    		if(line.startsWith("/*eval*/")){
+    			
+    			String[] evals=line.split("\\$");
+    			int etotal = 0;
+    			String nline=evals[0];
+    			for(int i=1;i<evals.length-1;i++){
+    				
+    				String result = app.configuration().getString(evals[i]);
+    				System.out.println(evals[i] + ":" + result);
+    				if(result!=null){
+    					etotal++;
+    					nline+=result;
+    					
+    				}else{
+    					System.out.println("Can't find variable: $" + evals[i] + "$, removing line.");
+    				}
+    			}
+    			nline+=evals[evals.length-1];
+    			if(etotal==evals.length-2){
+    				sb.append(nline + "\n");
+    			}
+    		}else{
+    			sb.append(line + "\n");
+    		}
+    	}
+    	System.out.println(sb.toString());
+    	
+    	return sb.toString();
+    	
     }
     
     /**
