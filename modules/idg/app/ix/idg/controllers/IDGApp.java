@@ -1064,9 +1064,10 @@ public class IDGApp extends App implements Commons {
                     String min = m.group(2);
                     String max = m.group(3);
                     Logger.debug("range: field="+field+" min="+min+" max="+max);
+                    SearchOptions options = new SearchOptions (request().queryString());
+                    options.top = total;
                     return _textIndexer.range
-                        (new SearchOptions (request().queryString()),
-                         field, min.equals("") ? null : Integer.parseInt(min),
+                        (options, field, min.equals("") ? null : Integer.parseInt(min),
                          max.equals("") ? null : Integer.parseInt(max));
                 }
             }
@@ -2308,8 +2309,8 @@ public class IDGApp extends App implements Commons {
             getOrElse (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
                         int total = TargetFactory.finder.findRowCount();        
-                        return getSearchResult (Target.class, q,
-                                                total, query);
+                        return getRangeSearchResult (Target.class, q,
+                                                     total, query);
                     }
                 });
         for (String s : args) {
