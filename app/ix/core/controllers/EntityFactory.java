@@ -44,17 +44,22 @@ import ix.core.models.Edit;
 import ix.core.models.Principal;
 import ix.core.models.BeanViews;
 import ix.core.models.Curation;
+import ix.core.search.TextIndexer;
+import ix.core.plugins.TextIndexerPlugin;
 import ix.utils.Util;
 import ix.utils.Global;
 
 public class EntityFactory extends Controller {
     static final SecureRandom rand = new SecureRandom ();
 
-    static final ExecutorService threadPool = 
+    static final ExecutorService _threadPool = 
         Executors.newCachedThreadPool();
 
-    static final Model.Finder<Long, Principal> principalFinder = 
+    static final Model.Finder<Long, Principal> _principalFinder = 
         new Model.Finder(Long.class, Principal.class);
+
+    static final TextIndexer _textIndexer =
+        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
     public static class FetchOptions {
         public int top;
@@ -206,11 +211,12 @@ public class EntityFactory extends Controller {
         }
 
         try {
+            long start = System.currentTimeMillis();
             List<T> results = query
                 .setFirstRow(options.skip)
                 .setMaxRows(options.top)
                 .findList();
-            //Logger.debug(" ==> "+results.size());
+            Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
 
             return results;
         }
@@ -259,7 +265,7 @@ public class EntityFactory extends Controller {
                 // TODO: Need to use Akka here!
                 // execute in the background to determine the actual number
                 // of rows that this query should return
-                threadPool.submit(new Runnable () {
+                _threadPool.submit(new Runnable () {
                         public void run () {
                             FutureIds<T> future = 
                                 finder.where(options.filter).findFutureIds();
@@ -420,6 +426,21 @@ public class EntityFactory extends Controller {
 
     protected static <K,T> Result get (K id, Model.Finder<K, T> finder) {
         return get (id, null, finder);
+    }
+
+    protected static <K,T> Result doc (K id, Model.Finder<K, T> finder) {
+        try {
+            T inst = finder.byId(id);
+            if (inst != null) {
+                return ok (_textIndexer.getDocJson(inst));
+            }
+            return notFound ("Bad request: "+request().uri());
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError
+                (request().uri()+": "+ex.getMessage());
+        }
     }
 
     protected static <K,T> Result get (K id, String expand, 
@@ -783,7 +804,7 @@ public class EntityFactory extends Controller {
 
         Principal principal = null;
         if (request().username() != null) {
-            principal = principalFinder
+            principal = _principalFinder
                 .where().eq("name", request().username())
                 .findUnique();
             // create new user if doesn't exist

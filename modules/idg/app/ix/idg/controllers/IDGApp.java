@@ -35,8 +35,10 @@ import ix.seqaln.SequenceIndexer;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.regex.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+import chemaxon.struc.MolAtom;
 
 import static ix.core.search.TextIndexer.Facet;
 import static ix.core.search.TextIndexer.SearchResult;
@@ -70,6 +72,20 @@ public class IDGApp extends App implements Commons {
                 //Logger.debug("matched ligand: "+ligand.id+" "+r.getId());
                 if (!processed.contains(lig.id)) {
                     processed.add(lig.id);
+                    int[] amap = new int[r.getMol().getAtomCount()];
+                    int i = 0, nmaps = 0;
+                    for (MolAtom ma : r.getMol().getAtomArray()) {
+                        amap[i] = ma.getAtomMap();
+                        if (amap[i] > 0)
+                            ++nmaps;
+                        ++i;
+                    }
+
+                    if (nmaps > 0) {
+                        IxCache.set("AtomMaps/"+getContext().getId()+"/"
+                                    +r.getId(), amap);
+                    }
+                    
                     return lig;
                 }
             }
@@ -99,6 +115,22 @@ public class IDGApp extends App implements Commons {
             }
             
             return target;
+        }
+    }
+
+    public static class GeneRIF implements Comparable<GeneRIF> {
+        public Long pmid;       
+        public String text;
+
+        GeneRIF (Long pmid, String text) {
+            this.pmid = pmid;
+            this.text = text;
+        }
+
+        public int compareTo (GeneRIF gene) {
+            if (gene.pmid > pmid) return 1;
+            if (gene.pmid < pmid) return -1;
+            return 0;
         }
     }
     
@@ -396,7 +428,10 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        IDG_TISSUE
+        IDG_TISSUE,
+        GTEx_TISSUE,
+        HPM_TISSUE,
+        HPA_RNA_TISSUE
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -917,7 +952,7 @@ public class IDGApp extends App implements Commons {
 
         return ok(ix.idg.views.html.ligandsmedia.render
                   (page, rows, result.count(),
-                   pages, decorate (facets), ligands));
+                   pages, decorate (facets), ligands, null));
     }
     
     static Result createDiseaseResult
@@ -1016,6 +1051,44 @@ public class IDGApp extends App implements Commons {
         return "\""+s+"\"";
     }
 
+    // check to see if q is format like a range
+    final static Pattern RangeRe = Pattern.compile
+        ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
+    static SearchResult getRangeSearchResult (Class kind, String q, final int total,
+                                              Map<String, String[]> params) {
+        if (q != null) {
+            try {
+                Matcher m = RangeRe.matcher(q);
+                if (m.find()) {
+                    final String field = m.group(1);
+                    final String min = m.group(2);
+                    final String max = m.group(3);
+                    
+                    Logger.debug("range: field="+field+" min="+min+" max="+max);
+                    final String sha1 = signature (q, request().queryString());
+                    return getOrElse (sha1, new Callable<SearchResult> () {
+                            public SearchResult call () throws Exception {
+                                SearchOptions options =
+                                    new SearchOptions (request().queryString());
+                                options.top = total;
+                                SearchResult result = _textIndexer.range
+                                    (options, field, min.equals("")
+                                     ? null : Integer.parseInt(min),
+                                     max.equals("") ? null : Integer.parseInt(max));
+                                result.setKey(sha1);
+                                return result;
+                            }
+                        });
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't perform range search", ex);
+            }
+        }
+        return getSearchResult (kind, q, total, params);
+    }
+
     static Result _targets (final String q, final int rows, final int page)
         throws Exception {
         final String key = "targets/"+Util.sha1(request ());
@@ -1030,8 +1103,8 @@ public class IDGApp extends App implements Commons {
                 query.put("order", new String[]{"$novelty"});
             }
             
-            final TextIndexer.SearchResult result =
-                getSearchResult (Target.class, q, total, query);
+            final SearchResult result =
+                getRangeSearchResult (Target.class, q, total, query);
             
             String action = request().getQueryString("action");
             if (action == null) action = "";
@@ -1072,11 +1145,15 @@ public class IDGApp extends App implements Commons {
                         
                         List<Target> targets = TargetFactory.getTargets
                             (_rows, (page-1)*_rows, null);
-                        
-                        return ok (ix.idg.views.html.targets.render
-                                   (page, _rows, total, pages,
-                                    decorate (facets),
-                                    targets, result.getKey()));
+
+                        long start = System.currentTimeMillis();
+                        Result r = ok (ix.idg.views.html.targets.render
+                                       (page, _rows, total, pages,
+                                        decorate (facets),
+                                        targets, result.getKey()));
+                        Logger.debug("rendering "+key+" in "
+                                     + (System.currentTimeMillis()-start)+"ms...");
+                        return r;
                     }
                 });
         }
@@ -1600,7 +1677,7 @@ public class IDGApp extends App implements Commons {
             
                         return ok (ix.idg.views.html.ligandsmedia.render
                                    (page, _rows, total, pages,
-                                    decorate (facets), ligands));
+                                    decorate (facets), ligands, null));
                     }
                 });
         }
@@ -1754,7 +1831,7 @@ public class IDGApp extends App implements Commons {
                                    (page, rows, total,
                                     pages, decorate (filter
                                                      (facets, LIGAND_FACETS)),
-                                    ligands));
+                                    ligands, context.getId()));
                     }
             });
     }
@@ -2242,8 +2319,8 @@ public class IDGApp extends App implements Commons {
             getOrElse (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
                         int total = TargetFactory.finder.findRowCount();        
-                        return getSearchResult (Target.class, q,
-                                                total, query);
+                        return getRangeSearchResult (Target.class, q,
+                                                     total, query);
                     }
                 });
         for (String s : args) {
@@ -2473,5 +2550,121 @@ public class IDGApp extends App implements Commons {
         return internalServerError
             (ix.idg.views.html.error.render
              (500, "Unable to perform batch search: "+q));
+    }
+
+    static final String[] TISSUES  = new String[] {
+        "GTEx Tissue Specificity Index",
+        "HPM Protein Tissue Specificity Index",
+        "HPA RNA Tissue Specificity Index",
+        //"HPA Protein Tissue Specificity Index"
+    };
+    static JsonNode _targetTissue (final String name) throws Exception {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode nodes = mapper.createArrayNode();
+
+        List<Target> targets = TargetResult.find(name);
+        for (Target tar: targets) {
+            ArrayNode axes = mapper.createArrayNode();
+            for (String t: TISSUES) {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("axis", t.replaceAll("Tissue Specificity Index",""));
+                Value p = tar.getProperty(t);
+                if (p != null) {
+                    if (p instanceof VNum)
+                        n.put("value", ((VNum)p).numval);
+                    else if (p instanceof VInt)
+                        n.put("value", ((VInt)p).intval);
+                    else {
+                        Logger.warn("Unknown tissue index property: "+p);
+                        n.put("value", 0);
+                    }
+                }
+                else {
+                    n.put("value", 0);
+                }
+                axes.add(n);
+            }
+
+            ObjectNode node = mapper.createObjectNode();
+            node.put("className", name);
+            node.put("axes", axes);
+            nodes.add(node);
+        }
+        
+        return nodes;
+    }
+    
+    public static Result targetTissue (final String name) {
+        try {
+            final String key = Util.sha1(name);
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        return ok (_targetTissue (name));
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return _internalServerError (ex);
+        }
+    }
+
+    public static Result structure (final String id,
+                                    final String format, final int size,
+                                    final String context) {
+        //Logger.debug("Fetching structure");
+        String atomMap = "";
+        if (context != null) {
+            int[] amap = (int[])IxCache.get("AtomMaps/"+context+"/"+id);
+            //Logger.debug("AtomMaps/"+context+" => "+amap);
+            if (amap != null && amap.length > 0) {
+                StringBuilder sb = new StringBuilder ();
+                sb.append(amap[0]);
+                for (int i = 1; i < amap.length; ++i)
+                    sb.append(","+amap[i]);
+                atomMap = sb.toString();
+            }
+            else {
+                atomMap = context;
+            }
+        }
+        return App.structure(id, format, size, atomMap);        
+    }
+
+    public static List<GeneRIF> getGeneRIFs (Target target) {
+        List<GeneRIF> generifs = new ArrayList<GeneRIF>();
+        for (XRef ref : target.links) {
+            if (Text.class.getName().equals(ref.kind)) {
+                try {
+                    Text text = (Text)ref.deRef();
+                    if (IDG_GENERIF.equals(text.label)) {
+                        for (Value val : ref.properties) {
+                            if (PUBMED_ID.equals(val.label)) {
+                                VInt pmid = (VInt)val;
+                                generifs.add(new GeneRIF
+                                             (pmid.intval, text.getValue()));
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.debug("Can't dereference "+ref.kind+":"+ref.refid);
+                }
+            }
+        }
+        
+        Collections.sort(generifs);
+        return generifs;
+    }
+
+    public static List<Long> getPMIDs (Target target) {
+        List<Long> pmids = new ArrayList<Long>();
+        for (Value val : target.properties) {
+            if (PUBMED_ID.equals(val.label)) {
+                pmids.add(((VInt)val).intval);
+            }
+        }
+        return pmids;
     }
 }

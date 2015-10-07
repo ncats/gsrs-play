@@ -7,7 +7,7 @@
 }{
 <ul class="nav navbar-nav navbar-left">
   <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.diseases(null,10,1)">Diseases</a></li>
-  <li role="presentation" class="active"><a href="#">Targets</a></li>
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.targets(null,10,1)">Targets</a></li>
   <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 8, 1)">Ligands</a></li>
 </ul>
 
@@ -125,7 +125,8 @@
 ** Look at /api/v1/suggest/@fields
 ** for a list of fields that can be specified!
 **@
-@ix.ncats.views.html.typeahead(Array("Target","Disease","Ligand","Gene","MeSH"))
+@* TODO Why does this break? *@
+@* @ix.ncats.views.html.typeahead(Array("Target","Disease","Ligand","Gene","MeSH")) *@
 
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
