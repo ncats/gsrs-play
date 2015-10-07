@@ -211,11 +211,12 @@ public class EntityFactory extends Controller {
         }
 
         try {
+            long start = System.currentTimeMillis();
             List<T> results = query
                 .setFirstRow(options.skip)
                 .setMaxRows(options.top)
                 .findList();
-            //Logger.debug(" ==> "+results.size());
+            Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
 
             return results;
         }

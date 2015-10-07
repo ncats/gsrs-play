@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Entity
 @Table(name="ix_idg_disease")
 public class Disease extends EntityModel {
-    @Column(length=1024)
     @Indexable(suggest=true,facet=true,name="Disease")
     public String name;
 

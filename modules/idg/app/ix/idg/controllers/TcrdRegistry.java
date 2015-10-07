@@ -1292,27 +1292,34 @@ public class TcrdRegistry extends Controller implements Commons {
 
         void addDisease (Target target, long tid) throws Exception {
             pstm20.setLong(1, tid);
-            ResultSet rset = pstm20.executeQuery();
+            final ResultSet rset = pstm20.executeQuery();
             try {
+                int cnt = 0;
                 while (rset.next()) {
-                    String name = rset.getString("name");
-                    List<Disease> diseases = DiseaseFactory
-                        .finder.where().eq("name", name).findList();
-                    Disease d = null;
-                    if (diseases.isEmpty()) {
-                        d = new Disease ();
-                        d.name = name;
-                        String doid = rset.getString("doid");
-                        d.synonyms.add(KeywordFactory.registerIfAbsent
-                                       ("DOID", doid,
-                                        "http://www.disease-ontology.org/term/"
-                                        +doid));
-                        d.save();
-                        DISEASES.put(doid, d);
-                    }
-                    else {
-                        d = diseases.iterator().next();
-                    }
+                    final String name = rset.getString("name");
+                    Disease d = IxCache.getOrElse(name, new Callable<Disease> () {
+                            public Disease call () throws Exception {
+                                List<Disease> diseases = DiseaseFactory
+                                .finder.where().eq("name", name).findList();
+                                Disease d = null;
+                                if (diseases.isEmpty()) {
+                                    d = new Disease ();
+                                    d.name = name;
+                                    String doid = rset.getString("doid");
+                                    d.synonyms.add
+                                        (KeywordFactory.registerIfAbsent
+                                         ("DOID", doid,
+                                          "http://www.disease-ontology.org/term/"
+                                          +doid));
+                                    d.save();
+                                    DISEASES.put(doid, d);
+                                }
+                                else {
+                                    d = diseases.iterator().next();
+                                }
+                                return d;
+                            }
+                        });
                     
                     XRef xref = target.addIfAbsent(new XRef (d));
                     
@@ -1377,7 +1384,10 @@ public class TcrdRegistry extends Controller implements Commons {
                     catch (Exception ex) {
                         ex.printStackTrace();
                     }
+                    ++cnt;
                 }
+
+                Logger.debug("Target "+target.id+" has "+cnt+" disease(s)!");
             }
             finally {
                 rset.close();

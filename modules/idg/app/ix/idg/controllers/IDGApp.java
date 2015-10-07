@@ -1124,11 +1124,15 @@ public class IDGApp extends App implements Commons {
                         
                         List<Target> targets = TargetFactory.getTargets
                             (_rows, (page-1)*_rows, null);
-                        
-                        return ok (ix.idg.views.html.targets.render
-                                   (page, _rows, total, pages,
-                                    decorate (facets),
-                                    targets, result.getKey()));
+
+                        long start = System.currentTimeMillis();
+                        Result r = ok (ix.idg.views.html.targets.render
+                                       (page, _rows, total, pages,
+                                        decorate (facets),
+                                        targets, result.getKey()));
+                        Logger.debug("rendering "+key+" in "
+                                     + (System.currentTimeMillis()-start)+"ms...");
+                        return r;
                     }
                 });
         }
