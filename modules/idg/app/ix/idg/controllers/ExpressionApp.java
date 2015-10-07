@@ -146,9 +146,19 @@ public class ExpressionApp extends App {
                 String[] confidenceColors = new String[]{
                         "#ffffff", "#EDF8E9", "#BAE4B3", "#74C476", "#31A354", "#006D2C"
                 };
-                File svg = Play.application().getFile("app/assets/tissues_body_human.svg");
-                FileInputStream fis = new FileInputStream(svg);
-                Document doc = XML.fromInputStream(fis, "UTF-8");
+
+                Document doc;
+                if (Play.isProd()) {
+                    doc = XML.fromInputStream
+                        (Play.application().resourceAsStream
+                         ("public/tissues_body_human.svg"), "UTF-8");
+                }
+                else {
+                    File svg = Play.application().getFile
+                        ("app/assets/tissues_body_human.svg");
+                    FileInputStream fis = new FileInputStream(svg);
+                    doc = XML.fromInputStream(fis, "UTF-8");
+                }
 
                 for (String organ : organs) {
                     Node node = XPath.selectNode("//*[@id='" + organ + "']", doc);
