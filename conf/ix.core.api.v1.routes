@@ -22,6 +22,8 @@ GET     /$context<[a-z0-9_]+>($id<[0-9]+>)/  ix.core.controllers.v1.RouteFactory
 GET     /$context<[a-z0-9_]+>/$id<[0-9]+>/  ix.core.controllers.v1.RouteFactory.get(context: String, id: Long, expand: String ?= null)
 GET     /$context<[a-z0-9_]+>/$id<[0-9]+>/@edits      ix.core.controllers.v1.RouteFactory.edits(context: String, id:Long)
 GET     /$context<[a-z0-9_]+>($id<[0-9]+>)/@edits      ix.core.controllers.v1.RouteFactory.edits(context: String, id: Long)
+GET     /$context<[a-z0-9_]+>/$id<[0-9]+>/@doc      ix.core.controllers.v1.RouteFactory.doc(context: String, id:Long)
+GET     /$context<[a-z0-9_]+>($id<[0-9]+>)/@doc      ix.core.controllers.v1.RouteFactory.doc(context: String, id: Long)
 GET     /$context<[a-z0-9_]+>/$id<[0-9]+>/*field  ix.core.controllers.v1.RouteFactory.field(context: String, id: Long, field: String)
 GET     /$context<[a-z0-9_]+>($id<[0-9]+>)/*field  ix.core.controllers.v1.RouteFactory.field(context: String, id: Long, field: String)
 GET     /$context<[a-z0-9_]+>  ix.core.controllers.v1.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
