@@ -1054,21 +1054,31 @@ public class IDGApp extends App implements Commons {
     // check to see if q is format like a range
     final static Pattern RangeRe = Pattern.compile
         ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
-    static SearchResult getRangeSearchResult (Class kind, String q, int total,
+    static SearchResult getRangeSearchResult (Class kind, String q, final int total,
                                               Map<String, String[]> params) {
         if (q != null) {
             try {
                 Matcher m = RangeRe.matcher(q);
                 if (m.find()) {
-                    String field = m.group(1);
-                    String min = m.group(2);
-                    String max = m.group(3);
+                    final String field = m.group(1);
+                    final String min = m.group(2);
+                    final String max = m.group(3);
+                    
                     Logger.debug("range: field="+field+" min="+min+" max="+max);
-                    SearchOptions options = new SearchOptions (request().queryString());
-                    options.top = total;
-                    return _textIndexer.range
-                        (options, field, min.equals("") ? null : Integer.parseInt(min),
-                         max.equals("") ? null : Integer.parseInt(max));
+                    final String sha1 = signature (q, request().queryString());
+                    return getOrElse (sha1, new Callable<SearchResult> () {
+                            public SearchResult call () throws Exception {
+                                SearchOptions options =
+                                    new SearchOptions (request().queryString());
+                                options.top = total;
+                                SearchResult result = _textIndexer.range
+                                    (options, field, min.equals("")
+                                     ? null : Integer.parseInt(min),
+                                     max.equals("") ? null : Integer.parseInt(max));
+                                result.setKey(sha1);
+                                return result;
+                            }
+                        });
                 }
             }
             catch (Exception ex) {
