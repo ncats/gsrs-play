@@ -1053,16 +1053,26 @@ public class IDGApp extends App implements Commons {
 
     // check to see if q is format like a range
     final static Pattern RangeRe = Pattern.compile
-        ("([^:]+):\\[([^,]+),([^\\]]+)\\]");
+        ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
     static SearchResult getRangeSearchResult (Class kind, String q, int total,
                                               Map<String, String[]> params) {
         if (q != null) {
-            Matcher m = RangeRe.matcher(q);
-            if (m.find()) {
-                String field = m.group(1);
-                String min = m.group(2);
-                String max = m.group(3);
-                Logger.debug("range: field="+field+" min="+min+" max="+max);
+            try {
+                Matcher m = RangeRe.matcher(q);
+                if (m.find()) {
+                    String field = m.group(1);
+                    String min = m.group(2);
+                    String max = m.group(3);
+                    Logger.debug("range: field="+field+" min="+min+" max="+max);
+                    return _textIndexer.range
+                        (new SearchOptions (request().queryString()),
+                         field, min.equals("") ? null : Integer.parseInt(min),
+                         max.equals("") ? null : Integer.parseInt(max));
+                }
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                Logger.error("Can't perform range search", ex);
             }
         }
         return getSearchResult (kind, q, total, params);
