@@ -70,7 +70,13 @@ public class IxContext extends Plugin {
             if (!home.exists())
                 home.mkdirs();
         }
-
+        Logger.info("##############################################");
+        Logger.info("##############################################");
+        Logger.info("##############################################");
+        Logger.info("#Play Framework: " + play.core.PlayVersion.current()+ "#");
+        Logger.info("##############################################");
+        Logger.info("##############################################");
+        
         if (!home.exists())
             throw new IllegalArgumentException
                 (IX_HOME+" \""+h+"\" is not accessible!");
