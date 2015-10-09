@@ -158,6 +158,7 @@ public class BuildInfo {
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
+
   val hcs = Project("hcs", file("modules/hcs"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -202,4 +203,11 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
+  val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
+    .settings(commonSettings: _*).settings(
+    libraryDependencies ++= commonDependencies,
+      libraryDependencies += "com.typesafe" % "config" % "1.2.0",
+      mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
+  ).dependsOn(ginas).aggregate(ginas)
 }

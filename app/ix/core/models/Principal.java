@@ -27,7 +27,7 @@ import javax.persistence.*;
 // never becomes an issue at truncation.
 //
 // This is indeed an ugly work-around.
-@Table(name="ix_prin")
+@Table(name="ix_core_principal")
 @Inheritance
 @DiscriminatorValue("PRI")
 public class Principal extends IxModel {
