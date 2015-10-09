@@ -546,9 +546,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 }catch(Exception e){
                     getInstance().decrementExtractionQueue();
                     Logger.error(e.getMessage());
+                    ObjectMapper om = new ObjectMapper();
+                    transformFailures.println(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
+                    transformFailures.flush();
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
                 }finally{
                     updateJobIfNecessary(pr.job);
+                    
                 }
                                 
             } else if (mesg instanceof Terminated) {

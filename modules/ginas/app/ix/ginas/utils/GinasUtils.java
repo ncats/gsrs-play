@@ -21,7 +21,7 @@ import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.SpecifiedSubstanceGroup1;
+import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
@@ -218,7 +218,7 @@ public class GinasUtils {
                     return sub;
                 case specifiedSubstanceG1:
                     sub = mapper.treeToValue(tree,
-                                             SpecifiedSubstanceGroup1.class);
+                                             SpecifiedSubstanceGroup1Substance.class);
                     return sub;
                 case concept:
                     sub = mapper.treeToValue(tree, Substance.class);

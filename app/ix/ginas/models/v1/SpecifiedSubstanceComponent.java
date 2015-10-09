@@ -1,8 +1,10 @@
 package ix.ginas.models.v1;
 
-import ix.ginas.models.Ginas;
-
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.OneToOne;
 
 @Entity
 @Inheritance
