@@ -231,21 +231,22 @@ public class Evolution {
 
         Connection con = datasource.getConnection();
         try {
-            Statement stm = con.createStatement();
-            ResultSet rset = stm.executeQuery
-                ("select count(*) from play_evolutions");
-            if (rset.next()) {
-                int count = rset.getInt(1);
-                if (count > 0)
-                    execute (downs);
-            }
-            rset.close();
+//            Statement stm = con.createStatement();
+//            ResultSet rset = stm.executeQuery
+//                ("select count(*) from play_evolutions");
+//            if (rset.next()) {
+//                int count = rset.getInt(1);
+//                if (count > 0)
+//                    execute (downs);
+//            }
+//            rset.close();
+            execute (downs);
             execute (ups);
             
             // if we get here, then all is good.. so truncate the
             //  play_evolutions table
-            stm.execute("delete from play_evolutions");
-            stm.close();
+//            stm.execute("delete from play_evolutions");
+//            stm.close();
             /*
             PreparedStatement pstm = con.prepareStatement
                 ("insert into play_evolutions values(?, ?, ?, ?, ?, ?, ?)");
