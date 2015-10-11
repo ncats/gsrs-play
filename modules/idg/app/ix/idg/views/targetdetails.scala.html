@@ -312,7 +312,7 @@
       <div class="col-md-4">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Synonyms <i class="fa fa-external-link"></i> </h3>
+            <h3 class="panel-title">Synonym <i class="fa fa-external-link"></i> </h3>
           </div>
           <div class="panel-body">
             <table class="table">
@@ -370,7 +370,7 @@
 	      @if(!ligands.isEmpty()) {
 	         <div class="panel panel-default">
 		    <div class="panel-heading">
-		       <h3 class="panel-title">Ligands</h3>
+		       <h3 class="panel-title">Ligand</h3>
 		    </div>
 		    <div class="panel-body">
 		       <table>
@@ -448,10 +448,6 @@
 		     <td>R01 Count</td>
 		     <td>@target.r01Count</td>
 		   </tr>
-	           <tr>
-		     <td>Patent Count</td>
-		     <td>@target.patentCount</td>
-		   </tr>		   
 		   <tr>
 		     <td>Funding ($)</td>
 		     <td>@{"%.2f".format(target.grantTotalCost)}</td>
@@ -479,16 +475,16 @@
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
-	@if(target.patentCount > 0) {
+	@if(target.patentCount != null && target.patentCount > 0) {
           <div class="panel panel-default">
 	    <div class="panel-heading">
-	      <h3 class="panel-title">Patent Count (@target.patentCount)</h3>
+	      <h3 class="panel-title">Patent (@target.patentCount)</h3>
 	    </div>
 	    <div class="panel-body">
 	      <div class="row">
 	        <div class="col-md-2"></div>
 		<div class="col-md-8">
-		   <div id="patent-line-plot"></div>
+		   <div id="patent-line-plot" style="height:180px;"></div>
 		</div>
 		<div class="col-md-2"></div>
 	      </div>

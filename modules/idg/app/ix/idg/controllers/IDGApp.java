@@ -457,7 +457,7 @@ public class IDGApp extends App implements Commons {
         "Ligand"
     };
 
-    static FacetDecorator[] decorate (Facet... facets) {
+    static FacetDecorator[] decorate (Class kind, Facet... facets) {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here
         for (int i = 0; i < facets.length; ++i) {
@@ -491,14 +491,37 @@ public class IDGApp extends App implements Commons {
             decors.add(f);
         }
         
-        IDGFacetDecorator f = new IDGFacetDecorator
-            (new TextIndexer.Facet(DiseaseOntologyRegistry.CLASS));
-        f.hidden = true;
-        decors.add(f);
+        { IDGFacetDecorator f = new IDGFacetDecorator
+                (new TextIndexer.Facet(DiseaseOntologyRegistry.CLASS));
+            f.hidden = true;
+            decors.add(f);
+        }
+
+        if (kind != null) {
+            SearchResult result = getSearchFacets (kind);
+            Logger.debug("+++");
+            for (FacetDecorator f : decors) {
+                if (!f.hidden) {
+                    Logger.debug("Facet "+f.facet.getName());
+                    Facet full = result.getFacet(f.facet.getName());
+                    for (int i = 0; i < f.facet.size(); ++i) {
+                        TextIndexer.FV fv = f.facet.getValue(i);
+                        f.total[i] = full.getCount(fv.getLabel());
+                        Logger.debug("  + "+fv.getLabel()+" "
+                                     +fv.getCount()
+                                     +"/"+f.total[i]);
+                    }
+                }
+            }
+        }
         
         return decors.toArray(new FacetDecorator[0]);
     }
 
+    static FacetDecorator[] decorate (Facet... facets) {
+        return decorate (null, facets);
+    }
+    
     @Cached(key="_help", duration= Integer.MAX_VALUE)
     public static Result help() {
         return ok (ix.idg.views.html.help.render
@@ -933,7 +956,8 @@ public class IDGApp extends App implements Commons {
 
         return ok(ix.idg.views.html.targets.render
                   (page, rows, result.count(),
-                   pages, decorate (facets), targets, result.getKey()));
+                   pages, decorate (Target.class, facets),
+                   targets, result.getKey()));
 
     }
 
@@ -1201,7 +1225,8 @@ public class IDGApp extends App implements Commons {
                             return ok (ix.idg.views.html.targets.render
                                        (page, rows, total,
                                         pages, decorate
-                                        (filter (facets, TARGET_FACETS)),
+                                        (Target.class,
+                                         filter (facets, TARGET_FACETS)),
                                         targets, context.getId()));
                         }
                     });
@@ -2538,7 +2563,8 @@ public class IDGApp extends App implements Commons {
                             return ok (ix.idg.views.html.targets.render
                                        (page, rows, total,
                                         pages, decorate
-                                        (filter (facets, TARGET_FACETS)),
+                                        (Target.class,
+                                         filter (facets, TARGET_FACETS)),
                                         targets, context.getId()));
                         }
                     });

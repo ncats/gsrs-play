@@ -158,6 +158,7 @@ public class App extends Authentication {
         final public int max;
         final public boolean raw;
         public boolean hidden;
+        public Integer[] total;
 
         public FacetDecorator (Facet facet) {
             this (facet, false, 6);
@@ -166,15 +167,21 @@ public class App extends Authentication {
             this.facet = facet;
             this.raw = raw;
             this.max = max;
+            total = new Integer[facet.size()];
         }
 
         public String name () { return facet.getName(); }
         public int size () { return facet.getValues().size(); }
         public String label (int i) {
-            return facet.getValues().get(i).getLabel();
+            return facet.getLabel(i);
         }
         public String value (int i) {
-            return facet.getValues().get(i).getCount().toString();
+            Integer total = this.total[i];
+            Integer count = facet.getCount(i);
+            if (total != null) {
+                return count+" | "+total;
+            }
+            return count.toString();
         }
     }
     /**
