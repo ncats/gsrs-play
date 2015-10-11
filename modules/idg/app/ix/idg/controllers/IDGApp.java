@@ -2667,4 +2667,30 @@ public class IDGApp extends App implements Commons {
         }
         return pmids;
     }
+
+    public static JsonNode getPatents (Target target) {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode nodes = mapper.createArrayNode();
+        for (XRef ref : target.links) {
+            if (Timeline.class.getName().equals(ref.kind)) {
+                try {
+                    Timeline tl = (Timeline)ref.deRef();
+                    if ("Patent Count".equals(tl.name)) {
+                        for (Event e : tl.events) {
+                            ObjectNode n = mapper.createObjectNode();
+                            n.put("year", e.start.toString());
+                            n.put("count", e.end.toString());
+                            nodes.add(n);
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't dereference link "
+                                 +ref.kind+":"+ref.refid);
+                }
+            }
+        }
+        return nodes;
+    }
 }

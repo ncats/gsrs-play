@@ -429,11 +429,6 @@
 				     data-html="true"
 				     title="<p align='left'>Number of transmembrane helices according to Survey of the Human Transmembrane Proteome (https://modbase.compbio.ucsf.edu/projects/membrane/). At least 2 are required to be in their list.</p>">Transmembrane</span>
 				}
-				case "EBI Total Patent Count (Relevant)" => {
-   				  <span data-toggle="tooltip"
-				     data-html="true"
-				     title="<p align='left'>">Patent Count</span>
-				}
 				case _ => {
 				}
 			     }
@@ -453,6 +448,10 @@
 		     <td>R01 Count</td>
 		     <td>@target.r01Count</td>
 		   </tr>
+	           <tr>
+		     <td>Patent Count</td>
+		     <td>@target.patentCount</td>
+		   </tr>		   
 		   <tr>
 		     <td>Funding ($)</td>
 		     <td>@{"%.2f".format(target.grantTotalCost)}</td>
@@ -480,29 +479,49 @@
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
-      </div>
-      <div class="col-md-4">
-        @**
-        <div class="panel panel-default">
+	@if(target.patentCount > 0) {
+          <div class="panel panel-default">
 	    <div class="panel-heading">
-	      <h3 class="panel-title">Tissue Specificity Index</h3>
+	      <h3 class="panel-title">Patent Count (@target.patentCount)</h3>
 	    </div>
 	    <div class="panel-body">
 	      <div class="row">
 	        <div class="col-md-2"></div>
 		<div class="col-md-8">
-		   <div id="tissue-specificity-radar"></div>
+		   <div id="patent-line-plot"></div>
 		</div>
 		<div class="col-md-2"></div>
 	      </div>
 	    </div>
-	</div>
-	**@
+	  </div>
+	}
+       
+      </div>
+      <div class="col-md-4">
         @property(PANTHER_PROTEIN_CLASS, null, -1)
         @property(ChEMBL_PROTEIN_CLASS, null, -1)
 	@property(IMPC_TERM)
 	@property("Pathway", null, 1)
         @property(UNIPROT_KEYWORD)
+        <div class="panel panel-default">
+	    <div class="panel-heading">
+	      <h3 class="panel-title">Data Types</h3>
+	    </div>
+	    <div class="panel-body">
+	      <div class="row">
+	        <div class="col-md-2"></div>
+		<div class="col-md-8">
+		   <div id="attr-type-radar"></div>
+		</div>
+		<div class="col-md-2"></div>
+	      </div>
+	      <button type="button" class="btn btn-default"
+	              data-toggle="modal" data-target="#attr-type-radar-modal"
+	              aria-label="Left Align" style="float:right;">
+	          <span class="fa fa-external-link" aria-hidden="true"></span>
+	      </button>
+	    </div>
+	</div>
        </div>
     </div> <!-- row -->
     <!--
@@ -846,6 +865,33 @@
   </div>
 </div>
 
+<div class="modal fade" id="attr-type-radar-modal" tabindex="-1"
+     role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalLabelRadar"></h4>
+            </div>
+            <div class="modal-body">
+	      <div class="row">
+		<div class="col-md-2">
+		</div>
+		<div class="col-md-8">
+		  <div id="modal-radardiv"
+		       style="display: inline;"
+		       class="embed-responsive embed-responsive-4by3">
+		  </div>
+		</div>
+		<div class="col-md-2"></div>
+	      </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <head>
     <style type="text/css">
     .axis path,
@@ -873,8 +919,11 @@
     <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>        
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>    
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />    
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />     
 </head>
 
 <script>
@@ -884,12 +933,13 @@ $(function () {
 });
 
 $(document).ready(function () {
-    console.log();
+
   $('.tree').treegrid({
-   expanderExpandedClass: 'fa fa-angle-down',
-   expanderCollapsedClass: 'fa fa-angle-right',
-   initialState: 'collapsed'
+     expanderExpandedClass: 'fa fa-angle-down',
+     expanderCollapsedClass: 'fa fa-angle-right',
+     initialState: 'collapsed'
   });
+
   $('#keyword').on('click touchstart', function () {
      showLoadModal();
   });
@@ -911,7 +961,49 @@ $(document).ready(function () {
       }
   });
 
-  tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
+  $.ajax({
+     url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
+     dataType:"json",
+     success:function(data) {
+        var chart = RadarChart.chart();
+        chart.config({
+            w:150, h:150,
+                    axisText:false, levels:0, circles:false
+        });
+        var svg = d3.select("#attr-type-radar").append('svg' )
+           .attr("width", 150)
+           .attr("height", 150)
+           .append('g').classed('focus', 1).datum(data).call(chart);
+     }
+  });
+
+  $.ajax({
+      url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
+      dataType:"json",
+      success:function(data) {
+          var chart = RadarChart.chart();
+          chart.config({
+              w:600, h:600,
+              axisText:true, levels:0, circles:true
+          });
+          var svg = d3.select("#modal-radardiv").append('svg' )
+                  .attr("width", 600 )
+                    .attr("height", 600)
+                    .append('g').classed('focus', 1).datum(data).call(chart);
+          $("#modalLabelRadar" ).html
+	     ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
+      }
+   });
+
+   new Morris.Line({
+      element: 'patent-line-plot',
+      data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),
+      xkey: 'year',
+      ykeys: ['count'],
+      labels: ['Count']
+   });
+   
+   tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
 function showLoadModal () {
