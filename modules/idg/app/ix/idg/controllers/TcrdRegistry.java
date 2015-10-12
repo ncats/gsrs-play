@@ -178,6 +178,7 @@ public class TcrdRegistry extends Controller implements Commons {
                             "where a.target_id = ? " +
                             "and a.doid = d.doid " +
                             "and c.protein_id = a.target_id " +
+                            "and c.disease_id = d.id " +
                             "and e.id = a.target_id " +
                             "and f.protein_id = a.target_id");
             pstm2 = con.prepareStatement
