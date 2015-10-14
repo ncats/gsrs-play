@@ -35,7 +35,7 @@
                        <div class = "col-md-2">
                            <span href="#" editable-select="relationship.qualification"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("QUALIFICATION") track by r.display" blur="submit">{{relationship.qualification.display}}</span>
                        </div>
-                       <div class="col-md-1">Amount</div>
+                       <amount value="relationship.amount"></amount>
                        @referenceview("relationshipForm", "relationship")
                        </div>
         </div>
@@ -45,6 +45,7 @@
             <div class="row form-row">
                 <div class="col-md-2">
                     @selectors.substanceselectorform("relationship.relatedSubstance")
+
                 </div>
                 <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Relationship Type" id="type" name = "type" ng-model = "relationship.type" ng-options="r.display for r in @GinasApp.getCV.getField("RELATIONSHIP_TYPE") track by r.display" required>
@@ -72,7 +73,8 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-1">
-                    <amount value="relationship.amount"></amount>
+                    <amount-form ng-form="amount-form.html"></amount-form>
+                    <a ng-show="!relationship.value" data-toggle="modal" data-target="#addamount" role="button" aria-label="Add a value"><i class="fa fa-plus fa-2x success"></i></a>
                 </div>
                 @referenceselectorform("relationshipForm", "relationship")
             </div>
