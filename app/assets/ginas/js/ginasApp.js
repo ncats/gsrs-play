@@ -361,23 +361,25 @@
                 default:
                     $scope.$broadcast('show-errors-check-validity');
                     if (form.$valid) {
-                        if (this.substance[type]) {
+                        if (getObjectAt(this.substance,type)) {
                             if (type == 'references') {
                                 if (typeof obj.uuid == "undefined") {
                                     obj.uuid = uuid();
                                 }
                                 obj.id = this.substance.references.length + 1;
                             }
-                            this.substance[type].push(obj);
+                            getObjectAt(this.substance,type).push(obj);
+                            //this.substance[type].push(obj);
                         } else {
-                            this.substance[type] = [];
+                            setObjectAt(this.substance,type, []);
                             if (type == 'references') {
                                 if (typeof obj.uuid == "undefined") {
                                     obj.uuid = uuid();
                                 }
                                 obj.id = 1;
                             }
-                            this.substance[type].push(obj);
+                            getObjectAt(this.substance,type).push(obj);
+                            //this.substance[type].push(obj);
                         }
                         $scope.$broadcast('show-errors-reset');
                     }
