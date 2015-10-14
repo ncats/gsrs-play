@@ -248,6 +248,8 @@ public class GinasApp extends App {
             //final String name = super.name();
             if ("StructurallyDiverse".equalsIgnoreCase(label))
                 return "Structurally Diverse";
+            if ("EP".equalsIgnoreCase(label))
+                return "PH. EUR";
             
             return label;
         }
