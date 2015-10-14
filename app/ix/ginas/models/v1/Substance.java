@@ -477,6 +477,14 @@ public class Substance extends Ginas {
 		addRestrictGroup(PrincipalFactory.registerIfAbsent(new Principal(principal,null)));
 	}
 	
+
+	@JsonIgnore
+	public String getDisplayStatus(){
+		if("approved".equalsIgnoreCase(status)){
+			return "Validated (UNII)";
+		}
+		return status;
+	}
 	
 	
 }
