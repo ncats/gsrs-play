@@ -20,9 +20,6 @@
             <div class = "col-md-2">
                 <strong>Agent Substance</strong>
             </div>
-            <div class = "col-md-2 text-right">
-                <strong>Reference ID</strong>
-            </div>
         </div>
         <div class = "row">
             <hr>
@@ -67,7 +64,6 @@
                     @selectors.substanceselectorform()
                 <span ng-show="substance.subref"><rendered id = substance.subref.refuuid></rendered> </span>
                 </div>
-                @referenceselectorform("agentModForm", "agentModification")
             </div>
             @submitbuttons("agentModification", "agentModForm", "agentModifications")
         </form>

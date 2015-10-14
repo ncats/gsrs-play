@@ -20,9 +20,6 @@
             <div class = "col-md-2">
                 <strong>Glycosylation Type</strong>
             </div>
-            <div class = "col-md-2 text-right">
-                <strong>Reference ID</strong>
-            </div>
         </div>
         <div ng-repeat="siteList in substance.protein.glycosylation">
             <div class = "col-md-2">
@@ -40,7 +37,6 @@
             <div class = "col-md-2">
                 <span href="#" editable-select="obj.residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj.residueIndex}}</span>
             </div>
-            @referenceview("glyForm", "obj")
         </div>
 </div>
 
@@ -77,7 +73,6 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                @referenceselectorform("glyForm", "glyc")
             </div>
             @submitbuttons("glyc", "glyForm", "glycosylation")
         </form>
