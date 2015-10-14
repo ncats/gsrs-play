@@ -247,8 +247,12 @@ public class GinasApp extends App {
             final String label = super.label(i);
             //final String name = super.name();
             if ("StructurallyDiverse".equalsIgnoreCase(label))
-                return "Structurally Diverse";
-            
+                return "structurally diverse";
+            if("approved".equalsIgnoreCase(label)){
+            	return "Validated (UNII)";
+            }else if("non-approved".equalsIgnoreCase(label)){
+            	return "Non-Validated";
+            }
             return label;
         }
     }
