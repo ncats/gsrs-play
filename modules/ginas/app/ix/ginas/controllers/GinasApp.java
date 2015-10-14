@@ -250,7 +250,10 @@ public class GinasApp extends App {
                 return "Structurally Diverse";
             if ("EP".equalsIgnoreCase(label))
                 return "PH. EUR";
-            
+            if("approved".equalsIgnoreCase(label))
+            	return "Validated (UNII)";
+            if("non-approved".equalsIgnoreCase(label))
+            	return "Non-Validated";
             return label;
         }
     }

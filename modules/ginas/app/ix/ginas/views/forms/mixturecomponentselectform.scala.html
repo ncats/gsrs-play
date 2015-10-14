@@ -11,7 +11,7 @@
         </div>
         <div ng-repeat="component in substance.mixture.components">
                         <div class ="col-md-2">
-                            <rendered id = component.subref.refuuid></rendered>
+                            <rendered id = component.substance.refuuid></rendered>
                         </div>
                        <div class = "col-md-6">
                            <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("MIXTURE_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
@@ -21,7 +21,7 @@
         <form class="form-horizontal" name="mixtureForm" id = "add-component" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    @selectors.substanceselectorform()
+                    @selectors.substanceselectorform("component.substance")
                 </div>
                 <div class="col-md-6 err-check" show-errors>
                     <select class="form-control" title="Mixture Type" id="type" name = "type" ng-model = "component.type" ng-options="r.display for r in @GinasApp.getCV.getField("MIXTURE_TYPE") track by r.display" required>

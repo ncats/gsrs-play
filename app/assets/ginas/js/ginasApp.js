@@ -88,6 +88,38 @@
         };
 
 
+        $scope.openSelector = function (storein) {
+
+            var modalInstance = $modal.open({
+                animation: true,
+                templateUrl: 'substanceSelector.html',
+                controller: 'SubstanceSelectorInstanceController',
+                size: 'lg'
+
+            });
+
+            modalInstance.result.then(function (selectedItem) {
+                var subref = {};
+                console.log(selectedItem);
+                subref.refuuid = selectedItem.uuid;
+                subref.refPname = selectedItem.name;
+                subref.approvalID = selectedItem.approvalID;
+                subref.substanceClass = "reference";
+                //this part assumes there's only ever 1 substance reference for a whole substance.
+                //However, there are likely to be many (maybe hundreds) in various contexts.
+                //If this is to be used as a stop-gap measure, it at least needs to be a key-value
+                //pair array for later selection. 
+                //storein = subref;
+                console.log($scope);
+                console.log(storein);
+                console.log(getObjectAt($scope,storein));
+                setObjectAt($scope,storein,subref);
+                $scope.subref=subref;
+                //$scope[storein]=subref;
+                console.log("selected");
+            });
+        };
+
         $scope.toFormSubstance = function (apiSub) {
 
             //first, flatten nameorgs, this is technically destructive
@@ -1322,10 +1354,10 @@
 
     });
 
-    ginasApp.controller('SubstanceSelectorController', function ($scope, $modal, Substance) {
+    ginasApp.controller('SubstanceSelectorController', function ($scope, $modal) {
 
 
-        $scope.open = function (size) {
+        $scope.open = function (storein) {
 
             var modalInstance = $modal.open({
                 animation: true,
@@ -1346,7 +1378,10 @@
               //However, there are likely to be many (maybe hundreds) in various contexts.
               //If this is to be used as a stop-gap measure, it at least needs to be a key-value
               //pair array for later selection. 
-                Substance.subref = subref;
+              
+                storein = subref;
+                console.log($scope);
+                console.log("selected");
             });
         };
 
@@ -1433,6 +1468,32 @@ function getDisplayFromCV(domain, value) {
 function vocabsetup(cv) {
     window.CV_REQUEST = cv;
     console.log("finished");
+}
+
+function getObjectAt(obj, path){
+        var v = path.split(".");
+        var reto=obj;
+        for(var i=0;i<v.length;i++){
+                reto = reto[v[i]];
+                if(typeof reto == "undefined" || reto === null){
+                        return undefined;
+                }
+        }
+        return reto;
+}
+function setObjectAt(obj, path, nobj){
+        var v = path.split(".");
+        var reto=obj;
+        for(var i=0;i<v.length-1;i++){
+                if(typeof reto[v[i]] == "undefined" || reto[v[i]] === null){
+                        reto[v[i]]={};        
+                }
+                reto = reto[v[i]];                
+        }
+        if(typeof reto !== "undefined"){
+                reto[v[v.length-1]]=nobj;
+        }
+        return reto;
 }
 
 

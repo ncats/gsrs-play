@@ -18,11 +18,11 @@
             <div class="col-md-1"><strong>Reference ID</strong></div>
 
         </div>
-                   <div ng-repeat="relationship in substance.relationships">
-<div class ="col-md-2">
-    <rendered id = relationship.subref.refuuid></rendered>
-
-</div>
+        <div ng-repeat="relationship in substance.relationships">
+                    <div class="row">
+                        <div class ="col-md-2">
+                           <rendered id = relationship.relatedSubstance.refuuid></rendered>
+                        </div>
                        <div class = "col-md-2">
                            <span href="#" editable-select="relationship.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("RELATIONSHIP_TYPE") track by r.display" blur="submit">{{relationship.type.display}}</span>
                        </div>
@@ -37,12 +37,15 @@
                        </div>
                        <amount value="relationship.amount"></amount>
                        @referenceview("relationshipForm", "relationship")
+                       </div>
         </div>
+        
 
         <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    @selectors.substanceselectorform()
+                    @selectors.substanceselectorform("relationship.relatedSubstance")
+
                 </div>
                 <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Relationship Type" id="type" name = "type" ng-model = "relationship.type" ng-options="r.display for r in @GinasApp.getCV.getField("RELATIONSHIP_TYPE") track by r.display" required>

@@ -1,6 +1,8 @@
 @import play.api.Play.current
 
-<div ng-controller="SubstanceSelectorController">
+@(scopeset: String)
+        
+<div>
     <script type="text/ng-template" id="substanceSelector.html">
         <div class="modal-header">
             <h3 class="modal-title">Select substance</h3>
@@ -91,9 +93,16 @@
         </div>
     </script>
 
-    <span ng-show="substance.subref"><rendered id = substance.subref.refuuid></rendered> </span>
-    <a ng-hide="substance.subref" role="button" aria-label="Select a Substance"  ng-click="open('substanceSelector')"><i class="fa fa-plus fa-2x success"></i></a>
-    @*<button aria-label="Select a substance" type="button" class="btn btn-default" ng-click="open('substanceSelector')"><span aria-hidden="true" class="fa fa-plus-square"></span></button>*@
+   @*  
+    <input ng-model="@{scopeset}.refPname">
+    <input ng-model="@{scopeset}.refuuid">
+    <input ng-model="@{scopeset}.approvalID">
+    <input ng-model="@{scopeset}.substanceClass">
+ 
+    {{@{scopeset}}}
+    *@
+    <span ng-show="@scopeset"><rendered id = @{scopeset}.refuuid></rendered> </span>
+    <a role="button" aria-label="Select a Substance"  ng-click="openSelector('@scopeset')"><i class="fa fa-plus fa-2x success"></i></a>
 </div>
 
 
