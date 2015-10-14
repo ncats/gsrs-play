@@ -89,10 +89,10 @@
 
 
         $scope.openSelector = function (storein) {
-
+                console.log("openning");
             var modalInstance = $modal.open({
                 animation: true,
-                templateUrl: 'substanceSelector.html',
+                templateUrl: baseurl + 'assets/ginas/templates/substanceSelector.html',
                 controller: 'SubstanceSelectorInstanceController',
                 size: 'lg'
 
@@ -809,6 +809,7 @@
             template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.unit}}</span></div>'
         };
     });
+    
 
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';
@@ -1356,40 +1357,7 @@
 
     });
 
-    ginasApp.controller('SubstanceSelectorController', function ($scope, $modal) {
-
-
-        $scope.open = function (storein) {
-
-            var modalInstance = $modal.open({
-                animation: true,
-                templateUrl: 'substanceSelector.html',
-                controller: 'SubstanceSelectorInstanceController',
-                size: 'lg'
-
-            });
-
-            modalInstance.result.then(function (selectedItem) {
-                var subref = {};
-                console.log(selectedItem);
-                subref.refuuid = selectedItem.uuid;
-                subref.refPname = selectedItem.name;
-                subref.approvalID = selectedItem.approvalID;
-                subref.substanceClass = "reference";
-              //this part assumes there's only ever 1 substance reference for a whole substance.
-              //However, there are likely to be many (maybe hundreds) in various contexts.
-              //If this is to be used as a stop-gap measure, it at least needs to be a key-value
-              //pair array for later selection. 
-              
-                storein = subref;
-                console.log($scope);
-                console.log("selected");
-            });
-        };
-
-
-    });
-
+  
     // Please note that $modalInstance represents a modal window (instance) dependency.
     // It is not the same as the $modal service used above.
 
