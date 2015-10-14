@@ -133,6 +133,28 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
   </div>
 </div>
 
+<div class="modal fade" id="modal-folder" tabindex="-1"
+role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
+    <div class="modal-dialog modal-lg" style="width: 40%; ">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close"
+                data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="modalLabelFolder">Select a dossier</h4>
+            </div>
+            <div class="modal-body">
+                @*<div class="row">*@
+                    <div id="combo-container" >
+                        <input id='folder-combobox' class="folder-typeahead" type="text">
+                        <button type="button" id="button-select-folder" class="btn btn-primary">OK</button>
+                    </div>
+                @*</div>*@
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modal-radar" tabindex="-1"
      role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -217,6 +239,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     <style type="text/css">
     </style>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/underscore.string.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3_clustergram.js")'></script>
@@ -225,6 +248,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/kinome.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>    
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>        
@@ -239,7 +263,10 @@ $(function() {
    $('[data-toggle="tooltip"]').tooltip ();
 });
 
+var _cart_selectType = "selected";
+
 $(document).ready(function () {
+
    $('#loadmodal').on('shown.bs.modal', function (e) {
       console.log('loadmodal is shown...');
    });
@@ -247,10 +274,45 @@ $(document).ready(function () {
       console.log('hgram modal is shown...');
       load_clustergram ('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null, ctx, null)');
    });
-
    $('#modal-radar').on('hidden.bs.modal', function (e) {
        d3.select("#modal-radardiv").select('svg').remove();
    });
+
+    function selectEntities(sel) {
+        return $(sel).map(function() {
+            var id = $(this ).attr("id");
+            if (id.indexOf("-") != -1) id = id.split("-")[1];
+            return id;
+        });
+    }
+
+    var folderNames = ['Default'];
+    @for(f <- ix.idg.controllers.DossierApp.getFolderNames()) {
+         @if( !f.equals("")) {
+    folderNames.push('@f');
+        }
+    }
+
+    $("#folder-combobox").typeahead(
+        {hint:true,minLength:1,highlight:true },
+        {source:substringMatcher(folderNames), name:'dossiers'}
+    );
+    $('#folder-combobox' ).typeahead('val', "Default");
+    $('#folder-combobox').on("typeahead:selected", function (evt, val, d) {
+        if (d == 'MeSH') {}
+        else $('#folder-combobox').typeahead('val', +val.value);
+    });
+
+    $("#button-select-folder" ).on('click', function() {
+        $('#modal-folder').modal('hide');
+        var selectedFolderName = $("#folder-combobox" ).typeahead('val');
+        var ents;
+        if (_cart_selectType == 'selected')
+            ents = selectEntities("#target-table  input:checked");
+        else if (_cart_selectType == 'all')
+            ents = selectEntities("#target-table  input");
+        addEntitiesToShoppingCart(ents, 'ix.idg.models.Target', selectedFolderName, '@ix.idg.controllers.routes.DossierApp.addEntities()');
+    });
 
     $.ajax({
         url:'@ix.idg.controllers.routes.DossierApp.count',
@@ -262,7 +324,6 @@ $(document).ready(function () {
     // select all checkboxes in the table
     $("#cb-addall" ).click(function(e) {
         var cb = $("#cb-addall").find("i");
-	//console.log('cb-addall clicked: '+cb+' '+cb.attr('class'));
         var table = $("#target-table");
         if (cb.hasClass('fa-check')) {
             $ ( 'td input:checkbox',table ).prop ( 'checked', true ) ;
@@ -273,36 +334,14 @@ $(document).ready(function () {
         }
     });
     $("#sc-add-selected" ).click(function(e) {
-        addEntitiesToShoppingCart(selectEntities("#target-table  input:checked"), 'ix.idg.models.Target');
+        _cart_selectType = 'selected';
+        $('#modal-folder').modal('show');
     });
     $("#sc-add-all" ).click(function(e) {
-        addEntitiesToShoppingCart(selectEntities("#target-table  input"), 'ix.idg.models.Target');
+        _cart_selectType = 'all';
+        $('#modal-folder').modal('show');
     });
-    function selectEntities(sel) {
-       return $(sel).map(function() {
-            var id = $(this ).attr("id");
-            if (id.indexOf("-") != -1) id = id.split("-")[1];
-            return id;
-       });
-    }
-    function addEntitiesToShoppingCart(entities, etype) {
-        var accs = _.map(entities, function(x){
-            var o = new Object();
-            o.type = etype;
-            o.entity = x
-            return (o);
-        });
-        console.log(JSON.stringify(accs));
-        $.ajax({
-            url:'@ix.idg.controllers.routes.DossierApp.addEntities',
-            type:"POST",
-            data: {'json':JSON.stringify(accs), 'folder':'Default'},
-            success:function(dat, status, xhr) {
-                console.log(dat);
-                $("#sc-count" ).html(dat.total_entries);
-            }
-        });
-    }
+
 
     // iterate over all .radar-XXX elements and draw the radar chart
     // currently we pull chart data dynamically, but really should be
@@ -368,5 +407,6 @@ function showLoadModal () {
 $(window).unload(function () {
     $('#loadmodal').modal('hide');
     $('#hgramModal').modal('hide');
+    $('#modal-folder').modal('hide');
 });
 </script>

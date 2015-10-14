@@ -1,32 +1,30 @@
 package ix.idg.controllers;
 
-import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.Expr;
+import com.avaje.ebean.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import ix.core.controllers.PredicateFactory;
+import ix.core.models.Predicate;
+import ix.core.models.Session;
+import ix.core.models.XRef;
+import ix.core.plugins.IxCache;
+import ix.idg.models.Disease;
+import ix.idg.models.Ligand;
+import ix.idg.models.Target;
+import ix.ncats.controllers.App;
+import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Result;
-import play.db.ebean.Model;
-import play.Logger;
 
-import java.util.concurrent.Callable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import ix.idg.models.Disease;
-import ix.idg.models.Ligand;
-import ix.idg.models.Target;
-import ix.core.models.Session;
-import ix.core.models.Predicate;
-import ix.core.models.XRef;
-import ix.ncats.controllers.App;
-import ix.core.controllers.PredicateFactory;
-import ix.core.plugins.IxCache;
+import java.util.concurrent.Callable;
 
 public class DossierApp extends App implements Commons {
     public static final String IDG_BUCKET = "IDG BUCKET";
@@ -206,6 +204,17 @@ public class DossierApp extends App implements Commons {
         return cart.size();
     }
 
+    public static List<String> getFolderNames() throws IOException {
+        ArrayNode cart = getCartFromSession();
+        List<String> names = new ArrayList<>();
+        for (int i = 0; i < cart.size(); i++) {
+            ObjectNode tmp = (ObjectNode) cart.get(i);
+            String name = tmp.get("folder").textValue();
+            if (!name.toLowerCase().equals("default")) names.add(name);
+        }
+        return names;
+    }
+
     // TODO should return a more informative json structure
     public static Result count() throws IOException {
         response().setContentType("text/plain");
@@ -236,7 +245,15 @@ public class DossierApp extends App implements Commons {
         ArrayNode cart = getCartFromSession();
 
         ObjectNode folder = getFolderFromCart(cart, folderName);
-        if (folder == null) return _badRequest("Invalid dossier folder specified");
+        if (folder == null) {
+            if (folderName.trim().equals(""))
+                return _badRequest("Must specify a non-empty folder name");
+            folder = mapper.createObjectNode();
+            folder.put("folder", folderName);
+            folder.put("entities", mapper.createArrayNode());
+            cart.add(folder);
+            Logger.debug("Added new dossier: "+folderName);
+        }
 
         ArrayNode entities = (ArrayNode) folder.get("entities");
         // add any new entities
@@ -300,16 +317,13 @@ public class DossierApp extends App implements Commons {
             // TODO ligands
         }
 
-        // for demo purposes
-        folderNames.add("R01 application");
-        folderNames.add("Group meeting");
-        folderNames.add("for John");
-
         return ok(ix.idg.views.html.cart.render(folderName, folderNames, targets, diseases, ligands, null));
     }
 
-    public static Result emptyCart () {
+    public static Result emptyCart () throws IOException {
         session().remove("cart");
+        ArrayNode cart = getCartFromSession();
+        session().put("cart", mapper.writeValueAsString(cart));
         return ok ("Cart emptied");
     }
 }
