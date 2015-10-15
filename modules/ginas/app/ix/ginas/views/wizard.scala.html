@@ -5,9 +5,40 @@
 
 @wizardfields(kind: String) = {
 
-@if(kind == "chemical") {
-    <div>@forms.structureform()</div>
-    <div>@forms.moietyform()</div>
+    @kind match {
+        case "chemical" => {
+            <div>@forms.structureform()</div>
+            <div>@forms.moietyform()</div>
+        }
+        case "mixture" => {
+           <div>Mixture selector not implemented yet.</div>
+           <div>@forms.mixturecomponentselectform()</div>
+        }
+        case "protein" => {
+             <div>@forms.subunitform()</div>
+             <div>@forms.proteindetailsform()</div>
+             <div>@forms.disulfideform()</div>
+             <div>@forms.glycosylationform()</div>
+             <div>@forms.agentmodificationform()</div>
+             @* <div>@forms.structuralmodificationform()</div>*@
+             <div>@forms.physicalmodificationform()</div>
+        }
+        case "polymer" => {
+           <div>Polymer not implemented yet.</div>
+        }
+        case "structurallyDiverse" => {
+           <div>@forms.diversesourceform()</div>
+           <div ng-show="sourceMaterialType=='Organism'">  </div>
+           <div>@forms.diverseorganismform()</div>       
+        }
+        case "concept" => {
+            <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
+        }
+        case x =>{
+            <h2>Unknown substance class: @kind</h2>    
+        }
+    }
+
     <div>@forms.officialnameform()</div>
     <div>@forms.nameform()</div>
     <div>@forms.codeform()</div>
@@ -15,70 +46,9 @@
     <div>@forms.noteform()</div>
     <div>@forms.propertyform()</div>
     <div ng-show="substance.references">@forms.referenceform()</div>
-    <!-- Modal -->
     @forms.referencemodalform()
     @forms.amountmodalform()
     @forms.parametermodalform()
-
-
-} else {
-    @if(kind == "mixture") {
-        <div>Mixture selector not implemented yet.</div>
-        <div>@forms.mixturecomponentselectform()</div>
-        <div>@forms.officialnameform()</div>
-        <div>@forms.nameform()</div>
-        <div>@forms.codeform()</div>
-        <div>@forms.relationshipform()</div>
-        <div>@forms.noteform()</div>
-        <div>@forms.propertyform()</div>
-        @forms.referenceform()
-        @forms.referencemodalform()
-    } else {
-        @if(kind == "protein") {
-            @forms.subunitform()
-            @forms.proteindetailsform()
-            <div>@forms.disulfideform()</div>
-            <div>@forms.glycosylationform()</div>
-            <div>@forms.agentmodificationform()</div>
-           @* <div>@forms.structuralmodificationform()</div>*@
-            <div>@forms.physicalmodificationform()</div>
-            <div>@forms.nameform()</div>
-            <div>@forms.codeform()</div>
-            <div ng-show="substance.references"> @forms.referenceform()</div>
-            @forms.referencemodalform()
-        } else {
-            @if(kind == "polymer") {
-                @forms.nameform()
-                <div ng-show="uniqueName">@forms.codeform()</div>
-                @forms.referenceform()
-                @forms.referencemodalform()
-            } else {
-                @if(kind == "structurallyDiverse") {
-                    @forms.diversesourceform()
-                    <div ng-show="sourceMaterialType=='Organism'">  </div>
-                    @forms.diverseorganismform()
-                    @forms.nameform()
-                    <div ng-show="uniqueName">@forms.codeform()</div>
-                    @forms.referenceform()
-                    @forms.referencemodalform()
-                } else {
-                    @if(kind.toLowerCase() == "concept") {
-                        <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
-                        <div>@forms.officialnameform()</div>
-                        <div>@forms.nameform()</div>
-                        <div>@forms.codeform()</div>
-                        <div>@forms.relationshipform()</div>
-                        <div>@forms.noteform()</div>
-                        @forms.referenceform()
-                        @forms.referencemodalform()
-                    } else {
-                        <h2>Unknown substance class: @kind</h2>
-                    }
-                }
-            }
-        }
-    }
-}
 
 }
 
