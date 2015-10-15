@@ -23,9 +23,6 @@
              @* <div>@forms.structuralmodificationform()</div>*@
              <div>@forms.physicalmodificationform()</div>
         }
-        case "polymer" => {
-           <div>Polymer not implemented yet.</div>
-        }
         case "structurallyDiverse" => {
            <div>@forms.diversesourceform()</div>
            <div ng-show="sourceMaterialType=='Organism'">  </div>
@@ -34,6 +31,16 @@
         case "concept" => {
             <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
         }
+        case "polymer" => {
+           <div>Polymer not implemented yet.</div>
+           <div>@forms.polymerclassificationform()</div>
+           <div>@forms.polymermonomerselectform()</div>
+           <div>@forms.polymerstructureform()</div>
+           <div>@forms.polymersruform()</div>           
+        }
+        case "nucleicAcid" => {
+           <div>Nucleic Acid not implemented yet.</div>
+        }        
         case x =>{
             <h2>Unknown substance class: @kind</h2>    
         }

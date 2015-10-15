@@ -1,0 +1,48 @@
+@import ix.ginas.controllers.GinasApp;
+
+<div class = "row info" >
+    <button class="btn btn-primary label-offset det">
+                      Monomers and Starting Materials&nbsp;<span class="badge" ng-show="substance.polymer.monomers.length>0">
+                        {{substance.polymer.monomers.length}}</span> </button>
+    <div class="col-md-12">
+        <div class ="row header-row">
+            <div class="col-md-2"><strong>Monomer Substance</strong></div>
+            <div class="col-md-2"><strong>Type</strong></div>
+            <div class="col-md-2"><strong>Amount</strong></div>            
+        </div>
+        <div ng-repeat="component in substance.polymer.monomers">
+            <div class="row">
+                        <div class ="col-md-2">
+                            <rendered id = component.monomerSubstance.refuuid></rendered>
+                        </div>
+                       <div class = "col-md-6">
+                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("MONOMER_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
+                       </div>
+                       
+            </div>
+        </div>
+
+        <form class="form-horizontal" name="monomerForm" id = "add-component" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2">
+                    @selectors.substanceselectorform("component.monomerSubstance")
+                </div>
+                <div class="col-md-6 err-check" show-errors>
+                    <select class="form-control" title="Monomer Type" id="type" name = "type" ng-model = "component.type" ng-options="r.display for r in @GinasApp.getCV.getField("MONOMER_TYPE") track by r.display" required>
+                        </select>
+                    <ng-messages for="monomerForm.type.$error" ng-if="monomerForm.type.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+            </div>
+            <div class = "row">
+                <hr>
+                <div class="col-md-1 pull-right">
+                    <a ng-click="component=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>   
+                    <a ng-click="validate(component, monomerForm, 'polymer.monomers'); component=null;" ><i class="fa fa-floppy-o fa-2x success"></i></a>       
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>

@@ -979,7 +979,7 @@
             },
             template: "<div id='sketcherForm' dataformat='molfile' ondatachange='setMol(this)'></div>",
             link: function (scope, element, attrs, ngModelCtrl) {
-                //console.log("LINKING");
+                
                 sketcher = new JSDraw("sketcherForm");
                 var url = window.strucUrl; //baseurl + 'smiles';
                 var structureid = (localStorageService.get('structureid') || false);
@@ -993,8 +993,6 @@
 
                     var mol = sk.getMolfile();
                     if (lastmol === mol)return;
-
-                    //console.log("CHANGING");
                     $http({
                         method: 'POST',
                         url: url,
@@ -1004,9 +1002,18 @@
                         }
                     }).success(function (data) {
                         lastmol = data.structure.molfile;
-                        scope.formsubstance.structure = data.structure;
-                        scope.formsubstance.moieties = data.moieties;
-                        scope.formsubstance.q = data.structure.smiles;
+                        if(scope.formsubstance===null || typeof scope.formsubstance === "undefined"){
+                                scope.formsubstance={};
+                        }
+                        console.log("Type:" + attrs.type);
+                        if(attrs.type === "structure"){
+                                scope.formsubstance = data.structure;
+                        }else{
+                                scope.formsubstance.structure = data.structure;
+                                scope.formsubstance.moieties = data.moieties;
+                                scope.formsubstance.q = data.structure.smiles;
+                        }
+                        console.log(scope);
                     });
                 };
 

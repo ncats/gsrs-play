@@ -1,0 +1,50 @@
+@import ix.ginas.controllers.GinasApp;
+
+<div class = "row info" >
+    <button class="btn btn-primary label-offset det">
+                      Structural Units&nbsp;<span class="badge" ng-show="substance.polymer.structuralUnits.length>0">
+                        {{substance.polymer.structuralUnits.length}}</span> </button>
+    <div class="col-md-12">
+        <div class ="row header-row">
+            <div class="col-md-2"><strong>Structural Unit</strong></div>
+            <div class="col-md-2"><strong>Unit Type</strong></div>
+            <div class="col-md-2"><strong>Unit Amount</strong></div>
+            <div class="col-md-2"><strong>Unit Connectivity</strong></div>
+        </div>
+        <div ng-repeat="component in substance.polymer.structuralUnits">
+            <div class="row">
+                        <div class ="col-md-2">
+                            <rendered id = component.substance.refuuid></rendered>
+                        </div>
+                       <div class = "col-md-6">
+                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SRU_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
+                       </div>
+                       
+                       
+            </div>
+        </div>
+
+        <form class="form-horizontal" name="mixtureForm" id = "add-component" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2">
+                    @selectors.substanceselectorform("component.substance")
+                </div>
+                <div class="col-md-6 err-check" show-errors>
+                    <select class="form-control" title="Mixture Type" id="type" name = "type" ng-model = "component.type" ng-options="r.display for r in @GinasApp.getCV.getField("MIXTURE_TYPE") track by r.display" required>
+                        </select>
+                    <ng-messages for="mixtureForm.type.$error" ng-if="mixtureForm.type.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+            </div>
+            <div class = "row">
+                <hr>
+                <div class="col-md-1 pull-right">
+                    <a ng-click="component=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>   
+                    <a ng-click="validate(component, mixtureForm, 'mixture.components'); component=null;" ><i class="fa fa-floppy-o fa-2x success"></i></a>       
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
