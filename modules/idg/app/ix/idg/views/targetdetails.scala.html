@@ -834,7 +834,9 @@
 	   <div class="col-md-12">
               <div class="panel panel-default">
                  <div class="panel-heading">
-            	    <h3 class="panel-title">Publication <i class="fa fa-external-link"></i> (@pmids.size)</h3>
+                     @** Maybe we should link to http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=3750
+                     which requires us to get the Entrez ID for the gene **@
+            	    <h3 class="panel-title">Publication <a href="http://www.ncbi.nlm.nih.gov/pubmed/?term=@for(kw <- target.synonyms) {@if("UniProt Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-external-link"></i></a> (@pmids.size)</h3>
 		 </div>
                  <div class="panel-body">
                     <div class="panel-body">
