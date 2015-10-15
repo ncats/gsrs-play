@@ -366,6 +366,11 @@ public class TcrdRegistry extends Controller implements Commons {
                      "http://www.genenames.org/cgi-bin/gene_symbol_report?match="+value);
                 target.addIfAbsent(kw);
 
+                kw = KeywordFactory.registerIfAbsent
+                        (ENTREZ_GENE, value = String.valueOf(rset.getLong("geneid")),
+                                "http://www.ncbi.nlm.nih.gov/gene/"+value);
+                target.addIfAbsent(kw);
+
                 Text seq = new Text (UNIPROT_SEQUENCE, rset.getString("seq"));
                 seq.save();
                 
