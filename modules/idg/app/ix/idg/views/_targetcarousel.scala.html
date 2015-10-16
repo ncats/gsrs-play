@@ -23,12 +23,7 @@
 @_donut(f: Facet) = {
      donuts.push(new Morris.Donut({
         element: 'donut-@Util.sha1(f.getName())',
-        data: [
-          @for(v <- f.getValues()) {
-	    {label: '@v.getLabel',
-	     value: @v.getCount},
-	  }
-        ],
+        data: @HtmlFormat.raw(IDGApp.getFacetJson(f).toString),
 	resize: false,
 	@if(f.getName().equals(IDG_DEVELOPMENT)) {
 	   colors: [@for(v <- f.getValues()) {
@@ -47,7 +42,7 @@
 @cloud(facet: String) = {
    @defining(App.scaleFacetCounts(ctx.getFacet(facet), 30, true)) { keywords =>
       wordcloud('cloud-@Util.sha1(facet)', 500, 200, '@facet', [
-       @for(v <- keywords) {
+       @for(v <- keywords.take(20)) {
 	    {text: '@v.label',
 	     size: @v.intval},
 	 }
@@ -235,7 +230,7 @@ function wordcloud (id, width, height, facetName, data) {
       })
       .font("Impact")
       .fontSize(function(d) {
-	 if (d.size < 10) return 10;
+	 if (d.size < 10) return 15;
 	 return d.size;
        })
       .on("end", draw)
