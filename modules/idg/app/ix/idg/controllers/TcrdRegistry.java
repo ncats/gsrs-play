@@ -562,105 +562,52 @@ public class TcrdRegistry extends Controller implements Commons {
         }
         
         void addExpression (Target target, long protein) throws Exception {
-            
             pstm8.setLong(1, protein);
             ResultSet rset = pstm8.executeQuery();
             Map<String, Keyword> sources = new HashMap<String, Keyword>();
             while (rset.next()) {
-                String type = rset.getString("etype");
-                String tissue = rset.getString("tissue");               
-                if (type.startsWith("GTEx")) {
-                    Keyword source = datasources.get(type);
-                    if (source == null) {
-                        source = KeywordFactory.registerIfAbsent
-                            (SOURCE, type, "http://www.gtexportal.org/");
-                        datasources.put(type, source);
-                    }
-                    sources.put(type, source);
-                    double value = rset.getDouble("number_value");
-                    Value kw = KeywordFactory.registerIfAbsent
-                        (GTEx_TISSUE, tissue, null);
-                    target.addIfAbsent(kw);
-                    VNum val = new VNum (GTEx_EXPR, value);
-                    val.unit = tissue;
-                    target.properties.add(val);
-                    Logger.debug("Target "+target.id+" "+type+": "+tissue);
+                Expression expr = new Expression();
+                expr.source = rset.getString("etype");
+                expr.tissue = rset.getString("tissue"); 
+                expr.confidence = rset.getDouble("conf");
+                expr.qualValue = rset.getString("qual_value"); 
+                expr.numberValue = rset.getDouble("number_value");
+                expr.evidence = rset.getString("evidence");
+
+                String sourceUrl = "";
+                if (expr.source.startsWith("GTEx")) {
+                    sourceUrl = "http://www.gtexportal.org/";
+                    expr.sourceid = GTEx_EXPR;
+                } else if (expr.source.startsWith("HPM Gene")) {
+                    sourceUrl = "http://www.humanproteomemap.org";
+                    expr.sourceid = HPM_EXPR;
+                } else if (expr.source.startsWith("JensenLab Text Mining")) {
+                    sourceUrl = "";
+                } else if (expr.source.startsWith("JensenLab Knowledge UniProtKB-RC")) {
+                    sourceUrl = "http://tissues.jensenlab.org";
+                    expr.sourceid = IDG_EXPR;
+                } else if (expr.source.startsWith("HPA")) {
+                    sourceUrl = "http://tissues.jensenlab.org";
+                    expr.sourceid = expr.source+" Expression";
+                } else if (expr.source.startsWith("JensenLab Experiment")) {
+                    sourceUrl = "http://tissues.jensenlab.org";
+                    String t = expr.source.substring("JensenLab Experiment".length()+1).trim();
+                    expr.sourceid = t+" Expression";
+                } else
+                    Logger.warn("Unknown expression \""+expr.source
+                            +"\" for target "+target.id);
+
+                expr.save();
+                target.addIfAbsent(new XRef(expr));
+                Logger.debug("Target "+target.id+" "+expr.source+": "+expr.tissue);
+
+                Keyword source = datasources.get(expr.source);
+                if (source == null) {
+                    source = KeywordFactory.registerIfAbsent
+                            (SOURCE, expr.source, sourceUrl);
+                    datasources.put(expr.source, source);
                 }
-                else if ("HPM Protein".equalsIgnoreCase(type)) {
-                }
-                else if ("HPM Gene".equalsIgnoreCase(type)) {
-                    Keyword source = datasources.get(type);
-                    if (source == null) {
-                        source = KeywordFactory.registerIfAbsent
-                            (SOURCE, type, "http://www.humanproteomemap.org");
-                        datasources.put(type, source);
-                    }
-                    sources.put(type, source);
-                    double value = rset.getDouble("number_value");
-                    Value kw = KeywordFactory.registerIfAbsent
-                        (HPM_TISSUE, tissue, null);
-                    target.addIfAbsent(kw);
-                    VNum val = new VNum (HPM_EXPR, value);
-                    val.unit = tissue;
-                    target.properties.add(val);
-                    Logger.debug("Target "+target.id+" "+type+": "+tissue);
-                }
-                else if ("JensenLab Text Mining".equalsIgnoreCase(type)) {
-                }
-                else if ("JensenLab Knowledge UniProtKB-RC"
-                         .equalsIgnoreCase(type)) {
-                    Keyword source = datasources.get(type);
-                    if (source == null) {
-                        source = KeywordFactory.registerIfAbsent
-                            (SOURCE, type,
-                             "http://tissues.jensenlab.org");
-                        datasources.put(type, source);
-                    }
-                    sources.put(type, source);
-                    
-                    String evidence = rset.getString("evidence");
-                    if ("CURATED".equalsIgnoreCase(evidence)) {
-                        Value t = KeywordFactory.registerIfAbsent
-                            (IDG_TISSUE, tissue, null);
-                        target.addIfAbsent(t);
-                        Logger.debug("Target "
-                                     +target.id+" tissue: "+tissue);
-                    }
-                }
-                else if (type.startsWith("HPA")) {
-                    Keyword source = datasources.get(type);
-                    if (source == null) {
-                        source = KeywordFactory.registerIfAbsent
-                            (SOURCE, type,
-                             "http://tissues.jensenlab.org");
-                        datasources.put(type, source);
-                    }
-                    sources.put(type, source);
-                    Value kw = KeywordFactory.registerIfAbsent
-                        (type+" Tissue", tissue, null);
-                    target.addIfAbsent(kw);
-                    Logger.debug("Target "+target.id+" "+type+": "+tissue);
-                }
-                else if (type.startsWith("JensenLab Experiment")) {
-                    Keyword source = datasources.get(type);
-                    if (source == null) {
-                        source = KeywordFactory.registerIfAbsent
-                            (SOURCE, type,
-                             "http://tissues.jensenlab.org");
-                        datasources.put(type, source);
-                    }
-                    sources.put(type, source);
-                    String t = type.substring
-                        ("JensenLab Experiment".length()+1).trim();
-                    Value kw = KeywordFactory.registerIfAbsent
-                        (t+" Tissue", tissue, null);
-                    target.addIfAbsent(kw);
-                    Logger.debug("Target "+target.id+" "+type+": "+tissue);
-                }
-                else {
-                    Logger.warn("Unknown expression \""+type
-                                +"\" for target "+target.id);
-                }
+                sources.put(expr.source, source);
             }
             rset.close();
 
