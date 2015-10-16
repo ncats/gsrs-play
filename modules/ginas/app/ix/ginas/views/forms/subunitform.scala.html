@@ -1,18 +1,21 @@
+
+@(parent : String)
+
 <div class="row info" id="subunits-form">
     <button class="btn btn-primary label-offset det">
-                        Subunits&nbsp;<span class="badge" ng-show="substance.subunits.length>0">
-                        {{substance.subunits.length}}</span> </button>
+                        Subunits&nbsp;<span class="badge" ng-show="substance.@{parent}.subunits.length>0">
+                        {{substance.@{parent}.subunits.length}}</span> </button>
     <a aria-label="Add Subunits"><i class = "fa fa-plus fa-2x success"></i></a>
     <div class="col-md-12">
 
-    <div class = "row"  ng-repeat="sunit in substance.subunits">
+    <div class = "row"  ng-repeat="sunit in substance.@{parent}.subunits">
         <hr>
         Subunit {{sunit.index}}
         <div class="col-md-12">
             <div class = "row">
               <div class = "col-xs-2" ng-repeat="su in sunit.display">
 
- @*                 the amino acid directive in ginasApp.js has a getTemplate function. This can be used to modify the tooltip
+ @*               the amino acid directive in ginasApp.js has a getTemplate function. This can be used to modify the tooltip
                   the amino acid has a series of boolean properties for existence of links/modifications. The ng-Class function can be used to
                   retrieve a class name based on true or false properties, then highlighting can be applied.*@
 
@@ -28,11 +31,8 @@
         </div>
 
            @*
-           Still working on having the sequences editable. The display is currently the sequence convered into an array of objects, so the whole thing cannot be editable.
+           Still working on having the sequences editable. The display is currently the sequence converted into an array of objects, so the whole thing cannot be editable.
            Should there be a string version undermeath? This could take up a lot of space.
-
-
-
            *@
 
 
@@ -48,14 +48,15 @@
     <form class="form-horizontal" name="subunitForm" id = "add-subunit" role="form" novalidate>
         <div class="row form-row">
             <div class = "col-md-12">
-                <subunit ng-model="subunit.sequence" subindex={{substance.subunits.length}}></subunit>
+                <subunit ng-model="subunit.sequence" subindex={{substance.@{parent}.subunits.length}}></subunit>
             </div>
         </div>
         <div ng-hide=true>
             <input ng-model="subunit.index">
         </div>
-        <div >
-        @submitbuttons("subunit", "subunitForm", "subunits")
+        <div >      
+       @submitbuttons("subunit", "subunitForm", parent + ".subunits", false)
+       
         </div>
     </form>
 </div>

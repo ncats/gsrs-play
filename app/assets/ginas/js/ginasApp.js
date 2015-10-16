@@ -329,9 +329,19 @@
 
         };
 
-        //main submission method
-        $scope.validate = function (obj, form, type) {
+        //Method for pushing temporary objects into the final message
+        //Note: This was changed to use a full path for type.
+        //That means that passing something like "nucleicAcid.type"
+        //for type, will store the form object into that path inside
+        //the substance, unless otherwise caught in the switch.
+        //This simplifies some things.
+        $scope.validate = function (obj, form, type, force) {
+                if(typeof force==="undefined"){
+                        force=false;
+                }
             console.log(type);
+            console.log(form);
+            console.log("Force:" + force);
             switch (type) {
                 case "protein":
                     $scope.proteinDetails(obj, form);
@@ -360,7 +370,9 @@
                 //    break;
                 default:
                     $scope.$broadcast('show-errors-check-validity');
-                    if (form.$valid) {
+                    console.log("Check valid");
+                    if (form.$valid || force) {
+                        console.log("Valid");
                         if (getObjectAt(this.substance,type)) {
                             if (type == 'references') {
                                 if (typeof obj.uuid == "undefined") {

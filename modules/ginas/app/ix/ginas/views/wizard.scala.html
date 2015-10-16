@@ -15,7 +15,7 @@
            <div>@forms.mixturecomponentselectform()</div>
         }
         case "protein" => {
-             <div>@forms.subunitform()</div>
+             <div>@forms.subunitform("protein")</div>
              <div>@forms.proteindetailsform()</div>
              <div>@forms.disulfideform()</div>
              <div>@forms.glycosylationform()</div>
@@ -32,14 +32,18 @@
             <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
         }
         case "polymer" => {
-           <div>Polymer not implemented yet.</div>
+           <div>Polymer not implemented yet, still in development</div>
            <div>@forms.polymerclassificationform()</div>
            <div>@forms.polymermonomerselectform()</div>
            <div>@forms.polymerstructureform()</div>
            <div>@forms.polymersruform()</div>           
         }
         case "nucleicAcid" => {
-           <div>Nucleic Acid not implemented yet.</div>
+           <div>Nucleic Acid not implemented yet, still in development</div>
+           <div>@forms.subunitform("nucleicAcid")</div>
+           <div>@forms.nucleicacidsugarform()</div>
+           <div>@forms.nucleicacidlinkageform()</div>
+           <div>@forms.nucleicaciddetailsform()</div>
         }        
         case x =>{
             <h2>Unknown substance class: @kind</h2>    
