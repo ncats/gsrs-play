@@ -2211,7 +2211,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where d.protein_id in (8721)\n"
                  //+"where c.id in (11521)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 //+"where b.tdl = 'Tclin'\n"
+                 //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"

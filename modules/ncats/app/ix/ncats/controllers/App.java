@@ -683,7 +683,7 @@ public class App extends Authentication {
     }
         
     public static SearchResult getSearchFacets (final Class kind) {
-        return getSearchFacets (kind, FACET_DIM);
+        return getSearchFacets (kind, 1000);
     }
     
     public static SearchResult getSearchFacets (final Class kind,
@@ -693,7 +693,7 @@ public class App extends Authentication {
             return getOrElse (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
-                            (kind, null, 0, 0, fdim, getRequestQuery ());
+                            (kind, null, 0, 0, fdim, null);
                         result.setKey(sha1);
                         return result;
                     }
@@ -705,7 +705,9 @@ public class App extends Authentication {
         }
         return null;
     }
-    
+
+    final static Pattern RangeRe = Pattern.compile
+        ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
          final String q, final int total, final Map<String, String[]> query) {
@@ -727,6 +729,34 @@ public class App extends Authentication {
             else {
                 Logger.debug("Search request sha1: "+sha1+" cached? "
                              +IxCache.contains(sha1));
+
+                if (q != null) {
+                    // check to see if q is format like a range
+                    Matcher m = RangeRe.matcher(q);
+                    if (m.find()) {
+                        final String field = m.group(1);
+                        final String min = m.group(2);
+                        final String max = m.group(3);
+                        
+                        Logger.debug
+                            ("range: field="+field+" min="+min+" max="+max);
+                        
+                        return getOrElse (sha1, new Callable<SearchResult> () {
+                                public SearchResult call () throws Exception {
+                                    SearchOptions options =
+                                        new SearchOptions (query);
+                                    options.top = total;
+                                    SearchResult result = _textIndexer.range
+                                        (options, field, min.equals("")
+                                         ? null : Integer.parseInt(min),
+                                         max.equals("")
+                                         ? null : Integer.parseInt(max));
+                                    result.setKey(sha1);
+                                    return result;
+                                }
+                            });
+                    }
+                }
 
                 result = getOrElse
                     (sha1, new Callable<SearchResult>() {
@@ -961,9 +991,10 @@ public class App extends Authentication {
         }else{
                 
         }
+        
         if(size>250 && !highlight){
-                if(chem.hasStereoIsomers())
-                        dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+            if(chem.hasStereoIsomers())
+                dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
 
         /*

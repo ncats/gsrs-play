@@ -222,7 +222,7 @@ public class IDGApp extends App implements Commons {
             return super.name().replaceAll("IDG", "")
                 .replaceAll("UniProt","").trim();
         }
-        
+
         @Override
         public String label (final int i) {
             final String label = super.label(i);
@@ -1075,44 +1075,6 @@ public class IDGApp extends App implements Commons {
         return "\""+s+"\"";
     }
 
-    // check to see if q is format like a range
-    final static Pattern RangeRe = Pattern.compile
-        ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
-    static SearchResult getRangeSearchResult (Class kind, String q, final int total,
-                                              Map<String, String[]> params) {
-        if (q != null) {
-            try {
-                Matcher m = RangeRe.matcher(q);
-                if (m.find()) {
-                    final String field = m.group(1);
-                    final String min = m.group(2);
-                    final String max = m.group(3);
-                    
-                    Logger.debug("range: field="+field+" min="+min+" max="+max);
-                    final String sha1 = signature (q, request().queryString());
-                    return getOrElse (sha1, new Callable<SearchResult> () {
-                            public SearchResult call () throws Exception {
-                                SearchOptions options =
-                                    new SearchOptions (request().queryString());
-                                options.top = total;
-                                SearchResult result = _textIndexer.range
-                                    (options, field, min.equals("")
-                                     ? null : Integer.parseInt(min),
-                                     max.equals("") ? null : Integer.parseInt(max));
-                                result.setKey(sha1);
-                                return result;
-                            }
-                        });
-                }
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-                Logger.error("Can't perform range search", ex);
-            }
-        }
-        return getSearchResult (kind, q, total, params);
-    }
-
     static Result _targets (final String q, final int rows, final int page)
         throws Exception {
         final String key = "targets/"+Util.sha1(request ());
@@ -1128,7 +1090,7 @@ public class IDGApp extends App implements Commons {
             }
             
             final SearchResult result =
-                getRangeSearchResult (Target.class, q, total, query);
+                getSearchResult (Target.class, q, total, query);
             
             String action = request().getQueryString("action");
             if (action == null) action = "";
@@ -2344,8 +2306,7 @@ public class IDGApp extends App implements Commons {
             getOrElse (key, new Callable<SearchResult> () {
                     public SearchResult call () throws Exception {
                         int total = TargetFactory.finder.findRowCount();        
-                        return getRangeSearchResult (Target.class, q,
-                                                     total, query);
+                        return getSearchResult (Target.class, q, total, query);
                     }
                 });
         for (String s : args) {
