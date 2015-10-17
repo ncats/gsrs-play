@@ -567,6 +567,7 @@ public class TcrdRegistry extends Controller implements Commons {
             Map<String, Keyword> sources = new HashMap<String, Keyword>();
             while (rset.next()) {
                 Expression expr = new Expression();
+                expr.proteinId = protein;
                 expr.source = rset.getString("etype");
                 expr.tissue = rset.getString("tissue"); 
                 expr.confidence = rset.getDouble("conf");

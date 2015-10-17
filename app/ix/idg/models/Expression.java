@@ -20,18 +20,25 @@ public class Expression extends play.db.ebean.Model {
     @Column(nullable = false)
     public String source;
 
+    @Column(nullable = false)
+    public Long proteinId;
+
     public String sourceid;
 
     public Double confidence;
     public Double numberValue;
 
     @Column(nullable = true)
-    @Indexable(facet=true,name=EXPR_QUAL)
+    @Indexable(facet=true,name="Qualitiative Expression Levels")
     public String qualValue;
 
     public String evidence;
 
     public Expression() {
+    }
+
+    public Long getProteinId() {
+        return proteinId;
     }
 
     public String getSourceid() {

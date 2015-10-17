@@ -7,6 +7,7 @@
 @import ix.core.models.Text
 @import ix.core.models.VInt
 @import ix.core.models.Publication
+@import ix.idg.controllers.ExpressionApp
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
 @import ix.idg.controllers.Commons._
@@ -240,16 +241,12 @@
 @expression(name: String, skull: String) = {
    <div class="row">
       <div class="col-md-6">
-         @defining(IDGApp.getProperties(target, name, 0)){ props =>
+         @defining(ExpressionApp.getLinkedExpr(target, name)){ exprs =>
 	 <div class="panel-body">
-	    @for(p <- props) {
-	       @p match {
-	           case kw: Keyword => {
-		      @keyword(kw)
-		   }
-		   case _ => {
-		   }
-	       	}
+	    @for(expr <- exprs) {
+            @if(expr.sourceid.equals(name)) {
+                @facet(expr.sourceid, expr.tissue)
+            }
 	    }
 	 </div>
 	 }
@@ -621,16 +618,16 @@
 
 		   <div class="tab-content">
 		      <div role="tabpanel" class="tab-pane active" id="idg-tab">
-		        @expression(IDG_TISSUE, "idg")
+		        @expression(IDG_EXPR, "idg")
 		      </div>
 		      <div role="tabpanel" class="tab-pane" id="gtex-tab">
-		        @expression(GTEx_TISSUE, "gtex")
+		        @expression(GTEx_EXPR, "gtex")
 		      </div>
 		      <div role="tabpanel" class="tab-pane" id="hpm-tab">
-		        @expression(HPM_TISSUE, "hpm")
+		        @expression(HPM_EXPR, "hpm")
 		      </div>
 		      <div role="tabpanel" class="tab-pane" id="hpa-tab">
-		        @expression(HPA_RNA_TISSUE, "hpa")
+		        @expression(HPA_RNA_EXPR, "hpa")
 		      </div>
 		   </div>
 		 </div>

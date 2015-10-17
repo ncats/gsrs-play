@@ -3,6 +3,8 @@ package ix.idg.controllers;
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.core.models.Value;
+import ix.core.models.XRef;
+import ix.idg.models.Expression;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import org.w3c.dom.Document;
@@ -110,6 +112,39 @@ public class ExpressionApp extends App {
         return null;
     }
 
+    public static List<Expression> getLinkedExpr(Target t, String sourceId) {
+        List<Expression> ret = new ArrayList<>();
+        for (XRef xref : t.getLinks()) {
+            if (!xref.kind.equals(Expression.class.getName())) continue;
+            Expression expr = (Expression) xref.deRef();
+
+            // TODO HPM PROTEIN should get a key in Commons
+            if (expr.getSourceid() != null && expr.getSourceid().equals(sourceId))
+                ret.add(expr);
+        }
+        return ret;
+    }
+
+    static class ExprTuple {
+        public String tissue = null;
+        public int level = 0;
+
+        public ExprTuple() {
+        }
+
+        public boolean equals(Object o) {
+            if (o == this) return true;
+            if (o == null) return false;
+            if (getClass() != o.getClass()) return false;
+            ExprTuple oe = (ExprTuple) o;
+            return oe.tissue.equals(tissue) && oe.level == level;
+        }
+
+        public int hashCode() {
+            return tissue != null ? tissue.hashCode() * 37 + level : level;
+        }
+    }
+
     public static Result homunculus(final String acc, final String source) throws Exception {
         if (acc == null)
             return _badRequest("Must specify a target accession");
@@ -123,51 +158,76 @@ public class ExpressionApp extends App {
                 if (targets.size() == 0) return _notFound("No data found for " + acc);
                 Target t = targets.get(0);
 
+                List<XRef> xrefs = t.getLinks();
+
                 // iterate over tissue names and map them to the SVG id's
                 // may need to update mapping
-                String ds = Commons.GTEx_TISSUE;
+                String ds = Commons.GTEx_EXPR;
                 if (source != null) {
-                    if ("idg".equalsIgnoreCase(source)) ds = Commons.IDG_TISSUE;
-                    else if ("hpm".equalsIgnoreCase(source)) ds = Commons.HPM_TISSUE;
-                    else if ("uniprot".equalsIgnoreCase(source)) ds = Commons.UNIPROT_TISSUE;
-                    else if ("gtex".equalsIgnoreCase(source)) ds = Commons.GTEx_TISSUE;
-                    else if ("hpa".equalsIgnoreCase(source)) ds = Commons.HPA_RNA_TISSUE;
+                    if ("idg".equalsIgnoreCase(source)) ds = Commons.IDG_EXPR;
+                    else if ("hpm".equalsIgnoreCase(source)) ds = Commons.HPM_EXPR;
+                    else if ("gtex".equalsIgnoreCase(source)) ds = Commons.GTEx_EXPR;
+                    else if ("hpa".equalsIgnoreCase(source)) ds = Commons.HPA_RNA_EXPR;
                 }
-                Set<String> organset = new HashSet<>();
-                for (Value v : t.getProperties()) {
-                    // candidate sources: IDG_TISSUE, HPM_TISSUE, UNIPROT_TISSUE, GTex_TISSUE
-                    if (v.label.equals(ds)) {
-                        String val = (String) v.getValue();
-                        for (String key : onm.keySet()) {
-                            if (val.toLowerCase().contains(key)) organset.add(onm.get(key));
+
+                Set<ExprTuple> organset = new HashSet<>();
+                for (XRef xref : t.getLinks()) {
+                    if (!xref.kind.equals(Expression.class.getName())) continue;
+                    Expression expr = (Expression) xref.deRef();
+
+                    // TODO HPM PROTEIN should get a key in Commons
+                    if (expr.getSourceid() == null || !expr.getSourceid().equals(ds)) continue;
+
+                    // map to canonical organ terms
+                    ExprTuple tuple = new ExprTuple();
+                    for (String key : onm.keySet()) {
+                        if (expr.getTissue().toLowerCase().contains(key)) {
+                            tuple.tissue = onm.get(key);
+                            if (ds.equals(Commons.IDG_EXPR)) tuple.level = expr.getConfidence().intValue();
+                            else {
+                                if (expr.getQualValue().toLowerCase().equals("Low")) tuple.level = 0;
+                                else if (expr.getQualValue().toLowerCase().equals("Medium")) tuple.level = 1;
+                                else if (expr.getQualValue().toLowerCase().equals("High")) tuple.level = 2;
+                            }
+                            organset.add(tuple);
                         }
                     }
                 }
-                List<String> organs = new ArrayList<>(organset);
 
-                String[] confidenceColors = new String[]{
+                List<ExprTuple> organs = new ArrayList<>(organset);
+
+                String[] confidenceColorsIDG = new String[]{
                         "#ffffff", "#EDF8E9", "#BAE4B3", "#74C476", "#31A354", "#006D2C"
                 };
+                String[] confidenceColorsOther = new String[]{
+                        "#EDF8E9", "#74C476", "#006D2C"
+                };
+
+
+                String suffix = "";
+                if (!ds.equals(Commons.IDG_EXPR)) suffix = "-qual";
 
                 Document doc;
                 if (Play.isProd()) {
                     doc = XML.fromInputStream
-                        (Play.application().resourceAsStream
-                         ("public/tissues_body_human.svg"), "UTF-8");
-                }
-                else {
+                            (Play.application().resourceAsStream
+                                    ("public/tissues_body_human" + suffix + ".svg"), "UTF-8");
+                } else {
                     File svg = Play.application().getFile
-                        ("app/assets/tissues_body_human.svg");
+                            ("app/assets/tissues_body_human" + suffix + ".svg");
                     FileInputStream fis = new FileInputStream(svg);
                     doc = XML.fromInputStream(fis, "UTF-8");
                 }
 
-                for (String organ : organs) {
-                    Node node = XPath.selectNode("//*[@id='" + organ + "']", doc);
+                for (ExprTuple organ : organs) {
+                    Node node = XPath.selectNode("//*[@id='" + organ.tissue + "']", doc);
                     NamedNodeMap attributes = node == null ? null : node.getAttributes();
                     if (attributes == null) continue;
                     Node attrNode = attributes.getNamedItem("fill");
-                    attrNode.setNodeValue(confidenceColors[5]);
+                    if (ds.equals(Commons.IDG_EXPR))
+                        attrNode.setNodeValue(confidenceColorsIDG[organ.level]);
+                    else
+                        attrNode.setNodeValue(confidenceColorsOther[organ.level]);
                     attributes.setNamedItem(attrNode);
                 }
                 return ok(xml2str(doc));
