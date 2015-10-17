@@ -1054,18 +1054,18 @@ public class IDGApp extends App implements Commons {
 
 
         StringBuilder sb = new StringBuilder();
-        sb.append(routes.IDGApp.target(getId(t))).append(",").
-                append(getId(t)).append(",").
-                append(t.getName()).append(",").
+        sb.append(routes.IDGApp.target(csvQuote(getId(t)))).append(",").
+                append(csvQuote(getId(t))).append(",").
+                append(csvQuote(t.getName())).append(",").
                 append(csvQuote(t.getDescription())).append(",").
-                append(t.idgTDL.toString()).append(",").
-                append(dtoClass).append(",").
-                append(pantherClass).append(",").
-                append(chemblClass).append(",").
-                append(novelty).append(",").
-                append(t.idgFamily).append(",").
+                append(csvQuote(t.idgTDL.toString())).append(",").
+                append(csvQuote(dtoClass)).append(",").
+                append(csvQuote(pantherClass)).append(",").
+                append(csvQuote(chemblClass)).append(",").
+                append(csvQuote((String)novelty)).append(",").
+                append(csvQuote(t.idgFamily)).append(",").
                 append(csvQuote(function.toString())).append(",").
-                append(sb2.toString());
+                append(csvQuote(sb2.toString()));
         return sb.toString();
     }
 
@@ -1135,7 +1135,10 @@ public class IDGApp extends App implements Commons {
 
             if (action.toLowerCase().equals("download")) {
                 StringBuilder sb = new StringBuilder();
-                sb.append("URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function,PMIDs\n");
+                String tmp = "URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function,PMIDs";
+                tmp = tmp.replace(",", "\",\"");
+                tmp = "\""+tmp + "\"\n";
+                sb.append(tmp);
                 if (result.count() > 0) {
                     for (int i = 0; i < result.count(); i++) {
                         Target t = (Target) result.getMatches().get(i);
