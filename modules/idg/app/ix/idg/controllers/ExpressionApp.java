@@ -33,6 +33,7 @@ public class ExpressionApp extends App {
     static {
         onm = new HashMap<>();
         onm.put("brain", "nervous_system");
+        onm.put("cortex", "nervous_system");
         onm.put("pituitary", "nervous_system");
         onm.put("cerebra", "nervous_system");
         onm.put("cerebell", "nervous_system");
@@ -125,26 +126,6 @@ public class ExpressionApp extends App {
         return ret;
     }
 
-    static class ExprTuple {
-        public String tissue = null;
-        public int level = 0;
-
-        public ExprTuple() {
-        }
-
-        public boolean equals(Object o) {
-            if (o == this) return true;
-            if (o == null) return false;
-            if (getClass() != o.getClass()) return false;
-            ExprTuple oe = (ExprTuple) o;
-            return oe.tissue.equals(tissue) && oe.level == level;
-        }
-
-        public int hashCode() {
-            return tissue != null ? tissue.hashCode() * 37 + level : level;
-        }
-    }
-
     public static Result homunculus(final String acc, final String source) throws Exception {
         if (acc == null)
             return _badRequest("Must specify a target accession");
@@ -158,8 +139,6 @@ public class ExpressionApp extends App {
                 if (targets.size() == 0) return _notFound("No data found for " + acc);
                 Target t = targets.get(0);
 
-                List<XRef> xrefs = t.getLinks();
-
                 // iterate over tissue names and map them to the SVG id's
                 // may need to update mapping
                 String ds = Commons.GTEx_EXPR;
@@ -170,7 +149,7 @@ public class ExpressionApp extends App {
                     else if ("hpa".equalsIgnoreCase(source)) ds = Commons.HPA_RNA_EXPR;
                 }
 
-                Set<ExprTuple> organset = new HashSet<>();
+                HashMap<String,Integer> organs = new HashMap<>();
                 for (XRef xref : t.getLinks()) {
                     if (!xref.kind.equals(Expression.class.getName())) continue;
                     Expression expr = (Expression) xref.deRef();
@@ -179,22 +158,26 @@ public class ExpressionApp extends App {
                     if (expr.getSourceid() == null || !expr.getSourceid().equals(ds)) continue;
 
                     // map to canonical organ terms
-                    ExprTuple tuple = new ExprTuple();
                     for (String key : onm.keySet()) {
                         if (expr.getTissue().toLowerCase().contains(key)) {
-                            tuple.tissue = onm.get(key);
-                            if (ds.equals(Commons.IDG_EXPR)) tuple.level = expr.getConfidence().intValue();
+
+                            // derive the expr level or confidence
+                            Integer theLevel = 0;
+                            if (ds.equals(Commons.IDG_EXPR)) theLevel = expr.getConfidence().intValue();
                             else {
-                                if (expr.getQualValue().toLowerCase().equals("Low")) tuple.level = 0;
-                                else if (expr.getQualValue().toLowerCase().equals("Medium")) tuple.level = 1;
-                                else if (expr.getQualValue().toLowerCase().equals("High")) tuple.level = 2;
+                                if (expr.getQualValue().toLowerCase().equals("low")) theLevel = 0;
+                                else if (expr.getQualValue().toLowerCase().equals("medium")) theLevel = 1;
+                                else if (expr.getQualValue().toLowerCase().equals("high")) theLevel = 2;
                             }
-                            organset.add(tuple);
+
+                            String tissue = onm.get(key);
+                            if (organs.containsKey(tissue)) {
+                                Integer level = organs.get(tissue);
+                                if (theLevel > level) organs.put(tissue, theLevel);
+                            } else organs.put(tissue, theLevel);
                         }
                     }
                 }
-
-                List<ExprTuple> organs = new ArrayList<>(organset);
 
                 String[] confidenceColorsIDG = new String[]{
                         "#ffffff", "#EDF8E9", "#BAE4B3", "#74C476", "#31A354", "#006D2C"
@@ -219,15 +202,15 @@ public class ExpressionApp extends App {
                     doc = XML.fromInputStream(fis, "UTF-8");
                 }
 
-                for (ExprTuple organ : organs) {
-                    Node node = XPath.selectNode("//*[@id='" + organ.tissue + "']", doc);
+                for (String tissue : organs.keySet()) {
+                    Node node = XPath.selectNode("//*[@id='" + tissue + "']", doc);
                     NamedNodeMap attributes = node == null ? null : node.getAttributes();
                     if (attributes == null) continue;
                     Node attrNode = attributes.getNamedItem("fill");
                     if (ds.equals(Commons.IDG_EXPR))
-                        attrNode.setNodeValue(confidenceColorsIDG[organ.level]);
+                        attrNode.setNodeValue(confidenceColorsIDG[organs.get(tissue)]);
                     else
-                        attrNode.setNodeValue(confidenceColorsOther[organ.level]);
+                        attrNode.setNodeValue(confidenceColorsOther[organs.get(tissue)]);
                     attributes.setNamedItem(attrNode);
                 }
                 return ok(xml2str(doc));
