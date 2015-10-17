@@ -1079,11 +1079,22 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (ligand == null) {
                     // new ligand
                     String smiles = rset.getString("smiles");
+                    String ref = rset.getString("reference");
+                    String source = rset.getString("source");
+                    
                     ligand = new Ligand (drug);
                     ligand.synonyms.add(KeywordFactory.registerIfAbsent
-                                        (IDG_LIGAND, drug, null));
+                                        (IDG_LIGAND, drug, ref));
+                    if (source != null) {
+                        ligand.properties.add
+                            (KeywordFactory.registerIfAbsent
+                             (LIGAND_SOURCE, source, ref));
+                    }
+                    
                     ligand.description = rset.getString("nlm_drug_info");
                     if (smiles != null) {
+                        ligand.properties.add
+                            (new Text (ChEMBL_SMILES, smiles));
                         Structure struc = StructureProcessor.instrument
                             (smiles, null, false);
                         struc.save();
@@ -1213,6 +1224,8 @@ public class TcrdRegistry extends Controller implements Commons {
                     }
 
                     if (smiles != null) {
+                        ligand.properties.add
+                            (new Text (ChEMBL_SMILES, smiles));
                         Structure struc = StructureProcessor.instrument
                             (smiles, null, false);
                         struc.save();
@@ -2211,7 +2224,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where d.protein_id in (8721)\n"
                  //+"where c.id in (11521)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 //+"where b.tdl in ('Tclin','Tchem')\n"
+                 +"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"

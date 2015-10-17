@@ -23,7 +23,7 @@
 @_donut(f: Facet) = {
      donuts.push(new Morris.Donut({
         element: 'donut-@Util.sha1(f.getName())',
-        data: @HtmlFormat.raw(IDGApp.getFacetJson(f).toString),
+        data: @HtmlFormat.raw(App.getFacetJson(f).toString),
 	resize: false,
 	@if(f.getName().equals(IDG_DEVELOPMENT)) {
 	   colors: [@for(v <- f.getValues()) {

@@ -81,7 +81,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
           <th><button id="cb-addall" alt="Toggle check all"
 	  	      style="padding: 3px"
 	  	      class="btn btn-default" type="button">
-	      <i class="fa fa-check"></i></button></th>
+	      <i class="fa fa-check fa-fw"></i></button></th>
             <th>Name</th>
             <th>Development Level</th>
             <th>Target Family</th>
@@ -327,10 +327,10 @@ $(document).ready(function () {
         var table = $("#target-table");
         if (cb.hasClass('fa-check')) {
             $ ( 'td input:checkbox',table ).prop ( 'checked', true ) ;
-            $("#cb-addall" ).html('<i class="fa fa-remove"></i>');
+            $("#cb-addall" ).html('<i class="fa fa-remove fa-fw"></i>');
         } else {
             $ ( 'td input:checkbox',table ).prop ( 'checked', false ) ;
-            $("#cb-addall" ).html('<i class="fa fa-check"></i>');
+            $("#cb-addall" ).html('<i class="fa fa-check fa-fw"></i>');
         }
     });
     $("#sc-add-selected" ).click(function(e) {

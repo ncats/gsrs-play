@@ -25,7 +25,13 @@
 <div class="container-fluid">
   <div class="col-md-12">
     <div class="page-header">
+    @defining(ligand.getProperty(LIGAND_SOURCE)) { source =>
+      @if(source != null) {
+      <h1><a href='@HtmlFormat.raw(source.asInstanceOf[Keyword].href)'>@ligand.getName</a> <i class="fa fa-external-link"></i></h1>
+      } else {
       <h1>@ligand.getName()</h1>
+      }
+    }  
       @if(ligand.description != null) {
 	<div class="panel panel-default">
 	  <div class="panel-body">

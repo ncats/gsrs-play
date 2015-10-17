@@ -2680,35 +2680,4 @@ public class IDGApp extends App implements Commons {
         }
         return nodes;
     }
-
-    public static JsonNode getFacetJson (Facet facet) {
-        return getFacetJson (facet, 6);
-    }
-    
-    public static JsonNode getFacetJson (Facet facet, int max) {
-        ObjectMapper mapper = new ObjectMapper ();
-        ArrayNode nodes = mapper.createArrayNode();
-        
-        int others = 0;
-        for (TextIndexer.FV fv : facet.getValues()) {
-            if (nodes.size() < max) {
-                ObjectNode n = mapper.createObjectNode();
-                n.put("label", fv.getLabel());
-                n.put("value", fv.getCount());
-                nodes.add(n);
-            }
-            else {
-                others += fv.getCount();
-            }
-        }
-        
-        if (others > 0) {
-            ObjectNode n = mapper.createObjectNode();
-            n.put("label", "Others");
-            n.put("value", others);
-            nodes.add(n);
-        }
-        
-        return nodes;
-    }
 }
