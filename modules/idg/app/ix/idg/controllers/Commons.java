@@ -92,4 +92,6 @@ public interface Commons {
     public static final String UNIPROT_NAME = "UniProt Name";
     public static final String UNIPROT_TISSUE = "UniProt Tissue";
     public static final String UNIPROT_SEQUENCE = "UniProt Sequence";
+
+    public static final String ENTREZ_GENE = "Entrez Gene";
 }
