@@ -253,10 +253,16 @@ public class App extends Authentication {
      */
     static Pattern regex = Pattern.compile("\"([^\"]+)");
     public static String quote (String s) {
-        Matcher m = regex.matcher(s);
-        if (m.find())
-            return s; // nothing to do.. already have quote
-        return "\""+s+"\"";
+        try {
+            Matcher m = regex.matcher(s);
+            if (m.find())
+                return s; // nothing to do.. already have quote
+            return "\""+URLEncoder.encode(s, "utf8")+"\"";
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return s;
     }
     
     public static String decode (String s) {
@@ -499,7 +505,7 @@ public class App extends Authentication {
                 if (q.length() > 0)
                     q.append('&');
                 q.append(me.getKey()+"="
-                         + ("q".equals(me.getKey()) ? quote (s) : s));
+                         + ("q".equals(me.getKey()) ? encode (s) : s));
             }
         }
         return q.toString();

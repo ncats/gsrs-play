@@ -285,7 +285,7 @@ $(document).ready(function () {
 
   new Kinome('kinome-canvas',
       '@routes.Assets.at("images/kinome200.png")',
-      '@ix.idg.controllers.routes.IDGApp.getKinases(null)'+'@HtmlFormat.raw(App.queryString("q", "facet"))'
+      '@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.getKinases(null)+App.queryString("q", "facet"))'
   );
   
 @defining(IDGApp.getHierarchyAsJson(ctx, DTO_PROTEIN_CLASS)) { json =>

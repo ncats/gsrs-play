@@ -24,15 +24,23 @@ import ix.ncats.controllers.App;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
+import play.libs.Akka;
 import play.cache.Cached;
 import play.db.ebean.Model;
 import play.mvc.Result;
 import play.mvc.BodyParser;
 import play.mvc.Call;
+
 import tripod.chem.indexer.StructureIndexer;
 import ix.seqaln.SequenceIndexer;
 
-import java.io.IOException;
+import akka.actor.ActorRef;
+import akka.actor.ActorSystem;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import akka.actor.UntypedActorFactory;
+
+import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.regex.*;
@@ -2251,7 +2259,7 @@ public class IDGApp extends App implements Commons {
                 }
             }
         }
-        
+        Logger.info(node.size()+" kinase(s) fetched!");
         return node;
     }
     
@@ -2312,7 +2320,7 @@ public class IDGApp extends App implements Commons {
         for (String s : args) {
             Logger.debug(" ++ "+s);
         }
-        Logger.debug("_getKinases: q="+q+" key="+key+" result="+result);
+        Logger.debug("_getKinases: q="+q+" key="+key+" result="+result+" size="+result.size());
         
         if (result.finished()) {
             return getOrElse (key+"/json", new Callable<JsonNode>() {
@@ -2336,60 +2344,24 @@ public class IDGApp extends App implements Commons {
         }
     }
 
-    static Payload getBatchPayload () throws Exception {
-        Payload payload = null;
-        Map<String, String[]> params = request().body().asFormUrlEncoded();
-        String[] values = params.get("q");
-        if (values != null && values.length > 0) {
-            String content = values[0];
-            payload = _payloader.createPayload
-                ("Resolver Query", "text/plain", content);
-            values = params.get("kind");
-            String kind = null;
-            if (values != null) {
-                kind = values[0];
-                if (Target.class.getName().equalsIgnoreCase(kind)
-                    || Ligand.class.getName().equalsIgnoreCase(kind)
-                    || Disease.class.getName().equalsIgnoreCase(kind)) {
-                    payload.addIfAbsent
-                        (KeywordFactory.registerIfAbsent
-                         (IDG_RESOLVER, kind, null));
-                    payload.update();
-                }
-                else {
-                    Logger.debug("Bogus kind: "+kind);
-                }
-            }
-            Logger.debug("batchResolver: kind="+kind
-                         +" => payload "+payload.id);
-        }
-        return payload;
-    }
-
-    @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, 
-                   maxLength = 100000)
-    public static Result resolveBatch () {
+    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 100000)
+    public static Result resolveBatch (String kind, String format) {
         if (request().body().isMaxSizeExceeded()) {
+            String type = request().getHeader("Content-Type");
+            if (!"text/plain".equals(type))
+                return badRequest ("Invalid Content-Type: "+type
+                                   +"; only \"text/plain\" is allowed!");
             return badRequest ("Input is too large!");
         }
 
         try {
-            Payload payload = getBatchPayload ();
-            if (payload != null) {
-                String kind = null;
-                for (Value v : payload.properties)
-                    if (v.label.equals(IDG_RESOLVER)) {
-                        kind = ((Keyword)v).term;
-                        break;
-                    }
-                return resolve (payload.id.toString(), kind);
-            }
+            String text = request().body().asText();
+            return resolve (text, format, kind);
         }
         catch (Exception ex) {
             ex.printStackTrace();
             return _internalServerError (ex);
         }
-        return badRequest ("No \"q\" parameter specified!");
     }
 
     public static ArrayNode _resolveAsJson (String q, String kind) {
@@ -2427,37 +2399,201 @@ public class IDGApp extends App implements Commons {
             });
     }
 
-    public static Result resolve (String q, String kind) {
-        Logger.debug("resolve: q="+q+" kind="+kind);
+    static class ResolveChunker {
+        final public String text;
+        final public String kind;
+        final public String sep;
+        final public PipedInputStream pis;
+        
+        ResolveChunker (String text, String kind, String sep,
+                        PipedInputStream pis) {
+            this.text = text;
+            this.kind = kind;
+            this.sep = sep;
+            this.pis = pis;
+        }
+    }
+    
+    static class ResolveChunkActor extends UntypedActor {
+        @Override
+        public void onReceive (Object obj) {
+            if (obj instanceof ResolveChunker) {
+                ResolveChunker chunker = (ResolveChunker)obj;
+                try {
+                    PrintStream ps = new PrintStream
+                        (new PipedOutputStream (chunker.pis));
+                    resolveTarget (chunker.text, chunker.sep, ps);
+                    ps.close();
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    static void resolveTarget (String text, String sep, PrintStream ps)
+        throws Exception {
+        DefaultTokenizer tokenizer = new DefaultTokenizer ();
+        ps.println("ID"+sep+"Family"+sep+"TDL");
+        for (Enumeration<String> en = tokenizer.tokenize(text);
+             en.hasMoreElements();) {
+            final String token = en.nextElement();
+            
+            Target t = getOrElse (Util.sha1(token), new Callable<Target> () {
+                    public Target call () throws Exception {
+                        List<Target> targets = TargetFactory.finder
+                        .select("idgFamily,idgTDL,novelty,antibodyCount,"
+                                +"pubmedCount,patentCount,grantCount,"
+                                +"r01Count,grantTotalCost")
+                        .where().eq("synonyms.term", token)
+                        .findList();
+                        if (!targets.isEmpty())
+                            return targets.iterator().next();
+                        return null;
+                    }
+                });
+            
+            if (t != null)
+                ps.println(token+sep+t.idgFamily+sep+t.idgTDL);
+        }
+    }
+    
+    public static InputStream resolveAsChunk
+        (final String q, final String kind, final String sep)
+        throws Exception {
+        final PipedInputStream pis = new PipedInputStream ();
+        ActorRef actor = Akka.system().actorOf
+            (Props.create(ResolveChunkActor.class));
+        actor.tell(new ResolveChunker (q, kind, sep, pis), ActorRef.noSender());
+        return pis;
+    }
+
+    public static Result resolve (String q, String format, String kind) {
+        Logger.debug("resolve: q="+q+" kind="+kind+" format="+format);
+
+        if ("target".equalsIgnoreCase(kind))
+            kind = Target.class.getName();
+        else if ("ligand".equalsIgnoreCase(kind))
+            kind = Ligand.class.getName();
+        else if ("disease".equalsIgnoreCase(kind))
+            kind = Disease.class.getName();
+        
         try {
-            String content = PayloadFactory.getString(q);
-            if (content != null) {
-                ArrayNode nodes = resolveAsJson (content, kind);
-                if (nodes.size() > 0)
-                    return ok (nodes);
+            Payload payload = PayloadFactory.getPayload(UUID.fromString(q));
+            if (payload != null) {
+                if (kind == null) {
+                    // get kind from the
+                    for (Value v : payload.properties) {
+                        if (IDG_RESOLVER.equalsIgnoreCase(v.label)) {
+                            kind = ((Keyword)v).term;
+                            break;
+                        }
+                    }
+
+                    if (kind == null) {
+                        kind = Target.class.getName();                  
+                        Logger.warn("Payload "+payload.id+" has no "
+                                    +IDG_RESOLVER+" property; assuming "
+                                    +kind);
+                    }
+                }
+
+                String content = PayloadFactory.getString(payload.id);
+                response().setHeader(ETAG, q);
+                if ("json".equalsIgnoreCase(format)) {
+                    ArrayNode nodes = resolveAsJson (content, kind);
+                    if (nodes.size() > 0)
+                        return ok (nodes);
+                }
+                else if ("csv".equalsIgnoreCase(format)) {
+                    return ok (resolveAsChunk (content, kind, ","));
+                }
+                else if ("txt".equalsIgnoreCase(format)) {
+                    return ok (resolveAsChunk (content, kind, "\t"));
+                }
+                else 
+                    return badRequest ("Unknown resolve format: "+format);
             }
         }
         catch (IllegalArgumentException ex) {
             // not a payload id
+            Logger.warn("resolver: input is not a payload; treat as-is!");
         }
         catch (Exception ex) {
             ex.printStackTrace();
             return _internalServerError (ex);
         }
+
+        if (kind == null)
+            kind = Target.class.getName();
         
         try {
-            ArrayNode nodes = resolveAsJson (q, kind);
-            if (nodes.size() > 0)
-                return ok (nodes);
-
-            return notFound (nodes);
+            // first save the payload 
+            Payload payload = _payloader.createPayload
+                ("Resolver Query", "text/plain", q);
+            if (payload != null) {
+                payload.addIfAbsent
+                    (KeywordFactory.registerIfAbsent
+                     (IDG_RESOLVER, kind, null));
+                payload.update();
+                Logger.debug("resolver: kind="+kind
+                             +" => payload "+payload.id);
+                response().setHeader(ETAG, payload.id.toString());              
+            }
+            
+            if ("json".equalsIgnoreCase(format)) {
+                ArrayNode nodes = resolveAsJson (q, kind);
+                if (nodes.size() > 0)
+                    return ok (nodes);
+            }
+            else if ("csv".equalsIgnoreCase(format)) {
+                return ok (resolveAsChunk (q, kind, ","));
+            }
+            else if ("txt".equalsIgnoreCase(format)) {
+                return ok (resolveAsChunk (q, kind, "\t"));
+            }
+            else 
+                return badRequest ("Unknown resolve format: "+format);
+            
+            return ok (payload.id.toString());
         }
         catch (Exception ex) {
             ex.printStackTrace();
             return _internalServerError (ex);
         }
     }
-
+    
+    static Payload getBatchPayload () throws Exception {
+        Payload payload = null;
+        Map<String, String[]> params = request().body().asFormUrlEncoded();
+        String[] values = params.get("q");
+        if (values != null && values.length > 0) {
+            String content = values[0];
+            payload = _payloader.createPayload
+                ("Resolver Query", "text/plain", content);
+            values = params.get("kind");
+            String kind = null;
+            if (values != null) {
+                kind = values[0];
+                if (Target.class.getName().equalsIgnoreCase(kind)
+                    || Ligand.class.getName().equalsIgnoreCase(kind)
+                    || Disease.class.getName().equalsIgnoreCase(kind)) {
+                    payload.addIfAbsent
+                        (KeywordFactory.registerIfAbsent
+                         (IDG_RESOLVER, kind, null));
+                    payload.update();
+                }
+                else {
+                    Logger.debug("Bogus kind: "+kind);
+                }
+            }
+            Logger.debug("batchResolver: kind="+kind
+                         +" => payload "+payload.id);
+        }
+        return payload;
+    }
+    
     @BodyParser.Of(value = BodyParser.FormUrlEncoded.class, 
                    maxLength = 100000)
     public static Result batch () {
