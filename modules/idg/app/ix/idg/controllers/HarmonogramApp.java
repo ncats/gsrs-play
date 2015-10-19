@@ -206,58 +206,59 @@ public class HarmonogramApp extends App {
         });
 
         final String theQuery = q.toLowerCase(); // to check for the special cases: all, tdark, tclin, etc
-        HashMap<String, Double> attrMap = getOrElse(theQuery, new Callable<HashMap<String, Double>>() {
-            @Override
-            public HashMap<String, Double> call() throws Exception {
-                List<HarmonogramCDF> hgs;
-                int ntarget = 1;
-                if (theQuery.equals("all")) {
-                    hgs = HarmonogramFactory.finder.all();
-                    ntarget = TargetFactory.finder.findRowCount();
-                } else if (("tdark tclin tchem tbio").contains(theQuery)) {
-                    List<Target> ts;
-                    if (theQuery.equals("tdark"))
-                        ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tdark).findList();
-                    else if (theQuery.equals("tclin"))
-                        ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tclin).findList();
-                    else if (theQuery.equals("tchem"))
-                        ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tchem).findList();
-                    else
-                        ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tbio).findList();
-                    ntarget = ts.size();
-                    List<String> uniprots = new ArrayList<>();
-                    for (Target t : ts) uniprots.add(getId(t));
-                    hgs = HarmonogramFactory.finder.where().in("uniprotId", uniprots).findList();
-                } else
-                    hgs = HarmonogramFactory.finder.where().in("uniprotId", q).findList();
-                Logger.debug("Working with " + hgs.size() + " CDF's from " + ntarget + " targets for for q = " + q);
+        List<HarmonogramCDF> hgs;
+        int ntarget = 1;
+        if (theQuery.equals("all")) {
+            hgs = HarmonogramFactory.finder.all();
+            ntarget = TargetFactory.finder.findRowCount();
+        } else if (("tdark tclin tchem tbio").contains(theQuery)) {
+            List<Target> ts;
+            if (theQuery.equals("tdark"))
+                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tdark).findList();
+            else if (theQuery.equals("tclin"))
+                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tclin).findList();
+            else if (theQuery.equals("tchem"))
+                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tchem).findList();
+            else
+                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tbio).findList();
+            ntarget = ts.size();
+            List<String> uniprots = new ArrayList<>();
+            for (Target t : ts) uniprots.add(getId(t));
+            hgs = HarmonogramFactory.finder.where().in("uniprotId", uniprots).findList();
+        } else
+            hgs = HarmonogramFactory.finder.where().in("uniprotId", q).findList();
+        Logger.debug("Working with " + hgs.size() + " CDF's from " + ntarget + " targets for q = " + q);
 
-                HashMap<String, Double> attrMap = new HashMap<>();
-                for (HarmonogramCDF hg : hgs) {
-                    String attrGroup = hg.getAttrGroup();
-                    if (fieldName.equals("attr_type"))
-                        attrGroup = hg.getAttrType();
-                    else if (fieldName.equals("data_type"))
-                        attrGroup = hg.getDataType();
-                    else if (fieldName.equals("attr_group"))
-                        attrGroup = hg.getAttrGroup();
-                    Double value;
-                    if (attrMap.containsKey(attrGroup)) value = attrMap.get(attrGroup) + hg.getCdf();
-                    else value = hg.getCdf();
-                    attrMap.put(attrGroup, value);
-                }
+        HashMap<String, Double> attrMap = new HashMap<>();
+        for (HarmonogramCDF hg : hgs) {
+            String attrGroup = hg.getAttrGroup();
+            if (fieldName.equals("attr_type"))
+                attrGroup = hg.getAttrType();
+            else if (fieldName.equals("data_type"))
+                attrGroup = hg.getDataType();
+            else if (fieldName.equals("attr_group"))
+                attrGroup = hg.getAttrGroup();
+            Double value;
+            if (attrMap.containsKey(attrGroup)) value = attrMap.get(attrGroup) + hg.getCdf();
+            else value = hg.getCdf();
+            attrMap.put(attrGroup, value);
+        }
 
-                // need to scale in case we were aggregating over target sets (all, Tdark, Tclin, etc)
-                double factor = 1.0;
-                if (theQuery.toLowerCase().equals("all")) factor = 1.0 / ntarget;
-                for (String key : attrMap.keySet()) {
-                    Double val = attrMap.get(key);
-                    val *= factor;
-                    attrMap.put(key, val);
-                }
-                return attrMap;
-            }
-        });
+        // need to scale in case we were aggregating over target sets (all, Tdark, Tclin, etc)
+        double factor = 1.0;
+        if (theQuery.toLowerCase().equals("all")) factor = 1.0 / ntarget;
+        for (String mkey : attrMap.keySet()) {
+            Double val = attrMap.get(mkey);
+            val *= factor;
+            attrMap.put(mkey, val);
+        }
+
+//        HashMap<String, Double> attrMap = getOrElse(theQuery, new Callable<HashMap<String, Double>>() {
+//            @Override
+//            public HashMap<String, Double> call() throws Exception {
+//                return attrMap;
+//            }
+//        });
         if (attrMap.isEmpty()) {
             return _notFound("No harmonogram data found for " + theQuery);
         }
