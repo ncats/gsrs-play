@@ -872,7 +872,7 @@
             </div>
             <div class="modal-body">
 	      <div class="row">
-		<div class="col-md-2">
+		<div class="col-md-3">
             <form>
                 <div class="form-group">
                     <label for="selectAggregationType">Aggregation Type</label>
@@ -883,14 +883,17 @@
                     </select>
                 </div>
             </form>
+            <label for="radar-ds-container">Data Sources</label>
+            <div id="radar-ds-container">
+
+            </div>
         </div>
-		<div class="col-md-8">
+		<div class="col-md-9">
 		  <div id="modal-radardiv"
 		       style="display: inline;"
 		       class="embed-responsive embed-responsive-4by3">
 		  </div>
 		</div>
-		<div class="col-md-2"></div>
 	      </div>
             </div>
         </div>
@@ -989,7 +992,8 @@ $(document).ready(function () {
           var chart = RadarChart.chart();
           chart.config({
               w:600, h:600,
-              axisText:true, levels:0, circles:true
+              axisText:true, levels:0, circles:true,
+              axisTextMouseOverFunc: showDataSources('#radar-ds-container', '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type')
           });
           var svg = d3.select("#modal-radardiv").append('svg' )
                   .attr("width", 600 )
@@ -1009,9 +1013,11 @@ $(document).ready(function () {
             var chart = RadarChart.chart();
             chart.config({
                 w:600, h:600,
-                axisText:true, levels:0, circles:true
+                axisText:true, levels:0, circles:true,
+                axisTextMouseOverFunc: showDataSources('#radar-ds-container', '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field='+aggType)
             });
             $("#modal-radardiv" ).empty();
+            $("#radar-ds-container" ).empty();
             var svg = d3.select("#modal-radardiv").append('svg' )
                 .attr("width", 600 )
                 .attr("height", 600)

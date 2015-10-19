@@ -152,6 +152,30 @@ public class HarmonogramApp extends App {
         return node;
     }
 
+    public static Result dataSources(String field, final String value) throws Exception {
+        if (field == null || field.trim().equals("") || value == null || value.trim().equals(""))
+            return _badRequest("Must specify a field name and value");
+
+        final String fieldName = field.split("-")[1];
+        final String key = "hg/ds/" + fieldName + "/" + value;
+        Set<String> ds = getOrElse(key, new Callable<Set<String>>() {
+            public Set<String> call() throws Exception {
+                List<HarmonogramCDF> cdfs = HarmonogramFactory.finder.select("dataSource").where().eq(fieldName, value).findList();
+                Set<String> ds = new HashSet<>();
+                for (HarmonogramCDF cdf : cdfs)
+                    ds.add(cdf.getDataSource());
+                return ds;
+            }
+        });
+        ObjectNode root = mapper.createObjectNode();
+        root.put("fieldName", fieldName);
+        root.put("value", value);
+        ArrayNode arr = mapper.createArrayNode();
+        for (String s : ds) arr.add(s);
+        root.put("ds", arr);
+        return ok(root);
+    }
+
     // only valid for single target
     public static Result _hgForRadar(String q, String type) throws Exception {
         if (q == null || q.contains(",") || !type.contains("-"))
