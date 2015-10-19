@@ -4,7 +4,9 @@
         
 <div>
     <span ng-show="@{scopeset}">
-        <rendered id = @{scopeset}.refuuid></rendered> 
+        <code>{{@{scopeset}.refPname}}</code>
+        <rendered id = @{scopeset}.refuuid></rendered>
+
     </span>
     <a role="button" aria-label="Select a Substance"  ng-click="openSelector('@{scopeset}')"><i class="fa fa-plus fa-2x success"></i></a>
 </div>
