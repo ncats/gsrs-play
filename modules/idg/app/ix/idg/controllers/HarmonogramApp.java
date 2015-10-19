@@ -188,6 +188,8 @@ public class HarmonogramApp extends App {
                 attrGroup = hg.getAttrType();
             else if (fieldName.equals("data_type"))
                 attrGroup = hg.getDataType();
+            else if (fieldName.equals("attr_group"))
+                attrGroup = hg.getAttrGroup();
             Double value;
             if (attrMap.containsKey(attrGroup)) value = attrMap.get(attrGroup) + hg.getCdf();
             else value = hg.getCdf();

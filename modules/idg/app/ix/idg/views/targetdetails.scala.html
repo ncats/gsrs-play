@@ -873,7 +873,17 @@
             <div class="modal-body">
 	      <div class="row">
 		<div class="col-md-2">
-		</div>
+            <form>
+                <div class="form-group">
+                    <label for="selectAggregationType">Aggregation Type</label>
+                    <select id="select-agg">
+                        <option value="radar-attr_type">Attribute Type</option>
+                        <option value="radar-attr_group">Attribute Group</option>
+                        <option value="radar-data_type">Data Type</option>
+                    </select>
+                </div>
+            </form>
+        </div>
 		<div class="col-md-8">
 		  <div id="modal-radardiv"
 		       style="display: inline;"
@@ -989,6 +999,28 @@ $(document).ready(function () {
 	     ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
       }
    });
+
+  $("#select-agg" ).on('change', function() {
+    var aggType = $(this ).val();
+    $.ajax({
+        url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+'@IDGApp.getId(target)'+'&type='+aggType,
+        dataType:"json",
+        success:function(data) {
+            var chart = RadarChart.chart();
+            chart.config({
+                w:600, h:600,
+                axisText:true, levels:0, circles:true
+            });
+            $("#modal-radardiv" ).empty();
+            var svg = d3.select("#modal-radardiv").append('svg' )
+                .attr("width", 600 )
+                .attr("height", 600)
+                .append('g').classed('focus', 1).datum(data).call(chart);
+            $("#modalLabelRadar" ).html
+                ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
+        }
+    });
+});
 
    new Morris.Line({
       element: 'patent-line-plot',

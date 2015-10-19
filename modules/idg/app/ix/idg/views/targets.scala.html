@@ -168,9 +168,19 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
             <div class="modal-body">
 	      <div class="row">
 		<div class="col-md-2">
+            <form>
+                <div class="form-group">
+                    <label for="selectAggregationType">Aggregation Type</label>
+                    <select id="select-agg">
+                        <option value="radar-attr_type">Attribute Type</option>
+                        <option value="radar-attr_group">Attribute Group</option>
+                        <option value="radar-data_type">Data Type</option>
+                    </select>
+                </div>
+            </form>
 		</div>
 		<div class="col-md-8">
-		  <div id="modal-radardiv"
+		  <div id="modal-radardiv" target=""
 		       style="display: inline;"
 		       class="embed-responsive embed-responsive-4by3">
 		  </div>
@@ -377,6 +387,30 @@ $(document).ready(function () {
                     w:600, h:600,
                     axisText:true, levels:0, circles:true
                 });
+                $("#modal-radardiv" ).attr("target", target);
+                var svg = d3.select("#modal-radardiv").append('svg' )
+                    .attr("width", 600 )
+                    .attr("height", 600)
+                    .append('g').classed('focus', 1).datum(data).call(chart);
+                $("#modalLabelRadar" ).text("Data type summary for "+target);
+                $("#modal-radar" ).modal("show");
+            }
+        });
+    });
+
+    $("#select-agg" ).on('change', function() {
+        var aggType = $(this ).val();
+        var target = $("#modal-radardiv" ).attr("target");
+        $.ajax({
+            url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType,
+            dataType:"json",
+            success:function(data) {
+                var chart = RadarChart.chart();
+                chart.config({
+                    w:600, h:600,
+                    axisText:true, levels:0, circles:true
+                });
+                $("#modal-radardiv" ).empty();
                 var svg = d3.select("#modal-radardiv").append('svg' )
                     .attr("width", 600 )
                     .attr("height", 600)
@@ -389,10 +423,11 @@ $(document).ready(function () {
 
     $("#sc-empty").click(function (e) {
         $.get('@ix.idg.controllers.routes.DossierApp.emptyCart', function (d) {
-	    console.log(d);
-	    $("#sc-count" ).html('');
-	});
+    	    console.log(d);
+    	    $("#sc-count" ).html('');
+    	});
     });
+
 });
 
 function showLoadModal () {
