@@ -392,6 +392,7 @@ $(document).ready(function () {
                     axisTextMouseOverFunc: showDataSources('#radar-ds-container', '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type')
                 });
                 $("#modal-radardiv" ).attr("target", target);
+                $("#radar-ds-container" ).empty();
                 var svg = d3.select("#modal-radardiv").append('svg' )
                     .attr("width", 600 )
                     .attr("height", 600)
