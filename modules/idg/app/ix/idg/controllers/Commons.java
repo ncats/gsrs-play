@@ -40,8 +40,6 @@ public interface Commons {
     public static final String HPM_EXPR = "HPM Expression";
     public static final String HPA_RNA_TISSUE = "HPA RNA Tissue";
     public static final String HPA_RNA_EXPR = "HPA RNA Expression";
-    public static final String HPA_IHC_TISSUE = "HPA IHC Tissue";
-    public static final String HPA_IHC_EXPR = "HPA IHC Expression";
     public static final String HPA_PROTEIN_TISSUE = "HPA Protein Tissue";
     public static final String HPA_PROTEIN_EXPR = "HPA Protein Expression";
 

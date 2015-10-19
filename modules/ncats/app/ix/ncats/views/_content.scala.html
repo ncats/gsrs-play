@@ -17,7 +17,9 @@
       } else {
       <div class="col-md-12">
       }
-      @carousel
+      @if(total > 0) {	
+         @carousel
+      }
       @defining(App.getUnspecifiedFacets(facets)) { unspecf =>
          @if(request().getQueryString("q") != null || !unspecf.isEmpty()) {
 	  <div style="overflow:auto;"
@@ -36,12 +38,12 @@
            case "sequence" => {
 	      <span><h4>Sequence Query:&nbsp;
 		  <code>@ix.ncats.controllers.App.getSequence(request().getQueryString("q"), 50)</code></h4></span> <div id="searching"></div>
-	      }
+	   }
            case "batch" => {
 	      <span><h4>Batch Query:&nbsp;
 		  <code>@ix.ncats.controllers.App.getPayload(request().getQueryString("q"), 50)</code></h4></span> <div id="searching"></div>
 	    }
-  	    case "Substructure" => {
+  	    case "substructure" => {
 	      <span><h4>Substructure Query:&nbsp; <a  href="#"
            tabindex="-1"
            data-toggle="popover"
@@ -52,7 +54,7 @@
 	   data-html="true"
            data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a></h4></span><div id="searching"></div>
 	    }
-	     case "Similarity" => {
+	     case "similarity" => {
 	      <span><h4>Similarity Query:&nbsp; <a  href="#"
            tabindex="-1"
            data-toggle="popover"
@@ -68,7 +70,7 @@
    	         <span><h4>Query:&nbsp;<code>@request().getQueryString("q")</code>
               @if(total == 0) {
                   <span  class="text-center" style="color: #000000;"><h4>Didn't find what you're looking for?
-                      <a href="mailto:pharos@@mail.nih.gov?subject=Empty result for query '@request().getQueryString("q")' and entity @kind" class="alert-link">Contact us</a></h4></span>
+                      <a href="mailto:pharos@@mail.nih.gov?subject=Empty result for query '@request().uri'" class="alert-link">Contact us</a></h4></span>
               }
 
           } else {

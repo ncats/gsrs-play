@@ -81,8 +81,9 @@ current, rows, total, pages, facets){ @ligandmenu() }{
   }
 </ul>
 }(HtmlFormat.empty){
-<div class="collapse in" id="carousel-highlight" aria-expanded="true">	
- <div class="ContentFlow" style="height:300px;">
+ @if(!ligands.isEmpty) {
+ <div class="collapse in" id="carousel-highlight" aria-expanded="true">	
+  <div class="ContentFlow" style="height:300px;">
    <div class="loadIndicator"><div class="indicator"></div></div>
    <div class="flow">
      @for(lig <- ligands) {
@@ -97,8 +98,11 @@ current, rows, total, pages, facets){ @ligandmenu() }{
      }
    </div>
    <div class="globalCaption"></div>
+  </div>
  </div>
-</div>
+ } else {
+ <div></div>
+ }
 }
 
 <head>

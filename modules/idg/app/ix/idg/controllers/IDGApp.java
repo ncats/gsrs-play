@@ -436,10 +436,13 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
-        IDG_TISSUE,
+        //IDG_TISSUE,
         GTEx_TISSUE,
-        HPM_TISSUE,
-        HPA_RNA_TISSUE
+        "R01 Grant Count",
+        "PubMed Count",
+        "Patent Count"
+        //HPM_TISSUE,
+        //HPA_RNA_TISSUE
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -449,12 +452,12 @@ public class IDGApp extends App implements Commons {
     };
 
     public static final String[] LIGAND_FACETS = {
-        WHO_ATC,
+        //WHO_ATC,
         //IDG_DRUG,
         IDG_DEVELOPMENT,
         IDG_FAMILY,
-        PHARMALOGICAL_ACTION
-        //UNIPROT_TARGET
+        PHARMALOGICAL_ACTION,
+        LIGAND_SOURCE
     };
 
     public static final String[] ALL_FACETS = {
@@ -1369,7 +1372,7 @@ public class IDGApp extends App implements Commons {
             }
             else if ("substructure".equalsIgnoreCase(t)) {
                 String url = routes.IDGApp.ligands(q, 8, 1).url()
-                    +"&type="+t;
+                    +"&type=substructure";
                 return redirect (url);
             }
             else if ("similarity".equalsIgnoreCase(t)) {
@@ -1378,7 +1381,7 @@ public class IDGApp extends App implements Commons {
                     cutoff = "0.8";
                 }
                 String url = routes.IDGApp.ligands(q, 8, 1).url()
-                    +"&type="+t+"&cutoff="+cutoff;
+                    +"&type=similarity&cutoff="+cutoff;
                 return redirect (url);
             }
             else if ("sequence".equalsIgnoreCase(t)) {
@@ -1387,7 +1390,7 @@ public class IDGApp extends App implements Commons {
                     iden = "0.5";
                 }
                 String url = routes.IDGApp.targets(q, 10, 1).url()
-                    +"&type="+t+"&identity="+iden;
+                    +"&type=sequence&identity="+iden;
                 return redirect (url);
             }
             

@@ -44,9 +44,11 @@
       <div class="col-md-4">
 	<div class="panel panel-default">
 	  <div class="panel-body">
+          @defining(IDGApp.getStructure(ligand)) { struc =>
+            @if(struc != null) {
 	    <center>
-	      <img alt="Structure of @ligand.getName()"
-		   src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(ligand).getId,"svg",200)'>
+	          <img alt="Structure of @ligand.getName()"
+		       src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",200)'>
 	    </center>
 	    <button type="button" class="btn btn-default"
 	            data-toggle="modal" data-target="#strucModal"
@@ -54,6 +56,8 @@
 	            aria-label="Left Align" style="float:right;">
 	       <span class="fa fa-external-link" aria-hidden="true"></span>
 	    </button>
+	    }
+	  }
 	  </div>
 	</div>
 	<div class="panel panel-default">

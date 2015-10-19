@@ -240,7 +240,7 @@ public class TcrdRegistry extends Controller implements Commons {
             
             for (Target t : TARGETS) {
                 try {
-                    t.update();
+                    //t.update();
                     INDEXER.update(t);
                 }
                 catch (Exception ex) {
@@ -250,7 +250,7 @@ public class TcrdRegistry extends Controller implements Commons {
             
             for (Ligand l : LIGS) {
                 try {
-                    l.update();
+                    //l.update();
                     INDEXER.update(l);              
                 }
                 catch (Exception ex) {
@@ -260,7 +260,7 @@ public class TcrdRegistry extends Controller implements Commons {
 
             for (Disease d : DISEASES.values()) {
                 try {
-                    d.update();             
+                    //d.update();             
                     INDEXER.update(d);              
                 }
                 catch (Exception ex) {
@@ -579,22 +579,41 @@ public class TcrdRegistry extends Controller implements Commons {
                 if (expr.source.startsWith("GTEx")) {
                     sourceUrl = "http://www.gtexportal.org/";
                     expr.sourceid = GTEx_EXPR;
-                } else if (expr.source.startsWith("HPM Gene")) {
+                    Keyword tissue = KeywordFactory.registerIfAbsent
+                        (GTEx_TISSUE, expr.tissue, null);
+                    target.addIfAbsent((Value)tissue);
+                }
+                else if (expr.source.startsWith("HPM Gene")) {
                     sourceUrl = "http://www.humanproteomemap.org";
                     expr.sourceid = HPM_EXPR;
-                } else if (expr.source.startsWith("JensenLab Text Mining")) {
+                    Keyword tissue = KeywordFactory.registerIfAbsent
+                        (HPM_TISSUE, expr.tissue, null);
+                    target.addIfAbsent((Value)tissue);
+                }
+                else if (expr.source.startsWith("JensenLab Text Mining")) {
                     sourceUrl = "";
-                } else if (expr.source.startsWith("JensenLab Knowledge UniProtKB-RC")) {
+                }
+                else if (expr.source.startsWith
+                           ("JensenLab Knowledge UniProtKB-RC")) {
                     sourceUrl = "http://tissues.jensenlab.org";
                     expr.sourceid = IDG_EXPR;
-                } else if (expr.source.startsWith("HPA")) {
+                    Keyword tissue = KeywordFactory.registerIfAbsent
+                        (IDG_TISSUE, expr.tissue, null);
+                    target.addIfAbsent((Value)tissue);
+                }
+                else if (expr.source.startsWith("HPA")) {
                     sourceUrl = "http://tissues.jensenlab.org";
                     expr.sourceid = expr.source+" Expression";
-                } else if (expr.source.startsWith("JensenLab Experiment")) {
+                    Keyword tissue = KeywordFactory.registerIfAbsent
+                        (expr.source+" Tissue", expr.tissue, null);
+                    target.addIfAbsent((Value)tissue);
+                }
+                else if (expr.source.startsWith("JensenLab Experiment")) {
                     sourceUrl = "http://tissues.jensenlab.org";
                     String t = expr.source.substring("JensenLab Experiment".length()+1).trim();
                     expr.sourceid = t+" Expression";
-                } else
+                }
+                else
                     Logger.warn("Unknown expression \""+expr.source
                             +"\" for target "+target.id);
 
@@ -1015,19 +1034,10 @@ public class TcrdRegistry extends Controller implements Commons {
                 String chemblId = rset.getString("cmpd_chemblid");
                 String drug = rset.getString("drug");
                 
-                Ligand ligand = null;
-                if (chemblId != null) {
-                    List<Ligand> ligands = LigandFactory.finder.where()
-                        .eq("synonyms.term", chemblId).findList();
-                    ligand = ligands.isEmpty() ? null
-                        : ligands.iterator().next();
-                }
-                else { //
-                    List<Ligand> ligands = LigandFactory.finder.where()
-                        .eq("synonyms.term", drug).findList();
-                    ligand = ligands.isEmpty() ? null
-                        : ligands.iterator().next();
-                }
+                List<Ligand> ligands = LigandFactory.finder.where()
+                    .eq("synonyms.term", drug).findList();
+                Ligand ligand = ligands.isEmpty() ? null
+                    : ligands.iterator().next();
 
                 if (ligand == null) {
                     // new ligand
@@ -1043,7 +1053,7 @@ public class TcrdRegistry extends Controller implements Commons {
                             (KeywordFactory.registerIfAbsent
                              (LIGAND_SOURCE, source, ref));
                     }
-                    
+
                     ligand.description = rset.getString("nlm_drug_info");
                     if (smiles != null) {
                         ligand.properties.add
@@ -1073,7 +1083,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     ligand.addIfAbsent((Value)chembl.getSource());
                 }
 
-                XRef tref = new XRef (target);
+                XRef tref = ligand.addIfAbsent(new XRef (target));
                 tref.properties.add
                         (KeywordFactory.registerIfAbsent
                                 (IDG_DEVELOPMENT, target.idgTDL.name, null));
@@ -1081,7 +1091,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     (KeywordFactory.registerIfAbsent
                      (IDG_FAMILY, target.idgFamily, null));
                 
-                XRef lref = new XRef (ligand);
+                XRef lref = target.addIfAbsent(new XRef (ligand));
                 lref.properties.add
                     (KeywordFactory.registerIfAbsent
                      (IDG_LIGAND, ligand.getName(), null));
@@ -1104,14 +1114,13 @@ public class TcrdRegistry extends Controller implements Commons {
                          "CHEMBL".equalsIgnoreCase(source) ? null
                          : rset.getString("reference"));
                     
-                    tref.properties.add(kw);
-                    lref.properties.add(kw);
+                    tref.addIfAbsent((Value)kw);
+                    lref.addIfAbsent((Value)kw);
                 }
-                
-                target.links.add(lref);
-                ligand.links.add(tref);
 
                 try {
+                    tref.save();
+                    lref.save();
                     ligand.update();
                     target.update();
                 }
