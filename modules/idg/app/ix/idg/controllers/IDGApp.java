@@ -2719,4 +2719,26 @@ public class IDGApp extends App implements Commons {
         }
         return nodes;
     }
+
+    public static Map<Long,Long> getPatentInfo(Target target) {
+        Map<Long, Long> ent = new HashMap<Long, Long>();
+        for (XRef ref : target.links) {
+            if (Timeline.class.getName().equals(ref.kind)) {
+                try {
+                    Timeline tl = (Timeline)ref.deRef();
+                    if ("Patent Count".equals(tl.name)) {
+                        for (Event e : tl.events) {
+                            ent.put(e.start, e.end);
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't dereference link "
+                            +ref.kind+":"+ref.refid);
+                }
+            }
+        }
+        return ent;
+    }
 }
