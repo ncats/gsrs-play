@@ -80,6 +80,9 @@ public class GinasLoad extends App {
     public static boolean OLD_LOAD =
         Play.application().configuration()
         .getString("ix.ginas.loader", "new").equalsIgnoreCase("old");
+    public static boolean ALLOW_LOAD =
+            Play.application().configuration()
+            .getBoolean("ix.ginas.allowloading", true);
         
     public static final String[] ALL_FACETS = {
         "Job Status"
@@ -144,7 +147,7 @@ public class GinasLoad extends App {
     }
 
     public static Result load () {
-        if (Play.isProd()) {
+        if (!ALLOW_LOAD) {
             return redirect (ix.ginas.controllers.routes.GinasFactory.index());
         }
         return ok (ix.ginas.views.html.admin.load.render());
@@ -152,7 +155,7 @@ public class GinasLoad extends App {
     
     public static Result loadJSON () {
         
-        if (Play.isProd()) {
+        if (!ALLOW_LOAD) {
             return badRequest ("Invalid request!");
         }
         

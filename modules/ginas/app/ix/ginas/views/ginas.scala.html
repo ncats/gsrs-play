@@ -115,7 +115,8 @@
             <div class="collapse navbar-collapse pull-right pull-down" id="searchtop">
                 <ul class="nav navbar-nav pull-right"><li>
              <form class="form-inline main-search" role="search" method="GET"
-                    action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id = "search-bar">
+                    action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id = "search-bar"
+                    onsubmit="return submitq(this.q)">
                         <div class="input-group">
                             <input type="text" class="form-control typeahead" id="search"
                             title="Search" placeholder="Search ..." name="q">
