@@ -353,6 +353,102 @@
             tempSite = $scope.findSite(subunit.display, obj.residueIndex - 1 + 1);
             tempSite.glycosylationSite = true;
         };
+        
+        $scope.cleanSequence = function (s) {
+            return s.replace(/[^A-Za-z]/g, '');
+        };
+
+        $scope.parseSubunit = function (sequence, subunit) {
+            var split = sequence.replace(/[^A-Za-z]/g, '').split('');
+            var display = [];
+            var obj = {};
+            var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
+            for (var i in split) {
+                var aa = split[i];
+                var valid = _.indexOf(invalid, aa.toUpperCase());
+                if (valid >= 0) {
+                    obj.value = aa;
+                    obj.valid = false;
+                    obj.subunitIndex = subunit;
+                    obj.residueIndex = i - 1 + 2;
+                    display.push(obj);
+                    obj = {};
+                } else {
+                    obj.value = aa;
+                    obj.valid = true;
+                    obj.name = $scope.findName(aa);
+                    obj.type = $scope.getType(aa);
+                    obj.subunitIndex = subunit;
+                    obj.residueIndex = i - 1 + 2;
+                    if (aa.toUpperCase() == 'C') {
+                        obj.cysteine = true;
+                    }
+                    display.push(obj);
+                    obj = {};
+                }
+            }
+            this.display = display;
+            display = _.chunk(display, 10);
+            return display;
+        };
+
+        $scope.findName = function (aa) {
+            switch (aa.toUpperCase()) {
+                case 'A':
+                    return "Alanine";
+                case 'C':
+                    return "Cysteine";
+                case 'D':
+                    return "Aspartic acid";
+                case 'E':
+                    return "Glutamic acid";
+                case 'F':
+                    return "Phenylalanine";
+                case 'G':
+                    return "Glycine";
+                case 'H':
+                    return "Histidine";
+                case 'I':
+                    return "Isoleucine";
+                case 'K':
+                    return "Lysine";
+                case 'L':
+                    return "Leucine";
+                case 'M':
+                    return "Methionine";
+                case 'N':
+                    return "Asparagine";
+                case 'P':
+                    return "Proline";
+                case 'Q':
+                    return "Glutamine";
+                case 'R':
+                    return "Arginine";
+                case 'S':
+                    return "Serine";
+                case 'T':
+                    return "Threonine";
+                case 'V':
+                    return "Valine";
+                case 'W':
+                    return "Tryptophan";
+                case 'Y':
+                    return "Tyrosine";
+
+                default:
+                    return "Tim forgot one";
+            }
+
+        };
+
+        $scope.getType = function (aa) {
+            if (aa == aa.toLowerCase()) {
+                return 'D';
+            }
+            else {
+                return 'L';
+            }
+        };
 
         $scope.parseAgentModification = function (obj, path) {
 
@@ -398,7 +494,12 @@
             var v = path.split(".");
             var type = _.last(v);
             var subClass = ($scope.substance.substanceClass);
+            
             switch (type) {
+                case "subunits":
+                    obj.display = $scope.parseSubunit(obj.sequence, obj.subunitIndex);
+                    $scope.defaultSave(obj, form, path, list);
+                    break;
                 case "protein":
                     $scope.proteinDetails(obj, form);
                     break;
@@ -460,7 +561,7 @@
                     $scope.defaultSave(obj, form, path, list);
                     break;
                 default:
-                   $scope.defaultSave(obj, form, path, list);
+                    $scope.defaultSave(obj, form, path, list);
                     break;
             }
         };
@@ -770,6 +871,7 @@
         };
         return substanceFactory;
     }]);
+    
 
     ginasApp.service('substanceIDRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances(";
@@ -926,126 +1028,24 @@
 
     });
 
-    ginasApp.directive('subunit', function () {
-        clean = function (s) {
-            return s.replace(/[^A-Za-z]/g, '');
-        };
-
-        parseSubunit = function (sequence, subunit) {
-            var split = sequence.replace(/[^A-Za-z]/g, '').split('');
-            var display = [];
-            var obj = {};
-            var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
-            for (var i in split) {
-                var aa = split[i];
-                var valid = _.indexOf(invalid, aa.toUpperCase());
-                if (valid >= 0) {
-                    obj.value = aa;
-                    obj.valid = false;
-                    obj.subunitIndex = subunit;
-                    obj.residueIndex = i - 1 + 2;
-                    display.push(obj);
-                    obj = {};
-                } else {
-                    obj.value = aa;
-                    obj.valid = true;
-                    obj.name = findName(aa);
-                    obj.type = getType(aa);
-                    obj.subunitIndex = subunit;
-                    obj.residueIndex = i - 1 + 2;
-                    if (aa.toUpperCase() == 'C') {
-                        obj.cysteine = true;
-                    }
-                    display.push(obj);
-                    obj = {};
-                }
-            }
-            this.display = display;
-            display = _.chunk(display, 10);
-            return display;
-        };
-
-        addGlycosylation = function (subunit, index) {
-
-
-        };
-
-        findName = function (aa) {
-            switch (aa.toUpperCase()) {
-                case 'A':
-                    return "Alanine";
-                case 'C':
-                    return "Cysteine";
-                case 'D':
-                    return "Aspartic acid";
-                case 'E':
-                    return "Glutamic acid";
-                case 'F':
-                    return "Phenylalanine";
-                case 'G':
-                    return "Glycine";
-                case 'H':
-                    return "Histidine";
-                case 'I':
-                    return "Isoleucine";
-                case 'K':
-                    return "Lysine";
-                case 'L':
-                    return "Leucine";
-                case 'M':
-                    return "Methionine";
-                case 'N':
-                    return "Asparagine";
-                case 'P':
-                    return "Proline";
-                case 'Q':
-                    return "Glutamine";
-                case 'R':
-                    return "Arginine";
-                case 'S':
-                    return "Serine";
-                case 'T':
-                    return "Threonine";
-                case 'V':
-                    return "Valine";
-                case 'W':
-                    return "Tryptophan";
-                case 'Y':
-                    return "Tyrosine";
-
-                default:
-                    return "Tim forgot one";
-            }
-
-        };
-
-        getType = function (aa) {
-            if (aa == aa.toLowerCase()) {
-                return 'D';
-            }
-            else {
-                return 'L';
-            }
-        };
-
-
+    ginasApp.directive('subunit', function () {        
         return {
             restrict: 'E',
             require: 'ngModel',
             scope: '=',
-            link: function (scope, element, attr, ngModel) {
-                scope.$watch(function () {
-                    var seq = ngModel.$modelValue;
-                    if (typeof seq !== "undefined") {
-                        seq = clean(seq);
-                        scope.subunit.display = parseSubunit(seq, attr.subindex - 1 + 2);
-                        scope.subunit.index = attr.subindex - 1 + 2;
-                        ngModel.$setViewValue(seq);
-                        // console.log(scope);
-                    }
-                });
+            link: function (scope, element, attrs, ngModelCtrl) {
+                    scope.$watch(function (scope) {
+                             if(typeof scope.subunit === "undefined")
+                                scope.subunit={};
+                             if(attrs.subindex === ""){
+                                     scope.subunit.subunitIndex=1;
+                             }else{
+                                     scope.subunit.subunitIndex=attrs.subindex-0+1;
+                             }
+                     });
+                     
             },
-            template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" ng-model-options="{ debounce: 1000 }" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>',
+            template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>'
         };
     });
 
