@@ -1,4 +1,4 @@
-@(title: Html)
+@(title: String)
 
 <div class="modal fade" id="modal-radar" tabindex="-1"
 role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
@@ -9,7 +9,7 @@ role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
                 data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title" id="modalLabelRadar">
-                    @title
+                    @Html(title)
                 </h4>
             </div>
             <div class="modal-body">

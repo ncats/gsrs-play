@@ -860,7 +860,7 @@
   </div>
 </div>
 
-@modalradar(Html("<span class='label label-@target.idgTDL.label'>@target.idgTDL</span> @target.getName"))
+@modalradar(null)
 
 <head>
     <style type="text/css">
@@ -961,8 +961,8 @@ $(document).ready(function () {
                   .attr("width", 600 )
                     .attr("height", 600)
                     .append('g').classed('focus', 1).datum(data).call(chart);
-          @*$("#modalLabelRadar" ).html*@
-	     @*('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');*@
+          $("#modalLabelRadar" ).html
+	     ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
       }
    });
 

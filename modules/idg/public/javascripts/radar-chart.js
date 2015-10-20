@@ -16,6 +16,27 @@ function showDataSources(selector, dsUrl) {
     return (func);
 }
 
+function getModalChartConfig(mouseOverUrl) {
+    return { w: 600, h: 600,
+        axisText: true, levels: 0, circles: true,
+        axisTextMouseOverFunc: showDataSources('#radar-ds-container',mouseOverUrl)
+    };
+}
+
+function renderChart(chartData, chartConfig, show) {
+    var chart = RadarChart.chart();
+    chart.config(chartConfig);
+    $("#modal-radardiv").empty();
+    $("#radar-ds-container").empty();
+    var svg = d3.select("#modal-radardiv").append('svg')
+        .attr("width", chartConfig.w)
+        .attr("height", chartConfig.h)
+        .append('g').classed('focus', 1).datum(chartData).call(chart);
+    if (show != undefined && !show) {}
+    else $("#modal-radar").modal("show");
+}
+
+
 var RadarChart = {
     defaultConfig: {
         containerClass: 'radar-chart',
