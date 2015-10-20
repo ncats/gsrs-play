@@ -39,10 +39,12 @@
         </div>
         <div class="hidden-sm hidden-md hidden-lg">
             <div class="navbar-collapse collapse" id="searchbarmobile" aria-expanded="false">
-                <form class="form-inline main-search ng-pristine ng-valid" role="search" method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id="mobilesearch">
+                <form class="form-inline main-search ng-pristine ng-valid" role="search" method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id="mobilesearch"
+                onsubmit="return validateForm(this.fname.value)">
                     <div class="input-group">
                             <input type="text" class="form-control typeahead" id="searchboxmobile"
-                            title="Search" placeholder="Search ..." name="q">
+                            title="Search" placeholder="Search ..." name="q"
+                            onsubmit="return submitq(this.q)">
                             <span class="input-group-btn">
                                 <button class="btn btn-default" id="search" type="search"
                                 value="submit">

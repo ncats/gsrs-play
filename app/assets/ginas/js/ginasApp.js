@@ -1485,4 +1485,9 @@ function setObjectAt(obj, path, nobj){
         return reto;
 }
 
-
+function submitq(qinput){
+        if(qinput.value.indexOf("\"")<0){
+                qinput.value="\"" + qinput.value+"\"";
+        }        
+        return true;
+}
