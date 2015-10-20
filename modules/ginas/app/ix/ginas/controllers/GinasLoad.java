@@ -147,7 +147,7 @@ public class GinasLoad extends App {
     }
 
     public static Result load () {
-        if (ALLOW_LOAD) {
+        if (!ALLOW_LOAD) {
             return redirect (ix.ginas.controllers.routes.GinasFactory.index());
         }
         return ok (ix.ginas.views.html.admin.load.render());
@@ -155,7 +155,7 @@ public class GinasLoad extends App {
     
     public static Result loadJSON () {
         
-        if (ALLOW_LOAD) {
+        if (!ALLOW_LOAD) {
             return badRequest ("Invalid request!");
         }
         
