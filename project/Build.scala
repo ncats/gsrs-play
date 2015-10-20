@@ -59,8 +59,6 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "html5shiv" % "3.7.2"
       ,"org.webjars" % "requirejs" % "2.1.15"
       ,"org.webjars" % "respond" % "1.4.2"
-      ,"org.webjars" % "highcharts" % "4.0.4"
-      ,"org.webjars" % "highslide" % "4.1.13"
       ,"org.webjars" % "html2canvas" % "0.4.1"
       ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
       ,"colt" % "colt" % "1.2.0"
@@ -160,6 +158,7 @@ public class BuildInfo {
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
+
   val hcs = Project("hcs", file("modules/hcs"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -175,6 +174,8 @@ public class BuildInfo {
   val reach = Project("reach", file("modules/reach"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
+      libraryDependencies +="org.webjars" % "highcharts" % "4.0.4",
+      libraryDependencies +="org.webjars" % "highslide" % "4.1.13",
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
@@ -202,4 +203,11 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
+  val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
+    .settings(commonSettings: _*).settings(
+    libraryDependencies ++= commonDependencies,
+      libraryDependencies += "com.typesafe" % "config" % "1.2.0",
+      mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
+  ).dependsOn(ginas).aggregate(ginas)
 }

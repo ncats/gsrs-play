@@ -22,9 +22,6 @@
             <div class = "col-md-2">
                 <strong>Ending Residue Index</strong>
             </div>
-            <div class = "col-md-2 text-right">
-                <strong>Reference ID</strong>
-            </div>
         </div>
 
         <div class = "row" ng-repeat="obj in substance.protein.disulfideLinks">
@@ -44,7 +41,6 @@
             <div class = "col-md-2">
                 <span href="#" editable-select="obj[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[1].residueIndex}}</span>
             </div>
-            @referenceview("disForm", "obj")
         </div>
 
 
@@ -85,7 +81,6 @@
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>
                     </ng-messages>
                 </div>
-                @referenceselectorform("disForm", "site")
             </div>
             @submitbuttons("site", "disForm", "disulfideLinks")
         </form>

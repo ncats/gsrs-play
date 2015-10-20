@@ -1,3 +1,5 @@
+/*set the schema if there is one*/
+/*eval*/ ALTER SESSION SET CURRENT_SCHEMA=$db.default.schema$;
 CREATE TABLE PLAY_EVOLUTIONS
 (   ID NUMBER NOT NULL ENABLE, 
     HASH VARCHAR2(255 BYTE) NOT NULL ENABLE, 

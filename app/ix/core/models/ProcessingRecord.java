@@ -37,7 +37,6 @@ public class ProcessingRecord extends Model {
     
     
     @Version
-    @Column(columnDefinition = "timestamp default '2014-10-06 21:17:06'")
     public Timestamp lastUpdate; // here
     
     

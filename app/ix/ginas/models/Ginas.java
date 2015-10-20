@@ -47,9 +47,9 @@ public class Ginas extends Model {
     //@JoinColumn(name="id", referencedColumnName="uuid")
 //    @ManyToMany//(cascade=CascadeType.ALL)
 //    @JoinTable(name="ix_ginas_access",
-//	    joinColumns=@JoinColumn
-//	    (name="id", referencedColumnName="uuid")
-//	)
+//          joinColumns=@JoinColumn
+//          (name="id", referencedColumnName="uuid")
+//      )
     @JsonSerialize(using = PrincipalListSerializer.class)
     @JsonDeserialize(using = PrincipalListDeserializer.class)
     public List<Principal> access = new ArrayList<Principal>();

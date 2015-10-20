@@ -1,5 +1,4 @@
 SELECT 
-
 (select 
 (case when count(*) = 1 
 THEN 'worked' 

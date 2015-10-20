@@ -4,8 +4,6 @@
     <button class="btn btn-primary label-offset det">
                       Relationships&nbsp;<span class="badge" ng-show="ginasCtrl.substance.chemical.relationships.length>0">
                         {{ginasCtrl.substance.chemical.relationships.length}}</span> </button>
-    @*<a ng-show="!addingStructure" ng-click="addStructure()" aria-label="Add Structure"><i class = "fa fa-plus fa-2x success"></i></a>*@
-    @*<div ng-show="addingStructure">*@
     <div>
 
         <div class="col-md-12">
@@ -19,9 +17,6 @@
                 <div class="col-md-1"><strong>Amount</strong></div>
                 <div class="col-md-1"></div>
             </div>
-@*            <div ng-repeat="relationship in ginasCtrl.substance.chemical.relationships">
-                <relationship r="relationship"></relationship>
-            </div>*@
         </div>
         <div class="row form-row" >
             <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>

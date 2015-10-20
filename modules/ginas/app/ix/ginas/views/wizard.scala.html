@@ -10,7 +10,7 @@
     <div>@forms.moietyform()</div>
     <div>@forms.officialnameform()</div>
     <div>@forms.nameform()</div>
-    <div >@forms.codeform()</div>
+    <div>@forms.codeform()</div>
     <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>
     <div>@forms.propertyform()</div>
@@ -23,19 +23,27 @@
 
 } else {
     @if(kind == "mixture") {
-        @forms.nameform()
-        <div ng-show="uniqueName">@forms.codeform()</div>
+        <div>Mixture selector not implemented yet.</div>
+        <div>@forms.mixturecomponentselectform()</div>
+        <div>@forms.officialnameform()</div>
+        <div>@forms.nameform()</div>
+        <div>@forms.codeform()</div>
+        <div>@forms.relationshipform()</div>
+        <div>@forms.noteform()</div>
+        <div>@forms.propertyform()</div>
         @forms.referenceform()
         @forms.referencemodalform()
     } else {
         @if(kind == "protein") {
             @forms.subunitform()
             @forms.proteindetailsform()
-            <div >@forms.disulfideform()</div>
-            <div >@forms.glycosylationform()</div>
+            <div>@forms.disulfideform()</div>
+            <div>@forms.glycosylationform()</div>
             <div>@forms.agentmodificationform()</div>
-            @forms.nameform()
-            <div >@forms.codeform()</div>
+           @* <div>@forms.structuralmodificationform()</div>*@
+            <div>@forms.physicalmodificationform()</div>
+            <div>@forms.nameform()</div>
+            <div>@forms.codeform()</div>
             <div ng-show="substance.references"> @forms.referenceform()</div>
             @forms.referencemodalform()
         } else {
@@ -55,8 +63,12 @@
                     @forms.referencemodalform()
                 } else {
                     @if(kind.toLowerCase() == "concept") {
-                        @forms.nameform()
-                        <div ng-show="uniqueName">@forms.codeform()</div>
+                        <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
+                        <div>@forms.officialnameform()</div>
+                        <div>@forms.nameform()</div>
+                        <div>@forms.codeform()</div>
+                        <div>@forms.relationshipform()</div>
+                        <div>@forms.noteform()</div>
                         @forms.referenceform()
                         @forms.referencemodalform()
                     } else {
