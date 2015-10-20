@@ -45,6 +45,34 @@
                 console.log('invalid substance class');
                 break;
         }
+
+        function getObjectAt(path){
+            console.log(path);
+            var v = path.split(".");
+            var reto = {};
+            for(var i=0;i<v.length;i++){
+                reto = this[v[i]];
+                if(typeof reto == "undefined" || reto === null){
+                    return undefined;
+                }
+            }
+            return reto;
+        }
+        function setObjectAt(obj, path, nobj){
+            var v = path.split(".");
+            var reto=obj;
+            for(var i=0;i<v.length-1;i++){
+                if(typeof reto[v[i]] == "undefined" || reto[v[i]] === null){
+                    reto[v[i]]={};
+                }
+                reto = reto[v[i]];
+            }
+            if(typeof reto !== "undefined"){
+                reto[v[v.length-1]]=nobj;
+            }
+            return reto;
+        }
+
         return Substance;
     });
 
@@ -80,6 +108,12 @@
 
     ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $modal, $http, $window, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
 
+        var ginasCtrl = this;
+
+        $scope.select = ['Substructure', 'Similarity'];
+        $scope.type = 'Substructure';
+        $scope.cutoff = 0.8;
+
         $scope.range = function (min, step) {
             step = step || 1;
             var input = [];
@@ -88,7 +122,7 @@
         };
 
 
-        $scope.openSelector = function (storein) {
+        $scope.openSelector = function (path) {
                 console.log("openning");
             var modalInstance = $modal.open({
                 animation: true,
@@ -100,7 +134,7 @@
 
             modalInstance.result.then(function (selectedItem) {
                 var subref = {};
-                console.log(selectedItem);
+                //console.log(selectedItem);
                 subref.refuuid = selectedItem.uuid;
                 subref.refPname = selectedItem.name;
                 subref.approvalID = selectedItem.approvalID;
@@ -109,14 +143,8 @@
                 //However, there are likely to be many (maybe hundreds) in various contexts.
                 //If this is to be used as a stop-gap measure, it at least needs to be a key-value
                 //pair array for later selection. 
-                //storein = subref;
-                console.log($scope);
-                console.log(storein);
-                console.log(getObjectAt($scope,storein));
-                setObjectAt($scope,storein,subref);
+                _.set($scope, path, subref);
                 $scope.subref=subref;
-                //$scope[storein]=subref;
-                console.log("selected");
             });
         };
 
@@ -173,12 +201,6 @@
             formSub = $scope.collapseReferences(formSub, 0);
             return formSub;
         };
-
-        var ginasCtrl = this;
-
-        $scope.select = ['Substructure', 'Similarity'];
-        $scope.type = 'Substructure';
-        $scope.cutoff = 0.8;
 
         //date picker
         $scope.open = function ($event) {
@@ -248,10 +270,9 @@
             $scope.$broadcast('show-errors-reset');
         };
 
-        $scope.setDisulfide = function (site, bridge) {
-            site.disulfide = true;
+        $scope.setLinkProperty = function (site, bridge, property) {
+            _.set(site, property, true);
             site.bridge = bridge;
-            console.log(site);
         };
 
         $scope.findSite = function (array, index) {
@@ -259,7 +280,6 @@
             _.forEach(array, function (n) {
                 var temp = (_.find(n, 'residueIndex', index));
                 if (typeof temp !== "undefined") {
-                    console.log(temp);
                     returnSite = temp;
                 }
             });
@@ -267,7 +287,6 @@
         };
 
         $scope.makeSite = function (obj) {
-            console.log(obj);
             var site = {};
             site.subunitIndex = obj.subunitIndex - 1 + 1;
             site.residueIndex = obj.residueIndex - 1 + 1;
@@ -275,20 +294,20 @@
         };
 
 
-        $scope.parseDisulfide = function (obj, type) {
-            var disulfide = [];
+        $scope.parseLink = function (obj, path) {
+            var link = [];
 
-            //PERSIST--add sites to disulfide list
+            //PERSIST--add sites to link list
             var site = $scope.makeSite(obj);
-            disulfide.push(site);
+            link.push(site);
 
             //DISPLAY--make array for bridge site
             var bridge = [obj.subunitIndexEnd, obj.residueIndexEnd];
 
-            //DISPLAY-- find site, add disulfide property and bridge
-            var subunit = (_.pick($scope.substance.subunits, 'index', obj.subunitIndex - 1)[0]);
+            //DISPLAY-- find site, add link property and bridge
+            var subunit = (_.pick($scope.substance.protein.subunits, 'index', obj.subunitIndex - 1)[0]);
             tempSite = $scope.findSite(subunit.display, obj.residueIndex - 1 + 1);
-            $scope.setDisulfide(tempSite, bridge);
+            $scope.setLinkProperty(tempSite, bridge);
 
             //DO IT AGAIN for ending index. can't really be done in a loop, can make and end site object and abstract these though
             var endSite = $scope.makeSite({
@@ -296,18 +315,28 @@
                 'residueIndex': obj.residueIndexEnd - 1 + 1
             });
 
-            disulfide.push(endSite);
+            link.push(endSite);
             var endBridge = [obj.subunitIndex, obj.residueIndex];
-            subunit = (_.pick($scope.substance.subunits, 'index', obj.subunitIndexEnd - 1)[0]);
+            subunit = (_.pick($scope.substance.protein.subunits, 'index', obj.subunitIndexEnd - 1)[0]);
             var tempEndSite = $scope.findSite(subunit.display, obj.residueIndexEnd - 1 + 1);
-            $scope.setDisulfide(tempEndSite, endBridge);
 
 
-            $scope.substance.protein.disulfideLinks.push(disulfide);
+            //switch property if other link
+            var prop = "disulfide";
+            if(_.has(obj, "linkageType")){
+                prop = "otherLink";
+            }
+
+            //set display properties
+            $scope.setLinkProperty(tempSite, bridge, prop);
+            $scope.setLinkProperty(tempEndSite, endBridge, prop);
+
+            return link;
+            //$scope.substance.protein.linkLinks.push(link);
         };
 
 
-        $scope.parseGlycosylation = function (obj, type) {
+        $scope.parseGlycosylation = function (obj, path) {
             var link = obj.link;
             if (!$scope.substance.protein.glycosylation[link + "GlycosylationSites"]) {
                 $scope.substance.protein.glycosylation[link + "GlycosylationSites"] = [];
@@ -325,7 +354,37 @@
             tempSite.glycosylationSite = true;
         };
 
-        $scope.parseAgentModification = function (obj, type) {
+        $scope.parseAgentModification = function (obj, path) {
+
+        };
+
+        $scope.defaultSave = function(obj, form, path, list){
+            $scope.$broadcast('show-errors-check-validity');
+            if (form.$valid) {
+                if (_.has($scope.substance, path)){
+                    console.log("already exists");
+                    if(!list){
+                        _.set($scope.substance, path, obj);
+                    }else {
+                        var temp = _.get($scope.substance, path);
+                        console.log(temp);
+                        temp.push(obj);
+                        _.set($scope.substance, path, temp);
+                    }
+                } else {
+                    if(!list){
+                        console.log("making a new object at " +path);
+                        _.set($scope.substance, path, obj);
+                    }else {
+                        console.log("making a new list at " +path);
+                        var x = [];
+                        x.push(obj);
+                        _.set($scope.substance, path, x);
+                        console.log($scope);
+                    }
+                }
+                $scope.$broadcast('show-errors-reset');
+            }
 
         };
 
@@ -335,66 +394,74 @@
         //for type, will store the form object into that path inside
         //the substance, unless otherwise caught in the switch.
         //This simplifies some things.
-        $scope.validate = function (obj, form, type, force) {
-                if(typeof force==="undefined"){
-                        force=false;
-                }
-            console.log(type);
-            console.log(form);
-            console.log("Force:" + force);
+        $scope.validate = function (obj, form, path, list) {
+            var v = path.split(".");
+            var type = _.last(v);
+            var subClass = ($scope.substance.substanceClass);
             switch (type) {
                 case "protein":
                     $scope.proteinDetails(obj, form);
                     break;
                 case "disulfideLinks":
-                    if (!$scope.substance.protein[type]) {
-                        $scope.substance.protein[type] = [];
-                    }
-                    $scope.parseDisulfide(obj, type);
+                    var d = $scope.parseLink(obj, path);
+                    $scope.defaultSave(d, form, path, list);
+                    break;
+                case "otherLinks":
+                    var ol = {};
+                    var otl = $scope.parseLink(obj, path);
+                    _.set(ol, "sites", otl);
+                    _.set(ol, "linkageType", obj.linkageType);
+
+                   // var otl = $scope.parseLink(obj, path);
+                    console.log(ol);
+                    _.set(otl, "linkageType", obj.linkageType);
+                   // console.log(form);
+                    $scope.defaultSave(ol, form, path, list);
                     break;
                 case "glycosylation":
-                    if (!$scope.substance.protein[type]) {
-                        $scope.substance.protein[type] = {};
+                    if (!$scope.substance.protein[path]) {
+                        $scope.substance.protein[path] = {};
                     }
                     if (!$scope.substance.protein.glycosylation.count) {
                         $scope.substance.protein.glycosylation.count = 0;
                     }
-                    $scope.parseGlycosylation(obj, type);
+                    $scope.parseGlycosylation(obj, path);
                     break;
-                case "agentModification":
+                case "physicalModifications":
+                    if(_.has($scope.substance, path)){
+                        console.log("already exists");
+                    }else{
+
+                    }
+                    break;
+                case "agentModifications":
+                    console.log($scope.substance[subClass][path]);
+                    if (!$scope.substance.protein[path]) {
+                        console.log("new");
+                        _.set($scope.substance[subClass], path, obj);
+                    }else{
+                        console.log("old");
+                        $scope.substance.protein[path].push(obj);
+                    }
                     break;
                 //    if (!$scope.substance.protein.modifications) {
                 //        $scope.substance.proteinmodifications = {};
                 //    }
                 //    $scope.parseAgentModifications(obj);
                 //    break;
-                default:
-                    $scope.$broadcast('show-errors-check-validity');
-                    console.log("Check valid");
-                    if (form.$valid || force) {
-                        console.log("Valid");
-                        if (getObjectAt(this.substance,type)) {
-                            if (type == 'references') {
-                                if (typeof obj.uuid == "undefined") {
-                                    obj.uuid = uuid();
-                                }
-                                obj.id = this.substance.references.length + 1;
-                            }
-                            getObjectAt(this.substance,type).push(obj);
-                            //this.substance[type].push(obj);
-                        } else {
-                            setObjectAt(this.substance,type, []);
-                            if (type == 'references') {
-                                if (typeof obj.uuid == "undefined") {
-                                    obj.uuid = uuid();
-                                }
-                                obj.id = 1;
-                            }
-                            getObjectAt(this.substance,type).push(obj);
-                            //this.substance[type].push(obj);
-                        }
-                        $scope.$broadcast('show-errors-reset');
+
+                case "references":
+                    _.set(obj, "uuid", uuid());
+                    if(!$scope.substance[path]){
+                        _.set(obj, "id", 1);
+                    }else {
+                        _.set(obj, "id", $scope.substance.references.length + 1);
                     }
+                    $scope.defaultSave(obj, form, path, list);
+                    break;
+                default:
+                   $scope.defaultSave(obj, form, path, list);
+                    break;
             }
         };
 
@@ -750,7 +817,7 @@
                     'Content-Type': 'text/plain'
                 }
             }).success(function (data) {
-                console.log(data);
+                //console.log(data);
                 options[field] = data.content[0].terms;
             });
         };
@@ -1392,7 +1459,7 @@
         $scope.select = function (item) {
             var subref = {};
 
-            console.log(item);
+            //console.log(item);
             $modalInstance.close(item);
         };
 
@@ -1407,11 +1474,11 @@
         $scope.fetch = function (term, skip) {
             var url = baseurl + "api/v1/substances/search?q=" +
                 term + "*&top=" + $scope.top + "&skip=" + skip;
-            console.log(url);
+           // console.log(url);
             var responsePromise = $http.get(url);
 
             responsePromise.success(function (data, status, headers, config) {
-                console.log(data);
+                //console.log(data);
                 $scope.results = data;
             });
 
@@ -1426,7 +1493,6 @@
 
 
         $scope.nextPage = function () {
-            console.log($scope.results.skip);
             $scope.fetch($scope.term, $scope.results.skip + $scope.results.top);
         };
         $scope.prevPage = function () {
@@ -1459,30 +1525,6 @@ function vocabsetup(cv) {
     console.log("finished");
 }
 
-function getObjectAt(obj, path){
-        var v = path.split(".");
-        var reto=obj;
-        for(var i=0;i<v.length;i++){
-                reto = reto[v[i]];
-                if(typeof reto == "undefined" || reto === null){
-                        return undefined;
-                }
-        }
-        return reto;
-}
-function setObjectAt(obj, path, nobj){
-        var v = path.split(".");
-        var reto=obj;
-        for(var i=0;i<v.length-1;i++){
-                if(typeof reto[v[i]] == "undefined" || reto[v[i]] === null){
-                        reto[v[i]]={};        
-                }
-                reto = reto[v[i]];                
-        }
-        if(typeof reto !== "undefined"){
-                reto[v[v.length-1]]=nobj;
-        }
-        return reto;
-}
+
 
 

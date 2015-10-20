@@ -1,0 +1,101 @@
+@import ix.ginas.controllers.GinasApp;
+
+<div class = "row info" >
+  <button class="btn btn-primary label-offset det">
+ Other Links&nbsp;<span class="badge" ng-show="substance.protein.otherLinks.length>0">
+                        {{substance.protein.otherLinks.length}}</span> </button>
+  @* <a ng-show="!addingCodes" ng-click="toggleForm(codeForm)" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
+  <a ng-show="addingCodes" ng-click="toggleForm(codeForm)" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>*@
+  <div class="col-md-12">
+    <div class = "row header-row">
+      <div class = "col-md-2">
+        <strong>Starting Subunit Index</strong>
+      </div>
+      <div class = "col-md-2">
+        <strong>Starting Residue Index</strong>
+      </div>
+      <div class ="col-md-1">
+                </div>
+      <div class = "col-md-2">
+        <strong>Ending Subunit Index</strong>
+      </div>
+      <div class = "col-md-2">
+        <strong>Ending Residue Index</strong>
+      </div>
+      <div class ="col-md-2">
+        <strong>Linkage Type</strong>
+      </div>
+    </div>
+
+    <div class = "row" ng-repeat="obj in substance.protein.otherLinks">
+      <hr>
+      <div class = "col-md-2">
+        <span href="#" editable-select="obj.sites[0].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[0].subunitIndex}}</span>
+      </div>
+      <div class = "col-md-2">
+        <span href="#" editable-select="obj.sites[0].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[0].residueIndex}}</span>
+      </div>
+      <div class ="col-md-1">
+        <i class="fa fa-link fa-2x fa-rotate-90"></i>
+      </div>
+      <div class = "col-md-2">
+        <span href="#" editable-select="obj.sites[1].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[1].subunitIndex}}</span>
+      </div>
+      <div class = "col-md-2">
+        <span href="#" editable-select="obj.sites[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[1].residueIndex}}</span>
+      </div>
+        <div class = "col-md-2">
+            <span href="#" editable-select="obj.linkageType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("OTHER_LINKAGE_TYPE") track by r.display" blur="submit">{{obj.linkageType.display}}</span>
+        </div>
+    </div>
+
+
+    <form class="form-horizontal" name="otherForm" id = "add-code" role="form" novalidate>
+      <div class="row form-row">
+        <div class="col-md-2 err-check" id="code-div" show-errors>
+          <select ng-model="otherSite.subunitIndex" ng-selected="1" class="form-control" name = "year" id = "year">
+            <option ng-repeat="n in range(substance.protein.subunits.length)">{{n}}</option>
+          </select>
+          <ng-messages for="otherForm.code.$error" ng-if="otherForm.code.$touched">
+            <ng-message when="required" class="help-block">Substance name is required</ng-message>
+          </ng-messages>
+        </div>
+        <div class="col-md-2 err-check" id="code-div" show-errors>
+          <select ng-model="otherSite.residueIndex" class="form-control" name = "year" id = "year">
+            <option ng-repeat="n in range(substance.protein.subunits[otherSite.subunitIndex-1].sequence.length)">{{n}}</option>
+          </select>
+          <ng-messages for="otherForm.code.$error" ng-if="otherForm.code.$touched">
+            <ng-message when="required" class="help-block">Substance name is required</ng-message>
+          </ng-messages>
+        </div>
+        <div class ="col-md-1 text-center">
+          <i class="fa fa-link fa-rotate-270 fa-2x"></i>
+        </div>
+        <div class="col-md-2 err-check" id="code-div" show-errors>
+          <select ng-model="otherSite.subunitIndexEnd" class="form-control" name = "year" id = "year">
+            <option ng-repeat="n in range(substance.protein.subunits.length)">{{n}}</option>
+          </select>
+          <ng-messages for="otherForm.code.$error" ng-if="otherForm.code.$touched">
+            <ng-message when="required" class="help-block">Substance name is required</ng-message>
+          </ng-messages>
+        </div>
+        <div class="col-md-2 err-check" id="code-div" show-errors>
+          <select ng-model="otherSite.residueIndexEnd" class="form-control" name = "year" id = "year">
+            <option ng-repeat="n in range(substance.protein.subunits[otherSite.subunitIndexEnd-1].sequence.length)">{{n}}</option>
+          </select>
+          <ng-messages for="otherForm.code.$error" ng-if="otherForm.code.$touched">
+            <ng-message when="required" class="help-block">Substance name is required</ng-message>
+          </ng-messages>
+        </div>
+          <div class="col-md-2 err-check" show-errors>
+              <select class="form-control" title="Linkage Type" id="linkType" name = "linkType" ng-model = "otherSite.linkageType" ng-options="r.display for r in @GinasApp.getCV.getField("OTHER_LINKAGE_TYPE") track by r.display" required>
+                        </select>
+              <ng-messages for="otherForm.linkageType.$error" ng-if="otherForm.linkageType.$touched">
+                  <ng-message when="required" class="help-block">*required</ng-message>
+              </ng-messages>
+          </div>
+      </div>
+      @submitbuttons("otherSite", "otherForm", "protein.otherLinks")
+    </form>
+  </div>
+</div>

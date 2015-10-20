@@ -2,7 +2,7 @@
 
 <div class = "row info" >
     <button class="btn btn-primary label-offset det">
- Disulfide Links&nbsp;<span class="badge" ng-show="substance.codes.length>0">
+ Disulfide Links&nbsp;<span class="badge" ng-show="substance.protein.disulfidelinks.length>0">
                         {{substance.protein.disulfidelinks.length}}</span> </button>
     @* <a ng-show="!addingCodes" ng-click="toggleForm(codeForm)" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
     <a ng-show="addingCodes" ng-click="toggleForm(codeForm)" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>*@
@@ -27,19 +27,19 @@
         <div class = "row" ng-repeat="obj in substance.protein.disulfideLinks">
             <hr>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj[0].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[0].subunitIndex}}</span>
+                <span href="#" editable-select="obj[0].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj[0].subunitIndex}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj[0].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[0].residueIndex}}</span>
+                <span href="#" editable-select="obj[0].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj[0].residueIndex}}</span>
             </div>
             <div class ="col-md-1">
                 <i class="fa fa-link fa-2x fa-rotate-90"></i>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj[1].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[1].subunitIndex}}</span>
+                <span href="#" editable-select="obj[1].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj[1].subunitIndex}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.subunits.length)" blur="submit">{{obj[1].residueIndex}}</span>
+                <span href="#" editable-select="obj[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj[1].residueIndex}}</span>
             </div>
         </div>
 
@@ -48,7 +48,7 @@
             <div class="row form-row">
                 <div class="col-md-2 err-check" id="code-div" show-errors>
                     <select ng-model="site.subunitIndex" ng-selected="1" class="form-control" name = "year" id = "year">
-                        <option ng-repeat="n in range(substance.subunits.length)">{{n}}</option>
+                        <option ng-repeat="n in range(substance.protein.subunits.length)">{{n}}</option>
                     </select>
                     <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>
@@ -56,7 +56,7 @@
                 </div>
                 <div class="col-md-2 err-check" id="code-div" show-errors>
                     <select ng-model="site.residueIndex" class="form-control" name = "year" id = "year">
-                        <option ng-repeat="n in range(substance.subunits[site.subunitIndex-1].sequence.length)">{{n}}</option>
+                        <option ng-repeat="n in range(substance.protein.subunits[site.subunitIndex-1].sequence.length)">{{n}}</option>
                     </select>
                     <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>
@@ -67,7 +67,7 @@
                 </div>
                 <div class="col-md-2 err-check" id="code-div" show-errors>
                     <select ng-model="site.subunitIndexEnd" class="form-control" name = "year" id = "year">
-                        <option ng-repeat="n in range(substance.subunits.length)">{{n}}</option>
+                        <option ng-repeat="n in range(substance.protein.subunits.length)">{{n}}</option>
                     </select>
                     <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>
@@ -75,14 +75,14 @@
                 </div>
                 <div class="col-md-2 err-check" id="code-div" show-errors>
                     <select ng-model="site.residueIndexEnd" class="form-control" name = "year" id = "year">
-                        <option ng-repeat="n in range(substance.subunits[site.subunitIndexEnd-1].sequence.length)">{{n}}</option>
+                        <option ng-repeat="n in range(substance.protein.subunits[site.subunitIndexEnd-1].sequence.length)">{{n}}</option>
                     </select>
                     <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>
                     </ng-messages>
                 </div>
             </div>
-            @submitbuttons("site", "disForm", "disulfideLinks")
+            @submitbuttons("site", "disForm", "protein.disulfideLinks")
         </form>
     </div>
 </div>
