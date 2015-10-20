@@ -1486,7 +1486,7 @@ function setObjectAt(obj, path, nobj){
 }
 
 function submitq(qinput){
-        if(qinput.value.indexOf("\"")<0 && qinput.value.indexOf("*")<0){
+        if(qinput.value.indexOf("\"")<0 && qinput.value.indexOf("*")<0 && qinput.value.indexOf(":")<0 && qinput.value.indexOf(" AND ")<0 && qinput.value.indexOf(" OR ")<0){
                 qinput.value="\"" + qinput.value+"\"";
         }        
         return true;
