@@ -689,7 +689,7 @@ public class App extends Authentication {
     }
         
     public static SearchResult getSearchFacets (final Class kind) {
-        return getSearchFacets (kind, 500);
+        return getSearchFacets (kind, 100);
     }
     
     public static SearchResult getSearchFacets (final Class kind,

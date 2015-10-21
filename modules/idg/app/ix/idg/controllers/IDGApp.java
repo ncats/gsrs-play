@@ -439,8 +439,10 @@ public class IDGApp extends App implements Commons {
         //IDG_TISSUE,
         GTEx_TISSUE,
         "R01 Grant Count",
-        "PubMed Count",
-        "Patent Count"
+        //"PubMed Count",
+        "Log Novelty",
+        IDG_TOOLS
+        //"Patent Count"
         //HPM_TISSUE,
         //HPA_RNA_TISSUE
     };
@@ -653,7 +655,7 @@ public class IDGApp extends App implements Commons {
      * return a list of all data sources
      */
     static DataSource[] _getDataSources () throws Exception {
-        SearchOptions opts = new SearchOptions (null, 1, 0, 10);           
+        SearchOptions opts = new SearchOptions (null, 1, 0, 1000);           
         TextIndexer.SearchResult results = _textIndexer.search(opts, null);
         Set<String> labels = new TreeSet<String>();
         for (TextIndexer.Facet f : results.getFacets()) {
@@ -687,6 +689,11 @@ public class IDGApp extends App implements Commons {
                     }
                 }
             }
+            Logger.debug("DataSource: "+la);
+            Logger.debug("  + targets: "+ds.targets);
+            Logger.debug("  + ligands: "+ds.ligands);
+            Logger.debug("  + diseases: "+ds.diseases);
+            
             sources.add(ds);
         }
 
@@ -2476,7 +2483,8 @@ public class IDGApp extends App implements Commons {
     }
 
     public static Result resolve (String q, String format, String kind) {
-        Logger.debug("resolve: q="+q+" kind="+kind+" format="+format);
+        Logger.debug("resolve: q="+(q.length() < 40 ? q : q.substring(0,40))
+                     +" kind="+kind+" format="+format);
 
         if ("target".equalsIgnoreCase(kind))
             kind = Target.class.getName();

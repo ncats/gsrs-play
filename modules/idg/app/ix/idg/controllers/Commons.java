@@ -19,6 +19,11 @@ public interface Commons {
     public static final String IDG_TISSUE = "IDG Tissue";
     public static final String IDG_LIGAND = "IDG Ligand";
     public static final String IDG_TISSUE_REF = "IDG Tissue Ref";
+    public static final String IDG_TOOLS = "IDG Tools";
+    public static final String IDG_TOOLS_ANTIBODIES = "Antibodies";
+    public static final String IDG_TOOLS_SELECTIVE_COMPOUNDS = "Selective compounds";
+    public static final String IDG_TOOLS_PHENOTYPES = "Phenotypes";
+    
     public static final String PHARMALOGICAL_ACTION = "Pharmalogical Action";
     public static final String PUBMED_ID = "PubMed ID";
     public static final String LIGAND_SOURCE = "Ligand Source";

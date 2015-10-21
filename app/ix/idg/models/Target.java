@@ -86,7 +86,9 @@ public class Target extends EntityModel {
     @Indexable(facet=true,name=IDG_DEVELOPMENT)
     public TDL idgTDL; // target development level
 
-    @Indexable(sortable=true,name="Novelty")
+    @Indexable(sortable=true,name="Log Novelty",
+               dranges={-4., -3.5, -3., -2.5, -2., -1.5, -1., -0.5, 0, 1., 2.},
+               format="%1.1f")
     public Double novelty;
 
     @Indexable(sortable=true,name="Antibody Count",

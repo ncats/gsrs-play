@@ -300,7 +300,8 @@ public class TcrdRegistry extends Controller implements Commons {
             target.properties.add(t.source);
             
             if (t.novelty != null) {
-                target.novelty = t.novelty;
+                // log10
+                target.novelty = Math.log10(t.novelty);
             }
             
             String value;
@@ -591,7 +592,7 @@ public class TcrdRegistry extends Controller implements Commons {
                     target.addIfAbsent((Value)tissue);
                 }
                 else if (expr.source.startsWith("JensenLab Text Mining")) {
-                    sourceUrl = "";
+                    sourceUrl = "http://jensenlab.org";
                 }
                 else if (expr.source.startsWith
                            ("JensenLab Knowledge UniProtKB-RC")) {
@@ -707,6 +708,7 @@ public class TcrdRegistry extends Controller implements Commons {
             ResultSet rset = pstm7.executeQuery();
             Set<String> terms = new TreeSet<String>();
             Map<String, Keyword> sources = new TreeMap<String, Keyword>();
+            int phenoCount = 0;
             while (rset.next()) {
                 String type = rset.getString("ptype");
                 if ("impc".equalsIgnoreCase(type)) {
@@ -739,8 +741,8 @@ public class TcrdRegistry extends Controller implements Commons {
                         trait = trait.replaceAll("/", "-");
                         Keyword gwas = KeywordFactory.registerIfAbsent
                                 (GWAS_TRAIT, trait, null);
-                        XRef ref = new XRef (gwas);
-                        ref.properties.add(source);
+                        XRef ref = target.addIfAbsent(new XRef (gwas));
+                        ref.addIfAbsent(source);
                         
                         long pmid = rset.getLong("pmid");
                         if (!rset.wasNull()) {
@@ -774,7 +776,13 @@ public class TcrdRegistry extends Controller implements Commons {
                             }
                             */
                         }
-                        target.links.add(ref);
+                        
+                        if (ref.id == null) {
+                            ref.save();
+                        }
+                        
+                        // also add this as a property
+                        target.addIfAbsent((Value)gwas);
                     }
                 }
                 else if ("JAX/MGI Human Ortholog Phenotype"
@@ -792,8 +800,10 @@ public class TcrdRegistry extends Controller implements Commons {
                         pheno = pheno.replaceAll("/", "-");
                         sources.put(type, source);
                         Keyword kw = KeywordFactory.registerIfAbsent
-                            (MGI_TERM, pheno, "http://www.informatics.jax.org/searches/Phat.cgi?id="+termId);
+                            (MGI_TERM, pheno,
+                             "http://www.informatics.jax.org/searches/Phat.cgi?id="+termId);
                         target.properties.add(kw);
+                        ++phenoCount;
                     }
                 }
                 else if ("OMIM".equalsIgnoreCase(type)) {
@@ -822,18 +832,26 @@ public class TcrdRegistry extends Controller implements Commons {
                         (IMPC_TERM, term.replaceAll("/","-"), null);
                     target.properties.add(t);
                 }
+                
                 Logger.debug("Target "+target.id+" has "+terms.size()
                              +" phenotype(s)!");
             }
             
             for (Keyword source: sources.values()) {
-                target.properties.add(source);
+                target.addIfAbsent((Value)source);
+            }
+
+            if (!terms.isEmpty() || phenoCount > 0) {
+                Keyword pheno = KeywordFactory.registerIfAbsent
+                    (IDG_TOOLS, IDG_TOOLS_PHENOTYPES, null);
+                target.addIfAbsent((Value)pheno);
             }
         }
         
         void addTDL (Target target, long protein) throws Exception {
             pstm6.setLong(1, protein);
             ResultSet rset = pstm6.executeQuery();
+            int selective = 0;
             while (rset.next()) {
                 String type = rset.getString("itype");
                 Value val = null;
@@ -864,6 +882,9 @@ public class TcrdRegistry extends Controller implements Commons {
                     if (type.equalsIgnoreCase("UniProt Function")) {
                         target.description = (String)val.getValue();
                     }
+                    else if (type.equalsIgnoreCase("ChEMBL Selective Compound")) {
+                        ++selective;
+                    }
                     else {
                         if (type.equalsIgnoreCase("Ab Count")) {
                             target.antibodyCount =
@@ -892,6 +913,19 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
             }
             rset.close();
+
+            if (selective > 0) {
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (IDG_TOOLS, IDG_TOOLS_SELECTIVE_COMPOUNDS, null);
+                target.properties.add(kw);
+            }
+            
+            if ((target.antibodyCount != null && target.antibodyCount > 0)
+                || (target.monoclonalCount != null && target.monoclonalCount > 0)) {
+                Keyword kw = KeywordFactory.registerIfAbsent
+                    (IDG_TOOLS, IDG_TOOLS_ANTIBODIES, null);
+                target.properties.add(kw);
+            }
         }
 
         void addPanther (Target target,long protein) throws Exception {
@@ -1047,8 +1081,18 @@ public class TcrdRegistry extends Controller implements Commons {
                     
                     ligand = new Ligand (drug);
                     ligand.synonyms.add(KeywordFactory.registerIfAbsent
-                                        (IDG_LIGAND, drug, ref));
+                                        (IDG_DRUG, drug, ref));
                     if (source != null) {
+                        if (chemblId == null) {
+                            Keyword ds = datasources.get(source);
+                            if (ds == null) {
+                                ds = KeywordFactory.registerIfAbsent
+                                    (SOURCE, source, null);
+                                datasources.put(source, ds);
+                            }
+                            ligand.properties.add(ds);
+                        }
+                        
                         ligand.properties.add
                             (KeywordFactory.registerIfAbsent
                              (LIGAND_SOURCE, source, ref));
@@ -1065,7 +1109,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         ligand.links.add(xref);
                         MOLIDX.add(null, struc.id.toString(), struc.molfile);
                     }
-                                        
+
                     ligand.save();
                     LIGS.add(ligand);
                     
@@ -1080,7 +1124,14 @@ public class TcrdRegistry extends Controller implements Commons {
                          "https://www.ebi.ac.uk/chembl/compound/inspect/"
                          +chemblId);
                     ligand.addIfAbsent(kw);
-                    ligand.addIfAbsent((Value)chembl.getSource());
+
+                    Keyword ds = datasources.get(ChEMBL);
+                    if (ds == null) {
+                        ds = KeywordFactory.registerIfAbsent
+                            (SOURCE, ChEMBL, "https://www.ebi.ac.uk/chembl");
+                        datasources.put(ChEMBL, ds);
+                    }
+                    ligand.addIfAbsent((Value)ds);
                 }
 
                 XRef tref = ligand.addIfAbsent(new XRef (target));
@@ -1154,6 +1205,13 @@ public class TcrdRegistry extends Controller implements Commons {
         }
 
         void addChembl (Target target, long tid) throws Exception {
+            Keyword source = datasources.get(ChEMBL);
+            if (source == null) {
+                source = KeywordFactory.registerIfAbsent
+                    (SOURCE, ChEMBL, "https://www.ebi.ac.uk/chembl");
+                datasources.put(ChEMBL, source);
+            }
+            
             pstm16.setLong(1, tid);
             ResultSet rset = pstm16.executeQuery();
             int count = 0;
@@ -1167,7 +1225,7 @@ public class TcrdRegistry extends Controller implements Commons {
                 }
                 else {
                     ligand = new Ligand (chemblId);
-                    ligand.properties.add(chembl.getSource());
+                    ligand.properties.add(source);
                     ligand.synonyms.add
                         (KeywordFactory.registerIfAbsent
                          (ChEMBL_SYNONYM, chemblId,
@@ -1267,6 +1325,14 @@ public class TcrdRegistry extends Controller implements Commons {
         }
 
         void addDisease (Target target, long tid) throws Exception {
+            final String type = "DiseaseOntology";
+            Keyword ds = datasources.get(type);
+            if (ds == null) {
+                ds = KeywordFactory.registerIfAbsent
+                    (SOURCE, type, "http://www.disease-ontology.org");
+                datasources.put(type, ds);
+            }
+            
             pstm20.setLong(1, tid);
             final ResultSet rset = pstm20.executeQuery();
             try {
@@ -1281,6 +1347,7 @@ public class TcrdRegistry extends Controller implements Commons {
                                 if (diseases.isEmpty()) {
                                     d = new Disease ();
                                     d.name = name;
+                                    d.properties.add(datasources.get(type));
                                     String doid = rset.getString("doid");
                                     d.synonyms.add
                                         (KeywordFactory.registerIfAbsent
@@ -1297,17 +1364,34 @@ public class TcrdRegistry extends Controller implements Commons {
                             }
                         });
                     
-                    XRef xref = target.addIfAbsent(new XRef (d));
+                    XRef xref = target.addIfAbsent(new XRef (d));                    
+                    String dtype = rset.getString("datype");
                     
-                    String type = rset.getString("datype");
-                    if ("JensenLab Knowledge UniProtKB-KW"
-                        .equalsIgnoreCase(type)) {
-                        xref.addIfAbsent(KeywordFactory.registerIfAbsent
-                                         (IDG_DISEASE, d.name, null));
-                    }
+                    Keyword source = datasources.get(dtype);
+                    if (source == null) {
+                        String url = null;
+                        if (dtype.equalsIgnoreCase("JensenLab Experiment DistiLD")) {
+                            url = "http://distild.jensenlab.org";
+                        }
+                        else if ("JensenLab Knowledge UniProtKB-KW"
+                                 .equalsIgnoreCase(dtype)) {
+                            url = "http://diseases.jensenlab.org";
+                        }
+                        else if ("JensenLab Text Mining".equalsIgnoreCase(dtype)) {
+                            url = "http://diseases.jensenlab.org";
+                        }
 
-                    Keyword source = KeywordFactory.registerIfAbsent
-                        (SOURCE, type, null);
+                        source = KeywordFactory.registerIfAbsent(SOURCE, dtype, url);
+                        datasources.put(dtype, source);
+                    }
+                    d.addIfAbsent((Value)source);
+                    
+                    if ("JensenLab Knowledge UniProtKB-KW"
+                        .equalsIgnoreCase(dtype)) {
+                        xref.addIfAbsent(KeywordFactory.registerIfAbsent
+                                             (IDG_DISEASE, d.name, null));
+                    }
+                    
                     xref.addIfAbsent(source);
                     double zscore = rset.getDouble("zscore");
                     if (!rset.wasNull()) {
@@ -1420,22 +1504,23 @@ public class TcrdRegistry extends Controller implements Commons {
                              +" (protein: "+t.protein+")");
             }
             
-            addDTO(target, t.protein);
-            addTDL(target, t.protein);
-            addPhenotype(target, t.protein);
-            addExpression(target, t.protein);
-            addGO(target, t.protein);
-            addPathway(target, t.id);
-            addPanther(target, t.protein);
-            addPatent(target, t.protein);
-            addGrant(target, t.id);
-            addDrugs(target, t.id);
-            addChembl(target, t.id);
-            addDisease(target, t.id);
-            addHarmonogram(target, t.protein);
-            addGeneRIF(target, t.protein);
-            addTINX(target, t.id);
-            
+            addDTO (target, t.protein);
+            addTDL (target, t.protein);
+            addPhenotype (target, t.protein);
+            addExpression (target, t.protein);
+            addGO (target, t.protein);
+            addPathway (target, t.id);
+            addPanther (target, t.protein);
+            addPatent (target, t.protein);
+            addGrant (target, t.id);
+            addDrugs (target, t.id);
+            addChembl (target, t.id);
+            addDisease (target, t.id);
+            addHarmonogram (target, t.protein);
+            addGeneRIF (target, t.protein);
+            addTINX (target, t.id);
+
+            target.update();
             TARGETS.add(target);
 
             /*
@@ -2186,7 +2271,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  //+"where d.protein_id in (8721)\n"
                  //+"where c.id in (11521)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
-                 +"where b.tdl in ('Tclin','Tchem')\n"
+                 //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
                  //+" where c.uniprot = 'Q8N568'\n"
                  //+" where c.uniprot = 'Q6NV75'\n"
