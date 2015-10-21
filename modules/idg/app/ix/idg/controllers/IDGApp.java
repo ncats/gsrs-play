@@ -22,6 +22,7 @@ import ix.idg.models.Ligand;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
+import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.Play;
 import play.cache.Cached;
@@ -29,6 +30,7 @@ import play.db.ebean.Model;
 import play.mvc.Result;
 import play.mvc.BodyParser;
 import play.mvc.Call;
+import java.util.ArrayList;
 import tripod.chem.indexer.StructureIndexer;
 import ix.seqaln.SequenceIndexer;
 
@@ -2720,15 +2722,15 @@ public class IDGApp extends App implements Commons {
         return nodes;
     }
 
-    public static Map<Long,Long> getPatentInfo(Target target) {
-        Map<Long, Long> ent = new HashMap<Long, Long>();
+    public static String getPatentInfo(Target target) {
+        ArrayList<Long> ent = new ArrayList<Long>();
         for (XRef ref : target.links) {
             if (Timeline.class.getName().equals(ref.kind)) {
                 try {
                     Timeline tl = (Timeline)ref.deRef();
                     if ("Patent Count".equals(tl.name)) {
                         for (Event e : tl.events) {
-                            ent.put(e.start, e.end);
+                            ent.add(e.end);
                         }
                     }
                 }
@@ -2739,6 +2741,9 @@ public class IDGApp extends App implements Commons {
                 }
             }
         }
-        return ent;
+
+        //strip the brackets '[', ']' for sparkline
+        String res = StringUtils.join(ent, ",");
+        return res;
     }
 }

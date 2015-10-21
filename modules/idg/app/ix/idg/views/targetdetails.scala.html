@@ -483,7 +483,7 @@
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
-@**	@if(target.patentCount != null && target.patentCount > 0) { **@
+	@if(target.patentCount != null && target.patentCount > 0) {
           <div class="panel panel-default">
 	    <div class="panel-heading">
 	      <h3 class="panel-title">Patent (@target.patentCount)</h3>
@@ -496,13 +496,9 @@
 		</div>
 		<div class="col-md-2"></div>
 	      </div>
-			<div>
-				<span class="inlinesparkline"></span>
-			</div>
 	    </div>
-
 	  </div>
-@**	} **@
+	}
        
       </div>
       <div class="col-md-4">
@@ -935,14 +931,12 @@
     .tick text {
     visibility:inherit;
     }
-
     </style>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
-	<script type="text/javascript" src='@routes.Assets.at("javascripts/jquery.sparkline.js")'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>        
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>    
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
@@ -1025,23 +1019,7 @@ $(document).ready(function () {
       ykeys: ['count'],
       labels: ['Count']
    });
-
-    var myvalues = @IDGApp.getPatentInfo(target).values();
-    var myXvalues = @IDGApp.getPatentInfo(target).keySet();//[[1994,4],[1991,2],[2003,7],[2006,1],[2007,2],[2009,5],[2010,3],[2012,9],[2013,2],[2015,1]];
-  $('.inlinesparkline').sparkline(myvalues,
-  {
-  	fillColor:"#ffffff",
-  	width:'150px',
-  	height:'50px',
-  	lineColor:'#000000',
-  	highlightSpotColor:"#f08000",
-  	highlightLineColor:"#ffffff",
-  	spotRadius: 2,
-  	highlightColor: "#f08000",
-  	tooltipPrefix: 'Count: '
-  });
-
-   tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
+  tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
 function showLoadModal () {

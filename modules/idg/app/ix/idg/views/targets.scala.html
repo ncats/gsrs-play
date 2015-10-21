@@ -18,7 +18,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@IDGApp.format(t.novelty)</td>
         <td>@t.pubmedCount</td>
         <td>@t.grantCount</td>
-        <td>@t.patentCount</td>
+       @** <td>@t.patentCount</td> **@
+        <td><span class="inlinesparkline">@IDGApp.getPatentInfo(t)</span></td>
         <td>@t.antibodyCount</td>
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
         <td><div id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
@@ -237,6 +238,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
 
 <head>
     <style type="text/css">
+    .jqstooltip { box-sizing: content-box;}
     </style>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
@@ -249,9 +251,10 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     <script type="text/javascript" src='@routes.Assets.at("javascripts/kinome.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/cart.js")'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>    
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/jquery.sparkline.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>        
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("fabric.min.js"))'></script>
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/clustergram.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' /> 
@@ -343,6 +346,10 @@ $(document).ready(function () {
     });
 
 
+
+
+
+
     // iterate over all .radar-XXX elements and draw the radar chart
     // currently we pull chart data dynamically, but really should be
     // generated at compile time
@@ -393,6 +400,8 @@ $(document).ready(function () {
 	    $("#sc-count" ).html('');
 	});
     });
+
+     $('.inlinesparkline').sparkline('html', {width:'50px'});
 });
 
 function showLoadModal () {
