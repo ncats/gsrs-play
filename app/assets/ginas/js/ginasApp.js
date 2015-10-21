@@ -78,7 +78,7 @@
         return lookup;
     });
 
-    ginasApp.controller("GinasController", function($scope, $resource, $location, $modal, $http, $window, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
+    ginasApp.controller("GinasController", function($scope, $resource, $parse, $location, $modal, $http, $window, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
 
         $scope.range = function(min, step){
             step = step || 1;
@@ -203,6 +203,7 @@
         };
         ///
 
+
         $scope.proteinDetails = function(obj, form){
             $scope.$broadcast('show-errors-check-validity');
             console.log(obj);
@@ -216,37 +217,97 @@
             $scope.$broadcast('show-errors-reset');
         };
 
-        $scope.parseSite = function(obj, form){
-            var site ={};
-            var site2 ={};
-            var disulfide=[];
-            if(!$scope.substance.protein.disulfideLinks) {
-                $scope.substance.protein.disulfideLinks = [];
-            }
-            console.log(obj);
-            site.subunitIndex = obj.subunitIndex;
-            site.residueIndex = obj.residueIndex;
-            disulfide.push(site);
-            console.log(disulfide);
-            site2.subunitIndex = obj.subunitIndexEnd;
-            site2.residueIndex = obj.residueIndexEnd;
-            disulfide.push(site2);
-/*
-            console.log(_.findWhere($scope.substance.subunits[obj.subunitIndex-1].display[obj.subunitIndex-1], {'residueIndex': obj.residueIndex }),{});
-*/
-            console.log($scope.substance.subunits[obj.subunitIndex-1]);
-            console.log($scope.substance.subunits[obj.subunitIndex-1].display[obj.residueIndex]);
+        $scope.setDisulfide = function(site, bridge){
+            site.disulfide = true;
+            site.bridge = bridge;
+            console.log(site);
+        };
 
-            //console.log($scope.substance.subunits[obj.subunitIndex-1].display[obj.residueIndex].index[obj.residueIndex]);
+        $scope.findSite = function(array, index){
+            var returnSite ={};
+            _.forEach(array, function(n){
+                var temp =(_.find(n,'residueIndex',  index));
+                if(typeof temp !== "undefined"){
+                    console.log(temp);
+                    returnSite= temp;
+                }
+            });
+            return returnSite;
+        };
+
+        $scope.makeSite = function(obj){
+            console.log(obj);
+            var site = {};
+            site.subunitIndex = obj.subunitIndex-1+1;
+            site.residueIndex = obj.residueIndex-1+1;
+            return site;
+        };
+
+
+        $scope.parseDisulfide = function(obj, type){
+            console.log(type);
+            var disulfide=[];
+            var tempSite ={};
+            //make sure disulfides list is there
+            if(!$scope.substance.protein[type]) {
+                $scope.substance.protein[type] = [];
+            }
+
+            //PERSIST--add sites to disulfide list
+            var site = $scope.makeSite(obj);
+            disulfide.push(site);
+
+            //DISPLAY--make array for bridge site
+            var bridge = [obj.subunitIndexEnd, obj.residueIndexEnd];
+
+            //DISPLAY-- find site, add disulfide property and bridge
+            var subunit = (_.pick($scope.substance.subunits, 'index', obj.subunitIndex-1)[0]);
+            tempSite = $scope.findSite(subunit.display, obj.residueIndex-1+1);
+            $scope.setDisulfide(tempSite, bridge);
+
+            //DO IT AGAIN for ending index. can't really be done in a loop, can make and end site object and abstract these though
+            var endSite = $scope.makeSite({'subunitIndex':obj.subunitIndexEnd-1+1,'residueIndex':obj.residueIndexEnd-1+1 });
+
+            disulfide.push(endSite);
+            var endBridge = [obj.subunitIndex, obj.residueIndex];
+            subunit = (_.pick($scope.substance.subunits, 'index', obj.subunitIndexEnd-1)[0]);
+            var tempEndSite = $scope.findSite(subunit.display, obj.residueIndexEnd-1+1);
+            $scope.setDisulfide(tempEndSite, endBridge);
+
 
 
             $scope.substance.protein.disulfideLinks.push(disulfide);
-            console.log($scope.substance);
+        };
 
 
-           // console.log($scope.substance.subunits[obj.subunitIndex-1].display[obj.residueIndex-1].index[obj.residueIndex]);
+        $scope.parseGlycosylation = function(obj, type){
+            console.log(type);
+            var tempSite ={};
+            if(!$scope.substance.protein[type]) {
+                $scope.substance.protein[type] = {};
+            }
+            if(!$scope.substance.protein.glycosylation.count) {
+                $scope.substance.protein.glycosylation.count = 0;
+            }
+            var site = $scope.makeSite(obj);
+                var link = obj.link;
+                // Get the model
+                var model = $parse(link+"GlycosylationSites");
+                // Assigns a value to it
+                console.log(model);
+                model.assign($scope.substance.protein[type], []);
+                // Apply it to the scope
+                // $scope.$apply();
+            $scope.substance.protein.glycosylation[link+"GlycosylationSites"].push(site);
+            $scope.substance.protein.glycosylation.count ++;
+                console.log($scope);
 
+                var glycosylation=[];
 
+            //DISPLAY-- find site, add disulfide property and bridge
+            var subunit = (_.pick($scope.substance.subunits, 'index', obj.subunitIndex-1)[0]);
+            tempSite = $scope.findSite(subunit.display, obj.residueIndex-1+1);
+            $scope.setGlycosylation(tempSite, link);
         };
 
 
@@ -255,8 +316,11 @@
             console.log(type);
             if(type =='protein'){
                 $scope.proteinDetails(obj, form);
-            }else if(type =='disulfideLink') {
-                $scope.parseSite(obj, form);
+            }else if(type =='disulfideLinks') {
+                $scope.parseDisulfide(obj, type);
+            }
+            else if(type =='glycosylation') {
+                $scope.parseGlycosylation(obj, type);
             }else{
                 $scope.$broadcast('show-errors-check-validity');
                 if (form.$valid) {
@@ -769,7 +833,7 @@
                     obj.value = aa;
                     obj.valid = false;
                     obj.subunitIndex= subunit;
-                    obj.index = i-1+2;
+                    obj.residueIndex = i-1+2;
                     display.push(obj);
                     obj = {};
                 } else {
@@ -778,7 +842,7 @@
                     obj.name = findName(aa);
                     obj.type = getType(aa);
                     obj.subunitIndex= subunit;
-                    obj.index = i-1+2;
+                    obj.residueIndex = i-1+2;
                     if(aa.toUpperCase()=='C'){
                         obj.cysteine = true;
                     }
