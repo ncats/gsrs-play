@@ -22,6 +22,7 @@ import ix.idg.models.Ligand;
 import ix.idg.models.Target;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
+import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.Play;
 import play.libs.Akka;
@@ -30,7 +31,6 @@ import play.db.ebean.Model;
 import play.mvc.Result;
 import play.mvc.BodyParser;
 import play.mvc.Call;
-
 import tripod.chem.indexer.StructureIndexer;
 import ix.seqaln.SequenceIndexer;
 
@@ -2834,5 +2834,30 @@ public class IDGApp extends App implements Commons {
             }
         }
         return nodes;
+    }
+
+    public static String getPatentInfo(Target target) {
+        ArrayList<Long> ent = new ArrayList<Long>();
+        for (XRef ref : target.links) {
+            if (Timeline.class.getName().equals(ref.kind)) {
+                try {
+                    Timeline tl = (Timeline)ref.deRef();
+                    if ("Patent Count".equals(tl.name)) {
+                        for (Event e : tl.events) {
+                            ent.add(e.end);
+                        }
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    Logger.error("Can't dereference link "
+                            +ref.kind+":"+ref.refid);
+                }
+            }
+        }
+
+        //strip the brackets '[', ']' for sparkline
+        String res = StringUtils.join(ent, ",");
+        return res;
     }
 }

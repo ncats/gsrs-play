@@ -438,15 +438,23 @@
 		      </tr>
 		   }
 		   <tr>
-		     <td>Grant Count</td>
+		     <td>
+				 <span data-toggle="tooltip"
+				 data-html="true"
+				 title="<p align='left'>Number of NIH funded grant applications for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurateGrant Count</p>"></span>
+					 </td>
 		     <td>@target.grantCount</td>
 		   </tr>
 	           <tr>
-		     <td>R01 Count</td>
+		     <td><span data-toggle="tooltip"
+			 data-html="true"
+			 title="<p align='left'>Number of NIH funded R01 grants for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">R01 Count</span></td>
 		     <td>@target.r01Count</td>
 		   </tr>
 		   <tr>
-		     <td>Funding ($)</td>
+		     <td><span data-toggle="tooltip"
+			 data-html="true"
+			 title="<p align='left'>NIH funding (2010-2014) based on text mining of grant application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Funding ($)</span></td>
 		     <td>@{"%.2f".format(target.grantTotalCost)}</td>
 		   </tr>
 	           </table>
@@ -535,7 +543,9 @@
       <div class="col-md-6">   
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Disease Relevance (@diseases.size())</h3>
+            <h3 class="panel-title"><span data-toggle="tooltip"
+			data-html="true"
+			title="<p align='left'>Disease-gene associations mined from Medline Franklid et al, Methods, 2015, 83-89</p>">Disease Relevance (@diseases.size())</h3>
           </div>
           <div class="panel-body">
                <table class="tree table">
@@ -601,8 +611,10 @@
 			      </div>
 			      <div class="col-md-2"></div>
 	      		 </div>
-	    	    	 <div class="panel-footer">
-	      		      Tissue Specificity Index
+	    	    	 <div class="panel-footer"><span data-toggle="tooltip"
+					 data-html="true"
+					 title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
+	      		      Tissue Specificity Index</span>
 	    		 </div>
 	            </div>
 		 </div>
@@ -611,11 +623,19 @@
 		 <div class="col-md-8">
 	              <ul class="nav nav-tabs">
 		        <li role="presentation" class="active"><a href="#idg-tab" aria-controls="idg" data-toggle="tab">IDG</a></li>
-		        <li role="presentation"><a href="#gtex-tab" role="tab" aria-controls="gtex" data-toggle="tab">GTEx</a></li>
-		        <li role="presentation"><a href="#hpm-tab" role="tab" data-toggle="tab">HPM</a></li>
-		        <li role="presentation"><a href="#hpa-tab" role="tab" data-toggle="tab">HPA</a></li>
+		        <li role="presentation"><a href="#gtex-tab" role="tab" aria-controls="gtex" data-toggle="tab">
+					<span data-toggle="tooltip"
+					data-html="true"
+					title="<p align='left'>Tissue expression data from The Genotype-Tissue Expression (GTEx) project</p>">GTEx</span></a></li>
+		        <li role="presentation"><a href="#hpm-tab" role="tab" data-toggle="tab">
+					<span data-toggle="tooltip"
+					data-html="true"
+					title="<p align='left'>Tissue expression data from The Human Proteome Map (HPM)</p>">HPM</span></a></li>
+		        <li role="presentation"><a href="#hpa-tab" role="tab" data-toggle="tab">
+					<span data-toggle="tooltip"
+					data-html="true"
+					title="<p align='left'>Tissue expression data from The Human Protein Atlas</p>">HPA</span></a></li>
 		      </ul>
-
 		   <div class="tab-content">
 		      <div role="tabpanel" class="tab-pane active" id="idg-tab">
 		        @expression(IDG_EXPR, "idg")
@@ -782,7 +802,9 @@
       <div class="col-md-12">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Gene RIF (@generifs.size)</h3>
+            <h3 class="panel-title"><span data-toggle="tooltip"
+			data-html="true"
+			title="<p align='left'>Number of GeneRIFs annotations from NCBI Gene</p>">Gene RIF (@generifs.size)</span></h3>
           </div>
           <div class="panel-body">
             <div class="panel-body">
@@ -883,13 +905,12 @@
     .tick text {
     visibility:inherit;
     }
-
     </style>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
-    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>        
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
     <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>    
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
@@ -1027,8 +1048,7 @@ $(document).ready(function () {
       ykeys: ['count'],
       labels: ['Count']
    });
-   
-   tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
+  tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
 function showLoadModal () {

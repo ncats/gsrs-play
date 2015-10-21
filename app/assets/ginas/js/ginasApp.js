@@ -88,6 +88,38 @@
         };
 
 
+        $scope.openSelector = function (storein) {
+                console.log("openning");
+            var modalInstance = $modal.open({
+                animation: true,
+                templateUrl: baseurl + 'assets/ginas/templates/substanceSelector.html',
+                controller: 'SubstanceSelectorInstanceController',
+                size: 'lg'
+
+            });
+
+            modalInstance.result.then(function (selectedItem) {
+                var subref = {};
+                console.log(selectedItem);
+                subref.refuuid = selectedItem.uuid;
+                subref.refPname = selectedItem.name;
+                subref.approvalID = selectedItem.approvalID;
+                subref.substanceClass = "reference";
+                //this part assumes there's only ever 1 substance reference for a whole substance.
+                //However, there are likely to be many (maybe hundreds) in various contexts.
+                //If this is to be used as a stop-gap measure, it at least needs to be a key-value
+                //pair array for later selection. 
+                //storein = subref;
+                console.log($scope);
+                console.log(storein);
+                console.log(getObjectAt($scope,storein));
+                setObjectAt($scope,storein,subref);
+                $scope.subref=subref;
+                //$scope[storein]=subref;
+                console.log("selected");
+            });
+        };
+
         $scope.toFormSubstance = function (apiSub) {
 
             //first, flatten nameorgs, this is technically destructive
@@ -329,23 +361,25 @@
                 default:
                     $scope.$broadcast('show-errors-check-validity');
                     if (form.$valid) {
-                        if (this.substance[type]) {
+                        if (getObjectAt(this.substance,type)) {
                             if (type == 'references') {
                                 if (typeof obj.uuid == "undefined") {
                                     obj.uuid = uuid();
                                 }
                                 obj.id = this.substance.references.length + 1;
                             }
-                            this.substance[type].push(obj);
+                            getObjectAt(this.substance,type).push(obj);
+                            //this.substance[type].push(obj);
                         } else {
-                            this.substance[type] = [];
+                            setObjectAt(this.substance,type, []);
                             if (type == 'references') {
                                 if (typeof obj.uuid == "undefined") {
                                     obj.uuid = uuid();
                                 }
                                 obj.id = 1;
                             }
-                            this.substance[type].push(obj);
+                            getObjectAt(this.substance,type).push(obj);
+                            //this.substance[type].push(obj);
                         }
                         $scope.$broadcast('show-errors-reset');
                     }
@@ -757,17 +791,7 @@
                  amap :'='*/
 
             },
-            link: function (scope, element) {
-                $http({
-                    method: 'GET',
-                    url: baseurl + 'img/' + scope.id + '.svg',
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).success(function (data) {
-                    element.html(data);
-                });
-            }
+           template: '<img src=\"' + baseurl + 'img/{{id}}.svg\">'
         };
     });
 
@@ -785,6 +809,7 @@
             template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.unit}}</span></div>'
         };
     });
+    
 
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';
@@ -1332,33 +1357,7 @@
 
     });
 
-    ginasApp.controller('SubstanceSelectorController', function ($scope, $modal, Substance) {
-
-
-        $scope.open = function (size) {
-
-            var modalInstance = $modal.open({
-                animation: true,
-                templateUrl: 'substanceSelector.html',
-                controller: 'SubstanceSelectorInstanceController',
-                size: 'lg'
-
-            });
-
-            modalInstance.result.then(function (selectedItem) {
-                var subref = {};
-                console.log(selectedItem);
-                subref.refuuid = selectedItem.uuid;
-                subref.refPname = selectedItem.name;
-                subref.approvalID = selectedItem.approvalID;
-                subref.substanceClass = "reference";
-                Substance.subref = subref;
-            });
-        };
-
-
-    });
-
+  
     // Please note that $modalInstance represents a modal window (instance) dependency.
     // It is not the same as the $modal service used above.
 
@@ -1439,6 +1438,32 @@ function getDisplayFromCV(domain, value) {
 function vocabsetup(cv) {
     window.CV_REQUEST = cv;
     console.log("finished");
+}
+
+function getObjectAt(obj, path){
+        var v = path.split(".");
+        var reto=obj;
+        for(var i=0;i<v.length;i++){
+                reto = reto[v[i]];
+                if(typeof reto == "undefined" || reto === null){
+                        return undefined;
+                }
+        }
+        return reto;
+}
+function setObjectAt(obj, path, nobj){
+        var v = path.split(".");
+        var reto=obj;
+        for(var i=0;i<v.length-1;i++){
+                if(typeof reto[v[i]] == "undefined" || reto[v[i]] === null){
+                        reto[v[i]]={};        
+                }
+                reto = reto[v[i]];                
+        }
+        if(typeof reto !== "undefined"){
+                reto[v[v.length-1]]=nobj;
+        }
+        return reto;
 }
 
 

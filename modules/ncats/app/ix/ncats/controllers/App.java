@@ -19,7 +19,6 @@ import play.libs.ws.*;
 import play.libs.F;
 import play.libs.Akka;
 import play.mvc.Http;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -36,7 +35,6 @@ import akka.routing.RoundRobinRouter;
 import akka.routing.SmallestMailboxRouter;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import ix.core.search.TextIndexer;
 import ix.seqaln.SequenceIndexer;
 import static ix.core.search.TextIndexer.*;
@@ -59,7 +57,6 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
 import ix.utils.Global;
-
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
 import chemaxon.struc.MolAtom;
@@ -67,8 +64,11 @@ import chemaxon.struc.MolBond;
 import chemaxon.util.MolHandler;
 
 import java.awt.Dimension;
+
 import javax.imageio.ImageIO;
+
 import java.awt.image.BufferedImage;
+
 import org.freehep.graphicsio.svg.SVGGraphics2D;
 
 import gov.nih.ncgc.chemical.Chemical;
@@ -83,15 +83,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.sf.ehcache.Element;
 
+import net.sf.ehcache.Element;
 import ix.ncats.controllers.auth.*;
 
 /**
  * Basic plumbing for an App
  */
 public class App extends Authentication {
-    static final String APP_CACHE = App.class.getName();
+    private static final String KEY_DISPLAY_CD = "DISPLAY_CD";
+
+        private static final String DISPLAY_CD_VALUE_RELATIVE = "RELATIVE";
+
+        static final String APP_CACHE = App.class.getName();
     
     static final String RENDERER_URL =
         play.Play.application()
@@ -978,11 +982,17 @@ public class App extends Authentication {
         }
     }
 
+     public static byte[] render (Molecule mol, String format, int size, int[] amap) throws Exception{
+        return render(mol,format,size,amap,null);
+         }
 
-     public static byte[] render (Molecule mol, String format, int size, int[] amap)
+     public static byte[] render (Molecule mol, String format, int size, int[] amap, Map newDisplay)
         throws Exception {
         Chemical chem = new Jchemical (mol);
         DisplayParams dp = DisplayParams.DEFAULT();
+        if(newDisplay!=null)
+        dp.changeSettings(newDisplay);
+        
         //chem.reduceMultiples();
         boolean highlight=false;
         if(amap!=null && amap.length>0){
@@ -994,8 +1004,6 @@ public class App extends Authentication {
                         highlight=true;
                     }
                 }
-        }else{
-                
         }
         
         if(size>250 && !highlight){
@@ -1013,6 +1021,8 @@ public class App extends Authentication {
        
         ChemicalRenderer render = new NchemicalRenderer ();
         render.setDisplayParams(dp);
+        render.addDisplayProperty("TOP_TEXT");
+        render.addDisplayProperty("BOTTOM_TEXT");
         ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
         if (format.equals("svg")) {
             SVGGraphics2D svg = new SVGGraphics2D
@@ -1032,13 +1042,43 @@ public class App extends Authentication {
     
     public static byte[] render (Structure struc, String format, int size, int[] amap)
         throws Exception {
+        Map newDisplay = new HashMap();
+        if(struc.stereoChemistry == struc.stereoChemistry.RACEMIC){
+                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
+        }
         MolHandler mh = new MolHandler
             (struc.molfile != null ? struc.molfile : struc.smiles);
         Molecule mol = mh.getMolecule();
         if (mol.getDim() < 2) {
             mol.clean(2, null);
         }
-        return render (mol, format, size, amap);
+        if(struc.opticalActivity!= struc.opticalActivity.UNSPECIFIED && struc.opticalActivity!=null){
+                if(struc.definedStereo>0){
+                        if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
+                                if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC||struc.stereoChemistry==struc.stereoChemistry.RACEMIC||struc.stereoChemistry==struc.stereoChemistry.MIXED){
+                                        mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
+                                }
+                        }
+                }
+                if(struc.opticalActivity==struc.opticalActivity.PLUS){
+                        mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
+                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+                }
+                }else if(struc.opticalActivity==struc.opticalActivity.MINUS){
+                        mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
+                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+                }
+                }               
+        }
+
+        if(size>250){
+                        if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
+                                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+        }
+        if(newDisplay.size()==0)newDisplay=null;
+        return render (mol, format, size, amap,newDisplay);
     }
 
     public static int[] stringToIntArray(String amapString){
