@@ -2,12 +2,16 @@ package ix.core.models;
 
 import java.util.List;
 import java.util.ArrayList;
+
+import be.objectify.deadbolt.core.models.Permission;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_acl")
-public class Acl extends Model {
+public class Acl extends Model implements Permission{
 
     public enum Permission {
         None, // 
@@ -26,6 +30,7 @@ public class Acl extends Model {
     @ManyToMany(cascade=CascadeType.ALL)
     @Basic(fetch=FetchType.EAGER)
     @JoinTable(name="ix_core_acl_principal")
+    @JsonManagedReference
     public List<Principal> principals = new ArrayList<Principal>();
 
     @ManyToMany(cascade=CascadeType.ALL)
@@ -56,4 +61,10 @@ public class Acl extends Model {
     public static Acl newAdmin () {
         return new Acl (Permission.Admin);
     }
+
+    public String getValue()
+    {
+        return perm.toString();
+    }
 }
+
