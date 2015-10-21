@@ -86,7 +86,7 @@ public class Target extends EntityModel {
     @Indexable(facet=true,name=IDG_DEVELOPMENT)
     public TDL idgTDL; // target development level
 
-    @Indexable(sortable=true,name="Novelty")
+    @Indexable(sortable=true,name="Novelty",facet=true, ranges={0,5,10,15,20,25}, format="%1$.3f")
     public Double novelty;
 
     @JsonView(BeanViews.Full.class)

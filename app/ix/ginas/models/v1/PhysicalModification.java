@@ -17,7 +17,7 @@ import ix.ginas.models.Ginas;
 @Table(name="ix_ginas_physicalmod")
 @JSONEntity(title = "Physical Modification", isFinal = true)
 public class PhysicalModification extends Ginas {
-    @JSONEntity(title = "Role of Modification", isRequired = true)
+    @JSONEntity(title = "SecurityRole of Modification", isRequired = true)
     @Column(nullable=false)
     public String physicalModificationRole;
     

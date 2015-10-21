@@ -13,8 +13,10 @@
 @import ix.idg.controllers.UniprotRegistry
 @import ix.utils.Util
 @import java.net.URLEncoder
+@import be.objectify.deadbolt.java.views.html._
+@import ix.idg.security.IdgDeadboltHandler
 
-@(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword])
+@(target: Target, diseases: List[DiseaseRelevance], breadcrumb: List[Keyword], handlerIdg : IdgDeadboltHandler)
 
 @facet(label: String, value: String, href: String = null, max: Int = 40) = {
   @if(max > 0 && value.length > max) {
@@ -291,7 +293,8 @@
       <!--
         -- Synonyms
         -->
-      <div class="col-md-4">
+      @dynamic(name = "viewDetails", handler = handlerIdg) {
+        <div class="col-md-4">
         <div class="panel panel-default">
           <div class="panel-heading">
             <h3 class="panel-title">Synonyms <i class="fa fa-external-link"></i> </h3>
@@ -333,12 +336,15 @@
             </table>
           </div>
         </div>
+             }
       <!--
         -- Genes
         -->
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Gene <i class="fa fa-external-link"></i></h3>
+            <h3 class="panel-title"><span data-toggle="tooltip"
+            data-html="true"
+            title="<p align='left'>Antibody count from antibodypedia.com</p>">Gene</span> <i class="fa fa-external-link"></i></h3>
           </div>
           <div class="panel-body">
             @for(kw <- target.synonyms) {
@@ -449,7 +455,10 @@
         @property(ChEMBL_PROTEIN_CLASS, null, -1)
 	@property(IMPC_TERM)
 	@property("Pathway", null, 1)
-        @property(UNIPROT_KEYWORD)
+
+          @dynamic(name = "viewDetails", handler = handlerIdg) {
+              @property(UNIPROT_KEYWORD)
+          }
        </div>
     </div> <!-- row -->
     <!--
@@ -727,6 +736,8 @@
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.layout.cloud.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.css"))' />
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
 </head>
 

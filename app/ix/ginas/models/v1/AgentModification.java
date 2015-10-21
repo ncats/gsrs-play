@@ -17,7 +17,7 @@ public class AgentModification extends Ginas {
     @JSONEntity(title = "Process")
     public String agentModificationProcess;
     
-    @JSONEntity(title = "Role")
+    @JSONEntity(title = "SecurityRole")
     public String agentModificationRole;
     
     @JSONEntity(title = "Type", isRequired = true)

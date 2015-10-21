@@ -1,5 +1,6 @@
 package ix.idg.controllers;
 
+import be.objectify.deadbolt.java.actions.*;
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.QueryIterator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,23 +10,23 @@ import ix.core.controllers.PredicateFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
-import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
+import ix.idg.security.IdgDeadboltHandler;
 import ix.ncats.controllers.App;
+import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
 import play.Logger;
 import play.Play;
 import play.cache.Cached;
 import play.db.ebean.Model;
-import play.mvc.Result;
 import play.mvc.BodyParser;
 import play.mvc.Call;
+import play.mvc.Result;
 import tripod.chem.indexer.StructureIndexer;
-import ix.seqaln.SequenceIndexer;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -378,7 +379,8 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         IDG_DISEASE,
         IDG_TISSUE,
-        GWAS_TRAIT
+        GWAS_TRAIT,
+        IDG_NOVELTY
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -472,34 +474,38 @@ public class IDGApp extends App implements Commons {
         }
     }
 
+   // @Restrict(value = {@Group("Admin")}, handlerKey = "idg")
+    //@Pattern(value = "Read")
+   // @Pattern(value = "viewTaregts", patternType = PatternType.CUSTOM)
+   // @Dynamic(value = "viewTargets", handlerKey = "idg")
     @Cached(key="_index", duration = Integer.MAX_VALUE)
     public static Result index () {
-        return ok (ix.idg.views.html.index2.render
-                   ("Pharos: Illuminating the Druggable Genome",
-                    DiseaseFactory.finder.findRowCount(),
-                    TargetFactory.finder.findRowCount(),
-                    LigandFactory.finder.findRowCount()));
+        return ok(ix.idg.views.html.index2.render
+                ("Pharos: Illuminating the Druggable Genome",
+                        DiseaseFactory.finder.findRowCount(),
+                        TargetFactory.finder.findRowCount(),
+                        LigandFactory.finder.findRowCount()));
     }
 
     public static Result home () {
-        return redirect (routes.IDGApp.index());
+        return redirect(routes.IDGApp.index());
     }
 
     @Cached(key="_kinome", duration = Integer.MAX_VALUE)
     public static Result kinome () {
-        return ok (ix.idg.views.html.kinome.render());
+        return ok(ix.idg.views.html.kinome.render());
     }
 
     public static Result error (int code, String mesg) {
-        return ok (ix.idg.views.html.error.render(code, mesg));
+        return ok(ix.idg.views.html.error.render(code, mesg));
     }
 
     public static Result _notFound (String mesg) {
-        return notFound (ix.idg.views.html.error.render(404, mesg));
+        return notFound(ix.idg.views.html.error.render(404, mesg));
     }
 
     public static Result _badRequest (String mesg) {
-        return badRequest (ix.idg.views.html.error.render(400, mesg));
+        return badRequest(ix.idg.views.html.error.render(400, mesg));
     }
 
     public static Result _internalServerError (Throwable t) {
@@ -574,8 +580,7 @@ public class IDGApp extends App implements Commons {
             Disease.class, Target.class, Ligand.class
         };
 
-        List<DataSource> sources = new ArrayList<DataSource>();
-        for (String la : labels ) {
+		List<DataSource> sources = new ArrayList<DataSource>();        for (String la : labels ) {
             DataSource ds = new DataSource (la);
             for (Class cls : entities) {
                 opts = new SearchOptions (cls, 1, 0, 10);
@@ -596,6 +601,7 @@ public class IDGApp extends App implements Commons {
             }
             sources.add(ds);
         }
+        
 
         return sources.toArray(new DataSource[0]);
     }
@@ -630,9 +636,9 @@ public class IDGApp extends App implements Commons {
         throws Exception {
         final String key = "targets/"+t.id+"/diseases";
         return getOrElse
-            (key, new Callable<List<DiseaseRelevance>> () {
-                    public List<DiseaseRelevance> call () throws Exception {
-                        return getDiseaseRelevances (t);
+                (key, new Callable<List<DiseaseRelevance>>() {
+                    public List<DiseaseRelevance> call() throws Exception {
+                        return getDiseaseRelevances(t);
                     }
                 });
     }
@@ -644,7 +650,7 @@ public class IDGApp extends App implements Commons {
         List<Keyword> breadcrumb = getBreadcrumb (t);
         
         return ok (ix.idg.views.html
-                   .targetdetails.render(t, diseases, breadcrumb));
+                   .targetdetails.render(t, diseases, breadcrumb, new IdgDeadboltHandler()));
     }
 
     public static Result targetWarmCache (String secret) {
@@ -859,6 +865,7 @@ public class IDGApp extends App implements Commons {
         return prune;
     }
 
+
     static Result createTargetResult
             (TextIndexer.SearchResult result, int rows, int page) {
         TextIndexer.Facet[] facets = filter
@@ -874,7 +881,7 @@ public class IDGApp extends App implements Commons {
 
         return ok(ix.idg.views.html.targets.render
                   (page, rows, result.count(),
-                   pages, decorate (facets), targets, result.getKey()));
+                   pages, decorate (facets), targets, result.getKey(),  new IdgDeadboltHandler()));
 
     }
 
@@ -914,7 +921,9 @@ public class IDGApp extends App implements Commons {
                    pages, decorate (facets), diseases));
     }
 
+   // @Restrict(value = {@Group("Admin")}, handlerKey = "idg")
     public static Result targets (String q, final int rows, final int page) {
+
         try {
             if (q != null && q.trim().length() == 0)
                 q = null;
@@ -989,7 +998,9 @@ public class IDGApp extends App implements Commons {
         return query;
     }
 
+    @Dynamic(value = "viewTargets", handlerKey = "idg")
     static Result _targets (final String q, final int rows, final int page)
+
         throws Exception {
         final String key = "targets/"+Util.sha1(request ());
         Logger.debug("Targets: q="+q+" rows="+rows+" page="+page+" key="+key);
@@ -1049,7 +1060,7 @@ public class IDGApp extends App implements Commons {
                         return ok (ix.idg.views.html.targets.render
                                    (page, _rows, total, pages,
                                     decorate (facets),
-                                    targets, result.getKey()));
+                                    targets, result.getKey(), new IdgDeadboltHandler()));
                     }
                 });
         }
