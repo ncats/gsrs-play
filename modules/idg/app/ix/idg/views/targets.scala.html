@@ -19,7 +19,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@t.pubmedCount</td>
         <td>@t.grantCount</td>
        @** <td>@t.patentCount</td> **@
-        <td><span class="inlinesparkline">@IDGApp.getPatentInfo(t)</span></td>
+        <td>@t.patentCount <span class="inlinesparkline">@IDGApp.getPatentInfo(t)</span></td>
         <td>@t.antibodyCount</td>
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
         <td><div id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
