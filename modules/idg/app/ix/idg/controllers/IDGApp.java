@@ -1076,6 +1076,10 @@ public class IDGApp extends App implements Commons {
                 append(csvQuote((String)novelty)).append(",").
                 append(csvQuote(t.idgFamily)).append(",").
                 append(csvQuote(function.toString())).append(",").
+                append(csvQuote(String.valueOf(t.r01Count))).
+                append(csvQuote(String.valueOf(t.patentCount))).
+                append(csvQuote(String.valueOf(t.antibodyCount))).
+                append(csvQuote(String.valueOf(t.pubmedCount))).
                 append(csvQuote(sb2.toString()));
         return sb.toString();
     }
@@ -1108,7 +1112,8 @@ public class IDGApp extends App implements Commons {
 
             if (action.toLowerCase().equals("download")) {
                 StringBuilder sb = new StringBuilder();
-                String tmp = "URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function,PMIDs";
+                String tmp = "URL,Uniprot ID,Name,Description,Development Level,DTOClass,PantherClass,ChemblClass,Novelty,Target Family,Function," +
+                        "R01Count,PatentCount,AntibodyCount,PubmedCount,PMIDs";
                 tmp = tmp.replace(",", "\",\"");
                 tmp = "\""+tmp + "\"\n";
                 sb.append(tmp);
