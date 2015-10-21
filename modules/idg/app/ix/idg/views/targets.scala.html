@@ -155,56 +155,7 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
     </div>
 </div>
 
-<div class="modal fade" id="modal-radar" tabindex="-1"
-     role="dialog" aria-labelledby="modalLabelRadar" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close"
-                data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="modalLabelRadar"></h4>
-            </div>
-            <div class="modal-body">
-	      <div class="row">
-              <div class="col-md-3">
-                  <form>
-                      <div class="form-group">
-                          <label for="select-agg">Aggregation Type</label>
-                          <select id="select-agg">
-                              <option value="radar-attr_type">Attribute Type</option>
-                              <option value="radar-attr_group">Attribute Group</option>
-                              <option value="radar-data_type">Data Type</option>
-                          </select>
-                      </div>
-                      <div class="form-group">
-                          <label for="select-overlay">Overlay Data from</label>
-                          <select id="select-overlay">
-                              <option value="none">None</option>
-                              <option value="all">All targets</option>
-                              <option value="tdark">TDark</option>
-                              <option value="tchem">TChem</option>
-                              <option value="tbio">TBio</option>
-                              <option value="tclin">TClin</option>
-                          </select>
-                      </div>
-                  </form>
-            <label for="radar-ds-container">Data Sources</label>
-            <div id="radar-ds-container">
-
-            </div>
-		</div>
-		<div class="col-md-9">
-		  <div id="modal-radardiv" target=""
-		       style="display: inline;"
-		       class="embed-responsive embed-responsive-4by3">
-		  </div>
-		</div>
-	      </div>
-            </div>
-        </div>
-    </div>
-</div>
+@modalradar(null)
 
 <div class="modal fade" id="hgramModal" tabindex="-1"
      role="dialog" aria-labelledby="hgramModalLabel" aria-hidden="true" >
@@ -396,46 +347,19 @@ $(document).ready(function () {
             url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")'+'&q='+target,
             dataType:"json",
             success:function(data) {
-                var chart = RadarChart.chart();
-                chart.config({
-                    w:600, h:600,
-                    axisText:true, levels:0, circles:true,
-                    axisTextMouseOverFunc: showDataSources('#radar-ds-container', '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type')
-                });
+                var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type');
                 $("#modal-radardiv" ).attr("target", target);
-                $("#radar-ds-container" ).empty();
-                var svg = d3.select("#modal-radardiv").append('svg' )
-                    .attr("width", 600 )
-                    .attr("height", 600)
-                    .append('g').classed('focus', 1).datum(data).call(chart);
                 $("#modalLabelRadar" ).text("Data type summary for "+target);
-                $("#modal-radar" ).modal("show");
+                renderChart(data, chartConfig);
             }
         });
     });
-
-    function renderChart(chartData, aggType, target) {
-        var chart = RadarChart.chart();
-        chart.config({
-            w:600, h:600,
-            axisText:true, levels:0, circles:true,
-            axisTextMouseOverFunc: showDataSources('#radar-ds-container',
-                '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field='+aggType)
-        });
-        $("#modal-radardiv" ).empty();
-        $("#radar-ds-container" ).empty();
-        var svg = d3.select("#modal-radardiv").append('svg' )
-            .attr("width", 600 )
-            .attr("height", 600)
-            .append('g').classed('focus', 1).datum(chartData).call(chart);
-        $("#modalLabelRadar" ).text("Data type summary for "+target);
-        $("#modal-radar" ).modal("show");
-    }
 
     $("#select-agg" ).on('change', function() {
         var aggType = $(this ).val();
         var target = $("#modal-radardiv" ).attr("target");
         var overlay = $("#select-overlay" ).val();
+        var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' + '?field=' + aggType);
         var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
         var pud;
         if (overlay == 'none')
@@ -446,12 +370,14 @@ $(document).ready(function () {
             var chartData = atd[0];
             if (overlay != 'none')
                 chartData.push(aud[0][0]);
-            renderChart(chartData, aggType, target);
+            $("#modalLabelRadar" ).text("Data type summary for "+target);
+            renderChart(chartData, chartConfig);
         });
     });
     $("#select-overlay" ).on('change', function() {
         var aggType = $("#select-agg"   ).val();
         var target = $("#modal-radardiv" ).attr("target");
+        var chartConfig = getModalChartConfig('@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)' + '?field=' + aggType);
         var overlay = $(this).val();
         var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
         var pud;
@@ -463,7 +389,8 @@ $(document).ready(function () {
             var chartData = atd[0];
             if (overlay != 'none')
                 chartData.push(aud[0][0]);
-            renderChart(chartData, aggType, target);
+            $("#modalLabelRadar" ).text("Data type summary for "+target);
+            renderChart(chartData, chartConfig);
         });
     });
 
