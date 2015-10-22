@@ -18,9 +18,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
         <td>@IDGApp.format(t.novelty)</td>
         <td>@t.pubmedCount</td>
         <td>@t.grantCount</td>
-       @** <td>@t.patentCount</td> **@
-        <td>@t.patentCount <span class="inlinesparkline">@IDGApp.getPatentInfo(t)</span></td>
         <td>@t.antibodyCount</td>
+        <td>@t.patentCount <span class="inlinesparkline">@IDGApp.getPatentInfo(t)</span></td>
         @*<td><div style="display: inline;" id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>*@
         <td><div id="radar-@IDGApp.getId(t)" class="radar-div"></div></td>
     </tr>
@@ -89,8 +88,8 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Log Novelty", "novelty"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("PubMed Count", "pubmedCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Grant Count", "grantCount"))
-	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent Count", "patentCount"))
 	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Antibody Count", "antibodyCount"))
+	    @HtmlFormat.raw(IDGApp.getTargetTableHeader("Patent", "patentCount"))
 	    @*HtmlFormat.raw(IDGApp.getTargetTableHeader("Monoclonal Antibody Count", "monoclonalCount"))*@
             <th>Data Types</th>
         </tr>
@@ -319,10 +318,6 @@ $(document).ready(function () {
         _cart_selectType = 'all';
         $('#modal-folder').modal('show');
     });
-
-
-
-
 
 
     // iterate over all .radar-XXX elements and draw the radar chart

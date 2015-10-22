@@ -802,7 +802,7 @@ public class TcrdRegistry extends Controller implements Commons {
                         Keyword kw = KeywordFactory.registerIfAbsent
                             (MGI_TERM, pheno,
                              "http://www.informatics.jax.org/searches/Phat.cgi?id="+termId);
-                        target.properties.add(kw);
+                        target.addIfAbsent((Value)kw);
                         ++phenoCount;
                     }
                 }
@@ -2270,6 +2270,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"    on d.protein_id = a.protein_id \n"
                  //+"where d.protein_id in (8721)\n"
                  //+"where c.id in (11521)\n"
+                 +"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"
