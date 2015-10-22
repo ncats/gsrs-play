@@ -994,7 +994,7 @@
 
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';
-        var validTool = '<a href="#" class= "aminoAcid" tooltip="{{acid.subunitIndex}}-{{acid.index}} : {{acid.value}} ({{acid.type}}-{{acid.name}})">{{acid.value}}</a>';
+        var validTool = '<a href="#" class= "aminoAcid" tooltip="{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}} ({{acid.type}}-{{acid.name}})">{{acid.value}}</a>';
         var invalidTool = '<a href="#" class= "invalidAA" tooltip-class="invalidTool" tooltip="INVALID">{{acid.value}}</a>';
         var space = '&nbsp;';
         var close = '</div>';
@@ -1399,6 +1399,7 @@
 
     ginasApp.factory('SDFFields', function () {
         var SDFFields = {};
+        return SDFFields;
     });
 
 
@@ -1420,7 +1421,6 @@
         $scope.init = function (path, model) {
             $scope.path = path;
             $scope.checkModel = model;
-            //console.log(model);
         };
 
         $scope.$watch('radio.model', function (newVal, oldVal) {
@@ -1431,12 +1431,12 @@
             }
             sdf.path = $scope.path;
             sdf.method = $scope.radio.model;
-
-            console.log(window.SDFFields);
+            
             var l = [];
             for (var k in window.SDFFields) {
                 l.push(window.SDFFields[k]);
             }
+            //set the submission value
             $("#mappings").val(JSON.stringify(l));
         });
 
@@ -1506,30 +1506,4 @@
 })();
 window.SDFFields = {};
 
-function getDisplayFromCV(domain, value) {
-    for (var i in window.CV_REQUEST.content) {
-        if (window.CV_REQUEST.content[i].domain === domain) {
-            var terms = window.CV_REQUEST.content[i].terms;
-            for (var t in terms) {
-                if (terms[t].value === value) {
-                    return terms[t].display;
-                }
-            }
-        }
-    }
-    return value;
-}
 
-function vocabsetup(cv) {
-    window.CV_REQUEST = cv;
-    console.log("finished");
-}
-
-
-
-function submitq(qinput){
-        if(qinput.value.indexOf("\"")<0 && qinput.value.indexOf("*")<0 && qinput.value.indexOf(":")<0 && qinput.value.indexOf(" AND ")<0 && qinput.value.indexOf(" OR ")<0){
-                qinput.value="\"" + qinput.value+"\"";
-        }        
-        return true;
-}
