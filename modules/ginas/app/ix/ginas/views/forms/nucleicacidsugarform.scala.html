@@ -1,7 +1,7 @@
 @import ix.ginas.controllers.GinasApp;
 <div class = "row info" id = "protein-details">
     <button class="btn btn-primary label-offset det">
-                        Details&nbsp;</button>
+                        Sugars&nbsp;</button>
    <div class="col-md-12">
         <div class = "row header-row">
             <div class = "col-md-3">
@@ -10,16 +10,22 @@
             <div class = "col-md-2">
                 <strong>Sites</strong>
             </div>
+            <div class = "col-md-2">
+                <strong>Number of Sites</strong>
+            </div>
         </div>
 
         <div class = "row" ng-repeat="obj in substance.nucleicAcid.sugars">
-            <hr>
             <div class = "col-md-3">
-                <span href="#" editable-select="obj.sugar" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SUGAR") track by r.display" blur="submit">{{obj.system.display}}</span>
+                <span href="#" editable-select="obj.sugar" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SUGAR") track by r.display" blur="submit">{{obj.sugar.display}}</span>
             </div>
             <div class="col-md-2">
-                <span href="#" editable-text="obj.sites" blur="submit">{{obj.sites}}</span>
+                <span href="#" editable-text="obj.displaySites" onbeforesave="checkSites($data)" onaftersave="updateSiteList(obj)">{{obj.displaySites}}</span>
             </div>
+             <div class="col-md-2">
+                <span href="#" blur="submit">{{obj.sites.length}}</span>
+            </div>
+            <hr>
         </div>
 
             <!-- Adding bits -->
@@ -32,10 +38,10 @@
                         </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" class="form-control" ng-model ="obj.sites" title="Description" id="description" name = "description"/>
+                    <input type="text" class="form-control" ng-model ="obj.displaySites" title="Description" id="description" name = "description"/>
                 </div>
             </div>
-            @submitbuttons("obj", "sugarForm", "substance.nucleicAcid.sugars")
+            @submitbuttons("obj", "sugarForm", "nucleicAcid.sugars")
         </form>
     </div>
 </div>

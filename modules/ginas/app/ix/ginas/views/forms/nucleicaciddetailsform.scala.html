@@ -24,13 +24,13 @@
         <div class = "row">
             <hr>
             <div class = "col-md-2">
-                <span href="#" editable-select="substance.nucleicAcid.nucleicAcidType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" blur="submit">{{substance.nucleicAcid.nucleicAcidType.display}}</span>
+                <span href="#" editable-select="substance.nucleicAcid.nucleicAcidType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_TYPE") track by r.display" blur="submit">{{substance.nucleicAcid.nucleicAcidType.display}}</span>
             </div>
             <div class = "col-md-4">
-                <span href="#" editable-select="substance.nucleicAcid.nucleicAcidSubType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" blur="submit">{{substance.nucleicAcid.nucleicAcidSubType.display}}</span>
+                <span href="#" editable-select="substance.nucleicAcid.nucleicAcidSubType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SUBTYPE") track by r.display" blur="submit">{{substance.nucleicAcid.nucleicAcidSubType.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="substance.nucleicAcid.sequenceOrigin" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" blur="submit">{{substance.nucleicAcid.sequenceOrigin.display}}</span>
+                <span href="#" editable-select="substance.nucleicAcid.sequenceOrigin" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SEQUENCE_ORIGIN") track by r.display" blur="submit">{{substance.nucleicAcid.sequenceOrigin.display}}</span>
             </div>
             <div class = "col-md-2">
                 <span href="#" editable-select="substance.nucleicAcid.sequenceType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" blur="submit">{{substance.nucleicAcid.sequenceType.display}}</span>
