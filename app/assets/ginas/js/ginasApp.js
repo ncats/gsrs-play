@@ -484,6 +484,100 @@
 
         };
 
+
+        $scope.siteDisplayListToSiteList= function (slist){
+                var toks=slist.split(";");
+                var sites=[];
+                for(var i in toks){
+                        var l=toks[i];
+                        var rng=l.split("-");
+                        if(rng.length>1){
+                                var site1=$scope.siteDisplayToSite(rng[0]);
+                                var site2=$scope.siteDisplayToSite(rng[1]);
+                                if(site1.subunitIndex!=site2.subunitIndex){
+                                       throw "\"" + rng + "\" is not a valid shorthand for a site range. Must be between the same subunits.";
+                                }
+                                if(site2.residueIndex<=site1.residueIndex){
+                                       throw "\"" + rng + "\" is not a valid shorthand for a site range. Second residue index must be greater than first.";
+                                }
+                                sites.push(site1);
+                                for(var j = site1.residueIndex+1; j<site2.residueIndex;j++){
+                                        sites.push({
+                                                subunitIndex:site1.subunitIndex,
+                                                residueIndex:j
+                                        });
+                                }
+                                sites.push(site2);
+                        }else{
+                                sites.push($scope.siteDisplayToSite(rng[0]));
+                        }
+                }
+                return sites;
+                      
+        };
+        $scope.siteDisplayToSite= function (site){
+                var subres=site.split("_");
+
+                if(site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g)===null){
+                        throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
+                }
+
+                return {
+                        subunitIndex:subres[0]-0,
+                        residueIndex:subres[1]-0
+                };
+        };
+        $scope.sitesToDislaySites= function (sites){
+                sites.sort(function (site1,site2){
+                        var d=site1.subunitIndex - site2.subunitIndex;
+                        if(d===0){
+                                d= site1.residueIndex-site2.residueIndex;
+                        }
+                        return d;
+                
+                });
+                var csub=0;
+                var cres=0;
+                var rres=0;
+                var finish=false;
+                var disp="";
+                for(var i=0;i<sites.length;i++){
+                        
+                        var site=sites[i];
+                        if(site.subunitIndex==csub && site.residueIndex == cres)
+                                continue;
+                        finish=false;
+                        if(site.subunitIndex == csub){
+                                if(site.residueIndex == cres+1){
+                                        if(rres===0){
+                                                rres=cres;
+                                        }
+                                }else{
+                                        finish=true;                                               
+                                }
+                        }else{
+                                finish=true;
+                        }
+                        if(finish && csub!==0){
+                            if(rres!==0){
+                                disp+= csub + "_" + rres +"-" + csub + "_" + cres + ";";
+                            }else{
+                                disp+=csub + "_" + cres +";";
+                            }
+                            rres=0;
+                        }
+                        csub=site.subunitIndex;
+                        cres=site.residueIndex;                        
+                }
+                if(rres!==0){
+                        disp+= csub + "_" + rres +"-" + csub + "_" + cres;        
+                }else{
+                        disp+=csub + "_" + cres;
+                }
+                return disp;
+        };
+
+
         //Method for pushing temporary objects into the final message
         //Note: This was changed to use a full path for type.
         //That means that passing something like "nucleicAcid.type"
@@ -496,6 +590,11 @@
             var subClass = ($scope.substance.substanceClass);
             
             switch (type) {
+                case "sugars":
+                case "linkages":
+                    $scope.updateSiteList(obj);
+                    $scope.defaultSave(obj, form, path, list);                    
+                    break;
                 case "subunits":
                     obj.display = $scope.parseSubunit(obj.sequence, obj.subunitIndex);
                     $scope.defaultSave(obj, form, path, list);
@@ -775,6 +874,26 @@
                 console.log(relationship);
                 delete Substance.subref;
             }
+        };
+        
+        $scope.checkSites = function(dispSites) {
+                try{
+                        var sites=$scope.siteDisplayListToSiteList(dispSites);
+                }catch(e){
+                        return e;
+                }
+                
+        };
+        
+        $scope.updateSiteList = function(obj) {
+                try{
+                        obj.sites=$scope.siteDisplayListToSiteList(obj.displaySites);
+                        obj.displaySites = $scope.sitesToDislaySites(obj.sites);
+                        obj.sites=$scope.siteDisplayListToSiteList(obj.displaySites);
+                }catch(e){
+                        return e;
+                }
+                
         };
 
         $scope.submitpaster = function (input) {
@@ -1501,8 +1620,6 @@
 
 
     });
-
-
 })();
 window.SDFFields = {};
 
