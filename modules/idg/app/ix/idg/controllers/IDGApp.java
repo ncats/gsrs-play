@@ -436,12 +436,13 @@ public class IDGApp extends App implements Commons {
         IDG_DEVELOPMENT,
         IDG_FAMILY,
         IDG_DISEASE,
+        IDG_LIGAND,
         //IDG_TISSUE,
         GTEx_TISSUE,
-        "R01 Grant Count",
+        //"R01 Grant Count",
         //"PubMed Count",
-        "Log Novelty",
-        IDG_TOOLS
+        //"Log Novelty",
+        //IDG_TOOLS
         //"Patent Count"
         //HPM_TISSUE,
         //HPA_RNA_TISSUE
