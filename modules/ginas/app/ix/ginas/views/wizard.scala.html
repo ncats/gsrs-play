@@ -21,7 +21,7 @@
             <div>@forms.otherlinksform()</div>
             <div>@forms.glycosylationform()</div>
              <div>@forms.agentmodificationform()</div>
-             @* <div>@forms.structuralmodificationform()</div>*@
+             <div>@forms.structuralmodificationform()</div>
              <div>@forms.physicalmodificationform()</div>
         }
         case "structurallyDiverse" => {
@@ -104,7 +104,7 @@
     </div>
     </div>
     <div class ="row info">
-        <button ng-click="submitpaster(paste)">paste</button>
+        <button ng-click="submitpaster(paste); validate(substance)">paste</button>
 </div>
         <script>
             @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@

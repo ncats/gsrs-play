@@ -98,13 +98,12 @@
             </ng-messages>
         </div>
         <div class="col-md-2 err-check" show-errors>
-            <input type="text" class="form-control" ng-model ="amount.units" title="Units" id="units" name = "units"/>
+            <select class="form-control" title="Amount Units" id="unit" name = "unit" ng-model = "amount.units" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_UNIT") track by r.display" >
+            </select>
             <ng-messages for="amountForm.units.$error" ng-if="amountForm.units.$touched">
                 <ng-message when="required" class="help-block">Substance name is required</ng-message>
             </ng-messages>
         </div>
-
-        @* @referenceselectorform("amountForm", "amount")*@
     </div>
     @submitbuttons("amount", "amountForm", "amounts")
 </form>

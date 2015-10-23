@@ -46,41 +46,7 @@
 
         <form class="form-horizontal" name="disForm" id = "add-code" role="form" novalidate>
             <div class="row form-row">
-                <div class="col-md-2 err-check" id="code-div" show-errors>
-                    <select ng-model="site.subunitIndex" ng-selected="1" class="form-control" name = "year" id = "year">
-                        <option ng-repeat="n in range(substance.protein.subunits.length)">{{n}}</option>
-                    </select>
-                    <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
-                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2 err-check" id="code-div" show-errors>
-                    <select ng-model="site.residueIndex" class="form-control" name = "year" id = "year">
-                        <option ng-repeat="n in range(substance.protein.subunits[site.subunitIndex-1].sequence.length)">{{n}}</option>
-                    </select>
-                    <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
-                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class ="col-md-1 text-center">
-                    <i class="fa fa-link fa-rotate-270 fa-2x"></i>
-                </div>
-                <div class="col-md-2 err-check" id="code-div" show-errors>
-                    <select ng-model="site.subunitIndexEnd" class="form-control" name = "year" id = "year">
-                        <option ng-repeat="n in range(substance.protein.subunits.length)">{{n}}</option>
-                    </select>
-                    <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
-                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2 err-check" id="code-div" show-errors>
-                    <select ng-model="site.residueIndexEnd" class="form-control" name = "year" id = "year">
-                        <option ng-repeat="n in range(substance.protein.subunits[site.subunitIndexEnd-1].sequence.length)">{{n}}</option>
-                    </select>
-                    <ng-messages for="disForm.code.$error" ng-if="disForm.code.$touched">
-                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                    </ng-messages>
-                </div>
+                @selectors.siteselector("disForm", "substance.protein", 2)
             </div>
             @submitbuttons("site", "disForm", "protein.disulfideLinks")
         </form>
