@@ -35,6 +35,8 @@
         };
     });
 
+  
+
     ginasApp.factory('Substance', function () {
         var Substance = {};
         var substanceClass = window.location.search.split('=')[1];
@@ -337,6 +339,113 @@
             tempSite.glycosylationSite = true;
             return site;
         };
+        
+        $scope.cleanSequence = function (s) {
+            return s.replace(/[^A-Za-z]/g, '');
+        };
+
+        $scope.parseSubunit = function (sequence, subunit) {
+            var split = sequence.replace(/[^A-Za-z]/g, '').split('');
+            var display = [];
+            var obj = {};
+            var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
+            for (var i in split) {
+                var aa = split[i];
+                var valid = _.indexOf(invalid, aa.toUpperCase());
+                if (valid >= 0) {
+                    obj.value = aa;
+                    obj.valid = false;
+                    obj.subunitIndex = subunit;
+                    obj.residueIndex = i - 1 + 2;
+                    display.push(obj);
+                    obj = {};
+                } else {
+                    obj.value = aa;
+                    obj.valid = true;
+                    obj.name = $scope.findName(aa);
+                    if($scope.substance.protein){
+                        obj.type = $scope.getType(aa);
+                    }
+                    obj.subunitIndex = subunit;
+                    obj.residueIndex = i - 1 + 2;
+                    if (aa.toUpperCase() == 'C') {
+                        obj.cysteine = true;
+                    }
+                    display.push(obj);
+                    obj = {};
+                }
+            }
+            this.display = display;
+            display = _.chunk(display, 10);
+            return display;
+        };
+
+        $scope.findName = function (aa) {
+            var ret;
+            if($scope.substance.protein){
+                ret=getDisplayFromCV("AMINO_ACID_RESIDUES",aa.toUpperCase());
+            }else{
+                ret=getDisplayFromCV("NUCLEIC_ACID_BASE",aa.toUpperCase());
+            }
+            /*
+            switch (aa.toUpperCase()) {
+                case 'A':
+                    return "Alanine";
+                case 'C':
+                    return "Cysteine";
+                case 'D':
+                    return "Aspartic acid";
+                case 'E':
+                    return "Glutamic acid";
+                case 'F':
+                    return "Phenylalanine";
+                case 'G':
+                    return "Glycine";
+                case 'H':
+                    return "Histidine";
+                case 'I':
+                    return "Isoleucine";
+                case 'K':
+                    return "Lysine";
+                case 'L':
+                    return "Leucine";
+                case 'M':
+                    return "Methionine";
+                case 'N':
+                    return "Asparagine";
+                case 'P':
+                    return "Proline";
+                case 'Q':
+                    return "Glutamine";
+                case 'R':
+                    return "Arginine";
+                case 'S':
+                    return "Serine";
+                case 'T':
+                    return "Threonine";
+                case 'V':
+                    return "Valine";
+                case 'W':
+                    return "Tryptophan";
+                case 'Y':
+                    return "Tyrosine";
+
+                default:
+                    return "Tim forgot one";
+            }
+            */
+            return ret;
+
+        };
+
+        $scope.getType = function (aa) {
+            if (aa == aa.toLowerCase()) {
+                return 'D';
+            }
+            else {
+                return 'L';
+            }
+        };
 
         $scope.parseAgentModification = function (obj, path) {
 
@@ -367,6 +476,40 @@
 
         };
 
+
+        $scope.siteDisplayListToSiteList= function (slist){
+                var toks=slist.split(";");
+                var sites=[];
+                for(var i in toks){
+                        var l=toks[i];
+                        var rng=l.split("-");
+                        if(rng.length>1){
+                                var site1=$scope.siteDisplayToSite(rng[0]);
+                                var site2=$scope.siteDisplayToSite(rng[1]);
+                                if(site1.subunitIndex!=site2.subunitIndex){
+                                       throw "\"" + rng + "\" is not a valid shorthand for a site range. Must be between the same subunits.";
+                                }
+                                if(site2.residueIndex<=site1.residueIndex){
+                                       throw "\"" + rng + "\" is not a valid shorthand for a site range. Second residue index must be greater than first.";
+                                }
+                                sites.push(site1);
+                                for(var j = site1.residueIndex+1; j<site2.residueIndex;j++){
+                                        sites.push({
+                                                subunitIndex:site1.subunitIndex,
+                                                residueIndex:j
+                                        });
+                                }
+                                sites.push(site2);
+                        }else{
+                                sites.push($scope.siteDisplayToSite(rng[0]));
+                        }
+                }
+                return sites;
+                      
+        };
+       
+
+
         //Method for pushing temporary objects into the final message
         //Note: This was changed to use a full path for type.
         //That means that passing something like "nucleicAcid.type"
@@ -380,7 +523,19 @@
             var v = path.split(".");
             var type = _.last(v);
             var subClass = ($scope.substance.substanceClass);
+            
             switch (type) {
+                case "sugars":
+                case "linkages":
+                    //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
+                    //if(true)return "test";
+                    $scope.updateSiteList(obj);
+                    $scope.defaultSave(obj, form, path, list);                    
+                    break;
+                case "subunits":
+                    obj.display = $scope.parseSubunit(obj.sequence, obj.subunitIndex);
+                    $scope.defaultSave(obj, form, path, list);
+                    break;
                 case "protein":
                     $scope.proteinDetails(obj, form);
                     break;
@@ -597,6 +752,262 @@
             });
         };
 
+        $scope.getSiteResidue = function(subunits, site){
+                var si=site.subunitIndex;      
+                var ri=site.residueIndex;      
+                for(var i=0;i<subunits.length;i++){
+                     if(subunits[i].subunitIndex === si){
+                        var res=subunits[i].sequence.substr(ri-1,1);
+                        return res;
+                     }   
+                }
+                return "";
+        };
+        
+         $scope.siteDisplayToSite= function (site){
+                var subres=site.split("_");
+
+                if(site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g)===null){
+                        throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
+                }
+
+                return {
+                        subunitIndex:subres[0]-0,
+                        residueIndex:subres[1]-0
+                };
+        };
+        $scope.sitesToDislaySites= function (sites){
+                sites.sort(function (site1,site2){
+                        var d=site1.subunitIndex - site2.subunitIndex;
+                        if(d===0){
+                                d= site1.residueIndex-site2.residueIndex;
+                        }
+                        return d;
+                
+                });
+                var csub=0;
+                var cres=0;
+                var rres=0;
+                var finish=false;
+                var disp="";
+                for(var i=0;i<sites.length;i++){
+                        
+                        var site=sites[i];
+                        if(site.subunitIndex==csub && site.residueIndex == cres)
+                                continue;
+                        finish=false;
+                        if(site.subunitIndex == csub){
+                                if(site.residueIndex == cres+1){
+                                        if(rres===0){
+                                                rres=cres;
+                                        }
+                                }else{
+                                        finish=true;                                               
+                                }
+                        }else{
+                                finish=true;
+                        }
+                        if(finish && csub!==0){
+                            if(rres!==0){
+                                disp+= csub + "_" + rres +"-" + csub + "_" + cres + ";";
+                            }else{
+                                disp+=csub + "_" + cres +";";
+                            }
+                            rres=0;
+                        }
+                        csub=site.subunitIndex;
+                        cres=site.residueIndex;                        
+                }
+                if(rres!==0){
+                        disp+= csub + "_" + rres +"-" + csub + "_" + cres;        
+                }else{
+                        disp+=csub + "_" + cres;
+                }
+                return disp;
+        };
+        $scope.getAllSitesDisplay = function(link){
+                var sites="";
+                if(!$scope.substance.nucleicAcid)return "";
+                for(var i in $scope.substance.nucleicAcid.subunits){
+                        var subunit=$scope.substance.nucleicAcid.subunits[i];
+                        if(sites !== ""){
+                                sites+=";";
+                        }
+                        if(link){
+                                sites+=subunit.subunitIndex +"_1-" +subunit.subunitIndex + "_" + (subunit.sequence.length-1);
+                        }else{
+                                sites+=subunit.subunitIndex +"_1-" +subunit.subunitIndex + "_" + subunit.sequence.length;                        
+                        }
+                }
+                return sites;
+                
+        };
+        
+        $scope.getAllSites = function(link){
+                return $scope.siteDisplayListToSiteList($scope.getAllSitesDisplay(link));                
+        };
+        
+        $scope.getAllLeftoverSitesDisplay = function(link){
+                if(link){
+                        return $scope.sitesToDislaySites($scope.getAllSitesWithoutLinkage());
+                }else{
+                        return $scope.sitesToDislaySites($scope.getAllSitesWithoutSugar());
+                }
+        };
+        
+        $scope.getAllSitesWithoutSugar = function(){
+               var retsites=[];
+               
+               if($scope.substance.nucleicAcid && $scope.substance.nucleicAcid.sugars){
+                                
+                       var asites = [];
+                       for(var i=0;i<$scope.substance.nucleicAcid.sugars.length;i++){
+                                asites=asites.concat($scope.substance.nucleicAcid.sugars[i].sites);
+                       }
+                       var allsites=$scope.getAllSites();
+                       var asitesmap = {};
+                       var site;
+                       for(var s in asites){
+
+                                site=asites[s];
+                                asitesmap[site.subunitIndex + "_" + site.residueIndex]=true;
+                       }
+                       for(s in allsites){
+                                site=allsites[s];
+                                if(!asitesmap[site.subunitIndex + "_" + site.residueIndex]){
+                                        retsites.push(site);
+                                }
+                       }
+               }else{
+                      retsites= $scope.getAllSites();
+               }
+               return retsites;
+               
+               
+        };
+        $scope.getAllSitesWithoutLinkage = function(){
+               var retsites=[];
+               
+               if($scope.substance.nucleicAcid && $scope.substance.nucleicAcid.linkages){
+                                
+                       var asites = [];
+                       for(var i=0;i<$scope.substance.nucleicAcid.linkages.length;i++){
+                                asites=asites.concat($scope.substance.nucleicAcid.linkages[i].sites);
+                       }
+                       var allsites=$scope.getAllSites(true);
+                       var asitesmap = {};
+                       var site;
+                       for(var s in asites){
+
+                                site=asites[s];
+                                asitesmap[site.subunitIndex + "_" + site.residueIndex]=true;
+                       }
+                       for(s in allsites){
+                                site=allsites[s];
+                                if(!asitesmap[site.subunitIndex + "_" + site.residueIndex]){
+                                        retsites.push(site);
+                                }
+                       }
+               }else{
+                      retsites= $scope.getAllSites(true);
+               }
+               return retsites;
+               
+               
+        };
+        
+        $scope.isSiteSugarSpecified = function(site){
+        
+        
+        
+        };
+        
+        $scope.getSiteDuplicates = function(sites1,sites2){
+                       var retsites=[];
+                       var asitesmap = {};
+                       var site;
+                       for(var s in sites1){
+                                site=sites1[s];
+                                asitesmap[site.subunitIndex + "_" + site.residueIndex]=true;
+                       }
+                       for(s in sites2){
+                                site=sites2[s];
+                                if(asitesmap[site.subunitIndex + "_" + site.residueIndex]){
+                                        retsites.push(site);
+                                }
+                       }
+                       return retsites;
+        }; 
+        
+        $scope.getAllSugarSitesExcept = function(sugar){
+                       var asites = [];
+                       if($scope.substance.nucleicAcid.sugars)
+                               for(var i=0;i<$scope.substance.nucleicAcid.sugars.length;i++){
+                                       if($scope.substance.nucleicAcid.sugars[i] != sugar){
+                                                asites=asites.concat($scope.substance.nucleicAcid.sugars[i].sites);
+                                       }
+                               }
+                       return asites;
+        };
+        
+        $scope.getAllLinkageSitesExcept = function(linkage){
+                       var asites = [];
+                       if($scope.substance.nucleicAcid.linkages)
+                               for(var i=0;i<$scope.substance.nucleicAcid.linkages.length;i++){
+                                       if($scope.substance.nucleicAcid.linkages[i] != linkage){
+                                                asites=asites.concat($scope.substance.nucleicAcid.linkages[i].sites);
+                                       }
+                               }
+                       return asites;
+        };
+        
+        $scope.checkSites = function(dispSites, subunits, link) {
+                try{
+
+                        var sites=$scope.siteDisplayListToSiteList(dispSites);
+                        var dsites;
+                        console.log("Specified as:");
+                        console.log(typeof link);
+                        console.log(link.linkage);
+                        if(!link.linkage){
+                                dsites=$scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link),sites);
+                        }else{
+                                dsites=$scope.getSiteDuplicates($scope.getAllLinkageSitesExcept(link),sites);
+                        }
+                        if(dsites.length>0){
+                                throw "Site(s) " + $scope.sitesToDislaySites(dsites) + " already specified!";
+                        }
+                        
+                        
+                        for(var s in sites){
+                                var site = sites[s];
+                                if(link.linkage){
+                                        var sited = {
+                                                subunitIndex:site.subunitIndex,
+                                                residueIndex:site.residueIndex+1
+                                        };
+                                        site=sited;
+                                }
+                                if($scope.getSiteResidue(subunits,site) === ""){
+                                        throw "Site " + sites[s].subunitIndex + "_" +sites[s].residueIndex + " does not exist in subunits";
+                                }
+                        }
+                }catch(e){
+                        return e;
+                }
+        };
+        
+        $scope.updateSiteList = function(obj) {
+                try{
+                        obj.sites=$scope.siteDisplayListToSiteList(obj.displaySites);
+                        obj.displaySites = $scope.sitesToDislaySites(obj.sites);
+                        obj.sites=$scope.siteDisplayListToSiteList(obj.displaySites);
+                }catch(e){
+                        return e;
+                }
+                
+        };
+
         $scope.submitpaster = function (input) {
             console.log(input);
             var sub = JSON.parse(input);
@@ -647,6 +1058,40 @@
             s4() + '-' + s4() + s4() + s4();
     };
 
+//sugarSites
+    ginasApp.directive('naSites', function() {
+          return {
+            require: 'ngModel',
+            link: function(scope, ele, attrs, c) {
+              scope.$watch(attrs.ngModel, function() {
+                var repObj = JSON.parse(attrs.naSites);
+                
+                
+                var ret = scope.checkSites(c.$modelValue,scope.substance.nucleicAcid.subunits,repObj);
+                
+                if(ret){
+                        c.$setValidity('siteInvalid', false);                        
+                }else{
+                        c.$setValidity('siteInvalid', true);                        
+                }
+                console.log(c);
+                
+                
+                //hack to have dynamic messages
+                if(!c.$errorMsg)c.$errorMsg={};
+                if(c.$modelValue.length<1){
+                        c.$errorMsg.naSites="";                
+                }else{
+                        c.$errorMsg.naSites=ret;
+                }
+                
+                return ret;
+                
+              });
+            }
+          };
+    });
+    
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {
             scope.$watch(attr.scrollSpy, function (value) {
@@ -695,6 +1140,7 @@
         };
         return substanceFactory;
     }]);
+    
 
     ginasApp.service('substanceIDRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances(";
@@ -855,121 +1301,24 @@
     });
 
     ginasApp.directive('subunit', function () {
-        clean = function (s) {
-            return s.replace(/[^A-Za-z]/g, '');
-        };
-
-        parseSubunit = function (sequence, subunit) {
-            var split = sequence.replace(/[^A-Za-z]/g, '').split('');
-            var display = [];
-            var obj = {};
-            var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
-            for (var i in split) {
-                var aa = split[i];
-                var valid = _.indexOf(invalid, aa.toUpperCase());
-                if (valid >= 0) {
-                    obj.value = aa;
-                    obj.valid = false;
-                    obj.subunitIndex = subunit;
-                    obj.residueIndex = i - 1 + 2;
-                    display.push(obj);
-                    obj = {};
-                } else {
-                    obj.value = aa;
-                    obj.valid = true;
-                    obj.name = findName(aa);
-                    obj.type = getType(aa);
-                    obj.subunitIndex = subunit;
-                    obj.residueIndex = i - 1 + 2;
-                    if (aa.toUpperCase() == 'C') {
-                        obj.cysteine = true;
-                    }
-                    display.push(obj);
-                    obj = {};
-                }
-            }
-            this.display = display;
-            display = _.chunk(display, 10);
-            return display;
-        };
-
-        findName = function (aa) {
-            switch (aa.toUpperCase()) {
-                case 'A':
-                    return "Alanine";
-                case 'C':
-                    return "Cysteine";
-                case 'D':
-                    return "Aspartic acid";
-                case 'E':
-                    return "Glutamic acid";
-                case 'F':
-                    return "Phenylalanine";
-                case 'G':
-                    return "Glycine";
-                case 'H':
-                    return "Histidine";
-                case 'I':
-                    return "Isoleucine";
-                case 'K':
-                    return "Lysine";
-                case 'L':
-                    return "Leucine";
-                case 'M':
-                    return "Methionine";
-                case 'N':
-                    return "Asparagine";
-                case 'P':
-                    return "Proline";
-                case 'Q':
-                    return "Glutamine";
-                case 'R':
-                    return "Arginine";
-                case 'S':
-                    return "Serine";
-                case 'T':
-                    return "Threonine";
-                case 'V':
-                    return "Valine";
-                case 'W':
-                    return "Tryptophan";
-                case 'Y':
-                    return "Tyrosine";
-
-                default:
-                    return "Tim forgot one";
-            }
-
-        };
-
-        getType = function (aa) {
-            if (aa == aa.toLowerCase()) {
-                return 'D';
-            }
-            else {
-                return 'L';
-            }
-        };
-
 
         return {
             restrict: 'E',
             require: 'ngModel',
             scope: '=',
-            link: function (scope, element, attr, ngModel) {
-                scope.$watch(function () {
-                    var seq = ngModel.$modelValue;
-                    if (typeof seq !== "undefined") {
-                        seq = clean(seq);
-                        scope.subunit.display = parseSubunit(seq, attr.subindex - 1 + 2);
-                        scope.subunit.index = attr.subindex - 1 + 2;
-                        ngModel.$setViewValue(seq);
-                        // console.log(scope);
-                    }
-                });
+            link: function (scope, element, attrs, ngModelCtrl) {
+                    scope.$watch(function (scope) {
+                             if(!scope.subunit)
+                                scope.subunit={};
+                             if(attrs.subindex === ""){
+                                     scope.subunit.subunitIndex=1;
+                             }else{
+                                     scope.subunit.subunitIndex=attrs.subindex-0+1;
+                             }
+                     });
+                     
             },
             template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>'
-            //template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" ng-model-options="{ debounce: 1000 }" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>',
         };
     });
 
@@ -1279,6 +1628,7 @@
 
     ginasApp.factory('SDFFields', function () {
         var SDFFields = {};
+        return SDFFields;
     });
 
 
@@ -1300,7 +1650,6 @@
         $scope.init = function (path, model) {
             $scope.path = path;
             $scope.checkModel = model;
-            //console.log(model);
         };
 
         $scope.$watch('radio.model', function (newVal, oldVal) {
@@ -1311,12 +1660,12 @@
             }
             sdf.path = $scope.path;
             sdf.method = $scope.radio.model;
-
-            console.log(window.SDFFields);
+            
             var l = [];
             for (var k in window.SDFFields) {
                 l.push(window.SDFFields[k]);
             }
+            //set the submission value
             $("#mappings").val(JSON.stringify(l));
         });
 
@@ -1389,8 +1738,6 @@
 
 
     });
-
-
 })();
 window.SDFFields = {};
 
@@ -1420,3 +1767,4 @@ function submitq(qinput) {
     }
     return true;
 }
+

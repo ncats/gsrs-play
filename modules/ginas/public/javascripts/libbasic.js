@@ -1,0 +1,24 @@
+function submitq(qinput){
+        if(qinput.value.indexOf("\"")<0 && qinput.value.indexOf("*")<0 && qinput.value.indexOf(":")<0 && qinput.value.indexOf(" AND ")<0 && qinput.value.indexOf(" OR ")<0){
+                qinput.value="\"" + qinput.value+"\"";
+        }        
+        return true;
+}
+
+function getDisplayFromCV(domain, value) {
+    for (var i in window.CV_REQUEST.content) {
+        if (window.CV_REQUEST.content[i].domain === domain) {
+            var terms = window.CV_REQUEST.content[i].terms;
+            for (var t in terms) {
+                if (terms[t].value === value) {
+                    return terms[t].display;
+                }
+            }
+        }
+    }
+    return value;
+}
+
+function vocabsetup(cv) {
+    window.CV_REQUEST = cv;
+}

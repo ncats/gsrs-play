@@ -1526,6 +1526,11 @@ NUCLEIC_ACID_LINKAGE	bP	Boranophosphate	bP	BP([*])([*])=O |$;;_R1;_R2;$|		BP([*]
 NUCLEIC_ACID_LINKAGE	nasP	Sodium Phosporothioate	nasP	[Na+].[S-]P([*])([*])=O |$;;;_R1;_R2;$|		[Na+].[S-]P([*])([*])=O |$;;;_R91;_R92;$|
 NUCLEIC_ACID_LINKAGE	ccnP	Phosphoryldimethylamine	ccnP			P([*])(N(C)C)([*])=O |$;_R91;;;;_R92;$|
 NUCLEIC_ACID_LINKAGE	pP	PhosphorylPIPERAZINE	pP			P([*])(N1CCNCC1)([*])=O  |$;_R91;;;;;;;_R92;$|
+NUCLEIC_ACID_BASE	A	Adenine	A	JAC85A2161	NC1=C2NC=NC2=NC=N1	Nc1ncnc2n([*])cnc12 |$;;;;;;;_R90;;;$|
+NUCLEIC_ACID_BASE	C	Cytosine	C	8J337D1HZY	NC1=NC(=O)NC=C1	Nc1ccn([*])c(=O)n1 |$;;;;;_R90;;;$|
+NUCLEIC_ACID_BASE	G	Guanine	G	5Z93L87A1R	NC1=NC2=C(NC=N2)C(=O)N1	Nc1nc2n([*])cnc2c(=O)[nH]1 |$;;;;;_R90;;;;;;$|
+NUCLEIC_ACID_BASE	T	Thymine	T	QR26YLT7LT	CC1=CNC(=O)NC1=O	Cc1cn([*])c(=O)[nH]c1=O |$;;;;_R90;;;;;$|
+NUCLEIC_ACID_BASE	U	Uracil	U	56HH86ZVCT	O=C1NC=CC(=O)N1	[*]n1ccc(=O)[nH]c1=O |$_R90;;;;;;;;$|
 FRACTION	ACEMANNAN	ACEMANNAN
 FRACTION	ANTHOCYANINS	ANTHOCYANINS
 FRACTION	ANTIGEN; GLYCOPROTEIN	ANTIGEN; GLYCOPROTEIN
