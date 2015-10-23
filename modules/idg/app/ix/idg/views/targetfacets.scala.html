@@ -1,0 +1,122 @@
+
+@import ix.ncats.controllers.App
+@import ix.ncats.controllers.App.FacetDecorator
+@import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.IDGApp._
+@import ix.idg.controllers.Commons._
+@import ix.core.search.TextIndexer._
+
+@(q: String, facets: Array[Array[FacetDecorator]])
+
+@facet(f: FacetDecorator) = {
+<div class="col-md-4">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">@f.name</h3>
+    </div>
+    <div class="panel-body">
+     <table class="table table-condensed">
+      @for(i <- 0 until Math.min(10,f.size)) {
+	<tr>
+	  @defining(App.sha1(f.facet,i)) { id =>
+	     <td>
+	       <input type="checkbox" onclick="facetToggle(this)"
+		      @if(f.selection(i)) {
+		      checked="true"
+		      }
+	       	      label="Toggle @f.facet.getLabel(i)"
+		      id="@id"/>
+	     </td>
+	     <script>
+	        filters['@id'] = {
+	           checked: @f.selection(i),
+                   name: '@App.encode(f.facet)',
+	           value: '@App.encode(f.facet, i)'
+	        };
+	     </script>
+          }
+          @if(f.raw) {
+            <td>@HtmlFormat.raw(f.label(i))</td>
+          } else {
+            <td class = "text-capitalize">@f.label(i)</td>
+          }
+	 <td>
+           @if(f.raw) {
+              <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))</span>
+           } else {
+              <span class="badge" style="float:right;">@f.value(i)</span>
+           }
+	 </td>
+        </tr>
+        }
+     </table>
+    </div>
+  </div>
+</div>
+}
+
+@ix.ncats.views.html.main("Target Facets"){
+@targetmenu(null)
+}(HtmlFormat.empty){
+<script>
+  var filters = {};
+</script>
+
+<div class="container-fluid">
+  <div class="col-md-12">
+    <div class="page-header">
+      <h1>Target Facets
+	<div class="pull-right">
+	  <a href="@ix.idg.controllers.routes.IDGApp.targets()"
+	     class="btn btn-default btn-lg">Close</a>
+	  <button type="button" class="btn btn-primary btn-lg"
+	  	  onclick="applyFilters(this)">Apply</button>
+	</div>
+      </h1>
+    </div>
+    @for(i <- 0 until facets.length) {
+    <div class="row">
+      @for(f <- facets(i)) {
+	@if(f != null) {
+           @facet(f)
+	}
+      }
+    </div>
+    }
+  </div>
+</div>
+}
+
+<script>
+function facetToggle (el) {
+  filters[el.id].checked = el.checked;
+  console.log(filters[el.id].name+'/'+filters[el.id].value+': '+el.checked);  
+}
+
+$(function() {
+   $('[data-toggle="popover"]').popover();
+   $('[data-toggle="tooltip"]').tooltip();
+});
+
+function applyFilters (el) {
+  console.log('Applying filters...');
+  var facet = '';
+  for (var f in filters) {
+     if (filters[f].checked) {
+        if (facet.length > 0) {
+	   facet += '&';
+	}
+	facet += 'facet='+filters[f].name+'/'+filters[f].value;
+     }
+  }
+  
+  var url = '@ix.idg.controllers.routes.IDGApp.targets(q)';
+  if (facet.length > 0) {
+     url += url.indexOf('?') < 0 ? '?' : '&';
+     url += facet;
+  }
+  console.log('url: '+url);
+  location.href = url;
+}
+
+</script>

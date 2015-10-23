@@ -285,6 +285,11 @@ public class IDGApp extends App implements Commons {
                     return "<a href=\"http://en.wikipedia.org/wiki/Nuclear_receptor\">"+label+"</a>";
                 }
             }
+            
+            if (label.length() > 30) {
+                return "<span data-toggle='tooltip' data-html='false'"
+                    +" title='"+label+"'>"+App.truncate(label,30)+"</span>";
+            }
             return label;
         }
     }
@@ -437,15 +442,49 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         IDG_DISEASE,
         IDG_LIGAND,
-        //IDG_TISSUE,
         GTEx_TISSUE,
-        //"R01 Grant Count",
-        //"PubMed Count",
-        //"Log Novelty",
-        //IDG_TOOLS
-        //"Patent Count"
-        //HPM_TISSUE,
-        //HPA_RNA_TISSUE
+    };
+
+    public static final String[] ALL_TARGET_FACETS = {
+        
+        IDG_DEVELOPMENT,
+        IDG_FAMILY,
+        IDG_DISEASE,
+        IDG_LIGAND,
+
+        IDG_TISSUE,
+        GTEx_TISSUE,
+        HPM_TISSUE,
+        HPA_RNA_TISSUE,
+        HPA_PROTEIN_TISSUE,
+        
+        GWAS_TRAIT,
+        IMPC_TERM,
+        MGI_TERM,
+        OMIM_TERM,
+
+        GO_COMPONENT,
+        GO_PROCESS,
+        GO_FUNCTION,
+
+        "KEGG Pathway",
+        "Reactome Pathway",
+        "Wikipathways Pathway",
+        "Panther Pathway",
+        "BioCarta Pathway",
+
+        "Log Novelty",
+        "R01 Grant Count",
+        "PubMed Count",
+        "Antibody Count",
+        "Monoclonal Count",
+        "Patent Count",
+
+        PHARMALOGICAL_ACTION,
+        IDG_TOOLS,
+        GRANT_FUNDING_IC,
+        GRANT_ACTIVITY,
+        SOURCE  
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -479,6 +518,7 @@ public class IDGApp extends App implements Commons {
         }
         // now add hidden facet so as to not have them shown in the alert
         // box
+        /*
         for (int i = 1; i <= 8; ++i) {
             IDGFacetDecorator f = new IDGFacetDecorator
                 (new TextIndexer.Facet
@@ -486,7 +526,8 @@ public class IDGApp extends App implements Commons {
             f.hidden = true;
             decors.add(f);
         }
-
+        */
+        
         // at most the dto is only 5 deep
         for (int i = 0; i < 6; ++i) {
             IDGFacetDecorator f = new IDGFacetDecorator
@@ -535,11 +576,47 @@ public class IDGApp extends App implements Commons {
     static FacetDecorator[] decorate (Facet... facets) {
         return decorate (null, facets);
     }
+
+    static FacetDecorator[][] toMatrix (int columns,
+                                        FacetDecorator... facets) {
+        List<FacetDecorator> fa = new ArrayList<FacetDecorator>();
+        for (FacetDecorator f : facets) {
+            if (f.size() > 0) 
+                fa.add(f);
+        }
+        
+        int rows = (fa.size()+columns-1)/columns;
+        FacetDecorator[][] m = new FacetDecorator[rows][columns];
+        for (int i = 0; i < fa.size(); ++i) {
+            m[i/columns][i%columns] = fa.get(i);
+        }
+        return m;
+    }
     
     @Cached(key="_help", duration= Integer.MAX_VALUE)
     public static Result help() {
-        return ok (ix.idg.views.html.help.render
-                ("Pharos: Illuminating the Druggable Genome"));
+        final String key = "idg/help";
+        try {
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        TextIndexer.Facet[] target =
+                            getFacets (Target.class, "Namespace");
+                        TextIndexer.Facet[] disease =
+                            getFacets (Disease.class, "Namespace");
+                        TextIndexer.Facet[] ligand =
+                            getFacets (Ligand.class, "Namespace");
+                        return ok (ix.idg.views.html.help.render
+                                   ("Pharos: Illuminating the Druggable Genome",
+                                    target.length > 0 ? target[0] : null,
+                                    disease.length > 0 ? disease[0] : null,
+                                    ligand.length > 0 ? ligand[0]: null));
+                    }
+                });
+        }
+        catch (Exception ex) {
+            Logger.error("Can't get about page", ex);
+            return error (500, "Unable to fulfil request");
+        }
     }
 
     @Cached(key="_about", duration = Integer.MAX_VALUE)
@@ -579,6 +656,48 @@ public class IDGApp extends App implements Commons {
 
     public static Result home () {
         return redirect (routes.IDGApp.index());
+    }
+
+    public static Result targetfacets (String ctx) {
+        SearchResult result = null;
+        if (ctx != null) {
+            result = getSearchContext (ctx);
+        }
+
+        if (result == null) {
+            if (ctx != null)
+                Logger.warn("Can't retrieve SearchResult for context "+ctx);
+            
+            result = getSearchFacets (Target.class);
+        }
+
+        FacetDecorator[] decors = decorate
+            (Target.class, filter (result.getFacets(), ALL_TARGET_FACETS));
+        
+        SearchOptions opts = result.getOptions();
+        if (!opts.facets.isEmpty()) {
+            for (String f : opts.facets) {
+                int pos = f.indexOf('/');
+                if (pos > 0) {
+                    String name = f.substring(0, pos);
+                    String value = f.substring(pos+1);
+                    for (FacetDecorator fd : decors) {
+                        if (name.equals(fd.facet.getName())) {
+                            for (int i = 0; i < fd.facet.size(); ++i) {
+                                if (value.equals
+                                    (fd.facet.getValue(i).getLabel())) {
+                                    fd.selection[i] = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return ok (ix.idg.views.html.targetfacets.render
+                   (result.getQuery(), toMatrix (3, decors)));
     }
 
     @Cached(key="_kinome", duration = Integer.MAX_VALUE)

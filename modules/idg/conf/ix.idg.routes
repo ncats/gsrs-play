@@ -19,6 +19,7 @@ GET /help   ix.idg.controllers.IDGApp.help
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/kinome	ix.idg.controllers.IDGApp.kinome
 GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
+GET	/targets/facets	ix.idg.controllers.IDGApp.targetfacets(ctx: String ?= null)
 GET	/targets/:name	ix.idg.controllers.IDGApp.target(name: String)
 GET	/diseases	ix.idg.controllers.IDGApp.diseases(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/diseases/:name	ix.idg.controllers.IDGApp.disease(name: String)

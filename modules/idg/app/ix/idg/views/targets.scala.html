@@ -41,7 +41,7 @@ facets: Array[FacetDecorator], targets: List[Target], ctx: String )
 @ix.ncats.views.html._content("Targets", "ix.idg.models.Target",
     ix.idg.controllers.routes.IDGApp.targets().url,
     current, rows, total, pages, facets) {
-    @targetmenu()
+    @targetmenu(ctx)
 } {
     <ol class="breadcrumb">
         <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>

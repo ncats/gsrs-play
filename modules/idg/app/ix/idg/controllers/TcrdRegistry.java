@@ -882,9 +882,6 @@ public class TcrdRegistry extends Controller implements Commons {
                     if (type.equalsIgnoreCase("UniProt Function")) {
                         target.description = (String)val.getValue();
                     }
-                    else if (type.equalsIgnoreCase("ChEMBL Selective Compound")) {
-                        ++selective;
-                    }
                     else {
                         if (type.equalsIgnoreCase("Ab Count")) {
                             target.antibodyCount =
@@ -902,6 +899,11 @@ public class TcrdRegistry extends Controller implements Commons {
                                  ("EBI Total Patent Count (Relevant)")) {
                             target.patentCount =
                                 ((Number)val.getValue()).intValue();
+                        }
+                        else if (type.equalsIgnoreCase
+                                 ("ChEMBL Selective Compound")) {
+                            
+                            ++selective;
                         }
 
                         target.properties.add(val);
@@ -2267,7 +2269,7 @@ public class TcrdRegistry extends Controller implements Commons {
                  +"    on d.protein_id = a.protein_id \n"
                  //+"where d.protein_id in (8721)\n"
                  //+"where c.id in (11521)\n"
-                 +"where a.target_id in (12241)\n"
+                 //+"where a.target_id in (12241)\n"
                  //+"where c.uniprot = 'Q9H3Y6'\n"
                  //+"where b.tdl in ('Tclin','Tchem')\n"
                  //+"where b.idgfam = 'kinase'\n"

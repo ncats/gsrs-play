@@ -258,7 +258,7 @@
 }
 
 @ix.ncats.views.html.main(target.name){
-@targetmenu()
+@targetmenu(null)
 }{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
@@ -441,7 +441,7 @@
 		     <td>
 				 <span data-toggle="tooltip"
 				 data-html="true"
-				 title="<p align='left'>Number of NIH funded grant applications for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurateGrant Count</p>"></span>
+				 title="<p align='left'>Number of NIH funded grant applications for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurateGrant Count</p>">Grant Count</span>
 					 </td>
 		     <td>@target.grantCount</td>
 		   </tr>

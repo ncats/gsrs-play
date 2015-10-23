@@ -163,7 +163,8 @@ public class App extends Authentication {
         final public boolean raw;
         public boolean hidden;
         public Integer[] total;
-
+        public boolean[] selection;
+        
         public FacetDecorator (Facet facet) {
             this (facet, false, 6);
         }
@@ -172,6 +173,7 @@ public class App extends Authentication {
             this.raw = raw;
             this.max = max;
             total = new Integer[facet.size()];
+            selection = new boolean[facet.size()];
         }
 
         public String name () { return facet.getName(); }
