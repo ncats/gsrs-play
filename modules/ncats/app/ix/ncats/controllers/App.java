@@ -510,8 +510,8 @@ public class App extends Authentication {
             for (String s : me.getValue()) {
                 if (q.length() > 0)
                     q.append('&');
-                q.append(me.getKey()+"="
-                         + ("q".equals(me.getKey()) ? encode (s) : s));
+                q.append(me.getKey()+"="+encode (s));
+                //+ ("q".equals(me.getKey()) ? encode (s) : s));
             }
         }
         return q.toString();
