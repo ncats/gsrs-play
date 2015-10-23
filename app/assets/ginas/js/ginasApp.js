@@ -23,6 +23,8 @@
     });
 
 
+  
+
     ginasApp.factory('Substance', function () {
         var Substance = {};
         var substanceClass = window.location.search.split('=')[1];
@@ -532,6 +534,8 @@
             switch (type) {
                 case "sugars":
                 case "linkages":
+                    //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
+                    //if(true)return "test";
                     $scope.updateSiteList(obj);
                     $scope.defaultSave(obj, form, path, list);                    
                     break;
@@ -979,12 +983,70 @@
                
         };
         
+        $scope.isSiteSugarSpecified = function(site){
+        
+        
+        
+        };
+        
+        $scope.getSiteDuplicates = function(sites1,sites2){
+                       var retsites=[];
+                       var asitesmap = {};
+                       var site;
+                       for(var s in sites1){
+                                site=sites1[s];
+                                asitesmap[site.subunitIndex + "_" + site.residueIndex]=true;
+                       }
+                       for(s in sites2){
+                                site=sites2[s];
+                                if(asitesmap[site.subunitIndex + "_" + site.residueIndex]){
+                                        retsites.push(site);
+                                }
+                       }
+                       return retsites;
+        }; 
+        
+        $scope.getAllSugarSitesExcept = function(sugar){
+                       var asites = [];
+                       if($scope.substance.nucleicAcid.sugars)
+                               for(var i=0;i<$scope.substance.nucleicAcid.sugars.length;i++){
+                                       if($scope.substance.nucleicAcid.sugars[i] != sugar){
+                                                asites=asites.concat($scope.substance.nucleicAcid.sugars[i].sites);
+                                       }
+                               }
+                       return asites;
+        };
+        
+        $scope.getAllLinkageSitesExcept = function(linkage){
+                       var asites = [];
+                       if($scope.substance.nucleicAcid.linkages)
+                               for(var i=0;i<$scope.substance.nucleicAcid.linkages.length;i++){
+                                       if($scope.substance.nucleicAcid.linkages[i] != linkage){
+                                                asites=asites.concat($scope.substance.nucleicAcid.linkages[i].sites);
+                                       }
+                               }
+                       return asites;
+        };
+        
         $scope.checkSites = function(dispSites, subunits, link) {
                 try{
+
                         var sites=$scope.siteDisplayListToSiteList(dispSites);
+                        var dsites;
+                        
+                        if(!link.linkage){
+                                dsites=$scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link),sites);
+                        }else{
+                                dsites=$scope.getSiteDuplicates($scope.getAllLinkageSitesExcept(link),sites);
+                        }
+                        if(dsites.length>0){
+                                throw "Site(s) " + $scope.sitesToDislaySites(dsites) + " already specified!";
+                        }
+                        
+                        
                         for(var s in sites){
                                 var site = sites[s];
-                                if(link){
+                                if(link.linkage){
                                         var sited = {
                                                 subunitIndex:site.subunitIndex,
                                                 residueIndex:site.residueIndex+1
@@ -1057,6 +1119,34 @@
             s4() + '-' + s4() + s4() + s4();
     };
 
+//sugarSites
+    ginasApp.directive('naSites', function() {
+          return {
+            require: 'ngModel',
+            link: function(scope, ele, attrs, c) {
+              scope.$watch(attrs.ngModel, function() {
+
+                var ret = scope.checkSites(c.$modelValue,scope.substance.nucleicAcid.subunits,scope[attrs.naSites]);
+                
+                if(ret){
+                        c.$setValidity('sitet', false);                        
+                }else{
+                        c.$setValidity('sitet', true);                        
+                }
+                if(!scope.$errorMsg)scope.$errorMsg={};
+                if(c.$modelValue.length<1){
+                        scope.$errorMsg[attrs.naSites]="";                
+                }else{
+                        scope.$errorMsg[attrs.naSites]=ret;
+                }
+                
+                return ret;
+                
+              });
+            }
+          };
+    });
+    
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {
             scope.$watch(attr.scrollSpy, function (value) {
