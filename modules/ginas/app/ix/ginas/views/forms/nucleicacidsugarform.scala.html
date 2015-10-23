@@ -23,8 +23,11 @@
             <div class="col-md-2">
                 <span href="#" ng-model ="obj.displaySites" editable-text="obj.displaySites"  onbeforesave="checkSites($data,substance.nucleicAcid.subunits,obj)" onaftersave="updateSiteList(obj)" na-sites={{obj}}>{{obj.displaySites}}</span>
             </div>
-             <div class="col-md-2">
+            <div class="col-md-2">
                 <span href="#" blur="submit">{{obj.sites.length}} of {{getAllSites().length}}</span>
+            </div>
+            <div class="col-md-2">
+                <button ng-click="removeItem(substance.nucleicAcid.sugars, obj)">Remove</button>
             </div>
             <hr>
         </div>

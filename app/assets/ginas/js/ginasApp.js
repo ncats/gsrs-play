@@ -43,7 +43,21 @@
                 Substance.substanceClass = substanceClass;
                 Substance.structurallyDiverse = {};
                 break;
+            case "nucleicAcid":
+                Substance.substanceClass = substanceClass;
+                Substance.nucleicAcid = {};
+                break;
+            case "mixture":
+                Substance.substanceClass = substanceClass;
+                Substance.mixture = {};
+                break;
+            case "polymer":
+                Substance.substanceClass = substanceClass;
+                Substance.polymer = {};
+                break;
             default:
+                Substance.substanceClass = substanceClass;
+//                Substance.polymer = {};
                 console.log('invalid substance class');
                 break;
         }
@@ -503,6 +517,7 @@
                 var sites=[];
                 for(var i in toks){
                         var l=toks[i];
+                        if(l === "")continue;
                         var rng=l.split("-");
                         if(rng.length>1){
                                 var site1=$scope.siteDisplayToSite(rng[0]);
@@ -541,7 +556,6 @@
             var v = path.split(".");
             var type = _.last(v);
             var subClass = ($scope.substance.substanceClass);
-            
             switch (type) {
                 case "sugars":
                 case "linkages":
@@ -551,8 +565,21 @@
                     $scope.defaultSave(obj, form, path, list);                    
                     break;
                 case "subunits":
+                    
+                    if(!obj.subunitIndex){
+                        var t=_.get($scope.substance,path);
+                        if(t){
+                                obj.subunitIndex=t.length+1;                                
+                        }else{
+                                obj.subunitIndex=1;
+                        }
+                    }else{
+                    }
                     obj.display = $scope.parseSubunit(obj.sequence, obj.subunitIndex);
-                    $scope.defaultSave(obj, form, path, list);
+                    if(obj._editType !== "edit"){
+                        $scope.defaultSave(obj, form, path, list);
+                    }
+                    obj._editType="add";
                     break;
                 case "protein":
                     $scope.proteinDetails(obj, form);
@@ -1040,14 +1067,27 @@
                        return asites;
         };
         
+        $scope.removeItem = function(list, item){
+                _.remove(list,function(someItem) {
+                        return item === someItem;                 
+                 });
+        };
+        $scope.setEditSubunit = function(sub){
+                        if(sub){
+                                $scope.subunit=sub;
+                                $scope.subunit._editType="edit";
+                        }else{
+                                $scope.subunit=null;
+                        }
+                        
+        };
+        
         $scope.checkSites = function(dispSites, subunits, link) {
                 try{
 
                         var sites=$scope.siteDisplayListToSiteList(dispSites);
                         var dsites;
-                        console.log("Specified as:");
-                        console.log(typeof link);
-                        console.log(link.linkage);
+                        
                         if(!link.linkage){
                                 dsites=$scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link),sites);
                         }else{
@@ -1139,6 +1179,7 @@
             require: 'ngModel',
             link: function(scope, ele, attrs, c) {
               scope.$watch(attrs.ngModel, function() {
+                if(attrs.naSites.length<2)return;
                 var repObj = JSON.parse(attrs.naSites);
                 
                 
@@ -1148,9 +1189,7 @@
                         c.$setValidity('siteInvalid', false);                        
                 }else{
                         c.$setValidity('siteInvalid', true);                        
-                }
-                console.log(c);
-                
+                }                
                 
                 //hack to have dynamic messages
                 if(!c.$errorMsg)c.$errorMsg={};
@@ -1382,9 +1421,9 @@
                              if(!scope.subunit)
                                 scope.subunit={};
                              if(attrs.subindex === ""){
-                                     scope.subunit.subunitIndex=1;
+                                     //scope.subunit.subunitIndex=1;
                              }else{
-                                     scope.subunit.subunitIndex=attrs.subindex-0+1;
+                                     //scope.subunit.subunitIndex=attrs.subindex-0+1;
                              }
                      });
                      

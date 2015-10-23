@@ -10,10 +10,14 @@
 
     <div class = "row"  ng-repeat="sunit in substance.@{parent}.subunits">
         <hr>
-        Subunit {{sunit.index}}
+        
         <div class="col-md-12">
+            Subunit {{sunit.subunitIndex}}
             <div class = "row">
-              <div class = "col-xs-2" ng-repeat="su in sunit.display">
+              <div ng-show="sunit._editType=='edit'" class="text-center">
+                  Editing subunit sequence below.
+              </div>
+              <div ng-hide="sunit._editType=='edit'" class = "col-xs-2" ng-repeat="su in sunit.display">
 
  @*               the amino acid directive in ginasApp.js has a getTemplate function. This can be used to modify the tooltip
                   the amino acid has a series of boolean properties for existence of links/modifications. The ng-Class function can be used to
@@ -24,10 +28,20 @@
 
 
 
-        <span ng-repeat ="aa in su">
-            <amino-acid acid=aa></amino-acid>
-        </span>
+            <span  ng-repeat ="aa in su">
+                <amino-acid acid=aa></amino-acid>
+               
+            </span>
             </div>
+        </div>
+        <div class = "row" >
+            <div class="col-md-12">
+                 <div class="pull-right">
+                    <button  ng-hide="sunit._editType=='edit'" ng-click="setEditSubunit(sunit)">Edit</button>
+                    <button  ng-show="sunit._editType=='edit'" ng-click="validate(sunit, 'subunitForm', '@{parent}.subunits', true); setEditSubunit(null);">Update</button>
+                    <button  ng-hide="sunit._editType=='edit'" ng-click="removeItem(substance.@{parent}.subunits, sunit)">Remove</button>
+                 </div>
+            </div>           
         </div>
 
            @*
@@ -46,8 +60,16 @@
 
 
     <form class="form-horizontal" name="subunitForm" id = "add-subunit" role="form" novalidate>
+        
         <div class="row form-row">
+           
             <div class = "col-md-12">
+                <div ng-show="subunit.subunitIndex">
+                    Editing subunit: {{subunit.subunitIndex}}
+                </div>
+                <div ng-hide="subunit.subunitIndex">
+                    Add new subunit
+                </div>
                 <subunit ng-model="subunit.sequence" subindex={{substance.@{parent}.subunits.length}}></subunit>
             </div>
         </div>
