@@ -1,72 +1,93 @@
 @import ix.ginas.controllers.GinasApp;
-<div class = "row info" id = "protein-details">
+
+<div class = "row info" >
     <button class="btn btn-primary label-offset det">
-                        Agent Modifications&nbsp;<span class="badge" ng-show="substance.protein.modifications.agentModifications.length>0">
-                        {{substance.protein.modifications.agentModifications.length}}</span> </button>
+                        Structural Modifications&nbsp;<span class="badge" ng-show="substance.protein.modifications.structuralModifications.length>0">
+                        {{substance.protein.modifications.structuralModifications.length}}</span> </button>
     <div class="col-md-12">
-
-            <!-- Title bits -->
-
         <div class = "row header-row">
             <div class = "col-md-2">
-                <strong>Modification Process</strong>
-            </div>
-            <div class = "col-md-4">
-                <strong>Modification Role</strong>
+                <strong>Type</strong>
             </div>
             <div class = "col-md-2">
-                <strong>Modification Type</strong>
+                <strong>Location Type</strong>
             </div>
             <div class = "col-md-2">
-                <strong>Agent Substance</strong>
+                <strong>Residue Modified</strong>
             </div>
-        </div>
-        <div class = "row">
-            <hr>
-            <div class = "col-md-2">
-                <span href="#" editable-select="agentModification.agentModificationProcess" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_PROCESS") track by r.display" blur="submit">{{substance.protein.modifications.agentModification.agentModificationProcess.display}}</span>
+            <div class = "col-md-1">
+                <strong>Subunit Index</strong>
             </div>
-            <div class = "col-md-4">
-                <span href="#" editable-select="agentModification.agentModificationRole" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("ROLE") track by r.display" blur="submit">{{substance.protein.modifications.agentModification.agentModificationRole.display}}</span>
+            <div class = "col-md-1">
+                <strong>Residue Index</strong>
             </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="agentModification.agentModificationType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_TYPE") track by r.display" blur="submit">{{substance.protein.modifications.agentModification.agentModificationType.display}}</span>
+            <div class ="col-md-1">
+                </div>
+            <div class = "col-md-1">
+                <strong>Ending Subunit Index</strong>
             </div>
-            <div class = "col-md-2">
-        {{agentModification.agentSubstance}}
+            <div class = "col-md-1">
+                <strong>Ending Residue Index</strong>
+            </div>
+            <div class ="col-md-2">
+                <strong>Linkage Type</strong>
             </div>
         </div>
 
-        <form class="form-horizontal" name="agentModForm" id = "add-ref" role="form" novalidate>
+        <div class = "row" ng-repeat="obj in substance.protein.modifications.structuralModifications">
+            <hr>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.sites[0].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[0].subunitIndex}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.sites[0].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[0].residueIndex}}</span>
+            </div>
+            <div class ="col-md-1">
+                <i class="fa fa-link fa-2x fa-rotate-90"></i>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.sites[1].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[1].subunitIndex}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.sites[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[1].residueIndex}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.linkageType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("OTHER_LINKAGE_TYPE") track by r.display" blur="submit">{{obj.linkageType.display}}</span>
+            </div>
+        </div>
+
+
+        <form class="form-horizontal" name="strucModForm" id = "add-code" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Agent Modification Process" id="agentModificationProcess" name = "agentModificationProcess" ng-model = "agentModification.agentModificationProcess" ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_PROCESS") track by r.display" required>
+                    <select class="form-control" title="Structural Modification Type" id="structuralModificationType" name = "structuralModificationType" ng-model = "structuralModification.structuralModificationType" ng-options="r.display for r in @GinasApp.getCV.getField("STRUCTURAL_MODIFICATION_TYPE") track by r.display" required>
                         </select>
-                    <ng-messages for="agentModForm.agentModificationProcess.$error" ng-if="agentModForm.agentModificationProcess.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-4 err-check" show-errors>
-                    <select class="form-control" title="Agent Modification Role" id="agentModificationRole" name = "agentModificationRole" ng-model = "agentModification.agentModificationRole" ng-options="r.display for r in @GinasApp.getCV.getField("ROLE") track by r.display" required>
-                        </select>
-                    <ng-messages for="agentModForm.agentModificationRole.$error" ng-if="agentModForm.agentModificationRole.$touched">
+                    <ng-messages for="strucModForm.agentModificationRole.$error" ng-if="strucModForm.agentModificationRole.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Agent Modification Type Origin" id="agentModificationType" name = "agentModificationType" ng-model = "agentModification.agentModificationType" ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_TYPE") track by r.display" required>
+                    <select class="form-control" title="Location Type" id="locationType" name = "locationType" ng-model = "structuralModification.locationType" ng-options="r.display for r in @GinasApp.getCV.getField("STRUCTURAL_MODIFICATION_TYPE") track by r.display" required>
                         </select>
-                    <ng-messages for="agentModForm.agentModificationType.$error" ng-if="agentModForm.agentModificationType.$touched">
+                    <ng-messages for="strucModForm.agentModificationRole.$error" ng-if="strucModForm.agentModificationRole.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                @selectors.siteselector("strucModForm", "substance.protein", 2)
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Extent" id="extent" name = "extent" ng-model = "structuralModification.extent" ng-options="r.display for r in @GinasApp.getCV.getField("EXTENT_TYPE") track by r.display">
+                        </select>
+                    <ng-messages for="strucModForm.linkageType.$error" ng-if="strucModForm.linkageType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2">
-                    @*@selectors.substanceselectorform('')*@
+                @selectors.substanceselectorform("structuralModification.molecularFragment")
                 </div>
+                @selectors.amountselectorform("structuralModification.extentAmount")
             </div>
-            @submitbuttons("agentModification", "agentModForm", "agentModifications")
+            @amountform("structuralModification.extentAmount")
+            @submitbuttons("structuralModification", "strucModForm", "protein.modifications.structuralModifications")
         </form>
     </div>
 </div>
-
-

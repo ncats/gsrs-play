@@ -11,7 +11,7 @@
             <div class = "col-md-3">
                 <strong>Modification Process</strong>
             </div>
-            <div class = "col-md-3">
+            <div class = "col-md-2">
                 <strong>Modification Role</strong>
             </div>
             <div class = "col-md-2">
@@ -20,23 +20,28 @@
             <div class = "col-md-2">
                 <strong>Agent Substance</strong>
             </div>
+            <div class = "col-md-1">
+                <strong>Agent Amount</strong>
+            </div>
         </div>
         <div class = "row"ng-repeat="m in substance.protein.modifications.agentModifications">
             <hr>
             <div class = "col-md-3">
                 <span href="#" editable-select="m.agentModificationProcess" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_PROCESS") track by r.display" blur="submit">{{m.agentModificationProcess.display}}</span>
             </div>
-            <div class = "col-md-3">
+            <div class = "col-md-2">
                 <span href="#" editable-select="m.agentModificationRole" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("ROLE") track by r.display" blur="submit">{{m.agentModificationRole.display}}</span>
             </div>
             <div class = "col-md-2">
                 <span href="#" editable-select="m.agentModificationType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_TYPE") track by r.display" blur="submit">{{m.agentModificationType.display}}</span>
             </div>
             <div class = "col-md-2">
-                {{m.agentSubstance.refPname}}
-                </div>
-            <div class="col-md-2">
+                <code>{{m.agentSubstance.refPname}}</code>
                 <rendered id =m.agentSubstance.refuuid ></rendered>
+            </div>
+            <div class="col-md-1">
+                <amount value = "agentSubstance.amount"></amount>
+
             </div>
         </div>
 
@@ -49,7 +54,7 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-3 err-check" show-errors>
+                <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Agent Modification Role" id="agentModificationRole" name = "agentModificationRole" ng-model = "agentModification.agentModificationRole" ng-options="r.display for r in @GinasApp.getCV.getField("ROLE") track by r.display" required>
                         </select>
                     <ng-messages for="agentModForm.agentModificationRole.$error" ng-if="agentModForm.agentModificationRole.$touched">
@@ -66,7 +71,9 @@
                 <div class="col-md-2">
                     @selectors.substanceselectorform("agentModification.agentSubstance")
                 </div>
+                @selectors.amountselectorform("agentModification.amount")
             </div>
+            @amountform("agentModification.amount")
             @submitbuttons("agentModification", "agentModForm", "protein.modifications.agentModifications")
         </form>
     </div>

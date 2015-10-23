@@ -35,11 +35,16 @@
                        <div class = "col-md-2">
                            <span href="#" editable-select="relationship.qualification"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("QUALIFICATION") track by r.display" blur="submit">{{relationship.qualification.display}}</span>
                        </div>
-                       <amount value="relationship.amount"></amount>
+                        <div class="col-md-1">
+                        <amount value = "relationship.amount"></amount>
+
+                        </div>
+                        <div class="col-md-1">
                        @referenceview("relationshipForm", "relationship")
+                            </div>
                        </div>
         </div>
-        
+
 
         <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
             <div class="row form-row">
@@ -72,22 +77,12 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-1">
-                    <amount-form ng-form="amount-form.html"></amount-form>
-                    <a ng-show="!relationship.value" data-toggle="modal" data-target="#addamount" role="button" aria-label="Add a value"><i class="fa fa-plus fa-2x success"></i></a>
-                </div>
+                @selectors.amountselectorform("relationship.amount")
                 @referenceselectorform("relationshipForm", "relationship")
             </div>
-            <div class = "row">
-                <hr>
-                <div class="col-md-1 pull-right">
-                    <a ng-click="relationship=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="movesubref(relationship); validate(relationship, relationshipForm, 'relationships'); relationship=null;" ><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
-            </div>
-@*
+            @amountform("relationship.amount")
+
             @submitbuttons("relationship", "relationshipForm", "relationships")
-*@
         </form>
 
     </div>

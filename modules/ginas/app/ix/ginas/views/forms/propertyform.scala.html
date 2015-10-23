@@ -69,11 +69,7 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                     </ng-messages>
                 </div>
                 <div class="col-md-3 err-check" id="property-div" show-errors>
-                    <a ng-show="!property.value" data-toggle="modal" data-target="#addamount" role="button" aria-label="Add a value"><i class="fa fa-plus fa-2x success"></i></a>
-@*                    <input type="text" class="form-control" ng-model ="property.value" title="Name" id="value" name = "value" />
-                    <ng-messages for="propertyForm.value.$error" ng-if="propertyForm.value.$touched">
-                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                    </ng-messages>*@
+                @selectors.amountselectorform("property.value")
                 </div>
                 <div class="col-md-2 err-check" id="property-div" show-errors>
                     <a ng-show="!property.parameter" data-toggle="modal" data-target="#addparam" role="button" aria-label="Add a parameter"><i class="fa fa-plus fa-2x success"></i></a>
@@ -88,12 +84,12 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                 </div>
                 @referenceselectorform("propertyForm", "property")
             </div>
+            @amountform("property.value")
+
             @submitbuttons("property", "propertyForm", "properties")
         </form>
     </div>
 </div>
-
-
 
 
 
