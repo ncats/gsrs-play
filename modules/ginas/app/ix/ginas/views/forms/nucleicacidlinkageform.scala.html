@@ -39,8 +39,8 @@
                         </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" class="form-control" ng-model ="objl.displaySites" title="Linkage Sites" id="linkagesites" name = "linkagesites" na-sites="objl"/>
-                    <small class="error" ng-show="linkageForm.linkagesites.$error.sitet">{{$errorMsg.objl}}</small>
+                    <input type="text" class="form-control" ng-model ="objl.displaySites" title="Linkage Sites" id="linkagesites" name = "linkagesites" na-sites={{objl}} />
+                    <small class="error" ng-show="linkageForm.linkagesites.$error.siteInvalid">{{linkageForm.linkagesites.$errorMsg.naSites}}</small>
                 </div>
                 <div class="col-md-3">
                     <button ng-click="objl.displaySites = getAllLeftoverSitesDisplay(true)">Apply to all remaining sites</button>

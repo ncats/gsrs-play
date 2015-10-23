@@ -379,7 +379,9 @@
                     obj.value = aa;
                     obj.valid = true;
                     obj.name = $scope.findName(aa);
-                    obj.type = $scope.getType(aa);
+                    if($scope.substance.protein){
+                        obj.type = $scope.getType(aa);
+                    }
                     obj.subunitIndex = subunit;
                     obj.residueIndex = i - 1 + 2;
                     if (aa.toUpperCase() == 'C') {
@@ -395,6 +397,13 @@
         };
 
         $scope.findName = function (aa) {
+            var ret;
+            if($scope.substance.protein){
+                ret=getDisplayFromCV("AMINO_ACID_RESIDUES",aa.toUpperCase());
+            }else{
+                ret=getDisplayFromCV("NUCLEIC_ACID_BASE",aa.toUpperCase());
+            }
+            /*
             switch (aa.toUpperCase()) {
                 case 'A':
                     return "Alanine";
@@ -440,6 +449,8 @@
                 default:
                     return "Tim forgot one";
             }
+            */
+            return ret;
 
         };
 
@@ -895,6 +906,7 @@
         };
         $scope.getAllSitesDisplay = function(link){
                 var sites="";
+                if(!$scope.substance.nucleicAcid)return "";
                 for(var i in $scope.substance.nucleicAcid.subunits){
                         var subunit=$scope.substance.nucleicAcid.subunits[i];
                         if(sites !== ""){
@@ -1033,7 +1045,9 @@
 
                         var sites=$scope.siteDisplayListToSiteList(dispSites);
                         var dsites;
-                        
+                        console.log("Specified as:");
+                        console.log(typeof link);
+                        console.log(link.linkage);
                         if(!link.linkage){
                                 dsites=$scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link),sites);
                         }else{
@@ -1125,19 +1139,25 @@
             require: 'ngModel',
             link: function(scope, ele, attrs, c) {
               scope.$watch(attrs.ngModel, function() {
-
-                var ret = scope.checkSites(c.$modelValue,scope.substance.nucleicAcid.subunits,scope[attrs.naSites]);
+                var repObj = JSON.parse(attrs.naSites);
+                
+                
+                var ret = scope.checkSites(c.$modelValue,scope.substance.nucleicAcid.subunits,repObj);
                 
                 if(ret){
-                        c.$setValidity('sitet', false);                        
+                        c.$setValidity('siteInvalid', false);                        
                 }else{
-                        c.$setValidity('sitet', true);                        
+                        c.$setValidity('siteInvalid', true);                        
                 }
-                if(!scope.$errorMsg)scope.$errorMsg={};
+                console.log(c);
+                
+                
+                //hack to have dynamic messages
+                if(!c.$errorMsg)c.$errorMsg={};
                 if(c.$modelValue.length<1){
-                        scope.$errorMsg[attrs.naSites]="";                
+                        c.$errorMsg.naSites="";                
                 }else{
-                        scope.$errorMsg[attrs.naSites]=ret;
+                        c.$errorMsg.naSites=ret;
                 }
                 
                 return ret;

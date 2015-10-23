@@ -21,7 +21,7 @@
                 <span href="#" editable-select="obj.sugar" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SUGAR") track by r.display" blur="submit">{{obj.sugar.display}}</span>
             </div>
             <div class="col-md-2">
-                <span href="#" editable-text="obj.displaySites" onbeforesave="checkSites($data,substance.nucleicAcid.subunits,obj)" onaftersave="updateSiteList(obj)">{{obj.displaySites}}</span>
+                <span href="#" ng-model ="obj.displaySites" editable-text="obj.displaySites"  onbeforesave="checkSites($data,substance.nucleicAcid.subunits,obj)" onaftersave="updateSiteList(obj)" na-sites={{obj}}>{{obj.displaySites}}</span>
             </div>
              <div class="col-md-2">
                 <span href="#" blur="submit">{{obj.sites.length}} of {{getAllSites().length}}</span>
@@ -39,8 +39,8 @@
                         </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" class="form-control" ng-model ="obj.displaySites" title="Sugar Sites" id="sugarsites" name = "sugarsites" na-sites="obj"/>
-                    <small class="error" ng-show="sugarForm.sugarsites.$error.sitet">{{$errorMsg.obj}}</small>
+                    <input type="text" class="form-control" ng-model ="obj.displaySites" title="Sugar Sites" id="sugarsites" name = "sugarsites" na-sites={{obj}} />
+                    <small class="error" ng-show="sugarForm.sugarsites.$error.siteInvalid">{{sugarForm.sugarsites.$errorMsg.naSites}}</small>
                 </div>
                 <div class="col-md-3">
                     <button ng-click="obj.displaySites = getAllLeftoverSitesDisplay()">Apply to all remaining sites</button>
