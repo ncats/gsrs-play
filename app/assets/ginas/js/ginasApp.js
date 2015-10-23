@@ -515,67 +515,7 @@
                 return sites;
                       
         };
-        $scope.siteDisplayToSite= function (site){
-                var subres=site.split("_");
-
-                if(site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g)===null){
-                        throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
-                }
-
-                return {
-                        subunitIndex:subres[0]-0,
-                        residueIndex:subres[1]-0
-                };
-        };
-        $scope.sitesToDislaySites= function (sites){
-                sites.sort(function (site1,site2){
-                        var d=site1.subunitIndex - site2.subunitIndex;
-                        if(d===0){
-                                d= site1.residueIndex-site2.residueIndex;
-                        }
-                        return d;
-                
-                });
-                var csub=0;
-                var cres=0;
-                var rres=0;
-                var finish=false;
-                var disp="";
-                for(var i=0;i<sites.length;i++){
-                        
-                        var site=sites[i];
-                        if(site.subunitIndex==csub && site.residueIndex == cres)
-                                continue;
-                        finish=false;
-                        if(site.subunitIndex == csub){
-                                if(site.residueIndex == cres+1){
-                                        if(rres===0){
-                                                rres=cres;
-                                        }
-                                }else{
-                                        finish=true;                                               
-                                }
-                        }else{
-                                finish=true;
-                        }
-                        if(finish && csub!==0){
-                            if(rres!==0){
-                                disp+= csub + "_" + rres +"-" + csub + "_" + cres + ";";
-                            }else{
-                                disp+=csub + "_" + cres +";";
-                            }
-                            rres=0;
-                        }
-                        csub=site.subunitIndex;
-                        cres=site.residueIndex;                        
-                }
-                if(rres!==0){
-                        disp+= csub + "_" + rres +"-" + csub + "_" + cres;        
-                }else{
-                        disp+=csub + "_" + cres;
-                }
-                return disp;
-        };
+       
 
 
         //Method for pushing temporary objects into the final message
@@ -876,13 +816,188 @@
             }
         };
         
-        $scope.checkSites = function(dispSites) {
+        $scope.getSiteResidue = function(subunits, site){
+                var si=site.subunitIndex;      
+                var ri=site.residueIndex;      
+                for(var i=0;i<subunits.length;i++){
+                     if(subunits[i].subunitIndex === si){
+                        var res=subunits[i].sequence.substr(ri-1,1);
+                        return res;
+                     }   
+                }
+                return "";
+        };
+        
+         $scope.siteDisplayToSite= function (site){
+                var subres=site.split("_");
+
+                if(site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g)===null){
+                        throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
+                }
+
+                return {
+                        subunitIndex:subres[0]-0,
+                        residueIndex:subres[1]-0
+                };
+        };
+        $scope.sitesToDislaySites= function (sites){
+                sites.sort(function (site1,site2){
+                        var d=site1.subunitIndex - site2.subunitIndex;
+                        if(d===0){
+                                d= site1.residueIndex-site2.residueIndex;
+                        }
+                        return d;
+                
+                });
+                var csub=0;
+                var cres=0;
+                var rres=0;
+                var finish=false;
+                var disp="";
+                for(var i=0;i<sites.length;i++){
+                        
+                        var site=sites[i];
+                        if(site.subunitIndex==csub && site.residueIndex == cres)
+                                continue;
+                        finish=false;
+                        if(site.subunitIndex == csub){
+                                if(site.residueIndex == cres+1){
+                                        if(rres===0){
+                                                rres=cres;
+                                        }
+                                }else{
+                                        finish=true;                                               
+                                }
+                        }else{
+                                finish=true;
+                        }
+                        if(finish && csub!==0){
+                            if(rres!==0){
+                                disp+= csub + "_" + rres +"-" + csub + "_" + cres + ";";
+                            }else{
+                                disp+=csub + "_" + cres +";";
+                            }
+                            rres=0;
+                        }
+                        csub=site.subunitIndex;
+                        cres=site.residueIndex;                        
+                }
+                if(rres!==0){
+                        disp+= csub + "_" + rres +"-" + csub + "_" + cres;        
+                }else{
+                        disp+=csub + "_" + cres;
+                }
+                return disp;
+        };
+        $scope.getAllSitesDisplay = function(link){
+                var sites="";
+                for(var i in $scope.substance.nucleicAcid.subunits){
+                        var subunit=$scope.substance.nucleicAcid.subunits[i];
+                        if(sites !== ""){
+                                sites+=";";
+                        }
+                        if(link){
+                                sites+=subunit.subunitIndex +"_1-" +subunit.subunitIndex + "_" + (subunit.sequence.length-1);
+                        }else{
+                                sites+=subunit.subunitIndex +"_1-" +subunit.subunitIndex + "_" + subunit.sequence.length;                        
+                        }
+                }
+                return sites;
+                
+        };
+        
+        $scope.getAllSites = function(link){
+                return $scope.siteDisplayListToSiteList($scope.getAllSitesDisplay(link));                
+        };
+        
+        $scope.getAllLeftoverSitesDisplay = function(link){
+                if(link){
+                        return $scope.sitesToDislaySites($scope.getAllSitesWithoutLinkage());
+                }else{
+                        return $scope.sitesToDislaySites($scope.getAllSitesWithoutSugar());
+                }
+        };
+        
+        $scope.getAllSitesWithoutSugar = function(){
+               var retsites=[];
+               
+               if($scope.substance.nucleicAcid && $scope.substance.nucleicAcid.sugars){
+                                
+                       var asites = [];
+                       for(var i=0;i<$scope.substance.nucleicAcid.sugars.length;i++){
+                                asites=asites.concat($scope.substance.nucleicAcid.sugars[i].sites);
+                       }
+                       var allsites=$scope.getAllSites();
+                       var asitesmap = {};
+                       var site;
+                       for(var s in asites){
+
+                                site=asites[s];
+                                asitesmap[site.subunitIndex + "_" + site.residueIndex]=true;
+                       }
+                       for(s in allsites){
+                                site=allsites[s];
+                                if(!asitesmap[site.subunitIndex + "_" + site.residueIndex]){
+                                        retsites.push(site);
+                                }
+                       }
+               }else{
+                      retsites= $scope.getAllSites();
+               }
+               return retsites;
+               
+               
+        };
+        $scope.getAllSitesWithoutLinkage = function(){
+               var retsites=[];
+               
+               if($scope.substance.nucleicAcid && $scope.substance.nucleicAcid.linkages){
+                                
+                       var asites = [];
+                       for(var i=0;i<$scope.substance.nucleicAcid.linkages.length;i++){
+                                asites=asites.concat($scope.substance.nucleicAcid.linkages[i].sites);
+                       }
+                       var allsites=$scope.getAllSites(true);
+                       var asitesmap = {};
+                       var site;
+                       for(var s in asites){
+
+                                site=asites[s];
+                                asitesmap[site.subunitIndex + "_" + site.residueIndex]=true;
+                       }
+                       for(s in allsites){
+                                site=allsites[s];
+                                if(!asitesmap[site.subunitIndex + "_" + site.residueIndex]){
+                                        retsites.push(site);
+                                }
+                       }
+               }else{
+                      retsites= $scope.getAllSites(true);
+               }
+               return retsites;
+               
+               
+        };
+        
+        $scope.checkSites = function(dispSites, subunits, link) {
                 try{
                         var sites=$scope.siteDisplayListToSiteList(dispSites);
+                        for(var s in sites){
+                                var site = sites[s];
+                                if(link){
+                                        var sited = {
+                                                subunitIndex:site.subunitIndex,
+                                                residueIndex:site.residueIndex+1
+                                        };
+                                        site=sited;
+                                }
+                                if($scope.getSiteResidue(subunits,site) === ""){
+                                        throw "Site " + sites[s].subunitIndex + "_" +sites[s].residueIndex + " does not exist in subunits";
+                                }
+                        }
                 }catch(e){
                         return e;
                 }
-                
         };
         
         $scope.updateSiteList = function(obj) {
@@ -1154,7 +1269,7 @@
             scope: '=',
             link: function (scope, element, attrs, ngModelCtrl) {
                     scope.$watch(function (scope) {
-                             if(typeof scope.subunit === "undefined")
+                             if(!scope.subunit)
                                 scope.subunit={};
                              if(attrs.subindex === ""){
                                      scope.subunit.subunitIndex=1;

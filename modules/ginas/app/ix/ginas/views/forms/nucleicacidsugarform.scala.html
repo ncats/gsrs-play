@@ -1,8 +1,9 @@
 @import ix.ginas.controllers.GinasApp;
-<div class = "row info" id = "protein-details">
+<div class = "row info" id = "nucleicacid-sugar">
     <button class="btn btn-primary label-offset det">
                         Sugars&nbsp;</button>
    <div class="col-md-12">
+        <span>Number of unspecified sugars: {{getAllSitesWithoutSugar().length}}</span>
         <div class = "row header-row">
             <div class = "col-md-3">
                 <strong>Sugar</strong>
@@ -20,10 +21,10 @@
                 <span href="#" editable-select="obj.sugar" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SUGAR") track by r.display" blur="submit">{{obj.sugar.display}}</span>
             </div>
             <div class="col-md-2">
-                <span href="#" editable-text="obj.displaySites" onbeforesave="checkSites($data)" onaftersave="updateSiteList(obj)">{{obj.displaySites}}</span>
+                <span href="#" editable-text="obj.displaySites" onbeforesave="checkSites($data,substance.nucleicAcid.subunits)" onaftersave="updateSiteList(obj)">{{obj.displaySites}}</span>
             </div>
              <div class="col-md-2">
-                <span href="#" blur="submit">{{obj.sites.length}}</span>
+                <span href="#" blur="submit">{{obj.sites.length}} of {{getAllSites().length}}</span>
             </div>
             <hr>
         </div>
@@ -39,6 +40,9 @@
                 </div>
                 <div class="col-md-3">
                     <input type="text" class="form-control" ng-model ="obj.displaySites" title="Description" id="description" name = "description"/>
+                </div>
+                <div class="col-md-3">
+                    <button ng-click="obj.displaySites = getAllLeftoverSitesDisplay()">Apply to all remaining sites</button>
                 </div>
             </div>
             @submitbuttons("obj", "sugarForm", "nucleicAcid.sugars")

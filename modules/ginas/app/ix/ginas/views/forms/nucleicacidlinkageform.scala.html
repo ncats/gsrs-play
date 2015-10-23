@@ -3,6 +3,7 @@
     <button class="btn btn-primary label-offset det">
                         Linkages&nbsp;</button>
    <div class="col-md-12">
+        <span>Number of unspecified linkages: {{getAllSitesWithoutLinkage().length}}</span>
         <div class = "row header-row">
             <div class = "col-md-3">
                 <strong>Linkage</strong>
@@ -20,10 +21,10 @@
                 <span href="#" editable-select="obj.linkage" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_LINKAGE") track by r.display" blur="submit">{{obj.linkage.display}}</span>
             </div>
             <div class="col-md-2">
-                <span href="#" editable-text="obj.displaySites" onbeforesave="checkSites($data)" onaftersave="updateSiteList(obj)">{{obj.displaySites}}</span>
+                <span href="#" editable-text="obj.displaySites" onbeforesave="checkSites($data,substance.nucleicAcid.subunits,true)" onaftersave="updateSiteList(obj)">{{obj.displaySites}}</span>
             </div>
              <div class="col-md-2">
-                <span href="#" blur="submit">{{obj.sites.length}}</span>
+                <span href="#" blur="submit">{{obj.sites.length}} of {{getAllSites(true).length}}</span>
             </div>
             <hr>
         </div>
@@ -39,6 +40,9 @@
                 </div>
                 <div class="col-md-3">
                     <input type="text" class="form-control" ng-model ="objl.displaySites" title="Description" id="description" name = "description"/>
+                </div>
+                <div class="col-md-3">
+                    <button ng-click="objl.displaySites = getAllLeftoverSitesDisplay(true)">Apply to all remaining sites</button>
                 </div>
             </div>
             @submitbuttons("objl", "linkageForm", "nucleicAcid.linkages")

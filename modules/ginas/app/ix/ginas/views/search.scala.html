@@ -5,8 +5,8 @@
 
 @(query: String, total: Int, facets: Array[FacetDecorator],
         chemicals: List[ChemicalSubstance], totalChemicals: Int,
-        proteins: List[ProteinSubstance], totalProteins: Int,
-        diseases: List[Disease], totalDiseases: Int)
+         proteins: List[ProteinSubstance], totalProteins: Int,
+         diseases: List[Disease], totalDiseases: Int)
 
 @ix.ncats.views.html.main("Search: " + query) {
     @menu()
