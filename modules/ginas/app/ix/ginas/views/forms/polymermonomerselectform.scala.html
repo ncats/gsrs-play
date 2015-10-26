@@ -11,18 +11,35 @@
             <div class="col-md-2"><strong>Amount</strong></div>            
         </div>
         <div ng-repeat="component in substance.polymer.monomers">
+            <div ng-show="component._editType=='edit'" class="text-center">
+                  Editing monomer below.
+            </div>
+            
             <div class="row">
+                <div ng-hide="component._editType=='edit'" class="text-center">
                         <div class ="col-md-2">
                             <rendered id = component.monomerSubstance.refuuid></rendered>
                         </div>
-                       <div class = "col-md-6">
+                       <div class = "col-md-2">
                            <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("MONOMER_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
                        </div>
                        
+                </div>
+                       <div class="pull-right">
+                            <button  ng-hide="component._editType=='edit'" ng-click="setEditMonomer(component)">Edit</button>
+                            <button  ng-show="component._editType=='edit'" ng-click="validate(component, 'monomerForm', 'polymer.monomers', true);">Update</button>
+                            <button  ng-hide="component._editType=='edit'" ng-click="removeItem(substance.polymer.monomers, component)">Remove</button>
+                       </div>                       
             </div>
         </div>
-
+        <hr>
         <form class="form-horizontal" name="monomerForm" id = "add-component" role="form" novalidate>
+                <div ng-show="component._editType=='edit'">
+                    Editing Monomer / Starting Material
+                </div>
+                <div ng-hide="component._editType=='edit'">
+                    Add new Monomer / Starting Material
+                </div>
             <div class="row form-row">
                 <div class="col-md-2">
                     @selectors.substanceselectorform("component.monomerSubstance")
@@ -35,13 +52,7 @@
                     </ng-messages>
                 </div>
             </div>
-            <div class = "row">
-                <hr>
-                <div class="col-md-1 pull-right">
-                    <a ng-click="component=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>   
-                    <a ng-click="validate(component, monomerForm, 'polymer.monomers'); component=null;" ><i class="fa fa-floppy-o fa-2x success"></i></a>       
-                </div>
-            </div>
+            @submitbuttons("component", "monomerForm", "polymer.monomers")
         </form>
 
     </div>

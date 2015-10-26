@@ -66,6 +66,7 @@
             case "polymer":
                 Substance.substanceClass = substanceClass;
                 Substance.polymer = {};
+                Substance.polymer.monomers = [];
                 break;
             default:
                 Substance.substanceClass = substanceClass;
@@ -590,13 +591,26 @@
                         _.set(obj, "id", $scope.substance.references.length + 1);
                     }
                     $scope.defaultSave(obj, form, path, list);
-                    break;
+                    break;                    
                 default:
-                    $scope.defaultSave(obj, form, path, list);
+                    if(obj._editType !== "edit"){
+                        $scope.defaultSave(obj, form, path, list);
+                    }
+                    obj._editType="add";
+                    //$scope.defaultSave(obj, form, path, list);
                     break;
             }
         };
 
+        $scope.getKeyByValue = function(obj,value){
+            for( var prop in obj ) {
+                if( obj.hasOwnProperty( prop ) ) {
+                     if( this[ prop ] === value )
+                         return prop;
+                }
+            }
+            return null;
+        };
         $scope.toggle = function (el) {
             if (el.selected) {
                 el.selected = !el.selected;
@@ -845,10 +859,12 @@
                         csub=site.subunitIndex;
                         cres=site.residueIndex;                        
                 }
-                if(rres!==0){
-                        disp+= csub + "_" + rres +"-" + csub + "_" + cres;        
-                }else{
-                        disp+=csub + "_" + cres;
+                if(sites.length>0){
+                        if(rres!==0){
+                                disp+= csub + "_" + rres +"-" + csub + "_" + cres;        
+                        }else{
+                                disp+=csub + "_" + cres;
+                        }
                 }
                 return disp;
         };
@@ -1002,6 +1018,25 @@
                         }
                         
         };
+        $scope.setEditMonomer = function(mon){
+                        if(mon){
+                                $scope.component=mon;
+                                $scope.component._editType="edit";
+                        }else{
+                                $scope.component=null;
+                        }
+                        
+        };
+        $scope.setEditSRU = function(sru){
+                        if(sru){
+                                $scope.srucomponent=sru;
+                                $scope.srucomponent._editType="edit";
+                        }else{
+                                $scope.srucomponent=null;
+                        }
+                        
+        };
+        
         
         $scope.checkSites = function(dispSites, subunits, link) {
                 try{

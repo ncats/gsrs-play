@@ -7,43 +7,54 @@
     <div class="col-md-12">
         <div class ="row header-row">
             <div class="col-md-2"><strong>Structural Unit</strong></div>
-            <div class="col-md-2"><strong>Unit Type</strong></div>
+            <div class="col-md-3"><strong>Unit Type</strong></div>
             <div class="col-md-2"><strong>Unit Amount</strong></div>
             <div class="col-md-2"><strong>Unit Connectivity</strong></div>
         </div>
         <div ng-repeat="component in substance.polymer.structuralUnits">
             <div class="row">
-                        <div class ="col-md-2">
-                            <rendered id = component.substance.refuuid></rendered>
+                        <div ng-show="component._editType=='edit'" class="text-center">
+                              Editing monomer below.
                         </div>
-                       <div class = "col-md-6">
+                        <div ng-hide="component._editType=='edit'" class="text-center">
+                       <div class ="col-md-2">
+                            <rendered id = component.substance.refuuid></rendered>
+                       </div>
+                       <div class = "col-md-3">
                            <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SRU_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
                        </div>
-                       
-                       
+                       <div class="col-md-2">
+                            <span href="#" editable-text="component.displayConnectivity">{{component.displayConnectivity}}</span>
+                        </div>
+                        </div>
+                        <div class="pull-right">
+                            <button  ng-hide="component._editType=='edit'" ng-click="setEditSRU(component)">Edit</button>
+                            <button  ng-show="component._editType=='edit'" ng-click="validate(component, 'sruForm', 'polymer.structuralUnits', true);">Update</button>
+                            <button  ng-hide="component._editType=='edit'" ng-click="removeItem(substance.polymer.structuralUnits, component)">Remove</button>
+                       </div>     
             </div>
         </div>
+        <hr>
 
-        <form class="form-horizontal" name="mixtureForm" id = "add-component" role="form" novalidate>
+        <form class="form-horizontal" name="sruForm" id = "add-sru" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    @selectors.substanceselectorform("component.substance")
+                    @selectors.substanceselectorform("srucomponent.substance")
                 </div>
                 <div class="col-md-6 err-check" show-errors>
-                    <select class="form-control" title="Mixture Type" id="type" name = "type" ng-model = "component.type" ng-options="r.display for r in @GinasApp.getCV.getField("MIXTURE_TYPE") track by r.display" required>
+                    <select class="form-control" title="SRU Type" id="type" name = "type" ng-model = "srucomponent.type" ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SRU_TYPE") track by r.display" required>
                         </select>
-                    <ng-messages for="mixtureForm.type.$error" ng-if="mixtureForm.type.$touched">
+                    <ng-messages for="sruForm.type.$error" ng-if="sruForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-            </div>
-            <div class = "row">
-                <hr>
-                <div class="col-md-1 pull-right">
-                    <a ng-click="component=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>   
-                    <a ng-click="validate(component, mixtureForm, 'mixture.components'); component=null;" ><i class="fa fa-floppy-o fa-2x success"></i></a>       
+                <div class="col-md-3">
+                    <input type="text" class="form-control" ng-model ="srucomponent.displayConnectivity" title="SRU Connectivity" id="connectivity" name = "connectivity" />
                 </div>
+                
             </div>
+            @submitbuttons("srucomponent", "sruForm", "polymer.structuralUnits")
+             
         </form>
 
     </div>
