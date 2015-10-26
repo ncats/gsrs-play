@@ -27,7 +27,7 @@
                 </div>
                        <div class="pull-right">
                             <button  ng-hide="component._editType=='edit'" ng-click="setEditMonomer(component)">Edit</button>
-                            <button  ng-show="component._editType=='edit'" ng-click="validate(component, 'monomerForm', 'polymer.monomers', true);">Update</button>
+                            <button  ng-show="component._editType=='edit'" ng-click="validate('component', 'monomerForm', 'polymer.monomers', true);">Update</button>
                             <button  ng-hide="component._editType=='edit'" ng-click="removeItem(substance.polymer.monomers, component)">Remove</button>
                        </div>                       
             </div>

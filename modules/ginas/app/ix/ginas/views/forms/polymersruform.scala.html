@@ -29,7 +29,7 @@
                         </div>
                         <div class="pull-right">
                             <button  ng-hide="component._editType=='edit'" ng-click="setEditSRU(component)">Edit</button>
-                            <button  ng-show="component._editType=='edit'" ng-click="validate(component, 'sruForm', 'polymer.structuralUnits', true);">Update</button>
+                            <button  ng-show="component._editType=='edit'" ng-click="validate('srucomponent', 'sruForm', 'polymer.structuralUnits', true);">Update</button>
                             <button  ng-hide="component._editType=='edit'" ng-click="removeItem(substance.polymer.structuralUnits, component)">Remove</button>
                        </div>     
             </div>

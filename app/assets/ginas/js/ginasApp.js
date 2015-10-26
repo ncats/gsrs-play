@@ -1,3 +1,4 @@
+
 (function () {
     var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'ui.bootstrap.datetimepicker', 'LocalStorageModule', 'ngTagsInput', 'xeditable', 'ui.select'
@@ -66,7 +67,6 @@
             case "polymer":
                 Substance.substanceClass = substanceClass;
                 Substance.polymer = {};
-                Substance.polymer.monomers = [];
                 break;
             default:
                 Substance.substanceClass = substanceClass;
@@ -466,7 +466,7 @@
 
         };
 
-        $scope.defaultSave = function (obj, form, path, list) {
+        $scope.defaultSave = function (obj, form, path, list, name) {
             $scope.$broadcast('show-errors-check-validity');
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
@@ -486,7 +486,14 @@
                         _.set($scope.substance, path, x);
                     }
                 }
-                $scope.$broadcast('show-errors-reset');
+                console.log($scope);
+                console.log(path);
+                $scope[name] = {};
+
+                console.log(obj);
+                console.log(form);
+                console.log($scope);
+                $scope.reset(form);
             }
 
         };
@@ -532,7 +539,8 @@
         //for type, will store the form object into that path inside
         //the substance, unless otherwise caught in the switch.
         //This simplifies some things.
-        $scope.validate = function (obj, form, path, list) {
+        $scope.validate = function (objName, form, path, list) {
+            var obj = $scope[objName];
             console.log(obj);
             console.log(form);
             console.log($scope);
@@ -545,7 +553,7 @@
                     //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
                     //if(true)return "test";
                     $scope.updateSiteList(obj);
-                    $scope.defaultSave(obj, form, path, list);                    
+                    $scope.defaultSave(obj, form, path, list, objName);
                     break;
                 case "subunits":
                     
@@ -560,7 +568,7 @@
                     }
                     obj.display = $scope.parseSubunit(obj.sequence, obj.subunitIndex);
                     if(obj._editType !== "edit"){
-                        $scope.defaultSave(obj, form, path, list);
+                        $scope.defaultSave(obj, form, path, list, objName);
                     }
                     obj._editType="add";
                     break;
@@ -569,19 +577,19 @@
                     break;
                 case "disulfideLinks":
                     var d = $scope.parseLink(obj, path);
-                    $scope.defaultSave(d, form, path, list);
+                    $scope.defaultSave(d, form, path, list, objName);
                     break;
                 case "otherLinks":
                     var ol = {};
                     var otl = $scope.parseLink(obj, path);
                     _.set(ol, "sites", otl);
                     _.set(ol, "linkageType", obj.linkageType);
-                    $scope.defaultSave(ol, form, path, list);
+                    $scope.defaultSave(ol, form, path, list, objName);
                     break;
                 case "glycosylation":
                     var g = $scope.parseGlycosylation(obj, path);
                     _.set($scope.substance, path + ".glycosylationType", obj.glycosylationType);
-                    $scope.defaultSave(g, form, path + "." + obj.link + 'Glycosylation', list);
+                    $scope.defaultSave(g, form, path + "." + obj.link + 'Glycosylation', list, objName);
                     break;
                 case "references":
                     _.set(obj, "uuid", uuid());
@@ -590,27 +598,18 @@
                     } else {
                         _.set(obj, "id", $scope.substance.references.length + 1);
                     }
-                    $scope.defaultSave(obj, form, path, list);
-                    break;                    
-                default:
+                    $scope.defaultSave(obj, form, path, list, objName);
+                    break;
+                 default:
                     if(obj._editType !== "edit"){
-                        $scope.defaultSave(obj, form, path, list);
+                        $scope.defaultSave(obj, form, path, list, objName);
                     }
                     obj._editType="add";
-                    //$scope.defaultSave(obj, form, path, list);
                     break;
             }
+            $scope[objName] = {};
         };
 
-        $scope.getKeyByValue = function(obj,value){
-            for( var prop in obj ) {
-                if( obj.hasOwnProperty( prop ) ) {
-                     if( this[ prop ] === value )
-                         return prop;
-                }
-            }
-            return null;
-        };
         $scope.toggle = function (el) {
             if (el.selected) {
                 el.selected = !el.selected;
@@ -652,11 +651,8 @@
         };
 
         $scope.reset = function (form) {
-            console.log($scope);
             form.$setPristine();
-            console.log(form);
             $scope.$broadcast('show-errors-reset');
-            console.log($scope);
         };
 
         $scope.selected = false;
@@ -817,7 +813,7 @@
                         residueIndex:subres[1]-0
                 };
         };
-        $scope.sitesToDislaySites= function (sites){
+       $scope.sitesToDislaySites= function (sites){
                 sites.sort(function (site1,site2){
                         var d=site1.subunitIndex - site2.subunitIndex;
                         if(d===0){
@@ -1036,7 +1032,6 @@
                         }
                         
         };
-        
         
         $scope.checkSites = function(dispSites, subunits, link) {
                 try{
@@ -1262,9 +1257,7 @@
                     'Content-Type': 'text/plain'
                 }
             }).success(function (data) {
-                console.log(data);
                 options[field] = data.content[0].terms;
-                console.log(options);
             });
         };
 
@@ -1841,4 +1834,5 @@ function submitq(qinput) {
     }
     return true;
 }
+
 
