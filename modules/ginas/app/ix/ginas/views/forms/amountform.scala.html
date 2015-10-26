@@ -2,7 +2,7 @@
 
 @(amountOwner: String)
 
-<div ng-show="addAmount" id ="@amountOwner">
+<div ng-show="addAmount@{amountOwner}" id ="@amountOwner">
 <div class ="row">
     <button class="btn btn-primary label-offset det">
        Amount&nbsp;</button>
@@ -67,7 +67,7 @@
 
             </div>
             <a ng-click="@{amountOwner}=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-            <a ng-click="addAmount=false;" ><i class="fa fa-check fa-2x success"></i></a>
+            <a ng-click="addAmount@{amountOwner}=false;" ><i class="fa fa-check fa-2x success"></i></a>
 
         </div>
 
