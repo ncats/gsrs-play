@@ -1,7 +1,78 @@
 @import ix.ginas.controllers.GinasApp;
-
-<div class = "row info" >
+    
+<div class = "row info" id = "polymer-details">
     <button class="btn btn-primary label-offset det">
-                      Polymer Classification&nbsp;</button>
-     <div>Not implemented</div>
+                        Polymer Classification&nbsp;</button>
+    <div class="col-md-12">
+        <!-- Title bits -->
+        <div class = "row header-row">
+            <div class = "col-md-2">
+                <strong>Polymer Class</strong>
+            </div>
+            <div class = "col-md-4">
+                <strong>Polymer Subclass</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Polymer Geometry</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Polymer Source Type</strong>
+            </div>
+            <div class = "col-md-2 text-right">
+                <strong>Reference ID</strong>
+            </div>
+        </div>
+        <div class = "row">
+            <hr>
+            <div class = "col-md-2">
+                <span href="#" editable-select="substance.polymer.classification.polymerClass" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_CLASS") track by r.display" blur="submit">{{substance.polymer.classification.polymerClass.display}}</span>
+            </div>
+            <div class = "col-md-4">
+                <span href="#" editable-select="substance.polymer.classification.polymerSubclass" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SUBCLASS") track by r.display" blur="submit">{{substance.polymer.classification.polymerSubclass.display}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="substance.polymer.classification.polymerGeometry" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_GEOMETRY") track by r.display" blur="submit">{{substance.polymer.classification.polymerGeometry.display}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="substance.polymer.classification.sourceType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SOURCE_TYPE") track by r.display" blur="submit">{{substance.polymer.classification.sourceType.display}}</span>
+            </div>
+        </div>
+
+        <form class="form-horizontal" name="polymerDetailsForm" id = "add-ref" role="form" novalidate>
+            <div class="row form-row" ng-show="!detailsSet">
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Polymer Class" id="polymerClass" name = "polymerClass" ng-model = "polymer.polymerClass" ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_CLASS") track by r.display" required>
+                        </select>
+                    <ng-messages for="editDetForm.nucleicAcidType.$error" ng-if="editDetForm.nucleicAcidType.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-4 err-check" show-errors>
+                    <select class="form-control" title="Polymer Subclass" id="polymerSubclass" name = "polymerSubclass" ng-model = "polymer.polymerSubclass" ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SUBCLASS") track by r.display" required>
+                        </select>
+                    <ng-messages for="detForm.nucleicAcidSubType.$error" ng-if="detForm.nucleicAcidSubType.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Polymer Geometry" id="polymerGeometry" name = "polymerGeometry" ng-model = "polymer.polymerGeometry" ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_GEOMETRY") track by r.display" required>
+                        </select>
+                    <ng-messages for="detForm.sequenceOrigin.$error" ng-if="detForm.sequenceOrigin.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Polymer Source Type" id="sourceType" name = "sourceType" ng-model = "polymer.sourceType" ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SOURCE_TYPE") track by r.display" required>
+                        </select>
+                    <ng-messages for="detForm.sequenceType.$error" ng-if="detForm.sequenceType.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                @referenceselectorform("detForm", "nucleicAcid")
+            </div>
+            @submitbuttons("polymer", "polymerDetailsForm", "polymer.classification",false)
+        </form>
+    </div>
 </div>
+
+
