@@ -363,7 +363,7 @@ public class HarmonogramApp extends App {
                 aRowNode.put("clust", clusmem[idx][0]);
                 aRowNode.put("rank", rank++);
                 aRowNode.put("name", sym);
-                aRowNode.put("cl", acdf.getIDGFamily());
+//                aRowNode.put("cl", acdf.getIDGFamily());
 
                 rowNodes.add(aRowNode);
             }
@@ -386,7 +386,7 @@ public class HarmonogramApp extends App {
                 aColNode.put("name", aColName);
                 aColNode.put("cluster", 1);
                 aColNode.put("rank", rank++);
-                aColNode.put("cl", colNameTypeMap.get(aColName));
+//                aColNode.put("cl", colNameTypeMap.get(aColName));
                 colNodes.add(aColNode);
             }
 
