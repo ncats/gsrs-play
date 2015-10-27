@@ -288,7 +288,7 @@ public class IDGApp extends App implements Commons {
             
             if (label.length() > 30) {
                 return "<span data-toggle='tooltip' data-html='false'"
-                    +" title='"+label+"'>"+App.truncate(label,30)+"</span>";
+                    +" title='"+App.encode(label)+"'>"+App.truncate(label,30)+"</span>";
             }
             return label;
         }
@@ -673,6 +673,8 @@ public class IDGApp extends App implements Commons {
 
         FacetDecorator[] decors = decorate
             (Target.class, filter (result.getFacets(), ALL_TARGET_FACETS));
+        for (FacetDecorator fd : decors)
+            fd.max = Math.min(10, fd.facet.size()); // default to 10 max
         
         SearchOptions opts = result.getOptions();
         if (!opts.facets.isEmpty()) {
@@ -687,6 +689,7 @@ public class IDGApp extends App implements Commons {
                                 if (value.equals
                                     (fd.facet.getValue(i).getLabel())) {
                                     fd.selection[i] = true;
+                                    if (i >= fd.max) fd.max = i+1;
                                     break;
                                 }
                             }
@@ -697,7 +700,9 @@ public class IDGApp extends App implements Commons {
         }
         
         return ok (ix.idg.views.html.targetfacets.render
-                   (result.getQuery(), toMatrix (3, decors)));
+                   (request().getQueryString("q"),
+                    request().getQueryString("type"),
+                    toMatrix (3, decors)));
     }
 
     @Cached(key="_kinome", duration = Integer.MAX_VALUE)
@@ -2578,7 +2583,8 @@ public class IDGApp extends App implements Commons {
              en.hasMoreElements();) {
             final String token = en.nextElement();
             
-            Target t = getOrElse (Util.sha1(token), new Callable<Target> () {
+            Target t = getOrElse (Util.sha1(token)+"/resolver/target",
+                                  new Callable<Target> () {
                     public Target call () throws Exception {
                         List<Target> targets = TargetFactory.finder
                         .select("idgFamily,idgTDL,novelty,antibodyCount,"

@@ -159,8 +159,8 @@ public class App extends Authentication {
     
     public static class FacetDecorator {
         final public Facet facet;
-        final public int max;
-        final public boolean raw;
+        public int max;
+        public boolean raw;
         public boolean hidden;
         public Integer[] total;
         public boolean[] selection;
@@ -688,9 +688,12 @@ public class App extends Authentication {
 
     public static SearchResult getSearchContext (String ctx) {
         Object result = IxCache.get(ctx);
-        if (result != null && result instanceof SearchResult) {
-            return (SearchResult)result;
+        if (result != null) {
+            if (result instanceof SearchResult) {
+                return (SearchResult)result;
+            }
         }
+        Logger.warn("No context found: "+ctx);
         return null;
     }
         
@@ -706,8 +709,7 @@ public class App extends Authentication {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
                             (kind, null, 0, 0, fdim, null);
-                        result.setKey(sha1);
-                        return result;
+                        return cacheKey (result, sha1);
                     }
                 });
         }
@@ -763,8 +765,7 @@ public class App extends Authentication {
                                          ? null : Integer.parseInt(min),
                                          max.equals("")
                                          ? null : Integer.parseInt(max));
-                                    result.setKey(sha1);
-                                    return result;
+                                    return cacheKey (result, sha1);
                                 }
                             });
                     }
@@ -776,8 +777,7 @@ public class App extends Authentication {
                                 SearchResult result = SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
-                                result.setKey(sha1);
-                                return result;
+                                return cacheKey (result, sha1);
                             }
                         });
 
@@ -813,6 +813,15 @@ public class App extends Authentication {
             Logger.trace("Unable to perform search", ex);
         }
         return null;
+    }
+
+    static protected SearchResult cacheKey (SearchResult result, String key) {
+        if (key.length() > 10) {
+            key = key.substring(0, 10);
+        }
+        IxCache.set(key, result); // create alias       
+        result.setKey(key);
+        return result;
     }
 
     public static Result getEtag (String key, Callable<Result> callable)
@@ -1544,32 +1553,29 @@ public class App extends Authentication {
          * the results of structure/sequence search context merged
          * together with facets, sorting, etc.
          */
-        final TextIndexer.SearchResult result = getOrElse
-            (key, new Callable<TextIndexer.SearchResult> () {
-                    public TextIndexer.SearchResult call () throws Exception {
+        final SearchResult result = getOrElse
+            (key, new Callable<SearchResult> () {
+                    public SearchResult call () throws Exception {
                         List results = context.getResults();
                         if (results.isEmpty()) {
                             return null;
                         }
                         
-                        TextIndexer.SearchResult searchResult =
+                        SearchResult searchResult =
                         SearchFactory.search (results, null, results.size(), 0,
                                               renderer.getFacetDim(),
                                               request().queryString());
                         Logger.debug("Cache misses: "
                                      +key+" size="+results.size()
                                      +" class="+searchResult);
-                        searchResult.setKey(context.getId());
                         // make an alias for the context.id to this search
                         // result
-                        IxCache.set(context.getId(), searchResult);
-                        return searchResult;
+                        return cacheKey (searchResult, context.getId());
                     }
                 });
 
         final List<T> results = new ArrayList<T>();
-        final List<TextIndexer.Facet> facets =
-            new ArrayList<TextIndexer.Facet>();
+        final List<Facet> facets = new ArrayList<Facet>();
         int[] pages = new int[0];
         int count = 0;
         if (result != null) {

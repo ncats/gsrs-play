@@ -1,3 +1,4 @@
+@import ix.ncats.controllers.App
 
 @(ctx: String)
 
@@ -110,7 +111,13 @@
         <i class="fa fa-navicon fa-fw"></i>
       </button>
       <ul class="dropdown-menu pull-left">
-	<li><a href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>Facets...</a></li>
+	@defining(App.queryString("facet","q","type")) { uri =>
+	  @if(uri.length > 0) {
+	     <li><a href='@HtmlFormat.raw(ix.idg.controllers.routes.IDGApp.targetfacets(ctx) + "&"+uri.substring(1))'>Facets...</a></li>
+	  } else {
+	     <li><a href='@ix.idg.controllers.routes.IDGApp.targetfacets(ctx)'>Facets...</a></li>
+	  }
+	}
         <li><a href="#sequence-modal" data-toggle="modal">
 	    Sequence Search</a></li>
         <li><a href="#batch-modal" data-toggle="modal">Batch Search</a></li>

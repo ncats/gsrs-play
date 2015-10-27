@@ -6,7 +6,7 @@
 @import ix.idg.controllers.Commons._
 @import ix.core.search.TextIndexer._
 
-@(q: String, facets: Array[Array[FacetDecorator]])
+@(q: String, t: String, facets: Array[Array[FacetDecorator]])
 
 @facet(f: FacetDecorator) = {
 <div class="col-md-4">
@@ -16,14 +16,14 @@
     </div>
     <div class="panel-body">
      <table class="table table-condensed">
-      @for(i <- 0 until Math.min(10,f.size)) {
+      @** first show all selected facets **@
+      @for(i <- 0 until f.max) {
+        @if(f.selection(i)) {
 	<tr>
 	  @defining(App.sha1(f.facet,i)) { id =>
 	     <td>
 	       <input type="checkbox" onclick="facetToggle(this)"
-		      @if(f.selection(i)) {
 		      checked="true"
-		      }
 	       	      label="Toggle @f.facet.getLabel(i)"
 		      id="@id"/>
 	     </td>
@@ -49,6 +49,39 @@
 	 </td>
         </tr>
         }
+      }
+      @for(i <- 0 until Math.min(10, f.max)) {
+        @if(!f.selection(i)) {
+	<tr>
+	  @defining(App.sha1(f.facet,i)) { id =>
+	     <td>
+	       <input type="checkbox" onclick="facetToggle(this)"
+	       	      label="Toggle @f.facet.getLabel(i)"
+		      id="@id"/>
+	     </td>
+	     <script>
+	        filters['@id'] = {
+	           checked: @f.selection(i),
+                   name: '@App.encode(f.facet)',
+	           value: '@App.encode(f.facet, i)'
+	        };
+	     </script>
+          }
+          @if(f.raw) {
+            <td>@HtmlFormat.raw(f.label(i))</td>
+          } else {
+            <td class = "text-capitalize">@f.label(i)</td>
+          }
+	 <td>
+           @if(f.raw) {
+              <span class="badge" style="float:right;">@HtmlFormat.raw(f.value(i))</span>
+           } else {
+              <span class="badge" style="float:right;">@f.value(i)</span>
+           }
+	 </td>
+        </tr>
+	}
+      }
      </table>
     </div>
   </div>
@@ -68,7 +101,7 @@
       <h1>Target Facets
 	<div class="pull-right">
 	  <a href="@ix.idg.controllers.routes.IDGApp.targets()"
-	     class="btn btn-default btn-lg">Close</a>
+	     class="btn btn-default btn-lg">Clear</a>
 	  <button type="button" class="btn btn-primary btn-lg"
 	  	  onclick="applyFilters(this)">Apply</button>
 	</div>
@@ -111,6 +144,10 @@ function applyFilters (el) {
   }
   
   var url = '@ix.idg.controllers.routes.IDGApp.targets(q)';
+  @if(t != null) {
+     url += url.indexOf('?') < 0 ? '?' : '&';
+     url += 'type=@t';
+  }
   if (facet.length > 0) {
      url += url.indexOf('?') < 0 ? '?' : '&';
      url += facet;
