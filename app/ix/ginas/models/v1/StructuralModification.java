@@ -40,7 +40,7 @@ public class StructuralModification extends Ginas {
     @OneToOne(cascade=CascadeType.ALL)
     public SubstanceReference molecularFragment;
     
-    @JSONEntity(title = "Modified Fragment SecurityRole")
+    @JSONEntity(title = "Modified Fragment Role")
     String moleculareFragmentRole;
     
     @JSONEntity(title = "Modification Group")
