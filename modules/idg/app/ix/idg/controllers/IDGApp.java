@@ -288,7 +288,8 @@ public class IDGApp extends App implements Commons {
             
             if (label.length() > 30) {
                 return "<span data-toggle='tooltip' data-html='false'"
-                    +" title='"+App.encode(label)+"'>"+App.truncate(label,30)+"</span>";
+                    +" title='"+label.replaceAll("'","%27")+"'>"
+                    +App.truncate(label,30)+"</span>";
             }
             return label;
         }
@@ -451,6 +452,7 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         IDG_DISEASE,
         IDG_LIGAND,
+        IDG_DRUG,
 
         IDG_TISSUE,
         GTEx_TISSUE,
@@ -472,6 +474,9 @@ public class IDGApp extends App implements Commons {
         "Wikipathways Pathway",
         "Panther Pathway",
         "BioCarta Pathway",
+        "NCI-Nature Pathway",
+        "HumanCyc Pathway",
+        "UniProt Pathway",
 
         "Log Novelty",
         "R01 Grant Count",
@@ -481,6 +486,7 @@ public class IDGApp extends App implements Commons {
         "Patent Count",
 
         PHARMALOGICAL_ACTION,
+        UNIPROT_KEYWORD,
         IDG_TOOLS,
         GRANT_FUNDING_IC,
         GRANT_ACTIVITY,
@@ -698,11 +704,30 @@ public class IDGApp extends App implements Commons {
                 }
             }
         }
+
+        // everything other than q
+        StringBuilder uri = new StringBuilder ();
+        String type = request().getQueryString("type");
+        if (type != null) {
+            uri.append("type="+type);
+        }
+        for (Map.Entry<String, String[]> me
+                 : request().queryString().entrySet()) {
+            if ("facet".equals(me.getKey())) {
+                for (String v : me.getValue()) {
+                    if (v.startsWith(DTO_PROTEIN_CLASS)
+                        || v.startsWith(PANTHER_PROTEIN_CLASS)) {
+                        if (uri.length() > 0)
+                            uri.append("&");
+                        uri.append("facet="+v);
+                    }
+                }
+            }
+        }
         
         return ok (ix.idg.views.html.targetfacets.render
                    (request().getQueryString("q"),
-                    request().getQueryString("type"),
-                    toMatrix (3, decors)));
+                    uri.toString(), toMatrix (3, decors)));
     }
 
     @Cached(key="_kinome", duration = Integer.MAX_VALUE)
