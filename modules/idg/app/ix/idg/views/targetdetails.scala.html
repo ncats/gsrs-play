@@ -245,7 +245,7 @@
 	 <div class="panel-body">
 	    @for(expr <- exprs) {
             @if(expr.sourceid.equals(name)) {
-                @facet(expr.sourceid, expr.tissue)
+                @facet(expr.sourceid.replaceAll("Expression", "Tissue"), expr.tissue)
             }
 	    }
 	 </div>
