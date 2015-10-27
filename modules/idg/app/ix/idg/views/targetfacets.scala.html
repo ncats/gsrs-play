@@ -6,7 +6,7 @@
 @import ix.idg.controllers.Commons._
 @import ix.core.search.TextIndexer._
 
-@(q: String, t: String, facets: Array[Array[FacetDecorator]])
+@(q: String, uri: String, facets: Array[Array[FacetDecorator]])
 
 @facet(f: FacetDecorator) = {
 <div class="col-md-4">
@@ -144,9 +144,9 @@ function applyFilters (el) {
   }
   
   var url = '@ix.idg.controllers.routes.IDGApp.targets(q)';
-  @if(t != null) {
+  @if(uri != null && uri.length > 0) {
      url += url.indexOf('?') < 0 ? '?' : '&';
-     url += 'type=@t';
+     url += '@HtmlFormat.raw(uri)';
   }
   if (facet.length > 0) {
      url += url.indexOf('?') < 0 ? '?' : '&';
