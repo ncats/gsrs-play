@@ -48,6 +48,9 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.chem.ChemCleaner;
+import ix.core.chem.PolymerDecode;
+import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
 import ix.core.models.VInt;
@@ -1693,17 +1696,41 @@ public class App extends Authentication {
         ObjectNode node = mapper.createObjectNode();
         try {
             String payload = request().body().asText();
+            payload=ChemCleaner.getCleanMolfile(payload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
-                Structure struc = StructureProcessor.instrument
-                    (payload, moieties, false); // don't standardize!
-                // we should be really use the PersistenceQueue to do this
-                // so that it doesn't block
-                struc.save();
-                for (Structure m : moieties)
-                    m.save();
-                node.put("structure", mapper.valueToTree(struc));
-                node.put("moieties", mapper.valueToTree(moieties));
+                
+                try{
+	                Structure struc = StructureProcessor.instrument
+	                    (payload, moieties, false); // don't standardize!
+	                // we should be really use the PersistenceQueue to do this
+	                // so that it doesn't block
+	                struc.save();
+	                
+					
+	                
+	                for (Structure m : moieties)
+	                    m.save();
+	                node.put("structure", mapper.valueToTree(struc));
+	                node.put("moieties", mapper.valueToTree(moieties));
+                }catch(Exception e){
+                	
+                }
+                try{
+					Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
+							.createChemical(payload, Chemical.FORMAT_AUTO);
+					
+	                Collection<StructuralUnit> o = PolymerDecode.DecomposePolymerSU(c,true);
+	                for(StructuralUnit su:o){
+	                	Structure struc = StructureProcessor.instrument
+	    	                    (su.structure, null, false);
+	                	struc.save();
+	                	su._structure=struc;
+	                }
+	                node.put("structuralUnits", mapper.valueToTree(o));
+                }catch(Exception e){
+                    Logger.error("Can't enumerate polymer", e);
+                }
             }
         }
         catch (Exception ex) {

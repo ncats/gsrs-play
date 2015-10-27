@@ -756,3 +756,6 @@ sketcher svg>text{
 .tooltip.invalidTool .tooltip-arrow {
     display: none;
 }
+.editreminder{
+    background: #dff0d8;
+}
