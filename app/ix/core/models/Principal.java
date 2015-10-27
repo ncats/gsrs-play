@@ -2,12 +2,9 @@ package ix.core.models;
 
 import javax.persistence.*;
 import be.objectify.deadbolt.core.models.Subject;
-import be.objectify.deadbolt.core.models.Role;
-import be.objectify.deadbolt.core.models.Permission;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import ix.core.controllers.AdminFactory;
 import play.data.validation.Constraints.*;
-import play.db.ebean.Model;
 
 import java.util.List;
 
@@ -36,7 +33,7 @@ public class Principal extends IxModel implements Subject{
     public Figure selfie;
 
     @Override
-    public List<? extends SecurityRole> getRoles()
+    public List<? extends Role> getRoles()
     {
         return AdminFactory.rolesByPrincipal(this);
     }

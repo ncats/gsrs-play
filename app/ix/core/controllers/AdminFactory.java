@@ -4,7 +4,6 @@ import com.avaje.ebean.Ebean;
 import com.avaje.ebean.SqlQuery;
 import com.avaje.ebean.SqlRow;
 import com.avaje.ebean.Transaction;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import play.*;
 import play.db.ebean.*;
 import play.mvc.*;
@@ -14,9 +13,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import ix.core.models.*;
 
-import java.sql.SQLData;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -27,8 +24,8 @@ public class AdminFactory extends Controller {
             new Model.Finder(Long.class, Acl.class);
     static final public Model.Finder<Long, Principal> palFinder =
             new Model.Finder(Long.class, Principal.class);
-    static final public Model.Finder<Long, SecurityRole> roleFinder =
-            new Model.Finder(Long.class, SecurityRole.class);
+    static final public Model.Finder<Long, Role> roleFinder =
+            new Model.Finder(Long.class, Role.class);
 
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
@@ -79,7 +76,7 @@ public class AdminFactory extends Controller {
     }
 
     public static Result getRole(Long id) {
-        SecurityRole role = roleFinder.byId(id);
+        Role role = roleFinder.byId(id);
         if (role != null) {
             ObjectMapper mapper = new ObjectMapper();
             return ok(mapper.valueToTree(role));
@@ -88,7 +85,7 @@ public class AdminFactory extends Controller {
     }
 
     public static Result deleteRole(Long id) {
-        SecurityRole role = roleFinder.byId(id);
+        Role role = roleFinder.byId(id);
         if (role != null) {
             try {
                 role.delete();
@@ -202,16 +199,16 @@ public class AdminFactory extends Controller {
         acl8.principals.add(user1);
         acl8.principals.add(user5);
 
-        SecurityRole role1 = SecurityRole.newGuest();
+        Role role1 = Role.newGuest();
         role1.principal = user1;
 
-        SecurityRole role2 = SecurityRole.newUser();
+        Role role2 = Role.newUser();
         role2.principal = user2;
 
-        SecurityRole role3 = SecurityRole.newOwner();
+        Role role3 = Role.newOwner();
         role3.principal = user3;
 
-        SecurityRole role4 = SecurityRole.newAdmin();
+        Role role4 = Role.newAdmin();
         role4.principal = user4;
 
         tx.commit();
@@ -230,7 +227,7 @@ public class AdminFactory extends Controller {
         return badRequest("Unknown resource: " + name);
     }
 
-    public static List<SecurityRole> rolesByPrincipal(Principal cred) {
+    public static List<Role> rolesByPrincipal(Principal cred) {
         Long userId = cred.id;
         return roleFinder.where().eq("principal.id", cred.id).findList();
     }

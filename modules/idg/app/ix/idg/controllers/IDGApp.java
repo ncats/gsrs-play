@@ -379,8 +379,7 @@ public class IDGApp extends App implements Commons {
         IDG_FAMILY,
         IDG_DISEASE,
         IDG_TISSUE,
-        GWAS_TRAIT,
-        IDG_NOVELTY
+        GWAS_TRAIT
     };
 
     public static final String[] DISEASE_FACETS = {
@@ -998,12 +997,11 @@ public class IDGApp extends App implements Commons {
         return query;
     }
 
-    @Dynamic(value = "viewTargets", handlerKey = "idg")
-    static Result _targets (final String q, final int rows, final int page)
 
+    static Result _targets (final String q, final int rows, final int page)
         throws Exception {
         final String key = "targets/"+Util.sha1(request ());
-        Logger.debug("Targets: q="+q+" rows="+rows+" page="+page+" key="+key);
+        Logger.debug("Targets: q=" + q + " rows=" + rows + " page=" + page + " key=" + key);
         
         final int total = TargetFactory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
@@ -1057,14 +1055,30 @@ public class IDGApp extends App implements Commons {
                         List<Target> targets = TargetFactory.getTargets
                             (_rows, (page-1)*_rows, null);
                         
+                        List<Target> filterTargets = new ArrayList<Target>();
+                        for(Target t : targets) {
+                            //Filter targets by role, permissions
+
+                            session().put("targetid", t.id.toString());
+                            filterTargets.add(filterTargetByAccessControl(t));
+
+                        }
                         return ok (ix.idg.views.html.targets.render
                                    (page, _rows, total, pages,
                                     decorate (facets),
-                                    targets, result.getKey(), new IdgDeadboltHandler()));
+                                           filterTargets, result.getKey(), new IdgDeadboltHandler()));
                     }
                 });
         }
     }
+
+    @Dynamic(value = "viewDetails")
+    public static Target filterTargetByAccessControl(Target t){
+
+        String id = session("targetid");
+        return t;
+    }
+
 
     
     public static Result sequences (final String q,
