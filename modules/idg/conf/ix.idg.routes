@@ -45,7 +45,7 @@ GET	/dossier/count ix.idg.controllers.DossierApp.count
 GET	/dossier/view ix.idg.controllers.DossierApp.view(folder: String ?= null)
 GET	/dossier/empty	ix.idg.controllers.DossierApp.emptyCart
 
-->	/	ix.ncats.Routes
+->	/	ix.marvin.Routes
 ->	/	ix.core.test.Routes
 
 GET	/warm/targets	ix.idg.controllers.IDGApp.targetWarmCache(secret: String)

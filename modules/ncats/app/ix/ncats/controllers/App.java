@@ -67,11 +67,8 @@ import chemaxon.struc.MolBond;
 import chemaxon.util.MolHandler;
 
 import java.awt.Dimension;
-
 import javax.imageio.ImageIO;
-
 import java.awt.image.BufferedImage;
-
 import org.freehep.graphicsio.svg.SVGGraphics2D;
 
 import gov.nih.ncgc.chemical.Chemical;
@@ -847,69 +844,6 @@ public class App extends Authentication {
                                    String key, Callable<T> callable)
         throws Exception {
         return IxCache.getOrElse(modified, key, callable);
-    }
-
-    public static Result marvin () {
-        response().setHeader("X-Frame-Options", "SAMEORIGIN");
-        return ok (ix.ncats.views.html.marvin.render());
-    }
-
-    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 10)
-    public static Result smiles () {
-        String data = request().body().asText();
-        Logger.info(data);
-        try {
-            //String q = URLEncoder.encode(mol.toFormat("smarts"), "utf8");
-            return ok (StructureProcessor.createQuery(data));
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.debug("** Unable to convert structure\n"+data);
-            return badRequest (data);
-        }
-    }
-
-    @BodyParser.Of(value = BodyParser.Json.class, maxLength = 1024*10)
-    public static Result molconvert () {
-        JsonNode json = request().body().asJson();        
-        try {
-            final String format = json.get("parameters").asText();
-            final String mol = json.get("structure").asText();
-
-            String sha1 = Util.sha1(mol);
-            Logger.debug("MOLCONVERT: format="+format+" mol="
-                         +mol+" sha1="+sha1);
-            
-            response().setContentType("application/json");
-            return getOrElse (0l, sha1, new Callable<Result>() {
-                    public Result call () {
-                        try {
-                            MolHandler mh = new MolHandler (mol);
-                            if (mh.getMolecule().getDim() < 2) {
-                                mh.getMolecule().clean(2, null);
-                            }
-                            String out = mh.getMolecule().toFormat(format);
-                            //Logger.debug("MOLCONVERT: output="+out);
-                            ObjectMapper mapper = new ObjectMapper ();
-                            ObjectNode node = mapper.createObjectNode();
-                            node.put("structure", out);
-                            node.put("format", format);
-                            node.put("contentUrl", "");
-                           
-                            return ok (node);
-                        }
-                        catch (Exception ex) {
-                            return badRequest ("Invalid molecule: "+mol);
-                        }
-                    }
-                });
-        }
-        catch (Exception ex) {
-            Logger.error("Can't parse request", ex);
-            ex.printStackTrace();
-            
-            return internalServerError ("Unable to convert input molecule");
-        }
     }
 
     public static Result renderOld (final String value, final int size) {
@@ -1754,33 +1688,33 @@ public class App extends Authentication {
                 List<Structure> moieties = new ArrayList<Structure>();
                 
                 try{
-	                Structure struc = StructureProcessor.instrument
-	                    (payload, moieties, false); // don't standardize!
-	                // we should be really use the PersistenceQueue to do this
-	                // so that it doesn't block
-	                struc.save();
-	                
-					
-	                
-	                for (Structure m : moieties)
-	                    m.save();
-	                node.put("structure", mapper.valueToTree(struc));
-	                node.put("moieties", mapper.valueToTree(moieties));
+                        Structure struc = StructureProcessor.instrument
+                            (payload, moieties, false); // don't standardize!
+                        // we should be really use the PersistenceQueue to do this
+                        // so that it doesn't block
+                        struc.save();
+                        
+                                        
+                        
+                        for (Structure m : moieties)
+                            m.save();
+                        node.put("structure", mapper.valueToTree(struc));
+                        node.put("moieties", mapper.valueToTree(moieties));
                 }catch(Exception e){
-                	
+                        
                 }
                 try{
-					Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
-							.createChemical(payload, Chemical.FORMAT_AUTO);
-					
-	                Collection<StructuralUnit> o = PolymerDecode.DecomposePolymerSU(c,true);
-	                for(StructuralUnit su:o){
-	                	Structure struc = StructureProcessor.instrument
-	    	                    (su.structure, null, false);
-	                	struc.save();
-	                	su._structure=struc;
-	                }
-	                node.put("structuralUnits", mapper.valueToTree(o));
+                                        Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
+                                                        .createChemical(payload, Chemical.FORMAT_AUTO);
+                                        
+                        Collection<StructuralUnit> o = PolymerDecode.DecomposePolymerSU(c,true);
+                        for(StructuralUnit su:o){
+                                Structure struc = StructureProcessor.instrument
+                                    (su.structure, null, false);
+                                struc.save();
+                                su._structure=struc;
+                        }
+                        node.put("structuralUnits", mapper.valueToTree(o));
                 }catch(Exception e){
                     Logger.error("Can't enumerate polymer", e);
                 }
