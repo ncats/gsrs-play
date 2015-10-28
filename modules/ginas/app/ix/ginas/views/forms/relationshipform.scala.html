@@ -49,7 +49,7 @@
         <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    @selectors.substanceselectorform("relationship.relatedSubstance")
+                <substance-chooser ng-model="relationship.relatedSubstance"></substance-chooser>
 
                 </div>
                 <div class="col-md-2 err-check" show-errors>

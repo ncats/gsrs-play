@@ -1203,11 +1203,11 @@
      ginasApp.directive('loading', function ($http) {
         return {
             template: "<div class=\"sk-folding-cube\">\n" + 
-		"  <div class=\"sk-cube1 sk-cube\"></div>\n" + 
-		"  <div class=\"sk-cube2 sk-cube\"></div>\n" + 
-		"  <div class=\"sk-cube4 sk-cube\"></div>\n" + 
-		"  <div class=\"sk-cube3 sk-cube\"></div>\n" + 
-		"</div>"
+            "  <div class=\"sk-cube1 sk-cube\"></div>\n" + 
+            "  <div class=\"sk-cube2 sk-cube\"></div>\n" + 
+            "  <div class=\"sk-cube4 sk-cube\"></div>\n" + 
+            "  <div class=\"sk-cube3 sk-cube\"></div>\n" + 
+            "</div>"
         };
     });
     
@@ -1473,6 +1473,24 @@
             template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>'
         };
     });
+    ginasApp.directive('substanceChooser', function () {
+        return {
+            restrict: 'AE',
+            replace: true,
+            transclude: true,
+            template: function (element, attrs) {
+                var html="<div>\n" + 
+                          "    <span ng-show=\"@{scopeset}\">\n" + 
+                          "        <code>{{@{scopeset}.refPname}}</code>\n" + 
+                          "        <rendered id = @{scopeset}.refuuid></rendered>\n" + 
+                          "    </span>\n" + 
+                          "    <a role=\"button\" aria-label=\"Select a Substance\"  ng-click=\"openSelector('@{scopeset}')\">Select Material<i class=\"fa fa-plus fa-2x success\"></i></a>\n" + 
+                          "</div>";
+                return html.replace(/@{scopeset}/g,attrs.ngModel);
+            }
+        };
+    });
+
 
     //Ok, this needs to be re-evaluated a bit.
     //Right now, it always round trips, but that doesn't always make sense.

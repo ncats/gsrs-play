@@ -69,7 +69,7 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2">
-                    @selectors.substanceselectorform("agentModification.agentSubstance")
+                    <substance-chooser ng-model="agentModification.agentSubstance"></substance-chooser>
                 </div>
                 @selectors.amountselectorform("agentModification.amount")
             </div>

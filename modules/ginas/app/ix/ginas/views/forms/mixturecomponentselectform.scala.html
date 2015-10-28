@@ -34,7 +34,7 @@
         <form class="form-horizontal" name="mixtureForm" id = "add-component" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    @selectors.substanceselectorform("mcomponent.substance")
+                    <substance-chooser ng-model = "mcomponent.substance"></substance-chooser>
                 </div>
                 <div class="col-md-6 err-check" show-errors>
                     <select class="form-control" title="Mixture Type" id="type" name = "type" ng-model = "mcomponent.type" ng-options="r.display for r in @GinasApp.getCV.getField("MIXTURE_TYPE") track by r.display" required>

@@ -82,7 +82,7 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2">
-                @selectors.substanceselectorform("structuralModification.molecularFragment")
+                <substance-chooser ng-model="structuralModification.molecularFragment"></substance-chooser>
                 </div>
                 @selectors.amountselectorform("structuralModification.extentAmount")
             </div>
