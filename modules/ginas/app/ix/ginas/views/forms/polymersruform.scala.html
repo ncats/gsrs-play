@@ -7,24 +7,31 @@
     <div class="col-md-12">
         <div class ="row header-row">
             <div class="col-md-2"><strong>Structural Unit</strong></div>
-            <div class="col-md-3"><strong>Unit Type</strong></div>
+            <div class="col-md-2"><strong>Unit Label</strong></div>
+            <div class="col-md-2"><strong>Unit Type</strong></div>
             <div class="col-md-2"><strong>Unit Amount</strong></div>
             <div class="col-md-2"><strong>Unit Connectivity</strong></div>
         </div>
         <div ng-repeat="component in substance.polymer.structuralUnits">
             <div class="row">
-                        <div ng-show="component._editType=='edit'" class="text-center">
-                              Editing monomer below.
+                        <div ng-show="component._editType=='edit'" class="text-center editreminder">
+                              Editing SRU below.
                         </div>
                         <div ng-hide="component._editType=='edit'" class="text-center">
-                       <div class ="col-md-2">
-                            <rendered id = component.substance.refuuid></rendered>
-                       </div>
-                       <div class = "col-md-3">
+                        <div class ="col-md-2">
+                            <rendered id = component._structure.id></rendered>
+                        </div>
+                        <div class="col-md-2">
+                           <span href="#" ng-model ="component.label" editable-text="component.label" >{{component.label}}</span>
+                        </div>
+                        <div class = "col-md-2">
                            <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SRU_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
-                       </div>
-                       <div class="col-md-2">
-                            <span href="#" editable-text="component.displayConnectivity">{{component.displayConnectivity}}</span>
+                        </div>
+                        <div class="col-md-2">
+                            TO BE AMOUNT
+                        </div>
+                        <div class="col-md-2">
+                            <span href="#" editable-text="component._displayConnectivity">{{component._displayConnectivity}}</span>
                         </div>
                         </div>
                         <div class="pull-right">
@@ -37,9 +44,15 @@
         <hr>
 
         <form class="form-horizontal" name="sruForm" id = "add-sru" role="form" novalidate>
+                <div ng-show="srucomponent._editType=='edit'">
+                    Editing Structural Unit
+                </div>
+                <div ng-hide="srucomponent._editType=='edit'">
+                    Add new Structural Unit
+                </div>
             <div class="row form-row">
                 <div class="col-md-2">
-                    @selectors.substanceselectorform("srucomponent.substance")
+                    <rendered id = srucomponent._structure.id></rendered>
                 </div>
                 <div class="col-md-6 err-check" show-errors>
                     <select class="form-control" title="SRU Type" id="type" name = "type" ng-model = "srucomponent.type" ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SRU_TYPE") track by r.display" required>

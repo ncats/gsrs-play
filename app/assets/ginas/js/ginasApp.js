@@ -77,6 +77,47 @@
 
         return Substance;
     });
+    
+    ginasApp.factory('polymerUtils', function () {
+        var  utils={};
+        utils.getAttachmentMapUnits = function (srus){
+                var rmap = {};
+                for(var i in srus){
+                        var lab =srus[i].label;
+                        if(!lab){
+                                lab= "{" + i + "}";
+                        }
+                        for(var k in srus[i].attachmentMap){
+                                if(srus[i].attachmentMap.hasOwnProperty(k)){
+                                        rmap[k]=lab;
+                                }
+                        }
+                }
+                return rmap;       
+        };
+        utils.sruConnectivityToDisplay = function (amap,rmap){
+                var disp="";
+                for(var k in amap){
+                  if(amap.hasOwnProperty(k)){
+                        var start=rmap[k] + "_" + k;
+                        for(var i in amap[k]){
+                                var end = rmap[amap[k][i]] + "_" + amap[k][i];
+                                disp+=start + "-" +end + ";";
+                        }
+                  }
+                }
+                return disp;
+        };
+        utils.setSRUConnectivityDisplay = function (srus){
+               var rmap=utils.getAttachmentMapUnits(srus);
+                for(var i in srus){
+                        var disp = utils.sruConnectivityToDisplay(srus[i].attachmentMap,rmap);
+                        srus[i]._displayConnectivity=disp;
+                }
+        };
+
+        return utils;
+    });
 
 
     ginasApp.factory('lookup', function () {
@@ -98,12 +139,16 @@
             var domain = lookup[field];
             if (typeof domain !== "undefined") {
                 return {
-                    "display": val,
+                    "display": getDisplayFromCV(domain, val),
                     "value": val,
                     "domain": domain
                 };
             }
             return null;
+        };
+        lookup.expandCVValueDisplay = function(domain,value){
+                var disp=getDisplayFromCV(domain,value);
+                return {value:value, display:disp, domain:domain};
         };
         return lookup;
     });
@@ -689,6 +734,7 @@
             return substanceSearch.load($query);
             //return substanceSearch.search(field, $query);
         };
+        
 
         $scope.expandCV = function (sub, path) {
 
@@ -1408,7 +1454,9 @@
         };
     });
 
-    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance) {
+    //Ok, this needs to be re-evaluated a bit.
+    //Right now, it always round trips, but that doesn't always make sense.
+    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance, lookup, polymerUtils) {
         return {
             restrict: 'E',
             require: "ngModel",
@@ -1446,7 +1494,15 @@
                         console.log("Type:" + attrs.type);
                         if (attrs.type === "structure") {
                             scope.formsubstance = data.structure;
-                        } else {
+                        }else if(attrs.type === "polymer") {
+                            scope.formsubstance.idealizedStructure = data.structure;
+                            for(var i in data.structuralUnits){
+                                data.structuralUnits[i].type=lookup.expandCVValueDisplay("POLYMER_SRU_TYPE",data.structuralUnits[i].type);
+                            }
+                            polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
+                            scope.formsubstance.structuralUnits = data.structuralUnits;
+                        
+                        }else{
                             scope.formsubstance.structure = data.structure;
                             scope.formsubstance.moieties = data.moieties;
                             scope.formsubstance.q = data.structure.smiles;
@@ -1826,6 +1882,7 @@
     });
 })();
 window.SDFFields = {};
+
 
 function getDisplayFromCV(domain, value) {
     for (var i in window.CV_REQUEST.content) {
