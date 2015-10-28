@@ -38,7 +38,8 @@
         </div>
 
         <form class="form-horizontal" name="detForm" id = "add-ref" role="form" novalidate>
-            <div class="row form-row" ng-show="!detailsSet">
+            <div ng-show="!detForm.$submitted">
+            <div class="row form-row">
                 <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Nucleic Acid Type" id="type" name = "type" ng-model = "nucleicAcid.nucleicAcidType" ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_TYPE") track by r.display" required>
                         </select>
@@ -70,6 +71,7 @@
                 @referenceselectorform("detForm", "nucleicAcid")
             </div>
             @submitbuttons("nucleicAcid", "detForm", "nucleicAcid", false)
+            </div>
         </form>
     </div>
 </div>
