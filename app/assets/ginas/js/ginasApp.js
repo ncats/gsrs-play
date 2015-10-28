@@ -1487,7 +1487,7 @@
             link: function (scope, element, attrs, ngModelCtrl) {
 
                 sketcher = new JSDraw("sketcherForm");
-                var url = window.strucUrl; //baseurl + 'smiles';
+                var url = window.strucUrl;
                 var structureid = (localStorageService.get('structureid') || false);
                 if (localStorageService.get('editID'))
                     structureid = false;
