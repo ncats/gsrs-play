@@ -86,33 +86,36 @@ public class Target extends EntityModel {
     @Indexable(facet=true,name=IDG_DEVELOPMENT)
     public TDL idgTDL; // target development level
 
-    @Indexable(sortable=true,name="Novelty")
+    @Indexable(sortable=true,name="Log Novelty",
+               dranges={-4., -3.5, -3., -2.5, -2., -1.5, -1., -0.5, 0, 1., 2.},
+               format="%1.1f")
     public Double novelty;
 
     @Indexable(sortable=true,name="Antibody Count",
-               ranges={0,40,80,120,160,200,300,400,500,600})
+               ranges={0,10,20,30,40,50,100,200})
     public Integer antibodyCount;
     
     @Indexable(sortable=true,name="Monoclonal Count",
-               ranges={0,10,20,30,40,50,60,70,80,100})
+               ranges={0,10,20,30,40,50,100,200})
     public Integer monoclonalCount;
 
     @Indexable(sortable=true,name="PubMed Count",
-               ranges={0,20,40,80,160,320,640,1280})
+               ranges={0,10,20,30,40,50,100,200})
     public Integer pubmedCount;
 
     @Indexable(sortable=true,name="Patent Count",
-               ranges={0,20,40,80,160,320,640,1280,2540,5120,10240})
+               ranges={0,10,20,30,40,50,100,200})
     public Integer patentCount;
 
     @Indexable(sortable=true,name="Grant Count",
-               ranges={0,50,100,150,200,300,500,1000,2000,3000})
+               ranges={0,10,20,50,200,300,500,1000,2000,3000})
     public Integer grantCount;
 
     @Indexable(sortable=true,name="Grant Total Cost")
     public Double grantTotalCost;
 
-    @Indexable(sortable=true,name="R01 Count")
+    @Indexable(sortable=true,name="R01 Grant Count",
+               ranges={0,10,20,30,40,50,100})
     public Integer r01Count;
 
     @JsonView(BeanViews.Full.class)

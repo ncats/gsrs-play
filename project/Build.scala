@@ -115,7 +115,7 @@ public class BuildInfo {
     javacOptions ++= javaBuildOptions,
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
   )
-  
+
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -129,6 +129,11 @@ public class BuildInfo {
         //javaOptions in Runtime += "-Dconfig.resource=ncats.conf"
   ).dependsOn(core).aggregate(core)
 
+  val marvin = Project("marvin", file("modules/marvin"))
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
+    libraryDependencies ++= commonDependencies
+  ).dependsOn(ncats).aggregate(ncats)
+  
   // needs to specify on the commandline during development and dist
   //  sbt -Dconfig.file=modules/granite/conf/granite.conf granite/run
   val granite = Project("granite", file("modules/granite"))
@@ -145,7 +150,7 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
-  ).dependsOn(ncats).aggregate(ncats)
+  ).dependsOn(marvin).aggregate(marvin)
 
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
@@ -183,7 +188,7 @@ public class BuildInfo {
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  ).dependsOn(ncats).aggregate(ncats)
+  ).dependsOn(marvin).aggregate(marvin)
 
   val tox21 = Project("tox21", file("modules/tox21"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
