@@ -169,42 +169,38 @@ role="dialog" aria-labelledby="modalLabelFolder" aria-hidden="true">
       </div>
       <div class="modal-body">
         <div class="embed-responsive embed-responsive-4by3">
-	  <div id='clust_instruct_container'>
-            <div id='viz_gmt_labels'></div>
+            <div class="row">
+                <div class="col-md-3" id='clust_instruct_container'>
+                    <div id='viz_gmt_labels'></div>
 
-            <!-- toggle clustergram order -->
-            <div id='toggle_order' class="btn-group" data-toggle="buttons" >
-              <label class="btn btn-primary active order_name">
-                <input type="radio" name="options" id="clust_button" autocomplete="off" checked > Cluster
-              </label>
-              <label class="btn btn-primary order_name">
-                <input type="radio" name="options" id="rank_button" autocomplete="off" > Rank
-              </label>
-              <label class="btn btn-primary order_name">
-                <input type="radio" name="options" id="class_button" autocomplete="off" > Class
-              </label>
+                        <!-- toggle clustergram order -->
+                    <div id='toggle_order' class="btn-group" data-toggle="buttons" >
+                        <label class="btn btn-primary active order_name">
+                            <input type="radio" name="options" id="clust_button" autocomplete="off" checked > Cluster
+                        </label>
+                        <label class="btn btn-primary order_name">
+                            <input type="radio" name="options" id="rank_button" autocomplete="off" > Rank
+                        </label>
+                        @*<label class="btn btn-primary order_name">*@
+                        @*<input type="radio" name="options" id="class_button" autocomplete="off" > Class*@
+                        @*</label>*@
+                    </div>
+
+                        <!-- input box for gene search -->
+                    <div class="form-group" id='gene_search_container'>
+                        <label for="gene_search_box">Search for a Gene</label>
+                        <input id='gene_search_box' type="text" class="form-control" placeholder="Input Gene" aria-describedby="sizing-addon2">
+                        <button type="submit" id='submit_gene_button' class="btn btn-default">Search</button>
+                    </div>
+                    <p>Set column group size</p>
+                    <div id="slider_col"></div>
+                </div>
+                <div class="col-md-9">
+                    <div id='svg_div' class='svg_div' ></div>
+                </div>
             </div>
-	    
-            <!-- input box for gene search -->
-            <div id='gene_search_container' class='row'>
-              <input id='gene_search_box' type="text" class="form-control" placeholder="Input Gene" aria-describedby="sizing-addon2">
-              <div id='gene_search_button' class="btn-group" data-toggle="buttons" >
-                <label id='submit_gene_button' class="btn btn-primary active">
-                  <input type="radio" name="options" id="" autocomplete="off" checked > Search
-                </label>
-              </div>
-            </div>
-            <p>set column group size</p>
-            <div id="slider_col"></div>
-            <p>set row group size</p>
-            <div id="slider_row"></div>
-	    
-	  </div>
-	  <!-- end clust instruct container -->
-	  
-	  <!-- svg_div - visualization will be put here -->
-	  <div id='svg_div' class='svg_div' ></div>
-	</div>
+
+        	</div>
       </div>
     </div>
   </div>

@@ -42,8 +42,9 @@ function load_clustergram(json_url) {
     var arguments_obj = {
       'network_data': network_data,
       'svg_div_id': 'svg_div',
-      'row_label':'',
-      'col_label':'',
+      'row_label':'Data Source',
+      'col_label':'Target',
+      'super_label_scale': 1,
       'outer_margins': outer_margins,
       'outer_margins_expand': outer_margins_expand,
 
@@ -55,8 +56,8 @@ function load_clustergram(json_url) {
 
       'transpose':true,
       // 'ini_expand':true
-      // 'col_label_scale':0.8,
-      // 'row_label_scale':0.8
+       'col_label_scale':0.8,
+       'row_label_scale':0.8,
       // 'force_square':1
       // 'opacity_scale':'log',
       // 'input_domain':2,
