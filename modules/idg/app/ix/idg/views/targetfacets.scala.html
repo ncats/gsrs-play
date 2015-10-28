@@ -5,12 +5,13 @@
 @import ix.idg.controllers.IDGApp._
 @import ix.idg.controllers.Commons._
 @import ix.core.search.TextIndexer._
+@import ix.utils.Util
 
 @(q: String, uri: String, facets: Array[Array[FacetDecorator]])
 
 @facet(f: FacetDecorator) = {
 <div class="col-md-4">
-  <div class="panel panel-default">
+  <div class="panel panel-default" id="@Util.sha1(App.encode(f.facet))">
     <div class="panel-heading">
       <h3 class="panel-title">@f.name</h3>
     </div>
@@ -22,16 +23,17 @@
 	<tr>
 	  @defining(App.sha1(f.facet,i)) { id =>
 	     <td>
-	       <input type="checkbox" onclick="facetToggle(this)"
+	       <input type="checkbox"  onclick="facetToggle(this)"
 		      checked="true"
 	       	      label="Toggle @f.facet.getLabel(i)"
 		      id="@id"/>
 	     </td>
 	     <script>
 	        filters['@id'] = {
-	           checked: @f.selection(i),
+	           checked: true,
                    name: '@App.encode(f.facet)',
-	           value: '@App.encode(f.facet, i)'
+	           value: '@App.encode(f.facet, i)',
+		   facet: '@Util.sha1(App.encode(f.facet))'
 	        };
 	     </script>
           }
@@ -63,7 +65,8 @@
 	        filters['@id'] = {
 	           checked: @f.selection(i),
                    name: '@App.encode(f.facet)',
-	           value: '@App.encode(f.facet, i)'
+	           value: '@App.encode(f.facet, i)',
+		   facet: '@Util.sha1(App.encode(f.facet))'
 	        };
 	     </script>
           }
@@ -123,7 +126,25 @@
 <script>
 function facetToggle (el) {
   filters[el.id].checked = el.checked;
-  console.log(filters[el.id].name+'/'+filters[el.id].value+': '+el.checked);  
+  var id = filters[el.id].facet;
+  var count = 0;
+  for (var f in filters) {
+     if (filters[f].checked && filters[f].facet == id) {
+        ++count;
+     }
+  }
+  if (count > 0) {
+     $('#'+id).removeClass('panel-default');
+     $('#'+id).addClass('panel-success');
+  }
+  else {
+     $('#'+id).removeClass('panel-success');
+     $('#'+id).addClass('panel-default');
+  }
+  /*
+  console.log(filters[el.id].name+'/'+filters[el.id].value
+		+': '+el.checked +' div='+id+' '+count);
+  */
 }
 
 $(function() {
@@ -152,8 +173,24 @@ function applyFilters (el) {
      url += url.indexOf('?') < 0 ? '?' : '&';
      url += facet;
   }
-  console.log('url: '+url);
+  //console.log('url: '+url);
   location.href = url;
 }
 
+$(document).ready(function() {
+  var counts = [];
+  for (var f in filters) {
+     if (filters[f].checked) {
+        counts[filters[f].facet] = 1;
+     }
+  }
+
+  for (var id in counts) {
+    //console.log('counts['+id+'] = '+counts[id]);
+    if (counts[id]) {
+       $('#'+id).removeClass('panel-default');
+       $('#'+id).addClass('panel-success');
+    }
+  }
+});
 </script>
