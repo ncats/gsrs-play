@@ -123,6 +123,7 @@ public class TextIndexer {
         public List<FV> getValues () {
             return values; 
         }
+        public int size () { return values.size(); }
 
         public FV getValue (int index) { return values.get(index); }
         public String getLabel (int index) {

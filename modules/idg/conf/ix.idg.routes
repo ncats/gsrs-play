@@ -19,6 +19,7 @@ GET /help   ix.idg.controllers.IDGApp.help
 GET	/index	ix.idg.controllers.IDGApp.index
 GET	/kinome	ix.idg.controllers.IDGApp.kinome
 GET	/targets	ix.idg.controllers.IDGApp.targets(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
+GET	/targets/facets	ix.idg.controllers.IDGApp.targetfacets(ctx: String ?= null)
 GET	/targets/:name	ix.idg.controllers.IDGApp.target(name: String)
 GET	/diseases	ix.idg.controllers.IDGApp.diseases(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/diseases/:name	ix.idg.controllers.IDGApp.disease(name: String)
@@ -30,10 +31,11 @@ GET	/tinx		ix.idg.controllers.TINXApp.tinx()
 GET	/tinx/target/:acc		ix.idg.controllers.TINXApp.tinxForTarget(acc: String)
 GET /hg/data ix.idg.controllers.HarmonogramApp.hgForTarget(q: String ?= null, ctx: String ?= null, format: String ?= null, type: String ?= null)
 GET /hg/view ix.idg.controllers.HarmonogramApp.view(q: String ?= null, ctx: String ?= null)
+GET /hg/ds ix.idg.controllers.HarmonogramApp.dataSources(field: String ?= null, value: String ?= null)
 GET	/hierarchy	ix.idg.controllers.IDGApp.getHierarchy(ctx: String, facet: String)
 GET	/kinases	ix.idg.controllers.IDGApp.getKinases(q: String ?= null)
-GET	/resolve/:q	ix.idg.controllers.IDGApp.resolve(q: String, kind: String ?= "ix.idg.models.Target")
-POST	/resolve	ix.idg.controllers.IDGApp.resolveBatch
+GET	/resolve/:q/$format<(json|txt|csv)>	ix.idg.controllers.IDGApp.resolve(q: String, format: String, kind: String ?= null)
+POST	/resolve/$kind<(target|ligand|disease)>.$format<(json|txt|csv)> ix.idg.controllers.IDGApp.resolveBatch(kind: String, format: String)
 POST	/batch		ix.idg.controllers.IDGApp.batch
 GET	/expression/homunculus ix.idg.controllers.ExpressionApp.homunculus(acc: String ?= null, source: String ?= null)
 GET	/targets/:name/tissue  ix.idg.controllers.IDGApp.targetTissue(name: String)

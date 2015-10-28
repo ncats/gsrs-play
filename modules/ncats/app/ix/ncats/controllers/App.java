@@ -96,9 +96,9 @@ import ix.ncats.controllers.auth.*;
 public class App extends Authentication {
     private static final String KEY_DISPLAY_CD = "DISPLAY_CD";
 
-	private static final String DISPLAY_CD_VALUE_RELATIVE = "RELATIVE";
+        private static final String DISPLAY_CD_VALUE_RELATIVE = "RELATIVE";
 
-	static final String APP_CACHE = App.class.getName();
+        static final String APP_CACHE = App.class.getName();
     
     static final String RENDERER_URL =
         play.Play.application()
@@ -162,10 +162,12 @@ public class App extends Authentication {
     
     public static class FacetDecorator {
         final public Facet facet;
-        final public int max;
-        final public boolean raw;
+        public int max;
+        public boolean raw;
         public boolean hidden;
-
+        public Integer[] total;
+        public boolean[] selection;
+        
         public FacetDecorator (Facet facet) {
             this (facet, false, 6);
         }
@@ -173,15 +175,22 @@ public class App extends Authentication {
             this.facet = facet;
             this.raw = raw;
             this.max = max;
+            total = new Integer[facet.size()];
+            selection = new boolean[facet.size()];
         }
 
         public String name () { return facet.getName(); }
         public int size () { return facet.getValues().size(); }
         public String label (int i) {
-            return facet.getValues().get(i).getLabel();
+            return facet.getLabel(i);
         }
         public String value (int i) {
-            return facet.getValues().get(i).getCount().toString();
+            Integer total = this.total[i];
+            Integer count = facet.getCount(i);
+            if (total != null) {
+                return count+" | "+total;
+            }
+            return count.toString();
         }
     }
     /**
@@ -253,10 +262,16 @@ public class App extends Authentication {
      */
     static Pattern regex = Pattern.compile("\"([^\"]+)");
     public static String quote (String s) {
-        Matcher m = regex.matcher(s);
-        if (m.find())
-            return s; // nothing to do.. already have quote
-        return "\""+s+"\"";
+        try {
+            Matcher m = regex.matcher(s);
+            if (m.find())
+                return s; // nothing to do.. already have quote
+            return "\""+URLEncoder.encode(s, "utf8")+"\"";
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return s;
     }
     
     public static String decode (String s) {
@@ -498,8 +513,8 @@ public class App extends Authentication {
             for (String s : me.getValue()) {
                 if (q.length() > 0)
                     q.append('&');
-                q.append(me.getKey()+"="
-                         + ("q".equals(me.getKey()) ? quote (s) : s));
+                q.append(me.getKey()+"="+encode (s));
+                //+ ("q".equals(me.getKey()) ? encode (s) : s));
             }
         }
         return q.toString();
@@ -676,14 +691,17 @@ public class App extends Authentication {
 
     public static SearchResult getSearchContext (String ctx) {
         Object result = IxCache.get(ctx);
-        if (result != null && result instanceof SearchResult) {
-            return (SearchResult)result;
+        if (result != null) {
+            if (result instanceof SearchResult) {
+                return (SearchResult)result;
+            }
         }
+        Logger.warn("No context found: "+ctx);
         return null;
     }
         
     public static SearchResult getSearchFacets (final Class kind) {
-        return getSearchFacets (kind, FACET_DIM);
+        return getSearchFacets (kind, 100);
     }
     
     public static SearchResult getSearchFacets (final Class kind,
@@ -693,9 +711,8 @@ public class App extends Authentication {
             return getOrElse (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
-                            (kind, null, 0, 0, fdim, getRequestQuery ());
-                        result.setKey(sha1);
-                        return result;
+                            (kind, null, 0, 0, fdim, null);
+                        return cacheKey (result, sha1);
                     }
                 });
         }
@@ -705,7 +722,9 @@ public class App extends Authentication {
         }
         return null;
     }
-    
+
+    final static Pattern RangeRe = Pattern.compile
+        ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
          final String q, final int total, final Map<String, String[]> query) {
@@ -728,14 +747,40 @@ public class App extends Authentication {
                 Logger.debug("Search request sha1: "+sha1+" cached? "
                              +IxCache.contains(sha1));
 
+                if (q != null) {
+                    // check to see if q is format like a range
+                    Matcher m = RangeRe.matcher(q);
+                    if (m.find()) {
+                        final String field = m.group(1);
+                        final String min = m.group(2);
+                        final String max = m.group(3);
+                        
+                        Logger.debug
+                            ("range: field="+field+" min="+min+" max="+max);
+                        
+                        return getOrElse (sha1, new Callable<SearchResult> () {
+                                public SearchResult call () throws Exception {
+                                    SearchOptions options =
+                                        new SearchOptions (query);
+                                    options.top = total;
+                                    SearchResult result = _textIndexer.range
+                                        (options, field, min.equals("")
+                                         ? null : Integer.parseInt(min),
+                                         max.equals("")
+                                         ? null : Integer.parseInt(max));
+                                    return cacheKey (result, sha1);
+                                }
+                            });
+                    }
+                }
+
                 result = getOrElse
                     (sha1, new Callable<SearchResult>() {
                             public SearchResult call () throws Exception {
                                 SearchResult result = SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
-                                result.setKey(sha1);
-                                return result;
+                                return cacheKey (result, sha1);
                             }
                         });
 
@@ -771,6 +816,15 @@ public class App extends Authentication {
             Logger.trace("Unable to perform search", ex);
         }
         return null;
+    }
+
+    static protected SearchResult cacheKey (SearchResult result, String key) {
+        if (key.length() > 10) {
+            key = key.substring(0, 10);
+        }
+        IxCache.set(key, result); // create alias       
+        result.setKey(key);
+        return result;
     }
 
     public static Result getEtag (String key, Callable<Result> callable)
@@ -943,8 +997,8 @@ public class App extends Authentication {
     }
 
      public static byte[] render (Molecule mol, String format, int size, int[] amap) throws Exception{
-     	return render(mol,format,size,amap,null);
-	 }
+        return render(mol,format,size,amap,null);
+         }
 
      public static byte[] render (Molecule mol, String format, int size, int[] amap, Map newDisplay)
         throws Exception {
@@ -965,8 +1019,10 @@ public class App extends Authentication {
                     }
                 }
         }
-        if(highlight){
-        	dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, false);
+        
+        if(size>250 && !highlight){
+            if(chem.hasStereoIsomers())
+                dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
 
         /*
@@ -1000,10 +1056,10 @@ public class App extends Authentication {
     
     public static byte[] render (Structure struc, String format, int size, int[] amap)
         throws Exception {
-    	Map newDisplay = new HashMap();
-    	if(struc.stereoChemistry == struc.stereoChemistry.RACEMIC){
-    		newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
-    	}
+        Map newDisplay = new HashMap();
+        if(struc.stereoChemistry == struc.stereoChemistry.RACEMIC){
+                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
+        }
         MolHandler mh = new MolHandler
             (struc.molfile != null ? struc.molfile : struc.smiles);
         Molecule mol = mh.getMolecule();
@@ -1011,29 +1067,29 @@ public class App extends Authentication {
             mol.clean(2, null);
         }
         if(struc.opticalActivity!= struc.opticalActivity.UNSPECIFIED && struc.opticalActivity!=null){
-        	if(struc.definedStereo>0){
-        		if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
-        			if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC||struc.stereoChemistry==struc.stereoChemistry.RACEMIC||struc.stereoChemistry==struc.stereoChemistry.MIXED){
-        				mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
-        			}
-        		}
-        	}
-        	if(struc.opticalActivity==struc.opticalActivity.PLUS){
-    			mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
-    			if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
-    	    		newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
-    	    	}
-    		}else if(struc.opticalActivity==struc.opticalActivity.MINUS){
-    			mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
-    			if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
-    	    		newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
-    	    	}
-    		}        	
+                if(struc.definedStereo>0){
+                        if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
+                                if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC||struc.stereoChemistry==struc.stereoChemistry.RACEMIC||struc.stereoChemistry==struc.stereoChemistry.MIXED){
+                                        mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
+                                }
+                        }
+                }
+                if(struc.opticalActivity==struc.opticalActivity.PLUS){
+                        mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
+                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+                }
+                }else if(struc.opticalActivity==struc.opticalActivity.MINUS){
+                        mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
+                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+                }
+                }               
         }
 
         if(size>250){
-        		if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
-        			newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+                        if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
+                                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
         if(newDisplay.size()==0)newDisplay=null;
         return render (mol, format, size, amap,newDisplay);
@@ -1500,32 +1556,29 @@ public class App extends Authentication {
          * the results of structure/sequence search context merged
          * together with facets, sorting, etc.
          */
-        final TextIndexer.SearchResult result = getOrElse
-            (key, new Callable<TextIndexer.SearchResult> () {
-                    public TextIndexer.SearchResult call () throws Exception {
+        final SearchResult result = getOrElse
+            (key, new Callable<SearchResult> () {
+                    public SearchResult call () throws Exception {
                         List results = context.getResults();
                         if (results.isEmpty()) {
                             return null;
                         }
                         
-                        TextIndexer.SearchResult searchResult =
+                        SearchResult searchResult =
                         SearchFactory.search (results, null, results.size(), 0,
                                               renderer.getFacetDim(),
                                               request().queryString());
                         Logger.debug("Cache misses: "
                                      +key+" size="+results.size()
                                      +" class="+searchResult);
-                        searchResult.setKey(context.getId());
                         // make an alias for the context.id to this search
                         // result
-                        IxCache.set(context.getId(), searchResult);
-                        return searchResult;
+                        return cacheKey (searchResult, context.getId());
                     }
                 });
 
         final List<T> results = new ArrayList<T>();
-        final List<TextIndexer.Facet> facets =
-            new ArrayList<TextIndexer.Facet>();
+        final List<Facet> facets = new ArrayList<Facet>();
         int[] pages = new int[0];
         int count = 0;
         if (result != null) {
@@ -1806,5 +1859,39 @@ public class App extends Authentication {
         }
         
         return values;
+    }
+
+    public static JsonNode getFacetJson (Facet facet) {
+        return getFacetJson (facet, 20);
+    }
+    
+    public static JsonNode getFacetJson (Facet facet, int max) {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode nodes = mapper.createArrayNode();
+        
+        int others = 0;
+        for (TextIndexer.FV fv : facet.getValues()) {
+            if (nodes.size() < max) {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("label", fv.getLabel());
+                n.put("value", fv.getCount());
+                nodes.add(n);
+            }
+            else {
+                others += fv.getCount();
+                break;
+            }
+        }
+
+        /*
+        if (others > 0) {
+            ObjectNode n = mapper.createObjectNode();
+            n.put("label", "Others");
+            n.put("value", others);
+            nodes.add(n);
+        }
+        */
+        
+        return nodes;
     }
 }

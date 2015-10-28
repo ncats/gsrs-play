@@ -3,6 +3,7 @@ package ix.idg.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import ix.core.models.Keyword;
 import ix.core.plugins.IxCache;
 import ix.core.search.TextIndexer;
 import ix.idg.models.HarmonogramCDF;
@@ -152,8 +153,37 @@ public class HarmonogramApp extends App {
         return node;
     }
 
+    public static Result dataSources(String field, final String value) throws Exception {
+        if (field == null || field.trim().equals("") || value == null || value.trim().equals(""))
+            return _badRequest("Must specify a field name and value");
+
+        final String fieldName = field.split("-")[1];
+        final String key = "hg/ds/" + fieldName + "/" + value;
+        Set<String> ds = getOrElse(key, new Callable<Set<String>>() {
+            public Set<String> call() throws Exception {
+                List<HarmonogramCDF> cdfs = HarmonogramFactory.finder.select("dataSource").where().eq(fieldName, value).findList();
+                Set<String> ds = new HashSet<>();
+                for (HarmonogramCDF cdf : cdfs)
+                    ds.add(cdf.getDataSource());
+                return ds;
+            }
+        });
+        ObjectNode root = mapper.createObjectNode();
+        root.put("fieldName", fieldName);
+        root.put("value", value);
+        ArrayNode arr = mapper.createArrayNode();
+        for (String s : ds) arr.add(s);
+        root.put("ds", arr);
+        return ok(root);
+    }
+
+    static String getId(Target t) {
+        Keyword kw = t.getSynonym(Commons.UNIPROT_ACCESSION);
+        return kw != null ? kw.term : null;
+    }
+
     // only valid for single target
-    public static Result _hgForRadar(String q, String type) throws Exception {
+    public static Result _hgForRadar(final String q, String type) throws Exception {
         if (q == null || q.contains(",") || !type.contains("-"))
             return _badRequest("Must specify a single Uniprot ID and/or type must be of the form radar-XXX");
 
@@ -165,7 +195,7 @@ public class HarmonogramApp extends App {
             public List<String> call() throws Exception {
                 List<String> fieldValues = new ArrayList<>();
                 Connection conn = play.db.DB.getConnection();
-                PreparedStatement pst = conn.prepareStatement("select distinct " + fieldName + " from ix_idg_harmonogram");
+                PreparedStatement pst = conn.prepareStatement("select distinct " + fieldName + " from ix_idg_harmonogram order by " + fieldName);
                 ResultSet rset = pst.executeQuery();
                 while (rset.next()) fieldValues.add(rset.getString(1));
                 rset.close();
@@ -175,11 +205,29 @@ public class HarmonogramApp extends App {
             }
         });
 
-        List<HarmonogramCDF> hgs = HarmonogramFactory.finder
-                .where().in("uniprotId", q).findList();
-        if (hgs.isEmpty()) {
-            return _notFound("No harmonogram data found for " + q);
-        }
+        final String theQuery = q.toLowerCase(); // to check for the special cases: all, tdark, tclin, etc
+        List<HarmonogramCDF> hgs;
+        int ntarget = 1;
+        if (theQuery.equals("all")) {
+            hgs = HarmonogramFactory.finder.all();
+            ntarget = TargetFactory.finder.findRowCount();
+        } else if (("tdark tclin tchem tbio").contains(theQuery)) {
+            List<Target> ts;
+            if (theQuery.equals("tdark"))
+                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tdark).findList();
+            else if (theQuery.equals("tclin"))
+                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tclin).findList();
+            else if (theQuery.equals("tchem"))
+                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tchem).findList();
+            else
+                ts = TargetFactory.finder.where().eq("idgTDL", Target.TDL.Tbio).findList();
+            ntarget = ts.size();
+            List<String> uniprots = new ArrayList<>();
+            for (Target t : ts) uniprots.add(getId(t));
+            hgs = HarmonogramFactory.finder.where().in("uniprotId", uniprots).findList();
+        } else
+            hgs = HarmonogramFactory.finder.where().in("uniprotId", q).findList();
+        Logger.debug("Working with " + hgs.size() + " CDF's from " + ntarget + " targets for q = " + q);
 
         HashMap<String, Double> attrMap = new HashMap<>();
         for (HarmonogramCDF hg : hgs) {
@@ -188,10 +236,31 @@ public class HarmonogramApp extends App {
                 attrGroup = hg.getAttrType();
             else if (fieldName.equals("data_type"))
                 attrGroup = hg.getDataType();
+            else if (fieldName.equals("attr_group"))
+                attrGroup = hg.getAttrGroup();
             Double value;
             if (attrMap.containsKey(attrGroup)) value = attrMap.get(attrGroup) + hg.getCdf();
             else value = hg.getCdf();
             attrMap.put(attrGroup, value);
+        }
+
+        // need to scale in case we were aggregating over target sets (all, Tdark, Tclin, etc)
+        double factor = 1.0;
+        if (theQuery.toLowerCase().equals("all")) factor = 1.0 / ntarget;
+        for (String mkey : attrMap.keySet()) {
+            Double val = attrMap.get(mkey);
+            val *= factor;
+            attrMap.put(mkey, val);
+        }
+
+//        HashMap<String, Double> attrMap = getOrElse(theQuery, new Callable<HashMap<String, Double>>() {
+//            @Override
+//            public HashMap<String, Double> call() throws Exception {
+//                return attrMap;
+//            }
+//        });
+        if (attrMap.isEmpty()) {
+            return _notFound("No harmonogram data found for " + theQuery);
         }
 
         ArrayNode anode = mapper.createArrayNode();
@@ -294,7 +363,7 @@ public class HarmonogramApp extends App {
                 aRowNode.put("clust", clusmem[idx][0]);
                 aRowNode.put("rank", rank++);
                 aRowNode.put("name", sym);
-                aRowNode.put("cl", acdf.getIDGFamily());
+//                aRowNode.put("cl", acdf.getIDGFamily());
 
                 rowNodes.add(aRowNode);
             }
@@ -317,7 +386,7 @@ public class HarmonogramApp extends App {
                 aColNode.put("name", aColName);
                 aColNode.put("cluster", 1);
                 aColNode.put("rank", rank++);
-                aColNode.put("cl", colNameTypeMap.get(aColName));
+//                aColNode.put("cl", colNameTypeMap.get(aColName));
                 colNodes.add(aColNode);
             }
 

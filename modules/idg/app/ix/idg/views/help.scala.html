@@ -3,7 +3,19 @@
 @import ix.idg.controllers.Commons
 @import java.net.URLEncoder
 
-@(title: String)
+@(title: String, target: Facet, disease: Facet, ligand: Facet)
+
+@fcol(name: String, facet: Facet) = {
+    <td>
+    @if(facet != null) {
+        @for(f <- facet.getValues()) {
+            @if(name.equals(f.getLabel())) {
+                @f.getCount()
+            }
+        }
+    }
+    </td>
+}
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -12,6 +24,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
         <title>@title</title>
+	<link rel="icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>    	
         <link rel="stylesheet"
         href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
         <link rel="stylesheet" type="text/css"
@@ -104,8 +117,43 @@
                 of all targets and their representation in all IDG datasources can be viewed <a href="">here</a>. Over
                 time we anticipate incorporating other relevant data sources.
 
+		<br>
+		<br>
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Target</th>
+                                    <th>Disease</th>
+                                    <th>Ligand</th>
+                                </tr>
+                                @for(source <- IDGApp.getDataSources()) {
+                                    <tr>
+                                        @if(source.href != null) {
+                                            <td><a href="@source.href">@source.name</a></td>
+                                        } else {
+                                            <td>@source.name</td>
+                                        }
+                                    <td><a href='@{ix.idg.controllers.routes.IDGApp.targets() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")}'>@source.targets</a>
+                                    </td>
+                                    <td><a href='@{ix.idg.controllers.routes.IDGApp.diseases() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")}'>@source.diseases</a>
+                                    </td>
+                                    <td><a href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")}'>@source.ligands</a>
+                                    </td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+		
+
                 <a name="harmonogram"></a> <h2>Harmonogram</h2>
-                The Harmonogram visualizes gene appearance in the <a href="http://amp.pharm.mssm.edu/Harmonizome">Harmonizome<a/>
+                The Harmonogram visualizes gene appearance in the <a href="http://amp.pharm.mssm.edu/Harmonizome">Harmonizome</a>
                 resources using interactive clustergrams. Genes are shown as rows and resources are shown as columns.
                 The gene occurrence value is normalized relative to the occurrence of other genes in the resource - the
                 darker the tile the more the gene occurs in the resource. The NIH Reporter Grants Linked to NCBI Genes

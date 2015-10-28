@@ -49,7 +49,8 @@ public class ChemblRegistry implements Commons {
                 ("No \"chembl\" datasource found!");
         }
         con = chembl.getConnection();
-        
+
+        /*
         try {
             Statement stm = con.createStatement();
             ResultSet rset = stm.executeQuery("select * from version");
@@ -64,6 +65,7 @@ public class ChemblRegistry implements Commons {
         catch (SQLException ex) {
             ex.printStackTrace();
         }
+        */
             
         pstm = con.prepareStatement
             ("select distinct e.* "+
