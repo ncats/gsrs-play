@@ -5,7 +5,7 @@
 @import ix.utils.Util;
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-     facets: Array[FacetDecorator], samples: List[QCSample])
+ facets: Array[FacetDecorator], samples: List[QCSample], ctx: String)
 
 @label(x: QCSample) = {
      @if(x.getName().length() > 30) {
