@@ -1079,6 +1079,14 @@
                         }
                         
         };
+        $scope.setEditMixtureComponent = function(mix){
+                        if(mix){
+                                $scope.mcomponent=mix;
+                                $scope.mcomponent._editType="edit";
+                        }else{
+                                $scope.mcomponent=null;
+                        }
+        };
         $scope.setEditMonomer = function(mon){
                         if(mon){
                                 $scope.component=mon;
@@ -1192,6 +1200,18 @@
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
             s4() + '-' + s4() + s4() + s4();
     };
+     ginasApp.directive('loading', function ($http) {
+        return {
+            template: "<div class=\"sk-folding-cube\">\n" + 
+		"  <div class=\"sk-cube1 sk-cube\"></div>\n" + 
+		"  <div class=\"sk-cube2 sk-cube\"></div>\n" + 
+		"  <div class=\"sk-cube4 sk-cube\"></div>\n" + 
+		"  <div class=\"sk-cube3 sk-cube\"></div>\n" + 
+		"</div>"
+        };
+    });
+    
+    
 
 //sugarSites
     ginasApp.directive('naSites', function() {
@@ -1830,15 +1850,14 @@
 
         //$scope.items = items;
         $scope.results = {};
-        $scope.selected = {};
+        $scope.selected = null;
+        $scope.searching = false;
 
-        $scope.top = 4;
+        $scope.top = 8;
         $scope.testb = 0;
 
         $scope.select = function (item) {
-            var subref = {};
-
-            //console.log(item);
+            $scope.selected=item;
             $modalInstance.close(item);
         };
 
@@ -1857,16 +1876,18 @@
             var responsePromise = $http.get(url);
 
             responsePromise.success(function (data, status, headers, config) {
-                //console.log(data);
+                console.log(data);
+                $scope.searching=false;
                 $scope.results = data;
             });
 
             responsePromise.error(function (data, status, headers, config) {
-                //alert("AJAX failed!");
+                $scope.searching=false;
             });
         };
 
         $scope.search = function () {
+            $scope.searching=true;
             $scope.fetch($scope.term, 0);
         };
 
