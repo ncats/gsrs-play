@@ -471,7 +471,9 @@
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
                     if (!list) {
+                        console.log(obj);
                         _.set($scope.substance, path, obj);
+                        console.log($scope);
                     } else {
                         var temp = _.get($scope.substance, path);
                         temp.push(obj);
@@ -486,14 +488,9 @@
                         _.set($scope.substance, path, x);
                     }
                 }
-                console.log($scope);
-                console.log(path);
                 $scope[name] = {};
-
-                console.log(obj);
-                console.log(form);
-                console.log($scope);
                 $scope.reset(form);
+                form.$setSubmitted(true);
             }
 
         };
@@ -530,7 +527,21 @@
                 return sites;
                       
         };
-       
+
+        $scope.addFields = function(obj, path){
+            if(!_.has($scope.substance, path)){
+                return obj;
+            }
+            var temp = _.get($scope.substance, [path]);
+            console.log(temp);
+            console.log(obj);
+            _.forIn(obj, function(value, key){
+                temp[key]=value;
+                console.log(value, key);
+            });
+            console.log(temp);
+            return temp;
+        };
 
 
         //Method for pushing temporary objects into the final message
@@ -546,6 +557,7 @@
             console.log($scope);
             var v = path.split(".");
             var type = _.last(v);
+            console.log(type);
             var subClass = ($scope.substance.substanceClass);
             switch (type) {
                 case "sugars":
@@ -573,7 +585,9 @@
                     obj._editType="add";
                     break;
                 case "protein":
-                    $scope.proteinDetails(obj, form);
+/*                    $scope.proteinDetails(obj, form);*/
+                    var prot = $scope.addFields(obj, path);
+                    $scope.defaultSave(prot, form, path, list, objName);
                     break;
                 case "disulfideLinks":
                     var d = $scope.parseLink(obj, path);
@@ -590,6 +604,11 @@
                     var g = $scope.parseGlycosylation(obj, path);
                     _.set($scope.substance, path + ".glycosylationType", obj.glycosylationType);
                     $scope.defaultSave(g, form, path + "." + obj.link + 'Glycosylation', list, objName);
+                    break;
+                case "structurallyDiverse":
+                    var diverse = $scope.addFields(obj, path);
+                    $scope.defaultSave(diverse, form, path, list, objName);
+
                     break;
                 case "references":
                     _.set(obj, "uuid", uuid());

@@ -73,7 +73,7 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                @selectors.siteselector("strucModForm", "substance.protein", 2)
+                @selectors.siteselector("strucModForm", "substance.protein", 1)
                 <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Extent" id="extent" name = "extent" ng-model = "structuralModification.extent" ng-options="r.display for r in @GinasApp.getCV.getField("EXTENT_TYPE") track by r.display">
                         </select>

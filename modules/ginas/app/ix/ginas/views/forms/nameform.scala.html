@@ -36,7 +36,6 @@
             </div>
             <div class = "col-md-2">
                 <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>
-
             </div>
             <div class = "col-md-2"><span ng-repeat="n in name.languages">
                 <span ng-show="!name.languages || name.languages.length==0" ng-click="toggle(nameForm.languages)" ><i class="fa fa-plus fa-2x success"></i></span>
