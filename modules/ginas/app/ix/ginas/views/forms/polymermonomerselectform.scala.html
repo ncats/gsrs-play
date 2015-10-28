@@ -18,7 +18,7 @@
             <div class="row">
                 <div ng-hide="component._editType=='edit'" class="text-center">
                         <div class ="col-md-2">
-                            <rendered id = component.monomerSubstance.refuuid></rendered>
+                            <substance-chooser ng-model = "component.substance"></substance-chooser>
                         </div>
                        <div class = "col-md-2">
                            <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("MONOMER_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>

@@ -36,12 +36,10 @@
                 <span href="#" editable-select="m.agentModificationType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_TYPE") track by r.display" blur="submit">{{m.agentModificationType.display}}</span>
             </div>
             <div class = "col-md-2">
-                <code>{{m.agentSubstance.refPname}}</code>
-                <rendered id =m.agentSubstance.refuuid ></rendered>
+                <substance-chooser ng-model = "m.agentSubstance"></substance-chooser>
             </div>
             <div class="col-md-1">
-                <amount value = "agentSubstance.amount"></amount>
-
+                <amount value = "m.amount"></amount>
             </div>
         </div>
 

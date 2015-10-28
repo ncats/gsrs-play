@@ -16,7 +16,7 @@
                         </div>
                         <div  ng-hide="component._editType=='edit'">
                         <div class ="col-md-2">
-                            <rendered id = component.substance.refuuid></rendered>
+                            <substance-chooser ng-model = "component.substance"></substance-chooser>
                         </div>
                        <div class = "col-md-6">
                            <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("MIXTURE_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>

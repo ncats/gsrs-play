@@ -168,26 +168,6 @@
             return input;
         };
 
-
-        $scope.openSelector = function (path) {
-            var modalInstance = $modal.open({
-                animation: true,
-                templateUrl: baseurl + 'assets/ginas/templates/substanceSelector.html',
-                controller: 'SubstanceSelectorInstanceController',
-                size: 'lg'
-
-            });
-
-            modalInstance.result.then(function (selectedItem) {
-                var subref = {};
-                subref.refuuid = selectedItem.uuid;
-                subref.refPname = selectedItem.name;
-                subref.approvalID = selectedItem.approvalID;
-                subref.substanceClass = "reference";
-                _.set($scope, path, subref);
-            });
-        };
-
         $scope.toFormSubstance = function (apiSub) {
 
             //first, flatten nameorgs, this is technically destructive
@@ -1395,9 +1375,6 @@
             replace: true,
             scope: {
                 id: '='
-                /*                size: '=',
-                 amap :'='*/
-
             },
             template: '<img src=\"' + baseurl + 'img/{{id}}.svg\">'
         };
@@ -1473,20 +1450,38 @@
             template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>'
         };
     });
-    ginasApp.directive('substanceChooser', function () {
+    ginasApp.directive('substanceChooser', function ($modal) {
         return {
-            restrict: 'AE',
-            replace: true,
-            transclude: true,
-            template: function (element, attrs) {
-                var html="<div>\n" + 
-                          "    <span ng-show=\"@{scopeset}\">\n" + 
-                          "        <code>{{@{scopeset}.refPname}}</code>\n" + 
-                          "        <rendered id = @{scopeset}.refuuid></rendered>\n" + 
-                          "    </span>\n" + 
-                          "    <a role=\"button\" aria-label=\"Select a Substance\"  ng-click=\"openSelector('@{scopeset}')\">Select Material<i class=\"fa fa-plus fa-2x success\"></i></a>\n" + 
-                          "</div>";
-                return html.replace(/@{scopeset}/g,attrs.ngModel);
+            restrict: 'E',
+            require: "ngModel",
+            scope: {
+                mymodel: '=ngModel'
+            },
+            templateUrl: baseurl + "assets/ginas/templates/substanceSelectorElement.html",
+            link: function (scope) {
+                console.log(scope);
+                scope.openSelector = function (parentRef, instanceName,test) {
+                    //console.log(test);
+                    var modalInstance = $modal.open({
+                        animation: true,
+                        templateUrl: baseurl + 'assets/ginas/templates/substanceSelector.html',
+                        controller: 'SubstanceSelectorInstanceController',
+                        size: 'lg'
+
+                    });
+
+                    modalInstance.result.then(function (selectedItem) {
+                        
+                        //if(!parentRef[instanceName])parentRef[instanceName]={};
+                        var oref={};
+                        oref.refuuid = selectedItem.uuid;
+                        oref.refPname = selectedItem.name;
+                        oref.approvalID = selectedItem.approvalID;
+                        oref.substanceClass = "reference";
+                        scope.mymodel=oref;
+                        //_.set($scope, path, subref);
+                    });
+                };
             }
         };
     });
@@ -1921,33 +1916,5 @@
     });
 })();
 window.SDFFields = {};
-
-
-function getDisplayFromCV(domain, value) {
-    for (var i in window.CV_REQUEST.content) {
-        if (window.CV_REQUEST.content[i].domain === domain) {
-            var terms = window.CV_REQUEST.content[i].terms;
-            for (var t in terms) {
-                if (terms[t].value === value) {
-                    return terms[t].display;
-                }
-            }
-        }
-    }
-    return value;
-}
-
-function vocabsetup(cv) {
-    window.CV_REQUEST = cv;
-    console.log("finished");
-}
-
-
-function submitq(qinput) {
-    if (qinput.value.indexOf("\"") < 0 && qinput.value.indexOf("*") < 0 && qinput.value.indexOf(":") < 0 && qinput.value.indexOf(" AND ") < 0 && qinput.value.indexOf(" OR ") < 0) {
-        qinput.value = "\"" + qinput.value + "\"";
-    }
-    return true;
-}
 
 
