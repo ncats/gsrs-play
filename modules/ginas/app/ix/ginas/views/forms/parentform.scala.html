@@ -10,9 +10,9 @@
         </div>
 
         <div class="row">
-            <div class ="col-md-3" ng-click="openSelector(substance.structurallyDiverse.parentSubstance)">
-                <rendered id = substance.structurallyDiverse.parentSubstance.refuuid></rendered>
-                <code>{{substance.structurallyDiverse.parentSubstance.refPname}}</code>
+            <div class ="col-md-3" >
+
+
             </div>
             <div class ="col-md-3" ng-click="openSelector(substance.structurallyDiverse.hybridSpeciesPaternalOrganism)">
                 <rendered id = substance.structurallyDiverse.hybridSpeciesPaternalOrganism.refuuid></rendered>
@@ -31,9 +31,18 @@
 @*            <div class = "col-md-3">
                 <find-substance></find-substance>
             </div>*@
-            <div class="col-md-3">
+            <div class="col-md-3 text-center">
 
-                <substance-chooser-lite saveto="parentSubstance"></substance-chooser-lite>
+                <span ng-show="!parentForm.parentSubstance.selected" ng-click="toggle(parentForm.parentSubstance)">
+                <substance-chooser-lite subref ="substance.structurallyDiverse.parentSubstance" name ="parentSubstance"></substance-chooser-lite>
+                </span>
+@*
+                <substance-view substance = substance.structurallyDiverse.parentSubstance ng-if="substance.structurallyDiverse.parentSubstance"></substance-view>
+*@
+@*
+                <substance-chooser-lite saveto="structurallyDiverse.parentSubstance"  ng-if="!substance.structurallyDiverse.parentSubstance"></substance-chooser-lite>
+*@
+
 
 @*                <tags-input custom-class="form-control" ng-model="diverse.parentSubstance" title="Substance Selector" placeholder="Substance Name" id="substance" name="substance" display-property="name" key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding="createSubref($tag, 'structurallyDiverse.parentSubstance')" required>
                     <auto-complete source="loadSubstances($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true" template="app/assets/ginas/templates/autocompletetemplate.html"></auto-complete>

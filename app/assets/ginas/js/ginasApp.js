@@ -703,7 +703,7 @@
 
         $scope.toggle = function (el) {
             console.log(el);
-            if (el.selected) {
+            if (_.has(el, selected)){
                 el.selected = !el.selected;
             } else {
                 el.selected = true;
@@ -1541,31 +1541,7 @@
         };
     });
 
-    ginasApp.directive('substanceChooserLite', function($templateRequest, $compile){
-        return {
-/*            restrict: 'E',
-            replace: true,*/
-/*
-            required: 'ngModel',
-*/
-            scope: true,
-            link: function(scope, element, attrs){
-                console.log(scope);
-                console.log(attrs);
-                scope.saveto = attrs.saveto;
-                $templateRequest( baseurl + "assets/ginas/templates/substancechooze.html").then(function(html){
-                    element.append($compile(html)(scope));
-                });
-/*
-                console.log(scope);
-*/
-            }
-/*
-            templateUrl: baseurl + "assets/ginas/templates/substancechooze.html"
-*/
-        };
 
-    });
 
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';
@@ -1624,6 +1600,134 @@
             template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>'
         };
     });
+
+/*    ginasApp.directive('substanceChooserLite', function($templateRequest, $compile){
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: true,
+            link: function(scope, element, attrs){
+                console.log(scope);
+                console.log(attrs);
+                scope.saveto = attrs.saveto;
+                $templateRequest( baseurl + "assets/ginas/templates/substancechooze.html").then(function(html){
+                    element.append($compile(html)(scope));
+                });
+            }
+        };
+    });
+
+    ginasApp.directive('substanceView', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                substance: '='
+            },
+            link: function(scope, element, attrs) {
+                console.log(attrs);
+                element.bind("click", function () {
+
+                });
+                console.log(scope);
+            },
+            template: '<div><rendered id = "substance.refuuid"></rendered><br/><code>{{substance.refPname}}</code></div>'
+        };
+    });*/
+
+    ginasApp.directive('substanceChooserLite', function (nameFinder) {
+        return {
+            templateUrl: baseurl + 'assets/ginas/templates/substancechooser.html',
+            replace: true,
+            restrict: 'E',
+            scope: {
+                path: '@subref',
+                subref: '=subref'
+            },
+            link: function (scope, element, attrs) {
+                console.log(scope);
+                scope.loadSubstances = function($query){
+                    return nameFinder.search($query);
+                };
+
+                scope.createSubref = function(selectedItem){
+                    console.log(scope);
+                    console.log(selectedItem);
+                    console.log(scope.path);
+                    var subref = {};
+                    subref.refuuid = selectedItem.uuid;
+                    subref.refPname = selectedItem.name;
+                    subref.approvalID = selectedItem.approvalID;
+                    subref.substanceClass = "reference";
+                    scope.subref = subref;
+                    _.set(scope.$parent, scope.path, subref);
+                    console.log(scope);
+                };
+
+                scope.focus= function(){
+                    console.log(scope);
+                    scope.diverse = [];
+                    console.log("focus");
+                };
+            }
+        };
+    });
+
+        ginasApp.directive('substanceView', function () {
+            return {
+                template: '<div><rendered id = "subref.refuuid"></rendered><br/><code>{{subref.refPname}}</code></div>',
+                replace: true,
+                restrict: 'E',
+                scope: {
+                    subref: '='
+                },
+                link: function(scope, element, attrs) {
+                    console.log(scope);
+                    element.bind("click", function () {
+                        scope.subref = undefined;
+                                    console.log(element);
+                        console.log(scope);
+                    });
+                }
+            };
+        });
+
+
+/*    ginasApp.directive('substanceChooserLite', function($templateRequest, $compile){
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: true,
+            link: function(scope, element, attrs){
+                console.log(scope);
+                console.log(attrs);
+                scope.saveto = attrs.saveto;
+                $templateRequest( baseurl + "assets/ginas/templates/substancechooze.html").then(function(html){
+                    element.append($compile(html)(scope));
+                });
+            }
+        };
+    });
+
+    ginasApp.directive('substanceView', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                substance: '='
+            },
+            link: function(scope, element, attrs) {
+                console.log(attrs);
+                element.bind("click", function () {
+
+                });
+                console.log(scope);
+            },
+            template: '<div><rendered id = "substance.refuuid"></rendered><br/><code>{{substance.refPname}}</code></div>'
+        };
+    });*/
+
+
     ginasApp.directive('substanceChooser', function ($modal) {
         return {
             restrict: 'E',
@@ -1633,7 +1737,9 @@
             },
             templateUrl: baseurl + "assets/ginas/templates/substanceSelectorElement.html",
             link: function (scope) {
+/*
                 console.log(scope);
+*/
                 scope.openSelector = function (parentRef, instanceName,test) {
                     //console.log(test);
                     var modalInstance = $modal.open({

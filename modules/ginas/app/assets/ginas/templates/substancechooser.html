@@ -1,9 +1,12 @@
 <div>
-<tags-input custom-class="form-control" ng-model= "saveto" title="Substance Selector" placeholder="Substance Name" id="substance" name="substance" display-property="name" key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag, saveto)' required>
+<substance-view subref = subref ng-show="subref"></substance-view>
+<div ng-show="!subref">
+<tags-input custom-class="form-control" ng-focus="focus()" ng-model= "diverse" title="Substance Selector" placeholder="Substance Name" id="substance" name="substance" display-property="name" key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag, d)' template = "tag-template" required>
     <auto-complete source="loadSubstances($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true" template="autocomplete-template"></auto-complete>
 </tags-input>
-<!--
-<ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domains.$touched">
+</div>
+
+<!--<ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domains.$touched">
     <ng-message when="required" class="help-block">*required</ng-message>
 </ng-messages>-->
 
@@ -18,5 +21,9 @@
         </div>
     </script>
 
+    <script type="text/ng-template" id="tag-template">
+        <div>
+        </div>
+    </script>
 
 </div>
