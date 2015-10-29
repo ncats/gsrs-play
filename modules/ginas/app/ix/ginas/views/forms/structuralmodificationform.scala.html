@@ -21,7 +21,7 @@
                 <strong>Extent</strong>
             </div>
             <div class ="col-md-2">
-                <strong>Linkage Type</strong>
+                <strong>Amount</strong>
             </div>
         </div>
 
@@ -70,10 +70,10 @@
                 <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="Extent" id="extent" name = "extent" ng-model = "structuralModification.extent" ng-options="r.display for r in lookup.getList('EXTENT_TYPE') track by r.display">
                     </select>
-                </div>                
-                @selectors.amountselectorform("structuralModification.extentAmount")
+                </div>    
+                <amount-edit-display ng-model="structuralModification.extentAmount"></amount-edit-display>    
             </div>
-            @amountform("structuralModification.extentAmount")
+            <amount-form ng-model="structuralModification.extentAmount"></amount-form>
             @submitbuttons("structuralModification", "strucModForm", "protein.modifications.structuralModifications")
         </form>
     </div>

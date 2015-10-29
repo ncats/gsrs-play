@@ -77,18 +77,12 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                @selectors.amountselectorform("relationship.amount")
+                <amount-edit-display ng-model="relationship.amount"></amount-edit-display>
                 @referenceselectorform("relationshipForm", "relationship")
             </div>
-            @amountform("relationship.amount")
-
+            <amount-form ng-model="relationship.amount"></amount-form>
             @submitbuttons("relationship", "relationshipForm", "relationships")
         </form>
 
     </div>
 </div>
-@* <div class ="row"><div class="col-md-3" ng-repeat="relationship in data">{{relationship.name}}</div></div>
-
-</div>
-</div>
-*@
