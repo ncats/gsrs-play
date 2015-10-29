@@ -21,7 +21,7 @@ import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.SpecifiedSubstanceGroup1;
+import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
@@ -34,8 +34,8 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import ix.seqaln.SequenceIndexer;
 
+import ix.seqaln.SequenceIndexer;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
@@ -193,6 +193,15 @@ public class GinasUtils {
                 switch (type) {
                 case chemical:
                     sub = mapper.treeToValue(tree, ChemicalSubstance.class);
+					try {
+						((ChemicalSubstance) sub).structure.smiles = ChemicalFactory
+								.DEFAULT_CHEMICAL_FACTORY()
+								.createChemical(
+										((ChemicalSubstance) sub).structure.molfile,
+										Chemical.FORMAT_MOL)
+								.export(Chemical.FORMAT_SMILES);
+					} catch (Exception e) {
+					}
                     return sub;
                 case protein:
                     sub = mapper.treeToValue(tree, ProteinSubstance.class);
@@ -209,7 +218,7 @@ public class GinasUtils {
                     return sub;
                 case specifiedSubstanceG1:
                     sub = mapper.treeToValue(tree,
-                                             SpecifiedSubstanceGroup1.class);
+                                             SpecifiedSubstanceGroup1Substance.class);
                     return sub;
                 case concept:
                     sub = mapper.treeToValue(tree, Substance.class);

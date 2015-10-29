@@ -2,6 +2,7 @@ package ix.ginas.models.v1;
 
 import java.util.List;
 import java.util.ArrayList;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -24,6 +25,9 @@ public class PolymerClassification extends Ginas {
     @JsonSerialize(using=KeywordListSerializer.class)    
     public List<Keyword> polymerSubclass = new ArrayList<Keyword>();
     public String sourceType;
+    
+    @OneToOne(cascade=CascadeType.ALL)
+    public SubstanceReference parentSubstance;
 
     public PolymerClassification () {}
 }

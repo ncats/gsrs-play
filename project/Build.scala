@@ -59,8 +59,6 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "html5shiv" % "3.7.2"
       ,"org.webjars" % "requirejs" % "2.1.15"
       ,"org.webjars" % "respond" % "1.4.2"
-      ,"org.webjars" % "highcharts" % "4.0.4"
-      ,"org.webjars" % "highslide" % "4.1.13"
       ,"org.webjars" % "html2canvas" % "0.4.1"
       ,"org.reflections" % "reflections" % "0.9.8" notTransitive ()
       ,"colt" % "colt" % "1.2.0"
@@ -71,7 +69,6 @@ object ApplicationBuild extends Build {
       ,"org.freehep" % "freehep-graphicsio-svg" % "2.4"
       ,"org.freehep" % "freehep-graphics2d" % "2.4"
       //,"ws.securesocial" %% "securesocial" % "master-SNAPSHOT"
-      ,"org.webjars" % "fabric.js" % "1.4.12"
       ,"org.webjars.bower" % "spin.js" % "2.0.2"
       ,"be.objectify" %% "deadbolt-java" % "2.3.3"
   )
@@ -119,7 +116,7 @@ public class BuildInfo {
     javacOptions ++= javaBuildOptions,
     mainClass in (Compile,run) := Some("ix.seqaln.SequenceIndexer")
   )
-  
+
   val core = Project("core", file("."))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
@@ -133,6 +130,11 @@ public class BuildInfo {
         //javaOptions in Runtime += "-Dconfig.resource=ncats.conf"
   ).dependsOn(core).aggregate(core)
 
+  val marvin = Project("marvin", file("modules/marvin"))
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
+    libraryDependencies ++= commonDependencies
+  ).dependsOn(ncats).aggregate(ncats)
+  
   // needs to specify on the commandline during development and dist
   //  sbt -Dconfig.file=modules/granite/conf/granite.conf granite/run
   val granite = Project("granite", file("modules/granite"))
@@ -146,9 +148,10 @@ public class BuildInfo {
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
     libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "morrisjs" % "0.5.1",
+      libraryDependencies += "org.webjars" % "fabric.js" % "1.4.12",
       javacOptions ++= javaBuildOptions
       //javaOptions in Runtime += "-Dconfig.resource=pharos.conf"
-  ).dependsOn(ncats).aggregate(ncats)
+  ).dependsOn(marvin).aggregate(marvin)
 
   val ginas = Project("ginas", file("modules/ginas"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
@@ -160,6 +163,7 @@ public class BuildInfo {
       libraryDependencies += "org.webjars" % "lodash" % "3.9.0",
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
 
   val hcs = Project("hcs", file("modules/hcs"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
@@ -176,6 +180,8 @@ public class BuildInfo {
   val reach = Project("reach", file("modules/reach"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
+      libraryDependencies +="org.webjars" % "highcharts" % "4.0.4",
+      libraryDependencies +="org.webjars" % "highslide" % "4.1.13",
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
@@ -183,7 +189,7 @@ public class BuildInfo {
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
-  ).dependsOn(ncats).aggregate(ncats)
+  ).dependsOn(marvin).aggregate(marvin)
 
   val tox21 = Project("tox21", file("modules/tox21"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
@@ -203,4 +209,11 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
+  val ginasEvo = Project("ginas-evolution", file("modules/ginas-evolution"))
+    .settings(commonSettings: _*).settings(
+    libraryDependencies ++= commonDependencies,
+      libraryDependencies += "com.typesafe" % "config" % "1.2.0",
+      mainClass in (Compile,run) := Some("ix.ginas.utils.Evolution")
+  ).dependsOn(ginas).aggregate(ginas)
 }

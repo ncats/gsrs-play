@@ -1,0 +1,57 @@
+@import ix.ginas.controllers.GinasApp;
+<div class = "row info" id = "nucleicacid-sugar" ng-show="substance.nucleicAcid.subunits" >
+    <button class="btn btn-primary label-offset det">
+                        Sugars&nbsp;</button>
+   <div class="col-md-12">
+        <span>Number of unspecified sugars: {{getAllSitesWithoutSugar().length}}</span>
+        <div class = "row header-row">
+            <div class = "col-md-3">
+                <strong>Sugar</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Sites</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Number of Sites</strong>
+            </div>
+        </div>
+
+        <div class = "row" ng-repeat="obj in substance.nucleicAcid.sugars">
+            <div class = "col-md-3">
+                <span href="#" editable-select="obj.sugar" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_SUGAR') track by r.display" blur="submit">{{obj.sugar.display}}</span>
+            </div>
+            <div class="col-md-2">
+                <site-selector ng-model="obj"></site-selector>
+            </div>
+            <div class="col-md-2">
+                <span href="#" blur="submit">{{obj.sites.length}} of {{getAllSites().length}}</span>
+            </div>
+            <div class="col-md-2">
+                <button ng-click="removeItem(substance.nucleicAcid.sugars, obj)">Remove</button>
+            </div>
+            <hr>
+        </div>
+
+            <!-- Adding bits -->
+
+        <form class="form-horizontal" name="sugarForm" id = "add-sugar" role="form" novalidate>
+            <div class="row form-row">
+               
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "obj.sugar" ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_SUGAR') track by r.display" required>
+                        </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" class="form-control" ng-model ="obj._displaySites" title="Sugar Sites" id="sugarsites" name = "sugarsites" na-sites={{obj}} />
+                    <small class="error" ng-show="sugarForm.sugarsites.$error.siteInvalid">{{sugarForm.sugarsites.$errorMsg.naSites}}</small>
+                </div>
+                <div class="col-md-3">
+                    <button ng-click="obj._displaySites = getAllLeftoverSitesDisplay()">Apply to all remaining sites</button>
+                </div>
+            </div>
+            @submitbuttons("obj", "sugarForm", "nucleicAcid.sugars")
+        </form>
+    </div>
+</div>
+
+

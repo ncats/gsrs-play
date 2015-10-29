@@ -1,0 +1,46 @@
+<div class = "row info">
+    <button class="btn btn-primary label-offset det">Polymer Idealized Structure</button>
+    <div>
+        <div class="col-md-12" id="structureSearcher">
+            <form name = "structureForm" id = "add-structure" role="form" novalidate>
+                <div class="row">
+                    <div class = "col-md-12" id="jsdraw">
+                        <sketcher ng-model="substanceh" structure="substance.polymer" type="polymer"></sketcher>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-2 pull-right">
+                        <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export"><i class="fa fa-external-link fa-2x success"></i></a> &nbsp;
+                        <a class= "pull-right padded" data-toggle="modal" data-target="#structureimport" aria-label="Import" ><i class="fa fa-clipboard fa-2x success"></i></a>
+                    </div>
+                </div>
+                <div class ="row header-row">
+                    <div class = "col-md-3"><strong>Molecular Formula</strong></div>
+                    <div class = "col-md-3"><strong>Molecular Weight</strong></div>
+                    <div class = "col-md-2"><strong>Defined Stereocenters</strong></div>
+                    <div class = "col-md-1"><strong>EZ Centers</strong></div>
+                    <div class = "col-md-1"><strong>Charge</strong></div>
+                    <div class = "col-md-2 text-right"><strong>Reference ID</strong></div>
+                </div>
+                <div class ="row" >
+                    <div class = "col-md-3">
+                                    {{substance.polymer.idealizedStructure.formula}}
+                    </div>
+                    <div class = "col-md-3">
+                                    {{substance.polymer.idealizedStructure.mwt}}
+                    </div>
+                    <div class = "col-md-2">
+                                    {{substance.polymer.idealizedStructure.definedStereo ||0 }}/{{substance.polymer.idealizedStructure.stereoCenters || 0}}
+                    </div>
+                    <div class = "col-md-1">
+                                    {{substance.polymer.idealizedStructure.ezCenters}}
+                    </div>
+                    <div class = "col-md-1">
+                                    {{substance.polymer.idealizedStructure.charge}}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

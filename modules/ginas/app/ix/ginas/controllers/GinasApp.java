@@ -29,7 +29,7 @@ import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Site;
-import ix.ginas.models.v1.SpecifiedSubstanceGroup1;
+import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
@@ -249,7 +249,12 @@ public class GinasApp extends App {
             //final String name = super.name();
             if ("StructurallyDiverse".equalsIgnoreCase(label))
                 return "Structurally Diverse";
-            
+            if ("EP".equalsIgnoreCase(label))
+                return "PH. EUR";
+            if("approved".equalsIgnoreCase(label))
+            	return "Validated (UNII)";
+            if("non-approved".equalsIgnoreCase(label))
+            	return "Non-Validated";
             return label;
         }
     }
@@ -528,7 +533,7 @@ public class GinasApp extends App {
                           .render((StructurallyDiverseSubstance) substance));
             case specifiedSubstanceG1:
                 return ok(ix.ginas.views.html.group1details
-                          .render((SpecifiedSubstanceGroup1) substance));
+                          .render((SpecifiedSubstanceGroup1Substance) substance));
             case concept:
                 return ok(ix.ginas.views.html.conceptdetails
                           .render((Substance) substance));

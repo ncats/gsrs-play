@@ -27,12 +27,17 @@
                     <div class="col-md-1"><span class="badge badge-primary">{{moiety.count}}</span></div>
 @*
 
-                    <span href="#" editable-select="moiety.stereochemistry"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("STEREOCHEMISTRY_TYPE") track by r.display" blur="submit">{{moiety.stereochemistry}}</span>
+                    <span href="#" editable-select="moiety.stereochemistry"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('STEREOCHEMISTRY_TYPE') track by r.display" blur="submit">{{moiety.stereochemistry}}</span>
 *@
-                    <div class="col-md-1"><span class="badge">{{moiety.stereochemistry}}</span></div>
-
-                    <div class="col-md-1"><span class="badge">{{moiety.opticalActivity}}</span></div>
-                    <div class="col-md-1"><span class="badge">{{moiety.atropisomerism||"no"}}</span></div>
+                    <div class="col-md-1">
+                            <span href="#" editable-select="moiety.stereochemistry" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('STEREOCHEMISTRY_TYPE') track by r.display" blur="submit"><span class="badge">{{moiety.stereochemistry.display || moiety.stereochemistry}}</span>
+                    </span></div>
+                    <div class="col-md-1">
+                        <span href="#" editable-select="moiety.opticalActivity" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('OPTICAL_ACTIVITY') track by r.display" blur="submit">
+                            <span class="badge">{{moiety.opticalActivity.display || moiety.opticalActivity || 'click to add' }}</span></div>
+                    <div class="col-md-1">
+                        <span href="#" editable-select="moiety.atropisomerism" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('ATROPISOMERISM') track by r.display" blur="submit">
+                            <span class="badge">{{moiety.atropisomerism.display || moiety.atropisomerism || "NO"}}</span></span></div>
                     <div class="col-md-2">{{moiety.formula}}</div>
                     <div class="col-md-1">{{moiety.mwt}}</div>
                     <div class="col-md-1"><span class="badge">{{moiety.definedStereo}} / {{moiety.stereoCenters}}</span></div>

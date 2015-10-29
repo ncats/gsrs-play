@@ -123,6 +123,7 @@ public class TextIndexer {
         public List<FV> getValues () {
             return values; 
         }
+        public int size () { return values.size(); }
 
         public FV getValue (int index) { return values.get(index); }
         public String getLabel (int index) {
@@ -855,6 +856,16 @@ public class TextIndexer {
         throws IOException {
         return filter (options, getTermsFilter (subset));
     }
+
+    public SearchResult range (SearchOptions options, String field,
+                               Integer min, Integer max)
+        throws IOException {
+        Query query = NumericRangeQuery.newIntRange
+            (field, min, max, true /* minInclusive?*/, true/*maxInclusive?*/);
+        
+        return search (getSearcher (), new SearchResult (options, null),
+                       query, null);
+    }
     
     protected SearchResult filter (SearchOptions options, Filter filter)
         throws IOException {
@@ -1127,10 +1138,53 @@ public class TextIndexer {
         if (term != null) {
             IndexSearcher searcher = getSearcher ();
             TopDocs docs = searcher.search(new TermQuery (term), 1);
+            //Logger.debug("TermQuery: term="+term+" => "+docs.totalHits);
             if (docs.totalHits > 0)
                 return searcher.doc(docs.scoreDocs[0].doc);
         }
         return null;
+    }
+
+    public JsonNode getDocJson (Object entity) throws Exception {
+        Document _doc = getDoc (entity);
+        if (_doc == null) {
+            return null;
+        }
+        List<IndexableField> _fields = _doc.getFields();
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode fields = mapper.createArrayNode();
+        for (IndexableField f : _fields) {
+            ObjectNode node = mapper.createObjectNode();
+            node.put("name", f.name());
+            if (null != f.numericValue()) {
+                node.put("value", f.numericValue().doubleValue());
+            }
+            else {
+                node.put("value", f.stringValue());
+            }
+
+            ObjectNode n = mapper.createObjectNode();
+            IndexableFieldType type = f.fieldType();
+            if (type.docValueType() != null)
+                n.put("docValueType", type.docValueType().toString());
+            n.put("indexed", type.indexed());
+            n.put("indexOptions", type.indexOptions().toString());
+            n.put("omitNorms", type.omitNorms());
+            n.put("stored", type.stored());
+            n.put("storeTermVectorOffsets", type.storeTermVectorOffsets());
+            n.put("storeTermVectorPayloads", type.storeTermVectorPayloads());
+            n.put("storeTermVectorPositions", type.storeTermVectorPositions());
+            n.put("storeTermVectors", type.storeTermVectors());
+            n.put("tokenized", type.tokenized());
+            
+            node.put("options", n);
+            fields.add(node);
+        }
+        
+        ObjectNode doc = mapper.createObjectNode();
+        doc.put("num_fields", _fields.size());
+        doc.put("fields", fields);
+        return doc;
     }
     
     /**

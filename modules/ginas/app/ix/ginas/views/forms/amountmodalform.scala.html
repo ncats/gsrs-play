@@ -36,9 +36,7 @@ aria-labelledby="myModalLabelimport" aria-hidden="true">
         <div class = "col-md-2">
           <strong>Units</strong>
         </div>
-        <div class = "col-md-2">
-          <strong>Referenced Material</strong>
-        </div>
+
       </div>
 
         <!-- Display bits -->
@@ -48,7 +46,7 @@ aria-labelledby="myModalLabelimport" aria-hidden="true">
         <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
         </div>
         <div class = "col-md-2">
-        <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>
+        <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('NAME_TYPE') track by r.display" blur="submit">{{name.type.display}}</span>
 
         </div>
         <div class = "col-md-2"><span ng-repeat="n in name.languages">
@@ -77,7 +75,7 @@ aria-labelledby="myModalLabelimport" aria-hidden="true">
       <form class="form" name="amountForm" id = "add-amount" role="form" novalidate>
         <div class="row form-row">
           <div class="col-md-2 err-check" show-errors>
-            <select class="form-control" title="Amount Type" id="type" name = "type" ng-model = "amount.type" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_TYPE") track by r.display" >
+            <select class="form-control" title="Amount Type" id="type" name = "type" ng-model = "amount.type" ng-options="r.display for r in lookup.getList('AMOUNT_TYPE') track by r.display" >
                         </select>
             <ng-messages for="amountForm.type.$error" ng-if="amountForm.type.$touched">
               <ng-message when="required" class="help-block">*required</ng-message>
@@ -114,15 +112,15 @@ aria-labelledby="myModalLabelimport" aria-hidden="true">
             </ng-messages>
           </div>
           <div class="col-md-2 err-check" show-errors>
-            <input type="text" class="form-control" ng-model ="amount.units" title="Units" id="units" name = "units"/>
+            <select class="form-control" title="Amount Units" id="unit" name = "unit" ng-model = "amount.units" ng-options="r.display for r in lookup.getList('AMOUNT_UNIT') track by r.display" >
+            </select>
             <ng-messages for="amountForm.units.$error" ng-if="amountForm.units.$touched">
               <ng-message when="required" class="help-block">Substance name is required</ng-message>
             </ng-messages>
           </div>
-
-          @* @referenceselectorform("amountForm", "amount")*@
+          <a ng-click=" validate(amount, amountForm, 'relationships.amount'); relationship=null;" ><i class="fa fa-floppy-o fa-2x success"></i></a>
         </div>
-        @submitbuttons("amount", "amountForm", "amounts")
+
       </form>
 
 

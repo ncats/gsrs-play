@@ -174,6 +174,20 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    public static Result doc (String context, Long id) {
+        try {
+            Method m = getMethod (context, "doc", Long.class);
+            if (m != null)
+                return (Result)m.invoke(null, id);
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.warn("Context {} has no method doc(Long)", context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+
     public static Result getUUID (String context, String uuid, String expand) {
         try {
             Method m = getMethod (context, "get", UUID.class, String.class);
@@ -254,7 +268,7 @@ public class RouteFactory extends Controller {
     
     public static Result page (String context, int top,
                                int skip, String filter) {
-    	
+        
         try {
             Method m = getMethod (context, "page", 
                                   int.class, int.class, String.class);

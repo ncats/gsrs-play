@@ -1,10 +1,13 @@
 package ix.core.models;
 
+import play.Logger;
 import play.db.ebean.Model;
 
 import javax.persistence.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -109,32 +112,45 @@ public abstract class EntityModel extends IxModel {
         return Global.getRef(this)+"?view=full";
     }
 
-    public boolean addIfAbsent (Keyword syn) {
+    public Keyword addIfAbsent (Keyword syn) {
         for (Keyword kw : getSynonyms ()) {
             if (kw.label.equals(syn.label)
                 && kw.term.equals(syn.term))
-                return false;
+                return kw;
         }
         getSynonyms().add(syn);
-        return true;
+        return syn;
+    }
+
+    public Value addIfAbsent (Value value) {
+        if (value != null) {
+            if (value.id != null) {
+                for (Value val : getProperties ()) {
+                    if (value.id.equals(val.id))
+                        return val;
+                }
+            }
+            getProperties().add(value);
+        }
+        return value;
     }
     
-    public boolean addIfAbsent (XRef xref) {
+    public XRef addIfAbsent (XRef xref) {
         for (XRef xr : getLinks()) {
             if (xr.refid.equals(xref.refid)
                 && xr.kind.equals(xref.kind))
-                return false;
+                return xr;
         }
         getLinks().add(xref);
-        return true;
+        return xref;
     }
 
-    public boolean addIfAbsent (Publication pub) {
+    public Publication addIfAbsent (Publication pub) {
         for (Publication p : getPublications ())
             if (p.id.equals(pub.id) || p.pmid.equals(pub.pmid))
-                return false;
+                return p;
         getPublications().add(pub);
-        return true;
+        return pub;
     }
 
     public XRef getLink (Object inst) {
@@ -165,5 +181,61 @@ public abstract class EntityModel extends IxModel {
     
     public boolean hasProperty (String label) {
         return null != getProperty (label);
+    }
+
+    @PreUpdate
+    public void _preUpdateCheck () {
+        Set unique = new HashSet ();
+        for (Keyword kw : getSynonyms ()) {
+            if (kw.id != null) {
+                if (unique.contains(kw.id)) {
+                    Logger.warn("Synonym "+kw.label+":"+kw.term+" ("+kw.id
+                                +") is duplicate in entity "
+                                +getClass().getName()+":"+id+"!");
+                }
+                else 
+                    unique.add(kw.id);
+            }
+        }
+        
+        unique.clear();
+        for (Value val : getProperties ()) {
+            if (val.id != null) {
+                if (unique.contains(val.id)) {
+                    Logger.warn("Property "+val.label+" ("
+                                +val.getClass().getName()+":"+val.id
+                                +") is duplicate in entity "
+                                +getClass().getName()+":"+id+"!");
+                }
+                else
+                    unique.add(val.id);
+            }
+        }
+
+        unique.clear();
+        for (XRef ref : getLinks ()) {
+            if (ref.id != null) {
+                if (unique.contains(ref.id)) {
+                    Logger.warn("XRef "+ref.kind+":"+ref.refid
+                                +" is duplicate in entity "
+                                +getClass().getName()+":"+id+"!");
+                }
+                else
+                    unique.add(ref.id);
+            }
+        }
+
+        unique.clear();
+        for (Publication pub : getPublications ()) {
+            if (pub.id != null) {
+                if (unique.contains(pub.id)) {
+                    Logger.warn("Publication "+pub.id
+                                +" is duplicate in entity "
+                                +getClass().getName()+":"+id+"!");
+                }
+                else
+                    unique.add(pub.id);
+            }
+        }
     }
 }

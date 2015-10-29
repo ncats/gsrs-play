@@ -1,0 +1,81 @@
+@import ix.ginas.controllers.GinasApp;
+<div class ="row info">
+    <button class="btn btn-primary label-offset det">
+                        Details</button>
+
+    <div class="col-md-12">
+        <div class = "row header-row">
+            <div class = "col-md-2">
+                <strong>Infra Specific Type</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Infra Specific Name</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Developmental Stage</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Fraction Name</strong>
+            </div>
+            <div class = "col-md-2">
+                <strong>Fraction Material Type</strong>
+            </div>
+        </div>
+
+        <div class = "row">
+            <hr>
+
+            <div class = "col-md-2">
+                <span href="#" editable-select="substance.structurallyDiverse.infraSpecificType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("INFRA_SPECIFIC_TYPE") track by r.display" blur="submit">{{substance.structurallyDiverse.infraSpecificType.display}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-text="substance.structurallyDiverse.infraSpecificName" blur="submit">{{substance.structurallyDiverse.infraSpecificName}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="substance.structurallyDiverse.developmentalStage" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("DEVELOPMENTAL_STAGE") track by r.display" blur="submit">{{substance.structurallyDiverse.developmentalStage.display}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-text="substance.structurallyDiverse.fractionName" blur="submit">{{substance.structurallyDiverse.fractionName}}</span>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="substance.structurallyDiverse.fractionMaterialType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("FRACTION_MATERIAL_TYPE") track by r.display" blur="submit">{{substance.structurallyDiverse.fractionMaterialType.display}}</span>
+            </div>
+        </div>
+
+        <form class="form-horizontal" name="diverseDetailForm" id = "add-ref" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" ng-model ="diverse.infraSpecificType" ng-options="r.display for r in @GinasApp.getCV.getField("INFRA_SPECIFIC_TYPE") track by r.display" title="Infra Specific Type" id="infraSpecificType" name = "infraSpecificType" required></select>
+                    <ng-messages for="diverseOrgForm.infraSpecificType.$error" ng-if="diverseOrgForm.infraSpecificType.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <input class="form-control" ng-model ="diverse.infraSpecificName" title="Infra Specific Name" id="infraSpecificName" name = "infraSpecificName" required />
+                    <ng-messages for="diverseOrgForm.infraSpecificName.$error" ng-if="diverseOrgForm.infraSpecificName.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" ng-model ="diverse.developmentalStage" ng-options="r.display for r in @GinasApp.getCV.getField("DEVELOPMENTAL_STAGE") track by r.display" title="Developmental Stage" id="developmentalStage" name = "developmentalStage" required></select>
+                    <ng-messages for="diverseOrgForm.developmentalStage.$error" ng-if="diverseOrgForm.developmentalStage.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <input class="form-control" ng-model ="diverse.fractionName" title="Fraction Name" id="fractionName" name = "fractionName" required />
+                    <ng-messages for="diverseOrgForm.fractionName.$error" ng-if="diverseOrgForm.fractionName.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" ng-model ="diverse.fractionMaterialType" ng-options="r.display for r in @GinasApp.getCV.getField("FRACTION_MATERIAL_TYPE") track by r.display" title="Fraction Material Type" id="fractionMaterialType" name = "fractionMaterialType" required></select>
+                    <ng-messages for="diverseOrgForm.fractionMaterialType.$error" ng-if="diverseOrgForm.fractionMaterialType.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+            </div>
+            @submitbuttons("diverse", "diverseDetailForm", "structurallyDiverse", false)
+        </form>
+    </div>
+</div>

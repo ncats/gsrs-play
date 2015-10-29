@@ -122,6 +122,20 @@ public class XRef extends IxModel {
         return _instance;
     }
 
+    public Value addIfAbsent (Value value) {
+        if (value != null) {
+            if (value.id != null) {
+                for (Value p : properties) {
+                    if (value.id.equals(p.id))
+                        return p;
+                }
+            }
+            properties.add(value);
+        }
+        
+        return value;
+    }
+    
     static Field getIdField (Class cls) {
         for (Field f : cls.getFields())
             if (null != f.getAnnotation(Id.class))

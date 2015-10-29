@@ -1,0 +1,45 @@
+@ix.ncats.views.html.header{
+<a class="navbar-brand" href="@ix.idg.controllers.routes.IDGApp.index"
+   style="padding: 0px 5px; margin-left: 0px;">
+  <img height="50" alt="Pharos Logo"
+       src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")'/>
+</a>
+}{
+<ul class="nav navbar-nav navbar-left">
+  <li role="presentation" class="active"><a href="#">Diseases</a></li>
+  <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.targets(null,10,1)">Targets</a></li>
+    <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.ligands(null, 8, 1)">Ligands</a></li>
+</ul>
+<ul class="nav navbar-nav navbar-right">
+  <form class="navbar-form navbar-right" role="search" method="GET"
+        action="@ix.idg.controllers.routes.IDGApp.search(null)">
+    <div class="form-group">
+      <input type="text" id="search-header-field" name="q"
+	     class="typeahead form-control" placeholder="Search..."/>
+      <input type="hidden" name="kind" value="ix.idg.models.Disease">
+    </div>
+    <button type="submit" class="btn btn-default">
+      <span class="fa fa-search" aria-hidden="true"></span>
+    </button>
+  </form>
+    <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.about()">About</a></li>
+    <li role="presentation"><a href="@ix.idg.controllers.routes.IDGApp.help()">Help</a></li>
+</ul>
+}
+
+@**
+** Specify all fields that you want to support autocomplete;
+** Look at /api/v1/suggest/@fields
+** for a list of fields that can be specified!
+**@
+@ix.ncats.views.html.typeahead(Array("Target","Disease","Ligand","Gene","MeSH"))
+
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-53774738-1', 'auto');
+ga('send', 'pageview');
+</script>

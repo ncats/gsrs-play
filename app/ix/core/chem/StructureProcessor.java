@@ -328,7 +328,8 @@ public class StructureProcessor {
                             }else{
                                 moiety.count=1;
                                 moietiesMap.put(hash,moiety);
-                                components.add(moiety);
+                                if (components != null)
+                                    components.add(moiety);
                             }
                             break;
                         }

@@ -9,15 +9,27 @@ public interface Commons {
     public static final String IDG_DEVELOPMENT = Target.IDG_DEVELOPMENT;
     public static final String IDG_FAMILY = Target.IDG_FAMILY;
     public static final String IDG_DRUG = "IDG Drug";
+    public static final String IDG_EXPR = "IDG Expression";
     public static final String IDG_ZSCORE = "IDG Z-score";
     public static final String IDG_CONF = "IDG Confidence";
+    public static final String IDG_EVIDENCE = "IDG Evidence";
     public static final String IDG_GENERIF = "IDG GeneRIF";
     public static final String IDG_TARGET = "IDG Target";
     public static final String IDG_SMILES = "IDG SMILES";
     public static final String IDG_TISSUE = "IDG Tissue";
     public static final String IDG_LIGAND = "IDG Ligand";
     public static final String IDG_TISSUE_REF = "IDG Tissue Ref";
+    public static final String IDG_TOOLS = "IDG Tools";
+    public static final String IDG_TOOLS_ANTIBODIES = "Antibodies";
+    public static final String IDG_TOOLS_SELECTIVE_COMPOUNDS = "Selective compounds";
+    public static final String IDG_TOOLS_PHENOTYPES = "Phenotypes";
+    
     public static final String PHARMALOGICAL_ACTION = "Pharmalogical Action";
+    public static final String PUBMED_ID = "PubMed ID";
+    public static final String LIGAND_SOURCE = "Ligand Source";
+    
+    public static final String GRANT_FUNDING_IC = "Grant Funding IC";
+    public static final String GRANT_ACTIVITY = "Grant Activity";
     
     public static final String OMIM_GENE = "OMIM Gene";
     public static final String GWAS_TRAIT = "GWAS Trait";
@@ -31,9 +43,12 @@ public interface Commons {
     public static final String GTEx_EXPR = "GTEx Expression";
     public static final String HPM_TISSUE = "HPM Tissue";
     public static final String HPM_EXPR = "HPM Expression";
-    public static final String HPA_RNA_TISSUE = "HPA-RNA Tissue";
-    public static final String HPA_IHC_TISSUE = "HPA-IHC Tissue";
+    public static final String HPA_RNA_TISSUE = "HPA RNA Tissue";
+    public static final String HPA_RNA_EXPR = "HPA RNA Expression";
+    public static final String HPA_PROTEIN_TISSUE = "HPA Protein Tissue";
+    public static final String HPA_PROTEIN_EXPR = "HPA Protein Expression";
 
+    public static final String KEGG_PATHWAY = "KEGG Pathway";
     public static final String PATENT_COUNT = "Patent Count";
 
     public static final String GO_COMPONENT = "GO Component";
@@ -49,6 +64,7 @@ public interface Commons {
     
     public static final String TINX_NOVELTY = "TINX Novelty";
     public static final String TINX_IMPORTANCE = "TINX Importance";
+    public static final String TINX_DISEASE_NOVELTY = "TINX Disease Novelty";
     public static final String TINX_PUBLICATION = "TINX Publication";
 
     public static final String WHO_ATC = "WHO ATC";
@@ -83,4 +99,6 @@ public interface Commons {
     public static final String UNIPROT_NAME = "UniProt Name";
     public static final String UNIPROT_TISSUE = "UniProt Tissue";
     public static final String UNIPROT_SEQUENCE = "UniProt Sequence";
+
+    public static final String ENTREZ_GENE = "Entrez Gene";
 }

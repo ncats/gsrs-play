@@ -4,9 +4,32 @@
 @(sub: ix.ginas.models.v1.ChemicalSubstance)
 
 
-@structureImage(s: Structure, size: Integer) = {
+@structureImage(s: Structure, size: Integer, showstereo: Boolean = false) = {
     <img class="struc-thumb img-responsive" alt="Structure of @sub.getName" title="Structure of @sub.getName"
     src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size)'>
+    @if(showstereo){
+     <table class="table">
+        <thead>
+            <tr>
+                    <th>Stereochemistry</th>
+                    <th>Optical Activity</th>
+                    <th>Additional Stereochemistry</th>
+            </tr>
+        </thead>
+    <tr>
+    <td><span class="badge">@s.stereoChemistry</span></td>
+            <td><span class="badge">
+            @if(s.opticalActivity!=null){
+                @s.opticalActivity.toValue()
+            }else{
+                @s.opticalActivity
+            }
+            </span></td>
+            <td><span class="badge">@s.atropisomerism</span></td>
+            </tr>
+            </table>
+    }
+    
 }
 
 @makeTable(s: Structure, stype: String) = {
@@ -17,7 +40,7 @@
                 @if(stype == "moiety") {
                     <th>Moiety Structure</th>
                     <th>Moiety Count</th>
-                    <th>Moiety StereoChemistry</th>
+                    <th>Moiety Stereochemistry</th>
                     <th>Moiety Optical Activity</th>
                     <th>Moiety Additional Stereochemistry</th>
                 }
@@ -81,7 +104,7 @@
         </h3>
         <div class="col-md-5">
             <div class = "row">
-            @structureImage(sub.structure, 400)
+            @structureImage(sub.structure, 400,true)
             </div>
             <div class = "row">
                 <div class = "col-md-6 col-md-offset-6">

@@ -73,6 +73,7 @@ public class PayloadPlugin extends Plugin {
         else {
             payload = found.iterator().next();
             Logger.debug("payload already loaded as "+payload.id);
+            tmp.delete();
         }
         return payload;
     }

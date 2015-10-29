@@ -1,6 +1,5 @@
 package ix.core.plugins;
 
-import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -8,19 +7,15 @@ import ix.core.models.ProcessingJob;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
 import ix.core.processing.RecordExtractor;
-import ix.core.processing.RecordPersister;
 import ix.core.processing.RecordTransformer;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
 import ix.utils.Util;
 
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -58,13 +53,13 @@ public class GinasRecordProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
         
         
-    private static final String PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
+    private static final String KEY_PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
     //Hack variable for resisting buildup
     //of extracted records not yet transformed
     private static Map<String,Long> queueStatistics = new ConcurrentHashMap<String,Long>();
     private static Map<String,Statistics> jobCacheStatistics = new ConcurrentHashMap<String,Statistics>();
     private static final String GINAS_RECORD_PROCESSOR = "GinasRecordProcessor";
-    private static final int MAX_EXTRACTION_QUEUE = 200;
+    private static int MAX_EXTRACTION_QUEUE = 100;
         
         
     //Replace with the methods you want.
@@ -297,7 +292,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         @Transactional
         public void persists() {
-                        
+            System.out.println("Persisting");
             getInstance().decrementExtractionQueue();
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             try{
@@ -549,12 +544,15 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
                                         
                 }catch(Exception e){
-                    Logger.error(e.getMessage());
-                    //e.printStackTrace();
                     getInstance().decrementExtractionQueue();
+                    Logger.error(e.getMessage());
+                    ObjectMapper om = new ObjectMapper();
+                    transformFailures.println(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
+                    transformFailures.flush();
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
                 }finally{
-                        updateJobIfNecessary(pr.job);
+                    updateJobIfNecessary(pr.job);
+                    
                 }
                                 
             } else if (mesg instanceof Terminated) {
@@ -603,6 +601,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
             jobCacheStatistics = instance.getMap("jobStatistics");
             queueStatistics= instance.getMap("queueStatistics");
         }
+        
+        MAX_EXTRACTION_QUEUE=play.Play.application().configuration()
+                .getInt("ix.ginas.maxrecordqueue", MAX_EXTRACTION_QUEUE);
+               
         
         try {
             persistFailures = new PrintWriter("fail.persist.log");
@@ -880,28 +882,28 @@ public class GinasRecordProcessorPlugin extends Plugin {
      * @return
      */
     public long getRecordsProcessing(){
-        Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
+        Long l=queueStatistics.get(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE);
         if(l==null)return 0;
         return l;
     }
     
     private synchronized void incrementExtractionQueue(){
         
-        Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
+        Long l=queueStatistics.get(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE);
         if(l==null)l=(long) 0;
         l++;
-        queueStatistics.put(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE,l);
+        queueStatistics.put(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE,l);
         //return l;
         //Logger.debug("Total Records:" + _extractedButNotTransformed);
     }
     private synchronized void decrementExtractionQueue(){
         
-        Long l=queueStatistics.get(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE);
+        Long l=queueStatistics.get(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE);
         if(l==null)l=(long) 0;
         l--;
         
-        queueStatistics.put(GinasRecordProcessorPlugin.PROCESS_QUEUE_SIZE,l);
-        //Logger.debug("Total Records:" + _extractedButNotTransformed);
+        queueStatistics.put(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE,l);
+        Logger.debug("Decrementing Total Records:" + l);
     }
     private void waitForProcessingRecordsCount(int max){
         while(getRecordsProcessing()>=max){

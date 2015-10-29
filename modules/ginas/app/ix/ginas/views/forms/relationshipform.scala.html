@@ -18,47 +18,42 @@
             <div class="col-md-1"><strong>Reference ID</strong></div>
 
         </div>
-                   <div ng-repeat="relationship in substance.relationships">
-<div class ="col-md-2">
-    <rendered id = relationship.subref.refuuid></rendered>
-
-</div>
+        <div ng-repeat="relationship in substance.relationships">
+                    <div class="row">
+                        <div class ="col-md-2">
+                           <rendered id = relationship.relatedSubstance.refuuid></rendered>
+                        </div>
                        <div class = "col-md-2">
-                           <span href="#" editable-select="relationship.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("RELATIONSHIP_TYPE") track by r.display" blur="submit">{{relationship.type.display}}</span>
+                           <span href="#" editable-select="relationship.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('RELATIONSHIP_TYPE') track by r.display" blur="submit">{{relationship.type.display}}</span>
                        </div>
                        <div class="col-md-2">
                        <span href="#" editable-text="relationship.comments" blur="submit">{{relationship.comments}}</span>
                    </div>
                        <div class = "col-md-2">
-                           <span href="#" editable-select="relationship.interactionType"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("INTERACTION_TYPE") track by r.display" blur="submit">{{relationship.interactionType.display}}</span>
+                           <span href="#" editable-select="relationship.interactionType"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('INTERACTION_TYPE') track by r.display" blur="submit">{{relationship.interactionType.display}}</span>
                        </div>
                        <div class = "col-md-2">
-                           <span href="#" editable-select="relationship.qualification"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("QUALIFICATION") track by r.display" blur="submit">{{relationship.qualification.display}}</span>
+                           <span href="#" editable-select="relationship.qualification"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('QUALIFICATION') track by r.display" blur="submit">{{relationship.qualification.display}}</span>
                        </div>
-                       <div class="col-md-1">Amount</div>
+                        <div class="col-md-1">
+                        <amount value = "relationship.amount"></amount>
+
+                        </div>
+                        <div class="col-md-1">
                        @referenceview("relationshipForm", "relationship")
+                            </div>
+                       </div>
         </div>
+
 
         <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-@*
-                    <span><b><code>No substance selected</code></b></span>
+                <substance-chooser ng-model="relationship.relatedSubstance"></substance-chooser>
 
-                    <span ><b><code>{{relationship.approvalID}}</code> {{ relationship.refPname }}</b></span>*@
-@*
-                    <button aria-label="Select a substance" type="button" class="btn btn-default" ng-model="relationship.subref" ng-click="openModal('structuresearch')"><span aria-hidden="true" class="fa fa-plus-square"></span></button>
-*@
-                    @*
-                    <substance-selector ng-model="relationship.relatedSubstance"></substance-selector>
-                    *@
-
-                    @selectors.substanceselectorform()
-
-                <span ng-show="substance.subref"><rendered id = substance.subref.refuuid></rendered> </span>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Relationship Type" id="type" name = "type" ng-model = "relationship.type" ng-options="r.display for r in @GinasApp.getCV.getField("RELATIONSHIP_TYPE") track by r.display" required>
+                    <select class="form-control" title="Relationship Type" id="type" name = "type" ng-model = "relationship.type" ng-options="r.display for r in lookup.getList('RELATIONSHIP_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="relationshipForm.type.$error" ng-if="relationshipForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
@@ -69,34 +64,25 @@
                 </div>
 
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Interaction Type" id="interactionType" name = "interactionType" ng-model = "relationship.interactionType" ng-options="r.display for r in @GinasApp.getCV.getField("INTERACTION_TYPE") track by r.display" required>
+                    <select class="form-control" title="Interaction Type" id="interactionType" name = "interactionType" ng-model = "relationship.interactionType" ng-options="r.display for r in lookup.getList('INTERACTION_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="relationshipForm.interactionType.$error" ng-if="relationshipForm.interactionType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Qualification" id="qualification" name = "qualification" ng-model = "relationship.qualification" ng-options="r.display for r in @GinasApp.getCV.getField("QUALIFICATION") track by r.display" required>
+                    <select class="form-control" title="Qualification" id="qualification" name = "qualification" ng-model = "relationship.qualification" ng-options="r.display for r in lookup.getList('QUALIFICATION') track by r.display" required>
                         </select>
                     <ng-messages for="relationshipForm.qualification.$error" ng-if="relationshipForm.qualification.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-1">
-                    <amount value="relationship.amount"></amount>
-                </div>
+                @selectors.amountselectorform("relationship.amount")
                 @referenceselectorform("relationshipForm", "relationship")
             </div>
-            <div class = "row">
-                <hr>
-                <div class="col-md-1 pull-right">
-                    <a ng-click="relationship=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="movesubref(relationship); validate(relationship, relationshipForm, 'relationships'); relationship=null;" ><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
-            </div>
-@*
+            @amountform("relationship.amount")
+
             @submitbuttons("relationship", "relationshipForm", "relationships")
-*@
         </form>
 
     </div>

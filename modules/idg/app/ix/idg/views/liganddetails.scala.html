@@ -25,7 +25,13 @@
 <div class="container-fluid">
   <div class="col-md-12">
     <div class="page-header">
+    @defining(ligand.getProperty(LIGAND_SOURCE)) { source =>
+      @if(source != null) {
+      <h1><a href='@HtmlFormat.raw(source.asInstanceOf[Keyword].href)'>@ligand.getName</a> <i class="fa fa-external-link"></i></h1>
+      } else {
       <h1>@ligand.getName()</h1>
+      }
+    }  
       @if(ligand.description != null) {
 	<div class="panel panel-default">
 	  <div class="panel-body">
@@ -38,9 +44,11 @@
       <div class="col-md-4">
 	<div class="panel panel-default">
 	  <div class="panel-body">
+          @defining(IDGApp.getStructure(ligand)) { struc =>
+            @if(struc != null) {
 	    <center>
-	      <img alt="Structure of @ligand.getName()"
-		   src='@ix.ncats.controllers.routes.App.structure(IDGApp.getStructure(ligand).getId,"svg",200)'>
+	          <img alt="Structure of @ligand.getName()"
+		       src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",200)'>
 	    </center>
 	    <button type="button" class="btn btn-default"
 	            data-toggle="modal" data-target="#strucModal"
@@ -48,6 +56,8 @@
 	            aria-label="Left Align" style="float:right;">
 	       <span class="fa fa-external-link" aria-hidden="true"></span>
 	    </button>
+	    }
+	  }
 	  </div>
 	</div>
 	<div class="panel panel-default">
@@ -148,6 +158,7 @@
         </div>
        </div>
       </div>
+      @if(!ligand.getPublications.isEmpty()) {
       <div class="row">
         <div class="col-md-12">
           <div class="panel panel-default">
@@ -184,6 +195,7 @@
 	  </div>
         </div>
       </div>
+      }
     </div>
   </div>
 </div>

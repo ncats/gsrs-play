@@ -19,7 +19,6 @@ import play.libs.ws.*;
 import play.libs.F;
 import play.libs.Akka;
 import play.mvc.Http;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
@@ -36,7 +35,6 @@ import akka.routing.RoundRobinRouter;
 import akka.routing.SmallestMailboxRouter;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-
 import ix.core.search.TextIndexer;
 import ix.seqaln.SequenceIndexer;
 import static ix.core.search.TextIndexer.*;
@@ -50,15 +48,18 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.chem.ChemCleaner;
+import ix.core.chem.PolymerDecode;
+import ix.core.chem.PolymerDecode.StructuralUnit;
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
+import ix.core.models.VInt;
 import ix.core.search.SearchOptions;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.utils.Util;
 import ix.utils.Global;
-
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
 import chemaxon.struc.MolAtom;
@@ -82,15 +83,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.sf.ehcache.Element;
 
+import net.sf.ehcache.Element;
 import ix.ncats.controllers.auth.*;
 
 /**
  * Basic plumbing for an App
  */
 public class App extends Authentication {
-    static final String APP_CACHE = App.class.getName();
+    private static final String KEY_DISPLAY_CD = "DISPLAY_CD";
+
+        private static final String DISPLAY_CD_VALUE_RELATIVE = "RELATIVE";
+
+        static final String APP_CACHE = App.class.getName();
     
     static final String RENDERER_URL =
         play.Play.application()
@@ -132,13 +137,34 @@ public class App extends Authentication {
         implements ResultRenderer<T> {
         public int getFacetDim () { return FACET_DIM; }
     }
+
+    public interface Tokenizer {
+        public Enumeration<String> tokenize (String input);
+    }
+
+    public static class DefaultTokenizer implements Tokenizer {
+        final protected String pattern;
+        public DefaultTokenizer () {
+            this ("[\\s;,\n\t]");
+        }
+        public DefaultTokenizer (String pattern) {
+            this.pattern = pattern;
+        }
+
+        public Enumeration<String> tokenize (String input) {
+            String[] tokens = input.split(pattern);
+            return Collections.enumeration(Arrays.asList(tokens));
+        }
+    }
     
     public static class FacetDecorator {
         final public Facet facet;
-        final public int max;
-        final public boolean raw;
+        public int max;
+        public boolean raw;
         public boolean hidden;
-
+        public Integer[] total;
+        public boolean[] selection;
+        
         public FacetDecorator (Facet facet) {
             this (facet, false, 6);
         }
@@ -146,15 +172,22 @@ public class App extends Authentication {
             this.facet = facet;
             this.raw = raw;
             this.max = max;
+            total = new Integer[facet.size()];
+            selection = new boolean[facet.size()];
         }
 
         public String name () { return facet.getName(); }
         public int size () { return facet.getValues().size(); }
         public String label (int i) {
-            return facet.getValues().get(i).getLabel();
+            return facet.getLabel(i);
         }
         public String value (int i) {
-            return facet.getValues().get(i).getCount().toString();
+            Integer total = this.total[i];
+            Integer count = facet.getCount(i);
+            if (total != null) {
+                return count+" | "+total;
+            }
+            return count.toString();
         }
     }
     /**
@@ -226,10 +259,16 @@ public class App extends Authentication {
      */
     static Pattern regex = Pattern.compile("\"([^\"]+)");
     public static String quote (String s) {
-        Matcher m = regex.matcher(s);
-        if (m.find())
-            return s; // nothing to do.. already have quote
-        return "\""+s+"\"";
+        try {
+            Matcher m = regex.matcher(s);
+            if (m.find())
+                return s; // nothing to do.. already have quote
+            return "\""+URLEncoder.encode(s, "utf8")+"\"";
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return s;
     }
     
     public static String decode (String s) {
@@ -300,14 +339,19 @@ public class App extends Authentication {
     }
 
     public static String url (String... remove) {
+        return url (true, remove);
+    }
+    
+    public static String url (boolean exact, String... remove) {
         //Logger.debug(">> uri="+request().uri());
 
-        StringBuilder uri = new StringBuilder ("?");
+        StringBuilder uri = new StringBuilder (request().path()+"?");
         Map<String, Collection<String>> params = getQueryParameters ();
         for (Map.Entry<String, Collection<String>> me : params.entrySet()) {
             boolean matched = false;
             for (String s : remove)
-                if (s.equals(me.getKey())) {
+                if ((exact && s.equals(me.getKey()))
+                    || me.getKey().startsWith(s)) {
                     matched = true;
                     break;
                 }
@@ -322,6 +366,56 @@ public class App extends Authentication {
         
         return uri.substring(0, uri.length()-1);
     }
+
+    public static Map<String, Collection<String>> removeIfMatch
+        (Map<String, Collection<String>> params, String key, String value) {
+        Collection<String> values = params.get(key);
+        //Logger.debug("removeIfMatch: key="+key+" value="+value+" "+values);
+        if (values != null) {
+            List<String> keep = new ArrayList<String>();
+            for (String v : values) {
+                try {
+                    String dv = URLDecoder.decode(v, "utf8");
+                    //Logger.debug(v+" => "+dv);
+                    if (!dv.startsWith(value)) {
+                        keep.add(v);
+                    }
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            if (!keep.isEmpty()) {
+                params.put(key, keep);
+            }
+            else {
+                params.remove(key);
+            }
+        }
+        return params;
+    }
+
+    public static Map<String, Collection<String>> removeIfMatch
+        (String key, String value) {
+        Map<String, Collection<String>> params = getQueryParameters ();
+        return removeIfMatch (params, key, value);
+    }
+
+    public static String url (Map<String, Collection<String>> params,
+                              String... remove) {
+        for (String p : remove)
+            params.remove(p);
+        
+        StringBuilder uri = new StringBuilder (request().path()+"?");
+        for (Map.Entry<String, Collection<String>> me : params.entrySet())
+            for (String v : me.getValue())
+                if (v != null)
+                    uri.append(me.getKey()+"="+v+"&");
+        
+        return uri.substring(0, uri.length()-1);
+    }
+    
 
     static Map<String, Collection<String>> getQueryParameters () {
         Map<String, Collection<String>> params =
@@ -416,8 +510,8 @@ public class App extends Authentication {
             for (String s : me.getValue()) {
                 if (q.length() > 0)
                     q.append('&');
-                q.append(me.getKey()+"="
-                         + ("q".equals(me.getKey()) ? quote (s) : s));
+                q.append(me.getKey()+"="+encode (s));
+                //+ ("q".equals(me.getKey()) ? encode (s) : s));
             }
         }
         return q.toString();
@@ -535,6 +629,14 @@ public class App extends Authentication {
         return randvar (5);
     }
 
+    protected static Map<String, String[]> getRequestQuery () {
+        Map<String, String[]> query = new HashMap<String, String[]>();
+        query.putAll(request().queryString());
+        // force to fetch everything at once
+        //query.put("fetch", new String[]{"0"});
+        return query;
+    }
+    
     public static SearchResult getSearchResult
         (final Class kind, final String q, final int total) {
         return getSearchResult (_textIndexer, kind, q, total);
@@ -549,10 +651,7 @@ public class App extends Authentication {
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
          final String q, final int total) {
-
-        Map<String, String[]> query =  new HashMap<String, String[]>();
-        query.putAll(request().queryString());
-        return getSearchResult (indexer, kind, q, total, query);
+        return getSearchResult (indexer, kind, q, total, getRequestQuery());
     }
 
     public static String signature (String q, Map<String, String[]> query) {
@@ -577,6 +676,11 @@ public class App extends Authentication {
             args.add(q);
         for (String f : qfacets)
             args.add(f);
+        
+        if (query.get("order") != null) {
+            for (String f : query.get("order"))
+                args.add(f);
+        }
         Collections.sort(args);
         
         return Util.sha1(args.toArray(new String[0]));
@@ -584,14 +688,17 @@ public class App extends Authentication {
 
     public static SearchResult getSearchContext (String ctx) {
         Object result = IxCache.get(ctx);
-        if (result != null && result instanceof SearchResult) {
-            return (SearchResult)result;
+        if (result != null) {
+            if (result instanceof SearchResult) {
+                return (SearchResult)result;
+            }
         }
+        Logger.warn("No context found: "+ctx);
         return null;
     }
         
     public static SearchResult getSearchFacets (final Class kind) {
-        return getSearchFacets (kind, FACET_DIM);
+        return getSearchFacets (kind, 100);
     }
     
     public static SearchResult getSearchFacets (final Class kind,
@@ -601,9 +708,8 @@ public class App extends Authentication {
             return getOrElse (sha1, new Callable<SearchResult>() {
                     public SearchResult call () throws Exception {
                         SearchResult result = SearchFactory.search
-                            (kind, null, 0, 0, fdim, request().queryString());
-                        result.setKey(sha1);
-                        return result;
+                            (kind, null, 0, 0, fdim, null);
+                        return cacheKey (result, sha1);
                     }
                 });
         }
@@ -613,7 +719,9 @@ public class App extends Authentication {
         }
         return null;
     }
-    
+
+    final static Pattern RangeRe = Pattern.compile
+        ("([^:]+):\\[([^,]*),([^\\]]*)\\]");
     public static SearchResult getSearchResult
         (final TextIndexer indexer, final Class kind,
          final String q, final int total, final Map<String, String[]> query) {
@@ -636,14 +744,40 @@ public class App extends Authentication {
                 Logger.debug("Search request sha1: "+sha1+" cached? "
                              +IxCache.contains(sha1));
 
+                if (q != null) {
+                    // check to see if q is format like a range
+                    Matcher m = RangeRe.matcher(q);
+                    if (m.find()) {
+                        final String field = m.group(1);
+                        final String min = m.group(2);
+                        final String max = m.group(3);
+                        
+                        Logger.debug
+                            ("range: field="+field+" min="+min+" max="+max);
+                        
+                        return getOrElse (sha1, new Callable<SearchResult> () {
+                                public SearchResult call () throws Exception {
+                                    SearchOptions options =
+                                        new SearchOptions (query);
+                                    options.top = total;
+                                    SearchResult result = _textIndexer.range
+                                        (options, field, min.equals("")
+                                         ? null : Integer.parseInt(min),
+                                         max.equals("")
+                                         ? null : Integer.parseInt(max));
+                                    return cacheKey (result, sha1);
+                                }
+                            });
+                    }
+                }
+
                 result = getOrElse
                     (sha1, new Callable<SearchResult>() {
                             public SearchResult call () throws Exception {
                                 SearchResult result = SearchFactory.search
                                 (kind, hasFacets ? null : q,
                                  total, 0, FACET_DIM, query);
-                                result.setKey(sha1);
-                                return result;
+                                return cacheKey (result, sha1);
                             }
                         });
 
@@ -681,6 +815,15 @@ public class App extends Authentication {
         return null;
     }
 
+    static protected SearchResult cacheKey (SearchResult result, String key) {
+        if (key.length() > 10) {
+            key = key.substring(0, 10);
+        }
+        IxCache.set(key, result); // create alias       
+        result.setKey(key);
+        return result;
+    }
+
     public static Result getEtag (String key, Callable<Result> callable)
         throws Exception {
         String ifNoneMatch = request().getHeader("If-None-Match");
@@ -701,69 +844,6 @@ public class App extends Authentication {
                                    String key, Callable<T> callable)
         throws Exception {
         return IxCache.getOrElse(modified, key, callable);
-    }
-
-    public static Result marvin () {
-        response().setHeader("X-Frame-Options", "SAMEORIGIN");
-        return ok (ix.ncats.views.html.marvin.render());
-    }
-
-    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 10)
-    public static Result smiles () {
-        String data = request().body().asText();
-        Logger.info(data);
-        try {
-            //String q = URLEncoder.encode(mol.toFormat("smarts"), "utf8");
-            return ok (StructureProcessor.createQuery(data));
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            Logger.debug("** Unable to convert structure\n"+data);
-            return badRequest (data);
-        }
-    }
-
-    @BodyParser.Of(value = BodyParser.Json.class, maxLength = 1024*10)
-    public static Result molconvert () {
-        JsonNode json = request().body().asJson();        
-        try {
-            final String format = json.get("parameters").asText();
-            final String mol = json.get("structure").asText();
-
-            String sha1 = Util.sha1(mol);
-            Logger.debug("MOLCONVERT: format="+format+" mol="
-                         +mol+" sha1="+sha1);
-            
-            response().setContentType("application/json");
-            return getOrElse (0l, sha1, new Callable<Result>() {
-                    public Result call () {
-                        try {
-                            MolHandler mh = new MolHandler (mol);
-                            if (mh.getMolecule().getDim() < 2) {
-                                mh.getMolecule().clean(2, null);
-                            }
-                            String out = mh.getMolecule().toFormat(format);
-                            //Logger.debug("MOLCONVERT: output="+out);
-                            ObjectMapper mapper = new ObjectMapper ();
-                            ObjectNode node = mapper.createObjectNode();
-                            node.put("structure", out);
-                            node.put("format", format);
-                            node.put("contentUrl", "");
-                           
-                            return ok (node);
-                        }
-                        catch (Exception ex) {
-                            return badRequest ("Invalid molecule: "+mol);
-                        }
-                    }
-                });
-        }
-        catch (Exception ex) {
-            Logger.error("Can't parse request", ex);
-            ex.printStackTrace();
-            
-            return internalServerError ("Unable to convert input molecule");
-        }
     }
 
     public static Result renderOld (final String value, final int size) {
@@ -850,11 +930,17 @@ public class App extends Authentication {
         }
     }
 
+     public static byte[] render (Molecule mol, String format, int size, int[] amap) throws Exception{
+        return render(mol,format,size,amap,null);
+         }
 
-     public static byte[] render (Molecule mol, String format, int size, int[] amap)
+     public static byte[] render (Molecule mol, String format, int size, int[] amap, Map newDisplay)
         throws Exception {
         Chemical chem = new Jchemical (mol);
         DisplayParams dp = DisplayParams.DEFAULT();
+        if(newDisplay!=null)
+        dp.changeSettings(newDisplay);
+        
         //chem.reduceMultiples();
         boolean highlight=false;
         if(amap!=null && amap.length>0){
@@ -866,12 +952,11 @@ public class App extends Authentication {
                         highlight=true;
                     }
                 }
-        }else{
-                
         }
+        
         if(size>250 && !highlight){
-                if(chem.hasStereoIsomers())
-                        dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+            if(chem.hasStereoIsomers())
+                dp.changeProperty(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
         }
 
         /*
@@ -884,6 +969,8 @@ public class App extends Authentication {
        
         ChemicalRenderer render = new NchemicalRenderer ();
         render.setDisplayParams(dp);
+        render.addDisplayProperty("TOP_TEXT");
+        render.addDisplayProperty("BOTTOM_TEXT");
         ByteArrayOutputStream bos = new ByteArrayOutputStream ();       
         if (format.equals("svg")) {
             SVGGraphics2D svg = new SVGGraphics2D
@@ -903,13 +990,43 @@ public class App extends Authentication {
     
     public static byte[] render (Structure struc, String format, int size, int[] amap)
         throws Exception {
+        Map newDisplay = new HashMap();
+        if(struc.stereoChemistry == struc.stereoChemistry.RACEMIC){
+                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_RELATIVE, true);
+        }
         MolHandler mh = new MolHandler
             (struc.molfile != null ? struc.molfile : struc.smiles);
         Molecule mol = mh.getMolecule();
         if (mol.getDim() < 2) {
             mol.clean(2, null);
         }
-        return render (mol, format, size, amap);
+        if(struc.opticalActivity!= struc.opticalActivity.UNSPECIFIED && struc.opticalActivity!=null){
+                if(struc.definedStereo>0){
+                        if(struc.opticalActivity==struc.opticalActivity.PLUS_MINUS){
+                                if(struc.stereoChemistry==struc.stereoChemistry.EPIMERIC||struc.stereoChemistry==struc.stereoChemistry.RACEMIC||struc.stereoChemistry==struc.stereoChemistry.MIXED){
+                                        mol.setProperty("BOTTOM_TEXT","relative stereochemistry");
+                                }
+                        }
+                }
+                if(struc.opticalActivity==struc.opticalActivity.PLUS){
+                        mol.setProperty("BOTTOM_TEXT","optical activity: (+)");
+                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+                }
+                }else if(struc.opticalActivity==struc.opticalActivity.MINUS){
+                        mol.setProperty("BOTTOM_TEXT","optical activity: (-)");
+                        if(struc.stereoChemistry == struc.stereoChemistry.UNKNOWN){
+                        newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS_AS_STARRED, true);
+                }
+                }               
+        }
+
+        if(size>250){
+                        if(struc.stereoChemistry != struc.stereoChemistry.ACHIRAL)
+                                newDisplay.put(DisplayParams.PROP_KEY_DRAW_STEREO_LABELS, true);
+        }
+        if(newDisplay.size()==0)newDisplay=null;
+        return render (mol, format, size, amap,newDisplay);
     }
 
     public static int[] stringToIntArray(String amapString){
@@ -1221,7 +1338,7 @@ public class App extends Authentication {
             }
         }
         else {
-            String key = signature (query, request().queryString());
+            String key = signature (query, getRequestQuery ());
             Object value = IxCache.get(key);
             Logger.debug("checkStatus: key="+key+" value="+value);
             
@@ -1261,6 +1378,26 @@ public class App extends Authentication {
         return notFound ("No key found: "+key+"!");
     }
 
+    public static SearchResultContext batch
+        (final String q, final int rows, final Tokenizer tokenizer,
+         final SearchResultProcessor processor) {
+        try {
+            final String key = "batch/"+Util.sha1(q);
+            Logger.debug("batch: q="+q+" rows="+rows);
+            return getOrElse (key, new Callable<SearchResultContext> () {
+                    public SearchResultContext call () throws Exception {
+                        processor.setResults(rows, tokenizer.tokenize(q));
+                        return processor.getContext();
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't perform batch search", ex);
+        }
+        return null;
+    }
+    
     public static SearchResultContext sequence
         (final String seq, final double identity, final int rows,
          final int page, final SearchResultProcessor processor) {
@@ -1347,25 +1484,35 @@ public class App extends Authentication {
          int page, final ResultRenderer<T> renderer) throws Exception {
 
         final String key = getKey (context, "facet");
-        final TextIndexer.SearchResult result = getOrElse
-            (key, new Callable<TextIndexer.SearchResult> () {
-                    public TextIndexer.SearchResult call () throws Exception {
+
+        /**
+         * we need to connect context.id with this key to have
+         * the results of structure/sequence search context merged
+         * together with facets, sorting, etc.
+         */
+        final SearchResult result = getOrElse
+            (key, new Callable<SearchResult> () {
+                    public SearchResult call () throws Exception {
                         List results = context.getResults();
-                        TextIndexer.SearchResult searchResult =
-                        results.isEmpty() ? null : SearchFactory.search
-                        (results, null, results.size(), 0,
-                         renderer.getFacetDim(),
-                         request().queryString());
+                        if (results.isEmpty()) {
+                            return null;
+                        }
+                        
+                        SearchResult searchResult =
+                        SearchFactory.search (results, null, results.size(), 0,
+                                              renderer.getFacetDim(),
+                                              request().queryString());
                         Logger.debug("Cache misses: "
                                      +key+" size="+results.size()
                                      +" class="+searchResult);
-                        return searchResult;
+                        // make an alias for the context.id to this search
+                        // result
+                        return cacheKey (searchResult, context.getId());
                     }
                 });
 
         final List<T> results = new ArrayList<T>();
-        final List<TextIndexer.Facet> facets =
-            new ArrayList<TextIndexer.Facet>();
+        final List<Facet> facets = new ArrayList<Facet>();
         int[] pages = new int[0];
         int count = 0;
         if (result != null) {
@@ -1536,17 +1683,41 @@ public class App extends Authentication {
         ObjectNode node = mapper.createObjectNode();
         try {
             String payload = request().body().asText();
+            payload=ChemCleaner.getCleanMolfile(payload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
-                Structure struc = StructureProcessor.instrument
-                    (payload, moieties, false); // don't standardize!
-                // we should be really use the PersistenceQueue to do this
-                // so that it doesn't block
-                struc.save();
-                for (Structure m : moieties)
-                    m.save();
-                node.put("structure", mapper.valueToTree(struc));
-                node.put("moieties", mapper.valueToTree(moieties));
+                
+                try{
+                        Structure struc = StructureProcessor.instrument
+                            (payload, moieties, false); // don't standardize!
+                        // we should be really use the PersistenceQueue to do this
+                        // so that it doesn't block
+                        struc.save();
+                        
+                                        
+                        
+                        for (Structure m : moieties)
+                            m.save();
+                        node.put("structure", mapper.valueToTree(struc));
+                        node.put("moieties", mapper.valueToTree(moieties));
+                }catch(Exception e){
+                        
+                }
+                try{
+                                        Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
+                                                        .createChemical(payload, Chemical.FORMAT_AUTO);
+                                        
+                        Collection<StructuralUnit> o = PolymerDecode.DecomposePolymerSU(c,true);
+                        for(StructuralUnit su:o){
+                                Structure struc = StructureProcessor.instrument
+                                    (su.structure, null, false);
+                                struc.save();
+                                su._structure=struc;
+                        }
+                        node.put("structuralUnits", mapper.valueToTree(o));
+                }catch(Exception e){
+                    Logger.error("Can't enumerate polymer", e);
+                }
             }
         }
         catch (Exception ex) {
@@ -1570,5 +1741,91 @@ public class App extends Authentication {
             return seq;
         }
         return null;
+    }
+
+    public static String getPayload (String id, int max) {
+        String payload = PayloadFactory.getString(id);
+        if (payload != null) {
+            int len = payload.length();
+            if (max <= 0 || len +3 <= max)
+                return payload;
+            return payload.substring(0, max)+"...";
+        }
+        return null;
+    }
+
+    public static List<VInt> scaleFacetCounts (Facet facet, int scale) {
+        return scaleFacetCounts (facet, scale, false);
+    }
+    
+    public static List<VInt> scaleFacetCounts
+        (Facet facet, int scale, boolean inverse) {
+        List<VInt> values = new ArrayList<VInt>();
+        if (facet != null) {
+            int max = 0, min = Integer.MAX_VALUE;
+            for (FV fv : facet.getValues()) {
+                if (fv.getCount() > max)
+                    max = fv.getCount();
+                if (fv.getCount() < min)
+                    min = fv.getCount();
+            }
+            
+            if ((max-min) <= scale/2) {
+                scale += scale/2;
+            }
+            
+            
+            for (FV fv : facet.getValues()) {
+                VInt v = new VInt ();
+                v.label = fv.getLabel();
+                if (max == min) {
+                    v.intval = (long)scale/2;
+                }
+                else if (inverse) {
+                    v.intval =
+                        (long)(0.5+(1. - (double)fv.getCount()/max)*scale);
+                }
+                else {
+                    v.intval = (long)(0.5+(double)fv.getCount()*scale/max);
+                }
+                values.add(v);
+            }
+        }
+        
+        return values;
+    }
+
+    public static JsonNode getFacetJson (Facet facet) {
+        return getFacetJson (facet, 20);
+    }
+    
+    public static JsonNode getFacetJson (Facet facet, int max) {
+        ObjectMapper mapper = new ObjectMapper ();
+        ArrayNode nodes = mapper.createArrayNode();
+        
+        int others = 0;
+        for (TextIndexer.FV fv : facet.getValues()) {
+            if (nodes.size() < max) {
+                ObjectNode n = mapper.createObjectNode();
+                n.put("label", fv.getLabel());
+                n.put("value", fv.getCount());
+                nodes.add(n);
+            }
+            else {
+                others += fv.getCount();
+                break;
+            }
+        }
+
+        /*
+        if (others > 0) {
+            ObjectNode n = mapper.createObjectNode();
+            n.put("label", "Others");
+            n.put("value", others);
+            nodes.add(n);
+        }
+        */
+        
+        return nodes;
     }
 }

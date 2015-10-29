@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.Ginas;
+import ix.core.models.Principal;
+import java.util.List;
 
 @JSONEntity(title = "Agent Modification", isFinal = true)
 @Entity
@@ -30,6 +32,6 @@ public class AgentModification extends Ginas {
     @OneToOne(cascade=CascadeType.ALL)
     public Amount amount;
     @JSONEntity(title = "Modification Group")
-        String modificationGroup = "1";
+    public String modificationGroup = "1";
     public AgentModification () {}
 }

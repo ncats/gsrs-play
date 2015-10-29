@@ -1,18 +1,69 @@
 package ix.ginas.models.v1;
 
-import javax.persistence.*;
-import java.util.ArrayList;
+import ix.ginas.models.Ginas;
+import ix.ginas.models.utils.JSONEntity;
+
 import java.util.List;
+import java.util.Map;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 @Entity
-@Inheritance
-@DiscriminatorValue("SSI")
-public class SpecifiedSubstanceGroup1 extends Substance {
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "ix_ginas_substance_comp")
-    public List<SpecifiedSubstanceComponent> specifiedSubstance =
-        new ArrayList<SpecifiedSubstanceComponent>();
+@Table(name="ix_ginas_ssg1")
+public class SpecifiedSubstanceGroup1 extends Ginas {
+	@ManyToMany(cascade=CascadeType.ALL)
+	@JoinTable(name="ix_ginas_substance_ss_comp")
+	public List<SpecifiedSubstanceComponent> constituents;
+	
+//	@OneToOne(cascade=CascadeType.ALL)
+//	public SubstanceReference parentSubstance;
 
-    public SpecifiedSubstanceGroup1() {
-    }
+//	public SubstanceReference getParentSubstance() {
+//		return parentSubstance;
+//	}
+//
+//	public void setParentSubstance(SubstanceReference parentSubstance) {
+//		this.parentSubstance = parentSubstance;
+//	}
+	
+	public int size(){
+		return constituents.size();
+	}
+/*
+	public void setFromMap(Map m) {
+		super.setFromMap(m);
+		components = toDataHolderList(
+				(List<Map>) m.get("components"),
+				new DataHolderFactory<gov.nih.ncats.informatics.ginas.shared.model.v1.Component>() {
+					@Override
+					public gov.nih.ncats.informatics.ginas.shared.model.v1.Component make() {
+						return new gov.nih.ncats.informatics.ginas.shared.model.v1.Component();
+					}
+				});
+		parentSubstance = toDataHolder(
+				m.get("parentSubstance"),
+				new DataHolderFactory<gov.nih.ncats.informatics.ginas.shared.model.v1.SubstanceReference>() {
+					@Override
+					public gov.nih.ncats.informatics.ginas.shared.model.v1.SubstanceReference make() {
+						return new gov.nih.ncats.informatics.ginas.shared.model.v1.SubstanceReference();
+					}
+				});
+	}
+
+	@Override
+	public Map addAttributes(Map m) {
+		super.addAttributes(m);
+
+		m.put("components", toMapList(components));
+		if (parentSubstance != null)
+			m.put("parentSubstance", parentSubstance.toMap());
+		return m;
+	}*/
+
 }

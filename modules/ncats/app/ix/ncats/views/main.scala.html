@@ -23,8 +23,13 @@
     <link rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
     <link rel="stylesheet" href='@routes.Assets.at("ncats/css/jquery.treegrid.css")'>
     <link rel="stylesheet" href='@routes.Assets.at("ncats/css/footer.css")'>
-    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/idg.css")'>    
+    <link rel="stylesheet" href='@routes.Assets.at("ncats/css/idg.css")'>
+    <link rel="icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>    
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.css"))' />
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))' type='text/javascript'></script>
+    <!-- make sure jquery-ui is loaded before bootstrap... otherwise it
+	 will override bootstrap's ui elements such as tooltip !-->
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.min.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
     <script src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>

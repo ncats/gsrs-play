@@ -1,0 +1,86 @@
+<div class="modal-header">
+            <h3 class="modal-title">Select substance</h3>
+        </div>
+        <div class="modal-body">
+        
+           <div class="row input-group">
+           
+            <div class = "col-md-11 norightpadding">
+                            <form ng-submit="search()">
+                            
+                            <input type="text"
+                            ng-model ="term"
+                            class="form-control typeahead" id="selectsearchbar"
+                            title="Search" placeholder="Search ..." name="q">          
+                           
+                            
+                            </form>
+                             </div>
+                            <div class = "col-md-1 noleftpadding">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" id="search" ng-click="search()">
+                                    <span class="fa fa-search"></span>
+                                </button>
+                            </span>
+                            </div>
+             </div>
+                            
+            <div class="btn-toolbar" role="toolbar">
+             <div class="btn-group" role="group">
+                <h3><span class="label label-default">{{ results.total }}</span></h3>
+                </div>
+                <div class="btn-group" role="group">
+                <ul class="pagination">
+                    <li>
+                      <a href='#' aria-label="Previous"
+                      ng-click="prevPage()"
+                      >
+                        <span aria-hidden="true" class="fa fa-angle-double-left"></span>
+                      </a>
+                    </li>
+                    <li>
+                      <a href='#' aria-label="Next"
+                      ng-click="nextPage()"
+                      >
+                        <span aria-hidden="true" class="fa fa-angle-double-right"></span>
+                      </a>
+                    </li>
+                </ul>
+              </div>
+              </div>
+            <div class= "panel-body">
+                <loading ng-show="searching"></loading>
+                <div ng-hide="searching" class = "row hidden-xs" id ="grid">
+                <div class = "col-md-3 thumb-col" ng-repeat="item in results.content">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <p class="text-right" data-toggle="tooltip" title="Approval ID">
+                                <a href="#" ng-click="$event.preventDefault(); selected.item = item" >
+                                    <code>{{item.approvalIDDisplay}}</code>
+                                </a>
+                             </p>
+                        </div>
+                        <div class="panel-body struc-img">
+                            <rendered id = item.uuid></rendered> 
+                            <div class = "row stereo">
+                                <div class = "col-md-10">
+                                </div>
+                            </div>
+                        </div>
+                        <div class = "panel-footer nameDiv" data-toggle="tooltip" title="{{item.name}}">
+                           {{item.name}}
+                        </div>
+                        <a href="#" ng-click="select(item)" >
+                           Select
+                        </a>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <span ng-show="selected">
+            Selected: <b><code>{{selected.item.approvalIDDisplay}}</code> {{ selected.item.name }}</b>
+            </span>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-warning" type="button" ng-click="cancel()">Cancel</button>
+        </div>

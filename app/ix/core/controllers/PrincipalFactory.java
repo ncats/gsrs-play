@@ -78,7 +78,9 @@ public class PrincipalFactory extends EntityFactory {
                 // where the result can be null, and there's still enough
                 // time between registration and being query-able
                 // The hashmap is a temporary measure to fix this.
+                // But still doesn't seem to fix it
                 justRegisteredCache.put(org.username, org);
+                
                 return org;
             }
             catch (Exception ex) {

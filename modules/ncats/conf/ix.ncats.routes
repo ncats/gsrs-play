@@ -1,11 +1,6 @@
 #
 # NCATS common resources
 #
-GET           /marvin                                                                      ix.ncats.controllers.App.marvin
-POST          /smiles                                                                      ix.ncats.controllers.App.smiles
-
-# mol conversion based on the chemaxon's convention
-POST          /molconvert                                                                  ix.ncats.controllers.App.molconvert
 
 # render an arbitrary value
 GET           /render/:value                                                               ix.ncats.controllers.App.render(value: String, size: Int ?= 150)

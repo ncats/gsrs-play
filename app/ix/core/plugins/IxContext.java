@@ -12,14 +12,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-
 import play.Application;
 import play.Logger;
 import play.Plugin;
 import play.db.DB;
 
 public class IxContext extends Plugin {
-    static final String IX_HOME = "ix.home";
+    private static final String APPLICATION_API = "application.api";
+	private static final String APPLICATION_CONTEXT = "application.context";
+	private static final String APPLICATION_HOST = "application.host";
+	static final String IX_HOME = "ix.home";
     static final String IX_DEBUG = "ix.debug";
     static final String IX_CACHE = "ix.cache";
     static final String IX_CACHE_BASE = IX_CACHE+".base";
@@ -38,6 +40,8 @@ public class IxContext extends Plugin {
     static final String IX_SEQUENCE_BASE = IX_SEQUENCE+".base";
     
     static final String APPLICATION_SQL_INIT = "application.sql.init";
+    static final String APPLICATION_SQL_TEST = "application.sql.test";
+	static final String APPLICATION_SQL_LOAD = "application.sql.load";
     
 
     private final Application app;
@@ -66,7 +70,13 @@ public class IxContext extends Plugin {
             if (!home.exists())
                 home.mkdirs();
         }
-
+        Logger.info("##############################################");
+        Logger.info("##############################################");
+        Logger.info("##############################################");
+        Logger.info("#Play Framework: " + play.core.PlayVersion.current()+ "#");
+        Logger.info("##############################################");
+        Logger.info("##############################################");
+        
         if (!home.exists())
             throw new IllegalArgumentException
                 (IX_HOME+" \""+h+"\" is not accessible!");
@@ -107,14 +117,22 @@ public class IxContext extends Plugin {
                     Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
                     Statement s = DB.getConnection().createStatement();
                     String sqlRun = readFullFileToString(initFile);
-                    System.out.println(sqlRun);
-                    try{
-                        ResultSet rs1=s.executeQuery(sqlRun);
-                        rs1.close();
-                        Logger.info("SQL initialization applied.");
-                    }catch(Exception e){
-                        e.printStackTrace();
+                   // System.out.println(sqlRun);
+                    sqlRun = interpretSQL(sqlRun);
+                    for(String sqlLine : sqlRun.split(";")){
+	                    try{
+	                    	Logger.debug("applying");
+	                        ResultSet rs1=s.executeQuery(sqlLine);
+	                        rs1.close();
+	                    	Logger.debug("closing");
+	                        Logger.info("SQL initialization applied.");
+	                    }catch(Exception e){
+	                    	Logger.debug("ERROR");
+	                    	Logger.info("SQL initialization failed:");
+	                        e.printStackTrace();
+	                    }
                     }
+                    Logger.debug("finished");
                     s.close();
                                 
                 }else{
@@ -127,25 +145,27 @@ public class IxContext extends Plugin {
             Logger.info("Schema exists");
         }
         
+        //Testing
         {
             Logger.info("Teting database configuration");
             File f=null;
-            f=getFile(APPLICATION_SQL_INIT,"../conf/sql/test/");
+            f=getFile(APPLICATION_SQL_TEST,"../conf/sql/test/");
                 
             if(f.exists()){
                 Logger.info("Test folder exists:" + f.getCanonicalPath());
                 String path = f.getAbsolutePath()+"/"+dbName+".sql";
                 File initFile = new File(path);
-                Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
+                //Logger.info("Looking for sql script:" + initFile.getCanonicalPath());
                 if(initFile.exists()){
-                    Logger.info("Applying SQL initialization:" + initFile.getCanonicalPath());
+                    Logger.info("Applying SQL testing:" + initFile.getCanonicalPath());
                     Statement s = DB.getConnection().createStatement();
                     String sqlRun = readFullFileToString(initFile);
-                    System.out.println(sqlRun);
+                    //System.out.println(sqlRun);
+                    sqlRun = interpretSQL(sqlRun);
                     boolean working=true;
                     try{
+                    	
                         ResultSet rs1=s.executeQuery(sqlRun);
-                                        
                         while(rs1.next()){
                             if(!"worked".equals(rs1.getString("result"))){
                                 working=false;
@@ -169,9 +189,48 @@ public class IxContext extends Plugin {
             }
                 
         }
+        //Loading
+        {
+            Logger.info("Loading database-specific production scripts");
+            File f=null;
+            f=getFile(APPLICATION_SQL_LOAD,"../conf/sql/load/");
+                
+            if(f.exists()){
+                Logger.info("Load folder exists:" + f.getCanonicalPath());
+                String path = f.getAbsolutePath()+"/"+dbName+".sql";
+                File initFile = new File(path);
+                if(initFile.exists()){
+                    Logger.info("Applying SQL loading:" + initFile.getCanonicalPath());
+                    Statement s = DB.getConnection().createStatement();
+                    String sqlRun = readFullFileToString(initFile);
+                    System.out.println(sqlRun);
+                    sqlRun = interpretSQL(sqlRun);
+                    System.out.println("after:" + sqlRun);
+                    for(String sqlLine : sqlRun.split(";")){
+	                    try{
+	                    	Logger.debug("applying load");
+	                        ResultSet rs1=s.executeQuery(sqlLine);
+	                        rs1.close();
+	                    	Logger.debug("closing load");
+	                        Logger.info("SQL initialization applied.");
+	                    }catch(Exception e){
+	                    	Logger.debug("ERROR load");
+	                    	Logger.info("SQL loading failed:");
+	                        e.printStackTrace();
+	                    }
+                    }
+                    s.close();
+                }else{
+                    Logger.info("No SQL load present for database:" + dbName);
+                }
+            }else{
+                Logger.info("Load folder does not exist:" + f.getCanonicalPath());
+            }
+                
+        }
         //meta.
 
-        host = app.configuration().getString("application.host");
+        host = app.configuration().getString(IxContext.APPLICATION_HOST);
         if (host == null || host.length() == 0) {
             host = null;
         }
@@ -183,7 +242,7 @@ public class IxContext extends Plugin {
         }
         Logger.info("## Application host: "+host);
 
-        context = app.configuration().getString("application.context");
+        context = app.configuration().getString(IxContext.APPLICATION_CONTEXT);
         if (context == null) {
             context = "";
         }
@@ -195,13 +254,45 @@ public class IxContext extends Plugin {
         }
         Logger.info("## Application context: "+context);
 
-        api = app.configuration().getString("application.api");
+        api = app.configuration().getString(IxContext.APPLICATION_API);
         if (api == null)
             api = "/api";
         else if (api.charAt(0) != '/')
             api = "/"+api;
         Logger.info("## Application api context: "
                     +((host != null ? host : "") + context+api));
+    }
+    
+    public String interpretSQL(String rawSQL){
+    	StringBuilder sb=new StringBuilder();
+    	for(String line:(rawSQL).split("\n")){
+    		if(line.startsWith("/*eval*/")){
+    			
+    			String[] evals=(line+" ").split("\\$");
+    			int etotal = 0;
+    			String nline=evals[0];
+    			for(int i=1;i<evals.length-1;i++){
+    				
+    				String result = app.configuration().getString(evals[i]);
+    				System.out.println(evals[i] + ":" + result);
+    				if(result!=null){
+    					etotal++;
+    					nline+=result;
+    					
+    				}else{
+    					System.out.println("Can't find variable: $" + evals[i] + "$, removing line.");
+    				}
+    			}
+    			nline+=evals[evals.length-1];
+    			if(etotal==evals.length-2){
+    				sb.append(nline + "\n");
+    			}
+    		}else{
+    			sb.append(line + "\n");
+    		}
+    	}    	
+    	return sb.toString();
+    	
     }
     
     /**

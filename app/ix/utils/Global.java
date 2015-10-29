@@ -33,20 +33,19 @@ import play.api.mvc.WithFilters;
 import julienrf.play.jsonp.Jsonp;
 
 public class Global extends GlobalSettings {
+    static final Logger.ALogger AccessLogger = Logger.of("access");
+    
     static Global _instance;
     public static Global getInstance () {
         return _instance;
     }
    
-
     // lookup of class name to resource
     private Map<String, String> names = new TreeMap<String, String>();
     private Set<Class<?>> resources;
     private IxContext ctx;
 
     public static Date epoch;
-    
-    
 
     protected void init (Application app) throws Exception {
         ctx = app.plugin(IxContext.class);
@@ -169,18 +168,20 @@ public class Global extends GlobalSettings {
         return new Class[]{GzipFilter.class,julienrf.play.jsonp.JsonpJava.class};
     }  
     
-    /*
     @Override
     public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
-          String p = req.path().substring("/idg".length()); 
+        /*
+        String p = req.path().substring("/idg".length()); 
         if (p.startsWith("/idg")) {
         //return ix.idg.Routes.routes().apply(req);
         }
+        */
+        String real = req.getHeader("X-Real-IP");
         play.api.mvc.Handler h = super.onRouteRequest(req);
-        Logger.debug("route: path="+req.path()+" method="+req.method()+" handler="+h);
+        AccessLogger.info("{} {} {} \"{}\"", req.remoteAddress(),
+                          real != null ? real : "", req.method(), req.uri());
         return h;
     }
-    */
 
     public boolean debug (int level) { 
         return ctx.debug(level); 
@@ -307,33 +308,33 @@ public class Global extends GlobalSettings {
         }
     }
 //
-//	// For CORS
-//	private class ActionWrapper extends Action.Simple {
-//		public ActionWrapper(Action<?> action, String cback) {
-//			this.delegate = action;
-//		}
+//      // For CORS
+//      private class ActionWrapper extends Action.Simple {
+//              public ActionWrapper(Action<?> action, String cback) {
+//                      this.delegate = action;
+//              }
 //
-//		@Override
-//		public Promise<Result> call(Http.Context ctx)
-//				throws java.lang.Throwable {
-//			Promise<Result> result = this.delegate.call(ctx);
-//			Http.Response response = ctx.response();
-//			response.setHeader("Access-Control-Allow-Origin", "*");
-//			
-//			return result;
-//		}
-//	}
+//              @Override
+//              public Promise<Result> call(Http.Context ctx)
+//                              throws java.lang.Throwable {
+//                      Promise<Result> result = this.delegate.call(ctx);
+//                      Http.Response response = ctx.response();
+//                      response.setHeader("Access-Control-Allow-Origin", "*");
+//                      
+//                      return result;
+//              }
+//      }
 //
-//	@Override
-//	public Action<?> onRequest(Http.Request request,
-//			java.lang.reflect.Method actionMethod) {
-//		return new ActionWrapper(super.onRequest(request, actionMethod));
-//	}
+//      @Override
+//      public Action<?> onRequest(Http.Request request,
+//                      java.lang.reflect.Method actionMethod) {
+//              return new ActionWrapper(super.onRequest(request, actionMethod));
+//      }
     
     @Override
     public Promise<Result> onHandlerNotFound(RequestHeader request) {
-    	if(!request.path().endsWith("/"))return super.onHandlerNotFound(request);
-    	//return Promise.<Result>((request.path().substring(0, request.path().length()-1));
+        if(!request.path().endsWith("/"))return super.onHandlerNotFound(request);
+        //return Promise.<Result>((request.path().substring(0, request.path().length()-1));
         return Promise.<Result>pure(Controller.movedPermanently(request.path().substring(0, request.path().length()-1)));
     }
     

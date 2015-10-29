@@ -1,5 +1,5 @@
 @import ix.ginas.controllers.GinasApp;
-<div class ="row info" id = "sourceMaterial" ng-controller="DiverseController as DiverseCtrl">
+<div class ="row info">
     <button class="btn btn-primary label-offset det">
                         Organism</button>
 
@@ -8,14 +8,11 @@
             <div class = "col-md-3">
                 <strong>Family</strong>
             </div>
-            <div class = "col-md-2">
+            <div class = "col-md-3">
                 <strong>Genus</strong>
             </div>
-            <div class = "col-md-2">
+            <div class = "col-md-3">
                 <strong>Species</strong>
-            </div>
-            <div class = "col-md-2">
-                <strong>Part</strong>
             </div>
             <div class = "col-md-2">
                 <strong>Author</strong>
@@ -23,55 +20,58 @@
         </div>
 
         <div class = "row">
+            <hr>
+
             <div class = "col-md-3">
-                                    {{ginasCtrl.substance.structurallyDiverse.organismFamily.display}}
+                <span href="#" editable-text="substance.structurallyDiverse.organismFamily" blur="submit">{{substance.structurallyDiverse.organismFamily}}</span>
+            </div>
+            <div class = "col-md-3">
+                <span href="#" editable-text="substance.structurallyDiverse.organismGenus" blur="submit">{{substance.structurallyDiverse.organismGenus}}</span>
+            </div>
+            <div class = "col-md-3">
+                <span href="#" editable-text="substance.structurallyDiverse.organismSpecies" blur="submit">{{substance.structurallyDiverse.organismSpecies}}</span>
             </div>
             <div class = "col-md-2">
-                    {{ginasCtrl.substance.structurallyDiverse.organismGenus.display}}
-            </div>
-            <div class = "col-md-2" ng-if="sourceMaterialType=='Organism'">
-                                    {{ginasCtrl.substance.structurallyDiverse.organismSpecies.display}}
-            </div>
-            <div class = "col-md-1 pull-right">
-                <a ng-show="!DiverseCtrl.adding" ng-click="DiverseCtrl.toggleAdd();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+                <span href="#" editable-text="substance.structurallyDiverse.sourceMaterialState" blur="submit">{{substance.structurallyDiverse.organismAuthor}}</span>
             </div>
         </div>
-        <div class="row form-row" ng-show="DiverseCtrl.adding">
-            <form class="form-horizontal" name="diverseForm" id = "diverseForm" role="form" ng-submit="DiverseCtrl.validate(diverse); DiverseCtrl.add()" novalidate>
+
+
+        <form class="form-horizontal" name="diverseSourceForm" id = "add-ref" role="form" novalidate>
+            <div class="row form-row" ng-show="!detailsSet">
                 <div class="col-md-3 err-check" show-errors>
                     <input class="form-control" ng-model ="diverse.organismFamily" title="Organism Family" id="organism-family" name = "organism-family" required />
-                    @*<select class="form-control" ng-model ="diverse.organismFamily" ng-options="r.display for r in @GinasApp.getCV.getField("SOURCE_MATERIAL_CLASS") track by r.display" title="Source Class" id="source-class" name = "source-class" required></select>*@
-                    <ng-messages for="diverseForm.organismFamily.$error" ng-if="diverseForm.organismFamily.$touched">
+                    @*<select class="form-control" ng-model ="diverse.organismFamily" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_CLASS') track by r.display" title="Source Class" id="source-class" name = "source-class" required></select>*@
+                    <ng-messages for="diverseOrgForm.organismFamily.$error" ng-if="diverseOrgForm.organismFamily.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-3 err-check" show-errors>
                     <input class="form-control" ng-model ="diverse.organismGenus" title="Organism Genus" id="organism-genus" name = "organism-genus" required />
-                    @*<select class="form-control" title="Source Type" id="source-type" name = "source-type" ng-model = "diverse.organismGenus" ng-options="r.display for r in @GinasApp.getCV.getField("SOURCE_MATERIAL_TYPE") track by r.display" required>*@
-                        @*</select>*@
-                    <ng-messages for="diverseForm.organismGenus.$error" ng-if="diverseForm.organismGenus.$touched">
+                    @*<select class="form-control" title="Source Type" id="source-type" name = "source-type" ng-model = "diverse.organismGenus" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_TYPE') track by r.display" required>*@
+                    @*</select>*@
+                    <ng-messages for="diverseOrgForm.organismGenus.$error" ng-if="diverseOrgForm.organismGenus.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-3 err-check" show-errors>
-                    <input class="form-control" ng-model ="diverse.organismFamily" title="Organism Family" id="organism-family" name = "organism-family" required />
-                    <select class="form-control" title="Source State" id="source-state" name = "source-state" ng-model = "diverse.organismSpecies" ng-options="r.display for r in @GinasApp.getCV.getField("SOURCE_MATERIAL_STATE") track by r.display" required>
-                        </select>
-                    <ng-messages for="diverseForm.sourceMaterialState.$error" ng-if="diverseForm.sourceMaterialState.$touched">
+                    <input class="form-control" ng-model ="diverse.organismSpecies" title="Organism Species" id="organism-species" name = "organism-species" required />
+@*                    <select class="form-control" title="Source State" id="source-state" name = "source-state" ng-model = "diverse.organismSpecies" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_STATE') track by r.display" required>
+                        </select>*@
+                    <ng-messages for="diverseOrgForm.organismSpecies.$error" ng-if="diverseOrgForm.organismSpecies.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-1 pull-right" ng-show="DiverseCtrl.editing">
-                    <a id ="name-submit" ng-click="DiverseCtrl.validate(diverse)" arial-label="Save">
-                        <i class="fa fa-floppy-o fa-2x success"></i></a>
-                    <a type="submit" ng-click="RefCtrl.toggleEdit();" aria-label="Cancel">
-                        <i class="fa fa-ban fa-2x danger"></i></a>
+                <div class="col-md-2 err-check" show-errors>
+                    <input class="form-control" ng-model ="diverse.organismAuthor" title="Organism Author" id="organism-author" name = "organism-author" required />
+                    @*                    <select class="form-control" title="Source State" id="source-state" name = "source-state" ng-model = "diverse.organismSpecies" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_STATE') track by r.display" required>
+                    </select>*@
+                    <ng-messages for="diverseOrgForm.organismAuthor.$error" ng-if="diverseOrgForm.organismAuthor.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
                 </div>
-                <div class="col-md-1 pull-right" ng-show="!DiverseCtrl.editing">
-                    <a ng-click="DiverseCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="DiverseCtrl.validate(diverse)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
-            </form>
-        </div>
+            </div>
+            @submitbuttons("diverse", "diverseSourceForm", "structurallyDiverse", false)
+        </form>
     </div>
 </div>

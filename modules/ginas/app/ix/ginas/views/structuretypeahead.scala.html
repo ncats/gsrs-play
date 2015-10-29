@@ -7,8 +7,7 @@ $(document).ready(function () {
         queryTokenizer: Bloodhound.tokenizers.whitespace,
         remote: {
           wildcard: 'QUERY',
-          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Structure", "QUERY", 10)
-    '
+          url: '@ix.core.controllers.search.routes.SearchFactory.suggestField("Structure", "QUERY", 10)'
             }
     /*
     remote: '/api/suggest/Target?q=%QUERY',

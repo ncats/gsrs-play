@@ -9,9 +9,9 @@
 @import java.net.URLEncoder
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-     facets: Array[FacetDecorator], ligands: List[Ligand])
+     facets: Array[FacetDecorator], ligands: List[Ligand], ctx: String)
 
-@ix.ncats.views.html.content("Ligands", "ix.idg.models.Ligand",
+@ix.ncats.views.html._content("Ligands", "ix.idg.models.Ligand",
 ix.idg.controllers.routes.IDGApp.ligands().url,
 current, rows, total, pages, facets){ @ligandmenu() }{
 <ol class="breadcrumb">
@@ -32,6 +32,7 @@ current, rows, total, pages, facets){ @ligandmenu() }{
      }
   }
 </ol>
+    @inprogress("ligands")
 }{
 <ul class="media-list">
   @for(lig <-ligands) {
@@ -46,9 +47,9 @@ current, rows, total, pages, facets){ @ligandmenu() }{
            	 data-trigger="click hover focus"
            	 data-title="@lig.getName()"
 	   	 data-html="true"
-           	 data-content="<img src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",150)'>">
+           	 data-content="<img src='@ix.idg.controllers.routes.IDGApp.structure(struc.getId,"svg",150,ctx)'>">
          	 <img class="media-object" alt="Structure of @IDGApp.getId(lig)"
-   	      	      src='@ix.ncats.controllers.routes.App.structure(struc.getId,"svg",80)'></a>
+   	      	      src='@ix.idg.controllers.routes.IDGApp.structure(struc.getId,"svg",80,ctx)'></a>
            }
         }
       </div>
@@ -79,8 +80,34 @@ current, rows, total, pages, facets){ @ligandmenu() }{
     </li>
   }
 </ul>
-}(HtmlFormat.empty)
+}(HtmlFormat.empty){
+ @if(!ligands.isEmpty) {
+ <div class="collapse in" id="carousel-highlight" aria-expanded="true">	
+  <div class="ContentFlow" style="height:300px;">
+   <div class="loadIndicator"><div class="indicator"></div></div>
+   <div class="flow">
+     @for(lig <- ligands) {
+        @defining(IDGApp.getStructure(lig)) { struc =>
+           @if(struc != null) {
+              <div class="item">
+                <img class="content" src='@ix.idg.controllers.routes.IDGApp.structure(struc.getId,"svg",250,ctx)' alt='@lig.getName'/>
+	        <div class="caption"><h3><a href='@ix.idg.controllers.routes.IDGApp.ligand(IDGApp.getId(lig))'>@lig.getName</a></h3></div>
+	      </div>
+	   }
+        }
+     }
+   </div>
+   <div class="globalCaption"></div>
+  </div>
+ </div>
+ } else {
+ <div></div>
+ }
+}
 
+<head>
+    <script type="text/javascript" src='@routes.Assets.at("javascripts/contentflow.js")'></script>
+</head>
 
 <script>
 $(function () {

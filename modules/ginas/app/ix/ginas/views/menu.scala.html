@@ -1,3 +1,4 @@
+@import ix.ginas.controllers.GinasLoad
 @import be.objectify.deadbolt.java.views.html._
 <!-- BANNER AND MENU -->
 <nav class="navbar navbar-default">
@@ -18,7 +19,7 @@
             <ul class="nav navbar-nav pull-left">
               <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self"><span>Home</span></a></li>
               <li><a href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
-              @subjectPresent() {
+              @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                   <li><a href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>Register Substance</span></a></li>
               }
               <li><a href="http://tripod.nih.gov/pub/ginasISO/"><span>Download</span></a></li>
@@ -31,7 +32,7 @@
             </ul>
             <div class="nav navbar-nav pull-right" id ="menu-login">
                 <ul class="nav navbar-nav pull-right">
-                    @if(!play.Play.isProd()) {
+                    @if(GinasLoad.ALLOW_LOAD) {
                         <li><a href= "@ix.ginas.controllers.routes.GinasLoad.load()" id ="load-button" target="_self"><button class="btn btn-default">
                             Load Data</button></a></li>
                     }
@@ -39,7 +40,7 @@
                 <li><a href= "@ix.ginas.controllers.routes.GinasFactory.login()" id ="login-button" target="_self"><button class="btn btn-default">Login</button></a></li>
             **@
 
-                @subjectNotPresentOr() {
+                @subjectNotPresentOr(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                     <li><a href= "/ginas/app/login" id ="login-button" target="_self"><button class="btn btn-default">
                         Login</button></a></li>
                 }{
@@ -51,10 +52,12 @@
         </div>
         <div class="hidden-sm hidden-md hidden-lg">
             <div class="navbar-collapse collapse" id="searchbarmobile" aria-expanded="false">
-                <form class="form-inline main-search ng-pristine ng-valid" role="search" method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id="mobilesearch">
+                <form class="form-inline main-search ng-pristine ng-valid" role="search" method="GET" action="@ix.ginas.controllers.routes.GinasApp.substances(null)" id="mobilesearch"
+                onsubmit="return validateForm(this.fname.value)">
                     <div class="input-group">
                             <input type="text" class="form-control typeahead" id="searchboxmobile"
-                            title="Search" placeholder="Search ..." name="q">
+                            title="Search" placeholder="Search ..." name="q"
+                            onsubmit="return submitq(this.q)">
                             <span class="input-group-btn">
                                 <button class="btn btn-default" id="search" type="search"
                                 value="submit">
@@ -70,3 +73,4 @@
     @screenshot()
     @report()
 </nav>
+@import ix.ncats.controllers.security.IxDeadboltHandler

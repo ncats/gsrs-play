@@ -34,7 +34,7 @@
                     <span href="#" editable-text="name.name" blur="submit">{{name.name}}</span>
                 </div>
                 <div class = "col-md-3">
-                    <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{name.type.display}}</span>
+                    <span href="#" editable-select="name.type" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('NAME_TYPE') track by r.display" blur="submit">{{name.type.display}}</span>
 
                 </div>
                 <div class = "col-md-2"><span ng-repeat="n in name.languages">
@@ -70,7 +70,7 @@
                         </div>
 
                         <div class="col-md-3 err-check" show-errors>
-                            <select class="form-control" title="Parameter Type" id="type" name = "type" ng-model = "parameter.type" ng-options="r.display for r in @GinasApp.getCV.getField("PARAMETER_TYPE") track by r.display" >
+                            <select class="form-control" title="Parameter Type" id="type" name = "type" ng-model = "parameter.type" ng-options="r.display for r in lookup.getList('PARAMETER_TYPE') track by r.display" >
                             </select>
                             <ng-messages for="parameterForm.type.$error" ng-if="parameterForm.type.$touched">
                                 <ng-message when="required" class="help-block">*required</ng-message>
@@ -78,7 +78,7 @@
                         </div>
                         <div class="col-md-3 err-check" show-errors>
                             <a ng-show="!parameter.amount" data-toggle="modal" data-target="#addamount" role="button" aria-label="Add amount"><i class="fa fa-plus fa-2x success"></i></a>
-                            <select class="form-control" title="Parameter Value" id="value" name = "value" ng-model = "parameter.value" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_TYPE") track by r.display" >
+                            <select class="form-control" title="Parameter Value" id="value" name = "value" ng-model = "parameter.value" ng-options="r.display for r in lookup.getList('AMOUNT_TYPE') track by r.display" >
                             </select>
                             <ng-messages for="parameterForm.type.$error" ng-if="parameterForm.type.$touched">
                                 <ng-message when="required" class="help-block">*required</ng-message>

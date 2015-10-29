@@ -65,6 +65,21 @@ public class Authentication extends Controller {
             cred = new Principal();
             cred.username = username;
             cred.admin = true;
+
+            /** Test **/
+
+            Role role1 = Role.newGuest();
+            Role role2 = Role.newUser();
+            Role role3 = Role.newOwner();
+            Role role4 = Role.newAdmin();
+
+            if(cred.isAdmin()) {
+                role1.principal = cred;
+                role3.principal = cred;
+                role4.principal = cred;
+            }
+
+            /** Test**/
         } else {
             cred = NIHLdapConnector.getEmployee(username, password);
         }
@@ -87,6 +102,7 @@ public class Authentication extends Controller {
             } else {
                 profile = users.iterator().next();
                 profile.user.username = username;
+
                 if (!profile.active) {
                     flash("message", "User is no longer active!");
                     return redirect(routes.Authentication.login(null));

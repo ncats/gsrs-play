@@ -1,0 +1,185 @@
+@import ix.core.search.TextIndexer.Facet
+@import ix.idg.controllers.IDGApp
+@import ix.idg.controllers.Commons
+@import java.net.URLEncoder
+
+@(title: String, target: Facet, disease: Facet, ligand: Facet)
+
+@fcol(name: String, facet: Facet) = {
+    <td>
+    @if(facet != null) {
+        @for(f <- facet.getValues()) {
+            @if(name.equals(f.getLabel())) {
+                @f.getCount()
+            }
+        }
+    }
+    </td>
+}
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+        <title>@title</title>
+	<link rel="icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>    	
+        <link rel="stylesheet"
+        href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
+        <link rel="stylesheet" type="text/css"
+        href='@routes.WebJarAssets.at(WebJarAssets.locate("font-awesome.min.css"))'>
+        <link rel="stylesheet" type="text/css"
+        href='@routes.Assets.at("ncats/css/idg-landing-hex.css")'>
+            <!--[if lte IE 9]>
+     <style>
+     .count {
+      margin-top:95%;
+      margin-right:1%;
+      }
+      </style>
+      <![endif]-->
+            <!--[if lte IE 9]>
+<style type="text/css">
+#ie6msg {border:3px solid #c33; margin:8px 0; background:#fcc; color:#000;}
+#ie6msg h4{margin:8px; padding:0;}
+#ie6msg p{margin:8px; padding:0;}
+#ie6msg p a.getie7{font-weight:bold; color:#006;}
+#ie6msg p a.ie6expl{font-weight:bold; color:#006;}
+</style>
+<div id="ie6msg">
+<h4>Did you know that your browser is out of date, and potentially poses a security risk?</h4>
+<p>To get the best possible experience using this website it is recommended that you upgrade your browser to a newer version. 
+<p>You could also try some other popular browsers like <a class="ie6expl" href="http://mozilla.com">FireFox</a> or
+ <a class="ie6expl" href="https://www.google.com/chrome/S">Chrome</a>.</p>
+</div>
+<![endif]-->
+        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'
+        type='text/javascript'></script>
+        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.js"))'></script>
+        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("typeahead.bundle.min.js"))'></script>
+        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("handlebars.min.js"))'></script>
+        <script src='@routes.WebJarAssets.at(WebJarAssets.locate("bloodhound.min.js"))'></script>
+        <script>
+        ( function ( i, s, o, g, r, a, m ) { i[ 'GoogleAnalyticsObject' ] = r ; i[ r ] = i[ r ] || function ( ) {
+        ( i[ r ].q = i[ r ].q ||[ ] ).push ( arguments ) }, i[ r ].l = 1 * new Date ( ) ; a = s.createElement ( o ),
+        m = s.getElementsByTagName ( o )[ 0 ] ; a.async = 1 ; a.src = g ; m.parentNode.insertBefore ( a, m )
+        } ) ( window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga' ) ;
+
+        ga ( 'create', 'UA-53774738-1', 'auto' ) ;
+        ga ( 'send', 'pageview' ) ;
+        </script>
+    </head>
+    <body>
+        <div class="container vertical-center" id="main-box">
+            <div class="row">
+                <center>
+                    <a href='@ix.idg.controllers.routes.IDGApp.index()'>
+                        <img src='@routes.Assets.at("ncats/images/Pharos_Logo_Rd8.svg")' class = "img-responsive" id="pharos" />
+                    </a>
+                </center>
+                <p>This page provides a variety of information on concepts and methods used in the Pharos inerface as well as
+                    a description of terms used to describe the data from the <a href="http://juniper.health.unm.edu/tcrd/">Target Central
+                    Resource Database</a>.</p>
+
+                <h2>Definitions</h2>
+
+                <a name="tdl"></a><h4>Target Development Level</h4>
+                <dl>
+                    <dt>Tclin</dt>
+                    <dd>These targets have activities in DrugDB (ie. approved drugs) with known mechanism of action that satisfy the activity thresholds detailed below</dd>
+                    <dt>Tchem</dt>
+                    <dd>These targets have activities in <a href="https://www.ebi.ac.uk/chembl/">ChEMBL</a> that satisfy the activity thresholds detailed below. In some cases, targets have been manually migrated to Tchem by human curation based on small molecule activities from other sources.</dd>
+                    <dt>Tbio</dt>
+                    <dd>These targets do not have known drug or small molecule activities that satisfy the activity thresholds detailed below AND satisfy one or more of the following criteria:
+                        <ul>
+                            <li>target is above the cutoff criteria for Tdark</li>
+                            <li>target is annotated with a Gene Ontology Molecular Function or Biological Process leaf term(s) with an Experimental Evidence code</li>
+                            <li>target has confirmed <a href="http://www.omim.org/">OMIM</a> phenotype(s)</li>
+                        </ul>
+                    </dd>
+                    <dt>Tdark</dt>
+                    <dd>These are targets about which virtually nothing is known. They do not have known drug or small molecule activities that satisfy the activity thresholds detailed below AND satisfy two or more of the following criteria:
+                        <ul>
+                            <li>A PubMed text-mining score from Jensen Lab &lt; 5</li>
+                            <li>&lt;= Gene RIFs</li>
+                            <li>&lt;= 50 Antibodies available according to <a href="http://antibodypedia.com">http://antibodypedia.com</a></li>
+                        </ul> </dd>
+                </dl>
+                <a name="idgfam"></a><h4>IDG Family Classification</h4>
+
+
+                <a name="datasources"></a><h2>Data Sources</h2>
+                The goal of the IDG KMC is to integrate a variety of data sources to shed light on unstudied and understudied
+                targets. To achieve this we have pulled together data on protein targets, small molecule activity, genomic
+                behavior and disease links. For a list of datasources, and their associated entity counts,
+                see the <a href="@ix.idg.controllers.routes.IDGApp.about()">About Pharos</a> page. A visual representation
+                of all targets and their representation in all IDG datasources can be viewed <a href="">here</a>. Over
+                time we anticipate incorporating other relevant data sources.
+
+		<br>
+		<br>
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <table class="table table-striped">
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Target</th>
+                                    <th>Disease</th>
+                                    <th>Ligand</th>
+                                </tr>
+                                @for(source <- IDGApp.getDataSources()) {
+                                    <tr>
+                                        @if(source.href != null) {
+                                            <td><a href="@source.href">@source.name</a></td>
+                                        } else {
+                                            <td>@source.name</td>
+                                        }
+                                    <td><a href='@{ix.idg.controllers.routes.IDGApp.targets() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")}'>@source.targets</a>
+                                    </td>
+                                    <td><a href='@{ix.idg.controllers.routes.IDGApp.diseases() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")}'>@source.diseases</a>
+                                    </td>
+                                    <td><a href='@{ix.idg.controllers.routes.IDGApp.ligands() + "?facet=" + URLEncoder.encode(Commons.SOURCE, "utf8") + "/" + URLEncoder.encode(source.name, "utf8")}'>@source.ligands</a>
+                                    </td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+		
+
+                <a name="harmonogram"></a> <h2>Harmonogram</h2>
+                The Harmonogram visualizes gene appearance in the <a href="http://amp.pharm.mssm.edu/Harmonizome">Harmonizome</a>
+                resources using interactive clustergrams. Genes are shown as rows and resources are shown as columns.
+                The gene occurrence value is normalized relative to the occurrence of other genes in the resource - the
+                darker the tile the more the gene occurs in the resource. The NIH Reporter Grants Linked to NCBI Genes
+                column shows the number of grants linked to each gene and this column is highlighted in blue. The resources
+                are classified into Resource Groups, e.g. Disease or Phenotype Associations, and they are color coded using the
+                column triangles.
+                <p>
+                You can view clustergrams for different gene classes, e.g. kinases, using the buttons on the sidebar.
+                    The ordering of the clustergram can be changed by clicking the reordering buttons or by double-clicking
+                    the row or column labels. For instance, double-clicking the NIH Reporter Grants column in Kinases view
+                    and zooming into the top of the clustergram reveals that EGFR is the kinase associated with the most grants.
+
+            <h2>Frequently Asked Questions</h2>
+            <ul>
+                <li><i>How can I download all the data from Pharos?</i> <br>Currently we do not allow full downloads of the database.
+                    Any subset (obtained using one or more filters) can be downloaded using the download icon.</li>
+            </ul>
+
+
+            <p>
+                    If you have more questions please contact us at
+                <a href="mailto:pharos@@mail.nih.gov"><code>pharos@@mail.nih.gov</code></a>
+            </p>
+            </div>
+            <p></p>
+
+        </div>
+    </body>
+</html>

@@ -1,9 +1,11 @@
 @import ix.ginas.controllers.GinasApp;
-<div class ="row info" id = "sourceMaterial" ng-controller="DiverseController as DiverseCtrl">
+<div class = "row info">
     <button class="btn btn-primary label-offset det">
-                        Source Materials</button>
-
+                        Source Materials&nbsp;</button>
     <div class="col-md-12">
+
+            <!-- Title bits -->
+
         <div class = "row header-row">
             <div class = "col-md-3">
                 <strong>Class</strong>
@@ -11,58 +13,50 @@
             <div class = "col-md-3">
                 <strong>Type</strong>
             </div>
-            <div class = "col-md-3" ng-if="diverse.sourceMaterialClass.display=='ORGANISM'">
+            <div class = "col-md-3" ng-if="substance.structurallyDiverse.sourceMaterialClass.display=='ORGANISM' || diverse.sourceMaterialClass.display=='ORGANISM'">
                 <strong>State</strong>
             </div>
         </div>
 
+
         <div class = "row">
+            <hr>
             <div class = "col-md-3">
-                                    {{ginasCtrl.substance.structurallyDiverse.sourceMaterialClass.display}}
+                <span href="#" editable-select="substance.structurallyDiverse.sourceMaterialClass" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_CLASS') track by r.display" blur="submit">{{substance.structurallyDiverse.sourceMaterialClass.display}}</span>
             </div>
             <div class = "col-md-3">
-                    {{ginasCtrl.substance.structurallyDiverse.sourceMaterialType.display}}
+                <span href="#" editable-select="substance.structurallyDiverse.sourceMaterialType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_TYPE') track by r.display" blur="submit">{{substance.structurallyDiverse.sourceMaterialType.display}}</span>
             </div>
-            <div class = "col-md-3" ng-if="diverse.sourceMaterialClass.display=='ORGANISM'">
-                                    {{ginasCtrl.substance.structurallyDiverse.sourceMaterialState.display}}
-            </div>
-            <div class = "col-md-1 pull-right">
-                <a ng-show="!DiverseCtrl.adding" ng-click="DiverseCtrl.toggleAdd();" aria-label="Edit"><i class="fa fa-pencil-square-o fa-2x success"></i></a>
+            <div class = "col-md-3">
+                <span href="#" editable-select="substance.structurallyDiverse.sourceMaterialState" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_STATE') track by r.display" blur="submit">{{substance.structurallyDiverse.sourceMaterialState.display}}</span>
             </div>
         </div>
-        <div class="row form-row" ng-show="DiverseCtrl.adding">
-            <form class="form-horizontal" name="diverseForm" id = "diverseForm" role="form" ng-submit="DiverseCtrl.validate(diverse); DiverseCtrl.add()" novalidate>
+
+        <form class="form-horizontal" name="diverseSourceForm" id = "add-ref" role="form" novalidate>
+            <div class="row form-row" ng-show="!diverseSourceForm.$submitted">
                 <div class="col-md-3 err-check" show-errors>
-                    <select class="form-control" ng-model ="diverse.sourceMaterialClass" ng-options="r.display for r in @GinasApp.getCV.getField("SOURCE_MATERIAL_CLASS") track by r.display" title="Source Class" id="source-class" name = "source-class" required></select>
+                    <select class="form-control" ng-model ="diverse.sourceMaterialClass" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_CLASS') track by r.display" title="Source Class" id="source-class" name = "source-class" required></select>
                     <ng-messages for="diverseForm.sourceMaterialClass.$error" ng-if="diverseForm.sourceMaterialClass.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-3 err-check" show-errors>
-                    <select class="form-control" title="Source Type" id="source-type" name = "source-type" ng-model = "diverse.sourceMaterialType" ng-options="r.display for r in @GinasApp.getCV.getField("SOURCE_MATERIAL_TYPE") track by r.display" required>
+                    <select class="form-control" title="Source Type" id="source-type" name = "source-type" ng-model = "diverse.sourceMaterialType" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="diverseForm.sourceMaterialType.$error" ng-if="diverseForm.sourceMaterialType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-3 err-check" ng-if="diverse.sourceMaterialClass.display=='ORGANISM'" show-errors>
-                    <select class="form-control" title="Source State" id="source-state" name = "source-state" ng-model = "diverse.sourceMaterialState" ng-options="r.display for r in @GinasApp.getCV.getField("SOURCE_MATERIAL_STATE") track by r.display" required>
+                    <select class="form-control" title="Source State" id="source-state" name = "source-state" ng-model = "diverse.sourceMaterialState" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_STATE') track by r.display" required>
                         </select>
                     <ng-messages for="diverseForm.sourceMaterialState.$error" ng-if="diverseForm.sourceMaterialState.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-1 pull-right" ng-show="DiverseCtrl.editing">
-                    <a id ="name-submit" ng-click="DiverseCtrl.validate(diverse)" arial-label="Save">
-                        <i class="fa fa-floppy-o fa-2x success"></i></a>
-                    <a type="submit" ng-click="RefCtrl.toggleEdit();" aria-label="Cancel">
-                        <i class="fa fa-ban fa-2x danger"></i></a>
-                </div>
-                <div class="col-md-1 pull-right" ng-show="!DiverseCtrl.editing">
-                    <a ng-click="DiverseCtrl.reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="DiverseCtrl.validate(diverse)" ><i class="fa fa-floppy-o fa-2x success"></i></a>
-                </div>
-            </form>
-        </div>
+                @referenceselectorform("diverseSourceForm", "structurallyDiverse")
+            </div>
+            @submitbuttons("diverse", "diverseSourceForm", "structurallyDiverse", false)
+        </form>
     </div>
 </div>

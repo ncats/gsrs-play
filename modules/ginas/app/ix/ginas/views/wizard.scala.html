@@ -5,68 +5,62 @@
 
 @wizardfields(kind: String) = {
 
-@if(kind == "chemical") {
-    <div>@forms.structureform()</div>
-    <div>@forms.moietyform()</div>
+    @kind match {
+        case "chemical" => {
+            <div>@forms.structureform()</div>
+            <div>@forms.moietyform()</div>
+        }
+        case "mixture" => {
+           <div>@forms.mixturecomponentselectform()</div>
+        }
+        case "protein" => {
+             <div>@forms.proteindetailsform()</div>
+             <div>@forms.subunitform("protein")</div>
+             <div>@forms.disulfideform()</div>
+             <div>@forms.otherlinksform()</div>
+             <div>@forms.glycosylationform()</div>
+             <div>@forms.agentmodificationform()</div>
+             <div>@forms.structuralmodificationform()</div>
+             <div>@forms.physicalmodificationform()</div>
+        }
+        case "structurallyDiverse" => {
+           <div>@forms.diversesourceform()</div>
+           <div ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'">@forms.diverseorganismform()</div>
+            <div>@forms.diversedetailsform()</div>
+
+        }
+        case "concept" => {
+            <div>Concepts have no defining information, but are collections of terms, codes and related information. They can be promoted to a defined substance at a later time, when appropriate.</div>
+        }
+        case "polymer" => {
+           <div>Polymer not implemented yet, still in development</div>
+           <div>@forms.polymerclassificationform()</div>
+           <div>@forms.polymermonomerselectform()</div>
+           <div>@forms.polymerstructureform()</div>
+           <div>@forms.polymersruform()</div>           
+        }
+        case "nucleicAcid" => {
+           <div>Nucleic Acid not implemented yet, still in development</div>
+           <div>@forms.nucleicaciddetailsform()</div>
+           <div>@forms.subunitform("nucleicAcid")</div>           
+           <div>@forms.nucleicacidsugarform()</div>
+           <div>@forms.nucleicacidlinkageform()</div>
+        }        
+        case x =>{
+            <h2>Unknown substance class: @kind</h2>    
+        }
+    }
+
     <div>@forms.officialnameform()</div>
     <div>@forms.nameform()</div>
-    <div >@forms.codeform()</div>
+    <div>@forms.codeform()</div>
     <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>
     <div>@forms.propertyform()</div>
     <div ng-show="substance.references">@forms.referenceform()</div>
-    <!-- Modal -->
     @forms.referencemodalform()
     @forms.amountmodalform()
     @forms.parametermodalform()
-
-
-} else {
-    @if(kind == "mixture") {
-        @forms.nameform()
-        <div ng-show="uniqueName">@forms.codeform()</div>
-        @forms.referenceform()
-        @forms.referencemodalform()
-    } else {
-        @if(kind == "protein") {
-            @forms.subunitform()
-            @forms.proteindetailsform()
-            <div >@forms.disulfideform()</div>
-@*            <div >@forms.modificationform()</div>*@
-            <div >@forms.glycosylationform()</div>
-            @forms.nameform()
-            <div >@forms.codeform()</div>
-            <div ng-show="substance.references"> @forms.referenceform()</div>
-            @forms.referencemodalform()
-        } else {
-            @if(kind == "polymer") {
-                @forms.nameform()
-                <div ng-show="uniqueName">@forms.codeform()</div>
-                @forms.referenceform()
-                @forms.referencemodalform()
-            } else {
-                @if(kind == "structurallyDiverse") {
-                    @forms.diversesourceform()
-                    <div ng-show="sourceMaterialType=='Organism'">  </div>
-                    @forms.diverseorganismform()
-                    @forms.nameform()
-                    <div ng-show="uniqueName">@forms.codeform()</div>
-                    @forms.referenceform()
-                    @forms.referencemodalform()
-                } else {
-                    @if(kind.toLowerCase() == "concept") {
-                        @forms.nameform()
-                        <div ng-show="uniqueName">@forms.codeform()</div>
-                        @forms.referenceform()
-                        @forms.referencemodalform()
-                    } else {
-                        <h2>Unknown substance class: @kind</h2>
-                    }
-                }
-            }
-        }
-    }
-}
 
 }
 
@@ -76,6 +70,9 @@
     <h3></h3>
 } {
     <h3></h3>
+    @*
+        Loading all CV
+    *@
     <script src="@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
     <div ng-cloak>
         @wizardfields(kind)
@@ -110,12 +107,9 @@
     </div>
     </div>
     <div class ="row info">
-        <button ng-click="submitpaster(paste)">paste</button>
+        <button ng-click="submitpaster(paste); validate(substance)">paste</button>
 </div>
         <script>
-            @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
-        var strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
-        var envurl='@ix.ncats.controllers.routes.App.smiles';
         var loadjson = @Html(json);
     </script>
 

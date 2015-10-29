@@ -48,12 +48,14 @@ public class Tox21App extends App {
     static final StructureProcessorPlugin Processor =
         Play.application().plugin(StructureProcessorPlugin.class);
 
-    static class Tox21SearchResultProcessor extends SearchResultProcessor {
+    static class Tox21SearchResultProcessor
+        extends SearchResultProcessor<StructureIndexer.Result> {
         int count;
 
         Tox21SearchResultProcessor () throws IOException {
         }
 
+        @Override
         protected Object instrument (StructureIndexer.Result r)
             throws Exception {
             List<QCSample> samples = Tox21Factory.finder
@@ -410,7 +412,7 @@ public class Tox21App extends App {
             
             return ok (ix.tox21.views.html.samples.render
                        (page, rows, result.count(),
-                        pages, decorate (facets), samples));
+                        pages, decorate (facets), samples, null));
         }
         else {
             String cache = QCSample.class.getName()+".facets";
@@ -430,7 +432,8 @@ public class Tox21App extends App {
                 samples = Tox21Factory.getQCSamples(rows, (page-1)*rows, null);
             }
             return ok (ix.tox21.views.html.samples.render
-                       (page, rows, total, pages, decorate (facets), samples));
+                       (page, rows, total, pages, decorate (facets),
+                        samples, null));
         }
     }
 
@@ -526,7 +529,7 @@ public class Tox21App extends App {
         Sample sample = Tox21Factory.getSample(id);
         Result r = null;
         if (sample != null) {
-            r = structure (sample.structure.getId(), "svg", size);
+            r = structure (sample.structure.getId(), "svg", size, "");
         }
         return r;
     }
@@ -559,16 +562,18 @@ public class Tox21App extends App {
     public static Result structureResult
         (final SearchResultContext context, int rows, int page)
         throws Exception {
-        return structureResult
+        return App.fetchResult
             (context, rows, page, new DefaultResultRenderer<QCSample> () {
-                    public Result render (int page, int rows,
+                    public Result render (SearchResultContext context,
+                                          int page, int rows,
                                           int total, int[] pages,
                                           List<TextIndexer.Facet> facets,
                                           List<QCSample> samples) {
                         return ok (ix.tox21.views.html.samples.render
                                    (page, rows, total,
                                     pages, decorate
-                                    (filter (facets, QC_FACETS)), samples));
+                                    (filter (facets, QC_FACETS)),
+                                    samples, context.getId()));
                     }
                 });
     }
