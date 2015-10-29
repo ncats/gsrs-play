@@ -5,6 +5,7 @@ import java.util.*;
 import java.sql.*;
 import java.net.*;
 import java.util.concurrent.Callable;
+import java.util.logging.*;
 
 import be.objectify.deadbolt.core.models.Permission;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -12,6 +13,7 @@ import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.*;
 import play.*;
+import play.Logger;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
@@ -67,10 +69,10 @@ public class Authentication extends Controller {
             cred = NIHLdapConnector.getEmployee(username, password);
         }
 
-        if (cred == null) {
+     /*   if (cred == null) {
             flash("message", "Invalid credential!");
             return redirect(routes.Authentication.login(null));
-        }
+        }*/
 
         List<UserProfile> users =
                 _profiles.where().eq("user.username", username).findList();
@@ -84,6 +86,7 @@ public class Authentication extends Controller {
                 profile.save();
             } else {
                 profile = users.iterator().next();
+                profile.user.username = username;
                 if (!profile.active) {
                     flash("message", "User is no longer active!");
                     return redirect(routes.Authentication.login(null));
@@ -116,6 +119,7 @@ public class Authentication extends Controller {
 
     public static Result login(String url) {
         Session session = getSession();
+        Logger.debug("url:" +  url + "  app: " + APP);
         if (session != null) {
             return url != null ? redirect(url)
                     : redirect(routes.Authentication.secured());
@@ -151,6 +155,7 @@ public class Authentication extends Controller {
         //mapper.valueToTree(session);
         //return ok(mapper.valueToTree(session));
         String context = Play.application().configuration().getString("application.context");
+        Logger.debug("context:" + context);
         return redirect(context);
     }
 

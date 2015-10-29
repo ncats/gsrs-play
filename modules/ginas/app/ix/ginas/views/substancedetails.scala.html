@@ -1,5 +1,5 @@
 @import ix.ginas.controllers.GinasApp
-
+@import be.objectify.deadbolt.java.views.html._
 
 @(sub: ix.ginas.models.v1.Substance)(breadcrumb: Html)(content: Html)
 
@@ -117,10 +117,11 @@
             </div>
         }
 
-
-        <div class="row info" id="refs">
-        @references(sub.references)
-        </div>
+        @dynamic(name="isAdmin", handler=new ix.ncats.controllers.security.IxDeadboltHandler()) {
+            <div class="row info" id="refs">
+            @references(sub.references)
+            </div>
+        }
 
 
     }

@@ -139,6 +139,63 @@ public class AdminFactory extends Controller {
         return sb.toString();
     }
 
+    public static Result createGinasTest() {
+
+        Transaction tx = Ebean.beginTransaction();
+        try{
+            Principal user1 = new Principal("admintest@fda.gov");
+            user1.username = "admint";
+            user1.admin = true;
+
+            Principal user2 = new Principal("usertest@fda.gov");
+            user2.username = "usert";
+
+            UserProfile up1 = new UserProfile(user1);
+            up1.active = true;
+
+            UserProfile up2 = new UserProfile(user2);
+            up2.active = true;
+
+            tx.commit();
+        } catch (Exception ex) {
+            Logger.trace("cant create test users");
+        } finally {
+            Ebean.endTransaction();
+        }
+        return ok("Ginas test data created!");
+    }
+
+    public static Result assignTestRoles(UserProfile profile) {
+
+        Acl acl1 = Acl.newRead();
+        Acl acl2 = Acl.newWrite();
+        Acl acl3 = Acl.newAdmin();
+        Acl acl4 = Acl.newReadWrite();
+        Role role1 = Role.newGuest();
+        Role role2 = Role.newUser();
+        Role role3 = Role.newOwner();
+        Role role4 = Role.newAdmin();
+
+        //List<UserProfile> users = new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class).where().eq("user.username", profile.user.username).findList();
+
+    if(profile.user.isAdmin()) {
+        acl1.principals.add(profile.user);
+        acl2.principals.add(profile.user);
+        acl3.principals.add(profile.user);
+        acl4.principals.add(profile.user);
+        role1.principal = profile.user;
+        role3.principal = profile.user;
+        role4.principal = profile.user;
+    }
+    else
+    {
+        acl1.principals.add(profile.user);
+        role1.principal = profile.user;
+        role2.principal = profile.user;
+    }
+        return ok("Ginas test data created!");
+    }
+
     public static Result createTest1() {
 
         Transaction tx = Ebean.beginTransaction();
