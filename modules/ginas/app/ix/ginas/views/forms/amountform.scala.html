@@ -37,7 +37,7 @@
 
         <div class="row form-row">
             <div class="col-md-2 err-check" show-errors>
-                <select class="form-control" title="Amount Type" id="type" name = "type" ng-model = "@{amountOwner}.type" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_TYPE") track by r.display" >
+                <select class="form-control" title="Amount Type" id="type" name = "type" ng-model = "@{amountOwner}.type" ng-options="r.display for r in lookup.getList('AMOUNT_TYPE') track by r.display" >
                         </select>
 
             </div>
@@ -62,7 +62,7 @@
 
             </div>
             <div class="col-md-2 err-check" show-errors>
-                <select class="form-control" title="Amount Units" id="unit" name = "unit" ng-model = "@{amountOwner}.units" ng-options="r.display for r in @GinasApp.getCV.getField("AMOUNT_UNIT") track by r.display" >
+                <select class="form-control" title="Amount Units" id="unit" name = "unit" ng-model = "@{amountOwner}.units" ng-options="r.display for r in lookup.getList('AMOUNT_UNIT') track by r.display" >
             </select>
 
             </div>

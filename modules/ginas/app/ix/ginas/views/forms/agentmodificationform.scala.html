@@ -27,13 +27,13 @@
         <div class = "row"ng-repeat="m in substance.protein.modifications.agentModifications">
             <hr>
             <div class = "col-md-3">
-                <span href="#" editable-select="m.agentModificationProcess" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_PROCESS") track by r.display" blur="submit">{{m.agentModificationProcess.display}}</span>
+                <span href="#" editable-select="m.agentModificationProcess" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('AGENT_MODIFICATION_PROCESS') track by r.display" blur="submit">{{m.agentModificationProcess.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="m.agentModificationRole" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("ROLE") track by r.display" blur="submit">{{m.agentModificationRole.display}}</span>
+                <span href="#" editable-select="m.agentModificationRole" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('ROLE') track by r.display" blur="submit">{{m.agentModificationRole.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="m.agentModificationType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_TYPE") track by r.display" blur="submit">{{m.agentModificationType.display}}</span>
+                <span href="#" editable-select="m.agentModificationType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('AGENT_MODIFICATION_TYPE') track by r.display" blur="submit">{{m.agentModificationType.display}}</span>
             </div>
             <div class = "col-md-2">
                 <substance-chooser ng-model = "m.agentSubstance"></substance-chooser>
@@ -46,21 +46,21 @@
         <form class="form-horizontal" name="agentModForm" id = "add-ref" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3 err-check" show-errors>
-                    <select class="form-control" title="Agent Modification Process" id="agentModificationProcess" name = "agentModificationProcess" ng-model = "agentModification.agentModificationProcess" ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_PROCESS") track by r.display" required>
+                    <select class="form-control" title="Agent Modification Process" id="agentModificationProcess" name = "agentModificationProcess" ng-model = "agentModification.agentModificationProcess" ng-options="r.display for r in lookup.getList('AGENT_MODIFICATION_PROCESS') track by r.display" required>
                         </select>
                     <ng-messages for="agentModForm.agentModificationProcess.$error" ng-if="agentModForm.agentModificationProcess.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Agent Modification Role" id="agentModificationRole" name = "agentModificationRole" ng-model = "agentModification.agentModificationRole" ng-options="r.display for r in @GinasApp.getCV.getField("ROLE") track by r.display" required>
+                    <select class="form-control" title="Agent Modification Role" id="agentModificationRole" name = "agentModificationRole" ng-model = "agentModification.agentModificationRole" ng-options="r.display for r in lookup.getList('ROLE') track by r.display" required>
                         </select>
                     <ng-messages for="agentModForm.agentModificationRole.$error" ng-if="agentModForm.agentModificationRole.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Agent Modification Type Origin" id="agentModificationType" name = "agentModificationType" ng-model = "agentModification.agentModificationType" ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_TYPE") track by r.display" required>
+                    <select class="form-control" title="Agent Modification Type Origin" id="agentModificationType" name = "agentModificationType" ng-model = "agentModification.agentModificationType" ng-options="r.display for r in lookup.getList('AGENT_MODIFICATION_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="agentModForm.agentModificationType.$error" ng-if="agentModForm.agentModificationType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

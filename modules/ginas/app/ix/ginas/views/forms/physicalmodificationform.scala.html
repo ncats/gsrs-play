@@ -22,10 +22,10 @@
         <div class = "row">
             <hr>
             <div class = "col-md-4">
-                <span href="#" editable-select="physicalModification.physicalModificationRole" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("PHYSICAL_MODIFICATION_ROLE") track by r.display" blur="submit">{{substance.protein.modifications.physicalModification.physicalModificationRole.display}}</span>
+                <span href="#" editable-select="physicalModification.physicalModificationRole" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('PHYSICAL_MODIFICATION_ROLE') track by r.display" blur="submit">{{substance.protein.modifications.physicalModification.physicalModificationRole.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="physicalModification.physicalModificationType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_TYPE") track by r.display" blur="submit">{{substance.protein.modifications.physicalModification.physicalModificationType.display}}</span>
+                <span href="#" editable-select="physicalModification.physicalModificationType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('AGENT_MODIFICATION_TYPE') track by r.display" blur="submit">{{substance.protein.modifications.physicalModification.physicalModificationType.display}}</span>
             </div>
             <div class = "col-md-2">
         {{physicalModification.agentSubstance}}
@@ -35,14 +35,14 @@
         <form class="form-horizontal" name="physicalModForm" id = "add-ref" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-4 err-check" show-errors>
-                    <select class="form-control" title="Agent Modification Role" id="physicalModificationRole" name = "physicalModificationRole" ng-model = "physicalModification.physicalModificationRole" ng-options="r.display for r in @GinasApp.getCV.getField("PHYSICAL_MODIFICATION_ROLE") track by r.display" required>
+                    <select class="form-control" title="Agent Modification Role" id="physicalModificationRole" name = "physicalModificationRole" ng-model = "physicalModification.physicalModificationRole" ng-options="r.display for r in lookup.getList('PHYSICAL_MODIFICATION_ROLE') track by r.display" required>
                         </select>
                     <ng-messages for="physicalModForm.physicalModificationRole.$error" ng-if="physicalModForm.physicalModificationRole.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Agent Modification Type Origin" id="physicalModificationType" name = "physicalModificationType" ng-model = "physicalModification.physicalModificationType" ng-options="r.display for r in @GinasApp.getCV.getField("AGENT_MODIFICATION_TYPE") track by r.display" required>
+                    <select class="form-control" title="Agent Modification Type Origin" id="physicalModificationType" name = "physicalModificationType" ng-model = "physicalModification.physicalModificationType" ng-options="r.display for r in lookup.getList('AGENT_MODIFICATION_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="physicalModForm.physicalModificationType.$error" ng-if="physicalModForm.physicalModificationType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

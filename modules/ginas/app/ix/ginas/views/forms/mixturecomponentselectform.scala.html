@@ -19,7 +19,7 @@
                             <substance-chooser ng-model = "component.substance"></substance-chooser>
                         </div>
                        <div class = "col-md-6">
-                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("MIXTURE_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
+                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('MIXTURE_TYPE') track by r.display" blur="submit">{{component.type.display}}</span>
                        </div>
                        </div>
                          <div class="pull-right">
@@ -37,7 +37,7 @@
                     <substance-chooser ng-model = "mcomponent.substance"></substance-chooser>
                 </div>
                 <div class="col-md-6 err-check" show-errors>
-                    <select class="form-control" title="Mixture Type" id="type" name = "type" ng-model = "mcomponent.type" ng-options="r.display for r in @GinasApp.getCV.getField("MIXTURE_TYPE") track by r.display" required>
+                    <select class="form-control" title="Mixture Type" id="type" name = "type" ng-model = "mcomponent.type" ng-options="r.display for r in lookup.getList('MIXTURE_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="mixtureForm.type.$error" ng-if="mixtureForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
