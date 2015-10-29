@@ -1468,6 +1468,8 @@
         };
     });
 
+//*************************
+//Amount stuff
     ginasApp.directive('amount', function () {
 
         return {
@@ -1479,6 +1481,35 @@
             template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display}}</span></div>'
         };
     });
+    
+    ginasApp.directive('amountForm', function (lookup) {
+        return {
+            restrict: 'AE',
+            replace: true,
+            scope: {
+                modelAmount: '=ngModel'
+            },
+            templateUrl: baseurl + "assets/ginas/templates/amount-form.html",
+            link: function(scope, element, attrs){
+                scope.lookup=lookup;
+            },
+        };
+    });
+    
+    ginasApp.directive('amountEditDisplay', function (lookup) {
+        return {
+            restrict: 'AE',
+            replace: true,
+            scope: {
+                modelAmount: '=ngModel'
+            },
+            templateUrl: baseurl + "assets/ginas/templates/amount-display.html",
+            link: function(scope, element, attrs){
+                scope.lookup=lookup;
+            },
+        };
+    });
+//*************************************
 
 
     ginasApp.directive('aminoAcid', function ($compile) {
@@ -1594,7 +1625,6 @@
                                 if(!scope.siteList){
                                         scope.siteList=scope.siteContainer.sites;
                                 }
-                                //console.log(scope.siteList);
                         }
                     }
                 );
