@@ -28,6 +28,9 @@
            <div>@forms.diversesourceform()</div>
            <div ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'">@forms.diverseorganismform()</div>
             <div>@forms.diversedetailsform()</div>
+            <div>@forms.parentform()</div>
+            <div>@forms.partform()</div>
+
 
         }
         case "concept" => {

@@ -1,0 +1,22 @@
+<div>
+<tags-input custom-class="form-control" ng-model= "saveto" title="Substance Selector" placeholder="Substance Name" id="substance" name="substance" display-property="name" key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag, saveto)' required>
+    <auto-complete source="loadSubstances($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true" template="autocomplete-template"></auto-complete>
+</tags-input>
+<!--
+<ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domains.$touched">
+    <ng-message when="required" class="help-block">*required</ng-message>
+</ng-messages>-->
+
+    <script type="text/ng-template" id="autocomplete-template">
+        <div class="autocomplete-template">
+            <div class="row text-center">
+                <rendered id="data.uuid"></rendered>
+            </div>
+            <div class="row text-center">
+                <span><code>{{data.name}}</code></span>
+            </div>
+        </div>
+    </script>
+
+
+</div>

@@ -153,7 +153,8 @@
         return lookup;
     });
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $modal, $http, $window, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
+    //removed  substanceSearch
+    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, data, nameFinder,  substanceSearch, substanceIDRetriever, lookup) {
 
         var ginasCtrl = this;
 
@@ -185,6 +186,7 @@
                 subref.approvalID = selectedItem.approvalID;
                 subref.substanceClass = "reference";
                 _.set($scope, path, subref);
+                console.log($scope);
             });
         };
 
@@ -507,10 +509,6 @@
             }
         };
 
-        $scope.parseAgentModification = function (obj, path) {
-
-        };
-
         $scope.defaultSave = function (obj, form, path, list, name) {
             $scope.$broadcast('show-errors-check-validity');
             if (form.$valid) {
@@ -675,6 +673,7 @@
         };
 
         $scope.toggle = function (el) {
+            console.log(el);
             if (el.selected) {
                 el.selected = !el.selected;
             } else {
@@ -1180,6 +1179,23 @@
             console.log(event);
             console.log(event.currentTarget);
         };
+
+        $scope.loadSubstances = function($query){
+            return nameFinder.search($query);
+            };
+
+        $scope.createSubref = function(selectedItem, path){
+            console.log(selectedItem);
+            console.log(path);
+            var subref = {};
+            subref.refuuid = selectedItem.uuid;
+            subref.refPname = selectedItem.name;
+            subref.approvalID = selectedItem.approvalID;
+            subref.substanceClass = "reference";
+            console.log(subref);
+            _.set($scope.substance, path, subref);
+            console.log($scope);
+        };
     });
 
     var uuid = function uuid() {
@@ -1236,7 +1252,27 @@
         };
     });
 
-    ginasApp.directive('duplicate', function (isDuplicate) {
+
+    ginasApp.service('nameFinder', function ($http) {
+        var url= baseurl + "api/v1/substances/search?q=";
+
+        var nameFinder ={
+        search: function(query){
+         var promise = $http.get(url + query+ "*&top=100", {
+             headers: {
+                 'Content-Type': 'text/plain'
+             }
+         }).then(function (response){
+             return response.data.content;
+         });
+            return promise;
+        }
+    };
+        return nameFinder;
+    });
+
+
+        ginasApp.directive('duplicate', function (isDuplicate) {
         return {
             restrict: 'A',
             require: 'ngModel',
@@ -1248,6 +1284,8 @@
 
     ginasApp.factory('isDuplicate', function ($q, substanceFactory) {
         return function dupCheck(modelValue) {
+            console.log(modelValue);
+            console.log($q);
             var deferred = $q.defer();
             substanceFactory.getSubstances(modelValue)
                 .success(function (response) {
@@ -1350,9 +1388,9 @@
         };
     });
 
-    ginasApp.service('substanceSearch', function ($http) {
+    ginasApp.service('substanceSearch', function ($http, $q) {
         var options = {};
-        var url = baseurl + "api/v1/suggest/Name?q=";
+        var url = baseurl + "api/v1/substances/search?q=";
 
         this.load = function (field) {
             $http.get(url + field.toUpperCase(), {
@@ -1364,7 +1402,7 @@
             });
         };
 
-        this.search = function (query) {
+        this.search = function ($q) {
             return options;
         };
     });
@@ -1375,9 +1413,6 @@
             replace: true,
             scope: {
                 id: '='
-                /*                size: '=',
-                 amap :'='*/
-
             },
             template: '<img src=\"' + baseurl + 'img/{{id}}.svg\">'
         };
@@ -1395,6 +1430,31 @@
         };
     });
 
+    ginasApp.directive('substanceChooserLite', function($templateRequest, $compile){
+        return {
+/*            restrict: 'E',
+            replace: true,*/
+/*
+            required: 'ngModel',
+*/
+            scope: true,
+            link: function(scope, element, attrs){
+                console.log(scope);
+                console.log(attrs);
+                scope.saveto = attrs.saveto;
+                $templateRequest( baseurl + "assets/ginas/templates/substancechooze.html").then(function(html){
+                    element.append($compile(html)(scope));
+                });
+/*
+                console.log(scope);
+*/
+            }
+/*
+            templateUrl: baseurl + "assets/ginas/templates/substancechooze.html"
+*/
+        };
+
+    });
 
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';
@@ -1640,54 +1700,6 @@
             restrict: 'E',
             templateUrl: baseurl + "assets/ginas/templates/molexport.html"
         };
-    });
-
-
-    ginasApp.controller('DiverseController', function ($scope, Substance, $rootScope) {
-        this.adding = true;
-
-        this.toggleEdit = function () {
-            this.editing = !this.editing;
-        };
-
-        this.toggleAdd = function () {
-            this.adding = !this.adding;
-        };
-
-        this.reset = function () {
-            $scope.diverse = {};
-            $scope.$broadcast('show-errors-reset');
-        };
-
-        this.validate = function (obj) {
-            $scope.$broadcast('show-errors-check-validity');
-            if ($scope.diverseForm.$valid) {
-                Substance.structurallyDiverse.sourceMaterialClass = obj.sourceMaterialClass;
-                Substance.structurallyDiverse.sourceMaterialType = obj.sourceMaterialType;
-                Substance.structurallyDiverse.sourceMaterialState = obj.sourceMaterialState;
-                this.toggleAdd();
-            }
-        };
-
-        this.setEdited = function (obj) {
-            $scope.editObj = obj;
-            $scope.tempCopy = angular.copy(obj);
-        };
-
-        this.update = function (reference) {
-            console.log(reference);
-            var index = Substance.references.indexOf(reference);
-            Substance.references[index] = reference;
-            $scope.editObj = null;
-            this.toggleEdit();
-        };
-
-        this.remove = function (reference) {
-            var index = Substance.references.indexOf(reference);
-            Substance.references.splice(index, 1);
-        };
-
-
     });
 
     ginasApp.controller('ProgressJobController', function ($scope, $http, $timeout) {
