@@ -1,0 +1,10 @@
+<div>
+    <span ng-show="mymodel">
+        <code>{{mymodel.refPname}}</code>
+        <rendered id = mymodel.refuuid></rendered>
+    </span>
+    <span ng-hide="mymodel">
+        <code>NO MATERIAL SELECTED</code>
+    </span>
+    <a role="button" aria-label="Select a Substance"  ng-click="openSelector()">select material</a>
+</div>

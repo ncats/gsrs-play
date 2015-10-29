@@ -11,15 +11,14 @@
             <div>@forms.moietyform()</div>
         }
         case "mixture" => {
-           <div>Mixture selector not implemented yet.</div>
            <div>@forms.mixturecomponentselectform()</div>
         }
         case "protein" => {
-             <div>@forms.subunitform("protein")</div>
              <div>@forms.proteindetailsform()</div>
+             <div>@forms.subunitform("protein")</div>
              <div>@forms.disulfideform()</div>
-            <div>@forms.otherlinksform()</div>
-            <div>@forms.glycosylationform()</div>
+             <div>@forms.otherlinksform()</div>
+             <div>@forms.glycosylationform()</div>
              <div>@forms.agentmodificationform()</div>
              <div>@forms.structuralmodificationform()</div>
              <div>@forms.physicalmodificationform()</div>
@@ -114,9 +113,6 @@
         <button ng-click="submitpaster(paste); validate(substance)">paste</button>
 </div>
         <script>
-            @*var renderUrl = '@ix.ncats.controllers.routes.App.render/';*@
-        var strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
-        var envurl='@ix.ncats.controllers.routes.App.smiles';
         var loadjson = @Html(json);
     </script>
 

@@ -369,7 +369,6 @@ public class Substance extends Ginas {
 		return null;
 	}
 
-	@JsonIgnore
 	public String getApprovalIDDisplay() {
 		if (approvalID != null)
 			return approvalID;

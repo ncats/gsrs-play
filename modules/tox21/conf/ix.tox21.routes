@@ -22,5 +22,5 @@ GET	/api/samples	ix.tox21.controllers.Tox21Factory.page(top: Int ?=10, skip: Int
 GET	/api/samples/:id	ix.tox21.controllers.Tox21Factory.get(id: Long, expand: String ?= null)
 
 ->	/	ix.qhts.Routes
-->	/	ix.ncats.Routes
+->	/	ix.marvin.Routes
 ->	/	ix.Routes

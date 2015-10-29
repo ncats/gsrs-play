@@ -150,8 +150,12 @@
                 var disp=getDisplayFromCV(domain,value);
                 return {value:value, display:disp, domain:domain};
         };
+        lookup.getList = function (domain){
+                return getCVListForDomain(domain);
+        };
         return lookup;
     });
+
 
     //removed  substanceSearch
     ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, data, nameFinder,  substanceSearch, substanceIDRetriever, lookup) {
@@ -189,6 +193,10 @@
                 console.log($scope);
             });
         };
+
+        
+        $scope.lookup = lookup;
+
 
         $scope.toFormSubstance = function (apiSub) {
 
@@ -405,6 +413,25 @@
         $scope.cleanSequence = function (s) {
             return s.replace(/[^A-Za-z]/g, '');
         };
+        $scope.getResidueAtSite = function (site){
+                var msub=$scope.getSubunitWithIndex(site.subunitIndex);
+                if(msub === null)return null;
+                return msub.sequence[site.residueIndex-1];
+        };
+        $scope.getSubunitWithIndex = function (subIndex){
+                var subs=[];
+                if($scope.substance.nucleicAcid){
+                       subs=$scope.substance.nucleicAcid.subunits;
+                }else if($scope.substance.protein){
+                       subs=$scope.substance.protein.subunits;
+                }
+                for(var i in subs){
+                        if(subs[i].subunitIndex === subIndex){
+                                return subs[i];
+                        }
+                }
+                return null;
+        };
 
         $scope.parseSubunit = function (sequence, subunit) {
             var split = sequence.replace(/[^A-Za-z]/g, '').split('');
@@ -605,9 +632,11 @@
             switch (type) {
                 case "sugars":
                 case "linkages":
+                case "structuralModifications":
                     //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
                     //if(true)return "test";
                     $scope.updateSiteList(obj);
+                    console.log(JSON.parse(JSON.stringify(obj)));
                     $scope.defaultSave(obj, form, path, list, objName);
                     break;
                 case "subunits":
@@ -1078,6 +1107,14 @@
                         }
                         
         };
+        $scope.setEditMixtureComponent = function(mix){
+                        if(mix){
+                                $scope.mcomponent=mix;
+                                $scope.mcomponent._editType="edit";
+                        }else{
+                                $scope.mcomponent=null;
+                        }
+        };
         $scope.setEditMonomer = function(mon){
                         if(mon){
                                 $scope.component=mon;
@@ -1097,16 +1134,26 @@
                         
         };
         
+        $scope.validateSites = function(dispSites, link){
+                var subunits=[];
+                if($scope.substance.substanceClass=== "protein"){
+                        subunits=$scope.substance.protein.subunits;
+                }else if($scope.substance.substanceClass=== "nucleicAcid"){
+                        subunits=$scope.substance.nucleicAcid.subunits;
+                }
+                return $scope.checkSites(dispSites,subunits, link);        
+        };
+        
         $scope.checkSites = function(dispSites, subunits, link) {
                 try{
 
                         var sites=$scope.siteDisplayListToSiteList(dispSites);
-                        var dsites;
+                        var dsites=[];
                         
-                        if(!link.linkage){
-                                dsites=$scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link),sites);
-                        }else{
+                        if(link.linkage){
                                 dsites=$scope.getSiteDuplicates($scope.getAllLinkageSitesExcept(link),sites);
+                        }else if(link.sugar){
+                                dsites=$scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link),sites);
                         }
                         if(dsites.length>0){
                                 throw "Site(s) " + $scope.sitesToDislaySites(dsites) + " already specified!";
@@ -1131,15 +1178,51 @@
                 }
         };
         
-        $scope.updateSiteList = function(obj) {
+        
+        $scope.updateSiteList = function(obj, sitelist) {
+                if(!sitelist){
+                        if(!obj.sites){
+                                obj.sites=[];
+                        }
+                        sitelist=obj.sites;                        
+                }
+                sitelist.length=0;
+
                 try{
-                        obj.sites=$scope.siteDisplayListToSiteList(obj.displaySites);
-                        obj.displaySites = $scope.sitesToDislaySites(obj.sites);
-                        obj.sites=$scope.siteDisplayListToSiteList(obj.displaySites);
+                        $scope.replaceArray(sitelist,$scope.siteDisplayListToSiteList(obj._displaySites));
+                        obj._displaySites = $scope.sitesToDislaySites(sitelist);
+                        $scope.replaceArray(sitelist,$scope.siteDisplayListToSiteList(obj._displaySites));
+                        obj._uniqueResidues=[];
+                        obj._residueCounts={};
+                        for(var i in sitelist){
+                        
+                                console.log("Site:"+ i);
+                                var r = $scope.getResidueAtSite(sitelist[i]);
+                                console.log("Site:"+ r);
+                                if(!obj._residueCounts[r])
+                                        obj._residueCounts[r]=0;
+                                obj._residueCounts[r]++;                                        
+                        }
+                        for(var k in obj._residueCounts){
+                                if(obj._residueCounts.hasOwnProperty(k)){
+                                        obj._uniqueResidues.push(k);
+                                }
+                        }
                 }catch(e){
                         return e;
                 }
                 
+        };
+        $scope.pushArrayIntoArray= function(dest,src){
+                for(var i in src){
+                        dest.push(src[i]);
+                }
+                return dest;
+        };
+        $scope.replaceArray= function(dest,src){
+                dest.length=0;
+                $scope.pushArrayIntoArray(dest,src);
+                return dest;
         };
 
         $scope.submitpaster = function (input) {
@@ -1208,6 +1291,23 @@
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
             s4() + '-' + s4() + s4() + s4();
     };
+     ginasApp.directive('loading', function ($http) {
+        return {
+            template: "<div class=\"sk-folding-cube\">\n" + 
+            "  <div class=\"sk-cube1 sk-cube\"></div>\n" + 
+            "  <div class=\"sk-cube2 sk-cube\"></div>\n" + 
+            "  <div class=\"sk-cube4 sk-cube\"></div>\n" + 
+            "  <div class=\"sk-cube3 sk-cube\"></div>\n" + 
+            "</div>"
+        };
+    });
+    
+    ginasApp.directive('structuralModification', function () {
+        return {
+            templateUrl: baseurl + "assets/ginas/templates/structuralmodification.html"
+        };
+    });
+    
 
 //sugarSites
     ginasApp.directive('naSites', function() {
@@ -1216,10 +1316,21 @@
             link: function(scope, ele, attrs, c) {
               scope.$watch(attrs.ngModel, function() {
                 if(attrs.naSites.length<2)return;
+                
+                
                 var repObj = JSON.parse(attrs.naSites);
-                
-                
-                var ret = scope.checkSites(c.$modelValue,scope.substance.nucleicAcid.subunits,repObj);
+                var subunits=[];
+                if(scope.substance.nucleicAcid){
+                        subunits=scope.substance.nucleicAcid.subunits;
+                }else if(scope.substance.protein){
+                        subunits=scope.substance.protein.subunits;
+                }else{
+                        return;
+                }
+                if(!c.$modelValue)
+                        return;
+        
+                var ret = scope.checkSites(c.$modelValue,subunits,repObj);
                 
                 if(ret){
                         c.$setValidity('siteInvalid', false);                        
@@ -1513,6 +1624,70 @@
             template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>'
         };
     });
+    ginasApp.directive('substanceChooser', function ($modal) {
+        return {
+            restrict: 'E',
+            require: "ngModel",
+            scope: {
+                mymodel: '=ngModel'
+            },
+            templateUrl: baseurl + "assets/ginas/templates/substanceSelectorElement.html",
+            link: function (scope) {
+                console.log(scope);
+                scope.openSelector = function (parentRef, instanceName,test) {
+                    //console.log(test);
+                    var modalInstance = $modal.open({
+                        animation: true,
+                        templateUrl: baseurl + 'assets/ginas/templates/substanceSelector.html',
+                        controller: 'SubstanceSelectorInstanceController',
+                        size: 'lg'
+
+                    });
+
+                    modalInstance.result.then(function (selectedItem) {
+                        
+                        //if(!parentRef[instanceName])parentRef[instanceName]={};
+                        var oref={};
+                        oref.refuuid = selectedItem.uuid;
+                        oref.refPname = selectedItem.name;
+                        oref.approvalID = selectedItem.approvalID;
+                        oref.substanceClass = "reference";
+                        scope.mymodel=oref;
+                        //_.set($scope, path, subref);
+                    });
+                };
+            }
+        };
+    });
+    
+     ginasApp.directive('siteSelector', function () {
+        return {
+            restrict: 'E',
+            scope:{
+                siteContainer:'=ngModel',
+                siteList:'='
+            },
+            templateUrl: baseurl + "assets/ginas/templates/siteSelector.html",
+            link: function (scope, element, attrs, parentCtrl) {
+                scope.validateSites=scope.$parent.validateSites;
+                scope.updateSiteList=scope.$parent.updateSiteList;
+                scope.$watch(
+                    function watchSelected() {
+                         return scope.siteContainer; 
+                    },
+                    function updateSelected(value) {
+                        if(value){
+                                if(!scope.siteList){
+                                        scope.siteList=scope.siteContainer.sites;
+                                }
+                                //console.log(scope.siteList);
+                        }
+                    }
+                );
+            }
+        };
+    });
+
 
     //Ok, this needs to be re-evaluated a bit.
     //Right now, it always round trips, but that doesn't always make sense.
@@ -1527,7 +1702,7 @@
             link: function (scope, element, attrs, ngModelCtrl) {
 
                 sketcher = new JSDraw("sketcherForm");
-                var url = window.strucUrl; //baseurl + 'smiles';
+                var url = window.strucUrl;
                 var structureid = (localStorageService.get('structureid') || false);
                 if (localStorageService.get('editID'))
                     structureid = false;
@@ -1581,7 +1756,6 @@
                     return scope.formsubstance.structure.molfile;
 
                 }, function (value) {
-                    //console.log("I SEE A CHANGE!");
                     if (lastmol !== value) {
 
                         ignorechange = true;
@@ -1842,15 +2016,14 @@
 
         //$scope.items = items;
         $scope.results = {};
-        $scope.selected = {};
+        $scope.selected = null;
+        $scope.searching = false;
 
-        $scope.top = 4;
+        $scope.top = 8;
         $scope.testb = 0;
 
         $scope.select = function (item) {
-            var subref = {};
-
-            //console.log(item);
+            $scope.selected=item;
             $modalInstance.close(item);
         };
 
@@ -1869,16 +2042,18 @@
             var responsePromise = $http.get(url);
 
             responsePromise.success(function (data, status, headers, config) {
-                //console.log(data);
+                console.log(data);
+                $scope.searching=false;
                 $scope.results = data;
             });
 
             responsePromise.error(function (data, status, headers, config) {
-                //alert("AJAX failed!");
+                $scope.searching=false;
             });
         };
 
         $scope.search = function () {
+            $scope.searching=true;
             $scope.fetch($scope.term, 0);
         };
 
@@ -1894,33 +2069,4 @@
     });
 })();
 window.SDFFields = {};
-
-
-function getDisplayFromCV(domain, value) {
-    for (var i in window.CV_REQUEST.content) {
-        if (window.CV_REQUEST.content[i].domain === domain) {
-            var terms = window.CV_REQUEST.content[i].terms;
-            for (var t in terms) {
-                if (terms[t].value === value) {
-                    return terms[t].display;
-                }
-            }
-        }
-    }
-    return value;
-}
-
-function vocabsetup(cv) {
-    window.CV_REQUEST = cv;
-    console.log("finished");
-}
-
-
-function submitq(qinput) {
-    if (qinput.value.indexOf("\"") < 0 && qinput.value.indexOf("*") < 0 && qinput.value.indexOf(":") < 0 && qinput.value.indexOf(" AND ") < 0 && qinput.value.indexOf(" OR ") < 0) {
-        qinput.value = "\"" + qinput.value + "\"";
-    }
-    return true;
-}
-
 

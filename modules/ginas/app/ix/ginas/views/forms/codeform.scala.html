@@ -32,10 +32,10 @@
                 <span href="#" editable-text="obj.code" blur="submit">{{obj.code}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj.system" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" blur="submit">{{obj.system.display}}</span>
+                <span href="#" editable-select="obj.system" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('CODE_SYSTEM') track by r.display" blur="submit">{{obj.system.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" blur="submit">{{obj.type.display}}</span>
+                <span href="#" editable-select="obj.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('CODE_TYPE') track by r.display" blur="submit">{{obj.type.display}}</span>
             </div>
             <div class="col-md-3">
                 <span href="#" editable-text="obj.description" blur="submit">{{obj.description}}</span>
@@ -54,11 +54,11 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.system" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_SYSTEM") track by r.display" required>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.system" ng-options="r.display for r in lookup.getList('CODE_SYSTEM') track by r.display" required>
                         </select>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in @GinasApp.getCV.getField("CODE_TYPE") track by r.display" required>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in lookup.getList('CODE_TYPE') track by r.display" required>
                         </select>
                 </div>
                 <div class="col-md-3">

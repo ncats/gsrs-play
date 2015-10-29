@@ -38,7 +38,7 @@
             <div class="col-md-12">
                  <div class="pull-right">
                     <button  ng-hide="sunit._editType=='edit'" ng-click="setEditSubunit(sunit)">Edit</button>
-                    <button  ng-show="sunit._editType=='edit'" ng-click="validate(sunit, 'subunitForm', '@{parent}.subunits', true); setEditSubunit(null);">Update</button>
+                    <button  ng-show="sunit._editType=='edit'" ng-click="validate('subunit', 'subunitForm', '@{parent}.subunits', true); setEditSubunit(null);">Update</button>
                     <button  ng-hide="sunit._editType=='edit'" ng-click="removeItem(substance.@{parent}.subunits, sunit)">Remove</button>
                  </div>
             </div>

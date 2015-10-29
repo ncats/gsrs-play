@@ -24,44 +24,45 @@
         <div class = "row">
             <hr>
             <div class = "col-md-2">
-                <span href="#" editable-select="substance.nucleicAcid.nucleicAcidType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_TYPE") track by r.display" blur="submit">{{substance.nucleicAcid.nucleicAcidType.display}}</span>
+                <span href="#" editable-select="substance.nucleicAcid.nucleicAcidType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_TYPE') track by r.display" blur="submit">{{substance.nucleicAcid.nucleicAcidType.display}}</span>
             </div>
             <div class = "col-md-4">
-                <span href="#" editable-select="substance.nucleicAcid.nucleicAcidSubType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SUBTYPE") track by r.display" blur="submit">{{substance.nucleicAcid.nucleicAcidSubType.display}}</span>
+                <span href="#" editable-select="substance.nucleicAcid.nucleicAcidSubType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_SUBTYPE') track by r.display" blur="submit">{{substance.nucleicAcid.nucleicAcidSubType.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="substance.nucleicAcid.sequenceOrigin" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SEQUENCE_ORIGIN") track by r.display" blur="submit">{{substance.nucleicAcid.sequenceOrigin.display}}</span>
+                <span href="#" editable-select="substance.nucleicAcid.sequenceOrigin" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_SEQUENCE_ORIGIN') track by r.display" blur="submit">{{substance.nucleicAcid.sequenceOrigin.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="substance.nucleicAcid.sequenceType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" blur="submit">{{substance.nucleicAcid.sequenceType.display}}</span>
+                <span href="#" editable-select="substance.nucleicAcid.sequenceType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SEQUENCE_TYPE') track by r.display" blur="submit">{{substance.nucleicAcid.sequenceType.display}}</span>
             </div>
         </div>
 
         <form class="form-horizontal" name="detForm" id = "add-ref" role="form" novalidate>
-            <div class="row form-row" ng-show="!detailsSet">
+            <div ng-show="!detForm.$submitted">
+            <div class="row form-row">
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Nucleic Acid Type" id="type" name = "type" ng-model = "nucleicAcid.nucleicAcidType" ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_TYPE") track by r.display" required>
+                    <select class="form-control" title="Nucleic Acid Type" id="type" name = "type" ng-model = "nucleicAcid.nucleicAcidType" ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="editDetForm.nucleicAcidType.$error" ng-if="editDetForm.nucleicAcidType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-4 err-check" show-errors>
-                    <select class="form-control" title="Nucleic Acid Subtype" id="nucleicAcidSubType" name = "nucleicAcidSubType" ng-model = "nucleicAcid.nucleicAcidSubType" ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SUBTYPE") track by r.display" required>
+                    <select class="form-control" title="Nucleic Acid Subtype" id="nucleicAcidSubType" name = "nucleicAcidSubType" ng-model = "nucleicAcid.nucleicAcidSubType" ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_SUBTYPE') track by r.display" required>
                         </select>
                     <ng-messages for="detForm.nucleicAcidSubType.$error" ng-if="detForm.nucleicAcidSubType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Sequence Origin" id="sequenceOrigin" name = "sequenceOrigin" ng-model = "nucleicAcid.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_SEQUENCE_ORIGIN") track by r.display" required>
+                    <select class="form-control" title="Sequence Origin" id="sequenceOrigin" name = "sequenceOrigin" ng-model = "nucleicAcid.sequenceOrigin" ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_SEQUENCE_ORIGIN') track by r.display" required>
                         </select>
                     <ng-messages for="detForm.sequenceOrigin.$error" ng-if="detForm.sequenceOrigin.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Sequence Type" id="sequenceType" name = "sequenceType" ng-model = "nucleicAcid.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
+                    <select class="form-control" title="Sequence Type" id="sequenceType" name = "sequenceType" ng-model = "nucleicAcid.sequenceType" ng-options="r.display for r in lookup.getList('SEQUENCE_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="detForm.sequenceType.$error" ng-if="detForm.sequenceType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
@@ -70,6 +71,7 @@
                 @referenceselectorform("detForm", "nucleicAcid")
             </div>
             @submitbuttons("nucleicAcid", "detForm", "nucleicAcid", false)
+            </div>
         </form>
     </div>
 </div>

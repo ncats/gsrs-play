@@ -25,7 +25,7 @@
                            <span href="#" ng-model ="component.label" editable-text="component.label" >{{component.label}}</span>
                         </div>
                         <div class = "col-md-2">
-                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SRU_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
+                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('POLYMER_SRU_TYPE') track by r.display" blur="submit">{{component.type.display}}</span>
                         </div>
                         <div class="col-md-2">
                             TO BE AMOUNT
@@ -55,7 +55,7 @@
                     <rendered id = srucomponent._structure.id></rendered>
                 </div>
                 <div class="col-md-6 err-check" show-errors>
-                    <select class="form-control" title="SRU Type" id="type" name = "type" ng-model = "srucomponent.type" ng-options="r.display for r in @GinasApp.getCV.getField("POLYMER_SRU_TYPE") track by r.display" required>
+                    <select class="form-control" title="SRU Type" id="type" name = "type" ng-model = "srucomponent.type" ng-options="r.display for r in lookup.getList('POLYMER_SRU_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="sruForm.type.$error" ng-if="sruForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

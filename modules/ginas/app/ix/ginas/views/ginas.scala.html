@@ -141,13 +141,8 @@
     </div>
 
     <script>
-  $(document).ready(function(){
-	  //Hide protein count numbers
-	  var smilesUrl = '@ix.ncats.controllers.routes.App.smiles';
-	  var strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
-
-
-
+    window.strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
+  $(document).ready(function(){ 
 	  //activate tooltips for proteins
 		  $('[data-toggle="tooltip"]').tooltip();
 		  $('[data-toggle="popover"]').popover();
@@ -155,7 +150,6 @@
   $('body').scrollspy({
     offset: 275
   });
-//window.FileContentsGrabber.getFileContents(function(a){$('#json-sequence').append(a);})
 </script>
 
 

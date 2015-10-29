@@ -1,0 +1,10 @@
+#
+# Marvin resources
+#
+GET	/marvin	ix.ncats.controllers.marvin.Marvin.sketcher
+POST	/smiles	ix.ncats.controllers.marvin.Marvin.smiles
+
+# mol conversion based on the chemaxon's convention
+POST	/molconvert	ix.ncats.controllers.marvin.Marvin.molconvert
+
+->	/	ix.ncats.Routes

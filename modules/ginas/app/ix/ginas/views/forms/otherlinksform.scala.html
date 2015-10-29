@@ -45,7 +45,7 @@
         <span href="#" editable-select="obj.sites[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[1].residueIndex}}</span>
       </div>
         <div class = "col-md-2">
-            <span href="#" editable-select="obj.linkageType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("OTHER_LINKAGE_TYPE") track by r.display" blur="submit">{{obj.linkageType.display}}</span>
+            <span href="#" editable-select="obj.linkageType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('OTHER_LINKAGE_TYPE') track by r.display" blur="submit">{{obj.linkageType.display}}</span>
         </div>
     </div>
 
@@ -55,7 +55,7 @@
         @selectors.siteselector("otherForm", "substance.protein", 2)
 
           <div class="col-md-2 err-check" show-errors>
-              <select class="form-control" title="Linkage Type" id="linkType" name = "linkType" ng-model = "site.linkageType" ng-options="r.display for r in @GinasApp.getCV.getField("OTHER_LINKAGE_TYPE") track by r.display" required>
+              <select class="form-control" title="Linkage Type" id="linkType" name = "linkType" ng-model = "site.linkageType" ng-options="r.display for r in lookup.getList('OTHER_LINKAGE_TYPE') track by r.display" required>
                         </select>
               <ng-messages for="otherForm.linkageType.$error" ng-if="otherForm.linkageType.$touched">
                   <ng-message when="required" class="help-block">*required</ng-message>

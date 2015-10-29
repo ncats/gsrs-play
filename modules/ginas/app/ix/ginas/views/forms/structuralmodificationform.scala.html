@@ -1,5 +1,4 @@
 @import ix.ginas.controllers.GinasApp;
-
 <div class = "row info" >
     <button class="btn btn-primary label-offset det">
                         Structural Modifications&nbsp;<span class="badge" ng-show="substance.protein.modifications.structuralModifications.length>0">
@@ -10,24 +9,16 @@
                 <strong>Type</strong>
             </div>
             <div class = "col-md-2">
+                <strong>Modified Substance</strong>
+            </div>
+            <div class = "col-md-2">
                 <strong>Location Type</strong>
             </div>
             <div class = "col-md-2">
-                <strong>Residue Modified</strong>
+                <strong>Sites</strong>
             </div>
-            <div class = "col-md-1">
-                <strong>Subunit Index</strong>
-            </div>
-            <div class = "col-md-1">
-                <strong>Residue Index</strong>
-            </div>
-            <div class ="col-md-1">
-                </div>
-            <div class = "col-md-1">
-                <strong>Ending Subunit Index</strong>
-            </div>
-            <div class = "col-md-1">
-                <strong>Ending Residue Index</strong>
+            <div class = "col-md-2">
+                <strong>Extent</strong>
             </div>
             <div class ="col-md-2">
                 <strong>Linkage Type</strong>
@@ -35,55 +26,51 @@
         </div>
 
         <div class = "row" ng-repeat="obj in substance.protein.modifications.structuralModifications">
+            
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.structuralModificationType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('STRUCTURAL_MODIFICATION_TYPE') track by r.display" blur="submit">{{obj.structuralModificationType.display}}</span>
+            </div>
+            <div class = "col-md-2">
+                <substance-chooser ng-model="obj.molecularFragment"></substance-chooser>
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.locationType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('LOCATION_TYPE') track by r.display" blur="submit">{{obj.locationType.display}}</span>
+            </div>
+            <div class="col-md-2">
+                <site-selector ng-model="obj"></site-selector>                
+            </div>
+            <div class = "col-md-2">
+                <span href="#" editable-select="obj.extent" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('EXTENT_TYPE') track by r.display" blur="submit">{{obj.extent.display}}</span>
+            </div>    
             <hr>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj.sites[0].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[0].subunitIndex}}</span>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj.sites[0].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[0].residueIndex}}</span>
-            </div>
-            <div class ="col-md-1">
-                <i class="fa fa-link fa-2x fa-rotate-90"></i>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj.sites[1].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[1].subunitIndex}}</span>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj.sites[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.sites[1].residueIndex}}</span>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj.linkageType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("OTHER_LINKAGE_TYPE") track by r.display" blur="submit">{{obj.linkageType.display}}</span>
-            </div>
-        </div>
-
-
+        </div>       
         <form class="form-horizontal" name="strucModForm" id = "add-code" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Structural Modification Type" id="structuralModificationType" name = "structuralModificationType" ng-model = "structuralModification.structuralModificationType" ng-options="r.display for r in @GinasApp.getCV.getField("STRUCTURAL_MODIFICATION_TYPE") track by r.display" required>
+                    <select class="form-control" title="Structural Modification Type" id="structuralModificationType" name = "structuralModificationType" ng-model = "structuralModification.structuralModificationType" ng-options="r.display for r in lookup.getList('STRUCTURAL_MODIFICATION_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="strucModForm.agentModificationRole.$error" ng-if="strucModForm.agentModificationRole.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Location Type" id="locationType" name = "locationType" ng-model = "structuralModification.locationType" ng-options="r.display for r in @GinasApp.getCV.getField("STRUCTURAL_MODIFICATION_TYPE") track by r.display" required>
-                        </select>
-                    <ng-messages for="strucModForm.agentModificationRole.$error" ng-if="strucModForm.agentModificationRole.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                @selectors.siteselector("strucModForm", "substance.protein", 1)
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Extent" id="extent" name = "extent" ng-model = "structuralModification.extent" ng-options="r.display for r in @GinasApp.getCV.getField("EXTENT_TYPE") track by r.display">
-                        </select>
-                    <ng-messages for="strucModForm.linkageType.$error" ng-if="strucModForm.linkageType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2">
-                @selectors.substanceselectorform("structuralModification.molecularFragment")
+                    <substance-chooser ng-model="structuralModification.molecularFragment"></substance-chooser>
                 </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Location Type" id="locationType" name = "locationType" ng-model = "structuralModification.locationType" ng-options="r.display for r in lookup.getList('LOCATION_TYPE') track by r.display" required>
+                        </select>
+                    <ng-messages for="strucModForm.agentModificationRole.$error" ng-if="strucModForm.agentModificationRole.$touched">
+                        <ng-message when="required" class="help-block">*required</ng-message>
+                    </ng-messages>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control" ng-model ="structuralModification._displaySites" title="Modification Sites" id="modsites" name = "modsites" na-sites={{structuralModification}} />
+                    <small class="error" ng-show="strucModForm.modsites.$error.siteInvalid">{{strucModForm.modsites.$errorMsg.naSites}}</small>
+                </div>
+                <div class="col-md-2 err-check" show-errors>
+                    <select class="form-control" title="Extent" id="extent" name = "extent" ng-model = "structuralModification.extent" ng-options="r.display for r in lookup.getList('EXTENT_TYPE') track by r.display">
+                    </select>
+                </div>                
                 @selectors.amountselectorform("structuralModification.extentAmount")
             </div>
             @amountform("structuralModification.extentAmount")

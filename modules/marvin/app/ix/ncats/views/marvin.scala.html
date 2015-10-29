@@ -4,9 +4,9 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Marvin JS</title>
-  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("javascripts/marvin/gui/css/editor.min.css")' media="screen" />
-  <script src='@routes.Assets.at("javascripts/marvin/gui/lib/es6-promise-2.0.1.min.js")'></script>
-  <script src='@routes.Assets.at("javascripts/marvin/gui/gui.nocache.js")'></script>
+  <link type="text/css" rel="stylesheet" href='@routes.Assets.at("marvin/gui/css/editor.min.css")' media="screen" />
+  <script src='@routes.Assets.at("marvin/gui/lib/es6-promise-2.0.1.min.js")'></script>
+  <script src='@routes.Assets.at("marvin/gui/gui.nocache.js")'></script>
   <script>
     window.addEventListener("message", function(event) {
 		try {
@@ -25,7 +25,7 @@
   	       marvin.Sketch.license('@routes.Assets.at("ncats/marvinjs-license.cxl")');
                marvin.sketcherInstance = new marvin.Sketch("sketch");
 	       marvin.sketcherInstance.setServices({
-	          "molconvertws": '@ix.ncats.controllers.routes.App.molconvert'
+	          "molconvertws": '@ix.ncats.controllers.marvin.routes.Marvin.molconvert'
                });
     
                top.sketcher = marvin.sketcherInstance;

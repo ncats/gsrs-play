@@ -7,6 +7,7 @@
 @import ix.core.models.Text
 @import ix.core.models.VInt
 @import ix.core.models.Publication
+@import ix.idg.controllers.ExpressionApp
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.IDGApp._
 @import ix.idg.controllers.Commons._
@@ -240,16 +241,12 @@
 @expression(name: String, skull: String) = {
    <div class="row">
       <div class="col-md-6">
-         @defining(IDGApp.getProperties(target, name, 0)){ props =>
+         @defining(ExpressionApp.getLinkedExpr(target, name)){ exprs =>
 	 <div class="panel-body">
-	    @for(p <- props) {
-	       @p match {
-	           case kw: Keyword => {
-		      @keyword(kw)
-		   }
-		   case _ => {
-		   }
-	       	}
+	    @for(expr <- exprs) {
+            @if(expr.sourceid.equals(name)) {
+                @facet(expr.sourceid.replaceAll("Expression", "Tissue"), expr.tissue)
+            }
 	    }
 	 </div>
 	 }
@@ -261,7 +258,7 @@
 }
 
 @ix.ncats.views.html.main(target.name){
-@targetmenu()
+@targetmenu(null)
 }{
 <ol class="breadcrumb">
   <li><a href="@ix.idg.controllers.routes.IDGApp.index()"><span class="fa fa-home"></span> Home</a></li>
@@ -312,7 +309,7 @@
       <div class="col-md-4">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Synonyms <i class="fa fa-external-link"></i> </h3>
+            <h3 class="panel-title">Synonym <i class="fa fa-external-link"></i> </h3>
           </div>
           <div class="panel-body">
             <table class="table">
@@ -370,7 +367,7 @@
 	      @if(!ligands.isEmpty()) {
 	         <div class="panel panel-default">
 		    <div class="panel-heading">
-		       <h3 class="panel-title">Ligands</h3>
+		       <h3 class="panel-title">Ligand</h3>
 		    </div>
 		    <div class="panel-body">
 		       <table>
@@ -429,11 +426,6 @@
 				     data-html="true"
 				     title="<p align='left'>Number of transmembrane helices according to Survey of the Human Transmembrane Proteome (https://modbase.compbio.ucsf.edu/projects/membrane/). At least 2 are required to be in their list.</p>">Transmembrane</span>
 				}
-				case "EBI Total Patent Count (Relevant)" => {
-   				  <span data-toggle="tooltip"
-				     data-html="true"
-				     title="<p align='left'>">Patent Count</span>
-				}
 				case _ => {
 				}
 			     }
@@ -446,15 +438,23 @@
 		      </tr>
 		   }
 		   <tr>
-		     <td>Grant Count</td>
+		     <td>
+				 <span data-toggle="tooltip"
+				 data-html="true"
+				 title="<p align='left'>Number of NIH funded grant applications for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurateGrant Count</p>">Grant Count</span>
+					 </td>
 		     <td>@target.grantCount</td>
 		   </tr>
 	           <tr>
-		     <td>R01 Count</td>
+		     <td><span data-toggle="tooltip"
+			 data-html="true"
+			 title="<p align='left'>Number of NIH funded R01 grants for 2010-2014 based on text mining of application titles and abstracts, due to nature of text mining results might be inaccurate</p>">R01 Count</span></td>
 		     <td>@target.r01Count</td>
 		   </tr>
 		   <tr>
-		     <td>Funding ($)</td>
+		     <td><span data-toggle="tooltip"
+			 data-html="true"
+			 title="<p align='left'>NIH funding (2010-2014) based on text mining of grant application titles and abstracts, due to nature of text mining results might be inaccurate</p>">Funding ($)</span></td>
 		     <td>@{"%.2f".format(target.grantTotalCost)}</td>
 		   </tr>
 	           </table>
@@ -480,29 +480,49 @@
 	@property(GO_FUNCTION)	
 	@property(GO_COMPONENT)
 	@property(GO_PROCESS)
-      </div>
-      <div class="col-md-4">
-        @**
-        <div class="panel panel-default">
+	@if(target.patentCount != null && target.patentCount > 0) {
+          <div class="panel panel-default">
 	    <div class="panel-heading">
-	      <h3 class="panel-title">Tissue Specificity Index</h3>
+	      <h3 class="panel-title">Patent (@target.patentCount)</h3>
 	    </div>
 	    <div class="panel-body">
 	      <div class="row">
 	        <div class="col-md-2"></div>
 		<div class="col-md-8">
-		   <div id="tissue-specificity-radar"></div>
+		   <div id="patent-line-plot" style="height:180px;"></div>
 		</div>
 		<div class="col-md-2"></div>
 	      </div>
 	    </div>
-	</div>
-	**@
+	  </div>
+	}
+       
+      </div>
+      <div class="col-md-4">
         @property(PANTHER_PROTEIN_CLASS, null, -1)
         @property(ChEMBL_PROTEIN_CLASS, null, -1)
 	@property(IMPC_TERM)
 	@property("Pathway", null, 1)
         @property(UNIPROT_KEYWORD)
+        <div class="panel panel-default">
+	    <div class="panel-heading">
+	      <h3 class="panel-title">Data Types</h3>
+	    </div>
+	    <div class="panel-body">
+	      <div class="row">
+	        <div class="col-md-2"></div>
+		<div class="col-md-8">
+		   <div id="attr-type-radar"></div>
+		</div>
+		<div class="col-md-2"></div>
+	      </div>
+	      <button type="button" class="btn btn-default"
+	              data-toggle="modal" data-target="#modal-radar"
+	              aria-label="Left Align" style="float:right;">
+	          <span class="fa fa-external-link" aria-hidden="true"></span>
+	      </button>
+	    </div>
+	</div>
        </div>
     </div> <!-- row -->
     <!--
@@ -523,7 +543,9 @@
       <div class="col-md-6">   
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Disease Relevance (@diseases.size())</h3>
+            <h3 class="panel-title"><span data-toggle="tooltip"
+			data-html="true"
+			title="<p align='left'>Disease-gene associations mined from Medline Franklid et al, Methods, 2015, 83-89</p>">Disease Relevance (@diseases.size())</h3>
           </div>
           <div class="panel-body">
                <table class="tree table">
@@ -589,8 +611,10 @@
 			      </div>
 			      <div class="col-md-2"></div>
 	      		 </div>
-	    	    	 <div class="panel-footer">
-	      		      Tissue Specificity Index
+	    	    	 <div class="panel-footer"><span data-toggle="tooltip"
+					 data-html="true"
+					 title="<p align='left'>Target tissue specificity, ranges from 0 (non-specific) - 1 specific to one tissue, calculated according to Yanai et al, Bioinformatics 2005, 650-659</p>">
+	      		      Tissue Specificity Index</span>
 	    		 </div>
 	            </div>
 		 </div>
@@ -599,23 +623,31 @@
 		 <div class="col-md-8">
 	              <ul class="nav nav-tabs">
 		        <li role="presentation" class="active"><a href="#idg-tab" aria-controls="idg" data-toggle="tab">IDG</a></li>
-		        <li role="presentation"><a href="#gtex-tab" role="tab" aria-controls="gtex" data-toggle="tab">GTEx</a></li>
-		        <li role="presentation"><a href="#hpm-tab" role="tab" data-toggle="tab">HPM</a></li>
-		        <li role="presentation"><a href="#hpa-tab" role="tab" data-toggle="tab">HPA</a></li>
+		        <li role="presentation"><a href="#gtex-tab" role="tab" aria-controls="gtex" data-toggle="tab">
+					<span data-toggle="tooltip"
+					data-html="true"
+					title="<p align='left'>Tissue expression data from The Genotype-Tissue Expression (GTEx) project</p>">GTEx</span></a></li>
+		        <li role="presentation"><a href="#hpm-tab" role="tab" data-toggle="tab">
+					<span data-toggle="tooltip"
+					data-html="true"
+					title="<p align='left'>Tissue expression data from The Human Proteome Map (HPM)</p>">HPM</span></a></li>
+		        <li role="presentation"><a href="#hpa-tab" role="tab" data-toggle="tab">
+					<span data-toggle="tooltip"
+					data-html="true"
+					title="<p align='left'>Tissue expression data from The Human Protein Atlas</p>">HPA</span></a></li>
 		      </ul>
-
 		   <div class="tab-content">
 		      <div role="tabpanel" class="tab-pane active" id="idg-tab">
-		        @expression(IDG_TISSUE, "idg")
+		        @expression(IDG_EXPR, "idg")
 		      </div>
 		      <div role="tabpanel" class="tab-pane" id="gtex-tab">
-		        @expression(GTEx_TISSUE, "gtex")
+		        @expression(GTEx_EXPR, "gtex")
 		      </div>
 		      <div role="tabpanel" class="tab-pane" id="hpm-tab">
-		        @expression(HPM_TISSUE, "hpm")
+		        @expression(HPM_EXPR, "hpm")
 		      </div>
 		      <div role="tabpanel" class="tab-pane" id="hpa-tab">
-		        @expression(HPA_RNA_TISSUE, "hpa")
+		        @expression(HPA_RNA_EXPR, "hpa")
 		      </div>
 		   </div>
 		 </div>
@@ -770,7 +802,9 @@
       <div class="col-md-12">
         <div class="panel panel-default">
           <div class="panel-heading">
-            <h3 class="panel-title">Gene RIF (@generifs.size)</h3>
+            <h3 class="panel-title"><span data-toggle="tooltip"
+			data-html="true"
+			title="<p align='left'>Number of GeneRIFs annotations from NCBI Gene</p>">Gene RIF (@generifs.size)</span></h3>
           </div>
           <div class="panel-body">
             <div class="panel-body">
@@ -819,7 +853,9 @@
 	   <div class="col-md-12">
               <div class="panel panel-default">
                  <div class="panel-heading">
-            	    <h3 class="panel-title">Publication <i class="fa fa-external-link"></i> (@pmids.size)</h3>
+                     @** Maybe we should link to http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=3750
+                     which requires us to get the Entrez ID for the gene **@
+            	    <h3 class="panel-title">Publication <a href="http://www.ncbi.nlm.nih.gov/pubmed?LinkName=gene_pubmed&from_uid=@for(kw <- target.synonyms) {@if("Entrez Gene".equals(kw.label)) {@kw.term}}"><i class="fa fa-external-link"></i></a> (@pmids.size)</h3>
 		 </div>
                  <div class="panel-body">
                     <div class="panel-body">
@@ -846,6 +882,8 @@
   </div>
 </div>
 
+@modalradar(null)
+
 <head>
     <style type="text/css">
     .axis path,
@@ -867,14 +905,16 @@
     .tick text {
     visibility:inherit;
     }
-
     </style>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/tinx.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/d3-tip.js")'></script>
     <script type="text/javascript" src='@routes.Assets.at("javascripts/radar-chart.js")'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("raphael-min.js"))'></script>
+    <script type="text/javascript" src='@routes.WebJarAssets.at(WebJarAssets.locate("morris.min.js"))'></script>    
     <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/d3-tip.css")' />
-    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />    
+    <link type="text/css" rel="stylesheet" href='@routes.Assets.at("stylesheets/radar-chart.css")' />
+    <link type="text/css" rel="stylesheet" href='@routes.WebJarAssets.at(WebJarAssets.locate("morris.css"))' />     
 </head>
 
 <script>
@@ -884,12 +924,13 @@ $(function () {
 });
 
 $(document).ready(function () {
-    console.log();
+
   $('.tree').treegrid({
-   expanderExpandedClass: 'fa fa-angle-down',
-   expanderCollapsedClass: 'fa fa-angle-right',
-   initialState: 'collapsed'
+     expanderExpandedClass: 'fa fa-angle-down',
+     expanderCollapsedClass: 'fa fa-angle-right',
+     initialState: 'collapsed'
   });
+
   $('#keyword').on('click touchstart', function () {
      showLoadModal();
   });
@@ -911,6 +952,102 @@ $(document).ready(function () {
       }
   });
 
+  $.ajax({
+     url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
+     dataType:"json",
+     success:function(data) {
+        var chart = RadarChart.chart();
+        chart.config({
+            w:150, h:150,
+                    axisText:false, levels:0, circles:false
+        });
+        var svg = d3.select("#attr-type-radar").append('svg' )
+           .attr("width", 150)
+           .attr("height", 150)
+           .append('g').classed('focus', 1).datum(data).call(chart);
+     }
+  });
+
+  $.ajax({
+      url: '@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,"radar-attr_type")&q=@IDGApp.getId(target)',
+      dataType:"json",
+      success:function(data) {
+          var chart = RadarChart.chart();
+          chart.config({
+              w:600, h:600,
+              axisText:true, levels:0, circles:true,
+              axisTextMouseOverFunc: showDataSources('#radar-ds-container', '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field=radar-attr_type')
+          });
+          var svg = d3.select("#modal-radardiv").append('svg' )
+                  .attr("width", 600 )
+                    .attr("height", 600)
+                    .append('g').classed('focus', 1).datum(data).call(chart);
+          $("#modalLabelRadar" ).html
+	     ('<h4><span class="label label-@target.idgTDL.label">@target.idgTDL</span> @target.getName</h4>');
+      }
+   });
+
+    function renderChart(chartData, aggType, target) {
+        var chart = RadarChart.chart();
+        chart.config({
+            w:600, h:600,
+            axisText:true, levels:0, circles:true,
+            axisTextMouseOverFunc: showDataSources('#radar-ds-container',
+                '@ix.idg.controllers.routes.HarmonogramApp.dataSources(null,null)'+'?field='+aggType)
+        });
+        $("#modal-radardiv" ).empty();
+        $("#radar-ds-container" ).empty();
+        var svg = d3.select("#modal-radardiv").append('svg' )
+            .attr("width", 600 )
+            .attr("height", 600)
+            .append('g').classed('focus', 1).datum(chartData).call(chart);
+        $("#modal-radar" ).modal("show");
+    }
+
+    $("#select-agg" ).on('change', function() {
+        var aggType = $(this ).val();
+        var target = '@IDGApp.getId(target)';
+        var overlay = $("#select-overlay" ).val();
+        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
+        var pud;
+        if (overlay == 'none')
+            pud = $.Deferred().resolve().promise();
+        else
+            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
+        $.when(ptd, pud).then(function(atd, aud) {
+            var chartData = atd[0];
+            if (overlay != 'none')
+                chartData.push(aud[0][0]);
+            renderChart(chartData, aggType, target);
+        });
+    });
+    $("#select-overlay" ).on('change', function() {
+        var aggType = $("#select-agg"   ).val();
+        var target = '@IDGApp.getId(target)';
+        var overlay = $(this).val();
+        var ptd = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+target+'&type='+aggType);
+        var pud;
+        if (overlay == 'none')
+            pud = $.Deferred().resolve().promise();
+        else
+            pud = $.get('@ix.idg.controllers.routes.HarmonogramApp.hgForTarget(null,null,null,null)'+'?q='+overlay+'&type='+aggType);
+        $.when(ptd, pud).then(function(atd, aud) {
+            var chartData = atd[0];
+            if (overlay != 'none')
+                chartData.push(aud[0][0]);
+            renderChart(chartData, aggType, target);
+        });
+    });
+
+
+
+   new Morris.Line({
+      element: 'patent-line-plot',
+      data: @HtmlFormat.raw(IDGApp.getPatents(target).toString),
+      xkey: 'year',
+      ykeys: ['count'],
+      labels: ['Count']
+   });
   tinx_target_plot("#tinx-plot", "@IDGApp.getId(target)");
 });
 
