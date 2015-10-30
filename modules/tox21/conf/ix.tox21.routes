@@ -7,8 +7,10 @@ GET	/search	ix.tox21.controllers.Tox21App.search(q: String ?= null, rows: Int?= 
 GET	/samples	ix.tox21.controllers.Tox21App.samples(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/assays	ix.tox21.controllers.Tox21App.assays(q: String ?= null, rows: Int ?= 10, page: Int ?= 1)
 GET	/samples/:id	ix.tox21.controllers.Tox21App.sample(id: String)
+GET	/QC/:id		ix.tox21.controllers.Tox21App.qc(id: String)
 # render a given Sample
-GET	/render/:id	ix.tox21.controllers.Tox21App.render(id: Long, size: Int ?= 150)
+GET	/struc/:id	ix.tox21.controllers.Tox21App.render(id: String, ctx: String ?= null, size: Int ?= 150)
+GET	/spectra/:id	ix.tox21.controllers.Tox21App.getSpectra(id: String, t: Int)
 #
 # building database
 #

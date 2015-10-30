@@ -930,11 +930,13 @@ public class App extends Authentication {
         }
     }
 
-     public static byte[] render (Molecule mol, String format, int size, int[] amap) throws Exception{
+    public static byte[] render (Molecule mol, String format,
+                                 int size, int[] amap) throws Exception{
         return render(mol,format,size,amap,null);
-         }
+    }
 
-     public static byte[] render (Molecule mol, String format, int size, int[] amap, Map newDisplay)
+    public static byte[] render (Molecule mol, String format,
+                                 int size, int[] amap, Map newDisplay)
         throws Exception {
         Chemical chem = new Jchemical (mol);
         DisplayParams dp = DisplayParams.DEFAULT();

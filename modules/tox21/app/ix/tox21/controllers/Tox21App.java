@@ -36,8 +36,11 @@ import static tripod.chem.indexer.StructureIndexer.ResultEnumeration;
 import ix.tox21.models.*;
 import ix.qhts.models.Sample;
 import ix.qhts.models.Assay;
+
 import chemaxon.formats.MolImporter;
 import chemaxon.struc.Molecule;
+import chemaxon.struc.MolAtom;
+import chemaxon.util.MolHandler;
 
 public class Tox21App extends App {
     static final int ROWS_PER_PAGE = 10;
@@ -60,7 +63,25 @@ public class Tox21App extends App {
             throws Exception {
             List<QCSample> samples = Tox21Factory.finder
                 .where().eq("structure.id", r.getId()).findList();
-            return samples.isEmpty() ? null : samples.iterator().next();
+
+            if (!samples.isEmpty()) {
+                int[] amap = new int[r.getMol().getAtomCount()];
+                int i = 0, nmaps = 0;
+                for (MolAtom ma : r.getMol().getAtomArray()) {
+                    amap[i] = ma.getAtomMap();
+                    if (amap[i] > 0)
+                        ++nmaps;
+                    ++i;
+                }
+                
+                if (nmaps > 0) {
+                    IxCache.set("AtomMaps/"+getContext().getId()+"/"
+                                +r.getId(), amap);
+                }
+                return samples.iterator().next();
+            }
+            
+            return null;
         }
     }
     
@@ -97,8 +118,10 @@ public class Tox21App extends App {
     }
         
     static final String[] QC_FACETS = new String[] {
-        "QC Grade",
-        "Sample",
+        "QC Grade T0",
+        "QC Grade T4",  
+        "Molecular Weight",
+        "Molecular Formula",    
         "Defined Stereocenters"
     };
 
@@ -159,11 +182,11 @@ public class Tox21App extends App {
     static FacetDecorator[] decorate (Facet... facets) {
         FacetDecorator[] decors = new FacetDecorator[facets.length];
         for (int i = 0; i < facets.length; ++i) {
-            if (QC_FACETS[0].equals(facets[i].getName())) {
+            if (facets[i].getName().startsWith("QC")) {
                 // use special decorator
                 decors[i] = new Tox21GradeFacetDecorator (facets[i]);
             }
-            else if (QC_FACETS[1].equals(facets[i].getName())) {
+            else if (facets[i].getName().equals("Sample")) {
                 decors[i] = new Tox21FacetDecorator (facets[i]);
             }
             else if ("Defined Stereocenters".equals(facets[i].getName())) {
@@ -245,7 +268,7 @@ public class Tox21App extends App {
             ("select * from ncgc_sample where sample_id = ?");
         try {
             int count = 0;
-            for (Molecule m = new Molecule (); mi.read(m); ) {
+            for (Molecule m; (m = mi.read()) != null; ) {
                 String id = m.getProperty("ncgc_id");
                 if (id == null) {
                     id = m.getProperty("PUBCHEM_EXT_DATASOURCE_REGID");
@@ -256,7 +279,7 @@ public class Tox21App extends App {
                 }
                 else {
                     pstm.setString(1, id);
-                    if (load (payload.name, pstm.executeQuery()) > 0) {
+                    if (load (payload.name, m, pstm.executeQuery()) > 0) {
                         ++count;
                     }
                 }
@@ -304,15 +327,19 @@ public class Tox21App extends App {
     }
 
     static int load (String source, ResultSet rset) throws SQLException {
+        return load (source, null, rset);
+    }
+    
+    static int load (String source, Molecule struc, ResultSet rset)
+        throws SQLException {
         int count = 0;
         while (rset.next()) {
             String name = rset.getString("sample_name");
             String ncgc = rset.getString("sample_id");
             String cas = rset.getString("cas");
             String sid = rset.getString("tox21_sid");
-            String smiles = rset.getString("smiles_iso");
-            String struc = rset.getString("structure");
-            String grade = rset.getString("tox21_t0");
+            String gradeT0 = rset.getString("tox21_t0");
+            String gradeT4 = rset.getString("tox21_t4");
             String toxid = rset.getString("tox21_id");
             String inchi = rset.getString("inchi_hash");
             
@@ -327,29 +354,62 @@ public class Tox21App extends App {
             if (inchi != null && (smiles != null || struc != null))
                 qc.synonyms.add(new Keyword (Sample.S_InChIKey, inchi));
             */
-            
-            if (smiles != null)
+
+            if (struc != null) {
                 qc.properties.add
-                    (new Text (Sample.P_SMILES_ISO, smiles));
-            
-            if (struc != null)
-                qc.properties.add(new Text (Sample.P_MOLFILE, struc));
+                    (new Text (Sample.P_MOLFILE, struc.toFormat("mol")));
+                qc.properties.add
+                    (new Text (Sample.P_SMILES_ISO,
+                               struc.toFormat("smiles:-a")));
+            }
+            else {
+                String mol = rset.getString("structure");
+                if (mol != null) {
+                    qc.properties.add(new Text (Sample.P_MOLFILE, mol));
+                    try {
+                        struc = new MolHandler (mol).getMolecule();
+                    }
+                    catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                
+                String smiles = rset.getString("smiles_iso");
+                if (smiles != null) {
+                    qc.properties.add
+                        (new Text (Sample.P_SMILES_ISO, smiles));
+                    if (mol == null) {
+                        try {
+                            struc = new MolHandler (smiles).getMolecule();
+                        }
+                        catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            }
 
             try {
-                if (grade != null) {
-                    qc.grade = QCSample.Grade.valueOf
-                        (QCSample.Grade.class, grade);
+                if (gradeT0 != null) {
+                    qc.gradeT0 = QCSample.Grade.valueOf
+                        (QCSample.Grade.class, gradeT0);
                 }
                 else {
-                    qc.grade = QCSample.Grade.ND;
+                    qc.gradeT0 = QCSample.Grade.ND;
+                }
+
+                if (gradeT4 != null) {
+                    qc.gradeT4 = QCSample.Grade.valueOf
+                        (QCSample.Grade.class, gradeT4);
+                }
+                else {
+                    qc.gradeT4 = QCSample.Grade.ND;
                 }
 
                 StructureReceiver receiver =
                     new Tox21StructureReceiver (source, qc);
                 if (struc != null)
                     Processor.submit(struc, receiver);
-                else if (smiles != null)
-                    Processor.submit(smiles, receiver);
                 else {
                     qc.save();
                 }
@@ -493,6 +553,10 @@ public class Tox21App extends App {
         }
     }
 
+    public static Result qc (final String id) {
+        return redirect (routes.Tox21App.sample(id));
+    }
+
     public static Result search (String q, int rows, int page) {
         String type = request().getQueryString("type");
         if (q.equals("")) {
@@ -525,31 +589,51 @@ public class Tox21App extends App {
         return samples (q, rows, page);
     }
 
-    protected static Result _render (Long id, final int size) throws Exception {
-        Sample sample = Tox21Factory.getSample(id);
+    protected static Result _render (Sample sample, final String ctx,
+                                     final int size) throws Exception {
         Result r = null;
         if (sample != null) {
-            r = structure (sample.structure.getId(), "svg", size, "");
+            MolHandler mh = new MolHandler (sample.structure.molfile);
+            int[] amap = null;
+            if (ctx != null) {
+                amap = (int[])IxCache.get("AtomMaps/"
+                                          +ctx+"/"+sample.structure.id);
+            }
+            r = ok (App.render(mh.getMolecule(), "svg", size, amap));
         }
         return r;
     }
     
-    public static Result render (final Long id, final int size) {
-        //Logger.debug("render "+id+"."+size);
+    public static Result render (final String id,
+                                 final String ctx, final int size) {
+        Logger.debug("render "+id+" ctx="+ctx+" size="+size);
         try {
-            String key = "render::sample::"+id+"::"+size;
-            Result result = getOrElse
-                (key, new Callable<Result>() {
-                        public Result call () throws Exception {
-                            return _render (id, size);
-                        }
-                    });
-            if (result == null) {
-                // don't cache this..
-                IxCache.remove(key);
+            final Sample sample =
+                getOrElse ("samples::"+id, new Callable<Sample>() {
+                    public Sample call () throws Exception {
+                        List<QCSample> samples = Tox21Factory
+                        .finder.where().eq("synonyms.term", id).findList();
+                        return samples.isEmpty()
+                        ? null : samples.iterator().next();
+                    }
+                });
+            if (sample != null) {
+                String key = "render::sample::"+sample.id+"::"+size;
+                Result result = getOrElse
+                    (key, new Callable<Result>() {
+                            public Result call () throws Exception {
+                                return _render (sample, ctx, size);
+                            }
+                        });
+                if (result == null) {
+                    // don't cache this..
+                    IxCache.remove(key);
+                }
+                response().setContentType("image/svg+xml");
+                return result;
             }
-            response().setContentType("image/svg+xml");
-            return result;
+            
+            return notFound (new byte[0]);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -615,5 +699,59 @@ public class Tox21App extends App {
         return internalServerError
             (ix.tox21.views.html.error.render
              (500, "Unable to perform substructure search: "+query));
+    }
+
+    static final String[] PDF_SUFFIXES = {
+        "LCMS.pdf",
+        "LCMS1.pdf",
+        "LCMS3.pdf",
+        "GCMS1.pdf"
+    };
+    static String PDF_ROOT =
+        Play.application().configuration().getString("tox21.pdf");
+    public static Result getSpectra (final String id, final int t) {
+        try {
+            File file = getSpectraFile (id, t);
+            if (file != null) {
+                return ok (file);
+            }
+            
+            return notFound (ix.tox21.views.html.error.render
+                             (400, "No spectra for sample "+id));
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
+    }
+
+    public static boolean hasSpectra (final String id, final int t) {
+        return null != getSpectraFile (id, t);
+    }
+
+    public static File getSpectraFile (final String id, final int t) {
+        try {
+            final String key = "file::"+id+"::"+t;
+            return getOrElse (key, new Callable<File> () {
+                    public File call () throws Exception {
+                        for (String s : PDF_SUFFIXES) {
+                            File file = new File (PDF_ROOT, String.format
+                                                  ("%1$s_0%2$d_%3$s",
+                                                   id, t, s));
+                            if (file.exists())
+                                return file;
+                        }
+                        return null;
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String getId (Sample sample) {
+        return sample.getSynonym(Sample.S_TOX21).term;
     }
 }
