@@ -24,18 +24,18 @@
             </div>
         </div>
         <div class = "row">
-            <hr>
+           
             <div class = "col-md-2">
-                <span href="#" editable-select="substance.protein.proteinType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" blur="submit">{{substance.protein.proteinType.display}}</span>
+                <span href="#" editable-select="substance.protein.proteinType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('PROTEIN_TYPE') track by r.display" blur="submit">{{substance.protein.proteinType.display}}</span>
             </div>
             <div class = "col-md-4">
-                <span href="#" editable-select="substance.protein.proteinSubType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" blur="submit">{{substance.protein.proteinSubType.display}}</span>
+                <span href="#" editable-select="substance.protein.proteinSubType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('PROTEIN_SUBTYPE') track by r.display" blur="submit">{{substance.protein.proteinSubType.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="substance.protein.sequenceOrigin" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" blur="submit">{{substance.protein.sequenceOrigin.display}}</span>
+                <span href="#" editable-select="substance.protein.sequenceOrigin" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SEQUENCE_ORIGIN') track by r.display" blur="submit">{{substance.protein.sequenceOrigin.display}}</span>
             </div>
             <div class = "col-md-2">
-                <span href="#" editable-select="substance.protein.sequenceType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" blur="submit">{{substance.protein.sequenceType.display}}</span>
+                <span href="#" editable-select="substance.protein.sequenceType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SEQUENCE_TYPE') track by r.display" blur="submit">{{substance.protein.sequenceType.display}}</span>
             </div>
         </div>
 
@@ -43,28 +43,28 @@
             <div ng-show="!detForm.$submitted">
             <div class="row form-row">
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Protein Type" id="type" name = "type" ng-model = "protein.proteinType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_TYPE") track by r.display" required>
+                    <select class="form-control" title="Protein Type" id="type" name = "type" ng-model = "protein.proteinType" ng-options="r.display for r in lookup.getList('PROTEIN_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="editDetForm.proteinType.$error" ng-if="editDetForm.proteinType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-4 err-check" show-errors>
-                    <select class="form-control" title="Protein Subtype" id="proteinSubType" name = "proteinSubType" ng-model = "protein.proteinSubType" ng-options="r.display for r in @GinasApp.getCV.getField("PROTEIN_SUBTYPE") track by r.display" required>
+                    <select class="form-control" title="Protein Subtype" id="proteinSubType" name = "proteinSubType" ng-model = "protein.proteinSubType" ng-options="r.display for r in lookup.getList('PROTEIN_SUBTYPE') track by r.display" required>
                         </select>
                     <ng-messages for="detForm.proteinSubType.$error" ng-if="detForm.proteinSubType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Sequence Origin" id="sequenceOrigin" name = "sequenceOrigin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_ORIGIN") track by r.display" required>
+                    <select class="form-control" title="Sequence Origin" id="sequenceOrigin" name = "sequenceOrigin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in lookup.getList('SEQUENCE_ORIGIN') track by r.display" required>
                         </select>
                     <ng-messages for="detForm.sequenceOrigin.$error" ng-if="detForm.sequenceOrigin.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Sequence Type" id="sequenceType" name = "sequenceType" ng-model = "protein.sequenceType" ng-options="r.display for r in @GinasApp.getCV.getField("SEQUENCE_TYPE") track by r.display" required>
+                    <select class="form-control" title="Sequence Type" id="sequenceType" name = "sequenceType" ng-model = "protein.sequenceType" ng-options="r.display for r in lookup.getList('SEQUENCE_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="detForm.sequenceType.$error" ng-if="detForm.sequenceType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

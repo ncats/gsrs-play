@@ -18,10 +18,10 @@
             <div class="row">
                 <div ng-hide="component._editType=='edit'" class="text-center">
                         <div class ="col-md-2">
-                            <rendered id = component.monomerSubstance.refuuid></rendered>
+                            <substance-chooser ng-model = "component.substance"></substance-chooser>
                         </div>
                        <div class = "col-md-2">
-                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("MONOMER_TYPE") track by r.display" blur="submit">{{component.type.display}}</span>
+                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('MONOMER_TYPE') track by r.display" blur="submit">{{component.type.display}}</span>
                        </div>
                        
                 </div>
@@ -45,7 +45,7 @@
                     <substance-chooser ng-model="component.monomerSubstance"></substance-chooser>
                 </div>
                 <div class="col-md-6 err-check" show-errors>
-                    <select class="form-control" title="Monomer Type" id="type" name = "type" ng-model = "component.type" ng-options="r.display for r in @GinasApp.getCV.getField("MONOMER_TYPE") track by r.display" required>
+                    <select class="form-control" title="Monomer Type" id="type" name = "type" ng-model = "component.type" ng-options="r.display for r in lookup.getList('MONOMER_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="monomerForm.type.$error" ng-if="monomerForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

@@ -34,7 +34,7 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
         <div class = "row" ng-repeat="obj in substance.properties">
             <hr>
             <div class = "col-md-2">
-                <span href="#" editable-select="obj.type" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NAME_TYPE") track by r.display" blur="submit">{{obj.type.display}}</span>
+                <span href="#" editable-select="obj.type" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('NAME_TYPE') track by r.display" blur="submit">{{obj.type.display}}</span>
             </div>
             <div class="col-md-2">
                 <span href="#" editable-text="obj.name" blur="submit">{{obj.name}}</span>
@@ -56,7 +56,7 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
         <form class="form-horizontal" name="propertyForm" id = "add-property" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Property Type" id="type" name = "type" ng-model = "property.type" ng-options="r.display for r in @GinasApp.getCV.getField("PROPERTY_TYPE") track by r.display" >
+                    <select class="form-control" title="Property Type" id="type" name = "type" ng-model = "property.type" ng-options="r.display for r in lookup.getList('PROPERTY_TYPE') track by r.display" >
                         </select>
                     <ng-messages for="propertyForm.type.$error" ng-if="propertyForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
@@ -69,7 +69,7 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                     </ng-messages>
                 </div>
                 <div class="col-md-3 err-check" id="property-div" show-errors>
-                @selectors.amountselectorform("property.value")
+                    <amount-edit-display ng-model="property.value"></amount-edit-display> 
                 </div>
                 <div class="col-md-2 err-check" id="property-div" show-errors>
                     <a ng-show="!property.parameter" data-toggle="modal" data-target="#addparam" role="button" aria-label="Add a parameter"><i class="fa fa-plus fa-2x success"></i></a>
@@ -84,8 +84,7 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                 </div>
                 @referenceselectorform("propertyForm", "property")
             </div>
-            @amountform("property.value")
-
+            <amount-form ng-model="property.value"></amount-form>
             @submitbuttons("property", "propertyForm", "properties")
         </form>
     </div>

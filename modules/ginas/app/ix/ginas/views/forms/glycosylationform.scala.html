@@ -31,7 +31,7 @@
         </div>
         <div class="row">
             <div class = "col-md-2 col-md-offset-6">
-                <span href="#" editable-select=" substance.protein.glycosylation.glycosylationType" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("GLYCOSYLATION_TYPE") track by r.display" blur="submit">{{substance.protein.glycosylation.glycosylationType.display}}</span>
+                <span href="#" editable-select=" substance.protein.glycosylation.glycosylationType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('GLYCOSYLATION_TYPE') track by r.display" blur="submit">{{substance.protein.glycosylation.glycosylationType.display}}</span>
             </div>
         </div>
         <div ng-repeat="siteList in substance.protein.glycosylation | arrays">
@@ -63,7 +63,7 @@
                 </div>
                 @selectors.siteselector("glyForm", "substance.protein", 2)
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Glycosylation Type" id="glycosylationType" name = "glycosylationType" ng-model = "site.glycosylationType" ng-options="r.display for r in @GinasApp.getCV.getField("GLYCOSYLATION_TYPE") track by r.display" >
+                    <select class="form-control" title="Glycosylation Type" id="glycosylationType" name = "glycosylationType" ng-model = "site.glycosylationType" ng-options="r.display for r in lookup.getList('GLYCOSYLATION_TYPE') track by r.display" >
                         </select>
                     <ng-messages for="glyForm.glycosylationType.$error" ng-if="glyForm.glycosylationType.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

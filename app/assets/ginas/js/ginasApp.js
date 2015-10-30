@@ -150,10 +150,15 @@
                 var disp=getDisplayFromCV(domain,value);
                 return {value:value, display:disp, domain:domain};
         };
+        lookup.getList = function (domain){
+                return getCVListForDomain(domain);
+        };
         return lookup;
     });
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $modal, $http, $window, $anchorScroll, localStorageService, Substance, data, substanceSearch, substanceIDRetriever, lookup) {
+
+    //removed  substanceSearch
+    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, data, nameFinder,  substanceSearch, substanceIDRetriever, lookup) {
 
         var ginasCtrl = this;
 
@@ -185,8 +190,13 @@
                 subref.approvalID = selectedItem.approvalID;
                 subref.substanceClass = "reference";
                 _.set($scope, path, subref);
+                console.log($scope);
             });
         };
+
+        
+        $scope.lookup = lookup;
+
 
         $scope.toFormSubstance = function (apiSub) {
 
@@ -403,6 +413,25 @@
         $scope.cleanSequence = function (s) {
             return s.replace(/[^A-Za-z]/g, '');
         };
+        $scope.getResidueAtSite = function (site){
+                var msub=$scope.getSubunitWithIndex(site.subunitIndex);
+                if(msub === null)return null;
+                return msub.sequence[site.residueIndex-1];
+        };
+        $scope.getSubunitWithIndex = function (subIndex){
+                var subs=[];
+                if($scope.substance.nucleicAcid){
+                       subs=$scope.substance.nucleicAcid.subunits;
+                }else if($scope.substance.protein){
+                       subs=$scope.substance.protein.subunits;
+                }
+                for(var i in subs){
+                        if(subs[i].subunitIndex === subIndex){
+                                return subs[i];
+                        }
+                }
+                return null;
+        };
 
         $scope.parseSubunit = function (sequence, subunit) {
             var split = sequence.replace(/[^A-Za-z]/g, '').split('');
@@ -507,10 +536,6 @@
             }
         };
 
-        $scope.parseAgentModification = function (obj, path) {
-
-        };
-
         $scope.defaultSave = function (obj, form, path, list, name) {
             $scope.$broadcast('show-errors-check-validity');
             if (form.$valid) {
@@ -607,9 +632,11 @@
             switch (type) {
                 case "sugars":
                 case "linkages":
+                case "structuralModifications":
                     //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
                     //if(true)return "test";
                     $scope.updateSiteList(obj);
+                    console.log(JSON.parse(JSON.stringify(obj)));
                     $scope.defaultSave(obj, form, path, list, objName);
                     break;
                 case "subunits":
@@ -675,7 +702,8 @@
         };
 
         $scope.toggle = function (el) {
-            if (el.selected) {
+            console.log(el);
+            if (_.has(el, selected)){
                 el.selected = !el.selected;
             } else {
                 el.selected = true;
@@ -1106,16 +1134,26 @@
                         
         };
         
+        $scope.validateSites = function(dispSites, link){
+                var subunits=[];
+                if($scope.substance.substanceClass=== "protein"){
+                        subunits=$scope.substance.protein.subunits;
+                }else if($scope.substance.substanceClass=== "nucleicAcid"){
+                        subunits=$scope.substance.nucleicAcid.subunits;
+                }
+                return $scope.checkSites(dispSites,subunits, link);        
+        };
+        
         $scope.checkSites = function(dispSites, subunits, link) {
                 try{
 
                         var sites=$scope.siteDisplayListToSiteList(dispSites);
-                        var dsites;
+                        var dsites=[];
                         
-                        if(!link.linkage){
-                                dsites=$scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link),sites);
-                        }else{
+                        if(link.linkage){
                                 dsites=$scope.getSiteDuplicates($scope.getAllLinkageSitesExcept(link),sites);
+                        }else if(link.sugar){
+                                dsites=$scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link),sites);
                         }
                         if(dsites.length>0){
                                 throw "Site(s) " + $scope.sitesToDislaySites(dsites) + " already specified!";
@@ -1140,15 +1178,51 @@
                 }
         };
         
-        $scope.updateSiteList = function(obj) {
+        
+        $scope.updateSiteList = function(obj, sitelist) {
+                if(!sitelist){
+                        if(!obj.sites){
+                                obj.sites=[];
+                        }
+                        sitelist=obj.sites;                        
+                }
+                sitelist.length=0;
+
                 try{
-                        obj.sites=$scope.siteDisplayListToSiteList(obj.displaySites);
-                        obj.displaySites = $scope.sitesToDislaySites(obj.sites);
-                        obj.sites=$scope.siteDisplayListToSiteList(obj.displaySites);
+                        $scope.replaceArray(sitelist,$scope.siteDisplayListToSiteList(obj._displaySites));
+                        obj._displaySites = $scope.sitesToDislaySites(sitelist);
+                        $scope.replaceArray(sitelist,$scope.siteDisplayListToSiteList(obj._displaySites));
+                        obj._uniqueResidues=[];
+                        obj._residueCounts={};
+                        for(var i in sitelist){
+                        
+                                console.log("Site:"+ i);
+                                var r = $scope.getResidueAtSite(sitelist[i]);
+                                console.log("Site:"+ r);
+                                if(!obj._residueCounts[r])
+                                        obj._residueCounts[r]=0;
+                                obj._residueCounts[r]++;                                        
+                        }
+                        for(var k in obj._residueCounts){
+                                if(obj._residueCounts.hasOwnProperty(k)){
+                                        obj._uniqueResidues.push(k);
+                                }
+                        }
                 }catch(e){
                         return e;
                 }
                 
+        };
+        $scope.pushArrayIntoArray= function(dest,src){
+                for(var i in src){
+                        dest.push(src[i]);
+                }
+                return dest;
+        };
+        $scope.replaceArray= function(dest,src){
+                dest.length=0;
+                $scope.pushArrayIntoArray(dest,src);
+                return dest;
         };
 
         $scope.submitpaster = function (input) {
@@ -1188,6 +1262,23 @@
             console.log(event);
             console.log(event.currentTarget);
         };
+
+        $scope.loadSubstances = function($query){
+            return nameFinder.search($query);
+            };
+
+        $scope.createSubref = function(selectedItem, path){
+            console.log(selectedItem);
+            console.log(path);
+            var subref = {};
+            subref.refuuid = selectedItem.uuid;
+            subref.refPname = selectedItem.name;
+            subref.approvalID = selectedItem.approvalID;
+            subref.substanceClass = "reference";
+            console.log(subref);
+            _.set($scope.substance, path, subref);
+            console.log($scope);
+        };
     });
 
     var uuid = function uuid() {
@@ -1211,6 +1302,11 @@
         };
     });
     
+    ginasApp.directive('structuralModification', function () {
+        return {
+            templateUrl: baseurl + "assets/ginas/templates/structuralmodification.html"
+        };
+    });
     
 
 //sugarSites
@@ -1220,10 +1316,21 @@
             link: function(scope, ele, attrs, c) {
               scope.$watch(attrs.ngModel, function() {
                 if(attrs.naSites.length<2)return;
+                
+                
                 var repObj = JSON.parse(attrs.naSites);
-                
-                
-                var ret = scope.checkSites(c.$modelValue,scope.substance.nucleicAcid.subunits,repObj);
+                var subunits=[];
+                if(scope.substance.nucleicAcid){
+                        subunits=scope.substance.nucleicAcid.subunits;
+                }else if(scope.substance.protein){
+                        subunits=scope.substance.protein.subunits;
+                }else{
+                        return;
+                }
+                if(!c.$modelValue)
+                        return;
+        
+                var ret = scope.checkSites(c.$modelValue,subunits,repObj);
                 
                 if(ret){
                         c.$setValidity('siteInvalid', false);                        
@@ -1256,7 +1363,27 @@
         };
     });
 
-    ginasApp.directive('duplicate', function (isDuplicate) {
+
+    ginasApp.service('nameFinder', function ($http) {
+        var url= baseurl + "api/v1/substances/search?q=";
+
+        var nameFinder ={
+        search: function(query){
+         var promise = $http.get(url + query+ "*&top=100", {
+             headers: {
+                 'Content-Type': 'text/plain'
+             }
+         }).then(function (response){
+             return response.data.content;
+         });
+            return promise;
+        }
+    };
+        return nameFinder;
+    });
+
+
+        ginasApp.directive('duplicate', function (isDuplicate) {
         return {
             restrict: 'A',
             require: 'ngModel',
@@ -1268,6 +1395,8 @@
 
     ginasApp.factory('isDuplicate', function ($q, substanceFactory) {
         return function dupCheck(modelValue) {
+            console.log(modelValue);
+            console.log($q);
             var deferred = $q.defer();
             substanceFactory.getSubstances(modelValue)
                 .success(function (response) {
@@ -1370,9 +1499,9 @@
         };
     });
 
-    ginasApp.service('substanceSearch', function ($http) {
+    ginasApp.service('substanceSearch', function ($http, $q) {
         var options = {};
-        var url = baseurl + "api/v1/suggest/Name?q=";
+        var url = baseurl + "api/v1/substances/search?q=";
 
         this.load = function (field) {
             $http.get(url + field.toUpperCase(), {
@@ -1384,7 +1513,7 @@
             });
         };
 
-        this.search = function (query) {
+        this.search = function ($q) {
             return options;
         };
     });
@@ -1395,14 +1524,13 @@
             replace: true,
             scope: {
                 id: '='
-                /*                size: '=',
-                 amap :'='*/
-
             },
             template: '<img src=\"' + baseurl + 'img/{{id}}.svg\">'
         };
     });
 
+//*************************
+//Amount stuff
     ginasApp.directive('amount', function () {
 
         return {
@@ -1414,6 +1542,36 @@
             template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display}}</span></div>'
         };
     });
+    
+    ginasApp.directive('amountForm', function (lookup) {
+        return {
+            restrict: 'AE',
+            replace: true,
+            scope: {
+                modelAmount: '=ngModel'
+            },
+            templateUrl: baseurl + "assets/ginas/templates/amount-form.html",
+            link: function(scope, element, attrs){
+                scope.lookup=lookup;
+            },
+        };
+    });
+    
+    ginasApp.directive('amountEditDisplay', function (lookup) {
+        return {
+            restrict: 'AE',
+            replace: true,
+            scope: {
+                modelAmount: '=ngModel'
+            },
+            templateUrl: baseurl + "assets/ginas/templates/amount-display.html",
+            link: function(scope, element, attrs){
+                scope.lookup=lookup;
+            },
+        };
+    });
+//*************************************
+
 
 
     ginasApp.directive('aminoAcid', function ($compile) {
@@ -1473,20 +1631,195 @@
             template: '<textarea class="form-control string"  rows="5" ng-model="subunit.sequence" name="sequence" placeholder="Sequence" title="sequence" id="sequence" required></textarea>'
         };
     });
-    ginasApp.directive('substanceChooser', function () {
+
+/*    ginasApp.directive('substanceChooserLite', function($templateRequest, $compile){
         return {
-            restrict: 'AE',
+            restrict: 'E',
             replace: true,
-            transclude: true,
-            template: function (element, attrs) {
-                var html="<div>\n" + 
-                          "    <span ng-show=\"@{scopeset}\">\n" + 
-                          "        <code>{{@{scopeset}.refPname}}</code>\n" + 
-                          "        <rendered id = @{scopeset}.refuuid></rendered>\n" + 
-                          "    </span>\n" + 
-                          "    <a role=\"button\" aria-label=\"Select a Substance\"  ng-click=\"openSelector('@{scopeset}')\">Select Material<i class=\"fa fa-plus fa-2x success\"></i></a>\n" + 
-                          "</div>";
-                return html.replace(/@{scopeset}/g,attrs.ngModel);
+            scope: true,
+            link: function(scope, element, attrs){
+                console.log(scope);
+                console.log(attrs);
+                scope.saveto = attrs.saveto;
+                $templateRequest( baseurl + "assets/ginas/templates/substancechooze.html").then(function(html){
+                    element.append($compile(html)(scope));
+                });
+            }
+        };
+    });
+
+    ginasApp.directive('substanceView', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                substance: '='
+            },
+            link: function(scope, element, attrs) {
+                console.log(attrs);
+                element.bind("click", function () {
+
+                });
+                console.log(scope);
+            },
+            template: '<div><rendered id = "substance.refuuid"></rendered><br/><code>{{substance.refPname}}</code></div>'
+        };
+    });*/
+
+    ginasApp.directive('substanceChooserLite', function (nameFinder) {
+        return {
+            templateUrl: baseurl + 'assets/ginas/templates/substancechooser.html',
+            replace: true,
+            restrict: 'E',
+            scope: {
+                path: '@subref',
+                subref: '=subref'
+            },
+            link: function (scope, element, attrs) {
+                console.log(scope);
+                scope.loadSubstances = function($query){
+                    return nameFinder.search($query);
+                };
+
+                scope.createSubref = function(selectedItem){
+                    console.log(scope);
+                    console.log(selectedItem);
+                    console.log(scope.path);
+                    var subref = {};
+                    subref.refuuid = selectedItem.uuid;
+                    subref.refPname = selectedItem.name;
+                    subref.approvalID = selectedItem.approvalID;
+                    subref.substanceClass = "reference";
+                    scope.subref = subref;
+                    _.set(scope.$parent, scope.path, subref);
+                    console.log(scope);
+                };
+
+                scope.focus= function(){
+                    console.log(scope);
+                    scope.diverse = [];
+                    console.log("focus");
+                };
+            }
+        };
+    });
+
+        ginasApp.directive('substanceView', function () {
+            return {
+                template: '<div><rendered id = "subref.refuuid"></rendered><br/><code>{{subref.refPname}}</code></div>',
+                replace: true,
+                restrict: 'E',
+                scope: {
+                    subref: '='
+                },
+                link: function(scope, element, attrs) {
+                    console.log(scope);
+                    element.bind("click", function () {
+                        scope.subref = undefined;
+                                    console.log(element);
+                        console.log(scope);
+                    });
+                }
+            };
+        });
+
+
+/*    ginasApp.directive('substanceChooserLite', function($templateRequest, $compile){
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: true,
+            link: function(scope, element, attrs){
+                console.log(scope);
+                console.log(attrs);
+                scope.saveto = attrs.saveto;
+                $templateRequest( baseurl + "assets/ginas/templates/substancechooze.html").then(function(html){
+                    element.append($compile(html)(scope));
+                });
+            }
+        };
+    });
+
+    ginasApp.directive('substanceView', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                substance: '='
+            },
+            link: function(scope, element, attrs) {
+                console.log(attrs);
+                element.bind("click", function () {
+
+                });
+                console.log(scope);
+            },
+            template: '<div><rendered id = "substance.refuuid"></rendered><br/><code>{{substance.refPname}}</code></div>'
+        };
+    });*/
+
+
+    ginasApp.directive('substanceChooser', function ($modal) {
+        return {
+            restrict: 'E',
+            require: "ngModel",
+            scope: {
+                mymodel: '=ngModel'
+            },
+            templateUrl: baseurl + "assets/ginas/templates/substanceSelectorElement.html",
+            link: function (scope) {
+/*
+                console.log(scope);
+*/
+                scope.openSelector = function (parentRef, instanceName,test) {
+                    //console.log(test);
+                    var modalInstance = $modal.open({
+                        animation: true,
+                        templateUrl: baseurl + 'assets/ginas/templates/substanceSelector.html',
+                        controller: 'SubstanceSelectorInstanceController',
+                        size: 'lg'
+
+                    });
+
+                    modalInstance.result.then(function (selectedItem) {
+                        
+                        //if(!parentRef[instanceName])parentRef[instanceName]={};
+                        var oref={};
+                        oref.refuuid = selectedItem.uuid;
+                        oref.refPname = selectedItem.name;
+                        oref.approvalID = selectedItem.approvalID;
+                        oref.substanceClass = "reference";
+                        scope.mymodel=oref;
+                        //_.set($scope, path, subref);
+                    });
+                };
+            }
+        };
+    });
+    
+     ginasApp.directive('siteSelector', function () {
+        return {
+            restrict: 'E',
+            scope:{
+                siteContainer:'=ngModel',
+                siteList:'='
+            },
+            templateUrl: baseurl + "assets/ginas/templates/siteSelector.html",
+            link: function (scope, element, attrs, parentCtrl) {
+                scope.validateSites=scope.$parent.validateSites;
+                scope.updateSiteList=scope.$parent.updateSiteList;
+                scope.$watch(
+                    function watchSelected() {
+                         return scope.siteContainer; 
+                    },
+                    function updateSelected(value) {
+                        if(value){
+                                if(!scope.siteList){
+                                        scope.siteList=scope.siteContainer.sites;
+                                }
+                        }
+                    }
+                );
             }
         };
     });
@@ -1559,7 +1892,6 @@
                     return scope.formsubstance.structure.molfile;
 
                 }, function (value) {
-                    //console.log("I SEE A CHANGE!");
                     if (lastmol !== value) {
 
                         ignorechange = true;
@@ -1678,54 +2010,6 @@
             restrict: 'E',
             templateUrl: baseurl + "assets/ginas/templates/molexport.html"
         };
-    });
-
-
-    ginasApp.controller('DiverseController', function ($scope, Substance, $rootScope) {
-        this.adding = true;
-
-        this.toggleEdit = function () {
-            this.editing = !this.editing;
-        };
-
-        this.toggleAdd = function () {
-            this.adding = !this.adding;
-        };
-
-        this.reset = function () {
-            $scope.diverse = {};
-            $scope.$broadcast('show-errors-reset');
-        };
-
-        this.validate = function (obj) {
-            $scope.$broadcast('show-errors-check-validity');
-            if ($scope.diverseForm.$valid) {
-                Substance.structurallyDiverse.sourceMaterialClass = obj.sourceMaterialClass;
-                Substance.structurallyDiverse.sourceMaterialType = obj.sourceMaterialType;
-                Substance.structurallyDiverse.sourceMaterialState = obj.sourceMaterialState;
-                this.toggleAdd();
-            }
-        };
-
-        this.setEdited = function (obj) {
-            $scope.editObj = obj;
-            $scope.tempCopy = angular.copy(obj);
-        };
-
-        this.update = function (reference) {
-            console.log(reference);
-            var index = Substance.references.indexOf(reference);
-            Substance.references[index] = reference;
-            $scope.editObj = null;
-            this.toggleEdit();
-        };
-
-        this.remove = function (reference) {
-            var index = Substance.references.indexOf(reference);
-            Substance.references.splice(index, 1);
-        };
-
-
     });
 
     ginasApp.controller('ProgressJobController', function ($scope, $http, $timeout) {
@@ -1921,33 +2205,4 @@
     });
 })();
 window.SDFFields = {};
-
-
-function getDisplayFromCV(domain, value) {
-    for (var i in window.CV_REQUEST.content) {
-        if (window.CV_REQUEST.content[i].domain === domain) {
-            var terms = window.CV_REQUEST.content[i].terms;
-            for (var t in terms) {
-                if (terms[t].value === value) {
-                    return terms[t].display;
-                }
-            }
-        }
-    }
-    return value;
-}
-
-function vocabsetup(cv) {
-    window.CV_REQUEST = cv;
-    console.log("finished");
-}
-
-
-function submitq(qinput) {
-    if (qinput.value.indexOf("\"") < 0 && qinput.value.indexOf("*") < 0 && qinput.value.indexOf(":") < 0 && qinput.value.indexOf(" AND ") < 0 && qinput.value.indexOf(" OR ") < 0) {
-        qinput.value = "\"" + qinput.value + "\"";
-    }
-    return true;
-}
-
 

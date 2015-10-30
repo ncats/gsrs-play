@@ -18,10 +18,10 @@
 
         <div class = "row" ng-repeat="obj in substance.nucleicAcid.linkages">
             <div class = "col-md-3">
-                <span href="#" editable-select="obj.linkage" e-style="width: 100%" e-ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_LINKAGE") track by r.display" blur="submit">{{obj.linkage.display}}</span>
+                <span href="#" editable-select="obj.linkage" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_LINKAGE') track by r.display" blur="submit">{{obj.linkage.display}}</span>
             </div>
             <div class="col-md-2">
-                <span href="#" editable-text="obj.displaySites" onbeforesave="checkSites($data,substance.nucleicAcid.subunits,obj)" onaftersave="updateSiteList(obj)">{{obj.displaySites}}</span>
+                <site-selector ng-model="obj"></site-selector>
             </div>
             <div class="col-md-2">
                 <span href="#" blur="submit">{{obj.sites.length}} of {{getAllSites(true).length}}</span>
@@ -36,17 +36,16 @@
 
         <form class="form-horizontal" name="linkageForm" id = "add-code" role="form" novalidate>
             <div class="row form-row">
-               
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "objl.linkage" ng-options="r.display for r in @GinasApp.getCV.getField("NUCLEIC_ACID_LINKAGE") track by r.display" required>
-                        </select>
+                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "objl.linkage" ng-options="r.display for r in lookup.getList('NUCLEIC_ACID_LINKAGE') track by r.display" required>
+                    </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" class="form-control" ng-model ="objl.displaySites" title="Linkage Sites" id="linkagesites" name = "linkagesites" na-sites={{objl}} />
+                    <input type="text" class="form-control" ng-model ="objl._displaySites" title="Linkage Sites" id="linkagesites" name = "linkagesites" na-sites={{objl}} />
                     <small class="error" ng-show="linkageForm.linkagesites.$error.siteInvalid">{{linkageForm.linkagesites.$errorMsg.naSites}}</small>
                 </div>
                 <div class="col-md-3">
-                    <button ng-click="objl.displaySites = getAllLeftoverSitesDisplay(true)">Apply to all remaining sites</button>
+                    <button ng-click="objl._displaySites = getAllLeftoverSitesDisplay(true)">Apply to all remaining sites</button>
                 </div>
             </div>
             @submitbuttons("objl", "linkageForm", "nucleicAcid.linkages")
