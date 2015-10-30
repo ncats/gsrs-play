@@ -21,7 +21,7 @@
         <div ng-repeat="relationship in substance.relationships">
                     <div class="row">
                         <div class ="col-md-2">
-                           <rendered id = relationship.relatedSubstance.refuuid></rendered>
+                           <substance-chooser ng-model="relationship.relatedSubstance"></substance-chooser>
                         </div>
                        <div class = "col-md-2">
                            <span href="#" editable-select="relationship.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('RELATIONSHIP_TYPE') track by r.display" blur="submit">{{relationship.type.display}}</span>

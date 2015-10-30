@@ -176,7 +176,7 @@
         $scope.openSelector = function (path) {
             var modalInstance = $modal.open({
                 animation: true,
-                templateUrl: baseurl + 'assets/ginas/templates/substanceSelector.html',
+                templateUrl: baseurl + 'assets/templates/substanceSelector.html',
                 controller: 'SubstanceSelectorInstanceController',
                 size: 'lg'
 
@@ -560,7 +560,7 @@
                         _.set($scope.substance, path, x);
                     }
                 }
-                $scope[name] = {sites:[]};
+                $scope[name] = {};
                 $scope.reset(form);
                 form.$setSubmitted(true);
             }else{
@@ -707,7 +707,8 @@
 
         $scope.toggle = function (el) {
             console.log(el);
-            if (_.has(el, selected)){
+            if(!el)return;
+            if (_.has(el, "selected")){
                 el.selected = !el.selected;
             } else {
                 el.selected = true;
@@ -1366,7 +1367,7 @@
     
     ginasApp.directive('structuralModification', function () {
         return {
-            templateUrl: baseurl + "assets/ginas/templates/structuralmodification.html"
+            templateUrl: baseurl + "assets/templates/structuralmodification.html"
         };
     });
     
@@ -1431,7 +1432,7 @@
 
         var nameFinder ={
         search: function(query){
-         var promise = $http.get(url + query+ "*&top=100", {
+         var promise = $http.get(url + query+ "*&top=10", {
              headers: {
                  'Content-Type': 'text/plain'
              }
@@ -1604,7 +1605,7 @@
                 path: '@path',
                 list: '@list'
             },
-            templateUrl: baseurl + "assets/ginas/templates/submit-buttons.html",
+            templateUrl: baseurl + "assets/templates/submit-buttons.html",
             link: function(scope, element, attrs){
                 scope.validate=function(){
                         if(scope.list === "false" || scope.list === false){
@@ -1635,12 +1636,12 @@
                 property: '=ngModel',
                 allreferences: '=references'
             },
-            templateUrl: baseurl + "assets/ginas/templates/reference-selector.html",
+            templateUrl: baseurl + "assets/templates/reference-selector.html",
             link: function(scope, element, attrs, cont){
                 scope.showReferences= function(){
                         var modalInstance = $modal.open({
                                 animation: true,
-                                templateUrl: baseurl + "assets/ginas/templates/reference-modal.html",
+                                templateUrl: baseurl + "assets/templates/reference-modal.html",
                                 size: 'lg',
                                 scope: scope.$parent,
                                 controller: "ReferenceSelectorInstanceController"
@@ -1653,7 +1654,7 @@
     ginasApp.directive('referenceForm', function () {
         return {
             restrict: 'E',
-            templateUrl: baseurl + "assets/ginas/templates/reference-form.html"
+            templateUrl: baseurl + "assets/templates/reference-form.html"
         };
     });
 //references end
@@ -1680,7 +1681,7 @@
             scope: {
                 modelAmount: '=ngModel'
             },
-            templateUrl: baseurl + "assets/ginas/templates/amount-form.html",
+            templateUrl: baseurl + "assets/templates/amount-form.html",
             link: function(scope, element, attrs){
                 scope.lookup=lookup;
             },
@@ -1694,7 +1695,7 @@
             scope: {
                 modelAmount: '=ngModel'
             },
-            templateUrl: baseurl + "assets/ginas/templates/amount-display.html",
+            templateUrl: baseurl + "assets/templates/amount-display.html",
             link: function(scope, element, attrs){
                 scope.lookup=lookup;
             },
@@ -1771,7 +1772,7 @@
                 console.log(scope);
                 console.log(attrs);
                 scope.saveto = attrs.saveto;
-                $templateRequest( baseurl + "assets/ginas/templates/substancechooze.html").then(function(html){
+                $templateRequest( baseurl + "assets/templates/substancechooze.html").then(function(html){
                     element.append($compile(html)(scope));
                 });
             }
@@ -1798,7 +1799,7 @@
 
     ginasApp.directive('substanceChooserLite', function (nameFinder) {
         return {
-            templateUrl: baseurl + 'assets/ginas/templates/substancechooser.html',
+            templateUrl: baseurl + 'assets/templates/substancechooser.html',
             replace: true,
             restrict: 'E',
             scope: {
@@ -1821,7 +1822,12 @@
                     subref.approvalID = selectedItem.approvalID;
                     subref.substanceClass = "reference";
                     scope.subref = subref;
-                    _.set(scope.$parent, scope.path, subref);
+                    // TP: I don't think this is necessary here, and may make some strange
+                    // things happening if editting from inside of an ng-repeat
+                    // as the reference being set isn't the same
+                    //
+                    // _.set(scope.$parent, scope.path, subref);
+                    
                     console.log(scope);
                 };
 
@@ -1843,12 +1849,12 @@
                     subref: '='
                 },
                 link: function(scope, element, attrs) {
-                    console.log(scope);
+                   /* console.log(scope);
                     element.bind("click", function () {
                         scope.subref = undefined;
                                     console.log(element);
                         console.log(scope);
-                    });
+                    });*/
                 }
             };
         });
@@ -1863,7 +1869,7 @@
                 console.log(scope);
                 console.log(attrs);
                 scope.saveto = attrs.saveto;
-                $templateRequest( baseurl + "assets/ginas/templates/substancechooze.html").then(function(html){
+                $templateRequest( baseurl + "assets/templates/substancechooze.html").then(function(html){
                     element.append($compile(html)(scope));
                 });
             }
@@ -1896,16 +1902,17 @@
             scope: {
                 mymodel: '=ngModel'
             },
-            templateUrl: baseurl + "assets/ginas/templates/substanceSelectorElement.html",
+            templateUrl: baseurl + "assets/templates/substanceSelectorElement.html",
             link: function (scope) {
 /*
                 console.log(scope);
 */
+                scope.lite=true;
                 scope.openSelector = function (parentRef, instanceName,test) {
                     //console.log(test);
                     var modalInstance = $modal.open({
                         animation: true,
-                        templateUrl: baseurl + 'assets/ginas/templates/substanceSelector.html',
+                        templateUrl: baseurl + 'assets/templates/substanceSelector.html',
                         controller: 'SubstanceSelectorInstanceController',
                         size: 'lg'
 
@@ -1936,7 +1943,7 @@
                 displayType:'@',
                 residueRegex:'@'
             },
-            templateUrl: baseurl + "assets/ginas/templates/site-selector.html",
+            templateUrl: baseurl + "assets/templates/site-selector.html",
             link: function (scope, element, attrs, parentCtrl) {
                 scope.validateSites=scope.$parent.validateSites;
                 scope.updateSiteList=scope.$parent.updateSiteList;
@@ -1946,6 +1953,7 @@
                             for (var i = 1; i <= min; i++) input.push(i);
                             return input;
                 };
+                scope.edit=false;
                 scope.validResidues = function (su) {
                             if(!su)return [];
                             var list=[];
@@ -1960,7 +1968,6 @@
                                 return scope.range(scope.subunits[su-1].sequence.length);
                             }
                 };
-               
                 scope.size=12;
                 if(attrs.size){
                         scope.size=attrs.size;
@@ -2133,7 +2140,7 @@
             scope: {
                 error: '='
             },
-            templateUrl: baseurl + "assets/ginas/templates/errorwindow.html"
+            templateUrl: baseurl + "assets/templates/errorwindow.html"
         };
     });
 
@@ -2175,7 +2182,7 @@
     ginasApp.directive('molExport', function ($http) {
         return {
             restrict: 'E',
-            templateUrl: baseurl + "assets/ginas/templates/molexport.html"
+            templateUrl: baseurl + "assets/templates/molexport.html"
         };
     });
 

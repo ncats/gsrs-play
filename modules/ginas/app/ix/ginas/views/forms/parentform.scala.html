@@ -11,8 +11,8 @@
 
         <div class="row">
             <div class ="col-md-3" >
-
-
+                <substance-chooser ng-model="substance.structurallyDiverse.parentSubstance"></substance-chooser>
+                
             </div>
             <div class ="col-md-3" ng-click="openSelector(substance.structurallyDiverse.hybridSpeciesPaternalOrganism)">
                 <rendered id = substance.structurallyDiverse.hybridSpeciesPaternalOrganism.refuuid></rendered>
@@ -28,14 +28,9 @@
 
     <form class="form-horizontal" name="parentForm" id = "add-component" role="form" novalidate>
         <div class="row form-row" ng-show="!parentForm.$submitted">
-@*            <div class = "col-md-3">
-                <find-substance></find-substance>
-            </div>*@
-            <div class="col-md-3 text-center">
 
-                <span ng-show="!parentForm.parentSubstance.selected" ng-click="toggle(parentForm.parentSubstance)">
-                <substance-chooser-lite subref ="substance.structurallyDiverse.parentSubstance" name ="parentSubstance"></substance-chooser-lite>
-                </span>
+            <div class="col-md-3 text-center">
+                <substance-chooser ng-model="diverse" name ="parentSubstance" lite="true"></substance-chooser>
 @*
                 <substance-view substance = substance.structurallyDiverse.parentSubstance ng-if="substance.structurallyDiverse.parentSubstance"></substance-view>
 *@
@@ -52,21 +47,8 @@
                 </ng-messages>*@
             </div>
 
-@*
-            <div class="col-md-3">
-            @selectors.substanceselectorform("diverse.parentSubstance")
-            </div>
-            <div class="col-md-3">
-            @selectors.substanceselectorform("diverse.hybridSpeciesPaternalOrganism")
-            </div>
-            <div class="col-md-3">
-            @selectors.substanceselectorform("diverse.hybridSpeciesMaternalOrganism")
-            </div>
-*@
-
         </div>
-        @submitbuttons("diverse", "parentForm", "structurallyDiverse", false)
-
+        <submit-buttons submit="diverse" form="parentForm" path="structurallyDiverse.parentSubstance" list="false"></submit-buttons>
 
     </form>
 

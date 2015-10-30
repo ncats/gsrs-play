@@ -1,5 +1,5 @@
 <div>
-<substance-view subref = subref ng-show="subref"></substance-view>
+<substance-view subref="subref" ng-show="subref" ng-click="subref=null"></substance-view>
 <div ng-show="!subref">
 <tags-input custom-class="form-control" ng-focus="focus()" ng-model= "diverse" title="Substance Selector" placeholder="Substance Name" id="substance" name="substance" display-property="name" key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag, d)' template = "tag-template" required>
     <auto-complete source="loadSubstances($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true" template="autocomplete-template"></auto-complete>
