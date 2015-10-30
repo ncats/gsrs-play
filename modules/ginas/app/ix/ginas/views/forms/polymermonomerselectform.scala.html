@@ -7,8 +7,8 @@
     <div class="col-md-12">
         <div class ="row header-row">
             <div class="col-md-2"><strong>Monomer Substance</strong></div>
-            <div class="col-md-2"><strong>Type</strong></div>
-            <div class="col-md-2"><strong>Amount</strong></div>            
+            <div class="col-md-5"><strong>Type</strong></div>
+            <div class="col-md-4"><strong>Amount</strong></div>            
         </div>
         <div ng-repeat="component in substance.polymer.monomers">
             <div ng-show="component._editType=='edit'" class="text-center editreminder">
@@ -18,11 +18,15 @@
             <div class="row">
                 <div ng-hide="component._editType=='edit'" class="text-center">
                         <div class ="col-md-2">
-                            <substance-chooser ng-model = "component.substance"></substance-chooser>
+                            <substance-chooser ng-model = "component.monomerSubstance"></substance-chooser>
                         </div>
-                       <div class = "col-md-2">
+                       <div class = "col-md-5">
                            <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('MONOMER_TYPE') track by r.display" blur="submit">{{component.type.display}}</span>
                        </div>
+                       <div class="col-md-4">
+                            <amount-edit-display ng-model="component.amount"></amount-edit-display> 
+                        </div>
+            
                        
                 </div>
                        <div class="pull-right">
@@ -31,6 +35,7 @@
                             <button  ng-hide="component._editType=='edit'" ng-click="removeItem(substance.polymer.monomers, component)">Remove</button>
                        </div>                       
             </div>
+           
         </div>
         <hr>
         <form class="form-horizontal" name="monomerForm" id = "add-component" role="form" novalidate>
@@ -44,14 +49,18 @@
                 <div class="col-md-2">
                     <substance-chooser ng-model="component.monomerSubstance"></substance-chooser>
                 </div>
-                <div class="col-md-6 err-check" show-errors>
+                <div class="col-md-5 err-check" show-errors>
                     <select class="form-control" title="Monomer Type" id="type" name = "type" ng-model = "component.type" ng-options="r.display for r in lookup.getList('MONOMER_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="monomerForm.type.$error" ng-if="monomerForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
+                <div class="col-md-4">
+                    <amount-edit-display ng-model="component.amount"></amount-edit-display> 
+                </div>
             </div>
+            <amount-form ng-model="component.amount"></amount-form>
             <submit-buttons submit="component" form="monomerForm" path="polymer.monomers"></submit-buttons>
         </form>
 

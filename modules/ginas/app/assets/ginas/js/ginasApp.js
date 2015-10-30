@@ -560,6 +560,8 @@
                         _.set($scope.substance, path, x);
                     }
                 }
+                
+                console.log("Valid");
                 $scope[name] = {};
                 $scope.reset(form);
                 form.$setSubmitted(true);
@@ -702,7 +704,7 @@
                     obj._editType="add";
                     break;
             }
-            $scope[objName] = {};
+            //$scope[objName] = {};
         };
 
         $scope.toggle = function (el) {
