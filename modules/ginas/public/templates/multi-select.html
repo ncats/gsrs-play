@@ -1,0 +1,9 @@
+<div>
+    <tags-input custom-class="form-control" title="Language" placeholder="language" name="language" ng-model="name.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
+    <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+</tags-input>
+<!--<ng-messages for="nameForm.language.$error" ng-if="nameForm.language.$touched">
+    <ng-message when="required" class="help-block">*required</ng-message>
+</ng-messages>-->
+
+</div>

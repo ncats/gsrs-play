@@ -9,7 +9,7 @@
             <div class="col-md-3"><strong>Maternal Organism</strong></div>
         </div>
 
-        <div class="row">
+       @* <div class="row">
             <div class ="col-md-3" >
                 <substance-chooser ng-model="substance.structurallyDiverse.parentSubstance"></substance-chooser>
                 
@@ -23,14 +23,24 @@
                 <rendered id = substance.structurallyDiverse.hybridSpeciesMaternalOrganism.refuuid></rendered>
                 <code>{{substance.structurallyDiverse.hybridSpeciesMaternalOrganism.refPname}}</code>
             </div>
-        </div>
+        </div>*@
     </div>
 
     <form class="form-horizontal" name="parentForm" id = "add-component" role="form" novalidate>
         <div class="row form-row" ng-show="!parentForm.$submitted">
 
-            <div class="col-md-3 text-center">
-                <substance-chooser ng-model="diverse" name ="parentSubstance" lite="true"></substance-chooser>
+            <div class="col-md-3 text-center show-errors">
+                 <substance-chooser-lite subref ="substance.structurallyDiverse.parentSubstance" name ="parentSubstance" form ="parentForm"></substance-chooser-lite>
+                </div>
+            <div class="col-md-3 text-center show-errors">
+                <substance-chooser-lite subref ="substance.structurallyDiverse.hybridSpeciesPaternalOrganism" name ="hybridSpeciesPaternalOrganism" form ="parentForm"></substance-chooser-lite>
+            </div>
+            <div class="col-md-3 text-center show-errors">
+                <substance-chooser-lite subref ="substance.structurallyDiverse.hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" form ="parentForm"></substance-chooser-lite>
+            </div>
+@*
+                <substance-chooser-lite ng-model="diverse" name ="parentSubstance"></substance-chooser-lite>
+*@
 @*
                 <substance-view substance = substance.structurallyDiverse.parentSubstance ng-if="substance.structurallyDiverse.parentSubstance"></substance-view>
 *@
@@ -45,7 +55,6 @@
                 <ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domains.$touched">
                     <ng-message when="required" class="help-block">*required</ng-message>
                 </ng-messages>*@
-            </div>
 
         </div>
         <submit-buttons submit="diverse" form="parentForm" path="structurallyDiverse.parentSubstance" list="false"></submit-buttons>

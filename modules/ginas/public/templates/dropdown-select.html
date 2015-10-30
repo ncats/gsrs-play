@@ -1,0 +1,12 @@
+<div>
+
+<!--
+    <span href="#" editable-select="ngModel" e-style="width: 100%" e-ng-options="r.display for r in values track by r.display" blur="submit">{{ngModel.display}}</span>
+-->
+
+    <select class="form-control" title="Name Type" name = "field" ng-model = "object" ng-change="selected(s)" ng-options="r.display for r in values track by r.display" required>
+    </select>
+    <ng-messages for="form.field.$error" ng-if="form.field.$touched">
+        <ng-message when="required" class="help-block">*required</ng-message>
+    </ng-messages>
+</div>

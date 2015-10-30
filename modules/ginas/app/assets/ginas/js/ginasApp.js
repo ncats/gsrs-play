@@ -118,8 +118,28 @@
         return utils;
     });
 
+    ginasApp.service('ajaxlookup', function ($http) {
+        var url = baseurl + "api/v1/vocabularies?filter=domain='";
 
-    ginasApp.factory('lookup', function () {
+        var nameFinder ={
+            load: function(domain){
+                var promise = $http.get(url + domain+ "'", {
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).then(function (response){
+                    return response.data.content;
+                });
+                return promise;
+            }
+        };
+        return nameFinder;
+    });
+
+    ginasApp.service('lookup', function ($http) {
+        var options = {};
+        var url = baseurl + "api/v1/vocabularies?filter=domain='";
+
         var lookup = {
             "names.type": "NAME_TYPE",
             "names.nameOrgs": "NAME_ORG",
@@ -133,6 +153,21 @@
             "relationships.qualification": "QUALIFICATION",
             "references.docType": "DOCUMENT_TYPE"
         };
+
+
+
+        lookup.load = function (field) {
+            $http.get(url + field.toUpperCase() + "'", {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (data) {
+                console.log(data);
+                return data.content[0].terms;
+            });
+           // console.log(options);
+        };
+
 
         lookup.getFromName = function (field, val) {
             var domain = lookup[field];
@@ -1160,6 +1195,21 @@
                         return item === someItem;                 
                  });
         };
+
+
+        //***************************BOILERPLATE SET EDIT*****************************************//
+        //*************************REUSABLE****************************************//
+
+        $scope.setEdit = function(obj, path){
+            if(obj){
+                $scope[path]= obj;
+                $scope[path]._editType="edit";
+            }else{
+                $scope[path] =null;
+            }
+        };
+
+
         $scope.setEditSubunit = function(sub){
                         if(sub){
                                 $scope.subunit=sub;
@@ -1461,7 +1511,6 @@
     ginasApp.factory('isDuplicate', function ($q, substanceFactory) {
         return function dupCheck(modelValue) {
             console.log(modelValue);
-            console.log($q);
             var deferred = $q.defer();
             substanceFactory.getSubstances(modelValue)
                 .success(function (response) {
@@ -1765,39 +1814,8 @@
         };
     });
 
-/*    ginasApp.directive('substanceChooserLite', function($templateRequest, $compile){
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: true,
-            link: function(scope, element, attrs){
-                console.log(scope);
-                console.log(attrs);
-                scope.saveto = attrs.saveto;
-                $templateRequest( baseurl + "assets/templates/substancechooze.html").then(function(html){
-                    element.append($compile(html)(scope));
-                });
-            }
-        };
-    });
 
-    ginasApp.directive('substanceView', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                substance: '='
-            },
-            link: function(scope, element, attrs) {
-                console.log(attrs);
-                element.bind("click", function () {
-
-                });
-                console.log(scope);
-            },
-            template: '<div><rendered id = "substance.refuuid"></rendered><br/><code>{{substance.refPname}}</code></div>'
-        };
-    });*/
+    ////DO NOT TOUCH VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/////////////////////////////////////
 
     ginasApp.directive('substanceChooserLite', function (nameFinder) {
         return {
@@ -1805,19 +1823,22 @@
             replace: true,
             restrict: 'E',
             scope: {
-                path: '@subref',
-                subref: '=subref'
+                subref: '=subref',
+                //path: '@subref',
+                name:'@name',
+                form: '@form'
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
+               // console.log(scope);
                 scope.loadSubstances = function($query){
                     return nameFinder.search($query);
                 };
 
                 scope.createSubref = function(selectedItem){
-                    console.log(scope);
-                    console.log(selectedItem);
-                    console.log(scope.path);
+                 //   console.log(scope);
+                 //   console.log(selectedItem);
+
+                  //  console.log(scope.path);
                     var subref = {};
                     subref.refuuid = selectedItem.uuid;
                     subref.refPname = selectedItem.name;
@@ -1828,15 +1849,14 @@
                     // things happening if editting from inside of an ng-repeat
                     // as the reference being set isn't the same
                     //
-                    // _.set(scope.$parent, scope.path, subref);
+                   //  _.set(scope.$parent, scope.path, subref);
                     
-                    console.log(scope);
+                 //   console.log(scope);
                 };
 
-                scope.focus= function(){
-                    console.log(scope);
-                    scope.diverse = [];
-                    console.log("focus");
+                scope.test= function(){
+                   console.log(scope);
+ console.log('bbbbb');
                 };
             }
         };
@@ -1851,51 +1871,23 @@
                     subref: '='
                 },
                 link: function(scope, element, attrs) {
-                   /* console.log(scope);
+                  //  console.log(scope);
                     element.bind("click", function () {
-                        scope.subref = undefined;
-                                    console.log(element);
-                        console.log(scope);
-                    });*/
+                      //  scope.$parent.temp= _.cloneDeep(scope.$parent.diverse);
+                       // console.log(scope);
+                        scope.$parent.diverse = [];
+                        //console.log(scope);
+
+                        //subref = undefined;
+/*                                    console.log(element);
+                        console.log(scope);*/
+                    });
                 }
             };
         });
 
 
-/*    ginasApp.directive('substanceChooserLite', function($templateRequest, $compile){
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: true,
-            link: function(scope, element, attrs){
-                console.log(scope);
-                console.log(attrs);
-                scope.saveto = attrs.saveto;
-                $templateRequest( baseurl + "assets/templates/substancechooze.html").then(function(html){
-                    element.append($compile(html)(scope));
-                });
-            }
-        };
-    });
-
-    ginasApp.directive('substanceView', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                substance: '='
-            },
-            link: function(scope, element, attrs) {
-                console.log(attrs);
-                element.bind("click", function () {
-
-                });
-                console.log(scope);
-            },
-            template: '<div><rendered id = "substance.refuuid"></rendered><br/><code>{{substance.refPname}}</code></div>'
-        };
-    });*/
-
+    ////DO NOT TOUCH ^^^^^^^^^^^^^^^^^^^^^/////////////////////////////////////
 
     ginasApp.directive('substanceChooser', function ($modal) {
         return {
@@ -2187,6 +2179,56 @@
             templateUrl: baseurl + "assets/templates/molexport.html"
         };
     });
+
+
+
+
+    ////DO NOT TOUCH VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/////////////////////////////////////
+    ginasApp.directive('textInput', function(){
+        return{
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/text-input.html",
+            scope:{
+                form: '@',
+                path:'@',
+                object:'=',
+                field: '@'
+
+            },
+            replace: 'true',
+            link: function(scope, element, attrs){
+                console.log(scope);
+                console.log(attrs);
+            }
+        };
+    });
+
+    ginasApp.directive('dropdownSelect', function(ajaxlookup){
+        return{
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/dropdown-select.html",
+            scope:{
+                form: '@',
+                object:'=',
+                field: '@',
+                cv: '@'
+            },
+            replace: 'true',
+            link: function(scope, element, attrs){
+                ajaxlookup.load(attrs.cv).then(function(data){
+                  //  console.log(data);
+                    scope.values = data[0].terms;
+                });
+                scope.selected = function(s){
+                    console.log(s);
+                };
+                console.log(scope);
+                console.log(attrs);
+            }
+        };
+    });
+
+    ////////DO NOT TOUCH^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^///////////////////////////////////////////////////////////
 
     ginasApp.controller('ProgressJobController', function ($scope, $http, $timeout) {
         $scope.max = 100;

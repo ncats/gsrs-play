@@ -56,6 +56,9 @@
         <form class="form-horizontal" name="nameForm" id = "add-name" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-4 err-check" id="name-div" show-errors>
+                    @*
+                    <text-input form ="nameForm" path ="substance.unofficialNames" object="unofficialName" field="name"></text-input>
+                    *@
                     <input type="text" class="form-control" ng-model ="name.name" title="Name" id="name" name = "name" required duplicate/>
                     <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
                         <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
@@ -63,7 +66,11 @@
                     </ng-messages>
                 </div>
                 <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "name.type" ng-options="r.display for r in lookup.getList('NAME_TYPE') track by r.display" required>
+@*
+                    <dropdown-select form ="nameForm" object="name" field="type" cv = "NAME_TYPE"></dropdown-select>
+*@
+
+             <select class="form-control" title="Name Type" id="type" name = "type" ng-model = "name.type" ng-options="r.display for r in lookup.getList('NAME_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="nameForm.type.$error" ng-if="nameForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>

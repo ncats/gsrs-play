@@ -1,14 +1,20 @@
 <div>
-<substance-view subref="subref" ng-show="subref" ng-click="subref=null"></substance-view>
-<div ng-show="!subref">
-<tags-input custom-class="form-control" ng-focus="focus()" ng-model= "diverse" title="Substance Selector" placeholder="Substance Name" id="substance" name="substance" display-property="name" key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag, d)' template = "tag-template">
-    <auto-complete source="loadSubstances($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true" template="autocomplete-template"></auto-complete>
-</tags-input>
-</div>
+    <span ng-show="subref">
+        <substance-view subref="subref" ng-show="subref" ng-click="subref=null"></substance-view>
+    </span>
 
-<!--<ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domains.$touched">
-    <ng-message when="required" class="help-block">*required</ng-message>
-</ng-messages>-->
+    <div ng-show="!subref">
+        <tags-input custom-class="form-control" ng-blur="cancel()" ng-model="diverse" title="Substance Selector"
+                    placeholder="Substance Name" id="substance" name="substance" display-property="name"
+                    key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag)'
+                    template="tag-template" required>
+            <auto-complete source="loadSubstances($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"
+                           template="autocomplete-template"></auto-complete>
+        </tags-input>
+    </div>
+<ng-messages for="form.name.$error" ng-if="form.name.$touched">
+        <ng-message when="required" class="help-block">*required</ng-message>
+    </ng-messages>
 
     <script type="text/ng-template" id="autocomplete-template">
         <div class="autocomplete-template">

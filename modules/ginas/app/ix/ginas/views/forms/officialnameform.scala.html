@@ -88,7 +88,7 @@
                 </div>
                 <div class="col-md-2 err-check" show-errors>
                     <tags-input custom-class="form-control" ng-model="officialName.domains" title="Domain" placeholder="Domain" id="domains" name="domains" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
-                        <auto-complete source="loadItems('NAME_DOMAIN', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                        <auto-complete source="loadItems('NAME_DOMAIN', $query)" min-length="1" debounce-delay="0" load-on-empty="true" load-on-focus="true" load-on-down-arrow="true"></auto-complete>
                     </tags-input>
                     <ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domainss.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
@@ -96,7 +96,7 @@
                 </div>
                 <div class="col-md-2 err-check" >
                     <tags-input custom-class="form-control" ng-model="officialName.nameJurisdiction" title="Jurisdiction" placeholder="Jurisdiction" id="nameJurisdiction" name="nameJurisdiction" display-property="display" key-property="value" add-from-autocomplete-only="true" >
-                        <auto-complete source="loadItems('JURISDICTION', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                        <auto-complete source="loadItems('JURISDICTION', $query)" min-length="1" debounce-delay="0"load-on-empty="true" load-on-focus="true" load-on-down-arrow="true"></auto-complete>
                     </tags-input>
                     <ng-messages for="officialNameForm.nameJurisdiction.$error" ng-if="officialNameForm.nameJurisdiction.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
