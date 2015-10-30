@@ -1,0 +1,73 @@
+
+<div class = "row info" >
+    <button class="btn btn-primary label-offset det">
+                      Parents&nbsp;</button>
+    <div class="col-md-12">
+        <div class ="row header-row">
+            <div class="col-md-3"><strong>Parent Substance</strong></div>
+            <div class="col-md-3"><strong>Paternal Organism</strong></div>
+            <div class="col-md-3"><strong>Maternal Organism</strong></div>
+        </div>
+
+        <div class="row">
+            <div class ="col-md-3" >
+
+
+            </div>
+            <div class ="col-md-3" ng-click="openSelector(substance.structurallyDiverse.hybridSpeciesPaternalOrganism)">
+                <rendered id = substance.structurallyDiverse.hybridSpeciesPaternalOrganism.refuuid></rendered>
+                <code>{{substance.structurallyDiverse.hybridSpeciesPaternalOrganism.refPname}}</code>
+
+            </div>
+            <div class ="col-md-3" ng-click="openSelector(substance.structurallyDiverse.hybridSpeciesMaternalOrganism)">
+                <rendered id = substance.structurallyDiverse.hybridSpeciesMaternalOrganism.refuuid></rendered>
+                <code>{{substance.structurallyDiverse.hybridSpeciesMaternalOrganism.refPname}}</code>
+            </div>
+        </div>
+    </div>
+
+    <form class="form-horizontal" name="parentForm" id = "add-component" role="form" novalidate>
+        <div class="row form-row" ng-show="!parentForm.$submitted">
+@*            <div class = "col-md-3">
+                <find-substance></find-substance>
+            </div>*@
+            <div class="col-md-3 text-center">
+
+                <span ng-show="!parentForm.parentSubstance.selected" ng-click="toggle(parentForm.parentSubstance)">
+                <substance-chooser-lite subref ="substance.structurallyDiverse.parentSubstance" name ="parentSubstance"></substance-chooser-lite>
+                </span>
+@*
+                <substance-view substance = substance.structurallyDiverse.parentSubstance ng-if="substance.structurallyDiverse.parentSubstance"></substance-view>
+*@
+@*
+                <substance-chooser-lite saveto="structurallyDiverse.parentSubstance"  ng-if="!substance.structurallyDiverse.parentSubstance"></substance-chooser-lite>
+*@
+
+
+@*                <tags-input custom-class="form-control" ng-model="diverse.parentSubstance" title="Substance Selector" placeholder="Substance Name" id="substance" name="substance" display-property="name" key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding="createSubref($tag, 'structurallyDiverse.parentSubstance')" required>
+                    <auto-complete source="loadSubstances($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true" template="app/assets/ginas/templates/autocompletetemplate.html"></auto-complete>
+                </tags-input>
+                <ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domains.$touched">
+                    <ng-message when="required" class="help-block">*required</ng-message>
+                </ng-messages>*@
+            </div>
+
+@*
+            <div class="col-md-3">
+            @selectors.substanceselectorform("diverse.parentSubstance")
+            </div>
+            <div class="col-md-3">
+            @selectors.substanceselectorform("diverse.hybridSpeciesPaternalOrganism")
+            </div>
+            <div class="col-md-3">
+            @selectors.substanceselectorform("diverse.hybridSpeciesMaternalOrganism")
+            </div>
+*@
+
+        </div>
+        @submitbuttons("diverse", "parentForm", "structurallyDiverse", false)
+
+
+    </form>
+
+</div>

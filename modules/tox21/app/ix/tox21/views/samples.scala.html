@@ -7,6 +7,26 @@
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
  facets: Array[FacetDecorator], samples: List[QCSample], ctx: String)
 
+@grade(t: Int, g: QCSample.Grade, toxid: String) = {
+  @g match {
+     case null => {
+        <td></td>
+	}
+     case QCSample.Grade.ND => {
+        <td class="valign-center"><span class="label label-default">@g</span>&nbsp;@HtmlFormat.raw(g.desc.replaceAll("\n", "<br>"))</td>
+     }
+     case _ => {
+        <td class="valign-center"><span class="label label-@{g.label}">@g</span>&nbsp;
+        @if(Tox21App.hasSpectra(toxid, t)) {
+           <a href="@ix.tox21.controllers.routes.Tox21App.getSpectra(toxid, t)">@HtmlFormat.raw(g.desc)</a>
+	} else {
+	   @HtmlFormat.raw(g.desc)
+	}
+	</td>
+     }
+  }
+}
+
 @label(x: QCSample) = {
      @if(x.getName().length() > 30) {
        <a  href="#"
@@ -43,9 +63,9 @@
            data-trigger="click hover focus"
            data-title="@s.getName() (@s.getSynonym(Sample.S_NCGC).term)"
 	   data-html="true"
-           data-content="<img src='@ix.ncats.controllers.routes.App.structure(s.structure.getId,"svg",200)'>">
+           data-content="<img src='@ix.tox21.controllers.routes.Tox21App.render(toxid,ctx,200)'>">
          <img alt="Structure of @s.getName()"
-   	      src='@ix.ncats.controllers.routes.App.structure(s.structure.getId,"svg",80)'></a>
+   	      src='@ix.tox21.controllers.routes.Tox21App.render(toxid,ctx,80)'></a>
        }
   </td>
     
@@ -59,17 +79,8 @@
     }
   </td>
 
-  @s.grade match {
-     case null => {
-        <td></td>
-	}
-     case QCSample.Grade.ND => {
-            <td class="valign-center"><span class="label label-default">@{s.grade}</span>&nbsp;@HtmlFormat.raw(s.grade.desc.replaceAll("\n", "<br>"))</td>
-     }
-     case _ => {
-           <td class="valign-center"><span class="label label-@{s.grade.label}">@s.grade</span>&nbsp;<a href="https://tripod.nih.gov/tox21/QC/@toxid">@HtmlFormat.raw(s.grade.desc)</a></td>
-       }
-    }
+  @grade(0, s.gradeT0, toxid)
+  @grade(4, s.gradeT4, toxid)
 </tr>
   }
 }
@@ -87,7 +98,8 @@ current, rows, total, pages, facets){ @menu() }{
     <th>Structure</th>
     <th>Tox21 ID</th>
     <th>Name</th>
-    <th>QC Grade [T0]</th>
+    <th>QC Grade T0</th>
+    <th>QC Grade T4</th>    
   </tr>
   @for(s <- samples) {
      @tabrow(s)

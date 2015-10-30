@@ -27,6 +27,9 @@
            <div>@forms.diversesourceform()</div>
            <div ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'">@forms.diverseorganismform()</div>
             <div>@forms.diversedetailsform()</div>
+            <div>@forms.parentform()</div>
+            <div>@forms.partform()</div>
+
 
         }
         case "concept" => {
@@ -112,7 +115,7 @@
 </div>
         <script>
         var loadjson = @Html(json);
-    </script>
+        </script>
 
         <script type="text/ng-template" id="tag-template-script">
         <div class="tag-template" >

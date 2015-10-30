@@ -1,6 +1,7 @@
 
 @import ix.qhts.models.Sample
 @import ix.tox21.models.QCSample
+@import ix.tox21.controllers.Tox21App
 
 @(qc: QCSample)
 
@@ -16,33 +17,14 @@
 <div class="container-fluid">
   <div class="col-md-12">
     <div class="page-header">
-      <h1>
-        <table>
-        <tr>
-         <td>
-           <span class="label label-@qc.grade.label">@qc.grade</span>
-         </td>
-         <td style="padding:5px;"></td>
-         <td>@qc.getName()</td>
-        </tr>
-        </table>
-      </h1>
+      <h1>@qc.getName()</h1>
     </div>
     <div class="row">
       <div class="col-md-4">
 	<div class="panel panel-default">
 	  <div class="panel-body">
-	    <center>
-	      @if(qc.grade == QCSample.Grade.ND) {
-	      <div class="alert alert-@qc.grade.label">
-		@HtmlFormat.raw(qc.grade.desc)
-	      </div>
-	      } else {
-  	      <a href="https://tripod.nih.gov/tox21/QC/@qc.getSynonym(Sample.S_TOX21).term">@HtmlFormat.raw(qc.grade.desc.replaceAll("\n","<p>"))</a>
-	      }
-	      <div id="loading"></div>
-	    </center>
 	    @if(qc.structure != null) {
+    	      <div id="loading"></div>
   	      <button type="button" class="btn btn-default"
 	            data-toggle="modal" data-target="#strucModal"
 		    data-molurl='@ix.ncats.controllers.routes.App.structure(qc.structure.getId,"mol")'
@@ -50,6 +32,41 @@
 	       <span class="fa fa-external-link" aria-hidden="true"></span>
 	      </button>
 	    }
+	  </div>
+	</div>
+      </div>
+      <div class="col-md-4">
+	<div class="panel panel-default">
+	  <div class="panel-heading">
+	    <h3 class="panel-title">QC Grade</h3>
+	  </div>
+	  <div class="panel-body">
+	    <table class="table">
+	     <tr>
+	      <td><strong>T0</strong></td>
+	      <td><span class="label label-@qc.gradeT0.label">
+		@qc.gradeT0</span></td>
+	      <td>
+	      @if(qc.gradeT0 == QCSample.Grade.ND || !Tox21App.hasSpectra(Tox21App.getId(qc), 0)) {
+	         @HtmlFormat.raw(qc.gradeT0.desc)
+	      } else {
+  	        <a href="@ix.tox21.controllers.routes.Tox21App.getSpectra(Tox21App.getId(qc), 0)">@HtmlFormat.raw(qc.gradeT0.desc)</a>
+              }
+	      </td>
+	     </tr>
+	     <tr>
+	      <td><strong>T4</strong></td>
+	      <td><span class="label label-@qc.gradeT4.label">
+		@qc.gradeT4</span></td>
+	      <td>
+	      @if(qc.gradeT4 == QCSample.Grade.ND || !Tox21App.hasSpectra(Tox21App.getId(qc), 4)) {
+	         @HtmlFormat.raw(qc.gradeT4.desc)
+	      } else {
+  	        <a href="@ix.tox21.controllers.routes.Tox21App.getSpectra(Tox21App.getId(qc), 4)">@HtmlFormat.raw(qc.gradeT4.desc)</a>
+              }
+	      </td>
+	     </tr>
+	    </table>
 	  </div>
 	</div>
       </div>
@@ -73,33 +90,17 @@
 	      <tr><td>PubChem</td><td><a href="https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?sid=@qc.getSynonym(Sample.S_SID).term"</td>@qc.getSynonym(Sample.S_SID).term</a></tr>
 	    </table>
 	  </div>
-	</div>
-      </div>
-<div class="col-md-4">
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">Properties</h3>
-          </div>
-          <div class="panel-body">
-	    Coming soon...
-          </div>
-        </div>
-        <div class="panel panel-default">
-          <div class="panel-heading">
-            <h3 class="panel-title">In vitro Summary</h3>
-          </div>
-          <div class="panel-body">
-	    Coming soon...
-          </div>
-        </div>
-
-       </div>
+	 </div>
+        </div>	
       </div>
     </div>
   </div>
 </div>
 }
 
+<head>
+  <script type="text/javascript" src='@routes.Assets.at("javascripts/pdfobject.js")'></script>
+</head>
 
 <script>
 $(document).ready(function () {
