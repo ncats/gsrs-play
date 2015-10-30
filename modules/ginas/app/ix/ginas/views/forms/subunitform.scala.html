@@ -77,7 +77,10 @@
             <input ng-model="subunit.index">
         </div>
         <div >
-       @submitbuttons("subunit", "subunitForm", parent + ".subunits")
+        <submit-buttons submit="subunit" form="subunitForm" path="@{parent}.subunits" list="true" ></submit-buttons>
+        
+        
+       
 
         </div>
     </form>

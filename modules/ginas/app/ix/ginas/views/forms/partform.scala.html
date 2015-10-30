@@ -34,9 +34,9 @@
                 <div class="col-md-9 err-check" id="note-div" show-errors>
                     <textarea type="text" class="form-control" ng-model ="note.note" title="Note" id="note" name = "note" required></textarea>
                 </div>
-                @referenceselectorform("noteForm", "note")
+                <reference-selector ngModel='note' references='substance.references'></reference-selector>  
         </div>
-        @submitbuttons("note", "noteForm", "notes")
+        <submit-buttons submit="note" form="noteForm" path="notes"></submit-buttons>
         </form>
     </div>
 </div>

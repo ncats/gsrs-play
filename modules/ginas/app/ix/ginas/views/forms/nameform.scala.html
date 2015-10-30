@@ -80,9 +80,9 @@
                 <div class="col-md-1">
                     <input type = "checkbox" ng-model = "name.preferred" placeholder="Preferred" title="Preferred" id="preferred"/>
                 </div>
-                @referenceselectorform("nameForm", "name")
+                <reference-selector ngModel='name' references='substance.references'></reference-selector>   
             </div>
-            @submitbuttons("name", "nameForm", "unofficialNames")
+            <submit-buttons submit="name" form="nameForm" path="unofficialNames"></submit-buttons>
         </form>
     </div>
 </div>

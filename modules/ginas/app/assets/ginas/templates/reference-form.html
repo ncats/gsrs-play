@@ -1,5 +1,3 @@
-@import ix.ginas.controllers.GinasApp
-
 <div class ="row info" id = "references">
     <button class="btn btn-primary label-offset det">
                         References&nbsp;<span class="badge" ng-show="substance.references.length>0">
@@ -79,15 +77,6 @@
                         <div class="input-group">
                         <input type="text" class="form-control" datepicker-popup ng-model="ref.documentDate" is-open="status.opened" ng-required="true" /><button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
                         </div>
-                        @*<div class="dropdown">
-                            <a class="dropdown-toggle" id="calendar"  role="button" data-toggle="dropdown" data-target="#" href="#">
-                                <input type="text" class="form-control" name = "calendar" data-ng-model="ref.documentDate"><span class="input-group-addon" id ="calendar-icon"><i class="fa fa-calendar"></i></span>
-                                </div>
-                            </a>
-                            <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                                <datetimepicker ng-model="ref.documentDate" data-datetimepicker-config="{ dropdownSelector: '#calendar', minView:'day' }"/>
-                            </ul>
-                        </div>*@
                         <ng-messages for="refForm.documentDate.$error" ng-if="refForm.documentDate.$dirty">
                             <ng-message when="required" class="help-block">*required</ng-message>
                         </ng-messages>
@@ -104,9 +93,7 @@
                         </ng-messages>
                     </div>
             </div>
-                    @submitbuttons("ref","refForm", "references")
-
+                    <submit-buttons submit="ref" form="refForm" path="references" list="true" ></submit-buttons>
                 </form>
             </div>
         </div>
-

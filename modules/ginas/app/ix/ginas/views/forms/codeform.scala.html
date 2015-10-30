@@ -64,9 +64,9 @@
                 <div class="col-md-3">
                     <input type="text" class="form-control" ng-model ="code.description" title="Description" id="description" name = "description"/>
                 </div>
-                @referenceselectorform("codeForm", "code")
+                <reference-selector ngModel='code' references='substance.references'></reference-selector>
             </div>
-            @submitbuttons("code", "codeForm", "codes")
+            <submit-buttons submit="code" form="codeForm" path="codes"></submit-buttons>
         </form>
     </div>
 </div>

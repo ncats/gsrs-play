@@ -82,10 +82,10 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                 <div class="col-md-1">
                     <input type = "checkbox" ng-model = "property.defining" title="Defining" id="defining"/>
                 </div>
-                @referenceselectorform("propertyForm", "property")
+                <reference-selector ngModel='property' references='substance.references'></reference-selector> 
             </div>
             <amount-form ng-model="property.value"></amount-form>
-            @submitbuttons("property", "propertyForm", "properties")
+            <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
         </form>
     </div>
 </div>

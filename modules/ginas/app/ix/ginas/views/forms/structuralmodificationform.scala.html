@@ -74,7 +74,7 @@
                 <amount-edit-display ng-model="structuralModification.extentAmount"></amount-edit-display>    
             </div>
             <amount-form ng-model="structuralModification.extentAmount"></amount-form>
-            @submitbuttons("structuralModification", "strucModForm", "protein.modifications.structuralModifications")
+            <submit-buttons submit="structuralModification" form="strucModForm" path="protein.modifications.structuralModifications"></submit-buttons>
         </form>
     </div>
 </div>

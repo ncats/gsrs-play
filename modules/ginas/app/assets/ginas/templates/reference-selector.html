@@ -1,0 +1,7 @@
+<div class="col-md-1 err-check pull-right" show-errors>
+    <tags-input custom-class="form-control" ng-hide="!allreferences"  ng-model = "property.references" title="References" placeholder="References" id="references" name="references" min-length="1" display-property="id" key-property="uuid" add-from-autocomplete-only="true" >
+        <auto-complete source="allreferences" min-length="1" max-results-to-show="100" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+    </tags-input>
+    
+    <a ng-click="showReferences()" role="button" aria-label="Add a reference"><i class="fa fa-plus fa-2x success"></i></a>
+</div>

@@ -1,5 +1,5 @@
 @import ix.ginas.controllers.GinasApp;
-<div class = "row info" id = "nucleicacid-sugar" ng-show="substance.nucleicAcid.subunits" >
+<div class = "row info" id = "nucleicacid-sugar" ng-show="substance.nucleicAcid.subunits.length>0" >
     <button class="btn btn-primary label-offset det">
                         Sugars&nbsp;</button>
    <div class="col-md-12">
@@ -49,7 +49,7 @@
                     <button ng-click="obj._displaySites = getAllLeftoverSitesDisplay()">Apply to all remaining sites</button>
                 </div>
             </div>
-            @submitbuttons("obj", "sugarForm", "nucleicAcid.sugars")
+            <submit-buttons submit="obj" form="sugarForm" path="nucleicAcid.sugars"></submit-buttons>
         </form>
     </div>
 </div>

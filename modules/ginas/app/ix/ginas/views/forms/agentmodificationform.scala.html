@@ -72,7 +72,7 @@
                 <amount-edit-display ng-model="agentModification.amount"></amount-edit-display> 
             </div>
             <amount-form ng-model="agentModification.amount"></amount-form>
-            @submitbuttons("agentModification", "agentModForm", "protein.modifications.agentModifications")
+            <submit-buttons submit="agentModification" form="agentModForm" path="protein.modifications.agentModifications"></submit-buttons>
         </form>
     </div>
 </div>

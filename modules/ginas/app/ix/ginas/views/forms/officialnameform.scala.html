@@ -121,9 +121,9 @@
                 <div class="col-md-1">
                     <input type = "checkbox" ng-model = "officialName.preferred" placeholder="Preferred" title="Preferred" id="preferred"/>
                 </div>
-                @referenceselectorform("officialNameForm", "officialName")
+                <reference-selector ngModel='officialName' references='substance.references'></reference-selector>                
             </div>
-            @submitbuttons("officialName", "officialNameForm", "officialNames")
+            <submit-buttons submit="officialName" form="officialNameForm" path="officialNames"></submit-buttons>
         </form>
 
     </div>

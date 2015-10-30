@@ -38,3 +38,4 @@ function submitq(qinput) {
 }
 
 
+window.SDFFields = {};

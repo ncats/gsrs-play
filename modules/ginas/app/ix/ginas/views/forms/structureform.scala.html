@@ -44,8 +44,8 @@
                     @referenceview("structureForm", "structure")
                     </div>
                     <div ng-hide="substance.structure.references.length > 0">
-                    @referenceselectorform("structureForm", "structure")
-                        </div>
+                        <reference-selector ngModel='structure' references='substance.references'></reference-selector>
+                    </div>
                 </div>
             </form>
         </div>
