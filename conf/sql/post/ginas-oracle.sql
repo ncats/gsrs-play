@@ -1,0 +1,10 @@
+CREATE INDEX xref_refid_index on ix_core_xref (refid);
+CREATE INDEX xref_kind_index on ix_core_xref (kind);
+CREATE INDEX value_label_index on ix_core_value (label);
+CREATE INDEX value_term_index on ix_core_value (term);
+CREATE INDEX sub_approval_index on ix_ginas_substance (approval_id);
+CREATE INDEX name_index on ix_ginas_name (name);
+CREATE INDEX ref_id_index on ix_ginas_reference (id);
+CREATE INDEX interaction_index on ix_ginas_relationship (interaction_type);
+CREATE INDEX qualification_index on ix_ginas_relationship (qualification);
+CREATE INDEX type_index on ix_ginas_relationship (type);
