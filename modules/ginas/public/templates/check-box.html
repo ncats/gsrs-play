@@ -1,0 +1,8 @@
+<div>
+    <label for="field" class="text-capitalize">{{field}}</label>
+
+    <input type = "checkbox" ng-model = "object[field]" placeholder="field" title="field" id="field"/>
+    <ng-messages for="form.field.$error" ng-if="form.field.$touched">
+        <ng-message when="required" class="help-block">*required</ng-message>
+    </ng-messages>
+</div>

@@ -8,7 +8,7 @@
                     placeholder="Substance Name" id="substance" name="substance" display-property="name"
                     key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag)'
                     template="tag-template" required>
-            <auto-complete source="loadSubstances($query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"
+            <auto-complete source="loadSubstances($query)" max-results-to-show="25" min-length="1" debounce-delay="0" load-on-down-arrow="true"
                            template="autocomplete-template"></auto-complete>
         </tags-input>
     </div>

@@ -1,0 +1,44 @@
+@import ix.ginas.controllers.GinasApp;
+<div class = "row info">
+  <button class="btn btn-primary label-offset det">
+                        Names&nbsp;<span class="badge" ng-show="substance.unofficialNames.length>0">
+                        {{substance.unofficialNames.length}}</span> </button>
+
+  <div class="col-md-12">
+  <form class="form-horizontal" name="nameForm" id = "add-name" role="form"  novalidate>
+    <div class="row form-row">git add 
+      <div class="col-md-4 err-check" id="name-div" show-errors>
+        <text-input ng-model="name.name" field="name" formname="unofficialNameForm" arr="substance.unofficialNames" required></text-input>
+      </div>
+      <div class="col-md-2 err-check" show-errors>
+        <dropdown-select ng-model="name.type" field="type" formname="unofficialNameForm" cv = "NAME_TYPE" arr="substance.unofficialNames"></dropdown-select>
+      </div>
+            <div class="col-md-2 err-check">
+        <multi-select  ng-model="name.languages" field="languages" formname="unofficialNameForm" cv = "LANGUAGE" arr="substance.unofficialNames"></multi-select>
+      </div>
+      <div class="col-md-1">
+        <check-box ng-model="name.preferred" field="preferred" formname="unofficialNameForm" array=substance.unofficialNames></check-box>
+      </div>
+@*
+      <reference-selector ngModel='name' references='substance.references' array=substance.unofficialNames></reference-selector>
+*@
+
+    </div>
+@*
+    <button ng-click="defaultSave(name, nameForm, 'unofficialNames', true, 'name')">Add</button>
+*@
+
+
+    <submit-buttons submit="name" form="nameForm" path="unofficialNames"></submit-buttons>
+
+  </form>
+  </div>
+</div>
+
+
+
+
+
+@*
+    Add button needs to save name to substance, and show the form
+*@

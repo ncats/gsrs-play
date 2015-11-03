@@ -575,6 +575,11 @@
         };
 
         $scope.defaultSave = function (obj, form, path, list, name) {
+            console.log(form);
+            console.log(path);
+            console.log(list);
+
+            console.log(JSON.stringify(obj));
             $scope.$broadcast('show-errors-check-validity');
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
@@ -591,20 +596,41 @@
                         _.set($scope.substance, path, obj);
                     } else {
                         var x = [];
-                        x.push(obj);
+                        console.log(JSON.stringify(obj));
+
+                        x.push(angular.copy(obj));
                         _.set($scope.substance, path, x);
                     }
                 }
                 
-                console.log("Valid");
+                console.log($scope);
                 $scope[name] = {};
                 $scope.reset(form);
                 form.$setSubmitted(true);
+                console.log($scope);
             }else{
-                console.log("Invalid");
+                //console.log("Invalid");
             }
         };
 
+
+        $scope.defaultSave2 = function (obj, path) {
+            console.log(path);
+            console.log(list);
+
+            console.log(JSON.stringify(obj));
+                        var x = [];
+                        console.log(JSON.stringify(obj));
+                        x.push(angular.copy(obj));
+            console.log(JSON.stringify($scope.substance));
+                        _.set($scope.substance, path, x);
+            console.log(JSON.stringify($scope.substance));
+              console.log($scope);
+             $scope[name] = {};
+            $scope.reset(form);
+             form.$setSubmitted(true);
+
+        };
 
         $scope.siteDisplayListToSiteList= function (slist){
                 var toks=slist.split(";");
@@ -665,7 +691,7 @@
            
             var v = path.split(".");
             var type = _.last(v);
-            console.log(type);
+          //  console.log(type);
             var subClass = ($scope.substance.substanceClass);
             switch (type) {
                 case "sugars":
@@ -677,7 +703,7 @@
                     //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
                     //if(true)return "test";
                     $scope.updateSiteList(obj);
-                    console.log(JSON.parse(JSON.stringify(obj)));
+                   // console.log(JSON.parse(JSON.stringify(obj)));
                     $scope.defaultSave(obj, form, path, list, objName);
                     break;
                 case "subunits":
@@ -1394,6 +1420,27 @@
             _.set($scope.substance, path, subref);
             console.log($scope);
         };
+
+        $scope.addToArray = function(obj, array){
+            //array.push(obj);
+            console.log($scope);
+           // console.log(obj);
+            if(!_.has($scope, array)) {
+                $scope[array].push(obj);
+            }else{
+              //  obj = [obj]
+                _.set($scope, array, obj);
+
+            }
+            console.log($scope);
+        };
+
+        $scope.formPrint = function(obj, form){
+            console.log(obj);
+            console.log(form);
+        };
+
+
     });
 
     var uuid = function uuid() {
@@ -2188,42 +2235,125 @@
         return{
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/text-input.html",
+            require: '^ngModel',
+            replace: true,
             scope:{
-                form: '@',
-                path:'@',
-                object:'=',
-                field: '@'
-
+                formname: '=',
+                object:'=ngModel',
+                field: '@',
+                arr: '='
             },
-            replace: 'true',
-            link: function(scope, element, attrs){
-                console.log(scope);
-                console.log(attrs);
-            }
+            link:  function (scope, element, attrs, ngModel) {
+
+                    scope.editing = function(obj){
+                        console.log(obj);
+                        if(_.has(obj, '_editing')) {
+                            obj._editing = !obj._editing;
+                        }else{
+                            _.set(obj, '_editing', true);
+                        }
+                    };
+                }
         };
     });
 
     ginasApp.directive('dropdownSelect', function(ajaxlookup){
-        return{
+        return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/dropdown-select.html",
+            require: '^ngModel',
+            replace: true,
+            scope: {
+                formname: '=',
+                object: '=ngModel',
+                field: '@',
+                arr: '='
+            },
+            link: function (scope, element, attrs, ngModel) {
+                ajaxlookup.load(attrs.cv).then(function(data){
+                 scope.values = data[0].terms;
+                 });
+
+                scope.editing = function (obj) {
+                    if (_.has(obj, '_editing')) {
+                        obj._editing = !obj._editing;
+                    } else {
+                        _.set(obj, '_editing', true);
+                    }
+                };
+
+                 scope.update = function (val) {
+                     console.log(val);
+                 val._editing= false;
+                 };
+            }
+        };
+    });
+
+    ginasApp.directive('multiSelect', function(ajaxlookup, data){
+        return{
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/multi-select.html",
+            require: '^ngModel',
+            replace: true,
+            scope: {
+                formname: '=',
+                object: '=ngModel',
+                field: '@',
+                arr: '=',
+                cv: '@'
+            },
+            link: function(scope, element, attrs){
+                console.log(scope);
+                scope.loadItems = function (cv, $query) {
+                    data.load(cv);
+                    return data.search(cv, $query);
+                };
+
+                scope.editing = function (obj) {
+                    console.log(obj);
+                    if (_.has(obj, '_editing')) {
+                        obj._editing = !obj._editing;
+                    } else {
+                        _.set(obj, '_editing', true);
+                    }
+                    console.log(scope);
+                };
+
+                scope.update = function (val) {
+                    console.log(val);
+                    val._editing= false;
+                };
+            }
+        };
+    });
+
+    ginasApp.directive('checkBox', function(ajaxlookup, data){
+        return{
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/check-box.html",
+            replace: true,
             scope:{
                 form: '@',
                 object:'=',
                 field: '@',
-                cv: '@'
+                array: '=array'
             },
-            replace: 'true',
             link: function(scope, element, attrs){
-                ajaxlookup.load(attrs.cv).then(function(data){
-                  //  console.log(data);
-                    scope.values = data[0].terms;
-                });
+                scope.editinginput=true;
+/*                /!*                ajaxlookup.load(attrs.cv).then(function(data){
+                 //console.log(data);
+                 scope.values = data[0].terms;
+                 });*!/
+                scope.loadItems = function (field, $query) {
+                    data.load(field);
+                    return data.search(field, $query);
+                };
                 scope.selected = function(s){
                     console.log(s);
-                };
-                console.log(scope);
-                console.log(attrs);
+                };*/
+/*                console.log(scope);
+                console.log(attrs);*/
             }
         };
     });
