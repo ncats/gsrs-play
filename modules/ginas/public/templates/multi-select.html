@@ -3,12 +3,12 @@
 
     <div ng-repeat="obj in arr">
             <span ng-repeat="tag in obj[field]">
-            <a href="#" ng-hide=" obj[field]._editing" ng-click="editing( obj[field]);"
+            <a href="#" ng-hide=" obj[field]._editing" ng-click="editing(obj[field]);"
                class="badge">{{tag.display}}</a>
         </span>
         <tags-input ng-show="obj[field]._editing" custom-class="form-control" title="{{field}}" placeholder="{{field}}"
                     name="{{field}}"
-                    ng-model=obj[field] ng-blur="update(obj[field]);" display-property="display" key-property="value"
+                    ng-model=obj[field] ng-blur="editing(obj[field]);" display-property="display" key-property="value"
                     addFromAutocompleteOnly="true">
             <auto-complete source="loadItems(cv, $query)" min-length="2" debounce-delay="0"
                            load-on-down-arrow="true"></auto-complete>
@@ -16,9 +16,10 @@
         <hr>
     </div>
     <tags-input custom-class="form-control" title="{{field}}" placeholder="{{field}}" id="{{field}}" name="{{field}}"
-                ng-model="object" ng-blur="editing(object);" display-property="display" key-property="value"
+                ng-model="object" ng-blur="editing(object[field]);" display-property="display" key-property="value"
                 addFromAutocompleteOnly="true">
         <auto-complete source="loadItems(cv, $query)" min-length="2" debounce-delay="0"
+                       max-results-to-show="1111" debounce-delay="0" load-on-empty="true" load-on-focus="true"
                        load-on-down-arrow="true"></auto-complete>
     </tags-input>
 

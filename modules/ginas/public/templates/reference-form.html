@@ -1,99 +1,31 @@
 <div class ="row info" id = "references">
     <button class="btn btn-primary label-offset det">
-                        References&nbsp;<span class="badge" ng-show="substance.references.length>0">
-                        {{substance.references.length}}</span> </button>
+                        References&nbsp;<span class="badge" ng-show="parent.references.length>0">
+                        {{parent.references.length}}</span> </button>
 
-        <div class="col-md-12">
-            <div class = "row header-row">
-                <div class = "col-md-1">
-                    <strong>ID</strong>
-                </div>
-                <div class = "col-md-2">
-                    <strong>Citation</strong>
-                </div>
-                <div class = "col-md-2">
-                    <strong>Document Type</strong>
-                </div>
-                <div class = "col-md-2">
-                    <strong>Date Accessed</strong>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="refForm" id = "add-name" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-1">
+                    <reference-apply ng-model ="ref.apply" referenceobj= referenceobj parent=parent></reference-apply>
                 </div>
                 <div class="col-md-2">
-            <strong>Tags</strong>
-            </div>
-                <div class = "col-md-2">
-                    <strong>URL</strong>
+                    <text-input ng-model="ref.citation" field="citation" arr="parent.references" required></text-input>
                 </div>
-            </div>
-
-            <div class = "row" ng-repeat="obj in substance.references">
-                <hr>
-                <div class = "col-md-1">
-                                    {{obj.id}}
-                </div>
-                <div class = "col-md-2">
-                    <span href="#" editable-text="obj.citation" blur="submit">{{obj.citation}}</span>
-                </div>
-                <div class = "col-md-2"><span ng-repeat="n in obj.doctype">
-                    <span ng-show="!selected" ng-click="info(scope, element)" > {{n.display}}</span></span>
-                    <tags-input ng-show ="selected" ng-blur="info()" custom-class="form-control" ng-model="obj.doctype" title="Document Type" placeholder="Document Type" id="doctype" name="doctype" display-property="display" key-property="value" max-tags="1" add-from-autocomplete-only="true" required>
-                        <auto-complete source="loadItems('DOCUMENT_TYPE', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                    </tags-input>
-                </div>
-                <div class = "col-md-2">
-                                    {{obj.documentDate  | date:'MM-dd-yyyy' }}
-                </div>
-                <div class = "col-md-2"><span ng-repeat="n in obj.tags">
-                    <span ng-show="!selected" ng-click="info(scope, element)" >{{n.text}}</span></span>
-                    <tags-input ng-show ="selected" ng-blur="info()" custom-class="form-control" title="Tags"  placeholder="Tags" id="type" name="type" ng-model = "ref.tags" min-length="5">
-                    </tags-input>
-                </div>
-                <div class = "col-md-2 break-text">
-                    <span href="#" editable-text="obj.url" blur="submit">{{obj.url}}</span>
-                </div>
-            </div>
-
-            <form class="form-horizontal" name="refForm" id = "add-ref" role="form" novalidate>
-            <div class="row form-row" >
-
-                    <div class = "col-md-1">
-                        {{substance.references.length +1}}
-                    </div>
-                    <div class="col-md-2 err-check" id="ref-div" show-errors>
-                        <input type="text" class="form-control" ng-model ="ref.citation" title="Citation" id="citation" name = "citation" required/>
-                        <ng-messages for="refForm.citation.$error" ng-if="refForm.citation.$touched">
-                            <ng-message when="duplicate" class="help-block">Reference already exists in Ginas</ng-message>
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
-                    <div class="col-md-2 err-check" show-errors>
-                        <tags-input custom-class="form-control" title="Document Type"  placeholder="Document Type" id="type" name="type" ng-model = "ref.doctype" display-property="display" key-property="value" addFromAutocompleteOnly="true" max-tags="1">
-                            <auto-complete source="loadItems('DOCUMENT_TYPE', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                        </tags-input>
-                        <ng-messages for="refForm.doctype.$error" ng-if="refForm.doctype.$touched">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
-                    <div class="col-md-3 err-check">
-                        <div class="input-group">
-                        <input type="text" class="form-control" datepicker-popup ng-model="ref.documentDate" is-open="status.opened" ng-required="true" /><button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
-                        </div>
-                        <ng-messages for="refForm.documentDate.$error" ng-if="refForm.documentDate.$dirty">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
                 <div class="col-md-2">
-                    <tags-input custom-class="form-control" title="Tags"  placeholder="Tags" id="type" name="type" ng-model = "ref.tags" min-length="5">
-                    </tags-input>
+                    <dropdown-select ng-model="ref.doctype" field="doctype" cv = "DOCUMENT_TYPE" arr="parent.references"></dropdown-select>
                 </div>
-
-                    <div class="col-md-2 err-check" id="ref-div" show-errors>
-                        <input type="text" class="form-control" ng-model ="ref.url" title="URL" id="url" name = "url" />
-                        <ng-messages for="refForm.url.$error" ng-if="refForm.url.$touched">
-                            <ng-message when="required" class="help-block">*required</ng-message>
-                        </ng-messages>
-                    </div>
-            </div>
-                    <submit-buttons submit="ref" form="refForm" path="references" list="true" ></submit-buttons>
-                </form>
-            </div>
-        </div>
+                <div class="col-md-2">
+                    <date-picker ng-model ="ref.documentDate" field ="documentDate" arr="parent.references"></date-picker>
+                </div>
+                <div class="col-md-2">
+                    <multi-select ng-model="ref.tags" field="tags" cv = "DOCUMENT_COLLECTION" arr="parent.references"></multi-select>
+                </div>
+                <div class="col-md-2">
+                    <text-input ng-model="ref.url" field="url" arr="parent.references" required></text-input>
+                </div>
+            </div><a ng-click="reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+            <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,13 @@
+<div>
+    <label for="apply" class="text-capitalize">Apply</label>
+    <br/>
+    <div ng-repeat="obj in parent.references">
+        <input type="checkbox" ng-model="update" ng-checked="isReferenced(obj.uuid)"
+               ng-click="updateReference(obj.uuid);" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/>
+        <hr>
+    </div>
+    <input type="checkbox" ng-model=apply placeholder="Apply" title="Apply" id="apply" checked/>
+    <ng-messages for="form.field.$error" ng-if="form.field.$touched">
+        <ng-message when="required" class="help-block">*required</ng-message>
+    </ng-messages>
+</div>

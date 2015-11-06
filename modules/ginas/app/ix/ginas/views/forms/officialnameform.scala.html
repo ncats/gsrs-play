@@ -3,6 +3,42 @@
     <button class="btn btn-primary label-offset det">
                        Official Names&nbsp;<span class="badge" ng-show="substance.officialNames.length>0">
                         {{substance.officialNames.length}}</span> </button>
+
+        <div class="col-md-12">
+            <form class="form-horizontal" name="officialNameForm" id = "add-name" role="form" novalidate>
+                <div class="row form-row">
+                    <div class="col-md-3 err-check" id="name-div" show-errors>
+                        <text-input ng-model="name.name" field="name" arr="substance.officialNames" required></text-input>
+                    </div>
+                    <div class="col-md-2 err-check">
+                        <multi-select ng-model="name.domain" field="domain" cv = "NAME_DOMAIN" arr="substance.officialNames"></multi-select>
+                    </div>
+                    <div class="col-md-2 err-check">
+                        <multi-select ng-model="name.jurisdiction" field="jurisdiction" cv = "JURISDICTION" arr="substance.officialNames"></multi-select>
+                    </div>
+                    <div class="col-md-1 err-check">
+                        <multi-select ng-model="name.nameOrg" field="nameOrg" cv = "NAME_ORG" arr="substance.officialNames"></multi-select>
+                    </div>
+                    <div class="col-md-2 err-check">
+                        <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE" arr="substance.officialNames"></multi-select>
+                    </div>
+                    <div class="col-md-1">
+                        <check-box ng-model="name.preferred" field="preferred" arr="substance.unofficialNames"></check-box>
+                    </div>
+                    <div class="col-md-1 pull-right">
+                        <reference-selector ng-model = "name.references" referenceobj= "name" arr="substance.officialNames" parent = "substance" formname="officialNameForm"></reference-selector>
+                    </div>
+                </div>
+                <hr>
+                <div class="officialNameForm"></div>
+                <submit-buttons submit="name" form="officialNameForm" path="officialNames"></submit-buttons>
+            </form>
+        </div>
+    </div>
+
+
+@*
+
     <a ng-show="!addingNames" ng-click="addNames()" aria-label="Add Names"><i class = "fa fa-plus fa-2x success"></i></a>
     <a ng-show="addingNames" ng-click="addNames()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
     <div class="col-md-12">
@@ -62,7 +98,7 @@
             </div>
             <div class = "col-md-2"><span ng-repeat="n in officialName.languages">
                 <span ng-show="!officialName.languages || officialName.languages.length==0" ng-click="toggle(officialNameForm.languages)" ><i class="fa fa-plus fa-2x success"></i></span>
-                <span ng-show="!officialNameForm.languages.selected" ng-click="toggle(officialNameForm.languages)" >{{n.display}}</span>
+                <span ng-show="!officialNameForm.languages.selected"  ng-click="toggle(officialNameForm.languages)" >{{n.display}}</span>
             </span>
                 <tags-input ng-show ="officialNameForm.languages.selected" ng-blur="toggle(officialNameForm.languages)" custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="officialName.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
                     <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
@@ -112,7 +148,7 @@
                 </div>
                 <div class="col-md-2 err-check" >
                     <tags-input custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="officialName.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
-                        <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
+                        <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" max-results-to-show="1111" debounce-delay="0" load-on-empty="true" load-on-focus="true" load-on-down-arrow="true"></auto-complete>
                     </tags-input>
                     <ng-messages for="officialNameForm.language.$error" ng-if="officialNameForm.language.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
@@ -129,3 +165,4 @@
     </div>
 </div>
 
+*@
