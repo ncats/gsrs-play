@@ -1247,15 +1247,18 @@ public class TextIndexer {
     public long lastModified () { return lastModified.get(); }
 
     public void update (Object entity) throws IOException {
-        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+    	//String idString=null;
+    	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return;
         }
+        
 
         if (DEBUG (2))
             Logger.debug(">>> Updating "+entity+"...");
 
         try {
             Object id = null;
+            
             for (Field f : entity.getClass().getFields()) {
                 if (f.getAnnotation(Id.class) != null) {
                     id = f.get(entity);
@@ -1263,10 +1266,10 @@ public class TextIndexer {
             }
 
             if (id != null) {
+            	
                 String field = entity.getClass().getName()+".id";
                 indexWriter.deleteDocuments
                     (new Term (field, id.toString()));
-                
                 if (DEBUG (2))
                     Logger.debug("++ Updating "+field+"="+id);
                 
@@ -1281,7 +1284,10 @@ public class TextIndexer {
 
         if (DEBUG (2))
             Logger.debug("<<< "+entity);
+        
     }
+    
+    
 
     public void remove (Object entity) throws Exception {
         Class cls = entity.getClass();

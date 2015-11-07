@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 import java.util.ArrayList;
 import java.util.List;
 
+import ix.core.models.Indexable;
 import ix.ginas.models.Ginas;
 
 import javax.persistence.Basic;
@@ -17,6 +18,7 @@ import javax.persistence.Table;
 public class Subunit extends Ginas {
     @Lob
     @Basic(fetch=FetchType.EAGER)
+    @Indexable(sequence=true)
     public String sequence;
 
     public Integer subunitIndex;

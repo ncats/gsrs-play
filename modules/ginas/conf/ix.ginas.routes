@@ -28,6 +28,7 @@ GET         /cv/:field                  ix.ginas.controllers.GinasApp.getCVField
 GET         /img/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structure(id: String, format: String, size: Int ?= 150, context: String ?= null)
 GET         /export/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structureExport(id: String, format: String, context: String ?= null)
 POST        /register/validate          ix.ginas.controllers.GinasLoad.validateSubstance
+GET         /update                     ix.ginas.controllers.GinasApp.updateIndex
 
 ->      /   ix.ncats.Routes
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
