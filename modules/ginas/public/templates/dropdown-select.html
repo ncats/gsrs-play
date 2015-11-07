@@ -1,12 +1,16 @@
 <div>
+    <label for="{{field}}" class="text-capitalize">{{field}}</label>
+    <br/>
 
-<!--
-    <span href="#" editable-select="ngModel" e-style="width: 100%" e-ng-options="r.display for r in values track by r.display" blur="submit">{{ngModel.display}}</span>
--->
-
-    <select class="form-control" title="Name Type" name = "field" ng-model = "object" ng-change="selected(s)" ng-options="r.display for r in values track by r.display" required>
-    </select>
-    <ng-messages for="form.field.$error" ng-if="form.field.$touched">
-        <ng-message when="required" class="help-block">*required</ng-message>
-    </ng-messages>
+    <div ng-repeat="obj in arr">
+        <a href="#" ng-hide="obj[field]._editing" ng-click="editing(obj[field]);">{{obj[field].display}}</a>
+        <select ng-show="obj[field]._editing" class="form-control" ng-model=obj[field] ng-change="obj[field]._editing=false;"
+                ng-options="r.display for r in values track by r.display" title="{{field}}" name="{{field}}"></select>
+        <hr>
+    </div>
+    <div>
+        <select class="form-control" title="{{field}}" name="{{field}}" id="{{field}}" ng-model=object
+                ng-blur="editing(object[field]);" ng-options="r.display for r in values track by r.display">
+        </select>
+    </div>
 </div>

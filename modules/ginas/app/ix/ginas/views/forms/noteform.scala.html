@@ -1,5 +1,31 @@
 @import ix.ginas.controllers.GinasApp
 
+<div class = "row info">
+    <button class="btn btn-primary label-offset det">
+                        Notes&nbsp;<span class="badge" ng-show="substance.notes.length>0">
+                        {{substance.notes.length}}</span> </button>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="nameForm" id = "add-name" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-10 err-check" id="name-div">
+                    <text-box ng-model="note.note" field="note" arr="substance.notes" required></text-box>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <reference-selector ng-model = "note.references" referenceobj= "note" arr="substance.notes" parent = "substance" formname="noteForm"></reference-selector>
+                </div>
+            </div>
+            <hr>
+            <div class="noteForm"></div>
+            <submit-buttons submit="note" form="nameForm" path="notes"></submit-buttons>
+        </form>
+    </div>
+
+
+
+@*
+
+
+
 <div class = "row info" >
     <button class="btn btn-primary label-offset det">
                         Notes&nbsp;<span class="badge" ng-show="substance.notes.length>0">
@@ -43,3 +69,5 @@
     </div>
 </div>
 
+*@
+</div>

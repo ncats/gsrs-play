@@ -1,0 +1,23 @@
+<div>
+    <label for="{{field}}" class="text-capitalize">{{field}}</label>
+    <br/>
+
+    <div ng-repeat="obj in arr">
+        <a href="#" ng-hide="obj._editing" ng-click="editing(obj);">{{obj[field]}}</a>
+        <textarea ng-show="obj._editing" type="text" class="form-control" ng-model=obj[field] ng-blur="editing(obj);"
+               title="{{field}}" name="{{field}}"></textarea>
+        <hr>
+    </div>
+    <div>
+        <textarea type="text" class="form-control" ng-model =object title="Note" id="note" name = "note"  ng-blur="editing(object);" title="{{field}}" id="{{field}}" placeholder = "{{field}}"
+                  name="{{field}}"></textarea>
+
+<!--        <ng-messages for="form[name].$error" ng-if="form[name].$touched">
+                    <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
+                    <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                </ng-messages>-->
+    </div>
+</div>
+
+
+

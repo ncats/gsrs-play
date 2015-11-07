@@ -1,0 +1,18 @@
+<div>
+    <label for="{{field}}" class="text-capitalize">{{field}}</label>
+    <div ng-repeat="obj in arr">
+        <a href="#" ng-show="!obj._editing{{field}}" ng-click="editing(obj, field);"><i
+                class="fa fa-check fa-2x success" ng-show="obj.preferred"></i>
+            <i class="fa fa-times fa-2x warning" ng-show="!obj.preferred && !obj._editing{{field}}"></i></a>
+        <input type="checkbox" ng-show="obj._editing{{field}}" ng-model="obj[field]"
+               ng-change="obj._editing{{field}}=false" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/>
+        <hr>
+    </div>
+    <div class="text-center">
+    <input type="checkbox" ng-model=object ng-click="print(object)" placeholder="{{field}}" title="{{field}}"
+           id="{{field}}"/>
+    <ng-messages for="form.field.$error" ng-if="form.field.$touched">
+        <ng-message when="required" class="help-block">*required</ng-message>
+    </ng-messages>
+</div>
+</div>
