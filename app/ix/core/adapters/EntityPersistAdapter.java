@@ -2,13 +2,13 @@ package ix.core.adapters;
 
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
+import ix.core.models.Keyword;
+import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.ginas.models.v1.ProteinSubstance;
-import ix.ginas.models.v1.Subunit;
 import ix.seqaln.SequenceIndexer;
 
 import java.io.IOException;
@@ -16,6 +16,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,7 @@ import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
 
+import com.avaje.ebean.Ebean;
 import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,6 +69,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     private static ConcurrentHashMap<String, String> alreadyLoaded = new ConcurrentHashMap<String,String>();
     
     private static boolean UPDATE_INDEX = false;
+    private static boolean DEBUG = false;
     
     public EntityPersistAdapter () {
     }
@@ -306,12 +309,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         	reindex(bean);
         }
     }
-    
     public void reindex(Object bean){
     	String _id=getIdForBean(bean);
-    	if(alreadyLoaded.contains(bean.getClass() + _id))return;
-    	try {        		
-    		plugin.getIndexer().update(bean);		
+    	if(alreadyLoaded.containsKey(_id)){
+    		return;
+    	}
+    	
+    	
+    	try {      
+    		plugin.getIndexer().update(bean);
     		if(bean instanceof Structure){
     			if(_strucIndexer==null){
     				_strucIndexer=Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
@@ -321,12 +327,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     		
     		Field seq=getSequenceIndexableField(bean);
     		if(seq!=null){
-    			//System.out.println("Found a sequence");
     			String indexSequence;
 				try {
 					indexSequence = (String) seq.get(bean);
 					if(indexSequence!=null && indexSequence.length()>0){
-		    			System.out.println("Indexing sequence:" + _id + "\t" + _seqIndexer + "\t" + indexSequence);
+		    			//System.out.println("Indexing sequence:" + _id + "\t" + _seqIndexer + "\t" + indexSequence);
 		    			if(_seqIndexer==null){
 		    				_seqIndexer=Play.application()
 		    			            .plugin(SequenceIndexerPlugin.class).getIndexer();
@@ -338,7 +343,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 					e.printStackTrace();
 				}
     		}
-    		alreadyLoaded.put(bean.getClass() + _id,_id);
+    		alreadyLoaded.put(_id,_id);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -400,6 +405,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 			alreadyLoaded.clear();
 			UPDATE_INDEX = update;
 		}
+		
+	}
+	public static void setUpdateDebug(boolean debug) {
+		DEBUG=debug;
 		
 	}
 }

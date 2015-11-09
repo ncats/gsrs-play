@@ -1,6 +1,7 @@
 package ix.ginas.controllers;
 
 import gov.nih.ncgc.chemical.Chemical;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Keyword;
@@ -34,6 +35,7 @@ import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
+import ix.ginas.utils.RebuildIndex;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 
@@ -58,6 +60,7 @@ import play.libs.ws.WSResponse;
 import play.mvc.BodyParser;
 import play.mvc.Call;
 import play.mvc.Result;
+import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
 import chemaxon.struc.MolAtom;
 import ix.seqaln.SequenceIndexer;
@@ -1503,5 +1506,42 @@ public class GinasApp extends App {
                         return _badRequest(e.getMessage());
                 } 
         
+    }
+    public static String updateKey =null;
+    public static Result updateIndex(String key){
+    	if(!GinasLoad.ALLOW_REBUILD){
+    		return _badRequest("Cannot rebuild text index. Please ensure \"ix.ginas.allowindexrebuild\" is set to true");
+    	}
+    	if(updateKey==null){
+    		updateKey=UUID.randomUUID().toString();
+    	}
+    	Call callMonitor = routes.GinasApp.updateIndex("_monitor");
+    	if(!EntityPersistAdapter.isUpdatingIndex()){
+	    	if(key==null || !updateKey.equals(key)){
+	    		Call call = routes.GinasApp.updateIndex(updateKey);
+	    		return ok(new Html("<h1>Updated indexes:</h1><pre>" + RebuildIndex.UPDATE_MESSAGE+ "</pre><br><a href=\""+call.url() + "\">Rebuild Index (warning: will take some time)</a>"));
+	    	}
+    	
+    	
+    	
+    		EntityPersistAdapter.setUpdatingIndex(true);
+    		System.out.println("UPDATING INDEX");
+    		Runnable r= new Runnable(){
+			@Override
+			public void run() {
+				try {
+					RebuildIndex.updateLuceneIndex("ix.ginas.models.v1.Substance");
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}};
+    		new Thread(r).start();
+    		updateKey=UUID.randomUUID().toString();
+    		return ok(new Html("<h1>Updating indexes:</h1><pre>Preprocessing ...</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));
+    	}else{
+    		
+    		return ok(new Html("<h1>Updating indexes:</h1><pre>" + RebuildIndex.UPDATE_MESSAGE+ "</pre><br><a href=\"" + callMonitor.url() + "\">refresh</a>"));
+    		
+    	}
     }
 }

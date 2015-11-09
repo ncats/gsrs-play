@@ -1268,8 +1268,11 @@ public class TextIndexer {
             if (id != null) {
             	
                 String field = entity.getClass().getName()+".id";
-                indexWriter.deleteDocuments
-                    (new Term (field, id.toString()));
+                BooleanQuery q = new BooleanQuery();
+            	q.add(new TermQuery(new Term (field, id.toString())),BooleanClause.Occur.MUST);
+            	q.add(new TermQuery(new Term (FIELD_KIND, entity.getClass().getName())),BooleanClause.Occur.MUST);
+                indexWriter.deleteDocuments(q);   
+                
                 if (DEBUG (2))
                     Logger.debug("++ Updating "+field+"="+id);
                 
