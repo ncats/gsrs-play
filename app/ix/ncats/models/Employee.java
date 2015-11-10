@@ -7,7 +7,7 @@ import ix.core.models.Indexable;
 @Entity
 @DiscriminatorValue("EMP")
 public class Employee extends NIHAuthor {
-    public enum Role {
+    public enum Area {
         Biology,
             Chemistry,
             Informatics,
@@ -28,7 +28,7 @@ public class Employee extends NIHAuthor {
     public Department dept;
 
     @Indexable(facet=true)
-    public Role role;
+    public Area area;
 
     public Employee () {
         ncatsEmployee = true;
@@ -37,8 +37,8 @@ public class Employee extends NIHAuthor {
         super (lastname, forename);
         ncatsEmployee = true;
     }
-    public Employee (Role role) {
-        this.role = role;
+    public Employee (Area area) {
+        this.area = area;
         ncatsEmployee = true;
     }
 }

@@ -29,11 +29,13 @@ POST          /login                                                            
 GET           /session                                                                     ix.ncats.controllers.auth.Authentication.secured
 
 # user adminitsration
-GET           /admin/users                                                                 ix.ncats.controllers.crud.Administration.listPrincipals()
+GET           /admin/users                                                                 ix.ncats.controllers.crud.Administration.listPrincipals(page: Int ?= 1, soryBy: String ?= null, order: String ?= null, filter: String ?= null )
 POST          /admin/user/:id                                                              ix.ncats.controllers.crud.Administration.updatePrincipal(id: Long)
 GET           /admin/user/:id                                                              ix.ncats.controllers.crud.Administration.editPrincipal(id:Long)
 
 POST          /admin/users/:id/delete                                                      ix.ncats.controllers.crud.Administration.deletePrincipal(id: Long)
+POST          /admin/users/add                                                             ix.ncats.controllers.crud.Administration.addPrincipal()
+GET           /admin/users/add                                                             ix.ncats.controllers.crud.Administration.create()
 
 ->            /                                                                            ix.core.test.Routes
 ->            /                                                                            ix.Routes

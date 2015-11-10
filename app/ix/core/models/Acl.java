@@ -1,7 +1,6 @@
 package ix.core.models;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 import be.objectify.deadbolt.core.models.Permission;
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -25,12 +24,12 @@ public class Acl extends Model implements Permission{
         
     @Id
     public Long id;
+
     public Permission perm = Permission.Read;
 
     @ManyToMany(cascade=CascadeType.ALL)
     @Basic(fetch=FetchType.EAGER)
     @JoinTable(name="ix_core_acl_principal")
-    @JsonManagedReference
     public List<Principal> principals = new ArrayList<Principal>();
 
     @ManyToMany(cascade=CascadeType.ALL)
@@ -65,6 +64,14 @@ public class Acl extends Model implements Permission{
     public String getValue()
     {
         return perm.toString();
+    }
+
+    public static List<String> options(){
+        List<String> vals = new ArrayList<String>();
+        for (Permission permission: Permission.values()) {
+            vals.add(permission.name());
+        }
+        return vals;
     }
 }
 

@@ -58,46 +58,39 @@ public class Authentication extends Controller {
         String username = requestData.get("username");
         String password = requestData.get("password");
         Logger.debug("username: " + username);
-
+        boolean systemAuth = false;
         Principal cred;
+        UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+
+        if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
+                cred = profile.user;
+        } else {
+            cred = NIHLdapConnector.getEmployee(username, password);
+            systemAuth = true;
+        }
+
         if (username.equalsIgnoreCase("caodac")
                 && password.equalsIgnoreCase("foobar")) {
             cred = new Principal();
             cred.username = username;
-            cred.admin = true;
-
-            /** Test **/
-
-            Role role1 = Role.newGuest();
-            Role role2 = Role.newUser();
-            Role role3 = Role.newOwner();
-            Role role4 = Role.newAdmin();
-
-            if(cred.isAdmin()) {
-                role1.principal = cred;
-                role3.principal = cred;
-                role4.principal = cred;
-            }
-
-            /** Test**/
-        } else {
-            cred = NIHLdapConnector.getEmployee(username, password);
         }
 
-     /*   if (cred == null) {
+        if (cred == null) {
             flash("message", "Invalid credential!");
             return redirect(routes.Authentication.login(null));
-        }*/
+        }
 
-        List<UserProfile> users =
-                _profiles.where().eq("user.username", username).findList();
-        UserProfile profile;
+
 
         Transaction tx = Ebean.beginTransaction();
         try {
+        List<UserProfile> users =
+                _profiles.where().eq("user.username", username).findList();
+
             if (users == null || users.isEmpty()) {
                 profile = new UserProfile(cred);
                 profile.active = true;
+                profile.systemAuth = systemAuth;
                 profile.save();
             } else {
                 profile = users.iterator().next();

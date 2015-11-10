@@ -1,44 +1,43 @@
 package ix.core.models;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import play.db.ebean.Model;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "ix_core_role")
 public class Role extends Model implements be.objectify.deadbolt.core.models.Role {
-    public enum Kind implements be.objectify.deadbolt.core.models.Role {
+    public enum Kind {
         Guest,
         User, // authenticated user
         Owner,
         Admin;
-
-        @Override
-        public String getName() {
-            return name();
-        }
     }
 
     @Id
     public Long id;
     public Kind role;
-    public String name; //same as role, but deadbolt2 works with 'name' field
 
 
-    @ManyToOne(cascade = CascadeType.ALL)
-    public Principal principal;
+    @OneToOne()
+     public Principal principal;
+
 
     public Role() {
     }
 
     public Role(Kind role) {
         this.role = role;
-        this.name = role.toString();
     }
 
     @Override
     public String getName() {
-        return name;
+        return role.name();
     }
 
     public static Role newGuest() {
@@ -55,6 +54,14 @@ public class Role extends Model implements be.objectify.deadbolt.core.models.Rol
 
     public static Role newAdmin() {
         return new Role(Kind.Admin);
+    }
+
+    public static List<String> options(){
+        List<String> vals = new ArrayList<String>();
+        for (Kind role: Kind.values()) {
+            vals.add(role.name());
+        }
+        return vals;
     }
 
 

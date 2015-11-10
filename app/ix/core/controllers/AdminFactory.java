@@ -1,9 +1,7 @@
 package ix.core.controllers;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.SqlQuery;
-import com.avaje.ebean.SqlRow;
-import com.avaje.ebean.Transaction;
+import com.avaje.ebean.*;
+import org.apache.commons.codec.digest.DigestUtils;
 import play.*;
 import play.db.ebean.*;
 import play.mvc.*;
@@ -14,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.models.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -26,6 +25,10 @@ public class AdminFactory extends Controller {
             new Model.Finder(Long.class, Principal.class);
     static final public Model.Finder<Long, Role> roleFinder =
             new Model.Finder(Long.class, Role.class);
+    static final public Model.Finder<Long, UserProfile> proFinder =
+            new Model.Finder(Long.class, UserProfile.class);
+    public static final Model.Finder<Long, Group> groupfinder =
+            new Model.Finder(Long.class, Group.class);
 
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
@@ -96,6 +99,38 @@ public class AdminFactory extends Controller {
             }
         }
         return notFound("Unknown role: " + id);
+    }
+
+    public static Result deletePermission(Long id) {
+        Acl permission = aclFinder.byId(id);
+        if (permission != null) {
+            try {
+                permission.delete();
+                ObjectMapper mapper = new ObjectMapper();
+                return ok(mapper.valueToTree(permission));
+            } catch (Exception ex) {
+                return badRequest(ex.getMessage());
+            }
+        }
+        return notFound("Unknown permission: " + id);
+    }
+
+    public static Result deleteUserPermission(Long permId, Long userId) {
+
+        Principal user = palFinder.byId(userId);
+        if (user != null) {
+            try {
+
+                String sql = "delete from IX_CORE_ACL_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId and ap.IX_CORE_ACL_ID = :permId";
+                SqlUpdate sqlQuery = Ebean.createSqlUpdate(sql);
+                sqlQuery.setParameter("userId", userId);
+                sqlQuery.setParameter("permId", permId);
+                int rows = sqlQuery.execute();
+            } catch (Exception ex) {
+                return badRequest(ex.getMessage());
+            }
+        }
+        return notFound("Unknown user: " + userId);
     }
 
     public static Result getNamespace(Long id) {
@@ -170,7 +205,7 @@ public class AdminFactory extends Controller {
         group3.members.add(user2);
         group3.members.add(user3);
 
-        Acl acl1 = Acl.newRead();
+      /*  Acl acl1 = Acl.newRead();
         acl1.principals.add(user4);
         acl1.groups.add(group1);
 
@@ -182,12 +217,12 @@ public class AdminFactory extends Controller {
 
         Acl acl4 = Acl.newReadWrite();
         acl4.principals.add(user1);
-        acl4.principals.add(user3);
+        acl4.principals.add(user3);*/
 
         Acl acl5 = Acl.newExecute();
         acl5.groups.add(group2);
 
-        Acl acl6 = Acl.newRead();
+  /*      Acl acl6 = Acl.newRead();
         acl6.principals.add(user1);
         acl6.principals.add(user2);
         acl6.principals.add(user3);
@@ -209,7 +244,7 @@ public class AdminFactory extends Controller {
         role3.principal = user3;
 
         Role role4 = Role.newAdmin();
-        role4.principal = user4;
+        role4.principal = user4;*/
 
         tx.commit();
 
@@ -227,9 +262,42 @@ public class AdminFactory extends Controller {
         return badRequest("Unknown resource: " + name);
     }
 
+    public static String encrypt(String clearTextPassword, String salt) {
+        String text = "---" + clearTextPassword + "---" + salt + "---";
+        return DigestUtils.shaHex(text);
+    }
+
+    public static String generateSalt() {
+        return encrypt(new Date().toString(), String.valueOf(Math.random()));
+    }
+
+    public static boolean validatePassword(UserProfile profile, String password) {
+        if (profile.salt == null || profile.hashp == null) {
+            return false;
+        }
+        return profile.hashp.equals(encrypt(password, profile.salt));
+    }
+
     public static List<Role> rolesByPrincipal(Principal cred) {
-        Long userId = cred.id;
         return roleFinder.where().eq("principal.id", cred.id).findList();
+    }
+
+    public static List<String> roleNamesByPrincipal(Principal cred) {
+        List<Role> roles = rolesByPrincipal(cred);
+        List<String> roleList = new ArrayList<>();
+        for(Role r : roles){
+            roleList.add(r.getName());
+        }
+        return roleList;
+    }
+
+    public static List<String> aclNamesByPrincipal(Principal cred) {
+        List<Acl> perms = permissionByPrincipal(cred);
+        List<String> permList = new ArrayList<>();
+        for(Acl a : perms){
+            permList.add(a.getValue());
+        }
+        return permList;
     }
 
 
@@ -246,4 +314,35 @@ public class AdminFactory extends Controller {
         }
         return perByUser;
     }
+
+    public static synchronized Acl registerAclIfAbsent(Acl acl) {
+       //Acl perm = aclFinder.where().eq("id", acl.id).findUnique();
+        Acl.Permission pm = Acl.Permission.valueOf(acl.getValue());
+        Acl perm = aclFinder.where().eq("perm", pm).findUnique();
+        if (perm == null) {
+            try {
+                acl.save();
+                return acl;
+            } catch (Exception ex) {
+                Logger.trace("Can't register permission: " + acl.getValue(), ex);
+                throw new IllegalArgumentException(ex);
+            }
+        }
+        return perm;
+    }
+
+    public static Result setToInactive(Long id) {
+        Principal user = palFinder.byId(id);
+        if (user != null) {
+            UserProfile profile = proFinder.where().eq("user.username", user.username).findUnique();
+            profile.active = false;
+        }
+        return notFound("Unknown user: " + id);
+    }
+
+    public static List<Group> allGroups() {
+        return groupfinder.all();
+    }
+
+
 }
