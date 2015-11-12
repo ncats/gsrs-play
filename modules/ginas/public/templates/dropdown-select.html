@@ -1,5 +1,5 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">{{field}}</label>
+<!--
     <br/>
 
     <div ng-repeat="obj in arr">
@@ -7,8 +7,9 @@
         <select ng-show="obj[field]._editing" class="form-control" ng-model=obj[field] ng-change="obj[field]._editing=false;"
                 ng-options="r.display for r in values track by r.display" title="{{field}}" name="{{field}}"></select>
         <hr>
-    </div>
+    </div>-->
     <div>
+        <label for="{{field}}" class="text-capitalize">{{field}}</label>
         <select class="form-control" title="{{field}}" name="{{field}}" id="{{field}}" ng-model=object
                 ng-blur="editing(object[field]);" ng-options="r.display for r in values track by r.display">
         </select>

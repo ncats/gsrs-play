@@ -30,13 +30,13 @@
         <div class="row form-row" ng-show="!parentForm.$submitted">
 
             <div class="col-md-3 text-center show-errors">
-                 <substance-chooser-lite subref ="substance.structurallyDiverse.parentSubstance" name ="parentSubstance" form ="parentForm"></substance-chooser-lite>
+                 <substance-chooser-lite ng-model ="substance.structurallyDiverse.parentSubstance" name ="parentSubstance" form ="parentForm"></substance-chooser-lite>
                 </div>
             <div class="col-md-3 text-center show-errors">
-                <substance-chooser-lite subref ="substance.structurallyDiverse.hybridSpeciesPaternalOrganism" name ="hybridSpeciesPaternalOrganism" form ="parentForm"></substance-chooser-lite>
+                <substance-chooser-lite ng-model ="substance.structurallyDiverse.hybridSpeciesPaternalOrganism" name ="hybridSpeciesPaternalOrganism" form ="parentForm"></substance-chooser-lite>
             </div>
             <div class="col-md-3 text-center show-errors">
-                <substance-chooser-lite subref ="substance.structurallyDiverse.hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" form ="parentForm"></substance-chooser-lite>
+                <substance-chooser-lite ng-model ="substance.structurallyDiverse.hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" form ="parentForm"></substance-chooser-lite>
             </div>
 @*
                 <substance-chooser-lite ng-model="diverse" name ="parentSubstance"></substance-chooser-lite>

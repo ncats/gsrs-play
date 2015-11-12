@@ -1,0 +1,10 @@
+<div>
+    <a href="#" ng-click="editing(obj);">{{obj[field]}}</a>
+    <p ng-show="obj._editing" class="input-group">
+        <input type="text" class="form-control" datepicker-popup ng-model=object[field] ng-blur="editing(obj);"
+               is-open="status.opened" ng-required="true" id="{{field}}edit"/>
+         <span class="input-group-btn">
+    <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
+</span>
+    </p>
+</div>

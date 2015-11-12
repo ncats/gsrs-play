@@ -3,12 +3,12 @@
                         Codes&nbsp;<span class="badge" ng-show="substance.codes.length>0">
                         {{substance.codes.length}}</span> </button>
     <div class="col-md-12">
-        <form class="form-horizontal" name="codeForm" id = "add-name" role="form" novalidate>
+        <form class="form-horizontal" name="codeForm" role="form" novalidate>
             <div class="row form-row">
-                <div class="col-md-3 err-check" id="name-div" show-errors>
+                <div class="col-md-3 err-check">
                     <text-input ng-model="code.code" field="code" arr="substance.codes" required></text-input>
                 </div>
-                <div class="col-md-2 err-check" show-errors>
+                <div class="col-md-2 err-check">
                     <dropdown-select ng-model="code.system" field="system" cv = "CODE_SYSTEM" arr="substance.codes"></dropdown-select>
                 </div>
                 <div class="col-md-2 err-check">
@@ -21,74 +21,30 @@
                     <reference-selector ng-model = "code.references" referenceobj= "code" arr="substance.codes" parent = "substance" formname="codeForm"></reference-selector>
                 </div>
             </div>
-            <hr>
             <div class="codeForm"></div>
             <submit-buttons submit="code" form="codeForm" path="codes"></submit-buttons>
         </form>
+
+        <div class = "row" ng-repeat="obj in substance.codes">
+            <hr>
+            <div class="col-md-1">
+                <delete-button delete="obj"></delete-button>
+            </div>
+            <div class="col-md-3 err-check" >
+                <text-view-edit obj = "obj" field="code" arr="substance.codes" required></text-view-edit>
+            </div>
+            <div class="col-md-2 err-check" >
+                <dropdown-view-edit obj = "obj" field="system" cv = "CODE_SYSTEM" arr="substance.codes"></dropdown-view-edit>
+            </div>
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "obj" field="type" cv = "CODE_TYPE" arr="substance.codes"></dropdown-view-edit>
+            </div>
+            <div class="col-md-3 err-check">
+                <text-view-edit obj = "obj" field="description" arr="substance.codes" required></text-view-edit>
+            </div>
+            <div class="col-md-1 pull-right">
+                <reference-selector-view obj = "obj" referenceobj= "code" arr="substance.codes" parent = "substance" formname="codeForm"></reference-selector-view>
+            </div>
+        </div>
     </div>
 </div>
-@*<div class="col-md-12">
-<div class = "row header-row">
-<div class = "col-md-3">
-<strong>Code</strong>
-</div>
-<div class = "col-md-2">
-<strong>Code System</strong>
-</div>
-<div class = "col-md-2">
-<strong>Type</strong>
-</div>
-<div class = "col-md-3">
-<strong>Description</strong>
-</div>
-<div class = "col-md-2 text-right">
-<strong>Reference ID</strong>
-</div>
-</div>
-
-<div class = "row" ng-repeat="obj in substance.codes">
-<hr>
-<div class="col-md-3">
-<span href="#" editable-text="obj.code" blur="submit">{{obj.code}}</span>
-</div>
-<div class = "col-md-2">
-<span href="#" editable-select="obj.system" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('CODE_SYSTEM') track by r.display" blur="submit">{{obj.system.display}}</span>
-</div>
-<div class = "col-md-2">
-<span href="#" editable-select="obj.type" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('CODE_TYPE') track by r.display" blur="submit">{{obj.type.display}}</span>
-</div>
-<div class="col-md-3">
-<span href="#" editable-text="obj.description" blur="submit">{{obj.description}}</span>
-</div>
-@referenceview("codeForm", "obj")
-</div>
-
-<!-- Adding bits -->
-
-<form class="form-horizontal" name="codeForm" id = "add-code" role="form" novalidate>
-<div class="row form-row">
-<div class="col-md-3 err-check" id="code-div" show-errors>
-<input type="text" class="form-control" ng-model ="code.code" title="Code" id="code" name = "code" required/>
-<ng-messages for="codeForm.code.$error" ng-if="codeForm.code.$touched">
-<ng-message when="required" class="help-block">Substance name is required</ng-message>
-</ng-messages>
-</div>
-<div class="col-md-2 err-check" show-errors>
-<select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.system" ng-options="r.display for r in lookup.getList('CODE_SYSTEM') track by r.display" required>
-</select>
-</div>
-<div class="col-md-2 err-check" show-errors>
-<select class="form-control" title="Name Type" id="type" name = "type" ng-model = "code.type" ng-options="r.display for r in lookup.getList('CODE_TYPE') track by r.display" required>
-</select>
-</div>
-<div class="col-md-3">
-<input type="text" class="form-control" ng-model ="code.description" title="Description" id="description" name = "description"/>
-</div>
-<reference-selector ngModel='code' references='substance.references'></reference-selector>
-</div>
-<submit-buttons submit="code" form="codeForm" path="codes"></submit-buttons>
-</form>
-</div>
-</div>
-
-*@

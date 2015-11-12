@@ -1,5 +1,5 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">{{field}}</label>
+<!--
     <br/>
 
     <div ng-repeat="obj in arr">
@@ -7,8 +7,9 @@
         <input ng-show="obj._editing" type="text" class="form-control" ng-model=obj[field] ng-blur="editing(obj);"
                title="{{field}}" name="{{field}}"/>
         <hr>
-    </div>
+    </div>-->
     <div>
+        <label for="{{field}}" class="text-capitalize">{{field}}</label>
         <input type="text" class="form-control" ng-model=object
                ng-blur="editing(object);" title="{{field}}" id="{{field}}" placeholder = "{{field}}"
                name="{{field}}"/>

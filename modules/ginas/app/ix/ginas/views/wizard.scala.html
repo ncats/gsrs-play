@@ -7,8 +7,8 @@
 
     @kind match {
         case "chemical" => {
-@*            <div>@forms.structureform()</div>
-            <div>@forms.moietyform()</div>*@
+            <div>@forms.structureform()</div>
+            <div>@forms.moietyform()</div>
         }
         case "mixture" => {
            <div>@forms.mixturecomponentselectform()</div>
@@ -58,13 +58,13 @@
     <div>@forms.officialnameform()</div>
     <div>@forms.nameform2()</div>
     <div>@forms.codeform()</div>
-
-@*    <div>@forms.relationshipform()</div>*@
+    <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>
-@*    <div>@forms.propertyform()</div>
-    <reference-form></reference-form>
+<div>@forms.propertyform()</div>
+
+    <reference-form parent = "substance"></reference-form>
     @forms.amountmodalform()
-    @forms.parametermodalform()*@
+    @forms.parametermodalform()
 
 }
 
