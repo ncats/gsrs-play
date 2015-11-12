@@ -2,8 +2,6 @@ package ix.core.adapters;
 
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
-import ix.core.models.Keyword;
-import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
@@ -16,7 +14,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +33,6 @@ import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
 
-import com.avaje.ebean.Ebean;
 import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,7 +65,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     private static ConcurrentHashMap<String, String> alreadyLoaded = new ConcurrentHashMap<String,String>();
     
     private static boolean UPDATE_INDEX = false;
-    private static boolean DEBUG = false;
     
     public EntityPersistAdapter () {
     }
@@ -311,7 +306,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     }
     public void reindex(Object bean){
     	String _id=getIdForBean(bean);
-    	if(alreadyLoaded.containsKey(_id)){
+    	if(alreadyLoaded.containsKey(bean.getClass()+_id)){
     		return;
     	}
     	
@@ -343,7 +338,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 					e.printStackTrace();
 				}
     		}
-    		alreadyLoaded.put(_id,_id);
+    		alreadyLoaded.put(bean.getClass()+_id,_id);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -407,8 +402,5 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 		}
 		
 	}
-	public static void setUpdateDebug(boolean debug) {
-		DEBUG=debug;
-		
-	}
+	
 }
