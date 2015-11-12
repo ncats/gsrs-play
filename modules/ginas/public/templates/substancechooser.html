@@ -1,9 +1,11 @@
 <div>
+    <label for="{{field}}" class="text-capitalize">{{field}}</label>
+
     <span ng-show="subref">
         <substance-view subref="subref" ng-show="subref" ng-click="subref=null"></substance-view>
     </span>
 
-    <div ng-show="!subref">
+    <div ng-show="!subref"  id="{{field}}">
         <tags-input custom-class="form-control" ng-blur="cancel()" ng-model="diverse" title="Substance Selector"
                     placeholder="Substance Name" id="substance" name="substance" display-property="name"
                     key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag)'

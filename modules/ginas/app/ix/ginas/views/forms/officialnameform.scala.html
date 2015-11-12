@@ -7,7 +7,7 @@
         <div class="col-md-12">
             <form class="form-horizontal" name="officialNameForm" id = "add-name" role="form" novalidate>
                 <div class="row form-row">
-                    <div class="col-md-3 err-check" id="name-div" show-errors>
+                    <div class="col-md-3 err-check">
                         <text-input ng-model="name.name" field="name" arr="substance.officialNames" required></text-input>
                     </div>
                     <div class="col-md-2 err-check">
@@ -23,146 +23,43 @@
                         <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE" arr="substance.officialNames"></multi-select>
                     </div>
                     <div class="col-md-1">
-                        <check-box ng-model="name.preferred" field="preferred" arr="substance.unofficialNames"></check-box>
+                        <check-box ng-model="name.preferred" field="preferred" arr="substance.officialNames"></check-box>
                     </div>
                     <div class="col-md-1 pull-right">
                         <reference-selector ng-model = "name.references" referenceobj= "name" arr="substance.officialNames" parent = "substance" formname="officialNameForm"></reference-selector>
                     </div>
                 </div>
-                <hr>
                 <div class="officialNameForm"></div>
                 <submit-buttons submit="name" form="officialNameForm" path="officialNames"></submit-buttons>
             </form>
-        </div>
-    </div>
 
-
-@*
-
-    <a ng-show="!addingNames" ng-click="addNames()" aria-label="Add Names"><i class = "fa fa-plus fa-2x success"></i></a>
-    <a ng-show="addingNames" ng-click="addNames()" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>
-    <div class="col-md-12">
-
-            <!-- Title bits -->
-
-        <div class = "row header-row">
-            <div class = "col-md-3">
-                <strong>Name</strong>
-            </div>
-            <div class = "col-md-2">
-                <strong>Domain</strong></div>
-            <div class = "col-md-2">
-                <strong>Jurisdiction</strong></div>
-            <div class = "col-md-1">
-                <strong>Naming Org.</strong></div>
-            <div class = "col-md-2">
-                <strong>Language</strong>
-            </div>
-            <div class = "col-md-1">
-                <strong>Preferred</strong>
-            </div>
-            <div class = "col-md-1 text-right">
-                <strong>Reference ID</strong>
-            </div>
-        </div>
-
-            <!-- Display and edit in place bits -->
-
-        <div class = "row" ng-repeat="officialName in substance.officialNames">
-            <hr>
-            <div class="col-md-3 trungcate">
-                <span href="#" editable-text="officialName.name" blur="submit">{{officialName.name}}</span>
-            </div>
-            <div class = "col-md-2"><span ng-repeat="n in officialName.domains">
-                <span ng-show="!officialNameForm.domains.selected" ng-click="toggle(officialNameForm.domains)" >{{n.display}}</span></span>
-                <tags-input ng-show ="officialNameForm.domains.selected" ng-blur="toggle(officialNameForm.domains)" custom-class="form-control" ng-model="officialName.domains" title="Domain" placeholder="Domain" id="editdomains" name="domains" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
-                    <auto-complete source="loadItems('NAME_DOMAIN', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-            </div>
-            <div class = "col-md-2">
-                <span ng-show="!officialName.nameJurisdiction || officialName.nameJurisdiction.length==0" ng-click="toggle(officialNameForm.nameJurisdiction)" ><i class="fa fa-plus fa-2x success"></i></span>
-                <span ng-repeat="n in officialName.nameJurisdiction">
-                    <span ng-show="!officialNameForm.nameJurisdiction.selected" ng-click="toggle(officialNameForm.nameJurisdiction)">{{n.display}}</span>
-                </span>
-                <tags-input ng-show ="officialNameForm.nameJurisdiction.selected" ng-blur="toggle(officialNameForm.nameJurisdiction)" custom-class="form-control" ng-model="officialName.nameJurisdiction" title="Jurisdiction" placeholder="Jurisdiction" id="nameJurisdiction" name="nameJurisdiction" display-property="display" key-property="value" add-from-autocomplete-only="true" >
-                    <auto-complete source="loadItems('JURISDICTION', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-            </div>
-            <div class = "col-md-1"><span ng-repeat="n in officialName.nameOrgs">
-                <span ng-show="!officialName.nameOrgs || officialName.nameOrgs.length==0" ng-click="toggle(officialNameForm.nameOrgs)" ><i class="fa fa-plus fa-2x success"></i></span>
-                <span ng-show="!officialNameForm.nameOrgs.selected" ng-click="toggle(officialNameForm.nameOrgs)" >{{n.display}}</span>
-            </span>
-                <tags-input ng-show ="officialNameForm.nameOrgs.selected" ng-blur="toggle(officialNameForm.nameOrgs)" custom-class="form-control" title="Org" placeholder="Naming Org" id="nameOrg" name="nameOrg" ng-model = "officialName.nameOrgs" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
-                    <auto-complete source="loadItems('NAME_ORG', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-            </div>
-            <div class = "col-md-2"><span ng-repeat="n in officialName.languages">
-                <span ng-show="!officialName.languages || officialName.languages.length==0" ng-click="toggle(officialNameForm.languages)" ><i class="fa fa-plus fa-2x success"></i></span>
-                <span ng-show="!officialNameForm.languages.selected"  ng-click="toggle(officialNameForm.languages)" >{{n.display}}</span>
-            </span>
-                <tags-input ng-show ="officialNameForm.languages.selected" ng-blur="toggle(officialNameForm.languages)" custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="officialName.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
-                    <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-            </div>
-            <div class = "col-md-1 text-center">
-                <span href="#" editable-checkbox="officialName.preferred"><i class="fa fa-check fa-2x success" ng-show="officialName.preferred"></i> <i class="fa fa-times fa-2x warning" ng-show="!officialName.preferred"></i></span>
-
-            </div>
-            @referenceview("officialNameForm", "officialName")
-        </div>
-
-
-
-        <form class="form-horizontal" name="officialNameForm" id = "add-name" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-3 err-check" id="officialName-div" show-errors>
-                    <input type="text" class="form-control" ng-model ="officialName.name" title="Name" id="name" name = "name" required duplicate/>
-                    <ng-messages for="officialNameForm.name.$error" ng-if="officialNameForm.name.$touched">
-                        <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
-                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                    </ng-messages>
+            <div class = "row" ng-repeat="obj in substance.officialNames">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj"></delete-button>
                 </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <tags-input custom-class="form-control" ng-model="officialName.domains" title="Domain" placeholder="Domain" id="domains" name="domains" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
-                        <auto-complete source="loadItems('NAME_DOMAIN', $query)" min-length="1" debounce-delay="0" load-on-empty="true" load-on-focus="true" load-on-down-arrow="true"></auto-complete>
-                    </tags-input>
-                    <ng-messages for="officialNameForm.domains.$error" ng-if="officialNameForm.domainss.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                <div class="col-md-2">
+                    <text-view-edit obj = "obj" field="name" arr="substance.officialNames" required></text-view-edit>
                 </div>
-                <div class="col-md-2 err-check" >
-                    <tags-input custom-class="form-control" ng-model="officialName.nameJurisdiction" title="Jurisdiction" placeholder="Jurisdiction" id="nameJurisdiction" name="nameJurisdiction" display-property="display" key-property="value" add-from-autocomplete-only="true" >
-                        <auto-complete source="loadItems('JURISDICTION', $query)" min-length="1" debounce-delay="0"load-on-empty="true" load-on-focus="true" load-on-down-arrow="true"></auto-complete>
-                    </tags-input>
-                    <ng-messages for="officialNameForm.nameJurisdiction.$error" ng-if="officialNameForm.nameJurisdiction.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                <div class="col-md-2">
+                    <multi-view-edit obj = "obj" field="domain" cv = "NAME_DOMAIN" arr="substance.officialNames"></multi-view-edit>
                 </div>
-                <div class="col-md-1 err-check" >
-                    <tags-input custom-class="form-control" title="Naming Organization" placeholder="Org" id="nameOrg" name="nameOrg" ng-model = "officialName.nameOrgs" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
-                        <auto-complete source="loadItems('NAME_ORG', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                    </tags-input>
-                    <ng-messages for="officialNameForm.nameOrg.$error" ng-if="officialNameForm.nameOrg.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2 err-check" >
-                    <tags-input custom-class="form-control" title="Language" placeholder="language" id="language" name="language" ng-model="officialName.languages" display-property="display" key-property="value" addFromAutocompleteOnly="true" >
-                        <auto-complete source="loadItems('LANGUAGE', $query)" min-length="2" max-results-to-show="1111" debounce-delay="0" load-on-empty="true" load-on-focus="true" load-on-down-arrow="true"></auto-complete>
-                    </tags-input>
-                    <ng-messages for="officialNameForm.language.$error" ng-if="officialNameForm.language.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                <div class="col-md-2">
+                    <multi-view-edit obj = "obj" field="jurisdiction" cv = "JURISDICTION" arr="substance.officialNames"></multi-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <input type = "checkbox" ng-model = "officialName.preferred" placeholder="Preferred" title="Preferred" id="preferred"/>
+                    <multi-view-edit obj = "obj" field="nameOrg" cv = "NAME_ORG" arr="substance.officialNames"></multi-view-edit>
                 </div>
-                <reference-selector ngModel='officialName' references='substance.references'></reference-selector>                
+                <div class="col-md-2">
+                    <multi-view-edit obj = "obj" field="languages" cv = "LANGUAGE" arr="substance.officialNames"></multi-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="preferred" arr="substance.officialNames"></check-box-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <reference-selector-view obj = "obj" referenceobj= "name" arr="substance.officialNames" parent = "substance" formname="officialNameForm"></reference-selector-view>
+                </div>
             </div>
-            <submit-buttons submit="officialName" form="officialNameForm" path="officialNames"></submit-buttons>
-        </form>
 
+        </div>
     </div>
-</div>
-
-*@

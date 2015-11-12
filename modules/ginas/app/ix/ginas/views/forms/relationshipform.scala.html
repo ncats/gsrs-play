@@ -1,88 +1,65 @@
-@import ix.ginas.controllers.GinasApp;
-
 <div class = "row info" >
     <button class="btn btn-primary label-offset det">
                       Relationships&nbsp;<span class="badge" ng-show="substance.relationships.length>0">
                         {{substance.relationships.length}}</span> </button>
-    @*<a ng-show="!addingStructure" ng-click="addStructure()" aria-label="Add Structure"><i class = "fa fa-plus fa-2x success"></i></a>*@
-    @*<div ng-show="addingStructure">*@
     <div class="col-md-12">
-
-        <div class ="row header-row">
-            <div class="col-md-2"><strong>Related Substance</strong></div>
-            <div class="col-md-2"><strong>Type</strong></div>
-            <div class="col-md-2"><strong>Comments</strong></div>
-            <div class="col-md-2"><strong>Interaction Type</strong></div>
-            <div class="col-md-2"><strong>Qualification</strong></div>
-            <div class="col-md-1"><strong>Amount</strong></div>
-            <div class="col-md-1"><strong>Reference ID</strong></div>
-
-        </div>
-        <div ng-repeat="relationship in substance.relationships">
-                    <div class="row">
-                        <div class ="col-md-2">
-                           <substance-chooser ng-model="relationship.relatedSubstance"></substance-chooser>
+                <form class="form-horizontal" name="relationshipForm" role="form" novalidate>
+                    <div class="row form-row">
+                        <div class="col-md-2">
+                            <substance-chooser-lite ng-model ="relationship.relatedSubstance" field ="relatedSubstance" name ="parentSubstance" form ="parentForm"></substance-chooser-lite>
                         </div>
-                       <div class = "col-md-2">
-                           <span href="#" editable-select="relationship.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('RELATIONSHIP_TYPE') track by r.display" blur="submit">{{relationship.type.display}}</span>
-                       </div>
-                       <div class="col-md-2">
-                       <span href="#" editable-text="relationship.comments" blur="submit">{{relationship.comments}}</span>
-                   </div>
-                       <div class = "col-md-2">
-                           <span href="#" editable-select="relationship.interactionType"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('INTERACTION_TYPE') track by r.display" blur="submit">{{relationship.interactionType.display}}</span>
-                       </div>
-                       <div class = "col-md-2">
-                           <span href="#" editable-select="relationship.qualification"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('QUALIFICATION') track by r.display" blur="submit">{{relationship.qualification.display}}</span>
-                       </div>
-                        <div class="col-md-1">
-                        <amount value = "relationship.amount"></amount>
-
+                        <div class="col-md-2">
+                            <dropdown-select ng-model="relationship.type" field="type" cv = "RELATIONSHIP_TYPE" arr="substance.relationships"></dropdown-select>
+                        </div>
+                        <div class="col-md-2">
+                            <text-input ng-model="relationship.comments" field="comments" arr="substance.relationships"></text-input>
+                        </div>
+                        <div class="col-md-2">
+                            <dropdown-select ng-model="relationship.interactionType" field="interactionType" cv = "INTERACTION_TYPE" arr="substance.relationships"></dropdown-select>
+                        </div>
+                        <div class="col-md-2">
+                            <dropdown-select ng-model="relationship.qualification" field="qualification" cv = "QUALIFICATION" arr="substance.relationships"></dropdown-select>
                         </div>
                         <div class="col-md-1">
-                       @referenceview("relationshipForm", "relationship")
-                            </div>
-                       </div>
-        </div>
+                            <form-selector ng-model = "relationship.amount" referenceobj= "relationship" arr="substance.relationships" parent = "substance" formname="relationshipForm" type = "amount"></form-selector>
+                        </div>
+                        <div class="col-md-1 pull-right">
+                            <form-selector ng-model = "relationship.references" referenceobj= "relationship" arr="substance.relationships" parent = "substance" formname="relationshipForm" type = "reference"></form-selector>
+                        </div>
+                    </div>
+                    <div class="relationshipForm"></div>
+                    <submit-buttons submit="relationship" form="relationshipForm" path="relationships"></submit-buttons>
+                </form>
 
-
-        <form class="form-horizontal" name="relationshipForm" id = "add-relationship" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-2">
-                <substance-chooser ng-model="relationship.relatedSubstance"></substance-chooser>
-
-                </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Relationship Type" id="type" name = "type" ng-model = "relationship.type" ng-options="r.display for r in lookup.getList('RELATIONSHIP_TYPE') track by r.display" required>
-                        </select>
-                    <ng-messages for="relationshipForm.type.$error" ng-if="relationshipForm.type.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2" id="ref-div">
-                    <input type="text" class="form-control" ng-model ="relationship.comments" title="Comments" id="comments" name = "comments" />
-                </div>
-
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Interaction Type" id="interactionType" name = "interactionType" ng-model = "relationship.interactionType" ng-options="r.display for r in lookup.getList('INTERACTION_TYPE') track by r.display" required>
-                        </select>
-                    <ng-messages for="relationshipForm.interactionType.$error" ng-if="relationshipForm.interactionType.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Qualification" id="qualification" name = "qualification" ng-model = "relationship.qualification" ng-options="r.display for r in lookup.getList('QUALIFICATION') track by r.display" required>
-                        </select>
-                    <ng-messages for="relationshipForm.qualification.$error" ng-if="relationshipForm.qualification.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <amount-edit-display ng-model="relationship.amount"></amount-edit-display>                
-                <reference-selector ngModel='relationship' references='substance.references'></reference-selector> 
+        <div class = "row" ng-repeat="obj in substance.relationships">
+            <hr>
+            <div class="col-md-1">
+                <delete-button delete="obj"></delete-button>
             </div>
-            <amount-form ng-model="relationship.amount"></amount-form>
-            <submit-buttons submit="relationship" form="relationshipForm" path="relationships"></submit-buttons>
-        </form>
+            <div class="col-md-2">
+                <substance-view subref = "obj.relatedSubstance" ></substance-view>
+            </div>
+            <div class="col-md-2">
+                <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" arr="substance.relationships"></dropdown-view-edit>
+            </div>
+            <div class="col-md-2">
+                <text-view-edit obj = "obj" field="comments" arr="substance.relationships"></text-view-edit>
+            </div>
+            <div class="col-md-2">
+                <dropdown-view-edit obj = "obj" field="interactionType" cv = "INTERACTION_TYPE" arr="substance.relationships"></dropdown-view-edit>
+            </div>
+            <div class="col-md-1">
+                <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" arr="substance.relationships"></dropdown-view-edit>
+            </div>
+            <div class="col-md-1">
+                <form-selector-view obj = "obj" referenceobj= "relationship" arr="substance.relationships" parent = "substance" formname="relationshipForm" type = "amount"></form-selector-view>
+            </div>
+            <div class="col-md-1 pull-right">
+                <form-selector-view obj = "obj" referenceobj= "relationship" arr="substance.relationships" parent = "substance" formname="relationshipForm" type = "reference"></form-selector-view>
+            </div>
+        </div>
 
-    </div>
-</div>
+
+
+            </div>
+        </div>

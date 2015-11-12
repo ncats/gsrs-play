@@ -1,5 +1,5 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">{{field}}</label>
+<!--
 
     <div ng-repeat="obj in arr">
             <span ng-repeat="tag in obj[field]">
@@ -14,7 +14,8 @@
                            load-on-down-arrow="true"></auto-complete>
         </tags-input>
         <hr>
-    </div>
+    </div>-->
+    <label for="{{field}}" class="text-capitalize">{{field}}</label>
     <tags-input custom-class="form-control" title="{{field}}" placeholder="{{field}}" id="{{field}}" name="{{field}}"
                 ng-model="object" ng-blur="editing(object[field]);" display-property="display" key-property="value"
                 addFromAutocompleteOnly="true">
