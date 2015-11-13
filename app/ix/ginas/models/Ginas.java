@@ -20,6 +20,7 @@ import javax.persistence.PreUpdate;
 import play.Logger;
 import play.db.ebean.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -32,12 +33,18 @@ public class Ginas extends Model {
     //@Column(name = "DATA_UUID")
     public UUID uuid;
 
+    
+    //TP: why is this final?
     public final Date created = new Date ();
+    
+    @Indexable(facet = true, name = "Last Edited Date")
     public Date lastEdited;
     
+    //TP: why is this one-to-one?
     @OneToOne(cascade=CascadeType.ALL)
     @JsonSerialize(using = PrincipalSerializer.class)
     @JsonDeserialize(using = PrincipalDeserializer.class)
+    @Indexable(facet = true, name = "Last Edited By")
     public Principal lastEditedBy;
     
     //Where did this come from?
@@ -77,5 +84,12 @@ public class Ginas extends Model {
             }
         }
         return null;
+    }
+    
+    @JsonIgnore
+    public UUID getOrGenerateUUID(){
+    	if(uuid!=null)return uuid;
+    	this.uuid=UUID.randomUUID();
+    	return uuid;
     }
 }

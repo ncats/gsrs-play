@@ -1,79 +1,50 @@
 package ix.ginas.controllers;
 
-import ix.core.models.Keyword;
-import ix.core.models.Payload;
-import ix.core.models.ProcessingJob;
-import ix.core.models.ProcessingRecord;
-import ix.core.models.Structure;
-import ix.core.models.Value;
-import ix.core.processing.RecordTransformer;
-import ix.core.plugins.PayloadPlugin;
-import ix.core.plugins.StructureIndexerPlugin;
-import ix.core.plugins.GinasRecordProcessorPlugin;
-import ix.core.plugins.TextIndexerPlugin;
-import ix.core.plugins.StructureProcessorPlugin.PayloadProcessor;
-import ix.core.search.TextIndexer;
-import ix.core.search.TextIndexer.Facet;
-import ix.ginas.controllers.GinasApp;
-import ix.ginas.controllers.GinasLegacyUtils;
-import ix.ginas.models.Ginas;
-import ix.ginas.models.v1.*;
-import ix.ncats.controllers.App;
-import ix.utils.Util;
-import ix.core.chem.Chem;
 import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.ProcessingJobFactory;
-import ix.ginas.models.utils.*;
+import ix.core.models.Payload;
+import ix.core.models.ProcessingJob;
+import ix.core.plugins.GinasRecordProcessorPlugin;
+import ix.core.plugins.PayloadPlugin;
+import ix.core.search.TextIndexer;
+import ix.core.search.TextIndexer.Facet;
+import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.Ginas;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Moiety;
+import ix.ginas.models.v1.Relationship;
+import ix.ginas.models.v1.Substance;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasSDFUtils;
-import ix.ginas.utils.Validation;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
 import ix.ginas.utils.GinasUtils;
+import ix.ginas.utils.Validation;
+import ix.ncats.controllers.App;
+import ix.utils.Util;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.util.UUID;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.io.FileOutputStream;
-import java.util.zip.GZIPInputStream;
 
-import ix.core.stats.Statistics;
 import play.Logger;
 import play.Play;
 import play.data.DynamicForm;
-import play.db.ebean.Model;
 import play.data.Form;
-import play.mvc.Http;
 import play.mvc.Result;
-import tripod.chem.indexer.StructureIndexer;
 
-import com.avaje.ebean.*;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.fasterxml.jackson.core.type.TypeReference;
-
-import java.util.Date;
 
 
 public class GinasLoad extends App {
@@ -376,25 +347,136 @@ public class GinasLoad extends App {
                 
         Substance sub=null;
         
+        
+        
         try{
             System.out.println(mappingsjson);
             GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(mappingsjson);
             JsonNode jn=ex.getNextRecord();
             GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
             sub = trans.transformSubstance(jn);
-            GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
+            Substance osub = SubstanceFactory.getSubstance(sub.uuid);
             
             List<GinasProcessingMessage> messages = Validation.validateAndPrepare(sub, GinasProcessingStrategy.ACCEPT_APPLY_ALL());
-            
-            List<String> errors = new ArrayList<String>();
-            if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
-                throw new IllegalStateException(errors.toString());
-            }   
+            //how, exactly, should this be updated?
+            if(osub!=null){
+            	if(osub instanceof ChemicalSubstance){
+	            	for(Moiety m:((ChemicalSubstance)osub).moieties){
+	            		try{
+	            			m.delete();
+	            		}catch(Exception e){
+	            			e.printStackTrace();
+	            		}
+	            	}
+            	}
+            	
+            	if(sub instanceof ChemicalSubstance){
+            		
+            		((ChemicalSubstance)sub).setStructure(((ChemicalSubstance)sub).structure);
+            		List<Moiety> mlist=new ArrayList<Moiety>();
+	            	for(Moiety m:((ChemicalSubstance)sub).moieties){
+	            		try{
+	            			m.save();
+	            		}catch(Exception e){
+	            			m.update();
+	            		}
+	            		mlist.add(m);
+	            	}
+	            	((ChemicalSubstance)sub).moieties=mlist;
+            	}
+            	for(Relationship m:sub.relationships){
+            		try{
+            			//I don't know why this is necessary
+            			m.setRelatedSubstance(m.relatedSubstance);
+            			m.save();
+            		}catch(Exception e){
+            			m.relatedSubstance.update();
+            		}
+            	}
+           		sub.update();
+            	
+            }else{
+	            List<String> errors = new ArrayList<String>();
+	            if(!GinasUtils.persistSubstance(sub, _strucIndexer,errors)){
+	                throw new IllegalStateException(errors.toString());
+	            }   
+            }
         }catch(Throwable e){
             return _internalServerError(e);
         }
         return redirect(ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub)));
     }
+    public static boolean applyChanges(Ginas gold, Ginas gnew) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
+    	if(gnew==null)return false;
+    	if(!gold.getClass().equals(gnew.getClass())){
+    		throw new IllegalStateException("old type != new type");
+    	}
+    	Field[] fields = gold.getClass().getFields();
+    	Method[] methods = gold.getClass().getMethods();
+    	Map<String,Method> setters = new HashMap<String,Method>();
+    	for(Method m:methods){
+    		if(m.getName().startsWith("set")){
+    			setters.put(m.getName().toLowerCase(), m);
+    		}
+    	}
+    	
+    	for(Field f: fields){
+    		if (!java.lang.reflect.Modifier.isStatic(f.getModifiers()) && 
+    			!java.lang.reflect.Modifier.isFinal(f.getModifiers())) {
+    			Object old=f.get(gold);
+    			Object nn=f.get(gnew);
+    			
+    			Method m=setters.get(("set" + f.getName()).toLowerCase());
+    			if(m!=null){
+    				m.invoke(gold, nn);
+    			}
+    			if(nn!=null && !nn.equals(old))
+    				Logger.debug("Setting " + f.getName() + " to " + nn + " now " +f.get(gold) + " from " + old);
+    		}
+    	}
+    	return true;
+    }
+    /**
+     * Recursively populates a map from a ginas object from the IDs to the corresponding ginas objects.
+     * 
+     * This is used during update procedures, when an old set of objects related to a substance
+     * must be updated with new versions of the data.
+     * 
+     * 
+     * 
+     * @param ginasObject
+     * @param gmap
+     * @return
+     * @throws IllegalArgumentException
+     * @throws IllegalAccessException
+     */
+    public static Map<String,Ginas> getEntityMap(Ginas ginasObject, Map<String,Ginas> gmap) throws IllegalArgumentException, IllegalAccessException{
+    	if(gmap == null)gmap = new HashMap<String,Ginas>();
+    	Field[] fields = ginasObject.getClass().getFields();
+    	
+    	for(Field f: fields){
+    		if (!java.lang.reflect.Modifier.isStatic(f.getModifiers()) && 
+        			!java.lang.reflect.Modifier.isFinal(f.getModifiers())) {
+    			Object o = (Object)f.get(ginasObject);
+    			if(o!= null && o instanceof Ginas){
+    				gmap.put(((Ginas)o).getOrGenerateUUID().toString(), (Ginas)o);
+    				getEntityMap((Ginas)o,gmap);
+    			}
+    			
+    			if(o!=null && Collection.class.isAssignableFrom(o.getClass())){
+    				for(Object osub: (Collection)o){
+    					if(osub!= null && osub instanceof Ginas){
+    	    				gmap.put(((Ginas)osub).getOrGenerateUUID().toString(), (Ginas)osub);
+    	    				getEntityMap((Ginas)osub,gmap);
+    	    			}
+    				}
+    			}
+    		}
+    	}
+    	
+    	return gmap;
+    }
+    
     
     public static String extractSubstanceJSON(){
          String mappingsjson = null;

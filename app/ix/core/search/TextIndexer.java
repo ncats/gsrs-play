@@ -5,10 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
+import ix.core.models.Principal;
 import ix.core.plugins.IxCache;
 import ix.utils.Global;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -35,12 +38,14 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.Version;
 import org.reflections.Reflections;
+
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -1436,6 +1441,11 @@ public class TextIndexer {
                              .isAnnotationPresent(Entity.class)) {
                         // composite type; recurse
                         instrument (path, value, ixFields);
+                        Indexable ind=f.getAnnotation(Indexable.class);
+                        if(ind!=null){
+                        	
+                        	indexField (ixFields, indexable, path, value);
+                        }
                     }
                     else { // treat as string
                         indexField (ixFields, indexable, path, value);
@@ -1524,7 +1534,6 @@ public class TextIndexer {
             "".equals(indexable.name()) ? name : indexable.name();
         
         boolean asText = true;
-
         if (value instanceof Long) {
             //fields.add(new NumericDocValuesField (full, (Long)value));
             Long lval = (Long)value;
