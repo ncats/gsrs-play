@@ -2420,8 +2420,8 @@ console.log(obj);
                         } else {
                             scope.formsubstance.structure = data.structure;
                             scope.formsubstance.moieties = data.moieties;
-                            for(var i=0;i<data.moieties.length;i++){
-                                data.moieties[i]._id=scope.uuid();
+                            for(var j=0;j<data.moieties.length;j++){
+                                data.moieties[j]._id=scope.uuid();
                             }
                             scope.formsubstance.q = data.structure.smiles;
                         }
