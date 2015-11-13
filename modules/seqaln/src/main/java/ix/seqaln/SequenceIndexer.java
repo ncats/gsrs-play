@@ -556,7 +556,7 @@ public class SequenceIndexer {
         }
     }
 
-    protected String getSeq (final String id) {
+    public String getSeq (final String id) {
         try {
             final IndexSearcher indexer = getIndexSearcher ();
             return getOrElse

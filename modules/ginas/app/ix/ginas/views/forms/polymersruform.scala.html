@@ -28,7 +28,7 @@
                            <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('POLYMER_SRU_TYPE') track by r.display" blur="submit">{{component.type.display}}</span>
                         </div>
                         <div class="col-md-2">
-                            TO BE AMOUNT
+                            <amount-edit-display ng-model="component.amount"></amount-edit-display> 
                         </div>
                         <div class="col-md-2">
                             <span href="#" editable-text="component._displayConnectivity">{{component._displayConnectivity}}</span>
@@ -54,19 +54,26 @@
                 <div class="col-md-2">
                     <rendered id = srucomponent._structure.id></rendered>
                 </div>
-                <div class="col-md-6 err-check" show-errors>
+                <div class="col-md-2">
+                    <input type="text" class="form-control" ng-model ="srucomponent.label" title="SRU Label" id="label" name = "label" />
+                </div>
+                <div class="col-md-2 err-check" show-errors>
                     <select class="form-control" title="SRU Type" id="type" name = "type" ng-model = "srucomponent.type" ng-options="r.display for r in lookup.getList('POLYMER_SRU_TYPE') track by r.display" required>
                         </select>
                     <ng-messages for="sruForm.type.$error" ng-if="sruForm.type.$touched">
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <amount-edit-display ng-model="srucomponent.amount"></amount-edit-display> 
+                </div>
+                <div class="col-md-2">
                     <input type="text" class="form-control" ng-model ="srucomponent.displayConnectivity" title="SRU Connectivity" id="connectivity" name = "connectivity" />
                 </div>
                 
             </div>
-            @submitbuttons("srucomponent", "sruForm", "polymer.structuralUnits")
+            <amount-form ng-model="srucomponent.amount"></amount-form>
+            <submit-buttons submit="srucomponent" form="sruForm" path="polymer.structuralUnits"></submit-buttons>
              
         </form>
 

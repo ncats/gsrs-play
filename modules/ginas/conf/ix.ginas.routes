@@ -26,8 +26,9 @@ GET         /search                     ix.ginas.controllers.GinasApp.search(kin
 GET         /relationships/:uuid        ix.ginas.controllers.GinasApp.relationships(uuid: String)
 GET         /cv/:field                  ix.ginas.controllers.GinasApp.getCVField(field: String)
 GET         /img/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structure(id: String, format: String, size: Int ?= 150, context: String ?= null)
-GET         /export/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv)>   ix.ginas.controllers.GinasApp.structureExport(id: String, format: String, context: String ?= null)
+GET         /export/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv|fas)>   ix.ginas.controllers.GinasApp.structureExport(id: String, format: String, context: String ?= null)
 POST        /register/validate          ix.ginas.controllers.GinasLoad.validateSubstance
+GET         /_updateIndex/:key          ix.ginas.controllers.GinasApp.updateIndex(key: String)
 
 ->      /   ix.ncats.Routes
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)

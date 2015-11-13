@@ -69,10 +69,10 @@
                 <div class="col-md-2">
                     <substance-chooser ng-model="agentModification.agentSubstance"></substance-chooser>
                 </div>
-                @selectors.amountselectorform("agentModification.amount")
+                <amount-edit-display ng-model="agentModification.amount"></amount-edit-display> 
             </div>
-            @amountform("agentModification.amount")
-            @submitbuttons("agentModification", "agentModForm", "protein.modifications.agentModifications")
+            <amount-form ng-model="agentModification.amount"></amount-form>
+            <submit-buttons submit="agentModification" form="agentModForm" path="protein.modifications.agentModifications"></submit-buttons>
         </form>
     </div>
 </div>

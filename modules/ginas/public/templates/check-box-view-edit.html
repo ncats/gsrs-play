@@ -1,0 +1,7 @@
+<div>
+        <a href="#" ng-show="!obj._editing{{field}}" ng-click="editing(obj, field);"><i
+                class="fa fa-check fa-2x success" ng-show="obj[field]===true"></i>
+            <i class="fa fa-times fa-2x" ng-show="!obj[field]===true"></i></a>
+        <input type="checkbox" ng-show="obj._editing{{field}}" ng-model="obj[field]"
+               ng-change="obj._editing{{field}}=false" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/>
+</div>

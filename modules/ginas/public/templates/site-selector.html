@@ -1,0 +1,52 @@
+<div>
+    <div ng-show="displayType=='short' || !displayType">
+        
+        <span href="#" e-style="width: 100%" editable-text="siteContainer._displaySites" onbeforesave="validateSites($data,siteContainer)" onaftersave="updateSiteList(siteContainer,siteList)">
+        <div>{{siteContainer._displaySites}}</div>
+        <div><i>({{siteList.length}} sites)</i></div>
+        <div>{{siteContainer._uniqueResidues}}</div>
+        </span>
+    </div>
+    <div ng-show="displayType=='pair'">
+        <div ng-show="edit">
+            <div class="col-md-{{size}} err-check">
+              <select ng-model="siteList[0].subunitIndex" class="form-control" ng-options="r for r in range(subunits.length)">
+              </select>
+            </div>
+            <div class="col-md-{{size}} err-check">
+              <select ng-model="siteList[0].residueIndex" class="form-control"  ng-options="r for r in validResidues(siteList[0].subunitIndex)">
+              </select>
+            </div>
+            <div class ="col-md-1 text-center">
+              <i class="fa fa-link fa-rotate-270 fa-2x"></i>
+            </div>
+            <div class="col-md-{{size}} err-check">
+              <select ng-model="siteList[1].subunitIndex" class="form-control" ng-options="r for r in range(subunits.length)">
+              </select>
+            </div>
+            <div class="col-md-{{size}} err-check">
+              <select ng-model="siteList[1].residueIndex" class="form-control"  ng-options="r for r in validResidues(siteList[1].subunitIndex)">
+              </select>
+            </div>
+        </div>
+        <div ng-click="edit=!edit" ng-hide="edit">
+             <div class = "col-md-{{size}}">
+                <span href="#">{{siteList[0].subunitIndex || 'empty'}}</span>
+             </div>
+             <div class = "col-md-{{size}}">
+                <span href="#">{{siteList[0].residueIndex || 'empty'}}</span>
+             </div>
+             <div class ="col-md-1 text-center">
+                  <i class="fa fa-link fa-rotate-270 fa-2x"></i>
+                </div>
+             <div class = "col-md-{{size}}">
+                <span href="#">{{siteList[1].subunitIndex || 'empty'}}</span>
+             </div>
+             <div class = "col-md-{{size}}">
+                <span href="#">{{siteList[1].residueIndex || 'empty'}}</span>
+             </div>
+        </div>
+        
+        <!--<div>{{siteContainer._displaySites}}</div>-->
+    </div>
+</div>

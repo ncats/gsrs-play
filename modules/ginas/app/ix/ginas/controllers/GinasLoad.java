@@ -83,6 +83,10 @@ public class GinasLoad extends App {
     public static boolean ALLOW_LOAD =
             Play.application().configuration()
             .getBoolean("ix.ginas.allowloading", true);
+    
+    public static boolean ALLOW_REBUILD =
+            Play.application().configuration()
+            .getBoolean("ix.ginas.allowindexrebuild", true);
         
     public static final String[] ALL_FACETS = {
         "Job Status"

@@ -1,12 +1,15 @@
 @import ix.ginas.controllers.GinasApp;
 
-<div class = "row info" >
+<div class = "row info"  ng-show="getCysteineCount()>=2" >
     <button class="btn btn-primary label-offset det">
  Disulfide Links&nbsp;<span class="badge" ng-show="substance.protein.disulfidelinks.length>0">
                         {{substance.protein.disulfidelinks.length}}</span> </button>
     @* <a ng-show="!addingCodes" ng-click="toggleForm(codeForm)" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
     <a ng-show="addingCodes" ng-click="toggleForm(codeForm)" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>*@
+    
     <div class="col-md-12">
+    
+        <span>Number of unspecified Cysteine residues: {{getAllCysteinsWithoutLinkage().length}}</span>
         <div class = "row header-row">
             <div class = "col-md-2">
                 <strong>Starting Subunit Index</strong>
@@ -26,29 +29,19 @@
 
         <div class = "row" ng-repeat="obj in substance.protein.disulfideLinks">
             <hr>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj[0].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj[0].subunitIndex}}</span>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj[0].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj[0].residueIndex}}</span>
-            </div>
-            <div class ="col-md-1">
-                <i class="fa fa-link fa-2x fa-rotate-90"></i>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj[1].subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj[1].subunitIndex}}</span>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="obj[1].residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj[1].residueIndex}}</span>
+            
+            <site-selector ng-model="obj" display-type="pair" size="2" residue-regex="C"></site-selector>
+            <div class="pull-right">
+                    <button ng-click="removeItem(substance.protein.disulfideLinks, obj)">Remove</button>
             </div>
         </div>
 
 
-        <form class="form-horizontal" name="disForm" id = "add-code" role="form" novalidate>
+        <form class="form-horizontal" name="disForm" id = "add-code" role="form" editable-form shown="true" novalidate>
             <div class="row form-row">
-                @selectors.siteselector("disForm", "substance.protein", 2)
+                <site-selector ng-model="disulf" display-type="pair" size="2" residue-regex="C"></site-selector>
             </div>
-            @submitbuttons("site", "disForm", "protein.disulfideLinks")
+            <submit-buttons submit="disulf" form="disForm" path="protein.disulfideLinks"></submit-buttons>
         </form>
     </div>
 </div>

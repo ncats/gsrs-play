@@ -1,33 +1,42 @@
 package ix.core.adapters;
 
-import play.Logger;
-import play.Play;
-import java.util.Date;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
+import ix.core.models.Edit;
+import ix.core.models.Indexable;
+import ix.core.models.Structure;
+import ix.core.plugins.IxContext;
+import ix.core.plugins.SequenceIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.TextIndexerPlugin;
+import ix.seqaln.SequenceIndexer;
 
-import java.lang.reflect.*;
-import com.avaje.ebean.event.*;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-//import javax.annotation.PreDestroy;
-import javax.persistence.Entity;
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
+import javax.persistence.PostRemove;
 import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 import javax.persistence.PreRemove;
-import javax.persistence.PostRemove;
+import javax.persistence.PreUpdate;
 
+import play.Logger;
+import play.Play;
+import tripod.chem.indexer.StructureIndexer;
+
+import com.avaje.ebean.event.BeanPersistAdapter;
+import com.avaje.ebean.event.BeanPersistRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ix.core.models.*;
-import ix.core.plugins.*;
+//import javax.annotation.PreDestroy;
 
 public class EntityPersistAdapter extends BeanPersistAdapter {
     private TextIndexerPlugin plugin = 
@@ -48,7 +57,15 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     private Map<String, List<Method>> postLoadCallback = 
         new HashMap<String, List<Method>>();
     
-
+    public static SequenceIndexer _seqIndexer = Play.application()
+            .plugin(SequenceIndexerPlugin.class).getIndexer();
+    public static StructureIndexer _strucIndexer =
+            Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+    
+    private static ConcurrentHashMap<String, String> alreadyLoaded = new ConcurrentHashMap<String,String>();
+    
+    private static boolean UPDATE_INDEX = false;
+    
     public EntityPersistAdapter () {
     }
 
@@ -283,5 +300,107 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
         }
+        if(UPDATE_INDEX){
+        	reindex(bean);
+        }
     }
+    public void reindex(Object bean){
+    	String _id=getIdForBean(bean);
+    	if(alreadyLoaded.containsKey(bean.getClass()+_id)){
+    		return;
+    	}
+    	
+    	
+    	try {      
+    		plugin.getIndexer().update(bean);
+    		if(bean instanceof Structure){
+    			if(_strucIndexer==null){
+    				_strucIndexer=Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+    			}
+    			_strucIndexer.add(_id, ((Structure)bean).molfile);
+    		}
+    		
+    		Field seq=getSequenceIndexableField(bean);
+    		if(seq!=null){
+    			String indexSequence;
+				try {
+					indexSequence = (String) seq.get(bean);
+					if(indexSequence!=null && indexSequence.length()>0){
+		    			//System.out.println("Indexing sequence:" + _id + "\t" + _seqIndexer + "\t" + indexSequence);
+		    			if(_seqIndexer==null){
+		    				_seqIndexer=Play.application()
+		    			            .plugin(SequenceIndexerPlugin.class).getIndexer();
+		    			}
+		    			
+	    				_seqIndexer.add(_id, indexSequence);
+	    			}
+				} catch (Exception e){
+					e.printStackTrace();
+				}
+    		}
+    		alreadyLoaded.put(bean.getClass()+_id,_id);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
+    public static String getIdForBean(Object entity){
+    	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+            return null;
+        }
+        try {
+            Object id = null;
+            
+            for (Field f : entity.getClass().getFields()) {
+                if (f.getAnnotation(Id.class) != null) {
+                    id = f.get(entity);
+                }
+            }
+
+            if (id != null) {
+            	return id.toString();
+            }
+        }
+        catch (Exception ex) {
+            Logger.trace("Unable to update index for "+entity, ex);
+        }
+        return null;
+    }
+    public static Field getSequenceIndexableField(Object entity){
+    	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+            return null;
+        }
+        try {
+        	
+            for (Field f : entity.getClass().getFields()) {
+            	Indexable ind= f.getAnnotation(Indexable.class);
+            	
+                if (ind != null) {
+                	//System.out.println("Looking at" + f);
+                	if(ind.sequence()){
+                		return f;
+                	}
+                }
+               
+            }
+        }
+        catch (Exception ex) {
+            Logger.trace("Unable to update index for "+entity, ex);
+        }
+        return null;
+    }
+    
+
+	public static boolean isUpdatingIndex() {
+		return UPDATE_INDEX;
+	}
+
+	public static void setUpdatingIndex(boolean update) {
+		if(update!=UPDATE_INDEX){
+			alreadyLoaded.clear();
+			UPDATE_INDEX = update;
+		}
+		
+	}
+	
 }

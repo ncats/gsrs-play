@@ -1,0 +1,30 @@
+<div>
+<!--
+
+    <div ng-repeat="obj in arr">
+            <span ng-repeat="tag in obj[field]">
+            <a href="#" ng-hide=" obj[field]._editing" ng-click="editing(obj[field]);"
+               class="badge">{{tag.display}}</a>
+        </span>
+        <tags-input ng-show="obj[field]._editing" custom-class="form-control" title="{{field}}" placeholder="{{field}}"
+                    name="{{field}}"
+                    ng-model=obj[field] ng-blur="editing(obj[field]);" display-property="display" key-property="value"
+                    addFromAutocompleteOnly="true">
+            <auto-complete source="loadItems(cv, $query)" min-length="2" debounce-delay="0"
+                           load-on-down-arrow="true"></auto-complete>
+        </tags-input>
+        <hr>
+    </div>-->
+    <label for="{{field}}" class="text-capitalize">{{field}}</label>
+    <tags-input custom-class="form-control" title="{{field}}" placeholder="{{field}}" id="{{field}}" name="{{field}}"
+                ng-model="object" ng-blur="editing(object[field]);" display-property="display" key-property="value"
+                addFromAutocompleteOnly="true">
+        <auto-complete source="loadItems(cv, $query)" min-length="2" debounce-delay="0"
+                       max-results-to-show="1111" debounce-delay="0" load-on-empty="true" load-on-focus="true"
+                       load-on-down-arrow="true"></auto-complete>
+    </tags-input>
+
+    <!--        <ng-messages for="form.field.$error" ng-if="form.field.$touched">
+                <ng-message when="required" class="help-block">*required</ng-message>
+            </ng-messages>-->
+</div>

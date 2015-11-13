@@ -54,8 +54,11 @@ public class QCSample extends Sample {
     @Column(length=1024)
     public String comments;
 
-    @Indexable(facet=true,name="QC Grade")
-    public Grade grade;
+    @Indexable(facet=true,name="QC Grade T0")
+    public Grade gradeT0;
+    
+    @Indexable(facet=true,name="QC Grade T4")
+    public Grade gradeT4;
 
     public QCSample () {
     }

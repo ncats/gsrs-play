@@ -7,70 +7,45 @@
     @* <a ng-show="!addingCodes" ng-click="toggleForm(codeForm)" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
     <a ng-show="addingCodes" ng-click="toggleForm(codeForm)" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>*@
     <div class="col-md-12">
+        <form class="form-horizontal" name="glyTypForm" id = "add-code" role="form" novalidate>
+            <strong>Glycosylation Type</strong>
+            <select class="form-control" title="Glycosylation Type" ng-model = "protein.glycosylation.glycosylationType" ng-options="r.display for r in lookup.getList('GLYCOSYLATION_TYPE') track by r.display" >
+            </select>
+        </form>
         <div class = "row header-row">
-            <div class = "col-md-1">
-                <strong>Link</strong>
-            </div>
             <div class = "col-md-2">
-                <strong>Subunit Index</strong>
+                <strong>Link type</strong>
             </div>
-            <div class = "col-md-2">
-                <strong>Residue Index</strong>
-            </div>
-            <div class ="col-md-1">
-                </div>
-            <div class = "col-md-2">
-                <strong>Ending Subunit Index</strong>
-            </div>
-            <div class = "col-md-2">
-                <strong>Ending Residue Index</strong>
-            </div>
-            <div class = "col-md-2">
-                <strong>Glycosylation Type</strong>
+            <div class = "col-md-10">
+                <strong>Sites</strong>
             </div>
         </div>
-        <div class="row">
-            <div class = "col-md-2 col-md-offset-6">
-                <span href="#" editable-select=" substance.protein.glycosylation.glycosylationType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('GLYCOSYLATION_TYPE') track by r.display" blur="submit">{{substance.protein.glycosylation.glycosylationType.display}}</span>
-            </div>
-        </div>
-        <div ng-repeat="siteList in substance.protein.glycosylation | arrays">
-            <div class = "row" ng-repeat="obj in siteList">
+        
+        <div ng-repeat="glyc in substance.protein.glycosylation.glycosites">
+            
                 <hr>
                 <div class = "col-md-2">
-                {{obj.link}}
-                    @*<span href="#" editable-select="obj.link" e-style="width: 100%" e-ng-options="n in ['N', 'C', 'O']" blur="submit">{{obj.link}}</span>*@
+                    <span href="#" editable-select="glyc.linkType" e-ng-options="n in ['N', 'C', 'O']" blur="submit">{{glyc.linkType}}</span>
                 </div>
-
-                <div class = "col-md-2">
-                    <span href="#" editable-select="obj.subunitIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.subunitIndex}}</span>
+                <div class="col-md-10 err-check">
+                    <site-selector ng-model="glyc"></site-selector>
                 </div>
-                <div class = "col-md-2">
-                    <span href="#" editable-select="obj.residueIndex" e-style="width: 100%" e-ng-options="n in range(substance.protein.subunits.length)" blur="submit">{{obj.residueIndex}}</span>
-                </div>
-            </div>
+            
         </div>
 
-        <form class="form-horizontal" name="glyForm" id = "add-code" role="form" novalidate>
+        <form class="form-horizontal" name="glyForm" id = "add-code" role="form" novalidate editable-form shown="true">
             <div class="row form-row">
-                <div class="col-md-1 err-check" id="code-div" show-errors>
-                    <select ng-model="site.link" class="form-control" name = "year" id = "year">
+                <div class="col-md-2 err-check" show-errors>
+                    <select ng-model="glyc.linkType" class="form-control" >
                         <option ng-repeat="n in ['N', 'C', 'O']">{{n}}</option>
                     </select>
-                    <ng-messages for="glyForm.code.$error" ng-if="glyForm.code.$touched">
-                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                    </ng-messages>
                 </div>
-                @selectors.siteselector("glyForm", "substance.protein", 2)
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Glycosylation Type" id="glycosylationType" name = "glycosylationType" ng-model = "site.glycosylationType" ng-options="r.display for r in lookup.getList('GLYCOSYLATION_TYPE') track by r.display" >
-                        </select>
-                    <ng-messages for="glyForm.glycosylationType.$error" ng-if="glyForm.glycosylationType.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                <div class="col-md-10 err-check" show-errors>
+                    <input type="text" class="form-control" ng-model ="glyc._displaySites" title="Glycoslylation Sites" id="glycSites" name = "glycSites" na-sites={{glyc}} />
+                    <small class="error" ng-show="glyForm.glycSites.$error.siteInvalid">{{sugarForm.glycSites.$errorMsg.naSites}}</small>
                 </div>
             </div>
-            @submitbuttons("site", "glyForm", "protein.glycosylation")
+            <submit-buttons submit="glyc" form="glyForm" path="protein.glycosylation.glycosites"></submit-buttons>
         </form>
     </div>
 </div>
