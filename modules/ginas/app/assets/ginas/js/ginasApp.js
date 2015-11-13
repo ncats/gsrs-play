@@ -601,7 +601,7 @@
                     } else {
                         var temp = _.get($scope.substance, path);
                         temp.push(obj);
-//                        _.set($scope.substance, path, temp);
+                       _.set($scope.substance, path, temp);
                     }
                 } else {
                     if (!list) {
@@ -621,17 +621,6 @@
             } else {
                 console.log("Invalid");
             }
-        };
-
-
-        $scope.defaultSave2 = function (obj, path, form) {
-            var x = [];
-            x.push(angular.copy(obj));
-            _.set($scope.substance, path, x);
-            $scope[name] = {};
-            //  $scope.reset(form);
-            //   form.$setSubmitted(true);
-
         };
 
         $scope.siteDisplayListToSiteList = function (slist) {
@@ -810,6 +799,9 @@ console.log(obj);
         };
 
         $scope.remove = function (obj, field) {
+            console.log(obj);
+            console.log(field);
+            console.log(Substance);
             var index = Substance[field].indexOf(obj);
             Substance[field].splice(index, 1);
         };
@@ -2089,7 +2081,8 @@ console.log(obj);
             restrict: 'E',
             replace: true,
             scope: {
-                value: '='
+                value: '=',
+                amount:'=obj'
             },
             template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display}}</span></div>'
         };
@@ -2579,14 +2572,11 @@ console.log(obj);
 ginasApp.directive('deleteButton', function(){
     return{
         restrict: 'E',
-        scope: {
-            delete: '='
-        },
-     template: '<a ng-click="deleteObj(delete)"><i class="fa fa-times fa-2x danger"></i></a>' ,
+     template: '<a ng-click="deleteObj()"><i class="fa fa-times fa-2x danger"></i></a>' ,
         link: function(scope, element, attrs){
-            console.log(scope);
-            scope.deleteObj= function(obj){
-                console.log(obj);
+            scope.path= attrs.path;
+            scope.deleteObj= function(){
+                scope.$parent.remove(scope.obj, scope.path);
             };
         }
     };
@@ -2601,18 +2591,8 @@ ginasApp.directive('deleteButton', function(){
             require: '^ngModel',
             replace: true,
             scope: {
-                object: '=ngModel',
-                field: '@',
-                arr: '='
-            },
-            link: function (scope, element, attrs, ngModel) {
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
-                };
+                obj: '=ngModel',
+                field: '@'
             }
         };
     });
@@ -2621,15 +2601,12 @@ ginasApp.directive('deleteButton', function(){
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/text-view-edit.html",
-       //     require: '^ngModel',
             replace: true,
             scope: {
                 obj: '=',
-                field: '@',
-                arr: '='
+                field: '@'
             },
             link: function (scope, element, attrs, ngModel) {
-                console.log(scope);
                 scope.editing = function (obj) {
                     if (_.has(obj, '_editing')) {
                         obj._editing = !obj._editing;
@@ -2648,18 +2625,8 @@ ginasApp.directive('deleteButton', function(){
             require: '^ngModel',
             replace: true,
             scope: {
-                object: '=ngModel',
-                field: '@',
-                arr: '='
-            },
-            link: function (scope, element, attrs, ngModel) {
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
-                };
+                obj: '=ngModel',
+                field: '@'
             }
         };
     });
@@ -2668,12 +2635,10 @@ ginasApp.directive('deleteButton', function(){
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/text-box-view-edit.html",
-            //require: '^ngModel',
             replace: true,
             scope: {
                 obj: '=obj',
-                field: '@',
-                arr: '='
+                field: '@'
             },
             link: function (scope, element, attrs, ngModel) {
                 scope.editing = function (obj) {
@@ -2696,8 +2661,7 @@ ginasApp.directive('deleteButton', function(){
             replace: true,
             scope: {
                 object: '=ngModel',
-                field: '@',
-                arr: '='
+                field: '@'
             },
             link: function (scope, element, attrs, ngModel) {
                 //date picker
@@ -2707,14 +2671,6 @@ ginasApp.directive('deleteButton', function(){
 
                 scope.open = function ($event) {
                     scope.status.opened = true;
-                };
-
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
                 };
             }
         };
@@ -2724,12 +2680,10 @@ ginasApp.directive('deleteButton', function(){
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/date-picker-view-edit.html",
-          //  require: '^ngModel',
             replace: true,
             scope: {
                 obj: '=obj',
-                field: '@',
-                arr: '='
+                field: '@'
             },
             link: function (scope, element, attrs, ngModel) {
                 //date picker
@@ -2739,14 +2693,6 @@ ginasApp.directive('deleteButton', function(){
 
                 scope.open = function ($event) {
                     scope.status.opened = true;
-                };
-
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
                 };
             }
         };
@@ -2759,23 +2705,13 @@ ginasApp.directive('deleteButton', function(){
             require: '^ngModel',
             replace: true,
             scope: {
-                formname: '=',
-                object: '=ngModel',
-                field: '@',
-                arr: '='
+                obj: '=ngModel',
+                field: '@'
             },
             link: function (scope, element, attrs, ngModel) {
                 ajaxlookup.load(attrs.cv).then(function (data) {
                     scope.values = data[0].terms;
                 });
-
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
-                };
             }
         };
     });
@@ -2815,10 +2751,8 @@ ginasApp.directive('deleteButton', function(){
             require: '^ngModel',
             replace: true,
             scope: {
-                formname: '=',
-                object: '=ngModel',
+                obj: '=ngModel',
                 field: '@',
-                arr: '=',
                 cv: '@'
             },
             link: function (scope, element, attrs) {
@@ -2830,14 +2764,6 @@ ginasApp.directive('deleteButton', function(){
                     data.load(cv);
                     return data.search(cv, $query);
                 };
-
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
-                };
             }
         };
     });
@@ -2846,20 +2772,13 @@ ginasApp.directive('deleteButton', function(){
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/multi-view-edit.html",
-           // require: '^ngModel',
             replace: true,
             scope: {
-                formname: '=',
                 obj: '=',
                 field: '@',
-                arr: '=',
                 cv: '@'
             },
             link: function (scope, element, attrs) {
-                /*                ajaxlookup.load(attrs.cv).then(function(data){
-                 scope.values = data[0].terms;
-                 });*/
-
                 scope.loadItems = function (cv, $query) {
                     data.load(cv);
                     return data.search(cv, $query);
@@ -2880,19 +2799,13 @@ ginasApp.directive('deleteButton', function(){
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/check-box-view-edit.html",
-          //  require: '^ngModel',
             replace: true,
             scope: {
-                // formname: '=',
-                obj: '=ngModel',
-                field: '@',
-                arr: '='
-                //  cv: '@'
+                obj: '=',
+                field: '@'
             },
             link: function (scope, element, attrs) {
                 scope.editing = function (obj, field) {
-                    console.log(scope);
-                    console.log(obj);
                     _.set(obj, '_editing' + field, true);
                 };
             }
@@ -2907,16 +2820,8 @@ ginasApp.directive('deleteButton', function(){
             require: '^ngModel',
             replace: true,
             scope: {
-                // formname: '=',
-                object: '=ngModel',
-                field: '@',
-                arr: '='
-                //  cv: '@'
-            },
-            link: function (scope, element, attrs) {
-                scope.editing = function (obj, field) {
-                    _.set(obj, '_editing' + field, true);
-                };
+                obj: '=ngModel',
+                field: '@'
             }
         };
     });

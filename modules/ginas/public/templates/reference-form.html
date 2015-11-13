@@ -11,19 +11,19 @@
                     <reference-apply ng-model ="ref.apply" referenceobj= referenceobj parent=parent></reference-apply>
                 </div>
                 <div class="col-md-2">
-                    <text-input ng-model="ref.citation" field="citation" arr="parent.references"></text-input>
+                    <text-input ng-model="ref.citation" field="citation" ></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="ref.doctype" field="doctype" cv = "DOCUMENT_TYPE" arr="parent.references"></dropdown-select>
+                    <dropdown-select ng-model="ref.doctype" field="doctype" cv = "DOCUMENT_TYPE" ></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <date-picker ng-model ="ref.documentDate" field ="documentDate" arr="parent.references"></date-picker>
+                    <date-picker ng-model ="ref.documentDate" field ="documentDate"></date-picker>
                 </div>
                 <div class="col-md-2">
-                    <multi-select ng-model="ref.tags" field="tags" cv = "DOCUMENT_COLLECTION" arr="parent.references"></multi-select>
+                    <multi-select ng-model="ref.tags" field="tags" cv = "DOCUMENT_COLLECTION" ></multi-select>
                 </div>
                 <div class="col-md-2">
-                    <text-input ng-model="ref.url" field="url" arr="parent.references"></text-input>
+                    <text-input ng-model="ref.url" field="url" ></text-input>
                 </div>
             </div><a ng-click="reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
             <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
@@ -41,13 +41,13 @@
                 <dropdown-view-edit obj= "obj" field = "doctype" cv = "DOCUMENT_TYPE"></dropdown-view-edit>
             </div>
             <div class="col-md-2">
-                <date-picker-view-edit obj= "obj" field ="documentDate" arr="parent.references"></date-picker-view-edit>
+                <date-picker-view-edit obj= "obj" field ="documentDate"></date-picker-view-edit>
             </div>
             <div class="col-md-2">
-                <multi-view-edit obj= "obj" field="tags" cv = "DOCUMENT_COLLECTION" arr="parent.references"></multi-view-edit>
+                <multi-view-edit obj= "obj" field="tags" cv = "DOCUMENT_COLLECTION" ></multi-view-edit>
             </div>
             <div class="col-md-2">
-                <text-view-edit obj= "obj" field="url" arr="parent.references"></text-view-edit>
+                <text-view-edit obj= "obj" field="url" ></text-view-edit>
             </div>
 
         </div>

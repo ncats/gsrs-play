@@ -21,7 +21,7 @@
         <div class = "row" ng-repeat="obj in substance.notes">
             <hr>
             <div class="col-md-1">
-                <delete-button delete="obj"></delete-button>
+                <delete-button delete="obj" path="notes"></delete-button>
             </div>
             <div class="col-md-10 err-check" id="name-div">
                 <text-box-view-edit obj="obj" field="note" arr="substance.notes" required></text-box-view-edit>

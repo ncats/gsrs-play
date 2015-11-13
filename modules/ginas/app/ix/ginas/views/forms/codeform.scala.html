@@ -28,7 +28,7 @@
         <div class = "row" ng-repeat="obj in substance.codes">
             <hr>
             <div class="col-md-1">
-                <delete-button delete="obj"></delete-button>
+                <delete-button delete="obj" path="codes"></delete-button>
             </div>
             <div class="col-md-3 err-check" >
                 <text-view-edit obj = "obj" field="code" arr="substance.codes" required></text-view-edit>
