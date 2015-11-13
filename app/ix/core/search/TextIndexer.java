@@ -1534,8 +1534,6 @@ public class TextIndexer {
             "".equals(indexable.name()) ? name : indexable.name();
         
         boolean asText = true;
-        if(value instanceof Principal)
-        	System.out.println("!!!!!!!!!!!" + value.getClass());
         if (value instanceof Long) {
             //fields.add(new NumericDocValuesField (full, (Long)value));
             Long lval = (Long)value;
@@ -1639,15 +1637,6 @@ public class TextIndexer {
                          (dim, text.split(indexable.pathsep())));
                 }
                 else {
-                	if(value instanceof Principal){
-                		System.out.println("######################################");
-                		System.out.println("######################################");
-                		System.out.println("######################################");
-                		System.out.println("######################################");
-                		System.out.println("######################################");
-                		System.out.println("######################################");
-                		System.out.println(dim + "\t" + indexable.name());
-                	}
                     fields.add(new FacetField (dim, text));
                 }
             }

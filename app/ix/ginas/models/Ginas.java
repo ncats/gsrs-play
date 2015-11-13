@@ -20,6 +20,7 @@ import javax.persistence.PreUpdate;
 import play.Logger;
 import play.db.ebean.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -83,5 +84,12 @@ public class Ginas extends Model {
             }
         }
         return null;
+    }
+    
+    @JsonIgnore
+    public UUID getOrGenerateUUID(){
+    	if(uuid!=null)return uuid;
+    	this.uuid=UUID.randomUUID();
+    	return uuid;
     }
 }

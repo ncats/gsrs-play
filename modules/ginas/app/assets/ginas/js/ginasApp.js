@@ -289,10 +289,31 @@
 
             formSub = $scope.flattenCV(formSub);
             formSub = $scope.collapseReferences(formSub, 0);
+            if(formSub.moieties){
+                for(var i=0;i<formSub.moieties.length;i++){
+                        //moieties need new UUID on each save
+                        formSub.moieties[i].id=$scope.uuid();
+                        console.log("#############");
+                        console.log(formSub.moieties[i].id);
+                }
+            }
+            if(formSub.structure){
+                   //apparently needs to be reset as well
+                   formSub.structure.id=$scope.uuid();
+            }
+            console.log(formSub);
             return formSub;
         };
+        $scope.uuid = function uuid() {
+                    function s4() {
+                        return Math.floor((1 + Math.random()) * 0x10000)
+                            .toString(16)
+                            .substring(1);
+                    }
 
-
+                    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                        s4() + '-' + s4() + s4() + s4();
+                };
         //adds reference id//
         $scope.refLength = function () {
             if (!$scope.substance.references) {
@@ -909,7 +930,7 @@ console.log(obj);
         $scope.submitSubstance = function () {
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
-            $http.post(baseurl + 'submit', sub).success(function () {
+            $http.post(baseurl + 'register/submit', sub).success(function () {
                 console.log("success");
                 alert("submitted!");
             });
@@ -2399,10 +2420,24 @@ console.log(obj);
                         } else {
                             scope.formsubstance.structure = data.structure;
                             scope.formsubstance.moieties = data.moieties;
+                            for(var i=0;i<data.moieties.length;i++){
+                                data.moieties[i]._id=scope.uuid();
+                            }
                             scope.formsubstance.q = data.structure.smiles;
                         }
                         console.log(scope);
                     });
+                };
+                
+                scope.uuid = function uuid() {
+                    function s4() {
+                        return Math.floor((1 + Math.random()) * 0x10000)
+                            .toString(16)
+                            .substring(1);
+                    }
+
+                    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                        s4() + '-' + s4() + s4() + s4();
                 };
 
                 scope.$watch(function (scope) {
