@@ -1,7 +1,6 @@
 package ix.ginas.controllers;
 
 import java.util.List;
-
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
