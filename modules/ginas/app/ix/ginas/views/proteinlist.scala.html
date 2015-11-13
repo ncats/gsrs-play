@@ -23,6 +23,27 @@
         <div class = "row">
             <div class = "col-md-3">
                 <img ng-click="toggle()" src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="struc-thumb img-responsive" id="" />
+                <div class = "row">
+                    <div class = "col-md-12">
+                        <ul class= "list-inline pull-right list-unstyled">
+                            <li>
+                                @*
+                                    This should be another export
+                                *@
+                                <export-button structureid ="'@prot.uuid'" format="'fas'" ></export-button>
+                            </li>
+                            <li>
+                                @*
+                                This should be a sequence search
+                                *@
+                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self"class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
+                            </li>
+                            <li>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" class="btn btn-primary" aria-label="Edit Protein Substance"> <span class="fa fa-wrench chem-button"></span></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div class = "col-md-6">
 

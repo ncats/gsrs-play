@@ -2,6 +2,7 @@ package ix.ginas.controllers;
 
 import java.util.List;
 
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.models.Principal;
@@ -37,7 +38,16 @@ public class GinasFactory extends EntityFactory {
 	}
 
 	public static String getSequence(String id, int max) {
-		String seq = PayloadFactory.getString(id);
+		String seq=null;
+		try{
+			seq = PayloadFactory.getString(id);
+		}catch(IllegalArgumentException e){
+			seq=id;
+		}
+		if(seq==null){
+			
+			seq = GinasApp._seqIndexer.getSeq(id);
+		}
 		if (seq != null) {
 			seq = seq.replaceAll("[\n\t\\s]", "");
 			if (max > 0 && max + 3 < seq.length()) {
@@ -45,6 +55,7 @@ public class GinasFactory extends EntityFactory {
 			}
 			return seq;
 		}
+		
 		return null;
 	}
 

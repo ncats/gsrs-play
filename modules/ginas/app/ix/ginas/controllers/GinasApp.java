@@ -33,6 +33,7 @@ import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.RebuildIndex;
@@ -43,6 +44,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1474,39 +1477,81 @@ public class GinasApp extends App {
                                     final String format, final String context) {
         List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
         
-        Chemical c;
+        
+        
+        Chemical c=null;
+        Protein p=null;
         
         Substance s = SubstanceFactory.getSubstance(id);
+        
+        
+        
         
         if(s==null){
                 Structure struc = StructureFactory.getStructure(id);
                 c = GinasUtils.structureToChemical(struc, messages);
                 
         }else{
-                c = GinasUtils.substanceToChemical(s, messages);
+        	if(s instanceof ProteinSubstance){
+        		p=((ProteinSubstance)s).protein;
+        	}else{
+        		c = GinasUtils.substanceToChemical(s, messages);
+        	}
         }
+        
         
         
         ObjectMapper om = new ObjectMapper();
         Logger.debug("SERIALIZED:" + om.valueToTree(messages).toString());
         response().setHeader("EXPORT-WARNINGS",om.valueToTree(messages).toString() +"___");
                 try {
-                        if (format.equalsIgnoreCase("mol"))
+                        if (format.equalsIgnoreCase("mol")){
                                 return ok(c.export(Chemical.FORMAT_MOL));
-                        else if (format.equalsIgnoreCase("sdf"))
+                        }else if (format.equalsIgnoreCase("sdf")){
                                 return ok(c.export(Chemical.FORMAT_SDF));
-                        else if (format.equalsIgnoreCase("smiles"))
+                        }else if (format.equalsIgnoreCase("smiles")){
                                 return ok(c.export(Chemical.FORMAT_SMILES));
-                        else if (format.equalsIgnoreCase("cdx"))
+                        }else if (format.equalsIgnoreCase("cdx")){
                                 return ok(c.export(Chemical.FORMAT_CDX));
-                        else
+                        }else if (format.equalsIgnoreCase("fas")){
+                        		return ok(makeFastaFromProtein(((ProteinSubstance)s)));
+                        }else{
                                 return _badRequest("unknown format:" + format);
+                        }
                 } catch (Exception e) {
                         e.printStackTrace();
                         return _badRequest(e.getMessage());
                 } 
         
     }
+    public static String makeFastaFromProtein(ProteinSubstance p){
+    	String resp = "";
+    	List<Subunit> subs=p.protein.subunits;
+    	Collections.sort(subs, new Comparator<Subunit>(){
+			@Override
+			public int compare(Subunit o1, Subunit o2) {
+				return o1.subunitIndex-o2.subunitIndex;
+			}});
+    	
+    	for(Subunit s: subs){
+    		resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
+    		for(String seq : splitBuffer(s.sequence,80)){
+    			resp+=seq+"\n";
+    		}
+    	}
+    	return resp;
+    }
+
+	public static String[] splitBuffer(String input, int maxLength) {
+		int elements = (input.length() + maxLength - 1) / maxLength;
+		String[] ret = new String[elements];
+		for (int i = 0; i < elements; i++) {
+			int start = i * maxLength;
+			ret[i] = input.substring(start,
+					Math.min(input.length(), start + maxLength));
+		}
+		return ret;
+	}
     public static String updateKey =null;
     public static Result updateIndex(String key){
     	if(!GinasLoad.ALLOW_REBUILD){

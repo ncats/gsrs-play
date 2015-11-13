@@ -2477,9 +2477,12 @@ console.log(obj);
         return {
             restrict: 'E',
             scope: {
-                structureid: '='
+                structureid: '=',
+                format: '='
             },
-            template: '<button type="button" class="btn btn-primary" structureid = structureid  export><i class="fa fa-external-link chem-button"></i></button>'
+            template: function(){
+                return '<button type="button" class="btn btn-primary" structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
+            }
         };
     });
 
@@ -2497,9 +2500,13 @@ console.log(obj);
         return function (scope, element, attrs) {
             element.bind("click", function () {
                 var modal = angular.element(document.getElementById('export-mol'));
+                var format= scope.format;
+                if(!format){
+                        format="sdf";
+                }
                 $http({
                     method: 'GET',
-                    url: baseurl + 'export/' + scope.structureid + '.sdf',
+                    url: baseurl + 'export/' + scope.structureid + '.' + scope.format,
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -2523,7 +2530,6 @@ console.log(obj);
                 }, function (response) {
                     alert("ERROR exporting data");
                 });
-
             });
         };
     });
