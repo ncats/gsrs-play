@@ -68,9 +68,9 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                @referenceselectorform("detForm", "nucleicAcid")
+                <reference-selector ngModel='polymer' references='substance.references'></reference-selector>  
             </div>
-            @submitbuttons("polymer", "polymerDetailsForm", "polymer.classification",false)
+            <submit-buttons submit="polymer" form="polymerDetailsForm" path="polymer.classification" list=false></submit-buttons>
         </form>
     </div>
 </div>

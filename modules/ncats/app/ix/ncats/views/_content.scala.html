@@ -43,7 +43,7 @@
 	      <span><h4>Batch Query:&nbsp;
 		  <code>@ix.ncats.controllers.App.getPayload(request().getQueryString("q"), 50)</code></h4></span> <div id="searching"></div>
 	    }
-  	    case "substructure" => {
+  	    case "substructure" | "Substructure" => {
 	      <span><h4>Substructure Query:&nbsp; <a  href="#"
            tabindex="-1"
            data-toggle="popover"
@@ -54,7 +54,7 @@
 	   data-html="true"
            data-content="<img src='@ix.ncats.controllers.routes.App.render(request().getQueryString("q"),150)'>"><code>@request().getQueryString("q")</code></a></h4></span><div id="searching"></div>
 	    }
-	     case "similarity" => {
+	     case "similarity" | "Similarity" => {
 	      <span><h4>Similarity Query:&nbsp; <a  href="#"
            tabindex="-1"
            data-toggle="popover"

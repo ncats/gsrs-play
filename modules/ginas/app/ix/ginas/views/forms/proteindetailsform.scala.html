@@ -70,9 +70,9 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                @referenceselectorform("detForm", "protein")
+                <reference-selector ngModel='protein' references='substance.references'></reference-selector> 
             </div>
-            @submitbuttons("protein", "detForm", "protein", false)
+            <submit-buttons submit="protein" form="detForm" path="protein" list=false></submit-buttons>
             </div>
         </form>
     </div>

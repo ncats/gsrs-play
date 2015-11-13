@@ -54,9 +54,9 @@
                         <ng-message when="required" class="help-block">*required</ng-message>
                     </ng-messages>
                 </div>
-                @referenceselectorform("diverseSourceForm", "structurallyDiverse")
+                <reference-selector ngModel='structurallyDiverse' references='substance.references'></reference-selector>
             </div>
-            @submitbuttons("diverse", "diverseSourceForm", "structurallyDiverse", false)
+            <submit-buttons submit="diverse" form="diverseSourceForm" path="structurallyDiverse" list=false></submit-buttons>
         </form>
     </div>
 </div>

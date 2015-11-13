@@ -60,7 +60,21 @@ public class PayloadPlugin extends Plugin {
         payload.sha1 = Util.toHex(md.digest());
         List<Payload> found =
             PayloadFactory.finder.where().eq("sha1", payload.sha1).findList();
-        if (found.isEmpty()) {
+        
+        boolean save=true;
+        if (!found.isEmpty()){
+            payload = found.iterator().next();
+            Logger.debug("payload already loaded as "+payload.id);
+            try{
+            	File f=PayloadFactory.getFile(payload);
+            	if(!f.exists())throw new IllegalStateException("payload deleted");
+            	save=false;
+            }catch(Exception e){
+            	Logger.debug(payload.name+" file not found");
+            }
+        }
+        
+        if (save) {
             payload.name = name;
             payload.mimeType = mime;
             
@@ -70,11 +84,8 @@ public class PayloadPlugin extends Plugin {
             }
             Logger.debug(payload.name+" => "+payload.id + " " +payload.sha1);
         }
-        else {
-            payload = found.iterator().next();
-            Logger.debug("payload already loaded as "+payload.id);
-            tmp.delete();
-        }
+        
+        
         return payload;
     }
 

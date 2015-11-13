@@ -1,9 +1,0 @@
-
-@(objOwner: String)
-
-<div class="col-md-1">
-    <a ng-show="@{objOwner}"  ng-click="addAmount@{objOwner}=true"><amount value = "@{objOwner}"></amount></a>
-    <a ng-show="addAmount@{objOwner} &&!@{objOwner}" ng-click="addAmount@{objOwner}=false"><i class="fa fa-times fa-2x danger"></i></a>
-    <a ng-hide="@{objOwner}|| addAmount@{objOwner}" ng-click="print($event); addAmount@{objOwner}=true" aria-label="Add a value" id = "@objOwner"><i class="fa fa-plus fa-2x success"></i></a>
-</div>
-

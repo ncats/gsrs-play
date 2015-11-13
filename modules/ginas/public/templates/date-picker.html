@@ -1,0 +1,31 @@
+<div>
+    <label for="{{field}}" class="text-capitalize">Date</label>
+<!--    <br/>
+
+    <div ng-repeat="obj in arr">
+        <a href="#" ng-hide="obj._editing" ng-click="editing(obj);">{{obj[field]}}</a>
+
+        <p ng-show="obj._editing" class="input-group">
+            <input type="text" class="form-control" datepicker-popup ng-model=object[field] ng-blur="editing(obj);"
+                   is-open="status.opened" ng-required="true" id="{{field}}edit"/>
+         <span class="input-group-btn">
+    <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
+</span>
+        </p>
+        <hr>
+    </div>-->
+    <p class="input-group">
+        <input type="text" class="form-control" datepicker-popup ng-model=object is-open="status.opened"
+               ng-required="true" id="{{field}}"/>
+         <span class="input-group-btn">
+    <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
+</span>
+    </p>
+<!--
+    <ng-messages for="refForm.documentDate.$error" ng-if="refForm.documentDate.$dirty">
+        <ng-message when="required" class="help-block">*required</ng-message>
+    </ng-messages>
+-->
+
+
+</div>

@@ -27,6 +27,9 @@
            <div>@forms.diversesourceform()</div>
            <div ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'">@forms.diverseorganismform()</div>
             <div>@forms.diversedetailsform()</div>
+            <div>@forms.parentform()</div>
+            <div>@forms.partform()</div>
+
 
         }
         case "concept" => {
@@ -51,14 +54,15 @@
         }
     }
 
+
     <div>@forms.officialnameform()</div>
-    <div>@forms.nameform()</div>
+    <div>@forms.nameform2()</div>
     <div>@forms.codeform()</div>
     <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>
-    <div>@forms.propertyform()</div>
-    <div ng-show="substance.references">@forms.referenceform()</div>
-    @forms.referencemodalform()
+<div>@forms.propertyform()</div>
+
+    <reference-form parent = "substance"></reference-form>
     @forms.amountmodalform()
     @forms.parametermodalform()
 
@@ -75,6 +79,8 @@
     *@
     <script src="@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
     <div ng-cloak>
+    
+     
         @wizardfields(kind)
         <div class = "row info">
             <div class="col-md-4">
@@ -111,7 +117,7 @@
 </div>
         <script>
         var loadjson = @Html(json);
-    </script>
+        </script>
 
         <script type="text/ng-template" id="tag-template-script">
         <div class="tag-template" >
