@@ -32,12 +32,18 @@ public class Ginas extends Model {
     //@Column(name = "DATA_UUID")
     public UUID uuid;
 
+    
+    //TP: why is this final?
     public final Date created = new Date ();
+    
+    @Indexable(facet = true, name = "Last Edited Date")
     public Date lastEdited;
     
+    //TP: why is this one-to-one?
     @OneToOne(cascade=CascadeType.ALL)
     @JsonSerialize(using = PrincipalSerializer.class)
     @JsonDeserialize(using = PrincipalDeserializer.class)
+    @Indexable(facet = true, name = "Last Edited By")
     public Principal lastEditedBy;
     
     //Where did this come from?

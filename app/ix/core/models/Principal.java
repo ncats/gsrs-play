@@ -2,6 +2,8 @@ package ix.core.models;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 // Commented
 
@@ -60,6 +62,11 @@ public class Principal extends IxModel {
     public Principal (String username, String email) {
         this.username = username;
         this.email = email;
+    }
+    
+    @JsonIgnore
+    public String toString(){
+    	return username;
     }
 
     public boolean isAdmin () { return admin; }

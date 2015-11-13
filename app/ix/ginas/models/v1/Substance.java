@@ -86,8 +86,10 @@ public class Substance extends Ginas {
 	@OneToOne(cascade = CascadeType.ALL)
 	@JsonSerialize(using = PrincipalSerializer.class)
 	@JsonDeserialize(using = PrincipalDeserializer.class)
+	@Indexable(facet = true, name = "Approved By")
 	public Principal approvedBy;
 
+	@Indexable(facet = true, name = "Approved Date")
 	@JsonDeserialize(using = DateDeserializer.class)
 	public Date approved;
 

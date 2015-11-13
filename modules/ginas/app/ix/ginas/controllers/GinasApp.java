@@ -80,8 +80,12 @@ public class GinasApp extends App {
     
     public static final String[] CHEMICAL_FACETS = {
         "Record Status",
-        "Substance Class", "SubstanceStereoChemistry", "Molecular Weight",
-        "GInAS Tag" };
+        "Substance Class", 
+        "SubstanceStereoChemistry", 
+        "Molecular Weight",
+        "GInAS Tag"
+        
+    };
     
     public static final String[] PROTEIN_FACETS = {
         "Sequence Type",
@@ -89,9 +93,21 @@ public class GinasApp extends App {
     
     public static final String[] ALL_FACETS = {
         "Record Status",
-        "Substance Class", "SubstanceStereoChemistry", "Molecular Weight",
-        "GInAS Tag", "Sequence Type", "Material Class", "Material Type",
-        "Family", "Parts", "Code System" };
+        "Substance Class", 
+        "SubstanceStereoChemistry", 
+        "Molecular Weight",
+        "GInAS Tag", 
+        "Sequence Type", 
+        "Material Class", 
+        "Material Type",
+        "Family", 
+        "Parts", 
+        "Code System",
+        "Last Edited By",
+        "Last Edited Date",
+        "Approved By",
+        "Approved Date"
+    };
 
     static final PayloadPlugin _payload =
         Play.application().plugin(PayloadPlugin.class);
