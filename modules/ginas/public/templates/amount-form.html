@@ -31,13 +31,48 @@
                     <text-input ng-model="amount.nonNumericValue" field="nonNumericValue" arr="substance.amount"></text-input>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-2 pull-right">
             <a ng-click="amount=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
             <a ng-click="validate()" ><i class="fa fa-check fa-2x success"></i></a>
-
+</div>
+                </div>
 <!--
             <a ng-show="$parent.edit" ng-click="update(); $parent.toggleStage();" ><i class="fa fa-plus fa-2x success"></i></a>
 -->
 
         </form>
-        </div>
+<!--
+<div class = "row">
+    <hr>
+    <div class="col-md-1">
+        <delete-button delete="obj" path="officialNames"></delete-button>
     </div>
+    <div class="col-md-2">
+        <text-view-edit obj = "obj" field="name" arr="substance.officialNames" required></text-view-edit>
+    </div>
+    <div class="col-md-2">
+        <multi-view-edit obj = "obj" field="domain" cv = "NAME_DOMAIN" arr="substance.officialNames"></multi-view-edit>
+    </div>
+    <div class="col-md-2">
+        <multi-view-edit obj = "obj" field="jurisdiction" cv = "JURISDICTION" arr="substance.officialNames"></multi-view-edit>
+    </div>
+    <div class="col-md-1">
+        <multi-view-edit obj = "obj" field="nameOrg" cv = "NAME_ORG" arr="substance.officialNames"></multi-view-edit>
+    </div>
+    <div class="col-md-2">
+        <multi-view-edit obj = "obj" field="languages" cv = "LANGUAGE" arr="substance.officialNames"></multi-view-edit>
+    </div>
+    <div class="col-md-1">
+        <check-box-view-edit obj = "obj" field="preferred" arr="substance.officialNames"></check-box-view-edit>
+    </div>
+    <div class="col-md-1 pull-right">
+        <reference-selector-view obj = "obj" referenceobj= "name" arr="substance.officialNames" parent = "substance" formname="officialNameForm"></reference-selector-view>
+    </div>
+</div>-->
+
+
+
+
+    </div>
+</div>
