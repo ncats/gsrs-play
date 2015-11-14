@@ -785,6 +785,8 @@ public class EntityFactory extends Controller {
         return notFound (request().uri()+": No edit history found!");
     }
 
+    // This expects an update of the full record to be done using "/path/*"
+    // or "/path/_"
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
 
