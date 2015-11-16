@@ -6,7 +6,7 @@
                 <form class="form-horizontal" name="relationshipForm" role="form" novalidate>
                     <div class="row form-row">
                         <div class="col-md-2">
-                            <substance-chooser-lite ng-model ="relationship.relatedSubstance" field ="relatedSubstance" name ="parentSubstance" form ="parentForm"></substance-chooser-lite>
+                            <substance-chooser-lite ng-model ="relationship.relatedSubstance" field ="relatedSubstance" name ="relatedSubstance" formname ="relationshipForm"></substance-chooser-lite>
                         </div>
                         <div class="col-md-2">
                             <dropdown-select ng-model="relationship.type" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-select>
@@ -37,7 +37,7 @@
                 <delete-button delete="obj" path="relationships"></delete-button>
             </div>
             <div class="col-md-2">
-                <substance-view subref = "obj.relatedSubstance" ></substance-view>
+                <substance-chooser-view-edit obj = "obj" field ="relatedSubstance"></substance-chooser-view-edit>
             </div>
             <div class="col-md-2">
                 <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
