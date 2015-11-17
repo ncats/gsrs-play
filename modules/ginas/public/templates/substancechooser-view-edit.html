@@ -5,7 +5,7 @@
 
     <div ng-show="obj[field]._editing" id="{{field}}">
         <tags-input custom-class="form-control" ng-blur="obj[field]._editing = false" ng-model= s title="Substance Selector"
-                    placeholder="Substance Name" id="substance" name="{{field}}" add-from-autocomplete-only="true" display-property="name"
+                    placeholder="Substance Name" id="substance" name="{{field}}" add-from-autocomplete-only="true" display-property="_name"
                     key-property="approvalID" on-tag-adding='createSubref($tag)'>
             <auto-complete source="loadSubstances($query)" max-results-to-show="25" min-length="1" debounce-delay="0" load-on-down-arrow="true"
                            template="autocomplete-template"></auto-complete>
@@ -14,15 +14,4 @@
 <ng-messages for="form.name.$error" ng-if="form.name.$touched">
         <ng-message when="required" class="help-block">*required</ng-message>
     </ng-messages>
-
-    <script type="text/ng-template" id="autocomplete-template">
-        <div class="autocomplete-template">
-            <div class="row text-center">
-                <rendered id="data.uuid"></rendered>
-            </div>
-            <div class="row text-center">
-                <span><code>{{data.name}}</code></span>
-            </div>
-        </div>
-    </script>
 </div>

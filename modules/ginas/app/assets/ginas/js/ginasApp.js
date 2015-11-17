@@ -1530,6 +1530,7 @@ console.log(obj);
                         'Content-Type': 'text/plain'
                     }
                 }).then(function (response) {
+                    console.log(response);
                     return response.data.content;
                 });
                 return promise;
@@ -2195,6 +2196,7 @@ console.log(obj);
                 };
 
                 scope.createSubref = function (selectedItem) {
+                    console.log(selectedItem);
                       var subref = {};
                    subref.refuuid = selectedItem.uuid;
                     subref.refPname = selectedItem._name;

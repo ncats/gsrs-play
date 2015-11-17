@@ -6,8 +6,8 @@
     </span>
 
     <div ng-show="!subref"  id="{{field}}">
-        <tags-input custom-class="form-control" ng-blur="cancel()" ng-model= subref title="Substance Selector"
-                    placeholder="Substance Name" id="substance" name="{{field}}" display-property="name"
+        <tags-input custom-class="form-control" ng-blur="cancel()" ng-model=subref title="Substance Selector"
+                    placeholder="Substance Name" id="substance" name="substance" display-property="_name"
                     key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag)'
                     template="tag-template">
             <auto-complete source="loadSubstances($query)" max-results-to-show="25" min-length="1" debounce-delay="0" load-on-down-arrow="true"
@@ -24,7 +24,7 @@
                 <rendered id="data.uuid"></rendered>
             </div>
             <div class="row text-center">
-                <span><code>{{data.name}}</code></span>
+                <span><code>{{data._name}}</code></span>
             </div>
         </div>
     </script>
