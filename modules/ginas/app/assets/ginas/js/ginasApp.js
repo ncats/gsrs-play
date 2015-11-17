@@ -1954,18 +1954,19 @@ console.log(obj);
             replace: true,
             scope: {
                  obj: '=obj',
-                referenceobj: '=',
-                parent: '=',
-                type: '@'
+                referenceobj: '='
             },
             link: function (scope, element, attrs, ngModel) {
                 console.log(scope);
+                console.log(element[0].parentElement.parentElement);
                 scope.stage = true;
-                switch (scope.type) {
+                switch (attrs.type) {
                     case "amount":
-                            var template = angular.element('<a ng-click ="$parent.toggleStage(); $parent.setFormAmount(referenceobj.amount)"><amount value ="obj.amount" ></amount></a>');
+                            var template = angular.element('<a ng-click ="toggleStage()"><amount value ="obj.amount" ></amount></a>');
                             element.append(template);
                             $compile(template)(scope);
+                        var formHolder = '<amount-form ng-model= obj.amount></amount-form>';
+                       // element.append(formHolder);
                         break;
                     case "reference":
                         $templateRequest(baseurl + "assets/templates/reference-selector-view.html").then(function (html) {
@@ -1978,6 +1979,35 @@ console.log(obj);
 
                         break;
                 }
+
+                scope.toggleStage = function () {
+                    if (_.isUndefined(scope.referenceobj)) {
+                        var x = {};
+                        _.set(scope, 'referenceobj', x);
+                    }
+                    var directiveElement;
+                    var compiledDirective;
+/*                    var result = document.getElementsByClassName(attrs.formname);
+                    var elementResult = angular.element(result);*/
+                    var parent =  angular.element(element[0].parentElement.parentElement.parentElement);
+                    if (scope.stage===true) {
+                        scope.stage = false;
+                        childScope = scope.$new();
+                        compiledDirective = $compile(formHolder);
+                        directiveElement = compiledDirective(childScope);
+                        //fingers crossed...
+console.log(directiveElement);
+                       parent.append(directiveElement);
+                      //  elementResult.append(directiveElement);
+                    } else {
+                        console.log(parent);
+                        childScope.$destroy();
+                        console.log(directiveElement);
+                       // compiledDirective.empty();
+                        angular.element(parent[0]).empty();
+                        scope.stage = true;
+                    }
+                };
             }
     };
 });
@@ -2007,7 +2037,7 @@ console.log(obj);
                                 var template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
-                                formHolder = '<amount-form ng-model=referenceobj.amount referenceobj = referenceobj parent = parent arr=arr></amount-form>';
+                                formHolder = '<amount-form ng-model=referenceobj.amount></amount-form>';
                                 element.append(formHolder);
                             });
                             break;
@@ -2058,51 +2088,24 @@ console.log(obj);
             restrict: 'E',
             replace: true,
             scope: {
-                value: '=',
-                amount:'=obj'
+                value: '='
             },
-            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display}}</span></div>',
-            link: function (scope, element, attrs){
-                element.bind("click", function () {
-                console.log(scope);
-                });
-            }
+            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display}}</span></div>'
         };
     });
 
-    ginasApp.directive('amountForm', function (lookup) {
+    ginasApp.directive('amountForm', function () {
         return {
             restrict: 'E',
             replace: true,
             scope: {
-               // refmodel: '=',
-                amount: '=ngModel',
-                parent: '=',
-                field:'='
+                amount: '=ngModel'
             },
-            templateUrl: baseurl + "assets/templates/amount-form.html",
-            link: function (scope, element, attrs) {
-                console.log(scope);
-                scope.validate = function () {
-                    console.log(scope);
-                //    _.set(scope,'amount', scope.amount);
-                  //  scope.parent.$destroy();
-                };
-
-                scope.update = function () {
-                    console.log(scope);
-                    var temp = _.get(scope.arr, scope.amount);
-                    scope.temp = temp;
-                    console.log(scope);
-                    //scope.referenceobj.amount= scope.amount;
-                 //   _.set(scope.referenceobj,'amount', scope.amount);
-                    //  scope.parent.$destroy();
-                };
-            }
+            templateUrl: baseurl + "assets/templates/amount-form.html"
         };
     });
 
-     ginasApp.directive('amountEditDisplay', function (lookup) {
+/*     ginasApp.directive('amountEditDisplay', function (lookup) {
         return {
             restrict: 'E',
             replace: true,
@@ -2114,7 +2117,7 @@ console.log(obj);
                 scope.lookup = lookup;
             },
         };
-    });
+    });*/
 //*************************************
 
 

@@ -31,7 +31,8 @@
                     <submit-buttons submit="relationship" form="relationshipForm" path="relationships"></submit-buttons>
                 </form>
 
-        <div class = "row" ng-repeat="obj in substance.relationships">
+        <div class = "row" ng-repeat="obj in substance.relationships" >
+            {{obj.$$hashKey}}
             <hr>
             <div class="col-md-1">
                 <delete-button delete="obj" path="relationships"></delete-button>
@@ -58,8 +59,5 @@
                 <form-selector-view obj = "obj" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "reference"></form-selector-view>
             </div>
         </div>
-
-
-
             </div>
         </div>

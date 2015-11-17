@@ -1,13 +1,14 @@
-<div class = "row info">
+<div class="row info">
     <button class="btn btn-primary label-offset det">
         Amount&nbsp;</button>
     <a ng-click="$parent.toggleStage();" class="pull-right">
         <i class="fa fa-times fa-2x danger"></i></a>
+
     <div class="col-md-12">
         <form class="form-horizontal" name="amountForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    <dropdown-select ng-model="amount.type" field="type" cv = "AMOUNT_TYPE"></dropdown-select>
+                    <dropdown-select ng-model="amount.type" field="type" cv="AMOUNT_TYPE"></dropdown-select>
                 </div>
                 <div class="col-md-1">
                     <text-input ng-model="amount.average" field="average"></text-input>
@@ -25,7 +26,7 @@
                     <text-input ng-model="amount.highLimit" field="highLimit"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="amount.units" field="units" cv = "AMOUNT_UNIT"></dropdown-select>
+                    <dropdown-select ng-model="amount.units" field="units" cv="AMOUNT_UNIT"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <text-input ng-model="amount.nonNumericValue" field="nonNumericValue"></text-input>
@@ -33,46 +34,10 @@
             </div>
             <div class="row">
                 <div class="col-md-2 pull-right">
-            <a ng-click="amount=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-            <a ng-click="validate(); $parent.toggleStage()" ><i class="fa fa-check fa-2x success"></i></a>
-</div>
+                    <a ng-click="amount=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate(); $parent.toggleStage()"><i class="fa fa-check fa-2x success"></i></a>
                 </div>
-<!--
-            <a ng-show="$parent.edit" ng-click="update(); $parent.toggleStage();" ><i class="fa fa-plus fa-2x success"></i></a>
--->
-
+            </div>
         </form>
-<!--
-<div class = "row">
-    <hr>
-    <div class="col-md-1">
-        <delete-button delete="obj" path="officialNames"></delete-button>
-    </div>
-    <div class="col-md-2">
-        <text-view-edit obj = "obj" field="name" arr="substance.officialNames" required></text-view-edit>
-    </div>
-    <div class="col-md-2">
-        <multi-view-edit obj = "obj" field="domain" cv = "NAME_DOMAIN" arr="substance.officialNames"></multi-view-edit>
-    </div>
-    <div class="col-md-2">
-        <multi-view-edit obj = "obj" field="jurisdiction" cv = "JURISDICTION" arr="substance.officialNames"></multi-view-edit>
-    </div>
-    <div class="col-md-1">
-        <multi-view-edit obj = "obj" field="nameOrg" cv = "NAME_ORG" arr="substance.officialNames"></multi-view-edit>
-    </div>
-    <div class="col-md-2">
-        <multi-view-edit obj = "obj" field="languages" cv = "LANGUAGE" arr="substance.officialNames"></multi-view-edit>
-    </div>
-    <div class="col-md-1">
-        <check-box-view-edit obj = "obj" field="preferred" arr="substance.officialNames"></check-box-view-edit>
-    </div>
-    <div class="col-md-1 pull-right">
-        <reference-selector-view obj = "obj" referenceobj= "name" arr="substance.officialNames" parent = "substance" formname="officialNameForm"></reference-selector-view>
-    </div>
-</div>-->
-
-
-
-
     </div>
 </div>
