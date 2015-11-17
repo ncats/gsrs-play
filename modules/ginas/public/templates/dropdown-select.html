@@ -1,7 +1,7 @@
 <div>
     <div>
         <label for="{{field}}" class="text-capitalize">{{field}}</label>
-        <select class="form-control" title="{{field}}" name="{{field}}" id="{{field}}" ng-model=object
+        <select class="form-control" title="{{field}}" name="{{field}}" id="{{field}}" ng-model=obj
                 ng-blur="editing(obj[field]);" ng-options="r.display for r in values track by r.display">
         </select>
     </div>

@@ -593,6 +593,10 @@
 
         $scope.defaultSave = function (obj, form, path, list, name) {
             $scope.$broadcast('show-errors-check-validity');
+            console.log(obj);
+            console.log(form);
+            console.log($scope);
+
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
 
@@ -619,6 +623,7 @@
                 form.$setSubmitted(true);
                 console.log($scope);
             } else {
+                console.log(form);
                 console.log("Invalid");
             }
         };
@@ -679,6 +684,7 @@
         //This simplifies some things.
         $scope.validate = function (objName, form, path, list) {
             console.log($scope);
+            console.log(form);
             var obj = $scope[objName];
 console.log(obj);
             var v = path.split(".");
@@ -807,6 +813,7 @@ console.log(obj);
         };
 
         $scope.reset = function (form) {
+            console.log(form);
             form.$setPristine();
             $scope.$broadcast('show-errors-reset');
         };
@@ -1414,6 +1421,7 @@ console.log(obj);
             subref.substanceClass = "reference";
             console.log(subref);
             _.set($scope.substance, path, subref);
+            subref = {};
             console.log($scope);
         };
 
@@ -1947,7 +1955,6 @@ console.log(obj);
                  obj: '=obj',
                 referenceobj: '=',
                 parent: '=',
-                arr: '=',
                 type: '@'
             },
             link: function (scope, element, attrs, ngModel) {
@@ -1955,13 +1962,11 @@ console.log(obj);
                 scope.stage = true;
                 switch (scope.type) {
                     case "amount":
-                        console.log("amount");
-                            var template = angular.element('<amount value ="obj.amount"><amount>');
+                            var template = angular.element('<a ng-click ="$parent.toggleStage(); $parent.setFormAmount(referenceobj.amount)"><amount value ="obj.amount" ></amount></a>');
                             element.append(template);
                             $compile(template)(scope);
                         break;
                     case "reference":
-                        console.log("references");
                         $templateRequest(baseurl + "assets/templates/reference-selector-view.html").then(function (html) {
                             var template = angular.element(html);
                             element.append(template);
@@ -1997,7 +2002,6 @@ console.log(obj);
                 scope.getTemplate= function() {
                     switch (scope.type) {
                         case "amount":
-                            console.log("amount");
                             $templateRequest(baseurl + "assets/templates/amount-selector.html").then(function (html) {
                                 var template = angular.element(html);
                                 element.append(template);
@@ -2007,7 +2011,6 @@ console.log(obj);
                             });
                             break;
                         case "reference":
-                            console.log("references");
                             $templateRequest(baseurl + "assets/templates/reference-selector2.html").then(function (html) {
                                 var template = angular.element(html);
                                 element.append(template);
@@ -2022,34 +2025,6 @@ console.log(obj);
 
                     }
                 };
-
-                scope.getFormHolder = function(obj){
-                    if(obj){
-                        scope.referenceobj=obj;
-                        return formHolder;
-                    }
-                    else return formHolder;
-                };
-
-                scope.edit = function(obj, arr, type){
-                    scope.edit= true;
-                    scope.original= angular.copy(obj);
-                        console.log("editing:");
-                        console.log(obj);
-                    //scope.referenceobj=obj;
-                    scope.amountedit = obj;
-                    console.log(scope);
-                    scope.toggleStage();
-/*                    var result = document.getElementsByClassName(attrs.formname);
-                    var elementResult = angular.element(result);
-                   // elementResult.empty();
-                   // childScope = scope.$new();
-                    var compiledDirective = $compile('<amount-form refmodel = amount referenceobj = obj parent = parent ></amount-form>');
-                    var directiveElement = compiledDirective(childScope);
-                    elementResult.append(directiveElement);*/
-                };
-
-
 
                 scope.toggleStage = function () {
                     if (_.isUndefined(scope.referenceobj)) {
@@ -2070,6 +2045,7 @@ console.log(obj);
                         scope.stage = true;
                     }
                 };
+
                 scope.getTemplate();
             }
         };
@@ -2084,7 +2060,12 @@ console.log(obj);
                 value: '=',
                 amount:'=obj'
             },
-            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display}}</span></div>'
+            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display}}</span></div>',
+            link: function (scope, element, attrs){
+                element.bind("click", function () {
+                console.log(scope);
+                });
+            }
         };
     });
 
@@ -2094,22 +2075,22 @@ console.log(obj);
             replace: true,
             scope: {
                // refmodel: '=',
-                referenceobj: '=',
+                amount: '=ngModel',
                 parent: '=',
-                arr:'='
+                field:'='
             },
             templateUrl: baseurl + "assets/templates/amount-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
                 scope.validate = function () {
                     console.log(scope);
-                    _.set(scope.referenceobj,'amount', scope.amount);
+                //    _.set(scope,'amount', scope.amount);
                   //  scope.parent.$destroy();
                 };
 
                 scope.update = function () {
                     console.log(scope);
-                    var temp = _.get(scope.arr, scope.referenceobj);
+                    var temp = _.get(scope.arr, scope.amount);
                     scope.temp = temp;
                     console.log(scope);
                     //scope.referenceobj.amount= scope.amount;
@@ -2204,34 +2185,73 @@ console.log(obj);
             scope: {
                 subref: '=ngModel',
                 //path: '@subref',
-                name: '@name',
-                form: '@form',
-                field: '@',
-                arr: '='
+               // name: '@name',
+                formname: '=formname',
+                field: '@'
             },
-            link: function (scope, element, attrs) {
+            link: function (scope, element, attrs, ngModel) {
                 scope.loadSubstances = function ($query) {
                     return nameFinder.search($query);
                 };
 
                 scope.createSubref = function (selectedItem) {
+                      var subref = {};
+                   subref.refuuid = selectedItem.uuid;
+                    subref.refPname = selectedItem.name;
+                    subref.approvalID = selectedItem.approvalID;
+                    subref.substanceClass = "reference";
+                    scope.subref = angular.copy(subref);
+
+                };
+            }
+        };
+    });
+
+
+    ginasApp.directive('substanceChooserViewEdit', function (nameFinder) {
+        return {
+            templateUrl: baseurl + 'assets/templates/substancechooser-view-edit.html',
+            replace: true,
+            restrict: 'E',
+            scope: {
+                obj: '=',
+                field: '@'
+            },
+            link: function (scope, element, attrs) {
+                console.log(scope);
+                scope.loadSubstances = function ($query) {
+                    return nameFinder.search($query);
+                };
+
+                scope.createSubref = function (selectedItem) {
+                    console.log(scope);
+                    console.log(selectedItem);
                     var subref = {};
                     subref.refuuid = selectedItem.uuid;
                     subref.refPname = selectedItem.name;
                     subref.approvalID = selectedItem.approvalID;
                     subref.substanceClass = "reference";
-                    scope.subref = subref;
+                    console.log(subref);
+                    scope.obj[scope.field] = angular.copy(subref);
+                    scope.diverse= [];
+                    console.log(scope);
                 };
+
                 scope.editing = function (obj) {
+                    console.log("editing");
                     if (_.has(obj, '_editing')) {
                         obj._editing = !obj._editing;
                     } else {
                         _.set(obj, '_editing', true);
                     }
                 };
+
             }
         };
     });
+
+
+
 
     ginasApp.directive('substanceView', function () {
         return {
@@ -2242,11 +2262,22 @@ console.log(obj);
                 subref: '='
             },
             link: function (scope, element, attrs) {
+
+                scope.editing = function (obj) {
+                    if (_.has(obj, '_editing')) {
+                        obj._editing = !obj._editing;
+                    } else {
+                        _.set(obj, '_editing', true);
+                    }
+                };
+
+
+
                 //  console.log(scope);
                 element.bind("click", function () {
                     //  scope.$parent.temp= _.cloneDeep(scope.$parent.diverse);
                     // console.log(scope);
-                    scope.$parent.diverse = [];
+                   // scope.$parent.diverse = [];
                     //console.log(scope);
 
                     //subref = undefined;
