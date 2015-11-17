@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 public class PrincipalListDeserializer
     extends JsonDeserializer<List<Principal>> {
     public PrincipalListDeserializer () {
+    	
     }
 
     public List<Principal> deserialize

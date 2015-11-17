@@ -401,7 +401,12 @@ public class GinasUtils {
     }
 
     public static class GinasJSONExtractor extends RecordExtractor<JsonNode> {
-        public GinasJSONExtractor(InputStream is) {
+        public GinasJSONExtractor(){
+        	super(null);
+        }
+        
+        
+    	public GinasJSONExtractor(InputStream is) {
             super(is);
         }
 

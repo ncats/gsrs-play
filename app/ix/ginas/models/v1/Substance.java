@@ -263,6 +263,7 @@ public class Substance extends Ginas {
 
 	@Column(length = 1024)
 	@Indexable(suggest = true, facet = true, name = "Name")
+	@JsonProperty("_name")
 	public String getName() {
 		for (Name n : names) {
 			if (n.preferred) {
@@ -371,6 +372,7 @@ public class Substance extends Ginas {
 		return null;
 	}
 
+	@JsonProperty("_approvalIDDisplay")
 	public String getApprovalIDDisplay() {
 		if (approvalID != null)
 			return approvalID;

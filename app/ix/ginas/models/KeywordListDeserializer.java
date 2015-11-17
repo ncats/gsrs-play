@@ -1,23 +1,27 @@
 package ix.ginas.models;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
-
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-
-import ix.ginas.models.Ginas;
 import ix.core.models.Keyword;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import play.Logger;
+
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 
 public class KeywordListDeserializer extends JsonDeserializer<List<Keyword>> {
     final String label;
     public KeywordListDeserializer (String label) {
         this.label = label;
+    }
+    
+    public KeywordListDeserializer () {
+        this.label = null;
     }
 
     public List<Keyword> deserialize
@@ -35,5 +39,17 @@ public class KeywordListDeserializer extends JsonDeserializer<List<Keyword>> {
             }
         }
         return keywords;
+    }
+    
+    public static List<Keyword> deserialize(List nonKeyword, String label){
+    	List<Keyword> keywords = new ArrayList<Keyword>();
+    	for(Object s:nonKeyword){
+    		if(s instanceof Keyword){
+    			keywords.add((Keyword)s);
+    		}else{
+	    		keywords.add(new Keyword(label, s.toString()));
+    		}
+    	}
+    	return keywords;
     }
 }
