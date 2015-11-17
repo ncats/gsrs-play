@@ -5,6 +5,7 @@ import java.security.*;
 import java.util.*;
 import java.util.regex.*;
 import java.util.concurrent.*;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Array;
@@ -916,7 +917,17 @@ public class EntityFactory extends Controller {
                     return internalServerError (ex.getMessage());
                 }
                 obj=inst;
-                //return created (mapper.valueToTree(inst));
+                recursivelyApply(obj, "", new EntityCallable(){
+					@Override
+					public void call(Object m, String path) {
+						if(m instanceof Model){
+							try{
+								((Model)m).update();
+							}catch(Exception e){
+								
+							}
+						}
+					}});
             } else {
                 Object inst = obj;
                 StringBuilder uri = new StringBuilder ();
@@ -1134,8 +1145,42 @@ public class EntityFactory extends Controller {
         }
     } // update ()
     
-    
-    
+    public static interface EntityCallable{
+    	public void call(Object m, String path);
+    }
+    protected static void recursivelyApply(Model entity, String path, EntityCallable c){
+    	try{
+	    	for(Field f: entity.getClass().getFields()){
+	    		Class type= f.getType();
+	    		Annotation e=type.getAnnotation(Entity.class);
+	    		if(e!=null){
+	    			try {
+	    				Object nextEntity=f.get(entity);
+	    				if(nextEntity instanceof Model)
+	    					recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
+					} catch (IllegalArgumentException e1) {
+						e1.printStackTrace();
+					} catch (IllegalAccessException e1) {
+						e1.printStackTrace();
+					}
+	    		} else if (Collection.class.isAssignableFrom(type)) {
+	    			Collection col = (Collection) f.get(entity);
+	    			if(col!=null){
+	    				int i=0;
+	    				for(Object nextEntity:col){
+	    					if(nextEntity instanceof Model)
+	    						recursivelyApply((Model) nextEntity, path + "/" + f.getName() + "(" + i + ")",c);
+	    					i++;
+	    				}
+	    			}
+	    		}
+	    		
+	    	}
+    	}catch(Exception e){
+    		e.printStackTrace();
+    	}
+    	c.call(entity, path);
+    }
     
 
     protected static Object getJsonValue 
