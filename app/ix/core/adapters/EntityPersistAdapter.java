@@ -305,7 +305,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
     }
     public void reindex(Object bean){
-    	String _id=getIdForBean(bean);
+    	String _id=getIdForBeanAsString(bean);
     	if(alreadyLoaded.containsKey(bean.getClass()+_id)){
     		return;
     	}
@@ -343,28 +343,57 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 			e.printStackTrace();
 		}
     }
-    
-    public static String getIdForBean(Object entity){
+    public static Object getIdForBean(Object entity){
     	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return null;
         }
         try {
             Object id = null;
-            
-            for (Field f : entity.getClass().getFields()) {
-                if (f.getAnnotation(Id.class) != null) {
-                    id = f.get(entity);
-                }
-            }
+            Field f=getIdFieldForBean(entity);
+            id = f.get(entity);
 
             if (id != null) {
-            	return id.toString();
+            	return id;
             }
         }
         catch (Exception ex) {
             Logger.trace("Unable to update index for "+entity, ex);
         }
         return null;
+    }
+    public static Field getIdFieldForBean(Object entity){
+    	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+            return null;
+        }
+        try {
+            for (Field f : entity.getClass().getFields()) {
+                if (f.getAnnotation(Id.class) != null) {
+                    return f;
+                }
+            }
+        } catch (Exception ex) {
+            Logger.trace("Unable to update index for "+entity, ex);
+        }
+        return null;
+    }
+    public static Method getIdSettingMethodForBean(Object entity){
+    	Field f=getIdFieldForBean(entity);
+    	for(Method m:entity.getClass().getMethods()){
+    		if(m.getName().toLowerCase().equals("set" + f.getName().toLowerCase())){
+    			return m;
+    		}
+    	}
+    	return null;
+    }
+    public static String getIdForBeanAsString(Object entity){
+    	Object id=getIdForBean(entity);
+    	if(id!=null)return id.toString();
+    	return null;
+    }
+    public static String setIdForBean(Object entity){
+    	Object id=getIdForBean(entity);
+    	if(id!=null)return id.toString();
+    	return null;
     }
     public static Field getSequenceIndexableField(Object entity){
     	if (!entity.getClass().isAnnotationPresent(Entity.class)) {

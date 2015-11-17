@@ -297,6 +297,20 @@ public class RouteFactory extends Controller {
         Logger.warn("Context {} has no method create()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
+    
+    public static Result validate (String context) {
+        try {
+            Method m = getMethod (context, "create"); 
+            if (m != null)
+                return (Result)m.invoke(null);
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.warn("Context {} has no method create()",context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
 
     public static Result update (String context, Long id, String field) {
         try {

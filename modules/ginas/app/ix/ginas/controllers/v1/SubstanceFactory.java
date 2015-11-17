@@ -1,23 +1,25 @@
 package ix.ginas.controllers.v1;
 
-import java.util.*;
-import java.io.*;
-
-import play.libs.Json;
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
-
-import com.avaje.ebean.*;
-
+import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Structure;
 import ix.core.models.Value;
-import ix.ginas.models.*;
-import ix.ginas.models.v1.*;
-import ix.core.NamedResource;
-import ix.ginas.controllers.*;
+import ix.ginas.controllers.GinasApp;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.ProteinSubstance;
+import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.SubstanceReference;
+import ix.ginas.utils.GinasUtils;
+import ix.ginas.utils.GinasV1ProblemHandler;
+
+import java.util.List;
+import java.util.UUID;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import play.Logger;
+import play.db.ebean.Model;
+import play.mvc.Result;
 
 @NamedResource(name="substances",
                type=Substance.class,
@@ -112,13 +114,17 @@ public class SubstanceFactory extends EntityFactory {
     public static Result create () {
         return create (Substance.class, finder);
     }
+    
+    public static Result validate () {
+        return validate (Substance.class, finder);
+    }
 
     public static Result delete (UUID uuid) {
         return delete (uuid, finder);
     }
 
     public static Result update (UUID uuid, String field) {
-        return update (uuid, field, Substance.class, finder);
+        return update (uuid, field, Substance.class, finder, new GinasV1ProblemHandler());
     }
 
     public static List<Substance> getCollsionChemicalSubstances(int i, int j,
