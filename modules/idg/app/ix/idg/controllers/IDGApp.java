@@ -1391,7 +1391,9 @@ public class IDGApp extends App implements Commons {
                 Payload payload = _payloader.createPayload
                     ("Sequence Search", "text/plain", seq);
                 Call call = routes.IDGApp.targets(payload.id.toString(), 10, 1);
-                String id = params.get("identity");
+                String[] idv = params.get("identity");
+                String id=null;
+                if(idv!=null)id=idv[0];
                 return redirect (call.url()+"&type=sequence"
                                  + (id != null ? "&identity="+id :""));
             }
