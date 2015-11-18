@@ -24,7 +24,7 @@ public class Role extends Model implements be.objectify.deadbolt.core.models.Rol
     public Kind role;
 
 
-    @OneToOne()
+    @ManyToOne()
      public Principal principal;
 
 

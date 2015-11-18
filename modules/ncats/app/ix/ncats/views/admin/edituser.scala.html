@@ -1,9 +1,10 @@
 @import ix.core.models.UserProfile
 @import ix.core.models.Role
 @import ix.core.models.Acl
+@import ix.core.controllers.AdminFactory
 @import helper._
 
-@(id: Long, userForm: UserProfile, roleList: List[String], permList: List[String])
+@(id: Long, userForm: UserProfile, roleList: List[String], permList: List[String], grpList: List[String], appContext: String)
 
 @implicitFieldConstructor = @{ FieldConstructor(ix.ncats.views.html.admin.twitterBootstrapInput.render) }
 
@@ -54,18 +55,40 @@
                                 }
                                 </td>
                             </tr>
-                            <tr><td colspan="2"><br/></td></tr>
+                            @if(!appContext.contains("ginas")) {
+                                <tr><td colspan="2"><br/></td></tr>
 
-                            <tr align="left">
-                                <td align="center"><lable>Permissions &nbsp;&nbsp;</lable></td>
-                                <td id="permGroup">
-                                @for(ps <- Acl.options()) {
-                                    <input class="form-input" type="checkbox" name="p-@ps.toString()" id="p-@ps..toString()" value="@ps.toString()"
-                                        @if(permList.contains(ps.toString())) {checked="checked"} />
-                                    <span>@ps.toString()</span><br/>
-                                }
-                                </td>
-                            </tr>
+                                <tr align="left">
+                                    <td align="center"><lable>Permissions &nbsp;&nbsp;</lable></td>
+                                    <td id="permGroup">
+                                    @for(ps <- Acl.options()) {
+                                        <input class="form-input" type="checkbox" name="p-@ps.toString()" id="p-@ps.toString()" value="@ps.toString()"
+                                            @if(permList.contains(ps.toString())) {
+                                                checked="checked"
+                                            } />
+                                        <span>@ps.toString()</span> <br/>
+                                    }
+                                    </td>
+                                </tr>
+                            }
+
+
+                                <tr><td colspan="2"><br/></td></tr>
+
+                                <tr align="left">
+                                    <td align="center"><lable>Groups &nbsp;&nbsp;</lable></td>
+                                        <td id="permGroup">
+                                        @for(gs <- AdminFactory.allGroups()) {
+                                            <input class="form-input" type="checkbox" name="g-@gs.name" id="g-@gs.name" value="@gs.name"
+                                                @if(grpList.contains(gs.name)) {
+                                                    checked="checked"
+                                                }/>
+                                            <span>@gs.name</span> <br/>
+                                        }
+                                            <div id="grpLable">Enter a Group Name</div>
+                                            <div id="grpTxtBox"><input class="form-input" type="text" name="grpName" id="grpName"></div>
+                                        </td>
+                                </tr>
 
                             <tr><td colspan="2"><br/></td></tr>
                             <tr class="actions">
@@ -81,6 +104,15 @@
 
         </div>
   </form>
+    <script>
+        $("grpLable").click(function(){
+            $("grpTxtBox").show();
+        });
+
+        $("grpTxtBox").click(function(){
+            $("grpLable").hide();
+        });
+    </script>
 }
 
 

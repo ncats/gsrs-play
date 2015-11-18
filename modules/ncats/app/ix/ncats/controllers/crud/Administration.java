@@ -6,13 +6,11 @@ import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
-import ix.core.models.Acl;
-import ix.core.models.Principal;
-import ix.core.models.Role;
-import ix.core.models.UserProfile;
+import ix.core.models.*;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.routes;
 import play.Logger;
+import play.Play;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.db.ebean.Model;
@@ -28,6 +26,8 @@ public class Administration extends App {
 
     static Model.Finder<Long, UserProfile> _profiles =
             new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class);
+
+    static String appContext = Play.application().configuration().getString("application.context");
 
     public static Result index() {
         return redirect(ix.ncats.controllers.crud.routes.Administration.listPrincipals(1, "", "", ""));
@@ -65,9 +65,17 @@ public class Administration extends App {
         newUser.admin = Boolean.parseBoolean(requestData.get("admin"));
         newUser.email = requestData.get("email");
         newUser.username = requestData.get("username");
+        String groupName = requestData.get("grpName");
 
         ArrayList<Role> rolesChecked = new ArrayList<Role>();
         ArrayList<Acl> aclsChecked = new ArrayList<Acl>();
+        List<Group> groupsChecked = new ArrayList<Group>();
+
+
+        if(groupName != null && !groupName.isEmpty()){
+            Group grp = new Group(groupName);
+            groupsChecked.add(grp);
+        }
 
         for (String key : requestData.data().keySet()) {
             if (key.contains("r-")) {
@@ -78,6 +86,15 @@ public class Administration extends App {
             if (key.contains("p-")) {
                 Acl p = new Acl(Acl.Permission.valueOf(requestData.data().get(key)));
                 aclsChecked.add(p);
+            }
+
+            if (key.contains("g-")) {
+                String grpName = requestData.data().get(key);
+                Group group = AdminFactory.groupfinder.where().eq("name", grpName).findUnique();
+                if(group == null){
+                    group = new Group(requestData.data().get(key));
+                }
+                groupsChecked.add(group);
             }
         }
         newUser.save();
@@ -95,8 +112,17 @@ public class Administration extends App {
 
             for (Acl p : aclsChecked) {
                 p.principals.add(newUser);
-                AdminFactory.registerAclIfAbsent(p);
                 p.save();
+            }
+
+            for (Group g : groupsChecked) {
+                if(g.id != null) {
+                    g.members.add(newUser);
+                    g.saveManyToManyAssociations("members");
+                }else {
+                    g.members.add(newUser);
+                    g.save();
+                }
             }
             prof.save();
         }
@@ -115,17 +141,15 @@ public class Administration extends App {
         String password = requestData.get("password");
         String email = requestData.get("email");
         String active = requestData.get("active");
-
+        String groupName = requestData.get("grpName");
 
         List<Role> selectedRoles = new ArrayList<Role>();
         List<Acl> selectedPerms = new ArrayList<Acl>();
+        List<Group> selectedGroups = new ArrayList<Group>();
 
-        for(Role r : AdminFactory.rolesByPrincipal(user)){
-            AdminFactory.deleteRole(r.id);
-        }
-
-        for(Acl p : AdminFactory.permissionByPrincipal(user)){
-            AdminFactory.deleteUserPermission(p.id, user.id);
+        if(groupName != null && !groupName.isEmpty()){
+            Group grp = new Group(groupName);
+            selectedGroups.add(grp);
         }
 
         for (String key : requestData.data().keySet()) {
@@ -135,8 +159,21 @@ public class Administration extends App {
             }
 
             if (key.contains("p-")) {
-                Acl p = new Acl(Acl.Permission.valueOf(requestData.data().get(key)));
-                selectedPerms.add(p);
+                String permName = requestData.data().get(key);
+                Acl perm = AdminFactory.aclFinder.where().eq("Permission", Acl.Permission.valueOf(permName)).findUnique();
+                if(perm == null) {
+                    perm = new Acl(Acl.Permission.valueOf(permName));
+                }
+                selectedPerms.add(perm);
+            }
+
+            if (key.contains("g-")) {
+                String grpName = requestData.data().get(key);
+                Group group = AdminFactory.groupfinder.where().eq("name", grpName).findUnique();
+                if(group == null){
+                    group = new Group(requestData.data().get(key));
+                }
+                selectedGroups.add(group);
             }
         }
 
@@ -149,16 +186,9 @@ public class Administration extends App {
             profile.hashp = AdminFactory.encrypt(password, profile.salt);
         }
         profile.active = Boolean.parseBoolean(active);
-        for (Role r : selectedRoles) {
-           r.principal = user;
-            r.save();
-        }
-
-        for (Acl p : selectedPerms) {
-          p.principals.add(user);
-            //AdminFactory.registerAclIfAbsent(p);
-            p.save();
-        }
+        AdminFactory.updateGroups(user.id, selectedGroups);
+        AdminFactory.updatePermissions(user.id, selectedPerms);
+        AdminFactory.updateRoles(user.id, selectedRoles);
         profile.save();
 
         flash("success", " " + userName + " has been updated");
@@ -169,16 +199,16 @@ public class Administration extends App {
         Principal user = AdminFactory.palFinder.byId(id);
         UserProfile up = _profiles.where().eq("user.username", user.username).findUnique();
         up.user = user;
-        return ok(ix.ncats.views.html.admin.edituser.render(id, up, AdminFactory.roleNamesByPrincipal(user), AdminFactory.aclNamesByPrincipal(user)));
+        return ok(ix.ncats.views.html.admin.edituser.render(id, up, AdminFactory.roleNamesByPrincipal(user), AdminFactory.aclNamesByPrincipal(user),
+                AdminFactory.groupNamesByPrincipal(user), appContext));
     }
 
-    //  @Dynamic(value = "adminUser", handlerKey = "idg")
     public static Result deletePrincipal(Long id) {
-        return AdminFactory.setToInactive(id);
+        return AdminFactory.setUserToInactive(id);
     }
 
     public static Result create() {
         Form<UserProfile> userForm = Form.form(UserProfile.class);
-        return ok(ix.ncats.views.html.admin.createuser.render(userForm));
+        return ok(ix.ncats.views.html.admin.createuser.render(userForm, appContext));
     }
 }

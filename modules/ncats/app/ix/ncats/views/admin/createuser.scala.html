@@ -1,13 +1,12 @@
 @import ix.core.models.UserProfile
 @import ix.core.models.Role
 @import ix.core.models.Acl
-@import play.api.Play.current
+@import ix.core.controllers.AdminFactory
 @import helper._
 
-@(userForm: Form[UserProfile])
+@(userForm: Form[UserProfile], appContext: String)
 
 @implicitFieldConstructor = @{ FieldConstructor(ix.ncats.views.html.admin.twitterBootstrapInput.render) }
-
 @ix.ncats.views.html.admin.main {
     <form role="form" method="post" action="@ix.ncats.controllers.crud.routes.Administration.addPrincipal()">
 
@@ -48,15 +47,32 @@
                                     }
                                     </td>
                                 </tr>
+
+                                @if(!appContext.contains("ginas")) {
+                                    <tr><td colspan="2"><br/></td></tr>
+
+                                    <tr align="left">
+                                        <td align="center"><lable>Permissions &nbsp;&nbsp;</lable></td>
+                                        <td id="permGroup">
+                                        @for(ps <- Acl.options()) {
+                                            <input class="form-input" type="checkbox" name="p-@ps.toString()" id="p-@ps.toString()" value="@ps.toString()"/>
+                                            <span>@ps.toString()</span> <br/>
+                                        }
+                                        </td>
+                                    </tr>
+                                }
+
                                 <tr><td colspan="2"><br/></td></tr>
 
                                 <tr align="left">
-                                    <td align="center"><lable>Permissions &nbsp;&nbsp;</lable></td>
+                                    <td align="center"><lable>Groups &nbsp;&nbsp;</lable></td>
                                     <td id="permGroup">
-                                    @for(ps <- Acl.options()) {
-                                        <input class="form-input" type="checkbox" name="p-@ps.toString()" id="p-@ps..toString()" value="@ps.toString()"/>
-                                        <span>@ps.toString()</span><br/>
-                                    }
+                                        @for(gs <- AdminFactory.allGroups()) {
+                                            <input class="form-input" type="checkbox" name="g-@gs.name" id="g-@gs.name" value="@gs.name"/>
+                                            <span>@gs.name</span> <br/>
+                                        }
+                                        <div id="grpLable">Enter a Group Name</div>
+                                        <div id="grpTxtBox"><input class="form-input" type="text" name="grpName" id="grpName"></div>
                                     </td>
                                 </tr>
 
@@ -72,11 +88,9 @@
             </div>
 
 
+
         </div>
     </form>
-    <script>
-        var context = @play.api.Play.configuration.getString("application.context").getOrElse("")
-    </script>
 }
 
 

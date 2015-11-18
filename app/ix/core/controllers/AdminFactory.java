@@ -121,16 +121,26 @@ public class AdminFactory extends Controller {
         if (user != null) {
             try {
 
-                String sql = "delete from IX_CORE_ACL_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId and ap.IX_CORE_ACL_ID = :permId";
-                SqlUpdate sqlQuery = Ebean.createSqlUpdate(sql);
-                sqlQuery.setParameter("userId", userId);
-                sqlQuery.setParameter("permId", permId);
-                int rows = sqlQuery.execute();
+                Acl acl = aclFinder.setId(permId).fetch("principals").findUnique();
+                acl.principals.remove(palFinder.byId(userId));
+                acl.saveManyToManyAssociations("principals");
             } catch (Exception ex) {
                 return badRequest(ex.getMessage());
             }
         }
         return notFound("Unknown user: " + userId);
+    }
+
+    public static Result deleteUserGroup(Long grpId, Long userId) {
+
+        try {
+            Group grp = groupfinder.setId(grpId).fetch("members").findUnique();
+            grp.members.remove(palFinder.byId(userId));
+            grp.saveManyToManyAssociations("members");
+        }catch(Exception ex){
+            return badRequest(ex.getMessage());
+        }
+        return ok("user: " + userId);
     }
 
     public static Result getNamespace(Long id) {
@@ -300,6 +310,29 @@ public class AdminFactory extends Controller {
         return permList;
     }
 
+    public static List<String> groupNamesByPrincipal(Principal cred) {
+        List<Group> grps = groupsByPrincipal(cred);
+        List<String> grpList = new ArrayList<>();
+        for(Group g : grps){
+            grpList.add(g.name);
+        }
+        return grpList;
+    }
+
+    public static List<Group> groupsByPrincipal(Principal cred) {
+        Long userId = cred.id;
+        List<Group> groupByUser = new ArrayList<>();
+        String sql = "select IX_CORE_GROUP_ID from IX_CORE_GROUP_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId";
+        SqlQuery sqlQuery = Ebean.createSqlQuery(sql);
+        sqlQuery.setParameter("userId", userId);
+        Set<SqlRow> sqlRows = sqlQuery.findSet();
+
+        for (SqlRow row : sqlRows) {
+            groupByUser.add(groupfinder.byId((Long) row.get("ix_core_group_id")));
+        }
+        return groupByUser;
+    }
+
 
     public static List<Acl> permissionByPrincipal(Principal cred) {
         Long userId = cred.id;
@@ -315,29 +348,60 @@ public class AdminFactory extends Controller {
         return perByUser;
     }
 
-    public static synchronized Acl registerAclIfAbsent(Acl acl) {
-       //Acl perm = aclFinder.where().eq("id", acl.id).findUnique();
-        Acl.Permission pm = Acl.Permission.valueOf(acl.getValue());
-        Acl perm = aclFinder.where().eq("perm", pm).findUnique();
-        if (perm == null) {
-            try {
-                acl.save();
-                return acl;
-            } catch (Exception ex) {
-                Logger.trace("Can't register permission: " + acl.getValue(), ex);
-                throw new IllegalArgumentException(ex);
-            }
-        }
-        return perm;
-    }
-
-    public static Result setToInactive(Long id) {
+    public static Result setUserToInactive(Long id) {
         Principal user = palFinder.byId(id);
         if (user != null) {
             UserProfile profile = proFinder.where().eq("user.username", user.username).findUnique();
             profile.active = false;
         }
         return notFound("Unknown user: " + id);
+    }
+
+    public static void updateGroups(Long userId, List<Group> groups){
+
+        Principal user = palFinder.byId(userId);
+
+        for(Group g : AdminFactory.groupsByPrincipal(user)){
+            AdminFactory.deleteUserGroup(g.id, user.id);
+        }
+
+        for (Group g : groups) {
+            if(g.id != null) {
+                g.members.add(user);
+                g.saveManyToManyAssociations("members");
+            }else {
+                g.members.add(user);
+                g.save();
+            }
+        }
+    }
+
+    public static void updatePermissions(Long userId, List<Acl> perms){
+        Principal user = palFinder.byId(userId);
+        for(Acl p : AdminFactory.permissionByPrincipal(user)){
+            AdminFactory.deleteUserPermission(p.id, user.id);
+        }
+
+        for (Acl p : perms) {
+            if(p.id != null){
+                p.principals.add(user);
+                p.saveManyToManyAssociations("principals");
+            }else {
+                p.principals.add(user);
+                p.save();
+            }
+        }
+    }
+
+    public static void updateRoles(Long userId, List<Role> roles){
+        Principal user = palFinder.byId(userId);
+        for(Role r : AdminFactory.rolesByPrincipal(user)){
+            AdminFactory.deleteRole(r.id);
+        }
+        for (Role r : roles) {
+            r.principal = user;
+            r.save();
+        }
     }
 
     public static List<Group> allGroups() {
