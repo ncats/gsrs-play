@@ -118,9 +118,11 @@
     });
 
     ginasApp.service('ajaxlookup', function ($http) {
-        var url = baseurl + "api/v1/vocabularies?filter=domain='";
+        var url = baseurl + "api/v1/vocabularies?i=9&filter=domain='";
 
         var nameFinder = {
+            options: {},
+            fetching:{},
             load: function (domain) {
                 var promise = $http.get(url + domain + "'", {
                     headers: {
@@ -130,14 +132,6 @@
                     return response.data.content;
                 });
                 return promise;
-            },
-            search: function (field, query) {
-                return _.chain(options[field])
-                    .filter(function (x) {
-                        return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
-                    })
-                    .sortBy('display')
-                    .value();
             }
         };
         return nameFinder;
@@ -289,31 +283,31 @@
 
             formSub = $scope.flattenCV(formSub);
             formSub = $scope.collapseReferences(formSub, 0);
-            if(formSub.moieties){
-                for(var i=0;i<formSub.moieties.length;i++){
-                        //moieties need new UUID on each save
-                        formSub.moieties[i].id=$scope.uuid();
-                        console.log("#############");
-                        console.log(formSub.moieties[i].id);
+            if (formSub.moieties) {
+                for (var i = 0; i < formSub.moieties.length; i++) {
+                    //moieties need new UUID on each save
+                    formSub.moieties[i].id = $scope.uuid();
+                    console.log("#############");
+                    console.log(formSub.moieties[i].id);
                 }
             }
-            if(formSub.structure){
-                   //apparently needs to be reset as well
-                   formSub.structure.id=$scope.uuid();
+            if (formSub.structure) {
+                //apparently needs to be reset as well
+                formSub.structure.id = $scope.uuid();
             }
             console.log(formSub);
             return formSub;
         };
         $scope.uuid = function uuid() {
-                    function s4() {
-                        return Math.floor((1 + Math.random()) * 0x10000)
-                            .toString(16)
-                            .substring(1);
-                    }
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+            }
 
-                    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                        s4() + '-' + s4() + s4() + s4();
-                };
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                s4() + '-' + s4() + s4() + s4();
+        };
         //adds reference id//
         $scope.refLength = function () {
             if (!$scope.substance.references) {
@@ -605,7 +599,7 @@
                     } else {
                         var temp = _.get($scope.substance, path);
                         temp.push(obj);
-                       _.set($scope.substance, path, temp);
+                        _.set($scope.substance, path, temp);
                     }
                 } else {
                     if (!list) {
@@ -686,7 +680,7 @@
             console.log($scope);
             console.log(form);
             var obj = $scope[objName];
-console.log(obj);
+            console.log(obj);
             var v = path.split(".");
             var type = _.last(v);
             //  console.log(type);
@@ -1618,41 +1612,53 @@ console.log(obj);
     }]);
 
     ginasApp.service('data', function ($http) {
+
         var options = {};
+        var fetching = {};
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
-
-        this.load = function (field) {
-            $http.get(url + field.toUpperCase() + "'", {
-                headers: {
-                    'Content-Type': 'text/plain'
+        var data = {
+            load: function (field) {
+                if (!_.has(options, field)) {
+                    if (!fetching[field]) {
+                        fetching[field] = true;
+                        $http.get(url + field.toUpperCase() + "'", {
+                            headers: {
+                                'Content-Type': 'text/plain'
+                            }
+                        }).success(function (data) {
+                            console.log(data);
+                            options[field] = data.content[0].terms;
+                        });
+                    }
                 }
-            }).success(function (data) {
-                options[field] = data.content[0].terms;
-            });
-        };
+            },
+            search: function (field, query) {
+                return _.chain(options[field])
+                    .filter(function (x) {
+                        return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                    })
+                    .sortBy('display')
+                    .value();
+            },
 
-        this.search = function (field, query) {
-            return _.chain(options[field])
-                .filter(function (x) {
-                    return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
-                })
-                .sortBy('display')
-                .value();
-        };
-        this.lookup = function (field, query) {
-            console.log(options);
-            return _.chain(options[field])
-                .filter(function (x) {
-                    return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
-                })
-                .sortBy('value')
-                .value();
-        };
+            lookup: function (field, query) {
+                console.log(options);
+                return _.chain(options[field])
+                    .filter(function (x) {
+                        return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                    })
+                    .sortBy('value')
+                    .value();
+            },
 
-        this.retrieve = function (field) {
-            console.log(options[field]);
-            return options;
+            retrieve: function (field) {
+                return options[field];
+            }
         };
+        return data;
+
+        //console.log(options[field]);
+          //return options[field];
     });
 
     ginasApp.service('substanceSearch', function ($http, $q) {
@@ -1742,15 +1748,15 @@ console.log(obj);
                     var result = document.getElementsByClassName(attrs.formname);
                     var elementResult = angular.element(result);
                     console.log(scope.stage);
-                    if (scope.stage===true) {
+                    if (scope.stage === true) {
                         console.log('ok');
                         scope.stage = false;
                         childScope = scope.$new();
                         var compiledDirective;
-                        if(obj){
+                        if (obj) {
                             compiledDirective = $compile('<ref-holder refmodel = refmodel referenceobj = obj parent = parent></ref-holder>');
                         }
-                         compiledDirective = $compile('<ref-holder refmodel = refmodel referenceobj = referenceobj parent = parent></ref-holder>');
+                        compiledDirective = $compile('<ref-holder refmodel = refmodel referenceobj = referenceobj parent = parent></ref-holder>');
                         var directiveElement = compiledDirective(childScope);
                         elementResult.append(directiveElement);
                         console.log(scope.stage);
@@ -1912,7 +1918,7 @@ console.log(obj);
         };
     });
 
-    ginasApp.directive('referenceForm', function (lookup) {
+    ginasApp.directive('referenceForm', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -1924,7 +1930,7 @@ console.log(obj);
                 console.log(scope);
                 scope.validate = function () {
                     console.log(scope);
-                    _.set(scope.referenceobj,'amount', scope.amount);
+                    _.set(scope.referenceobj, 'amount', scope.amount);
                     //  scope.parent.$destroy();
                 };
 
@@ -1942,7 +1948,6 @@ console.log(obj);
     });
 
 
-
 //references end
 //****************************
 
@@ -1953,26 +1958,29 @@ console.log(obj);
             restrict: 'E',
             replace: true,
             scope: {
-                 obj: '=obj',
-                referenceobj: '='
+                obj: '=obj',
+                referenceobj: '=',
+                divid: '@'
             },
             link: function (scope, element, attrs, ngModel) {
                 console.log(scope);
-                console.log(element[0].parentElement.parentElement);
                 scope.stage = true;
+                var formHolder;
                 switch (attrs.type) {
                     case "amount":
-                            var template = angular.element('<a ng-click ="toggleStage()"><amount value ="obj.amount" ></amount></a>');
-                            element.append(template);
-                            $compile(template)(scope);
-                        var formHolder = '<amount-form ng-model= obj.amount></amount-form>';
-                       // element.append(formHolder);
+                        var template = angular.element('<a ng-click ="toggleStage()"><amount value ="obj.amount" ></amount></a>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        formHolder = '<amount-form ng-model= obj.amount></amount-form>';
+                        // element.append(formHolder);
                         break;
                     case "reference":
                         $templateRequest(baseurl + "assets/templates/reference-selector-view.html").then(function (html) {
                             var template = angular.element(html);
                             element.append(template);
                             $compile(template)(scope);
+                            formHolder = '<ref-holder ng-click ="toggleStage()" refmodel = refmodel referenceobj = referenceobj parent = parent ></ref-holder>';
+
                         });
                         break;
                     case "subref":
@@ -1981,36 +1989,28 @@ console.log(obj);
                 }
 
                 scope.toggleStage = function () {
+                    console.log("clicked yo!");
                     if (_.isUndefined(scope.referenceobj)) {
                         var x = {};
                         _.set(scope, 'referenceobj', x);
                     }
-                    var directiveElement;
-                    var compiledDirective;
-/*                    var result = document.getElementsByClassName(attrs.formname);
-                    var elementResult = angular.element(result);*/
-                    var parent =  angular.element(element[0].parentElement.parentElement.parentElement);
-                    if (scope.stage===true) {
+                    var result = document.getElementsByClassName(scope.divid);
+                    var elementResult = angular.element(result);
+                    if (scope.stage === true) {
                         scope.stage = false;
                         childScope = scope.$new();
-                        compiledDirective = $compile(formHolder);
-                        directiveElement = compiledDirective(childScope);
-                        //fingers crossed...
-console.log(directiveElement);
-                       parent.append(directiveElement);
-                      //  elementResult.append(directiveElement);
+                        var compiledDirective = $compile(formHolder);
+                        var directiveElement = compiledDirective(childScope);
+                        elementResult.append(directiveElement);
                     } else {
-                        console.log(parent);
                         childScope.$destroy();
-                        console.log(directiveElement);
-                       // compiledDirective.empty();
-                        angular.element(parent[0]).empty();
+                        elementResult.empty();
                         scope.stage = true;
                     }
                 };
             }
-    };
-});
+        };
+    });
 
 
     ginasApp.directive('formSelector', function ($modal, $compile, $templateRequest) {
@@ -2018,7 +2018,7 @@ console.log(directiveElement);
             restrict: 'E',
             replace: true,
             scope: {
-               // refmodel: '=ngModel',
+                // refmodel: '=ngModel',
                 referenceobj: '=',
                 parent: '=',
                 arr: '=',
@@ -2030,7 +2030,7 @@ console.log(directiveElement);
                 var childScope;
                 scope.stage = true;
 
-                scope.getTemplate= function() {
+                scope.getTemplate = function () {
                     switch (scope.type) {
                         case "amount":
                             $templateRequest(baseurl + "assets/templates/amount-selector.html").then(function (html) {
@@ -2064,7 +2064,7 @@ console.log(directiveElement);
                     }
                     var result = document.getElementsByClassName(attrs.formname);
                     var elementResult = angular.element(result);
-                    if (scope.stage===true) {
+                    if (scope.stage === true) {
                         scope.stage = false;
                         childScope = scope.$new();
                         var compiledDirective = $compile(formHolder);
@@ -2090,7 +2090,7 @@ console.log(directiveElement);
             scope: {
                 value: '='
             },
-            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display}}</span></div>'
+            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display || value.units}}</span></div>'
         };
     });
 
@@ -2105,19 +2105,19 @@ console.log(directiveElement);
         };
     });
 
-/*     ginasApp.directive('amountEditDisplay', function (lookup) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                modelAmount: '=ngModel'
-            },
-            templateUrl: baseurl + "assets/templates/amount-display.html",
-            link: function (scope, element, attrs) {
-                scope.lookup = lookup;
-            },
-        };
-    });*/
+    /*     ginasApp.directive('amountEditDisplay', function (lookup) {
+     return {
+     restrict: 'E',
+     replace: true,
+     scope: {
+     modelAmount: '=ngModel'
+     },
+     templateUrl: baseurl + "assets/templates/amount-display.html",
+     link: function (scope, element, attrs) {
+     scope.lookup = lookup;
+     },
+     };
+     });*/
 //*************************************
 
 
@@ -2181,7 +2181,7 @@ console.log(directiveElement);
 
 
     ginasApp.directive('substanceChooserLite', function (nameFinder) {
-          return {
+        return {
             templateUrl: baseurl + 'assets/templates/substancechooser.html',
             replace: true,
             restrict: 'E',
@@ -2189,7 +2189,7 @@ console.log(directiveElement);
             scope: {
                 subref: '=ngModel',
                 //path: '@subref',
-               // name: '@name',
+                // name: '@name',
                 formname: '=formname',
                 field: '@'
             },
@@ -2200,8 +2200,8 @@ console.log(directiveElement);
 
                 scope.createSubref = function (selectedItem) {
                     console.log(selectedItem);
-                      var subref = {};
-                   subref.refuuid = selectedItem.uuid;
+                    var subref = {};
+                    subref.refuuid = selectedItem.uuid;
                     subref.refPname = selectedItem._name;
                     subref.approvalID = selectedItem.approvalID;
                     subref.substanceClass = "reference";
@@ -2238,7 +2238,7 @@ console.log(directiveElement);
                     subref.substanceClass = "reference";
                     console.log(subref);
                     scope.obj[scope.field] = angular.copy(subref);
-                    scope.diverse= [];
+                    scope.diverse = [];
                     console.log(scope);
                 };
 
@@ -2254,8 +2254,6 @@ console.log(directiveElement);
             }
         };
     });
-
-
 
 
     ginasApp.directive('substanceView', function () {
@@ -2277,12 +2275,11 @@ console.log(directiveElement);
                 };
 
 
-
                 //  console.log(scope);
                 element.bind("click", function () {
                     //  scope.$parent.temp= _.cloneDeep(scope.$parent.diverse);
                     // console.log(scope);
-                   // scope.$parent.diverse = [];
+                    // scope.$parent.diverse = [];
                     //console.log(scope);
 
                     //subref = undefined;
@@ -2449,15 +2446,15 @@ console.log(directiveElement);
                         } else {
                             scope.formsubstance.structure = data.structure;
                             scope.formsubstance.moieties = data.moieties;
-                            for(var j=0;j<data.moieties.length;j++){
-                                data.moieties[j]._id=scope.uuid();
+                            for (var j = 0; j < data.moieties.length; j++) {
+                                data.moieties[j]._id = scope.uuid();
                             }
                             scope.formsubstance.q = data.structure.smiles;
                         }
                         console.log(scope);
                     });
                 };
-                
+
                 scope.uuid = function uuid() {
                     function s4() {
                         return Math.floor((1 + Math.random()) * 0x10000)
@@ -2544,7 +2541,7 @@ console.log(directiveElement);
                 structureid: '=',
                 format: '='
             },
-            template: function(){
+            template: function () {
                 return '<button type="button" class="btn btn-primary" structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
             }
         };
@@ -2564,9 +2561,9 @@ console.log(directiveElement);
         return function (scope, element, attrs) {
             element.bind("click", function () {
                 var modal = angular.element(document.getElementById('export-mol'));
-                var format= scope.format;
-                if(!format){
-                        format="sdf";
+                var format = scope.format;
+                if (!format) {
+                    format = "sdf";
                 }
                 $http({
                     method: 'GET',
@@ -2605,19 +2602,18 @@ console.log(directiveElement);
         };
     });
 
-ginasApp.directive('deleteButton', function(){
-    return{
-        restrict: 'E',
-     template: '<a ng-click="deleteObj()"><i class="fa fa-times fa-2x danger"></i></a>' ,
-        link: function(scope, element, attrs){
-            scope.path= attrs.path;
-            scope.deleteObj= function(){
-                scope.$parent.remove(scope.obj, scope.path);
-            };
-        }
-    };
-});
-
+    ginasApp.directive('deleteButton', function () {
+        return {
+            restrict: 'E',
+            template: '<a ng-click="deleteObj()"><i class="fa fa-times fa-2x danger"></i></a>',
+            link: function (scope, element, attrs) {
+                scope.path = attrs.path;
+                scope.deleteObj = function () {
+                    scope.$parent.remove(scope.obj, scope.path);
+                };
+            }
+        };
+    });
 
 
     ginasApp.directive('textInput', function () {
@@ -2756,13 +2752,13 @@ ginasApp.directive('deleteButton', function(){
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/dropdown-view-edit.html",
-          //  require: '^ngModel',
+            //  require: '^ngModel',
             replace: true,
             scope: {
                 formname: '=',
                 obj: '=',
                 field: '@',
-                arr: '='
+                cv: '@'
             },
             link: function (scope, element, attrs, ngModel) {
                 ajaxlookup.load(attrs.cv).then(function (data) {
@@ -2795,9 +2791,10 @@ ginasApp.directive('deleteButton', function(){
                 /*                ajaxlookup.load(attrs.cv).then(function(data){
                  scope.values = data[0].terms;
                  });*/
+                data.load(scope.cv);
 
                 scope.loadItems = function (cv, $query) {
-                    data.load(cv);
+                   // data.load(cv);
                     return data.search(cv, $query);
                 };
             }
@@ -2815,8 +2812,10 @@ ginasApp.directive('deleteButton', function(){
                 cv: '@'
             },
             link: function (scope, element, attrs) {
+                data.load(scope.cv);
+
                 scope.loadItems = function (cv, $query) {
-                    data.load(cv);
+                   // data.load(cv);
                     return data.search(cv, $query);
                 };
 
