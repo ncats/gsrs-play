@@ -351,7 +351,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             Object id = null;
             Field f=getIdFieldForBean(entity);
             id = f.get(entity);
-
             if (id != null) {
             	return id;
             }

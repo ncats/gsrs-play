@@ -13,6 +13,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
 
 import javax.persistence.Entity;
+import javax.persistence.OptimisticLockException;
 
 import play.libs.Json;
 import play.*;
@@ -46,6 +47,7 @@ import ix.core.models.ETag;
 import ix.core.models.ETagRef;
 import ix.core.models.Edit;
 import ix.core.models.Principal;
+import ix.core.models.Structure;
 import ix.core.models.BeanViews;
 import ix.core.models.Curation;
 import ix.core.search.TextIndexer;
@@ -872,13 +874,29 @@ public class EntityFactory extends Controller {
         if (obj == null)
             return notFound ("Not a valid entity id="+id);
 
+        
         Object[] rootChange = new Object[]{
                 null, 
                 (new ObjectMapper()).valueToTree(obj).toString(),
                 null,
                 type,
                 id};
-        
+        final Map<Object,Model> oldObjects = new HashMap<Object,Model>();
+		recursivelyApply(obj, "", new EntityCallable() {
+			@Override
+			public void call(Object m, String path) {
+				if (m instanceof Model) {
+					try {
+
+						Method f = EntityPersistAdapter.getIdSettingMethodForBean(m);
+						Object _id = EntityPersistAdapter.getIdForBean(m);
+						oldObjects.put(_id, (Model) m);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
         Principal principal = null;
         if (request().username() != null) {
             principal = _principalFinder
@@ -908,7 +926,7 @@ public class EntityFactory extends Controller {
             String[] paths = field.split("/");
             if (paths.length == 1 
                 && (paths[0].equals("_") || paths[0].equals("*"))) {
-                T inst = mapper.treeToValue(value, type);
+                final T inst = mapper.treeToValue(value, type);
                 try {
                 	Method m=EntityPersistAdapter.getIdSettingMethodForBean(inst);
                 	m.invoke(inst, id);
@@ -917,17 +935,48 @@ public class EntityFactory extends Controller {
                     return internalServerError (ex.getMessage());
                 }
                 obj=inst;
-                recursivelyApply(obj, "", new EntityCallable(){
+                recursivelyApply(inst, "", new EntityCallable(){
 					@Override
 					public void call(Object m, String path) {
+						if(inst == m)return;
+						Model old=null;
 						if(m instanceof Model){
 							try{
-								((Model)m).update();
+								
+								Method f=EntityPersistAdapter.getIdSettingMethodForBean(m);
+								Object _id=EntityPersistAdapter.getIdForBean(m);
+
+								//Get old model, do something with it?
+								 old=oldObjects.get(_id);
+								if(_id==null){
+									//((Model) m).save();
+								}else{
+									if(f!=null){
+										f.invoke(m,_id);
+									}
+									
+									((Model)m).update(_id);
+									Logger.debug("Success updating:" + path);
+								}
+								
+							}catch(OptimisticLockException e){
+								
+								Logger.error("Lock error:" + path + "\t" + m.getClass().getName());
+								if(m instanceof Structure && old!=null){
+									Logger.error("Lock change:" + ((Structure)m).lastEdited + "\t" + ((Structure)old).lastEdited);	
+								}
+								if(m.getClass().getName().contains("tructure"))
+									e.printStackTrace();
+								
+								//Logger.debug((new ObjectMapper()).valueToTree(m).toString());
 							}catch(Exception e){
+								Logger.error("Error updating:" + path + "\t" + m.getClass().getName());
+								e.printStackTrace();
 								
 							}
 						}
 					}});
+                
             } else {
                 Object inst = obj;
                 StringBuilder uri = new StringBuilder ();
@@ -1108,34 +1157,36 @@ public class EntityFactory extends Controller {
             rootChange[0]="/";
             rootChange[2]=obj;
             changes.add(rootChange);
+            
+
             //eventually, figure out enumerated changes directly
             
-            
-            for (Object[] c : changes) {
-            	
-                Edit e = new Edit ((Class<?>) c[3], c[4]);
-                
-                e.path = (String)c[0];
-                e.editor = principal;
-                e.oldValue = (String)c[1];
-                //Need to preserve full tree changes
-                e.newValue = (new ObjectMapper()).writeValueAsString(c[2]);
-                Logger.debug("Saving change" + c + "\t" + id);
-                Transaction tx = Ebean.beginTransaction();
-                try {
-                    e.save();
-                    tx.commit();
-                    Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
-                }
-                catch (Exception ex) {
-                	Logger.error(ex.getMessage());
-                    Logger.trace
-                        ("Can't persist Edit for "+type+":"+id, ex);
-                }
-                finally {
-                    Ebean.endTransaction();
-                }   
-            }
+//            
+//            for (Object[] c : changes) {
+//            	
+//                Edit e = new Edit ((Class<?>) c[3], c[4]);
+//                
+//                e.path = (String)c[0];
+//                e.editor = principal;
+//                e.oldValue = (String)c[1];
+//                //Need to preserve full tree changes
+//                e.newValue = (new ObjectMapper()).writeValueAsString(c[2]);
+//                Logger.debug("Saving change" + c + "\t" + id);
+//                Transaction tx = Ebean.beginTransaction();
+//                try {
+//                    e.save();
+//                    tx.commit();
+//                    Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
+//                }
+//                catch (Exception ex) {
+//                	Logger.error(ex.getMessage());
+//                    Logger.trace
+//                        ("Can't persist Edit for "+type+":"+id, ex);
+//                }
+//                finally {
+//                    Ebean.endTransaction();
+//                }   
+//            }
             return ok (mapper.valueToTree(obj));
         }
         catch (Exception ex) {
@@ -1153,9 +1204,11 @@ public class EntityFactory extends Controller {
 	    	for(Field f: entity.getClass().getFields()){
 	    		Class type= f.getType();
 	    		Annotation e=type.getAnnotation(Entity.class);
+	    		
 	    		if(e!=null){
 	    			try {
 	    				Object nextEntity=f.get(entity);
+	    				
 	    				if(nextEntity instanceof Model)
 	    					recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
 					} catch (IllegalArgumentException e1) {

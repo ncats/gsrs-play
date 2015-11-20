@@ -6,7 +6,11 @@ import ix.core.models.Structure;
 import ix.core.models.Value;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.MixtureSubstance;
+import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.ProteinSubstance;
+import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
+import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.utils.GinasUtils;
@@ -17,6 +21,8 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import gov.nih.ncgc.chemical.Chemical;
+import gov.nih.ncgc.chemical.ChemicalFactory;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
@@ -124,7 +130,45 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result update (UUID uuid, String field) {
-        return update (uuid, field, Substance.class, finder, new GinasV1ProblemHandler());
+    	//if(true)return ok("###");
+		try {
+			JsonNode value = request().body().asJson();
+			Class sub = Substance.class;
+			String typ = value.get("substanceClass").asText();
+			Substance.SubstanceClass type;
+			try {
+				type = Substance.SubstanceClass.valueOf(typ);
+			} catch (Exception e) {
+				throw new IllegalStateException("Unimplemented substance class:" + typ);
+			}
+			switch (type) {
+			case chemical:
+				sub = ChemicalSubstance.class;
+				break;
+			case protein:
+				sub = ProteinSubstance.class;
+				break;
+			case mixture:
+				sub = MixtureSubstance.class;
+				break;
+			case polymer:
+				sub = PolymerSubstance.class;
+				break;
+			case structurallyDiverse:
+				sub = StructurallyDiverseSubstance.class;
+				break;
+			case specifiedSubstanceG1:
+				sub = SpecifiedSubstanceGroup1Substance.class;
+				break;
+			case concept:
+				sub = Substance.class;
+				break;
+			}
+			return update(uuid, field, sub, finder, new GinasV1ProblemHandler());
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
     }
 
     public static List<Substance> getCollsionChemicalSubstances(int i, int j,

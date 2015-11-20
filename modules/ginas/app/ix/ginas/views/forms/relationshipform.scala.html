@@ -32,7 +32,6 @@
                 </form>
 
         <div class = "row" ng-repeat="obj in substance.relationships" >
-            {{obj.$$hashKey}}
             <hr>
             <div class="col-md-1">
                 <delete-button delete="obj" path="relationships"></delete-button>
@@ -53,7 +52,8 @@
                 <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
             </div>
             <div class="col-md-1">
-                <form-selector-view obj = "obj" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "amount"></form-selector-view>
+            	{{obj.amount}}
+<!--                <form-selector-view obj = "obj" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "amount"></form-selector-view> -->
             </div>
             <div class="col-md-1 pull-right">
                 <form-selector-view obj = "obj" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "reference"></form-selector-view>

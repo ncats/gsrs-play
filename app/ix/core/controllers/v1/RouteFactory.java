@@ -358,4 +358,11 @@ public class RouteFactory extends Controller {
         }
         return notFound ("Unknown id "+uuid);
     }
+    public static Result checkPreFlight(String path) {
+        response().setHeader("Access-Control-Allow-Origin", "*");       // Need to add the correct domain in here!!
+        response().setHeader("Access-Control-Allow-Methods", "POST, PUT, GET");   // Only allow POST
+        response().setHeader("Access-Control-Max-Age", "300");          // Cache response for 5 minutes
+        response().setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
+        return ok();
+    }
 }
