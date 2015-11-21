@@ -8,7 +8,7 @@
         <form class="form-horizontal" name="refForm" id = "add-name" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-1">
-                    <reference-apply ng-model ="ref.apply" obj = obj referenceobj = ref parent=parent type="view"></reference-apply>
+                    <reference-apply ng-model ="ref.apply" obj= obj referenceobj = reference parent=parent type="view"></reference-apply>
                 </div>
                 <div class="col-md-2">
                     <text-input ng-model="ref.citation" field="citation" ></text-input>
@@ -32,7 +32,7 @@
         <div class = "row" ng-repeat="reference in parent.references">
             <hr>
             <div class="col-md-1">
-                <reference-apply obj = obj referenceobj = reference parent=parent type="edit"></reference-apply>
+                <reference-apply obj = obj referenceobj = reference parent= parent type="edit"></reference-apply>
             </div>
             <div class="col-md-3">
                 <text-view-edit obj = "reference" field = "citation"></text-view-edit>

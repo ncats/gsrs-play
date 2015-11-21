@@ -6,45 +6,48 @@
         <form class="form-horizontal" name="codeForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3 err-check">
-                    <text-input ng-model="code.code" field="code" arr="substance.codes" required></text-input>
+                    <text-input ng-model="code.code" field="code"  ></text-input>
                 </div>
                 <div class="col-md-2 err-check">
-                    <dropdown-select ng-model="code.system" field="system" cv = "CODE_SYSTEM" arr="substance.codes"></dropdown-select>
+                    <dropdown-select ng-model="code.system" field="system" cv = "CODE_SYSTEM" ></dropdown-select>
                 </div>
                 <div class="col-md-2 err-check">
-                    <dropdown-select ng-model="code.type" field="type" cv = "CODE_TYPE" arr="substance.codes"></dropdown-select>
+                    <dropdown-select ng-model="code.type" field="type" cv = "CODE_TYPE" ></dropdown-select>
                 </div>
                 <div class="col-md-3 err-check">
-                    <text-input ng-model="code.description" field="description" arr="substance.codes" required></text-input>
+                    <text-input ng-model="code.description" field="description"></text-input>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <reference-selector ng-model = "code.references" referenceobj= "code" arr="substance.codes" parent = "substance" formname="codeForm"></reference-selector>
+                    <form-selector ng-model = "code.references" referenceobj= "code" parent = "substance" formname="codeForm" type = "reference"></form-selector>
                 </div>
             </div>
             <div class="codeForm"></div>
             <submit-buttons submit="code" form="codeForm" path="codes"></submit-buttons>
         </form>
 
-        <div class = "row" ng-repeat="obj in substance.codes">
-            <hr>
+        <div ng-repeat="obj in substance.codes">
+            <div class ="row">
+                <hr>
             <div class="col-md-1">
                 <delete-button delete="obj" path="codes"></delete-button>
             </div>
             <div class="col-md-3 err-check" >
-                <text-view-edit obj = "obj" field="code" arr="substance.codes" required></text-view-edit>
+                <text-view-edit obj = "obj" field="code"  ></text-view-edit>
             </div>
             <div class="col-md-2 err-check" >
-                <dropdown-view-edit obj = "obj" field="system" cv = "CODE_SYSTEM" arr="substance.codes"></dropdown-view-edit>
+                <dropdown-view-edit obj = "obj" field="system" cv = "CODE_SYSTEM" ></dropdown-view-edit>
             </div>
             <div class="col-md-2 err-check">
-                <dropdown-view-edit obj = "obj" field="type" cv = "CODE_TYPE" arr="substance.codes"></dropdown-view-edit>
+                <dropdown-view-edit obj = "obj" field="type" cv = "CODE_TYPE" ></dropdown-view-edit>
             </div>
             <div class="col-md-3 err-check">
-                <text-view-edit obj = "obj" field="description" arr="substance.codes" required></text-view-edit>
+                <text-view-edit obj = "obj" field="description"  ></text-view-edit>
             </div>
             <div class="col-md-1 pull-right">
-                <reference-selector-view obj = "obj" referenceobj= "code" arr="substance.codes" parent = "substance" formname="codeForm"></reference-selector-view>
+                <form-selector-view obj = "obj" referenceobj= "code" parent = "substance" formname="codeForm" type = "reference" divid={{obj.$$hashKey}}></form-selector-view>
             </div>
         </div>
+        <div class = {{obj.$$hashKey}}></div>
     </div>
+</div>
 </div>
