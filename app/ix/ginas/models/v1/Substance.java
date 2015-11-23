@@ -1,11 +1,8 @@
 package ix.ginas.models.v1;
 
+import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
-import ix.core.models.BeanViews;
-import ix.core.models.Indexable;
-import ix.core.models.Keyword;
-import ix.core.models.Principal;
-import ix.core.models.ProcessingJob;
+import ix.core.models.*;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.ginas.models.Ginas;
 import ix.ginas.models.KeywordListSerializer;
@@ -471,11 +468,11 @@ public class Substance extends Ginas {
 	}
 	
 
-	public void addRestrictGroup(Principal p){
+	public void addRestrictGroup(Group p){
 		this.access.add(p);
 	}
-	public void addRestrictGroup(String principal){
-		addRestrictGroup(PrincipalFactory.registerIfAbsent(new Principal(principal,null)));
+	public void addRestrictGroup(String group){
+		addRestrictGroup(AdminFactory.registerGroupIfAbsent(new Group(group)));
 	}
 	
 

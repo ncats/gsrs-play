@@ -49,6 +49,10 @@ public class UserProfile extends IxModel implements Subject {
         return AdminFactory.permissionByPrincipal(user); //return permissions;
     }
 
+    public List<Group> getGroups() {
+        return AdminFactory.groupsByPrincipal(user);
+    }
+
     @Override
     public String getIdentifier()
     {

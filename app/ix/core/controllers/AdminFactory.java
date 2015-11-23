@@ -409,4 +409,27 @@ public class AdminFactory extends Controller {
     }
 
 
+    public static synchronized Group registerGroupIfAbsent(Group org) {
+        boolean result = allGroups().contains(org);
+        if (!result) {
+            try {
+                org.save();
+                // For some reason, there is a race condition
+                // that seems to happen only with oracle,
+                // where the result can be null, and there's still enough
+                // time between registration and being query-able
+                // The hashmap is a temporary measure to fix this.
+                // But still doesn't seem to fix it
+              //  justRegisteredCache.put(org.username, org);
+
+                return org;
+            } catch (Exception ex) {
+                Logger.trace("Can't register Group: " + org.name, ex);
+                throw new IllegalArgumentException(ex);
+            }
+        }
+        return org;
+    }
+
+
 }

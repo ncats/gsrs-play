@@ -1,5 +1,6 @@
 package ix.ginas.models;
 
+import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.utils.Global;
@@ -59,7 +60,7 @@ public class Ginas extends Model {
 //      )
     @JsonSerialize(using = PrincipalListSerializer.class)
     @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
+    public List<Group> access = new ArrayList<Group>();
     
     public Ginas () {
     }
