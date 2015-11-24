@@ -1822,13 +1822,13 @@
                 var index;
                 var template;
                 scope.apply=true;
-                if (_.isUndefined(scope.obj)) {
-                    scope.obj={};
+                if (_.isUndefined(scope.referenceobj)) {
+                    scope.referenceobj={};
                 }
 
-                if (_.isUndefined(scope.obj.references)) {
+                if (_.isUndefined(scope.referenceobj.references)) {
                     var x = [];
-                    _.set(scope.obj, 'references', x);
+                    _.set(scope.referenceobj, 'references', x);
                 }
 
                 scope.isReferenced = function () {
@@ -1842,12 +1842,13 @@
                         $compile(template)(scope);
                         break;
                     case "edit":
-                        template = angular.element('<div><input type="checkbox" ng-model="referenceobj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
+                        template = angular.element('<div><input type="checkbox" ng-model="obj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
                         element.append(template);
                         $compile(template)(scope);
-                        uuid = scope.referenceobj.uuid;
-                        index = _.indexOf(scope.obj.references, uuid);
-                        scope.referenceobj.apply = scope.isReferenced();
+                        uuid = scope.obj.uuid;
+                        index = _.indexOf(scope.referenceobj.references, uuid);
+                        scope.obj.apply = scope.isReferenced();
+
                         break;
                 }
 
@@ -1862,14 +1863,14 @@
                 scope.updateReference = function () {
                     console.log("update)");
                     console.log(scope);
-                    index = _.indexOf(scope.obj.references, uuid);
+                    index = _.indexOf(scope.referenceobj.references, uuid);
                     console.log(index);
                     if (index >= 0) {
-                        scope.obj.references.splice(index, 1);
-                        scope.referenceobj.apply = false;
+                        scope.referenceobj.references.splice(index, 1);
+                        scope.obj.apply = false;
                     } else {
-                        scope.obj.references.push(uuid);
-                        scope.referenceobj.apply = true;
+                        scope.referenceobj.references.push(uuid);
+                        scope.obj.apply = true;
                     }
                 };
 
@@ -1883,7 +1884,6 @@
             replace: 'true',
            // require: 'ngModel',
             scope: {
-                reference: '=',
                 referenceobj: '=',
                 obj: '=',
                 parent: '='
@@ -2031,6 +2031,7 @@
                         childScope.$destroy();
                         elementResult.empty();
                         scope.stage = true;
+                        console.log("scope destroyed");
                     }
                 };
             }

@@ -32,7 +32,7 @@
         <div class = "row" ng-repeat="reference in parent.references">
             <hr>
             <div class="col-md-1">
-                <reference-apply obj = obj referenceobj = reference parent= parent type="edit"></reference-apply>
+                <reference-apply obj = reference referenceobj = referenceobj parent= parent type="edit"></reference-apply>
             </div>
             <div class="col-md-3">
                 <text-view-edit obj = "reference" field = "citation"></text-view-edit>
