@@ -3,6 +3,7 @@ package ix.ginas.controllers.v1;
 import ix.core.NamedResource;
 
 import ix.core.controllers.EntityFactory;
+import ix.core.models.*;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -12,17 +13,16 @@ import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
-import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
-import play.Logger;
+
+import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
