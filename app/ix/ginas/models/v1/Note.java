@@ -23,11 +23,6 @@ import ix.ginas.models.*;
 @Entity
 @Table(name="ix_ginas_note")
 public class Note extends Ginas {
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_note_access")
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
 
     /**
      * ideally we should be using List<Reference> here!

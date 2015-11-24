@@ -1,10 +1,7 @@
 package ix.ginas.models;
 
 import ix.core.controllers.AdminFactory;
-import ix.core.controllers.PrincipalFactory;
 import ix.core.models.Group;
-import ix.core.models.Keyword;
-import ix.core.models.Principal;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,27 +16,27 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 
 
 public class GroupListDeserializer extends JsonDeserializer<List<Group>> {
-        public GroupListDeserializer () {
-        }
-
-        public List<Group> deserialize
-                (JsonParser parser, DeserializationContext ctx)
-                throws IOException, JsonProcessingException {
-
-            List<Group> groups = new ArrayList<Group>();
-            if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
-                while (JsonToken.END_ARRAY != parser.nextToken()) {
-                    String acc = parser.getValueAsString();
-                   // groups.add(AdminFactory.registerGroupIfAbsent(new Group(acc)));
-                    groups.add(new Group(acc));
-                }
-            }
-            else {
-            }
-
-            return groups;
-        }
+    public GroupListDeserializer() {
     }
 
+    public List<Group> deserialize
+            (JsonParser parser, DeserializationContext ctx)
+            throws IOException, JsonProcessingException {
+
+        List<Group> groups = new ArrayList<Group>();
+        if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
+            while (JsonToken.END_ARRAY != parser.nextToken()) {
+                String name = parser.getValueAsString();
+                Group grp = AdminFactory.groupfinder.where().eq("name", name).findUnique();
+
+                if(grp == null){
+                    grp = AdminFactory.registerGroupIfAbsent(new Group(name));
+                }
+                groups.add(grp);
+            }
+        } else {}
+        return groups;
+    }
+}
 
 

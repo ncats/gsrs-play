@@ -58,8 +58,8 @@ public class Ginas extends Model {
 //          joinColumns=@JoinColumn
 //          (name="id", referencedColumnName="uuid")
 //      )
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
+    @JsonSerialize(using = GroupListSerializer.class)
+    @JsonDeserialize(using = GroupListDeserializer.class)
     public List<Group> access = new ArrayList<Group>();
     
     public Ginas () {

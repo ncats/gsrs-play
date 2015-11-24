@@ -410,8 +410,8 @@ public class AdminFactory extends Controller {
 
 
     public static synchronized Group registerGroupIfAbsent(Group org) {
-        boolean result = allGroups().contains(org);
-        if (!result) {
+        Group grp = groupfinder.where().eq("name", org.name).findUnique();
+        if (grp == null) {
             try {
                 org.save();
                 // For some reason, there is a race condition

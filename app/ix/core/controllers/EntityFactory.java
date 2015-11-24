@@ -12,6 +12,8 @@ import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
 import javax.persistence.Entity;
 
+import ix.core.models.*;
+import ix.core.models.Principal;
 import play.libs.Json;
 import play.*;
 import play.db.ebean.*;
@@ -38,12 +40,6 @@ import com.avaje.ebean.*;
 import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.event.BeanPersistListener;
 
-import ix.core.models.ETag;
-import ix.core.models.ETagRef;
-import ix.core.models.Edit;
-import ix.core.models.Principal;
-import ix.core.models.BeanViews;
-import ix.core.models.Curation;
 import ix.core.search.TextIndexer;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.utils.Util;
@@ -217,7 +213,6 @@ public class EntityFactory extends Controller {
                 .setMaxRows(options.top)
                 .findList();
             Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
-
             return results;
         }
         catch (Exception ex) {
@@ -1264,6 +1259,10 @@ public class EntityFactory extends Controller {
                 +id.substring(20);
         }
         return UUID.fromString(id);
+    }
+
+    public interface EntityFilter {
+        public boolean hasAccess (Object grp, Object sub);
     }
     
     

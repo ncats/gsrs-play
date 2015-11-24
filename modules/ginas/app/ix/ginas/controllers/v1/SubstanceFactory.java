@@ -3,6 +3,8 @@ package ix.ginas.controllers.v1;
 import java.util.*;
 import java.io.*;
 
+import ix.core.models.*;
+import ix.ncats.controllers.App;
 import play.libs.Json;
 import play.*;
 import play.db.ebean.*;
@@ -12,12 +14,12 @@ import play.mvc.*;
 import com.avaje.ebean.*;
 
 import ix.core.controllers.EntityFactory;
-import ix.core.models.Structure;
-import ix.core.models.Value;
 import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
 import ix.ginas.controllers.*;
+
+import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 
 @NamedResource(name="substances",
                type=Substance.class,
@@ -29,7 +31,7 @@ public class SubstanceFactory extends EntityFactory {
             new Model.Finder(UUID.class, ChemicalSubstance.class);
     static public final Model.Finder<UUID, ProteinSubstance> protfinder =
             new Model.Finder(UUID.class, ProteinSubstance.class);
-    
+
     public static Substance getSubstance (String id) {
     	if(id==null)return null;
         return getSubstance (UUID.fromString(id));
@@ -61,7 +63,9 @@ public class SubstanceFactory extends EntityFactory {
 
     public static List<Substance> getSubstances
         (int top, int skip, String filter) {
-        return filter (new FetchOptions (top, skip, filter), finder);
+        SubstanceFilter subFilter = new SubstanceFilter();
+        List<Substance> substances = filter (new FetchOptions (top, skip, filter), finder);
+        return subFilter.filterByAccess(substances);
     }
     
     public static List<Substance> getSubstancesWithExactName
@@ -130,5 +134,37 @@ public class SubstanceFactory extends EntityFactory {
             }
         }
         return finder.where().eq("structure.properties.term", hash).findList();
+    }
+
+
+    public static class SubstanceFilter implements EntityFilter {
+
+        UserProfile profile = getUserProfile();
+        Principal user = profile!= null? profile.user: null;
+        boolean access = false;
+
+        public boolean hasAccess(Object grp, Object sub){
+            Group group = (Group) grp;
+            Substance substance = (Substance) sub;
+            return substance.access.contains(group);
+        }
+
+           public List<Substance> filterByAccess (List<Substance> results) {
+               List<Substance> filteredSubstances = new ArrayList<Substance>();
+
+               for (Substance sub : results) {
+                   if(sub.access.isEmpty() || sub.access.size() == 0){
+                       filteredSubstances.add(sub);
+                   }
+                   if(user != null) {
+                    for(Group grp : profile.getGroups()){
+                        if (hasAccess(grp, sub)) {
+                            filteredSubstances.add(sub);
+                        }
+                    }
+                  }
+               }
+            return filteredSubstances;
+           }
     }
 }
