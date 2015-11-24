@@ -1,27 +1,38 @@
 package ix.ginas.models.v1;
 
-import ix.ginas.models.utils.JSONEntity;
+import ix.core.models.Indexable;
+import ix.core.models.Keyword;
+import ix.core.models.Principal;
+import ix.ginas.models.Ginas;
+import ix.ginas.models.KeywordListSerializer;
+import ix.ginas.models.KeywordListDeserializer;
+import ix.ginas.models.PrincipalListDeserializer;
+import ix.ginas.models.PrincipalListSerializer;
 import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.TreeSet;
 
-import javax.persistence.*;
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
-import ix.core.models.Indexable;
-import ix.core.models.Principal;
-import ix.core.models.Keyword;
-import ix.ginas.models.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
@@ -50,6 +61,7 @@ public class Name extends Ginas {
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)
+    @JsonDeserialize(using=KeywordListDeserializer.class)
     public List<Keyword> domains = new ArrayList<Keyword>();
     
     @JSONEntity(title = "Languages", format = "table", itemsTitle = "Language", itemsFormat = JSONConstants.CV_LANGUAGE)
@@ -59,7 +71,8 @@ public class Name extends Ginas {
                (name="ix_ginas_name_lang_uuid",
                referencedColumnName="uuid")
     )
-    @JsonSerialize(using=KeywordListSerializer.class)    
+    @JsonSerialize(using=KeywordListSerializer.class)
+    @JsonDeserialize(using=KeywordListDeserializer.class)
     public List<Keyword> languages = new ArrayList<Keyword>();
     
     @JSONEntity(title = "Naming Jurisdictions", format = "table", itemsTitle = "Jurisdiction", itemsFormat = JSONConstants.CV_JURISDICTION)
@@ -70,6 +83,7 @@ public class Name extends Ginas {
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)    
+    @JsonDeserialize(using=KeywordListDeserializer.class)
     public List<Keyword> nameJurisdiction = new ArrayList<Keyword>();
 
     @ManyToMany(cascade=CascadeType.ALL)
@@ -79,6 +93,7 @@ public class Name extends Ginas {
                referencedColumnName="uuid")
     )
     @JsonSerialize(using=KeywordListSerializer.class)    
+    @JsonDeserialize(using=KeywordListDeserializer.class)
     public List<Keyword> references = new ArrayList<Keyword>();    
     
     @JSONEntity(title = "Naming Organizations", format = "table")
@@ -184,14 +199,18 @@ public class Name extends Ginas {
     	return nameList;
     }
     
+    
+    @JsonIgnore
 	public boolean isOfficial() {
 		if(this.type.equals("of"))return true;
 		return false;
 	}
+    
 	public boolean isLanguage(String lang){
 		for(Keyword k:this.languages){
 			if(k.getValue().equals(lang))return true;
 		}
 		return false;
 	}
+	
 }

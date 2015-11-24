@@ -8,58 +8,60 @@
             <form class="form-horizontal" name="officialNameForm" id = "add-name" role="form" novalidate>
                 <div class="row form-row">
                     <div class="col-md-3 err-check">
-                        <text-input ng-model="name.name" field="name" arr="substance.officialNames" required></text-input>
+                        <text-input ng-model="name.name" field="name" required></text-input>
                     </div>
                     <div class="col-md-2 err-check">
-                        <multi-select ng-model="name.domain" field="domain" cv = "NAME_DOMAIN" arr="substance.officialNames"></multi-select>
+                        <multi-select ng-model="name.domain" field="domain" cv = "NAME_DOMAIN" ></multi-select>
                     </div>
                     <div class="col-md-2 err-check">
-                        <multi-select ng-model="name.jurisdiction" field="jurisdiction" cv = "JURISDICTION" arr="substance.officialNames"></multi-select>
+                        <multi-select ng-model="name.jurisdiction" field="jurisdiction" cv = "JURISDICTION" ></multi-select>
                     </div>
                     <div class="col-md-1 err-check">
-                        <multi-select ng-model="name.nameOrg" field="nameOrg" cv = "NAME_ORG" arr="substance.officialNames"></multi-select>
+                        <multi-select ng-model="name.nameOrg" field="nameOrg" cv = "NAME_ORG" ></multi-select>
                     </div>
                     <div class="col-md-2 err-check">
-                        <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE" arr="substance.officialNames"></multi-select>
+                        <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
                     </div>
                     <div class="col-md-1">
-                        <check-box ng-model="name.preferred" field="preferred" arr="substance.officialNames"></check-box>
+                        <check-box ng-model="name.preferred" field="preferred" ></check-box>
                     </div>
                     <div class="col-md-1 pull-right">
-                        <reference-selector ng-model = "name.references" referenceobj= "name" arr="substance.officialNames" parent = "substance" formname="officialNameForm"></reference-selector>
+                        <form-selector ng-model = "name.references" referenceobj= "name"  parent = "substance" formname="officialNameForm" type = "reference"></form-selector>
                     </div>
                 </div>
                 <div class="officialNameForm"></div>
                 <submit-buttons submit="name" form="officialNameForm" path="officialNames"></submit-buttons>
             </form>
 
-            <div class = "row" ng-repeat="obj in substance.officialNames">
+            <div ng-repeat="obj in substance.officialNames">
+                <div class="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj"></delete-button>
+                    <delete-button delete="obj" path="officialNames"></delete-button>
                 </div>
                 <div class="col-md-2">
-                    <text-view-edit obj = "obj" field="name" arr="substance.officialNames" required></text-view-edit>
+                    <text-view-edit obj = "obj" field="name" required></text-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <multi-view-edit obj = "obj" field="domain" cv = "NAME_DOMAIN" arr="substance.officialNames"></multi-view-edit>
+                    <multi-view-edit obj = "obj" field="domain" cv = "NAME_DOMAIN" ></multi-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <multi-view-edit obj = "obj" field="jurisdiction" cv = "JURISDICTION" arr="substance.officialNames"></multi-view-edit>
+                    <multi-view-edit obj = "obj" field="jurisdiction" cv = "JURISDICTION" ></multi-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <multi-view-edit obj = "obj" field="nameOrg" cv = "NAME_ORG" arr="substance.officialNames"></multi-view-edit>
+                    <multi-view-edit obj = "obj" field="nameOrg" cv = "NAME_ORG" ></multi-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <multi-view-edit obj = "obj" field="languages" cv = "LANGUAGE" arr="substance.officialNames"></multi-view-edit>
+                    <multi-view-edit obj = "obj" field="languages" cv = "LANGUAGE" ></multi-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="preferred" arr="substance.officialNames"></check-box-view-edit>
+                    <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <reference-selector-view obj = "obj" referenceobj= "name" arr="substance.officialNames" parent = "substance" formname="officialNameForm"></reference-selector-view>
+                    <form-selector-view obj = "obj" referenceobj= "name"  parent = "substance" formname="officialNameForm" type ="reference" divid = {{obj.$$hashKey}}></form-selector-view>
                 </div>
+                </div>
+                <div class = {{obj.$$hashKey}}></div>
             </div>
-
         </div>
-    </div>
+</div>

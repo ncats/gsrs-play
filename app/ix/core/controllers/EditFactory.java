@@ -7,10 +7,15 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
-
+import ix.core.NamedResource;
 import ix.core.models.Edit;
+import ix.core.models.Figure;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@NamedResource(name="edits",
+type=Edit.class,
+description="Edit history of changes to entities")
 public class EditFactory extends EntityFactory {
     public static final Model.Finder<UUID, Edit> finder = 
         new Model.Finder(UUID.class, Edit.class);
@@ -51,4 +56,9 @@ public class EditFactory extends EntityFactory {
         return internalServerError
             ("Unable to fullfil request: "+request().uri());
     }
+    
+    public static Result page (int top, int skip, String filter) {
+        return page (top, skip, filter, finder);
+    }
+
 }

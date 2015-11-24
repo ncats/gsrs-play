@@ -22,6 +22,7 @@ import play.Logger;
 import play.db.ebean.Model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -71,8 +72,9 @@ public class Ginas extends Model {
         this.lastEdited = new Date ();
     }
 
+    @JsonProperty("_self")
     @Indexable(indexed=false)
-    public String getSelf () {
+    public String getself () {
         if (uuid != null) {
             try {
                 String ref = Global.getRef(this);

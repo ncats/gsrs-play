@@ -30,5 +30,9 @@ GET         /export/$id<[a-f0-9\-]+>.$format<(svg|png|mol|sdf|smi|smiles|mrv|fas
 POST        /register/validate          ix.ginas.controllers.GinasLoad.validateSubstance
 GET         /_updateIndex/:key          ix.ginas.controllers.GinasApp.updateIndex(key: String)
 
+GET         /admin                      ix.ginas.controllers.GinasApp.admin()
+
 ->      /   ix.ncats.Routes
 GET     /:any   ix.ginas.controllers.GinasApp.lastUnicorn(any: String)
+
+

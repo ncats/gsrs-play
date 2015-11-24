@@ -18,8 +18,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 
-public class GinasV1ProblemHandler
-        extends  DeserializationProblemHandler {
+public class GinasV1ProblemHandler extends  DeserializationProblemHandler {
         
 		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
 		

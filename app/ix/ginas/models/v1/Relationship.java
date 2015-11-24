@@ -52,11 +52,14 @@ public class Relationship extends Ginas {
     @OneToOne(cascade=CascadeType.ALL)
     public SubstanceReference mediatorSubstance;
     
+    
+    @Indexable(facet=true,name="Relationships")
     @JSONEntity(title = "Relationship Type", format = JSONConstants.CV_RELATIONSHIP_TYPE, isRequired = true)
     public String type;
 
     public Relationship () {}
     
+    @JsonIgnore
     public String getDisplayType(){
         if(type.contains("->")){
                 return type.split("->")[0] + " (" +type.split("->")[1] +")";

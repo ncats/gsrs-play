@@ -29,6 +29,7 @@ GET     /$context<[a-z0-9_]+>($id<[0-9]+>)/*field  ix.core.controllers.v1.RouteF
 GET     /$context<[a-z0-9_]+>  ix.core.controllers.v1.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
 GET     /$context<[a-z0-9_]+>/  ix.core.controllers.v1.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
 POST    /$context<[a-z0-9_]+>  ix.core.controllers.v1.RouteFactory.create(context: String)
+POST    /$context<[a-z0-9_]+>/@validate  ix.core.controllers.v1.RouteFactory.validate(context: String)
 PUT     /$context<[a-z0-9_]+>/$id<[0-9]+>/*field       ix.core.controllers.v1.RouteFactory.update(context: String, id:Long, field: String)
 PUT     /$context<[a-z0-9_]+>($id<[0-9]+>)/*field       ix.core.controllers.v1.RouteFactory.update(context: String, id:Long, field: String)
 ##
@@ -37,6 +38,14 @@ PUT     /$context<[a-z0-9_]+>($id<[0-9]+>)/*field       ix.core.controllers.v1.R
 GET     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>  ix.core.controllers.v1.RouteFactory.getUUID(context: String, id: String, expand:String ?= null)
 GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)  ix.core.controllers.v1.RouteFactory.getUUID(context: String, id: String, expand:String ?= null)
 GET     /$id<[a-fA-F0-9\-]+>  ix.core.controllers.v1.RouteFactory._getUUID(id: String, expand:String ?= null)
+GET     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>/@edits      ix.core.controllers.v1.RouteFactory.editsUUID(context: String, id:String)
+GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/@edits      ix.core.controllers.v1.RouteFactory.editsUUID(context: String, id:String)
 GET     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>/*field  ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
 GET     /$id<[a-fA-F0-9\-]+>/*field  ix.core.controllers.v1.RouteFactory._fieldUUID(id: String, field: String)
 GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/*field  ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
+PUT     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>/*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
+PUT     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
+
+
+
+OPTIONS /$path<.*>	ix.core.controllers.v1.RouteFactory.checkPreFlight(path: String)

@@ -1,5 +1,7 @@
 package ix.ginas.models.v1;
 
+import java.util.UUID;
+
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,6 +22,9 @@ import ix.ginas.models.Ginas;
 @Entity
 @Table(name = "ix_ginas_moiety")
 public class Moiety extends Ginas {
+	@Id
+	public UUID uuid;
+	
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
     public Structure structure;
@@ -28,4 +33,5 @@ public class Moiety extends Ginas {
     public Integer count;
 
     public Moiety () {}
+    
 }

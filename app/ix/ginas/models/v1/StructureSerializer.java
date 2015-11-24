@@ -25,7 +25,7 @@ public class StructureSerializer extends JsonSerializer<Structure> {
         }
         provider.defaultSerializeField("id", struc.id, jgen);
         provider.defaultSerializeField("created", struc.created, jgen);
-        provider.defaultSerializeField("modified", struc.modified, jgen);
+        provider.defaultSerializeField("modified", struc.lastEdited, jgen);
         provider.defaultSerializeField("deprecated", struc.deprecated, jgen);
         provider.defaultSerializeField("digest", struc.digest, jgen);
         provider.defaultSerializeField("molfile", struc.molfile, jgen);

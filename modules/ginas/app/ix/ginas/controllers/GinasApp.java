@@ -98,6 +98,7 @@ public class GinasApp extends App {
         "SubstanceStereoChemistry", 
         "Molecular Weight",
         "GInAS Tag", 
+        "Relationships",
         "Sequence Type", 
         "Material Class", 
         "Material Type",
@@ -271,6 +272,21 @@ public class GinasApp extends App {
             //final String name = super.name();
             if ("StructurallyDiverse".equalsIgnoreCase(label))
                 return "Structurally Diverse";
+            if ("protein".equalsIgnoreCase(label))
+                return "Protein";
+            if ("nucleicAcid".equalsIgnoreCase(label))
+                return "Nucleic Acid";
+            if ("polymer".equalsIgnoreCase(label))
+                return "Polymer";
+            if ("mixture".equalsIgnoreCase(label))
+                return "Mixture";
+            if ("chemical".equalsIgnoreCase(label))
+                return "Chemical";
+            if ("concept".equalsIgnoreCase(label))
+                return "Concept";
+            if (label.contains("->"))
+                return label.split("->")[1] + " of " + label.split("->")[0];
+            
             if ("EP".equalsIgnoreCase(label))
                 return "PH. EUR";
             if("approved".equalsIgnoreCase(label))
@@ -334,6 +350,11 @@ public class GinasApp extends App {
         }
         
         return badRequest ("Invalid \"sequence\" parameter specified!");
+    }
+    
+    @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result admin () {
+        return ok (ix.ginas.views.html.admin.admin.render());
     }
     
   // @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
