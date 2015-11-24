@@ -26,7 +26,7 @@
                         <check-box ng-model="name.preferred" field="preferred" ></check-box>
                     </div>
                     <div class="col-md-1 pull-right">
-                        <form-selector ng-model = "name.references" referenceobj= "name"  parent = "substance" formname="officialNameForm" type = "reference"></form-selector>
+                        <form-selector referenceobj ="name" parent = "substance" divid="officialNameForm" type = "reference"></form-selector>
                     </div>
                 </div>
                 <div class="officialNameForm"></div>
@@ -58,7 +58,7 @@
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector-view obj = "obj" referenceobj= "name"  parent = "substance" formname="officialNameForm" type ="reference" divid = {{obj.$$hashKey}}></form-selector-view>
+                    <form-selector referenceobj ="obj" parent = "substance"  type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 </div>
                 <div class = {{obj.$$hashKey}}></div>

@@ -21,10 +21,10 @@
                             <dropdown-select ng-model="relationship.qualification" field="qualification" cv = "QUALIFICATION" ></dropdown-select>
                         </div>
                         <div class="col-md-1">
-                            <form-selector ng-model = "relationship.amount" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "amount"></form-selector>
+                            <form-selector referenceobj= "relationship" divid="relationshipForm" type = "amount"></form-selector>
                         </div>
                         <div class="col-md-1 pull-right">
-                            <form-selector ng-model = "relationship.references" referenceobj ="relationship"  parent = "substance" formname="relationshipForm" type = "reference"></form-selector>
+                            <form-selector referenceobj ="relationship" parent = "substance" divid="relationshipForm" type = "reference"></form-selector>
                         </div>
                     </div>
                     <div class="relationshipForm"></div>
@@ -53,10 +53,10 @@
                 <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
             </div>
             <div class="col-md-1">
-                <form-selector-view ng-model = "relationship.amount" obj = "obj" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "amount" divid={{obj.$$hashKey}}></form-selector-view>
+                <form-selector referenceobj= "obj" formname="relationshipForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
             </div>
             <div class="col-md-1 pull-right">
-                <form-selector-view ng-model = "relationship.references" referenceobj ="obj" parent = "substance" formname="relationshipForm" type = "reference" divid={{obj.$$hashKey}}></form-selector-view>
+                <form-selector referenceobj ="obj" parent = "substance" formname="relationshipForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
             </div>
         </div>
             <div class = {{obj.$$hashKey}}></div>
