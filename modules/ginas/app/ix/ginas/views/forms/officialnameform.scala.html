@@ -26,14 +26,15 @@
                         <check-box ng-model="name.preferred" field="preferred" ></check-box>
                     </div>
                     <div class="col-md-1 pull-right">
-                        <reference-selector ng-model = "name.references" referenceobj= "name"  parent = "substance" formname="officialNameForm"></reference-selector>
+                        <form-selector ng-model = "name.references" referenceobj= "name"  parent = "substance" formname="officialNameForm" type = "reference"></form-selector>
                     </div>
                 </div>
                 <div class="officialNameForm"></div>
                 <submit-buttons submit="name" form="officialNameForm" path="officialNames"></submit-buttons>
             </form>
 
-            <div class = "row" ng-repeat="obj in substance.officialNames">
+            <div ng-repeat="obj in substance.officialNames">
+                <div class="row">
                 <hr>
                 <div class="col-md-1">
                     <delete-button delete="obj" path="officialNames"></delete-button>
@@ -57,9 +58,10 @@
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <reference-selector-view obj = "obj" referenceobj= "name"  parent = "substance" formname="officialNameForm"></reference-selector-view>
+                    <form-selector-view obj = "obj" referenceobj= "name"  parent = "substance" formname="officialNameForm" type ="reference" divid = {{obj.$$hashKey}}></form-selector-view>
                 </div>
+                </div>
+                <div class = {{obj.$$hashKey}}></div>
             </div>
-
         </div>
-    </div>
+</div>

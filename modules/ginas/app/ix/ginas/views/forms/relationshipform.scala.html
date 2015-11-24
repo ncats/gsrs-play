@@ -24,7 +24,7 @@
                             <form-selector ng-model = "relationship.amount" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "amount"></form-selector>
                         </div>
                         <div class="col-md-1 pull-right">
-                            <form-selector ng-model = "relationship.references" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "reference"></form-selector>
+                            <form-selector ng-model = "relationship.references" obj ="relationship"  parent = "substance" formname="relationshipForm" type = "reference"></form-selector>
                         </div>
                     </div>
                     <div class="relationshipForm"></div>
@@ -56,7 +56,7 @@
                 <form-selector-view obj = "obj" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "amount" divid={{obj.$$hashKey}}></form-selector-view>
             </div>
             <div class="col-md-1 pull-right">
-                <form-selector-view obj = "obj" referenceobj= "relationship"  parent = "substance" formname="relationshipForm" type = "reference" divid={{obj.$$hashKey}}></form-selector-view>
+                <form-selector-view obj = "obj"  parent = "substance" formname="relationshipForm" type = "reference" divid={{obj.$$hashKey}}></form-selector-view>
             </div>
         </div>
             <div class = {{obj.$$hashKey}}></div>

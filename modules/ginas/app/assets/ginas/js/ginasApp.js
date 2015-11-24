@@ -42,7 +42,7 @@
             case "chemical":
                 Substance.substanceClass = substanceClass;
                 Substance.structure = {};
-                Substance.moieties = [];
+                Substance._moieties = [];
                 break;
             case "protein":
                 Substance.substanceClass = substanceClass;
@@ -72,7 +72,7 @@
                 console.log('invalid substance class');
                 break;
         }
-        Substance.references = [];
+        Substance._references = [];
         return Substance;
     });
 
@@ -118,7 +118,7 @@
     });
 
     ginasApp.service('ajaxlookup', function ($http) {
-        var url = baseurl + "api/v1/vocabularies?i=9&filter=domain='";
+        var url = baseurl + "api/v1/vocabularies?filter=domain='";
 
         var nameFinder = {
             options: {},
@@ -252,12 +252,12 @@
             apiSub = $scope.expandCV(apiSub, "");
             apiSub = $scope.splitNames(apiSub);
 
-            var references = {};
-            for (var v in apiSub.references) {
-                references[apiSub.references[v].uuid] = apiSub.references[v];
-                apiSub.references[v].id = v - 1 + 2;
-            }
-            apiSub = $scope.expandReferences(apiSub, references, 0);
+            //var references = {};
+            //for (var v in apiSub.references) {
+            //    references[apiSub.references[v].uuid] = apiSub.references[v];
+            //    apiSub.references[v].id = v - 1 + 2;
+            //}
+            //apiSub = $scope.expandReferences(apiSub, references, 0);
 
 
             return apiSub;
@@ -270,7 +270,7 @@
                     var name = formSub.officialNames[n];
                     name.type = "of";
                 }
-                formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
+                formSub._names = formSub.officialNames.concat(formSub.unofficialNames);
                 delete formSub.officialNames;
                 delete formSub.unofficialNames;
             }
@@ -283,10 +283,10 @@
 
             formSub = $scope.flattenCV(formSub);
             formSub = $scope.collapseReferences(formSub, 0);
-            if (formSub.moieties) {
-                for (var i = 0; i < formSub.moieties.length; i++) {
+            if (formSub._moieties) {
+                for (var i = 0; i < formSub._moieties.length; i++) {
                     //moieties need new UUID on each save
-                    formSub.moieties[i].id = $scope.uuid();
+                    formSub._moieties[i].id = $scope.uuid();
                     console.log("#############");
                     console.log(formSub.moieties[i].id);
                 }
@@ -861,21 +861,21 @@
             return sub;
         };
 
-        $scope.expandReferences = function (sub, referenceMap, depth) {
-            for (var v in sub) {
-                if (depth > 0) {
-                    if (v === "references") {
-                        for (var r in sub[v]) {
-                            sub[v][r] = referenceMap[sub[v][r]];
-                        }
-                    }
-                }
-                if (typeof sub[v] === "object") {
-                    $scope.expandReferences(sub[v], referenceMap, depth + 1);
-                }
-            }
-            return sub;
-        };
+        //$scope.expandReferences = function (sub, referenceMap, depth) {
+        //    for (var v in sub) {
+        //        if (depth > 0) {
+        //            if (v === "references") {
+        //                for (var r in sub[v]) {
+        //                    sub[v][r] = referenceMap[sub[v][r]];
+        //                }
+        //            }
+        //        }
+        //        if (typeof sub[v] === "object") {
+        //            $scope.expandReferences(sub[v], referenceMap, depth + 1);
+        //        }
+        //    }
+        //    return sub;
+        //};
 
         $scope.collapseReferences = function (sub, depth) {
             for (var v in sub) {
@@ -924,22 +924,22 @@
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
             if (update) {
-              $.ajax({
-                url: 'http://localhost:9000/ginas/app/api/v1/substances(' + sub.uuid + ')/_',
-                type: 'PUT',
-                beforeSend: function(request) {
-                  request.setRequestHeader("Content-Type", "application/json");
-                },
-                data: JSON.stringify(sub),
-                success: function(data) {
-                  alert('Load was performed.');
-                }
-              });
+                $.ajax({
+                    url: 'http://localhost:9000/ginas/app/api/v1/substances(' + sub.uuid + ')/_',
+                    type: 'PUT',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("Content-Type", "application/json");
+                    },
+                    data: JSON.stringify(sub),
+                    success: function (data) {
+                        alert('Load was performed.');
+                    }
+                });
             } else {
-              $http.post(baseurl + 'register/submit', sub).success(function() {
-                console.log("success");
-                alert("submitted!");
-              });
+                $http.post(baseurl + 'register/submit', sub).success(function () {
+                    console.log("success");
+                    alert("submitted!");
+                });
             }
         };
 
@@ -1640,7 +1640,6 @@
                                 'Content-Type': 'text/plain'
                             }
                         }).success(function (data) {
-                            console.log(data);
                             options[field] = data.content[0].terms;
                         });
                     }
@@ -1813,51 +1812,64 @@
             restrict: 'E',
             replace: true,
             scope: {
+                apply: '=ngModel',
                 obj: '=',
                 referenceobj: '=',
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
-                console.log(scope.referenceobj);
                 var uuid;
                 var index;
-                switch (attrs.type) {
-                    case "view":
-                        $templateRequest(baseurl + "assets/templates/reference-apply.html").then(function (html) {
-                            var template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                        break;
-                    case "edit":
-                        $templateRequest(baseurl + "assets/templates/reference-apply-edit.html").then(function (html) {
-                            var template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                            uuid = scope.referenceobj.uuid;
-                            index = _.indexOf(scope.obj.references, uuid);
-                        });
-                        break;
+                var template;
+                scope.apply=true;
+                if (_.isUndefined(scope.obj)) {
+                    scope.obj={};
                 }
-                scope.apply = true;
 
-                console.log(scope);
+                if (_.isUndefined(scope.obj.references)) {
+                    var x = [];
+                    _.set(scope.obj, 'references', x);
+                }
 
                 scope.isReferenced = function () {
                     return index >= 0;
                 };
 
-                scope.updateReference = function (uuid) {
-                    if (_.isUndefined(scope.referenceobj)) {
-                        var x = [];
-                        _.set(scope.referenceobj, 'references', x);
-                    }
-                    var index = _.indexOf(scope.referenceobj, uuid);
+                switch (attrs.type) {
+                    case "view":
+                        template = angular.element('<div><label for="apply" class="text-capitalize">Apply</label><br/><input type="checkbox" ng-model= apply placeholder="Apply" title="Apply" id="apply" checked/></div>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        break;
+                    case "edit":
+                        template = angular.element('<div><input type="checkbox" ng-model="referenceobj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        uuid = scope.referenceobj.uuid;
+                        index = _.indexOf(scope.obj.references, uuid);
+                        scope.referenceobj.apply = scope.isReferenced();
+                        break;
+                }
+
+
+
+
+
+                //from the selector only version, when adding a new set of
+                // references to a new element, the references are added to referenceobj, whic is passed down
+                //from the relationship form as ng-Model for relationships.references, the selector aliases it as referenceobj.
+
+                scope.updateReference = function () {
+                    console.log("update)");
+                    console.log(scope);
+                    index = _.indexOf(scope.obj.references, uuid);
+                    console.log(index);
                     if (index >= 0) {
-                        scope.referenceobj.references.splice(index, 1);
+                        scope.obj.references.splice(index, 1);
+                        scope.referenceobj.apply = false;
                     } else {
-                        scope.referenceobj.references.push(uuid);
+                        scope.obj.references.push(uuid);
+                        scope.referenceobj.apply = true;
                     }
                 };
 
@@ -1865,69 +1877,25 @@
         };
     });
 
-/*    ginasApp.directive('referenceApplyEdit', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                obj: '=',
-                apply: '=ngModel',
-                referenceobj: '=',
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/reference-apply-edit.html",
-            link: function (scope, elment, attrs) {
-                console.log(scope.obj);
-                console.log(scope.referenceobj);
-               // var uuidlist = _.map(scope.obj.references, 'uuid');
-               // console.log(uuidlist);
-                var uuid = scope.referenceobj.uuid;
-                var index = _.indexOf(scope.obj.references, uuid);
-
-                scope.isReferenced = function () {
-                    return index >= 0;
-                };
-
-                scope.updateReference = function () {
-                    //   var uuid = scope.referenceobj.uuid;
-                    //    console.log(uuid);
-                    /!*                    if (_.isUndefined(scope.obj.references)) {
-                     var x = [];
-                     _.set(scope.obj, 'references', x);
-                     }*!/
-                    // var index = _.indexOf(scope.obj.references, uuid);
-                    if (index >= 0) {
-                        console.log("remove");
-                        // var index = _.indexOf(scope.uuidlist, uuid);
-                        scope.referenceobj.references.splice(index, 1);
-                    } else {
-                        console.log("add");
-                        console.log(scope.obj);
-
-                        scope.obj.references.push(uuid);
-                        console.log(scope.obj.references);
-                    }
-                };
-            }
-        };
-    });*/
-
     ginasApp.directive('refHolder', function () {
         return {
             restrict: 'E',
             replace: 'true',
+           // require: 'ngModel',
             scope: {
-                obj: '=',
+                reference: '=',
                 referenceobj: '=',
+                obj: '=',
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/reference-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
+             //   console.log(ngModel);
 
 
                 scope.validate = function () {
-                    var ref = {};
+                   // var ref = scope.ref;
                     console.log(scope);
                     if (!_.isUndefined(scope.ref.citation)) {
                         _.set(scope.ref, "uuid", scope.uuid());
@@ -1935,12 +1903,17 @@
 
                         if (scope.ref.apply) {
                             console.log("apply to relationship");
-                            ref = _.omit(scope.ref, 'apply');
-                            scope.saveReference(ref.uuid, scope.referenceobj);
-                            scope.saveReference(ref, scope.parent);
+                           // ref = _.omit(scope.ref, 'apply');
+                            console.log(scope.ref);
+                         //   var arr = [];
+                         //   arr.push(scope.ref.uuid);
+                         //   scope.reference = arr;
+                          //  ngModel.$setViewValue(arr);
+                            scope.saveReference(scope.ref.uuid, scope.referenceobj);
+                            scope.saveReference(angular.copy(scope.ref), scope.parent);
                         } else {
                             console.log("add to substance.references");
-                            ref = _.omit(scope.ref, 'apply');
+                         //   ref = _.omit(scope.ref, 'apply');
                             scope.saveReference(ref, scope.parent);
                         }
                         scope.ref = {};
@@ -1960,16 +1933,19 @@
                         s4() + '-' + s4() + s4() + s4();
                 };
 
-                scope.saveReference = function (obj, parent) {
+                scope.saveReference = function (reference, parent) {
                     console.log("saving");
-
+                    console.log(scope);
                     if (_.has(parent, 'references')) {
                         var temp = _.get(parent, 'references');
-                        temp.push(obj);
+                        console.log(reference);
+                        temp.push(reference);
+                        //ngModel.$setViewValue(reference);
                         _.set(parent, 'references', temp);
                     } else {
                         var x = [];
-                        x.push(angular.copy(obj));
+                        x.push(angular.copy(reference));
+                       // ngModel.$setViewValue(reference);
                         _.set(parent, 'references', x);
                     }
                 };
@@ -1977,34 +1953,24 @@
         };
     });
 
-    /*    ginasApp.directive('referenceForm', function () {
-     return {
-     restrict: 'E',
-     replace: true,
-     scope: {
-     parent: '='
-     },
-     templateUrl: baseurl + "assets/templates/reference-form.html",
-     link: function (scope, element, attrs) {
-     console.log(scope);
-     scope.validate = function () {
-     console.log(scope);
-     _.set(scope.referenceobj, 'amount', scope.amount);
-     //  scope.parent.$destroy();
-     };
-
-     scope.update = function () {
-     console.log(scope);
-     var temp = _.get(scope.arr, scope.referenceobj);
-     scope.temp = temp;
-     console.log(scope);
-     //scope.referenceobj.amount= scope.amount;
-     //   _.set(scope.referenceobj,'amount', scope.amount);
-     //  scope.parent.$destroy();
-     };
-     }
-     };
-     });*/
+    ginasApp.directive('referenceForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/reference-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+                scope.validate = function () {
+                    console.log(scope);
+                    _.set(scope.referenceobj, 'amount', scope.amount);
+                    //  scope.parent.$destroy();
+                };
+            }
+        };
+    });
 
 
 //references end
@@ -2020,7 +1986,8 @@
                 obj: '=obj',
                 referenceobj: '=',
                 divid: '@',
-                parent: '='
+                parent: '=',
+                reference: '='
             },
             link: function (scope, element, attrs, ngModel) {
                 scope.stage = true;
@@ -2038,7 +2005,7 @@
                             var template = angular.element(html);
                             element.append(template);
                             $compile(template)(scope);
-                            formHolder = '<ref-holder obj = obj parent = parent ></ref-holder>';
+                            formHolder = '<ref-holder obj = obj referenceobj = referenceobj parent = parent ></ref-holder>';
 
                         });
                         break;
@@ -2075,15 +2042,15 @@
         return {
             restrict: 'E',
             replace: true,
+            require: '^ngModel',
             scope: {
-                // refmodel: '=ngModel',
+                reference: '=ngModel',
                 referenceobj: '=',
                 parent: '=',
                 arr: '=',
                 type: '@'
             },
             link: function (scope, element, attrs, ngModel) {
-                console.log(scope);
                 var formHolder;
                 var childScope;
                 scope.stage = true;
@@ -2104,7 +2071,7 @@
                                 var template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
-                                formHolder = '<ref-holder refmodel = refmodel referenceobj = referenceobj parent = parent ></ref-holder>';
+                                formHolder = '<ref-holder obj = reference referenceobj = referenceobj parent = parent ></ref-holder>';
 
                             });
                             break;

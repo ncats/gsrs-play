@@ -8,28 +8,30 @@
         <form class="form-horizontal" name="nameForm" id = "add-name" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-10 err-check" id="name-div">
-                    <text-box ng-model="note.note" field="note" arr="substance.notes" required></text-box>
+                    <text-box ng-model="note.note" field="note"></text-box>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <reference-selector ng-model = "note.references" referenceobj= "note" arr="substance.notes" parent = "substance" formname="noteForm"></reference-selector>
+                    <form-selector ng-model = "note.references" referenceobj= "note" parent = "substance" formname="noteForm" type ="reference"></form-selector>
                 </div>
             </div>
             <div class="noteForm"></div>
             <submit-buttons submit="note" form="nameForm" path="notes"></submit-buttons>
         </form>
 
-        <div class = "row" ng-repeat="obj in substance.notes">
+        <div ng-repeat="obj in substance.notes">
+            <div  class ="row">
             <hr>
             <div class="col-md-1">
                 <delete-button delete="obj" path="notes"></delete-button>
             </div>
             <div class="col-md-10 err-check" id="name-div">
-                <text-box-view-edit obj="obj" field="note" arr="substance.notes" required></text-box-view-edit>
+                <text-box-view-edit obj="obj" field="note"></text-box-view-edit>
             </div>
             <div class="col-md-1 pull-right">
-                <reference-selector-view obj="obj" referenceobj= "note" arr="substance.notes" parent = "substance" formname="noteForm"></reference-selector-view>
+                <form-selector-view obj="obj" referenceobj= "note" parent = "substance" formname="noteForm" type ="reference" divid={{obj.$$hashKey}}></form-selector-view>
             </div>
+            </div>
+            <div class = {{obj.$$hashKey}}></div>
         </div>
-
     </div>
 </div>
