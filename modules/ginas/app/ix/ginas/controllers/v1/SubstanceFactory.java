@@ -133,7 +133,7 @@ public class SubstanceFactory extends EntityFactory {
     	//if(true)return ok("###");
 		try {
 			JsonNode value = request().body().asJson();
-			Class sub = Substance.class;
+			Class subClass = Substance.class;
 			String typ = value.get("substanceClass").asText();
 			Substance.SubstanceClass type;
 			try {
@@ -142,29 +142,29 @@ public class SubstanceFactory extends EntityFactory {
 				throw new IllegalStateException("Unimplemented substance class:" + typ);
 			}
 			switch (type) {
-			case chemical:
-				sub = ChemicalSubstance.class;
-				break;
-			case protein:
-				sub = ProteinSubstance.class;
-				break;
-			case mixture:
-				sub = MixtureSubstance.class;
-				break;
-			case polymer:
-				sub = PolymerSubstance.class;
-				break;
-			case structurallyDiverse:
-				sub = StructurallyDiverseSubstance.class;
-				break;
-			case specifiedSubstanceG1:
-				sub = SpecifiedSubstanceGroup1Substance.class;
-				break;
-			case concept:
-				sub = Substance.class;
-				break;
+				case chemical:
+					subClass = ChemicalSubstance.class;
+					break;
+				case protein:
+					subClass = ProteinSubstance.class;
+					break;
+				case mixture:
+					subClass = MixtureSubstance.class;
+					break;
+				case polymer:
+					subClass = PolymerSubstance.class;
+					break;
+				case structurallyDiverse:
+					subClass = StructurallyDiverseSubstance.class;
+					break;
+				case specifiedSubstanceG1:
+					subClass = SpecifiedSubstanceGroup1Substance.class;
+					break;
+				case concept:
+					subClass = Substance.class;
+					break;
 			}
-			return update(uuid, field, sub, finder, new GinasV1ProblemHandler());
+			return update(uuid, field, subClass, finder, new GinasV1ProblemHandler());
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
