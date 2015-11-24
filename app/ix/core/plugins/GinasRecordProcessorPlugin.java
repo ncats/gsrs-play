@@ -901,9 +901,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
         Long l=queueStatistics.get(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE);
         if(l==null)l=(long) 0;
         l--;
-        
         queueStatistics.put(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE,l);
-        Logger.debug("Decrementing Total Records:" + l);
+        //Logger.debug("Decrementing Total Records:" + l);
     }
     private void waitForProcessingRecordsCount(int max){
         while(getRecordsProcessing()>=max){

@@ -297,6 +297,20 @@ public class RouteFactory extends Controller {
         Logger.warn("Context {} has no method create()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
+    
+    public static Result validate (String context) {
+        try {
+            Method m = getMethod (context, "create"); 
+            if (m != null)
+                return (Result)m.invoke(null);
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.warn("Context {} has no method create()",context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
 
     public static Result update (String context, Long id, String field) {
         try {
@@ -343,5 +357,12 @@ public class RouteFactory extends Controller {
                 return r;
         }
         return notFound ("Unknown id "+uuid);
+    }
+    public static Result checkPreFlight(String path) {
+        response().setHeader("Access-Control-Allow-Origin", "*");       // Need to add the correct domain in here!!
+        response().setHeader("Access-Control-Allow-Methods", "POST, PUT, GET");   // Only allow POST
+        response().setHeader("Access-Control-Max-Age", "300");          // Cache response for 5 minutes
+        response().setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
+        return ok();
     }
 }
