@@ -300,7 +300,7 @@ public class RouteFactory extends Controller {
     
     public static Result validate (String context) {
         try {
-            Method m = getMethod (context, "create"); 
+            Method m = getMethod (context, "validate"); 
             if (m != null)
                 return (Result)m.invoke(null);
         }
@@ -308,7 +308,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.warn("Context {} has no method create()",context);
+        Logger.warn("Context {} has no method validate()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
