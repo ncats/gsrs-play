@@ -25,12 +25,6 @@ import ix.ginas.models.*;
 @Table(name="ix_ginas_relationship")
 public class Relationship extends Ginas {
     @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_relationship_acc")
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
-
-    @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_relationship_ref")
     @JsonSerialize(using=KeywordListSerializer.class)    
     public List<Keyword> references = new ArrayList<Keyword>();

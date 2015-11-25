@@ -15,6 +15,8 @@ import java.lang.reflect.ParameterizedType;
 import javax.persistence.Entity;
 import javax.persistence.OptimisticLockException;
 
+import ix.core.models.*;
+import ix.core.models.Principal;
 import play.libs.Json;
 import play.*;
 import play.db.ebean.*;
@@ -224,7 +226,6 @@ public class EntityFactory extends Controller {
                 .setMaxRows(options.top)
                 .findList();
             Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
-
             return results;
         }
         catch (Exception ex) {
@@ -846,7 +847,7 @@ public class EntityFactory extends Controller {
      * @return
      */
     protected static <K, T extends Model> Result update 
-    (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
+        (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
     	return update(id,field,type,finder);
     }
     // This expects an update of the full record to be done using "/path/*"
@@ -942,7 +943,7 @@ public class EntityFactory extends Controller {
 						Model old=null;
 						if(m instanceof Model){
 							try{
-								
+
 								Method f=EntityPersistAdapter.getIdSettingMethodForBean(m);
 								Object _id=EntityPersistAdapter.getIdForBean(m);
 
@@ -953,7 +954,7 @@ public class EntityFactory extends Controller {
 								}else{
 									if(f!=null){
 										f.invoke(m,_id);
-									}
+            }
 									
 									((Model)m).update(_id);
 									Logger.debug("Success updating:" + path);
@@ -987,7 +988,7 @@ public class EntityFactory extends Controller {
                     Logger.debug("paths["+i+"/"+paths.length+"]:"+paths[i]);
 
                     String pname = paths[i]; // field name
-                    Integer pindex = null;   // field index if field is a list
+                    Integer pindex = null; // field index if field is a list
 
                     Matcher matcher = regex.matcher(pname);
                     if (matcher.find()) {
@@ -1033,7 +1034,7 @@ public class EntityFactory extends Controller {
                                 for (int k = 0; (val=it.next())!=null 
                                          && k < pindex; ++k){
                                 	//Logger.debug(fname+"["+pindex+"] = "+val);	
-                                }
+                            }
                                 
                                 
                             }
@@ -1043,7 +1044,7 @@ public class EntityFactory extends Controller {
                                      +fname+"\" is not an array or list");
                             }
                             Logger.debug(fname+"["+pindex+"] = "+val);
-                        } 
+                        }
                         
                         {
                             /*
@@ -1107,28 +1108,28 @@ public class EntityFactory extends Controller {
                              * for update
                              */
                             if(pindex == null){
-	                            try {
-	                                Method set = inst.getClass().getMethod
-	                                    ("set"+bname, ftype);
-	                                set.invoke(inst, val);
-	                                changes.add(new Object[]{
-	                                                uri.toString(), 
-	                                                oldVal,
+                            try {
+                                Method set = inst.getClass().getMethod
+                                    ("set"+bname, ftype);
+                                set.invoke(inst, val);
+                                changes.add(new Object[]{
+                                                uri.toString(), 
+                                                oldVal,
 	                                                val,
 	                                                temptype,
 	                                                tempid});
-	                            }
-	                            catch (Exception ex) {
-	                                Logger.error
-	                                    ("Can't find bean setter for field \""
-	                                     +fname+"\" in class "
-	                                     +inst.getClass(),
-	                                     ex);
-	                                
-	                                return internalServerError
-	                                    ("Unable to map path "+uri+"!");
-	                            }
                             }
+                            catch (Exception ex) {
+                                Logger.error
+                                    ("Can't find bean setter for field \""
+                                     +fname+"\" in class "
+                                     +inst.getClass(),
+                                     ex);
+                                
+                                return internalServerError
+                                    ("Unable to map path "+uri+"!");
+                            }
+                        }
                         }
 
                         if (val != null) {
@@ -1138,9 +1139,9 @@ public class EntityFactory extends Controller {
                             	if(tid!=null){
                             		tempid=tid;
                             		temptype=ftype;
-                            	}
-                            }
-                        }
+                                }
+                                    }
+                                    }
                         inst = val;
                     }
                     catch (NoSuchFieldException ex) {
@@ -1153,11 +1154,11 @@ public class EntityFactory extends Controller {
             
             //System.out.println((new ObjectMapper()).valueToTree(obj));
             
-            obj.update();
+                obj.update();
             rootChange[0]="/";
             rootChange[2]=obj;
             changes.add(rootChange);
-            
+
 
             //eventually, figure out enumerated changes directly
             
@@ -1176,7 +1177,7 @@ public class EntityFactory extends Controller {
 //                try {
 //                    e.save();
 //                    tx.commit();
-//                    Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
+                        //Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
 //                }
 //                catch (Exception ex) {
 //                	Logger.error(ex.getMessage());
@@ -1188,17 +1189,17 @@ public class EntityFactory extends Controller {
 //                }   
 //            }
             return ok (mapper.valueToTree(obj));
-        }
-        catch (Exception ex) {
+                    }
+                    catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Instance "+id, ex);
             return internalServerError (ex.getMessage());
-        }
+                    }
     } // update ()
     
     public static interface EntityCallable{
     	public void call(Object m, String path);
-    }
+                    }   
     protected static void recursivelyApply(Model entity, String path, EntityCallable c){
     	try{
 	    	for(Field f: entity.getClass().getFields()){
@@ -1215,7 +1216,7 @@ public class EntityFactory extends Controller {
 						e1.printStackTrace();
 					} catch (IllegalAccessException e1) {
 						e1.printStackTrace();
-					}
+                }
 	    		} else if (Collection.class.isAssignableFrom(type)) {
 	    			Collection col = (Collection) f.get(entity);
 	    			if(col!=null){
@@ -1227,14 +1228,14 @@ public class EntityFactory extends Controller {
 	    				}
 	    			}
 	    		}
-	    		
-	    	}
+
+            }
     	}catch(Exception e){
     		e.printStackTrace();
-    	}
+        }
     	c.call(entity, path);
-    }
-    
+        }
+
 
     protected static Object getJsonValue 
         (Object val, JsonNode value, Field field, Integer index) 
@@ -1465,6 +1466,10 @@ public class EntityFactory extends Controller {
                 +id.substring(20);
         }
         return UUID.fromString(id);
+    }
+
+    public interface EntityFilter {
+        public boolean hasAccess (Object grp, Object sub);
     }
     
     

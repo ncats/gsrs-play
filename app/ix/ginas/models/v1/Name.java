@@ -40,12 +40,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Name extends Ginas {
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
 
-	@ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_access")
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
-    
     @JSONEntity(title = "Name", isRequired = true)
     @Column(nullable=false)
     @Indexable(name="Name", suggest=true)

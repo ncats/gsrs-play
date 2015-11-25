@@ -1,6 +1,13 @@
 package ix.core.models;
 
 import javax.persistence.*;
+import be.objectify.deadbolt.core.models.Subject;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import ix.core.controllers.AdminFactory;
+import ix.core.controllers.PrincipalFactory;
+import play.data.validation.Constraints.*;
+
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -36,9 +43,12 @@ public class Principal extends IxModel {
     // provider of this principal
     public String provider; 
     
+   // @Required
     @Indexable(facet=true,name="Principal")
     @Column(unique=true)
     public String username;
+
+    @Email
     public String email;
     public boolean admin = false;
 

@@ -25,12 +25,7 @@ import ix.ginas.models.*;
 @Entity
 @Table(name="ix_ginas_reference")
 public class Reference extends Ginas {
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_reference_access")
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
-    
+
     @JSONEntity(title = "Citation Text", isRequired = true)
     @Column(nullable=false)
     public String citation;

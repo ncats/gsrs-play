@@ -1,0 +1,98 @@
+@import ix.core.models.UserProfile
+@import ix.core.models.Role
+@import ix.core.models.Acl
+@import ix.core.controllers.AdminFactory
+@import helper._
+
+@(userForm: Form[UserProfile], appContext: String)
+
+@implicitFieldConstructor = @{ FieldConstructor(ix.ncats.views.html.admin.twitterBootstrapInput.render) }
+@ix.ncats.views.html.admin.main {
+    <form role="form" method="post" action="@ix.ncats.controllers.crud.routes.Administration.addPrincipal()">
+
+        <div class="body">
+            <div class="form-group table" >
+                <table id="" align="center">
+                    <tr>
+                        <td colspan="2">
+                            <table>
+                                <tr><td colspan="2" align="center"><h4>Add User</h4></td></tr>
+                                <tr align="left">
+                                    <td><lable>User Name</lable></td>
+                                    <td> <input class="form-input" type="text" name="username"/> </td>
+                                </tr>
+
+                                <tr align="left">
+                                    <td><lable>Password</lable></td>
+                                    <td><input class="form-input" type="password" name="password" /> </td>
+                                </tr>
+
+                                <tr align="left">
+                                    <td><lable>Email</lable></td>
+                                    <td><input class="form-input" type="email" name="email" /></td>
+                                </tr>
+
+                                <tr align="left">
+                                    <td><lable>Active</lable></td>
+                                    <td><input class="form-input" type="checkbox" name="active" value="true"/></td>
+                                </tr>
+
+                                <tr><td colspan="2"><br/></td></tr>
+                                <tr align="left">
+                                    <td><lable>Roles</lable></td>
+                                    <td id="roleGroup">
+                                    @for(rs <- Role.options()) {
+                                        <input class="form-input" type="checkbox" name="r-@rs.toString()" id="r-@rs.toString()" value="@rs.toString()"/>
+                                        <span>@rs.toString()</span><br/>
+                                    }
+                                    </td>
+                                </tr>
+
+                                @if(!appContext.contains("ginas")) {
+                                    <tr><td colspan="2"><br/></td></tr>
+
+                                    <tr align="left">
+                                        <td align="center"><lable>Permissions &nbsp;&nbsp;</lable></td>
+                                        <td id="permGroup">
+                                        @for(ps <- Acl.options()) {
+                                            <input class="form-input" type="checkbox" name="p-@ps.toString()" id="p-@ps.toString()" value="@ps.toString()"/>
+                                            <span>@ps.toString()</span> <br/>
+                                        }
+                                        </td>
+                                    </tr>
+                                }
+
+                                <tr><td colspan="2"><br/></td></tr>
+
+                                <tr align="left">
+                                    <td align="center"><lable>Groups &nbsp;&nbsp;</lable></td>
+                                    <td id="permGroup">
+                                        @for(gs <- AdminFactory.allGroups()) {
+                                            <input class="form-input" type="checkbox" name="g-@gs.name" id="g-@gs.name" value="@gs.name"/>
+                                            <span>@gs.name</span> <br/>
+                                        }
+                                        <div id="grpLable">Enter a Group Name</div>
+                                        <div id="grpTxtBox"><input class="form-input" type="text" name="grpName" id="grpName"></div>
+                                    </td>
+                                </tr>
+
+                                <tr><td colspan="2"><br/></td></tr>
+                                <tr class="actions">
+                                    <td><input type="submit" value="Save" class="btn primary"> </td>
+                                    <td><a href="@ix.ncats.controllers.crud.routes.Administration.listPrincipals()" class="btn">Cancel</a></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+
+
+        </div>
+    </form>
+}
+
+
+
+

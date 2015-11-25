@@ -1,5 +1,6 @@
 package ix.ginas.models;
 
+import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.utils.Global;
@@ -58,9 +59,9 @@ public class Ginas extends Model {
 //          joinColumns=@JoinColumn
 //          (name="id", referencedColumnName="uuid")
 //      )
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
+    @JsonSerialize(using = GroupListSerializer.class)
+    @JsonDeserialize(using = GroupListDeserializer.class)
+    public List<Group> access = new ArrayList<Group>();
     
     public Ginas () {
     }
