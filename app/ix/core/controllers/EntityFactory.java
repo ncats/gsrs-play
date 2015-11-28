@@ -5,13 +5,17 @@ import java.security.*;
 import java.util.*;
 import java.util.regex.*;
 import java.util.concurrent.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Modifier;
 
+import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Entity;
 import javax.persistence.OptimisticLockException;
@@ -26,12 +30,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -42,6 +48,7 @@ import com.fasterxml.jackson.core.Version;
 import com.avaje.ebean.*;
 import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.event.BeanPersistListener;
+import com.avaje.ebean.bean.*;
 
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.models.ETag;
@@ -836,39 +843,6 @@ public class EntityFactory extends Controller {
 
         return notFound (request().uri()+": No edit history found!");
     }
-
-    protected static <K, T extends Model> Result _update
-        (K id, String field, Class<T> type, Model.Finder<K, T> finder)
-        throws Exception {
-
-        if (!request().method().equalsIgnoreCase("PUT")) {
-            return badRequest ("Only PUT is accepted!");
-        }
-
-        String content = request().getHeader("Content-Type");
-        if (content == null || (content.indexOf("application/json") < 0
-                                && content.indexOf("text/json") < 0)) {
-            return badRequest ("Mime type \""+content+"\" not supported!");
-        }
-
-        List<Object[]> changes = new ArrayList<Object[]>();
-        ObjectMapper mapper = getEntityMapper ();
-        JsonNode value = request().body().asJson();
-        Transaction tx = Ebean.beginTransaction();
-        try {
-            updateValue (mapper, id, value, finder);
-            tx.commit();
-            
-            return ok (mapper.valueToTree(finder.byId(id)));
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError (ex.getMessage());
-        }
-        finally {
-            Ebean.endTransaction();
-        }
-    }
     
     /**
      * Handle generic update to field, without special deserializationHandler
@@ -881,14 +855,7 @@ public class EntityFactory extends Controller {
      */
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
-        //return update (id,field,type,finder, null);
-        try {
-            return _update (id, field, type, finder);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-            return internalServerError (ex.getMessage());
-        }
+        return update (id,field,type,finder, null);
     }
     
     // This expects an update of the full record to be done using "/path/*"
@@ -1275,98 +1242,286 @@ public class EntityFactory extends Controller {
         }
         c.call(entity, path);
     }
+
+    protected static Result updateEntity (Class<?> type) {
+
+        if (!request().method().equalsIgnoreCase("PUT")) {
+            return badRequest ("Only PUT is accepted!");
+        }
+
+        String content = request().getHeader("Content-Type");
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
+            return badRequest ("Mime type \""+content+"\" not supported!");
+        }
+        JsonNode json = request().body().asJson();
+        EntityMapper mapper = getEntityMapper ();       
+        
+        Transaction tx = Ebean.beginTransaction();
+        try {
+            Object value = mapper.treeToValue(json, type);
+            value = instrument (value, json);
+            tx.commit();
+            
+            return ok (mapper.valueToTree(value));          
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
+        finally {
+            Ebean.endTransaction();
+        }
+    }
+
+    static List<Field> getFields (Object entity, Class... annotation) {
+        List<Field> fields = new ArrayList<Field>();
+        for (Field f : entity.getClass().getFields()) {
+            for (Class c : annotation) {
+                if (f.getAnnotation(c) != null) {
+                    fields.add(f);
+                    break;
+                }
+            }
+        }
+        return fields;
+    }
     
-    protected static Object updateValue
-        (ObjectMapper mapper, Object id, JsonNode node,
-         Model.Finder finder) throws Exception {
+    static List getAnnotatedValues (Object entity, Class... annotation)
+        throws Exception {
+        List values = new ArrayList ();
+        for (Field f : getFields (entity, annotation)) {
+            Object v = f.get(entity);
+            if (v != null)
+                values.add(v);
+        }
+        return values;
+    }
 
+    static Object getId (Object entity) throws Exception {
+        List values = getAnnotatedValues (Id.class);
+        return values.isEmpty() ? null : values.iterator().next();
+    }
+
+    static Field getIdField (Object entity) throws Exception {
+        List<Field> fields = getFields (entity, Id.class);
+        return fields.isEmpty() ? null : fields.iterator().next();
+    }
+    
+    static boolean isValid (Field f) {
+        int mods = f.getModifiers();
+        return (!Modifier.isStatic(mods)
+                && !Modifier.isFinal(mods)
+                && !Modifier.isTransient(mods)
+                && f.getAnnotation(JsonIgnore.class) == null
+                && f.getAnnotation(Id.class) == null);
+    }
+
+    /**
+     * set value of field using property bean instead of field-based
+     * as it's not recognized by ebean
+     */
+    static Object setValue (Object instance, Field field, Object value)
+        throws Exception {
+        Logger.debug("** setValue: field "+field.getName()+"["
+                     +instance.getClass().getName()+"] value="+value);
+        
+        String method = "set" + getBeanName (field.getName());
+        Object old = field.get(instance);
+        try {
+            Method set = instance.getClass().getMethod
+                (method, field.getType());
+            set.invoke(instance, value);
+        }
+        catch (NoSuchMethodException ex) {
+            Logger.warn("No method \""+method
+                        +"\" found in class "+instance.getClass().getName());
+            if (instance instanceof EntityBean) {
+                // find the closest match?
+                Method set = null;
+                for (Method m : instance.getClass().getMethods()) {
+                    if (m.getName().startsWith("set")) {
+                        Class[] types = m.getParameterTypes();
+                        if (types.length == 1
+                            && types[0].isAssignableFrom(field.getType())) {
+                            // let's assume this is what we're looking for
+                            set = m;
+                            break;
+                        }
+                    }
+                }
+                
+                if (set == null) {
+                    throw ex;
+                }
+            }
+            else { // revert to field-based
+                field.set(instance, value);
+            }
+        }
+        return old;
+    }
+
+    static void debugBean (Object value) throws Exception {
+        if (value == null) {
+            return;
+        }
+        else if (!(value instanceof EntityBean)) {
+            Logger.warn("Not an EntityBean: "+value
+                        +"["+value.getClass().getName()+"]");
+            return;
+        }
+
+        EntityBean bean = (EntityBean)value;
+        EntityBeanIntercept ebi = bean._ebean_intercept();
+
+        Class cls = value.getClass();
+        int c = ebi.getPersistenceContext().size(cls);
+        Logger.debug("## There are "+c+" instance of "+cls.getName()+
+                     " in the Ebean persitence context!");
+        Logger.debug("## intercepting="+ebi.isIntercepting()
+                     +" dirty=" + ebi.isDirty()+" new="+ebi.isNew()
+                     +" ref="+ebi.isReference()
+                     +" context="+ebi.getPersistenceContext());
+    }
+
+    protected static Object instrument
+        (Object value, JsonNode json) throws Exception {
+        Class cls = value.getClass();
+        if (cls.getAnnotation(Entity.class) == null)
+            throw new IllegalArgumentException
+                ("Class "+cls.getName()+" is not an entity");
+
+        Field idf = getIdField (value);
+        if (idf == null)
+            throw new IllegalArgumentException
+                ("Entity "+cls.getName()+" has no Id field!");
+        
+        Model.Finder finder = new Model.Finder
+            (idf.getType(), value.getClass());
+
+        Object xval = null;
+        
+        Object id = idf.get(value);
         if (id == null) {
-            Logger.error("Can't update entity with null id");
-            return null;
+            // if this entity has no id set, then we see if there is a
+            // unique column defined.. if so, we retrieve it
+            List<Field> columns = getFields (value, Column.class);
+            // now check which field has unique annotation
+            for (Field f : columns) {
+                Column column = (Column)f.getAnnotation(Column.class);
+                if (column.unique()) {
+                    Logger.debug("Field \""+f.getName()
+                                 +"\" contains unique value for class "
+                                 +value.getClass().getName());
+                    xval = finder.where()
+                        .eq(column.name().equals("")
+                            ? f.getName() : column.name(),
+                            f.get(value))
+                        .findUnique();
+                    
+                    if (xval != null)
+                        id = getId (xval);
+                    
+                    break;
+                }
+            }
         }
-        
-        Object val = finder.byId(id);
-        if (val == null) {
-            Logger.error("Invalid entity id="+id);
-            return null;
+        else {
+            xval = finder.byId(id);
         }
 
-        Logger.debug("Updating "+val.getClass().getName()+":"
-                     +id+": "+node);
+        Logger.debug(">>> "+id+" <=> "+value+" json="+json);
+        debugBean (xval);
         
-        for (Field f : val.getClass().getFields()) {
-            if (f.getAnnotation(Id.class) != null)
+        if (xval == null) {
+            // new object..
+            ((Model)value).save();
+            Logger.debug("<<< " + getId (value));
+
+            return value;
+        }
+
+        // now sync up val and value
+        Map<Field, Object> values = new HashMap<Field, Object>();
+        for (Field f : cls.getFields()) {
+            JsonProperty prop = f.getAnnotation(JsonProperty.class);
+            JsonNode node = json.get(prop != null ? prop.value() : f.getName());
+
+            Class type = f.getType();       
+            Logger.debug("field \""+f.getName()+"\"["+type
+                         +"] valid="+isValid(f)
+                         +" node="+node);            
+            if (!isValid (f) || node == null)
                 continue;
             
-            JsonProperty prop = f.getAnnotation(JsonProperty.class);
-            String fname = prop != null ? prop.value() : f.getName();
-            String bname = getBeanName (fname);
-            Class<?> t = f.getType();
-            JsonNode n = node.get(fname);
-            Object v = f.get(val);
-            if (n != null) {
-                JsonDeserialize jdes = f.getAnnotation(JsonDeserialize.class);
-                if (jdes != null) {
-                    SimpleModule module =
-                        new SimpleModule("CustomDeserializer",
-                                         new Version(1, 0, 0, null));
-                    module.addDeserializer
-                        (t, (JsonDeserializer)jdes.using().newInstance());
-                    mapper.registerModule(module);
+            Object v = f.get(value);
+            if (v != null) {
+                if (type.getAnnotation(Entity.class) != null) {
+                    setValue (xval, f, instrument (v, node));
                 }
-
-                if (v != null) { // update
-                    // check to see if it's an entity
+                else if (type.isArray()) {
+                    Class<?> t = type.getComponentType();
                     if (t.getAnnotation(Entity.class) != null) {
-                        Field idf = null;
-                        for (Field ff : t.getFields()) {
-                            if (ff.getAnnotation(Id.class) != null) {
-                                idf = ff;
-                                break;
+                        int len = Array.getLength(v);
+                        Object vv = f.get(xval);
+                        if (vv != null && Array.getLength(vv) > 0) {
+                            Logger.debug("$$ TODO: handle array properly!");
+                        }
+                        else {
+                            Object vals = Array.newInstance(t, len);
+                            for (int i = 0; i < len; ++i) {
+                                Object xv = Array.get(v, i);
+                                Array.set(vals, i,
+                                          instrument (xv, node.get(i)));
                             }
-                        }
-                        if (idf == null) {
-                            Logger.debug("Entity class "+t.getName()+" has "
-                                         +"no id field!");
-                            return null;
-                        }
-                        
-                        // recurse
-                        id = idf.get(v);
-                        if (id != null) {
-                            Object vv = updateValue
-                                (mapper, id, n,
-                                 new Model.Finder(id.getClass(), t));
-                            f.set(val, vv);
+                            setValue (xval, f, vals);
                         }
                     }
                     else {
-                        Object nv = mapper.treeToValue(n, t);
-                        Logger.debug("updating \""+fname+"\" in "
-                                     +val.getClass() +
-                                     " with \""+nv+"\"");
-                        try {
-                            Method set = val.getClass().getMethod
-                                ("set"+bname, t);
-                            set.invoke(val, nv);
+                        // just copy over
+                        setValue (xval, f, v);
+                    }
+                }
+                else if (Collection.class.isAssignableFrom(type)) {
+                    Collection col = (Collection)v;
+                    Logger.debug("Enter Collection.."+col.size());
+                    if (!col.isEmpty()) {
+                        Class t = getComponentType (f.getGenericType());
+                        Logger.debug("..component type "+t);
+                        if (t.getAnnotation(Entity.class) != null) {
+                            Collection xcol = (Collection)f.get(xval);
+                            if (xcol == null) {
+                                setValue (xval, f, xcol = new ArrayList ());
+                            }
+                            
+                            if (xcol.isEmpty()) {
+                                int i = 0;
+                                for (Iterator it = col.iterator();
+                                     it.hasNext(); ++i) {
+                                    Object xv = it.next();
+                                    Logger.debug(i+": "+xv+" <=> "+node.get(i));
+                                    xcol.add(instrument
+                                             (xv, node.get(i)));
+                                }
+                            }
+                            else { // update this list
+                            }
                         }
-                        catch (Exception ex) {
-                            ex.printStackTrace();
+                        else {
+                            setValue (xval, f, v);
                         }
                     }
                 }
-                else { // create
-                    //
+                else {
+                    setValue (xval, f, v);
                 }
             }
-            else {
-                // this field is not available in the json, so
-                // do we ignore it for now..
-            }
         }
+        ((Model)xval).update();
+        Logger.debug("<<< "+id);
         
-        ((Model)val).update();
-        return val;
+        return xval;
     }
     
     protected static Object getJsonValue 
