@@ -6,53 +6,53 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
         <form class="form-horizontal" name="propertyForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    <dropdown-select ng-model="property.type" field="type" cv = "RELATIONSHIP_TYPE" arr="substance.properties"></dropdown-select>
+                    <dropdown-select ng-model="property.type" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <text-input ng-model="property.name" field="comments" arr="substance.properties"></text-input>
+                    <text-input ng-model="property.name" field="comments" ></text-input>
                 </div>
                 <div class="col-md-1">
-                    <form-selector ng-model = "property.value" field="value" referenceobj= "property" arr="substance.properties" parent = "substance" formname="propertyForm" type = "amount"></form-selector>
+                    <form-selector referenceobj= "property" divid="propertyForm" type = "amount"></form-selector>
                 </div>
                 <div class="col-md-1">
                     <strong>Parameters</strong>
                     <a ng-show="!property.parameter" data-toggle="modal" data-target="#addparam" role="button" aria-label="Add a parameter"><i class="fa fa-plus fa-2x success"></i></a>
-                    </div>
-                    <div class="col-md-1">
-                        <check-box ng-model="property.defining" field="defining" arr="substance.properties"></check-box>
-                    </div>
-                    <div class="col-md-1 pull-right">
-                        <form-selector ng-model = "property.references" referenceobj= "property" arr="substance.properties" parent = "substance" formname="propertyForm" type = "reference"></form-selector>
-                    </div>
-
                 </div>
-                <div class="propertyForm"></div>
-                <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
+                <div class="col-md-1">
+                    <check-box ng-model="property.defining" field="defining" ></check-box>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="property" parent = "substance" divid="propertyForm" type = "reference"></form-selector>
+                </div>
+
+            </div>
+            <div class="propertyForm"></div>
+            <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
         </form>
 
-        <div class = "row" ng-repeat="obj in substance.properties">
-            <hr>
-            <div class="col-md-1">
-                <delete-button delete="obj"></delete-button>
-            </div>
-            <div class="col-md-2">
-                <dropdown-view-edit ng-model="property.type" field="type" cv = "RELATIONSHIP_TYPE" arr="substance.properties"></dropdown-view-edit>
-            </div>
-            <div class="col-md-2">
-                <text-view-edit ng-model="property.name" field="comments" arr="substance.properties"></text-view-edit>
-            </div>
-            <div class="col-md-1">
-                <form-selector-view obj = "obj" referenceobj= "property" arr="substance.properties" parent = "substance" formname="propertyForm" type = "amount"></form-selector-view>
-            </div>
-            <div class="col-md-1">
+        <div ng-repeat="obj in substance.properties">
+            <div class ="row">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj"></delete-button>
                 </div>
-            <div class="col-md-1">
-                <check-box-view-edit ng-model="obj" field = "defining"></check-box-view-edit>
+                <div class="col-md-2">
+                    <dropdown-view-edit ng-model="obj.type" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <text-view-edit ng-model="obj.name" field="comments" ></text-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj= "obj" formname="propertyForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="defining" ></check-box-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" formname="propertyForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
             </div>
-            <div class="col-md-1 pull-right">
-                <form-selector-view obj = "obj" referenceobj= "property" arr="substance.properties" parent = "substance" formname="propertyForm" type = "reference"></form-selector-view>
-            </div>
+            <div class = {{obj.$$hashKey}}></div>
         </div>
-
     </div>
 </div>

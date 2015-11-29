@@ -54,15 +54,13 @@
         }
     }
 
-
     <div>@forms.officialnameform()</div>
     <div>@forms.nameform()</div>
     <div>@forms.codeform()</div>
     <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>
-<div>@forms.propertyform()</div>
-
-    <reference-form parent = "substance"></reference-form>
+    <div>@forms.propertyform()</div>
+    <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
     @forms.amountmodalform()
     @forms.parametermodalform()
 

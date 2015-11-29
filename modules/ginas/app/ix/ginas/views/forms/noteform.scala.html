@@ -11,7 +11,7 @@
                     <text-box ng-model="note.note" field="note"></text-box>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector ng-model = "note.references" referenceobj= "note" parent = "substance" formname="noteForm" type ="reference"></form-selector>
+                    <form-selector referenceobj ="note" parent = "substance" divid="noteForm" type = "reference"></form-selector>
                 </div>
             </div>
             <div class="noteForm"></div>
@@ -28,7 +28,7 @@
                 <text-box-view-edit obj="obj" field="note"></text-box-view-edit>
             </div>
             <div class="col-md-1 pull-right">
-                <form-selector-view obj="obj" referenceobj= "note" parent = "substance" formname="noteForm" type ="reference" divid={{obj.$$hashKey}}></form-selector-view>
+                <form-selector referenceobj ="obj" parent = "substance"  type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
             </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

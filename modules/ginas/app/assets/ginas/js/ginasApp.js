@@ -1669,9 +1669,6 @@
             }
         };
         return data;
-
-        //console.log(options[field]);
-        //return options[field];
     });
 
     ginasApp.service('substanceSearch', function ($http, $q) {
@@ -1734,186 +1731,101 @@
         };
     });
 
-//***************
-
-
-//**************************
-//references start
-    /*    ginasApp.directive('referenceSelector', function ($modal, $compile) {
-     return {
-     restrict: 'E',
-     replace: true,
-     scope: {
-     refmodel: '=ngModel',
-     referenceobj: '=',
-     parent: '=',
-     arr: '='
-     },
-     templateUrl: baseurl + "assets/templates/reference-selector2.html",
-     link: function (scope, element, attrs, ngModel) {
-     scope.stage = true;
-     var childScope;
-     scope.toggleStage = function (obj) {
-     if (_.isUndefined(scope.referenceobj)) {
-     var x = {};
-     _.set(scope, 'referenceobj', x);
-     }
-     var result = document.getElementsByClassName(attrs.formname);
-     var elementResult = angular.element(result);
-     console.log(scope.stage);
-     if (scope.stage === true) {
-     console.log('ok');
-     scope.stage = false;
-     childScope = scope.$new();
-     var compiledDirective;
-     if (obj) {
-     compiledDirective = $compile('<ref-holder refmodel = refmodel referenceobj = obj parent = parent></ref-holder>');
-     }
-     compiledDirective = $compile('<ref-holder refmodel = refmodel referenceobj = referenceobj parent = parent></ref-holder>');
-     var directiveElement = compiledDirective(childScope);
-     elementResult.append(directiveElement);
-     console.log(scope.stage);
-     } else {
-     childScope.$destroy();
-     elementResult.empty();
-     scope.stage = true;
-     }
-     };
-     }
-     };
-     });
-
-     ginasApp.directive('referenceSelectorView', function () {
-     return {
-     restrict: 'E',
-     templateUrl: baseurl + "assets/templates/reference-selector-view.html",
-     //     require: '^ngModel',
-     replace: true,
-     scope: {
-     obj: '=',
-     field: '@',
-     arr: '='
-     },
-     link: function (scope, element, attrs, ngModel) {
-     console.log(scope);
-     scope.editing = function (obj) {
-     if (_.has(obj, '_editing')) {
-     obj._editing = !obj._editing;
-     } else {
-     _.set(obj, '_editing', true);
-     }
-     };
-     }
-     };
-     });*/
-
-    ginasApp.directive('referenceApply', function ($compile, $templateRequest) {
+    ginasApp.directive('formSelector', function ($modal, $compile, $templateRequest) {
         return {
             restrict: 'E',
             replace: true,
             scope: {
-                apply: '=ngModel',
-                obj: '=',
                 referenceobj: '=',
-                parent: '='
+                parent:'='
             },
-            link: function (scope, element, attrs) {
-                var uuid;
-                var index;
+            link: function (scope, element, attrs, ngModel) {
+                var formHolder;
+                var childScope;
                 var template;
-                scope.apply=true;
-                if (_.isUndefined(scope.obj)) {
-                    scope.obj={};
-                }
+                scope.stage = true;
 
-                if (_.isUndefined(scope.obj.references)) {
-                    var x = [];
-                    _.set(scope.obj, 'references', x);
-                }
+                    switch (attrs.type) {
+                        case "amount":
+                            if(attrs.mode=="edit"){
+                                template = angular.element('<a ng-click ="toggleStage()"><amount value ="referenceobj.amount" ></amount></a>');
+                                element.append(template);
+                                $compile(template)(scope);
+                            }else{
+                                $templateRequest(baseurl + "assets/templates/amount-selector.html").then(function (html) {
+                                    template = angular.element(html);
+                                    element.append(template);
+                                    $compile(template)(scope);
 
-                scope.isReferenced = function () {
-                    return index >= 0;
-                };
+                                });
+                            }
+                                formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
+                                element.append(formHolder);
+                            break;
+                        case "reference":
+                            if(attrs.mode=="edit"){
+                                $templateRequest(baseurl + "assets/templates/reference-selector-view.html").then(function (html) {
+                                    template = angular.element(html);
+                                    element.append(template);
+                                    $compile(template)(scope);
+                                });
+                            }else {
+                                $templateRequest(baseurl + "assets/templates/reference-selector2.html").then(function (html) {
+                                    template = angular.element(html);
+                                    element.append(template);
+                                    $compile(template)(scope);
+                                });
+                            }
+                                formHolder = '<reference-form referenceobj = referenceobj parent = parent></reference-form>';
+                            break;
+                        case "subref":
 
-                switch (attrs.type) {
-                    case "view":
-                        template = angular.element('<div><label for="apply" class="text-capitalize">Apply</label><br/><input type="checkbox" ng-model= apply placeholder="Apply" title="Apply" id="apply" checked/></div>');
-                        element.append(template);
-                        $compile(template)(scope);
-                        break;
-                    case "edit":
-                        template = angular.element('<div><input type="checkbox" ng-model="referenceobj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
-                        element.append(template);
-                        $compile(template)(scope);
-                        uuid = scope.referenceobj.uuid;
-                        index = _.indexOf(scope.obj.references, uuid);
-                        scope.referenceobj.apply = scope.isReferenced();
-                        break;
-                }
+                            break;
+
+                    }
 
 
-
-
-
-                //from the selector only version, when adding a new set of
-                // references to a new element, the references are added to referenceobj, whic is passed down
-                //from the relationship form as ng-Model for relationships.references, the selector aliases it as referenceobj.
-
-                scope.updateReference = function () {
-                    console.log("update)");
-                    console.log(scope);
-                    index = _.indexOf(scope.obj.references, uuid);
-                    console.log(index);
-                    if (index >= 0) {
-                        scope.obj.references.splice(index, 1);
-                        scope.referenceobj.apply = false;
+                scope.toggleStage = function () {
+                    if (_.isUndefined(scope.referenceobj)) {
+                        var x = {};
+                        _.set(scope, 'referenceobj', x);
+                    }
+                    var result = document.getElementsByClassName(attrs.divid);
+                    var elementResult = angular.element(result);
+                    if (scope.stage === true) {
+                        scope.stage = false;
+                        childScope = scope.$new();
+                        var compiledDirective = $compile(formHolder);
+                        var directiveElement = compiledDirective(childScope);
+                        elementResult.append(directiveElement);
                     } else {
-                        scope.obj.references.push(uuid);
-                        scope.referenceobj.apply = true;
+                        childScope.$destroy();
+                        elementResult.empty();
+                        scope.stage = true;
                     }
                 };
-
             }
         };
     });
 
-    ginasApp.directive('refHolder', function () {
+    ginasApp.directive('referenceForm', function () {
         return {
             restrict: 'E',
             replace: 'true',
-           // require: 'ngModel',
             scope: {
-                reference: '=',
                 referenceobj: '=',
-                obj: '=',
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/reference-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
-             //   console.log(ngModel);
-
 
                 scope.validate = function () {
-                   // var ref = scope.ref;
-                    console.log(scope);
                     if (!_.isUndefined(scope.ref.citation)) {
                         _.set(scope.ref, "uuid", scope.uuid());
-                        console.log("uuid set");
-
                         if (scope.ref.apply) {
-                            console.log("apply to relationship");
-                           // ref = _.omit(scope.ref, 'apply');
-                            console.log(scope.ref);
-                         //   var arr = [];
-                         //   arr.push(scope.ref.uuid);
-                         //   scope.reference = arr;
-                          //  ngModel.$setViewValue(arr);
                             scope.saveReference(scope.ref.uuid, scope.referenceobj);
                             scope.saveReference(angular.copy(scope.ref), scope.parent);
                         } else {
-                            console.log("add to substance.references");
-                         //   ref = _.omit(scope.ref, 'apply');
                             scope.saveReference(ref, scope.parent);
                         }
                         scope.ref = {};
@@ -1934,18 +1846,13 @@
                 };
 
                 scope.saveReference = function (reference, parent) {
-                    console.log("saving");
-                    console.log(scope);
                     if (_.has(parent, 'references')) {
                         var temp = _.get(parent, 'references');
-                        console.log(reference);
                         temp.push(reference);
-                        //ngModel.$setViewValue(reference);
                         _.set(parent, 'references', temp);
                     } else {
                         var x = [];
                         x.push(angular.copy(reference));
-                       // ngModel.$setViewValue(reference);
                         _.set(parent, 'references', x);
                     }
                 };
@@ -1953,157 +1860,55 @@
         };
     });
 
-    ginasApp.directive('referenceForm', function () {
+    ginasApp.directive('referenceFormOnly', function () {
         return {
             restrict: 'E',
             replace: true,
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/reference-form.html",
+            templateUrl: baseurl + "assets/templates/reference-form-only.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.validate = function () {
-                    console.log(scope);
-                    _.set(scope.referenceobj, 'amount', scope.amount);
-                    //  scope.parent.$destroy();
+                    scope.saveReference(ref, scope.parent);
+                scope.ref = {};
+                scope.ref.apply = true;
+                scope.refForm.$setPristine();
                 };
-            }
-        };
-    });
-
-
-//references end
-//****************************
-
-//*************************
-//Amount stuff
-    ginasApp.directive('formSelectorView', function ($modal, $compile, $templateRequest) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                obj: '=obj',
-                referenceobj: '=',
-                divid: '@',
-                parent: '=',
-                reference: '='
-            },
-            link: function (scope, element, attrs, ngModel) {
-                scope.stage = true;
-                var formHolder;
-                switch (attrs.type) {
-                    case "amount":
-                        var template = angular.element('<a ng-click ="toggleStage()"><amount value ="obj.amount" ></amount></a>');
-                        element.append(template);
-                        $compile(template)(scope);
-                        formHolder = '<amount-form ng-model= obj.amount></amount-form>';
-                        // element.append(formHolder);
-                        break;
-                    case "reference":
-                        $templateRequest(baseurl + "assets/templates/reference-selector-view.html").then(function (html) {
-                            var template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                            formHolder = '<ref-holder obj = obj referenceobj = referenceobj parent = parent ></ref-holder>';
-
-                        });
-                        break;
-                    case "subref":
-
-                        break;
-                }
-
-                scope.toggleStage = function () {
-                    if (_.isUndefined(scope.referenceobj)) {
-                        var x = {};
-                        _.set(scope, 'referenceobj', x);
+                scope.uuid = function uuid() {
+                    function s4() {
+                        return Math.floor((1 + Math.random()) * 0x10000)
+                            .toString(16)
+                            .substring(1);
                     }
-                    var result = document.getElementsByClassName(scope.divid);
-                    var elementResult = angular.element(result);
-                    if (scope.stage === true) {
-                        scope.stage = false;
-                        childScope = scope.$new();
-                        var compiledDirective = $compile(formHolder);
-                        var directiveElement = compiledDirective(childScope);
-                        elementResult.append(directiveElement);
+
+                    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                        s4() + '-' + s4() + s4() + s4();
+                };
+
+                scope.saveReference = function (reference, parent) {
+                    if (_.has(parent, 'references')) {
+                        var temp = _.get(parent, 'references');
+                        temp.push(reference);
+                        _.set(parent, 'references', temp);
                     } else {
-                        childScope.$destroy();
-                        elementResult.empty();
-                        scope.stage = true;
+                        var x = [];
+                        x.push(angular.copy(reference));
+                        _.set(parent, 'references', x);
                     }
                 };
             }
         };
     });
 
-
-    ginasApp.directive('formSelector', function ($modal, $compile, $templateRequest) {
+    ginasApp.directive('amountForm', function () {
         return {
             restrict: 'E',
             replace: true,
-            require: '^ngModel',
             scope: {
-                reference: '=ngModel',
-                referenceobj: '=',
-                parent: '=',
-                arr: '=',
-                type: '@'
+                amount: '=amount'
             },
-            link: function (scope, element, attrs, ngModel) {
-                var formHolder;
-                var childScope;
-                scope.stage = true;
-
-                scope.getTemplate = function () {
-                    switch (scope.type) {
-                        case "amount":
-                            $templateRequest(baseurl + "assets/templates/amount-selector.html").then(function (html) {
-                                var template = angular.element(html);
-                                element.append(template);
-                                $compile(template)(scope);
-                                formHolder = '<amount-form ng-model=referenceobj.amount></amount-form>';
-                                element.append(formHolder);
-                            });
-                            break;
-                        case "reference":
-                            $templateRequest(baseurl + "assets/templates/reference-selector2.html").then(function (html) {
-                                var template = angular.element(html);
-                                element.append(template);
-                                $compile(template)(scope);
-                                formHolder = '<ref-holder obj = reference referenceobj = referenceobj parent = parent ></ref-holder>';
-
-                            });
-                            break;
-                        case "subref":
-
-                            break;
-
-                    }
-                };
-
-                scope.toggleStage = function () {
-                    if (_.isUndefined(scope.referenceobj)) {
-                        var x = {};
-                        _.set(scope, 'referenceobj', x);
-                    }
-                    var result = document.getElementsByClassName(attrs.formname);
-                    var elementResult = angular.element(result);
-                    if (scope.stage === true) {
-                        scope.stage = false;
-                        childScope = scope.$new();
-                        var compiledDirective = $compile(formHolder);
-                        var directiveElement = compiledDirective(childScope);
-                        elementResult.append(directiveElement);
-                    } else {
-                        childScope.$destroy();
-                        elementResult.empty();
-                        scope.stage = true;
-                    }
-                };
-
-                scope.getTemplate();
-            }
+            templateUrl: baseurl + "assets/templates/amount-form.html"
         };
     });
 
@@ -2119,32 +1924,68 @@
         };
     });
 
-    ginasApp.directive('amountForm', function () {
+    ginasApp.directive('referenceApply', function ($compile, $templateRequest) {
         return {
             restrict: 'E',
             replace: true,
             scope: {
-                amount: '=ngModel'
+                apply: '=ngModel',
+                obj: '=',
+                referenceobj: '=',
+                parent: '='
             },
-            templateUrl: baseurl + "assets/templates/amount-form.html"
+            link: function (scope, element, attrs) {
+                var uuid;
+                var index;
+                var template;
+                scope.apply=true;
+                if (_.isUndefined(scope.referenceobj)) {
+                    scope.referenceobj={};
+                }
+
+                if (_.isUndefined(scope.referenceobj.references)) {
+                    var x = [];
+                    _.set(scope.referenceobj, 'references', x);
+                }
+
+                scope.isReferenced = function () {
+                    return index >= 0;
+                };
+
+                switch (attrs.type) {
+                    case "view":
+                        template = angular.element('<div class = "text-center"><label for="apply" class="text-capitalize">Apply</label><br/><input type="checkbox" ng-model= apply placeholder="Apply" title="Apply" id="apply" checked/></div>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        break;
+                    case "edit":
+                        template = angular.element('<div class = "text-center"><input type="checkbox" ng-model="obj.apply" ng-click="updateReference();" placeholder="{{field}}" title="{{field}}" id="{{field}}s"/></div>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        uuid = scope.obj.uuid;
+                        index = _.indexOf(scope.referenceobj.references, uuid);
+                        scope.obj.apply = scope.isReferenced();
+
+                        break;
+                }
+
+                scope.updateReference = function () {
+                    console.log("update)");
+                    console.log(scope);
+                    index = _.indexOf(scope.referenceobj.references, uuid);
+                    console.log(index);
+                    if (index >= 0) {
+                        scope.referenceobj.references.splice(index, 1);
+                        scope.obj.apply = false;
+                    } else {
+                        scope.referenceobj.references.push(uuid);
+                        scope.obj.apply = true;
+                    }
+                };
+
+            }
         };
     });
-
-    /*     ginasApp.directive('amountEditDisplay', function (lookup) {
-     return {
-     restrict: 'E',
-     replace: true,
-     scope: {
-     modelAmount: '=ngModel'
-     },
-     templateUrl: baseurl + "assets/templates/amount-display.html",
-     link: function (scope, element, attrs) {
-     scope.lookup = lookup;
-     },
-     };
-     });*/
-//*************************************
-
 
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';

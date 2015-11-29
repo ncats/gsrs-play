@@ -161,15 +161,49 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
+        
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             _serializationConfig = getSerializationConfig();
             for (Class v : views) {
                 _serializationConfig = _serializationConfig.withView(v);
             }
+            addHandler ();
+        }
+
+        void addHandler () {
+            addHandler (new DeserializationProblemHandler () {
+                    public boolean handleUnknownProperty
+                        (DeserializationContext ctx, JsonParser parser,
+                         JsonDeserializer deser, Object bean, String property) {
+                        return _handleUnknownProperty
+                            (ctx, parser, deser, bean, property);
+                    }
+                });
         }
         
         public EntityMapper () {
+            addHandler ();
+        }
+
+        public boolean _handleUnknownProperty
+            (DeserializationContext ctx, JsonParser parser,
+             JsonDeserializer deser, Object bean, String property) {
+            try {
+                Logger.warn("Unknown property \""
+                            +property+"\" (token="
+                            +parser.getCurrentToken()
+                            +") while parsing "
+                            +bean+"; skipping it..");
+                parser.skipChildren();
+            }
+            catch (IOException ex) {
+                ex.printStackTrace();
+                Logger.error
+                    ("Unable to handle unknown property!", ex);
+                return false;
+            }
+            return true;
         }
 
         public String toJson (Object obj) {
@@ -186,6 +220,63 @@ public class EntityFactory extends Controller {
                 Logger.trace("Can't write Json", ex);
             }
             return null;
+        }
+    }
+
+    protected static class EditHistory implements PropertyChangeListener {
+        List<Edit> edits = new ArrayList<Edit>();
+        ObjectMapper mapper = getEntityMapper ();
+        final public Edit edit;
+            
+        public EditHistory (String payload) throws Exception {
+            edit = new Edit ();
+            edit.path = request().uri(); // must be in a context
+            edit.newValue = payload;
+        }
+
+        public void add (Edit e) { edits.add(e); }
+        public List<Edit> edits () { return edits; }
+        public void attach (Object ebean) {
+            if (ebean instanceof EntityBean) {
+                ((EntityBean)ebean)._ebean_intercept()
+                    .addPropertyChangeListener(this);
+            }
+            else {
+                throw new IllegalArgumentException
+                    (ebean+" is not of an EntityBean!");
+            }
+        }
+        public void detach (Object ebean) {
+            if (ebean instanceof EntityBean) {
+                ((EntityBean)ebean)._ebean_intercept()
+                    .removePropertyChangeListener(this);
+            }
+            else {
+                throw new IllegalArgumentException
+                    (ebean+" is not of an EntityBean!");
+            }
+        }
+
+        public void propertyChange (PropertyChangeEvent e) {
+            Logger.debug("### "+e.getSource()+": propertyChange: name="
+                         +e.getPropertyName()+" old="+e.getOldValue()
+                         +" new="+e.getNewValue());
+            try {
+                Edit edit = new Edit ();
+                Object id = getId (e.getSource());
+                if (id != null)
+                    edit.refid = id.toString();
+                else
+                    Logger.warn("No id set of edit for "+e.getSource());
+                edit.kind = e.getSource().getClass().getName();
+                edit.path = e.getPropertyName();
+                edit.oldValue = mapper.writeValueAsString(e.getOldValue());
+                edit.newValue = mapper.writeValueAsString(e.getNewValue());
+                edits.add(edit);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -280,6 +371,7 @@ public class EntityFactory extends Controller {
                 // TODO: Need to use Akka here!
                 // execute in the background to determine the actual number
                 // of rows that this query should return
+                /*
                 _threadPool.submit(new Runnable () {
                         public void run () {
                             FutureIds<T> future = 
@@ -304,6 +396,7 @@ public class EntityFactory extends Controller {
                             }
                         }
                     });
+                */
             }
         }
         
@@ -1255,12 +1348,28 @@ public class EntityFactory extends Controller {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
         JsonNode json = request().body().asJson();
+        return updateEntity (json, type);
+    }
+
+    protected static Result updateEntity (JsonNode json, Class<?> type) {
         EntityMapper mapper = getEntityMapper ();       
-        
         Transaction tx = Ebean.beginTransaction();
-        try {
+        try {       
             Object value = mapper.treeToValue(json, type);
-            value = instrument (value, json);
+            EditHistory eh = new EditHistory (json.toString());
+            value = instrument (eh, value, json);
+            
+            if (value != null) {
+                Object id = getId (value);
+                eh.edit.refid = id != null ? id.toString() : null;
+                eh.edit.kind = value.getClass().getName();
+                eh.edit.save();
+                for (Edit e : eh.edits()) {
+                    e.batch = eh.edit.id.toString();
+                    e.save();
+                }
+                Logger.debug("** New edit history "+eh.edit.id);
+            }
             tx.commit();
             
             return ok (mapper.valueToTree(value));          
@@ -1299,8 +1408,22 @@ public class EntityFactory extends Controller {
     }
 
     static Object getId (Object entity) throws Exception {
-        List values = getAnnotatedValues (Id.class);
-        return values.isEmpty() ? null : values.iterator().next();
+        Field f = getIdField (entity);
+        Object id = null;
+        if (f != null) {
+            id = f.get(entity);
+            if (id == null) { // now try bean method
+                try {
+                    Method m = entity.getClass().getMethod
+                        ("get"+getBeanName (f.getName()));
+                    id = m.invoke(entity, new Object[0]);
+                }
+                catch (NoSuchMethodException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        return id;
     }
 
     static Field getIdField (Object entity) throws Exception {
@@ -1386,7 +1509,7 @@ public class EntityFactory extends Controller {
     }
 
     protected static Object instrument
-        (Object value, JsonNode json) throws Exception {
+        (EditHistory eh, Object value, JsonNode json) throws Exception {
         Class cls = value.getClass();
         if (cls.getAnnotation(Entity.class) == null)
             throw new IllegalArgumentException
@@ -1437,10 +1560,18 @@ public class EntityFactory extends Controller {
         if (xval == null) {
             // new object..
             ((Model)value).save();
-            Logger.debug("<<< " + getId (value));
+            id = getId (value);
+            Logger.debug("<<< " + id);
+            
+            Edit e = new Edit (value.getClass(), id);
+            ObjectMapper mapper = new ObjectMapper ();
+            e.newValue = mapper.writeValueAsString(value);
+            eh.add(e);
 
             return value;
         }
+
+        eh.attach(xval);
 
         // now sync up val and value
         Map<Field, Object> values = new HashMap<Field, Object>();
@@ -1458,7 +1589,7 @@ public class EntityFactory extends Controller {
             Object v = f.get(value);
             if (v != null) {
                 if (type.getAnnotation(Entity.class) != null) {
-                    setValue (xval, f, instrument (v, node));
+                    setValue (xval, f, instrument (eh, v, node));
                 }
                 else if (type.isArray()) {
                     Class<?> t = type.getComponentType();
@@ -1473,7 +1604,7 @@ public class EntityFactory extends Controller {
                             for (int i = 0; i < len; ++i) {
                                 Object xv = Array.get(v, i);
                                 Array.set(vals, i,
-                                          instrument (xv, node.get(i)));
+                                          instrument (eh, xv, node.get(i)));
                             }
                             setValue (xval, f, vals);
                         }
@@ -1485,27 +1616,25 @@ public class EntityFactory extends Controller {
                 }
                 else if (Collection.class.isAssignableFrom(type)) {
                     Collection col = (Collection)v;
-                    Logger.debug("Enter Collection.."+col.size());
+                    //Logger.debug("Enter Collection.."+col.size());
                     if (!col.isEmpty()) {
                         Class t = getComponentType (f.getGenericType());
-                        Logger.debug("..component type "+t);
+                        //Logger.debug("..component type "+t);
                         if (t.getAnnotation(Entity.class) != null) {
                             Collection xcol = (Collection)f.get(xval);
                             if (xcol == null) {
                                 setValue (xval, f, xcol = new ArrayList ());
                             }
+                            // update the list wholesale..
+                            xcol.clear();
                             
-                            if (xcol.isEmpty()) {
-                                int i = 0;
-                                for (Iterator it = col.iterator();
-                                     it.hasNext(); ++i) {
-                                    Object xv = it.next();
-                                    Logger.debug(i+": "+xv+" <=> "+node.get(i));
-                                    xcol.add(instrument
-                                             (xv, node.get(i)));
-                                }
-                            }
-                            else { // update this list
+                            int i = 0;
+                            for (Iterator it = col.iterator();
+                                 it.hasNext(); ++i) {
+                                Object xv = it.next();
+                                Logger.debug(i+": "+xv+" <=> "+node.get(i));
+                                xv = instrument (eh, xv, node.get(i));
+                                xcol.add(xv);
                             }
                         }
                         else {
@@ -1520,6 +1649,7 @@ public class EntityFactory extends Controller {
         }
         ((Model)xval).update();
         Logger.debug("<<< "+id);
+        eh.detach(xval);
         
         return xval;
     }

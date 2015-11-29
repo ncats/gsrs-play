@@ -130,14 +130,60 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result updateEntity () {
-        return updateEntity (Substance.class);
+        if (!request().method().equalsIgnoreCase("PUT")) {
+            return badRequest ("Only PUT is accepted!");
+        }
+
+        String content = request().getHeader("Content-Type");
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
+            return badRequest ("Mime type \""+content+"\" not supported!");
+        }
+        JsonNode json = request().body().asJson();
+
+        Class<? extends Substance> subClass = Substance.class;
+        String cls = json.get("substanceClass").asText();      
+        try {
+            Substance.SubstanceClass type =
+                Substance.SubstanceClass.valueOf(cls);
+            switch (type) {
+            case chemical:
+                subClass = ChemicalSubstance.class;
+                break;
+            case protein:
+                subClass = ProteinSubstance.class;
+                break;
+            case mixture:
+                subClass = MixtureSubstance.class;
+                break;
+            case polymer:
+                subClass = PolymerSubstance.class;
+                break;
+            case structurallyDiverse:
+                subClass = StructurallyDiverseSubstance.class;
+                break;
+            case specifiedSubstanceG1:
+                subClass = SpecifiedSubstanceGroup1Substance.class;
+                break;
+            case concept:               
+            default:
+                subClass = Substance.class;
+                break;
+            }
+        }
+        catch (Exception ex) {
+            Logger.warn("Unknown substance class: "+cls
+                        +"; treating as generic substance!");
+        }
+        
+        return updateEntity (json, subClass);
     }
     
     public static Result update (UUID uuid, String field) {
         //if(true)return ok("###");
         try {
             JsonNode value = request().body().asJson();
-            Class sub = Substance.class;
+            Class subClass = Substance.class;
             String typ = value.get("substanceClass").asText();
             Substance.SubstanceClass type;
             try {
@@ -147,29 +193,28 @@ public class SubstanceFactory extends EntityFactory {
             }
             switch (type) {
             case chemical:
-                sub = ChemicalSubstance.class;
+                subClass = ChemicalSubstance.class;
                 break;
             case protein:
-                sub = ProteinSubstance.class;
+                subClass = ProteinSubstance.class;
                 break;
             case mixture:
-                sub = MixtureSubstance.class;
+                subClass = MixtureSubstance.class;
                 break;
             case polymer:
-                sub = PolymerSubstance.class;
+                subClass = PolymerSubstance.class;
                 break;
             case structurallyDiverse:
-                sub = StructurallyDiverseSubstance.class;
+                subClass = StructurallyDiverseSubstance.class;
                 break;
             case specifiedSubstanceG1:
-                sub = SpecifiedSubstanceGroup1Substance.class;
+                subClass = SpecifiedSubstanceGroup1Substance.class;
                 break;
             case concept:
-                sub = Substance.class;
+                subClass = Substance.class;
                 break;
             }
-            return update(uuid, field, sub, finder,
-                          new GinasV1ProblemHandler());
+            return update(uuid, field, subClass, finder, new GinasV1ProblemHandler());
         } catch (Exception e) {
             e.printStackTrace();
             return null;
