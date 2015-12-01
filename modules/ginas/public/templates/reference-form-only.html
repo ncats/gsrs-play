@@ -23,7 +23,8 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-1 pull right">
+                <hr>
+                <div class="col-md-1 pull-right">
                     <a ng-click="reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
                     <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
                 </div>
@@ -33,7 +34,7 @@
         <div class="row" ng-repeat="reference in parent.references">
             <hr>
             <div class="col-md-1">
-                <delete-button delete="obj" path="relationships"></delete-button>
+                <a ng-click="deleteObj(reference, 'references')"><i class="fa fa-times fa-2x danger"></i></a>
             </div>
             <div class="col-md-3">
                 <text-view-edit obj="reference" field="citation"></text-view-edit>

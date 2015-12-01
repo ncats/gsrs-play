@@ -1,0 +1,46 @@
+<div class="row info">
+    <button class="btn btn-primary label-offset det">
+        Parameter&nbsp;</button>
+    <a ng-click="$parent.toggleStage();" class="pull-right">
+        <i class="fa fa-times fa-2x danger"></i></a>
+
+    <div class="col-md-12">
+        <form class="form-horizontal" name="parameterForm" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2">
+                    <text-input ng-model="parameter.name" field="name"></text-input>
+                </div>
+                <div class="col-md-2">
+                    <text-input ng-model="parameter.type" field="type"></text-input>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj="parameter" divid="parameterForm" type="amount"></form-selector>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2 pull-right">
+                    <a ng-click="parameter=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate();"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                </div>
+            </div>
+            <div class="parameterForm"></div>
+        </form>
+        <div class="row" ng-repeat="param in referenceobj.parameters">
+            <hr>
+            <div class="col-md-1">
+                <a ng-click="deleteObj(param, referenceobj.parameters)"><i class="fa fa-times fa-2x danger"></i></a>
+            </div>
+            <div class="col-md-2">
+                <text-view-edit obj="param" field="name"></text-view-edit>
+            </div>
+            <div class="col-md-2">
+                <text-view-edit obj="param" field="type"></text-view-edit>
+            </div>
+            <div class="col-md-1">
+                <form-selector referenceobj="param" parent="substance" formname="propertyForm" type="amount"
+                               divid={{obj.$$hashKey}} mode="edit"></form-selector>
+            </div>
+        </div>
+        <div class={{obj.$$hashKey}}></div>
+    </div>
+</div>

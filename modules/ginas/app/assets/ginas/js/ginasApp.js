@@ -799,9 +799,6 @@
         };
 
         $scope.remove = function (obj, field) {
-            console.log(obj);
-            console.log(field);
-            console.log(Substance);
             var index = Substance[field].indexOf(obj);
             Substance[field].splice(index, 1);
         };
@@ -1760,7 +1757,7 @@
                                 });
                             }
                                 formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
-                                element.append(formHolder);
+                            //    element.append(formHolder);
                             break;
                         case "reference":
                             if(attrs.mode=="edit"){
@@ -1778,8 +1775,19 @@
                             }
                                 formHolder = '<reference-form referenceobj = referenceobj parent = parent></reference-form>';
                             break;
-                        case "subref":
-
+                        case "parameter":
+                            if(attrs.mode=="edit"){
+                                    template = angular.element('<a ng-click ="toggleStage()"><parameters parameters ="referenceobj.parameters"></parameters></a>');
+                                    element.append(template);
+                                    $compile(template)(scope);
+                            }else {
+                                $templateRequest(baseurl + "assets/templates/parameter-selector.html").then(function (html) {
+                                    template = angular.element(html);
+                                    element.append(template);
+                                    $compile(template)(scope);
+                                });
+                            }
+                            formHolder = '<parameter-form referenceobj = referenceobj parent = parent></parameter-form>';
                             break;
 
                     }
@@ -1808,6 +1816,40 @@
         };
     });
 
+    ginasApp.directive('parameterForm', function () {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                referenceobj: '=',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/parameter-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+
+                scope.validate = function () {
+                    console.log(scope.referenceobj);
+                    if (_.has(scope.referenceobj, 'parameters')) {
+                        var temp = _.get(scope.referenceobj, 'parameters');
+                        temp.push(scope.parameter);
+                        _.set(scope.referenceobj, 'parameters', temp);
+                    } else {
+                        var x = [];
+                        x.push(angular.copy(scope.parameter));
+                        _.set(scope.referenceobj, 'parameters', x);
+                    }
+                    scope.parameter = {};
+                    scope.parameterForm.$setPristine();
+                };
+
+                scope.deleteObj = function(obj, parent){
+                    parent.splice(_.indexOf(parent, obj), 1);
+                };
+            }
+        };
+    });
+
     ginasApp.directive('referenceForm', function () {
         return {
             restrict: 'E',
@@ -1818,7 +1860,6 @@
             },
             templateUrl: baseurl + "assets/templates/reference-form.html",
             link: function (scope, element, attrs) {
-
                 scope.validate = function () {
                     if (!_.isUndefined(scope.ref.citation)) {
                         _.set(scope.ref, "uuid", scope.uuid());
@@ -1826,7 +1867,7 @@
                             scope.saveReference(scope.ref.uuid, scope.referenceobj);
                             scope.saveReference(angular.copy(scope.ref), scope.parent);
                         } else {
-                            scope.saveReference(ref, scope.parent);
+                            scope.saveReference(scope.ref, scope.parent);
                         }
                         scope.ref = {};
                         scope.ref.apply = true;
@@ -1897,6 +1938,14 @@
                         _.set(parent, 'references', x);
                     }
                 };
+
+
+                //this probably (definitely) needs to cascade down to all objects that use this reference
+
+                scope.deleteObj = function(ref){
+                    console.log(scope);
+                    scope.parent.references.splice(scope.parent.references.indexOf(ref), 1);
+                };
             }
         };
     });
@@ -1923,6 +1972,22 @@
             template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display || value.units}}</span></div>'
         };
     });
+
+    ginasApp.directive('parameters', function () {
+
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parameters: '='
+            },
+            template: '<div ng-repeat="p in parameters">{{p.name}} <amount value="p.amount"></amount></div>'
+        };
+    });
+
+
+
+
 
     ginasApp.directive('referenceApply', function ($compile, $templateRequest) {
         return {
@@ -2469,7 +2534,7 @@
             link: function (scope, element, attrs) {
                 scope.path = attrs.path;
                 scope.deleteObj = function () {
-                    scope.$parent.remove(scope.obj, scope.path);
+                    scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
                 };
             }
         };
@@ -2720,7 +2785,6 @@
             }
         };
     });
-
 
     ginasApp.controller('ProgressJobController', function ($scope, $http, $timeout) {
         $scope.max = 100;
