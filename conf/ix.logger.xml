@@ -28,9 +28,44 @@
     </encoder>
   </appender>
   
+   <appender name="FAIL_PERSIST_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${user.dir}/logs/fail-persist.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- daily rollover with compression -->
+      <fileNamePattern>fail-persist-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <!-- keep 1 week worth of history -->
+      <maxHistory>7</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>
+      <!-- this quadruples logging throughput -->
+      <immediateFlush>false</immediateFlush>
+    </encoder>
+  </appender>
+  <appender name="FAIL_TRANSFORM_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${user.dir}/logs/fail-transform.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- daily rollover with compression -->
+      <fileNamePattern>fail-transform-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <!-- keep 1 week worth of history -->
+      <maxHistory>7</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>
+      <!-- this quadruples logging throughput -->
+      <immediateFlush>false</immediateFlush>
+    </encoder>
+  </appender>
+  
   <!-- additivity=false ensures access log data only goes to the access log -->
   <logger name="access" level="INFO" additivity="false">
     <appender-ref ref="ACCESS_FILE" />
+  </logger>
+  <logger name="persistFail" level="INFO" additivity="false">
+    <appender-ref ref="FAIL_PERSIST_LOG" />
+  </logger>
+  <logger name="transformFail" level="INFO" additivity="false">
+    <appender-ref ref="FAIL_TRANSFORM_LOG" />
   </logger>
   
   <root level="INFO,DEBUG,WARN,ERROR">

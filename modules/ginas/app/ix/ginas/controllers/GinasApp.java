@@ -38,6 +38,7 @@ import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.RebuildIndex;
 import ix.ncats.controllers.App;
+import ix.utils.Global;
 import ix.utils.Util;
 
 import java.lang.reflect.Array;
