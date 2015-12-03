@@ -13,8 +13,6 @@ import ix.core.stats.Statistics;
 import ix.utils.Global;
 import ix.utils.Util;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -44,8 +42,6 @@ import akka.routing.RouterConfig;
 import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
-
-
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.config.Config;
