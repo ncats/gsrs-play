@@ -10,6 +10,7 @@ import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordTransformer;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
+import ix.utils.Global;
 import ix.utils.Util;
 
 import java.io.FileNotFoundException;
@@ -44,6 +45,8 @@ import akka.routing.SmallestMailboxRouter;
 //import chemaxon.formats.MolImporter;
 //import chemaxon.struc.Molecule;
 
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hazelcast.config.Config;
 import com.hazelcast.core.Hazelcast;
@@ -69,8 +72,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
     //  private static RecordTransformer _recordTransformer = 
     //                  new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
 
-    private static PrintWriter persistFailures;
-    private static PrintWriter transformFailures;
         
         
 
@@ -304,8 +305,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 e.printStackTrace();
                 applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_BAD);
                 ObjectMapper om = new ObjectMapper();
-                persistFailures.println(rec.name + "\t" + rec.message + "\t" + om.valueToTree(theRecord).toString().replace("\n", ""));
-                persistFailures.flush();
+                Global.PersistFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(theRecord).toString().replace("\n", ""));
             }
             updateJobIfNecessary(rec.job);                      
         }
@@ -547,8 +547,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     getInstance().decrementExtractionQueue();
                     Logger.error(e.getMessage());
                     ObjectMapper om = new ObjectMapper();
-                    transformFailures.println(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
-                    transformFailures.flush();
+                    Global.TransformFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
                 }finally{
                     updateJobIfNecessary(pr.job);
@@ -606,12 +605,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 .getInt("ix.ginas.maxrecordqueue", MAX_EXTRACTION_QUEUE);
                
         
-        try {
-            persistFailures = new PrintWriter("fail.persist.log");
-            transformFailures = new PrintWriter("fail.transform.log");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
        
         
         
