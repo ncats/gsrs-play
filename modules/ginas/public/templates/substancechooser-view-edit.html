@@ -1,6 +1,6 @@
 <div>
     <span ng-hide="obj[field]._editing" ng-click="editing(obj[field]);">
-      <rendered id = "obj[field].refuuid"></rendered><br/><code>{{obj[field].refPname}}</code>
+      <rendered id = {{obj[field].refuuid}}></rendered><br/><code>{{obj[field].refPname}}</code>
     </span>
 
     <div ng-show="obj[field]._editing" id="{{field}}">

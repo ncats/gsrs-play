@@ -150,7 +150,6 @@ div.box .on {
 
 .chem-button {
     font-size: 14px;
-    font-weight: 600;
 }
 
 #grid {
@@ -857,4 +856,8 @@ sketcher svg>text{
             transform: perspective(140px) rotateY(180deg);
     opacity: 0; 
   }
+}
+
+.magnify{
+    cursor: -webkit-zoom-in;
 }
