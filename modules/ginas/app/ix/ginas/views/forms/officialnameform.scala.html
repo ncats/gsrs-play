@@ -8,29 +8,29 @@
             <form class="form-horizontal" name="officialNameForm" id = "add-name" role="form" novalidate>
                 <div class="row form-row">
                     <div class="col-md-3 err-check">
-                        <text-input ng-model="name.name" field="name" required></text-input>
+                        <text-input ng-model="officialname.name" field="name" required></text-input>
                     </div>
                     <div class="col-md-2 err-check">
-                        <multi-select ng-model="name.domain" field="domain" cv = "NAME_DOMAIN" ></multi-select>
+                        <multi-select ng-model="officialname.domain" field="domain" cv = "NAME_DOMAIN" ></multi-select>
                     </div>
                     <div class="col-md-2 err-check">
-                        <multi-select ng-model="name.jurisdiction" field="jurisdiction" cv = "JURISDICTION" ></multi-select>
+                        <multi-select ng-model="officialname.jurisdiction" field="jurisdiction" cv = "JURISDICTION" ></multi-select>
                     </div>
                     <div class="col-md-1 err-check">
-                        <multi-select ng-model="name.nameOrg" field="nameOrg" cv = "NAME_ORG" ></multi-select>
+                        <multi-select ng-model="officialname.nameOrg" field="nameOrg" cv = "NAME_ORG" ></multi-select>
                     </div>
                     <div class="col-md-2 err-check">
-                        <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
+                        <multi-select ng-model="officialname.languages" field="languages" cv = "LANGUAGE"></multi-select>
                     </div>
                     <div class="col-md-1">
-                        <check-box ng-model="name.preferred" field="preferred" ></check-box>
+                        <check-box ng-model="officialname.preferred" field="preferred" ></check-box>
                     </div>
                     <div class="col-md-1 pull-right">
-                        <form-selector referenceobj ="name" parent = "substance" divid="officialNameForm" type = "reference"></form-selector>
+                        <form-selector referenceobj ="officialname" parent = "substance" divid="officialNameForm" type = "reference"></form-selector>
                     </div>
                 </div>
                 <div class="officialNameForm"></div>
-                <submit-buttons submit="name" form="officialNameForm" path="officialNames"></submit-buttons>
+                <submit-buttons submit="officialname" form="officialNameForm" path="officialNames"></submit-buttons>
             </form>
 
             <div ng-repeat="obj in substance.officialNames">

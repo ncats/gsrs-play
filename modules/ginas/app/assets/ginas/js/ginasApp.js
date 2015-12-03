@@ -350,7 +350,22 @@
         };
     });
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, data, nameFinder, substanceSearch, substanceIDRetriever, lookup) {
+    ginasApp.service('UUID', function(){
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+            }
+        this.newID = function() {
+            var uuid= s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+                s4() + '-' + s4() + s4() + s4();
+            console.log(uuid);
+            return(uuid);
+        };
+    });
+
+
+    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, UUID, data, nameFinder, substanceSearch, substanceIDRetriever, lookup) {
 
         var ginasCtrl = this;
         $scope.ref = {};
@@ -425,11 +440,10 @@
         $scope.fromFormSubstance = function (formSub) {
 
             if (formSub.officialNames || formSub.unofficialNames) {
-                for (var n in formSub.officialNames) {
-                    var name = formSub.officialNames[n];
-                    name.type = "of";
-                }
-                formSub._names = formSub.officialNames.concat(formSub.unofficialNames);
+                _.forEach(formSub.officialNames, function(n){
+                    n.type = "of";
+                });
+                formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
                 delete formSub.officialNames;
                 delete formSub.unofficialNames;
             }
@@ -442,22 +456,19 @@
 
             formSub = $scope.flattenCV(formSub);
             formSub = $scope.collapseReferences(formSub, 0);
-            if (formSub._moieties) {
-                for (var i = 0; i < formSub._moieties.length; i++) {
-                    //moieties need new UUID on each save
-                    formSub._moieties[i].id = $scope.uuid();
-                    console.log("#############");
-                    console.log(formSub.moieties[i].id);
-                }
+            if (formSub.moieties) {
+                _.forEach(formSub.moieties, function (m){
+                     m.id= UUID.newID();
+                });
             }
             if (formSub.structure) {
                 //apparently needs to be reset as well
-                formSub.structure.id = $scope.uuid();
+                formSub.structure.id = UUID.newID();
             }
             console.log(formSub);
             return formSub;
         };
-        /*        $scope.uuid = function uuid() {
+/*         $scope.uuid = function uuid() {
          function s4() {
          return Math.floor((1 + Math.random()) * 0x10000)
          .toString(16)
@@ -1030,7 +1041,7 @@
 
 
         $scope.flattenCV = function (sub) {
-            console.log(sub);
+          //  console.log(sub);
             for (var v in sub) {
                 if ($scope.isCV(sub[v])) {
                     sub[v] = sub[v].value;
@@ -1057,7 +1068,7 @@
         $scope.submitSubstance = function () {
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
-            if (update) {
+            if (_.has(sub, 'update')) {
                 $.ajax({
                     url: 'http://localhost:9000/ginas/app/api/v1/substances(' + sub.uuid + ')/_',
                     type: 'PUT',
@@ -1844,7 +1855,7 @@
         };
     });
 
-    ginasApp.directive('referenceForm', function () {
+    ginasApp.directive('referenceForm', function (UUID) {
         return {
             restrict: 'E',
             replace: 'true',
@@ -1856,7 +1867,7 @@
             link: function (scope, element, attrs) {
                 scope.validate = function () {
                     if (!_.isUndefined(scope.ref.citation)) {
-                        _.set(scope.ref, "uuid", scope.uuid());
+                        _.set(scope.ref, "uuid", UUID.new());
                         if (scope.ref.apply) {
                             scope.saveReference(scope.ref.uuid, scope.referenceobj);
                             scope.saveReference(angular.copy(scope.ref), scope.parent);
@@ -1869,7 +1880,7 @@
                     }
                 };
 
-                scope.uuid = function uuid() {
+/*                scope.uuid = function uuid() {
                     function s4() {
                         return Math.floor((1 + Math.random()) * 0x10000)
                             .toString(16)
@@ -1878,7 +1889,7 @@
 
                     return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
                         s4() + '-' + s4() + s4() + s4();
-                };
+                };*/
 
                 scope.saveReference = function (reference, parent) {
                     if (_.has(parent, 'references')) {
@@ -1895,7 +1906,7 @@
         };
     });
 
-    ginasApp.directive('referenceFormOnly', function () {
+    ginasApp.directive('referenceFormOnly', function (UUID) {
         return {
             restrict: 'E',
             replace: true,
@@ -1910,7 +1921,7 @@
                     scope.ref.apply = true;
                     scope.refForm.$setPristine();
                 };
-                scope.uuid = function uuid() {
+/*                scope.uuid = function uuid() {
                     function s4() {
                         return Math.floor((1 + Math.random()) * 0x10000)
                             .toString(16)
@@ -1919,7 +1930,7 @@
 
                     return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
                         s4() + '-' + s4() + s4() + s4();
-                };
+                };*/
 
                 scope.saveReference = function (reference, parent) {
                     if (_.has(parent, 'references')) {
@@ -1979,7 +1990,7 @@
         };
     });
 
-    ginasApp.directive('referenceApply', function ($compile, $templateRequest) {
+    ginasApp.directive('referenceApply', function ($compile) {
         return {
             restrict: 'E',
             replace: true,
