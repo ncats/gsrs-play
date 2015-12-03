@@ -1,55 +1,16 @@
-@import ix.ginas.controllers.GinasApp
-
-<div class = "row info" >
+<div class = "row info">
     <button class="btn btn-primary label-offset det">
-                        Parts&nbsp;<span class="badge" ng-show="substance.notes.length>0">
+                        Parts&nbsp;<span class="badge" ng-show="substance.structurallyDiverse.part.length>0">
                         {{substance.structurallyDiverse.part.length}}</span> </button>
     <div class="col-md-12">
-        <div class = "row header-row">
-            <div class = "col-md-2">
-                <strong>Part Location</strong>
+            <div class="row form-row">
+                <div class="col-md-3">
+                    <dropdown-view-edit obj="substance.structurallyDiverse" field="partLocation" cv = "PART_LOCATION" label =" Part Location"></dropdown-view-edit>
+                </div>
+                <div class="col-md-4">
+                    <multi-view-edit obj="substance.structurallyDiverse" field="part" cv = "PART" label = "Part"></multi-view-edit>
+                </div>
             </div>
-            <div class = "col-md-4" >
-                <strong>Parts</strong>
-            </div>
-        </div>
-
-        <div class = "row" >
-            <div class = "col-md-2">
-                <span href="#" editable-select="substance.structurallyDiverse.partLocation" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('PART_LOCATION') track by r.display" blur="submit">{{substance.structurallyDiverse.partLocation.display}}</span>
-            </div>
-            <div class = "col-md-4">
-@*
-                <span ng-show="!substance.structurallyDiverse.part || substance.structurallyDiverse.partLocation.length==0" ng-click="toggle(partForm.part)" ><i class="fa fa-plus fa-2x success"></i></span>
-*@
-                <span ng-repeat="n in substance.structurallyDiverse.part">
-                    <span ng-show="!partForm.part.selected" ng-click="toggle(partForm.part)">{{n.display}}</span>
-                </span>
-                <tags-input ng-show ="partForm.part.selected" ng-blur="toggle(partForm.part)" custom-class="form-control" ng-model="substance.structurallyDiverse.part" title="Part" placeholder="Part" id="part" name="part" display-property="display" key-property="value" add-from-autocomplete-only="true" >
-                    <auto-complete source="loadItems('PART', $query)" min-length="1" debounce-delay="0" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-            </div>
-            </div>
-
-        <form class="form-horizontal" name="partForm" id = "add-note" role="form" novalidate>
-        <div class="row form-row" ng-show="!partForm.$submitted" >
-            <div class="col-md-2 err-check" show-errors>
-                <select class="form-control" ng-model ="diverse.partLocation" ng-options="r.display for r in lookup.getList('PART_LOCATION') track by r.display" title="Infra Specific Type" id="infraSpecificType" name = "infraSpecificType" required></select>
-                <ng-messages for="diverseOrgForm.infraSpecificType.$error" ng-if="diverseOrgForm.infraSpecificType.$touched">
-                    <ng-message when="required" class="help-block">*required</ng-message>
-                </ng-messages>
-            </div>
-            <div class="col-md-4 err-check" show-errors>
-                <tags-input custom-class="form-control" ng-model="diverse.part" title="Part" placeholder="Part" id="part" name="part" display-property="display" key-property="value" add-from-autocomplete-only="true" required>
-                    <auto-complete source="loadItems('PART', $query)" max-results-to-show="1000" min-length="1" debounce-delay="0" load-on-focus="true" load-on-down-arrow="true"></auto-complete>
-                </tags-input>
-                <ng-messages for="partForm.part.$error" ng-if="partForm.part.$touched">
-                    <ng-message when="required" class="help-block">*required</ng-message>
-                </ng-messages>
-            </div>
-        </div>
-        <submit-buttons submit="diverse" form="partForm" path="structurallyDiverse" list="false"></submit-buttons>
-        </form>
+        <p></p>
     </div>
 </div>
-

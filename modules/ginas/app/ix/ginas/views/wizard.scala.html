@@ -48,7 +48,10 @@
            <div>@forms.subunitform("nucleicAcid")</div>           
            <div>@forms.nucleicacidsugarform()</div>
            <div>@forms.nucleicacidlinkageform()</div>
-        }        
+        }
+        case "specifiedSubstanceG1" => {
+            <div>@forms.ssconstituentform()</div>
+        }
         case x =>{
             <h2>Unknown substance class: @kind</h2>    
         }

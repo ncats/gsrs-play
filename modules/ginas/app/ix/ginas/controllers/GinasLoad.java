@@ -355,7 +355,7 @@ public class GinasLoad extends App {
             JsonNode jn=ex.getNextRecord();
             GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer)ex.getTransformer();
             sub = trans.transformSubstance(jn);
-            Substance osub = SubstanceFactory.getSubstance(sub.uuid);
+            Substance osub = (sub.uuid ==null)?null:SubstanceFactory.getSubstance(sub.uuid);
             
             List<GinasProcessingMessage> messages = Validation.validateAndPrepare(sub, GinasProcessingStrategy.ACCEPT_APPLY_ALL());
             //how, exactly, should this be updated?

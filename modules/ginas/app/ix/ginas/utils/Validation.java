@@ -7,6 +7,7 @@ import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Substance;
+import play.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,8 +74,9 @@ public class Validation {
                 }
             }
         }
-                
-                
+
+        Logger.info("substance Class " + s.substanceClass);
+
         switch(s.substanceClass){
         case chemical:
             gpm.addAll(validateAndPrepareChemical((ChemicalSubstance) s,strat));

@@ -595,6 +595,13 @@ i#grid-view-off {
     color: #ac2925;
 }
 
+.warning {
+    color: #f0ad4e;
+}
+
+.warning:hover {
+    color: #ec971f;
+}
 
 .err-check .help-block,.err-check .help-block-duplicate  {
     display: none;

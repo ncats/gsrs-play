@@ -1,77 +1,21 @@
-@import ix.ginas.controllers.GinasApp;
-<div class ="row info">
+<div class = "row info" >
     <button class="btn btn-primary label-offset det">
-                        Organism</button>
-
+                        Organism Details</button>
     <div class="col-md-12">
-        <div class = "row header-row">
-            <div class = "col-md-3">
-                <strong>Family</strong>
+        <div class="row form-row">
+            <div class="col-md-3 err-check">
+                <text-view-edit obj = "substance.structurallyDiverse" field="organismFamily" label="Organism Family"></text-view-edit>
             </div>
-            <div class = "col-md-3">
-                <strong>Genus</strong>
+            <div class="col-md-3 err-check">
+                <text-view-edit obj = "substance.structurallyDiverse" field="organismGenus" label="Organism Genus"></text-view-edit>
             </div>
-            <div class = "col-md-3">
-                <strong>Species</strong>
+            <div class="col-md-3 err-check">
+                <text-view-edit obj = "substance.structurallyDiverse" field="organismSpecies" label="Organism Species"></text-view-edit>
             </div>
-            <div class = "col-md-2">
-                <strong>Author</strong>
-            </div>
-        </div>
-
-        <div class = "row">
-            <hr>
-
-            <div class = "col-md-3">
-                <span href="#" editable-text="substance.structurallyDiverse.organismFamily" blur="submit">{{substance.structurallyDiverse.organismFamily}}</span>
-            </div>
-            <div class = "col-md-3">
-                <span href="#" editable-text="substance.structurallyDiverse.organismGenus" blur="submit">{{substance.structurallyDiverse.organismGenus}}</span>
-            </div>
-            <div class = "col-md-3">
-                <span href="#" editable-text="substance.structurallyDiverse.organismSpecies" blur="submit">{{substance.structurallyDiverse.organismSpecies}}</span>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-text="substance.structurallyDiverse.sourceMaterialState" blur="submit">{{substance.structurallyDiverse.organismAuthor}}</span>
+            <div class="col-md-3 err-check">
+                <text-view-edit obj = "substance.structurallyDiverse" field="organismAuthor" label="Organism Author"></text-view-edit>
             </div>
         </div>
-
-
-        <form class="form-horizontal" name="diverseSourceForm" id = "add-ref" role="form" novalidate>
-            <div class="row form-row" ng-show="!detailsSet">
-                <div class="col-md-3 err-check" show-errors>
-                    <input class="form-control" ng-model ="diverse.organismFamily" title="Organism Family" id="organism-family" name = "organism-family" required />
-                    @*<select class="form-control" ng-model ="diverse.organismFamily" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_CLASS') track by r.display" title="Source Class" id="source-class" name = "source-class" required></select>*@
-                    <ng-messages for="diverseOrgForm.organismFamily.$error" ng-if="diverseOrgForm.organismFamily.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-3 err-check" show-errors>
-                    <input class="form-control" ng-model ="diverse.organismGenus" title="Organism Genus" id="organism-genus" name = "organism-genus" required />
-                    @*<select class="form-control" title="Source Type" id="source-type" name = "source-type" ng-model = "diverse.organismGenus" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_TYPE') track by r.display" required>*@
-                    @*</select>*@
-                    <ng-messages for="diverseOrgForm.organismGenus.$error" ng-if="diverseOrgForm.organismGenus.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-3 err-check" show-errors>
-                    <input class="form-control" ng-model ="diverse.organismSpecies" title="Organism Species" id="organism-species" name = "organism-species" required />
-@*                    <select class="form-control" title="Source State" id="source-state" name = "source-state" ng-model = "diverse.organismSpecies" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_STATE') track by r.display" required>
-                        </select>*@
-                    <ng-messages for="diverseOrgForm.organismSpecies.$error" ng-if="diverseOrgForm.organismSpecies.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <input class="form-control" ng-model ="diverse.organismAuthor" title="Organism Author" id="organism-author" name = "organism-author" required />
-                    @*                    <select class="form-control" title="Source State" id="source-state" name = "source-state" ng-model = "diverse.organismSpecies" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_STATE') track by r.display" required>
-                    </select>*@
-                    <ng-messages for="diverseOrgForm.organismAuthor.$error" ng-if="diverseOrgForm.organismAuthor.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-            </div>
-            <submit-buttons submit="diverse" form="diverseSourceForm" path="structurallyDiverse" list=false></submit-buttons>
-        </form>
+        <p></p>
     </div>
 </div>

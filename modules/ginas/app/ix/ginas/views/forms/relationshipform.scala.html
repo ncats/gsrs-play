@@ -6,7 +6,7 @@
                 <form class="form-horizontal" name="relationshipForm" role="form" novalidate>
                     <div class="row form-row">
                         <div class="col-md-2">
-                            <substance-chooser-lite ng-model ="relationship.relatedSubstance" field ="relatedSubstance" name ="relatedSubstance" formname ="relationshipForm"></substance-chooser-lite>
+                            <substance-chooser-lite ng-model ="relationship.relatedSubstance" field ="relatedSubstance" name ="relatedSubstance" formname ="relationshipForm" label = "Related Substance"></substance-chooser-lite>
                         </div>
                         <div class="col-md-2">
                             <dropdown-select ng-model="relationship.type" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-select>
@@ -15,7 +15,7 @@
                             <text-input ng-model="relationship.comments" field="comments" ></text-input>
                         </div>
                         <div class="col-md-2">
-                            <dropdown-select ng-model="relationship.interactionType" field="interactionType" cv = "INTERACTION_TYPE" ></dropdown-select>
+                            <dropdown-select ng-model="relationship.interactionType" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction Type"></dropdown-select>
                         </div>
                         <div class="col-md-2">
                             <dropdown-select ng-model="relationship.qualification" field="qualification" cv = "QUALIFICATION" ></dropdown-select>
@@ -38,7 +38,7 @@
                 <delete-button delete="obj" path="relationships"></delete-button>
             </div>
             <div class="col-md-2">
-                <substance-chooser-view-edit obj = "obj" field ="relatedSubstance"></substance-chooser-view-edit>
+                <substance-chooser-view-edit obj = "obj" field ="relatedSubstance" label = "Related Substance"></substance-chooser-view-edit>
             </div>
             <div class="col-md-2">
                 <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
@@ -47,7 +47,7 @@
                 <text-view-edit obj = "obj" field="comments" ></text-view-edit>
             </div>
             <div class="col-md-2">
-                <dropdown-view-edit obj = "obj" field="interactionType" cv = "INTERACTION_TYPE" ></dropdown-view-edit>
+                <dropdown-view-edit obj = "obj" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction Type"></dropdown-view-edit>
             </div>
             <div class="col-md-1">
                 <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>

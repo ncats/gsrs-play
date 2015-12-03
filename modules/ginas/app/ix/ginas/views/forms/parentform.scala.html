@@ -2,7 +2,6 @@
     <button class="btn btn-primary label-offset det">
                       Parents&nbsp;</button>
     <div class="col-md-12">
-        <form class="form-horizontal" name="parentForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
                     <substance-chooser-lite ng-model ="substance.structurallyDiverse.parentSubstance" field ="parentSubstance" name ="parentSubstance" formname ="parentForm"></substance-chooser-lite>
@@ -14,16 +13,6 @@
                     <substance-chooser-lite ng-model ="substance.structurallyDiverse.hybridSpeciesMaternalOrganism" field ="hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" formname ="parentForm"></substance-chooser-lite>
                 </div>
             </div>
-            <div class="parentForm"></div>
-@*            <div class = "row">
-                <hr>
-                <div class="col-md-1 pull-right">
-                    <a ng-click="reset(parentForm)" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                </div>
-            </div>
-*@@**@
-@*            <submit-buttons submit="relationship" form="parentForm" path="relationships"></submit-buttons>
-*@
-        </form>
+        <p></p>
     </div>
 </div>

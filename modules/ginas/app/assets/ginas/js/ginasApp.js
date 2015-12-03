@@ -66,13 +66,17 @@
                 Substance.substanceClass = substanceClass;
                 Substance.polymer = {};
                 break;
+            case "specifiedSubstanceG1":
+                Substance.substanceClass = substanceClass;
+                Substance.specifiedSubstance = {};
+                break;
             default:
                 Substance.substanceClass = substanceClass;
 //                Substance.polymer = {};
                 console.log('invalid substance class');
                 break;
         }
-        Substance._references = [];
+        Substance.references = [];
         return Substance;
     });
 
@@ -359,7 +363,6 @@
         this.newID = function() {
             var uuid= s4() + s4() + '-' + s4() + '-' + s4() + '-' +
                 s4() + '-' + s4() + s4() + s4();
-            console.log(uuid);
             return(uuid);
         };
     });
@@ -440,13 +443,20 @@
         $scope.fromFormSubstance = function (formSub) {
 
             if (formSub.officialNames || formSub.unofficialNames) {
-                _.forEach(formSub.officialNames, function(n){
+                _.forEach(formSub.officialNames, function (n) {
                     n.type = "of";
                 });
-                formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
+            }
+                if(_.isUndefined(formSub.officialNames)){
+                    formSub.names =  formSub.unofficialNames;
+                }else if(_.isUndefined(formSub.unofficialNames)){
+                    formSub.names =  formSub.officialNames;
+                }else{
+                    formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
+                }
                 delete formSub.officialNames;
                 delete formSub.unofficialNames;
-            }
+
             if (formSub.q) {
                 delete formSub.q;
             }
@@ -468,24 +478,6 @@
             console.log(formSub);
             return formSub;
         };
-/*         $scope.uuid = function uuid() {
-         function s4() {
-         return Math.floor((1 + Math.random()) * 0x10000)
-         .toString(16)
-         .substring(1);
-         }
-
-         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-         s4() + '-' + s4() + s4() + s4();
-         };*/
-        //adds reference id//
-        $scope.refLength = function () {
-            if (!$scope.substance.references) {
-                return 1;
-            }
-            return $scope.substance.references.length + 1;
-        };
-        //add reference id//
 
         //populates tag fields
         $scope.loadItems = function (field, $query) {
@@ -906,11 +898,11 @@
                     _.set($scope.substance, path + ".glycosylationType", obj.glycosylationType);
                     $scope.defaultSave(g, form, path + "." + obj.link + 'Glycosylation', list, objName);
                     break;
-                case "structurallyDiverse":
+/*                case "structurallyDiverse":
                     var diverse = $scope.addFields(obj, path);
                     $scope.defaultSave(diverse, form, path, list, objName);
 
-                    break;
+                    break;*/
                 case "references":
                     $scope.defaultSave(obj, form, path, list, objName);
                     break;
@@ -1609,6 +1601,10 @@
                 $scope.stage = true;
             }
         };
+
+        $scope.printff = function(){
+            console.log("SDFSDFSDFSDdf");
+        };
     });
 
     ginasApp.directive('loading', function ($http) {
@@ -1867,7 +1863,7 @@
             link: function (scope, element, attrs) {
                 scope.validate = function () {
                     if (!_.isUndefined(scope.ref.citation)) {
-                        _.set(scope.ref, "uuid", UUID.new());
+                        _.set(scope.ref, "uuid", UUID.newID());
                         if (scope.ref.apply) {
                             scope.saveReference(scope.ref.uuid, scope.referenceobj);
                             scope.saveReference(angular.copy(scope.ref), scope.parent);
@@ -1879,17 +1875,6 @@
                         scope.refForm.$setPristine();
                     }
                 };
-
-/*                scope.uuid = function uuid() {
-                    function s4() {
-                        return Math.floor((1 + Math.random()) * 0x10000)
-                            .toString(16)
-                            .substring(1);
-                    }
-
-                    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                        s4() + '-' + s4() + s4() + s4();
-                };*/
 
                 scope.saveReference = function (reference, parent) {
                     if (_.has(parent, 'references')) {
@@ -1921,16 +1906,6 @@
                     scope.ref.apply = true;
                     scope.refForm.$setPristine();
                 };
-/*                scope.uuid = function uuid() {
-                    function s4() {
-                        return Math.floor((1 + Math.random()) * 0x10000)
-                            .toString(16)
-                            .substring(1);
-                    }
-
-                    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                        s4() + '-' + s4() + s4() + s4();
-                };*/
 
                 scope.saveReference = function (reference, parent) {
                     if (_.has(parent, 'references')) {
@@ -2119,10 +2094,9 @@
             require: '^ngModel',
             scope: {
                 subref: '=ngModel',
-                //path: '@subref',
-                // name: '@name',
-                formname: '=formname',
-                field: '@'
+                formname: '=',
+                field: '@',
+                label: '@'
             },
             link: function (scope, element, attrs, ngModel) {
                 scope.loadSubstances = function ($query) {
@@ -2150,7 +2124,8 @@
             restrict: 'E',
             scope: {
                 obj: '=',
-                field: '@'
+                field: '@',
+                label: '@'
             },
             link: function (scope, element, attrs) {
                 scope.loadSubstances = function ($query) {
@@ -2544,7 +2519,8 @@
             replace: true,
             scope: {
                 obj: '=ngModel',
-                field: '@'
+                field: '@',
+                label: '@'
             }
         };
     });
@@ -2556,15 +2532,13 @@
             replace: true,
             scope: {
                 obj: '=',
-                field: '@'
+                field: '@',
+                label: '@'
             },
             link: function (scope, element, attrs, ngModel) {
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
+                scope.edit = false;
+                scope.editing = function () {
+                     scope.edit = !scope.edit;
                 };
             }
         };
@@ -2679,7 +2653,8 @@
             replace: true,
             scope: {
                 obj: '=ngModel',
-                field: '@'
+                field: '@',
+                label: '@'
             },
                 link: function (scope, element, attrs) {
                     CV.load(attrs.cv).then(function(){
@@ -2697,7 +2672,8 @@
             scope: {
                 formname: '=',
                 obj: '=',
-                field: '@'
+                field: '@',
+                label: '@'
             },
             link: function (scope, element, attrs) {
                 if (!_.has(CV, attrs.cv)) {
@@ -2728,7 +2704,8 @@
             scope: {
                 obj: '=ngModel',
                 field: '@',
-                cv: '@'
+                cv: '@',
+                label: '@'
             },
             link: function (scope, element, attrs) {
                 /*                ajaxlookup.load(attrs.cv).then(function(data){
@@ -2752,7 +2729,8 @@
             scope: {
                 obj: '=',
                 field: '@',
-                cv: '@'
+                cv: '@',
+                label: '@'
             },
             link: function (scope, element, attrs) {
                 data.load(scope.cv);
