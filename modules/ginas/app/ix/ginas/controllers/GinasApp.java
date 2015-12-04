@@ -1,5 +1,6 @@
 package ix.ginas.controllers;
 
+import be.objectify.deadbolt.java.actions.Dynamic;
 import gov.nih.ncgc.chemical.Chemical;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.StructureFactory;
@@ -352,6 +353,12 @@ public class GinasApp extends App {
         return badRequest ("Invalid \"sequence\" parameter specified!");
     }
     
+    @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    public static Result admin () {
+        return ok (ix.ginas.views.html.admin.admin.render());
+    }
+    
+  // @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result substances(final String q, final int rows,
                                     final int page) {
         //System.out.println("Test");

@@ -1,5 +1,6 @@
 package ix.idg.controllers;
 
+import be.objectify.deadbolt.java.actions.*;
 import com.avaje.ebean.Expr;
 import com.avaje.ebean.QueryIterator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -14,13 +15,14 @@ import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.*;
 import ix.core.plugins.IxCache;
-import ix.core.plugins.PayloadPlugin;
 import ix.core.search.SearchOptions;
 import ix.core.search.TextIndexer;
 import ix.idg.models.Disease;
 import ix.idg.models.Ligand;
 import ix.idg.models.Target;
+import ix.idg.security.IdgDeadboltHandler;
 import ix.ncats.controllers.App;
+import ix.seqaln.SequenceIndexer;
 import ix.utils.Util;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
@@ -28,11 +30,10 @@ import play.Play;
 import play.libs.Akka;
 import play.cache.Cached;
 import play.db.ebean.Model;
-import play.mvc.Result;
 import play.mvc.BodyParser;
 import play.mvc.Call;
+import play.mvc.Result;
 import tripod.chem.indexer.StructureIndexer;
-import ix.seqaln.SequenceIndexer;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -651,17 +652,21 @@ public class IDGApp extends App implements Commons {
         }
     }
 
+   // @Restrict(value = {@Group("Admin")}, handlerKey = "idg")
+    //@Pattern(value = "Read")
+   // @Pattern(value = "viewTaregts", patternType = PatternType.CUSTOM)
+   // @Dynamic(value = "viewTargets", handlerKey = "idg")
     @Cached(key="_index", duration = Integer.MAX_VALUE)
     public static Result index () {
-        return ok (ix.idg.views.html.index2.render
-                   ("Pharos: Illuminating the Druggable Genome",
-                    DiseaseFactory.finder.findRowCount(),
-                    TargetFactory.finder.findRowCount(),
-                    LigandFactory.finder.findRowCount()));
+        return ok(ix.idg.views.html.index2.render
+                ("Pharos: Illuminating the Druggable Genome",
+                        DiseaseFactory.finder.findRowCount(),
+                        TargetFactory.finder.findRowCount(),
+                        LigandFactory.finder.findRowCount()));
     }
 
     public static Result home () {
-        return redirect (routes.IDGApp.index());
+        return redirect(routes.IDGApp.index());
     }
 
     public static Result targetfacets (String ctx) {
@@ -732,19 +737,19 @@ public class IDGApp extends App implements Commons {
 
     @Cached(key="_kinome", duration = Integer.MAX_VALUE)
     public static Result kinome () {
-        return ok (ix.idg.views.html.kinome.render());
+        return ok(ix.idg.views.html.kinome.render());
     }
 
     public static Result error (int code, String mesg) {
-        return ok (ix.idg.views.html.error.render(code, mesg));
+        return ok(ix.idg.views.html.error.render(code, mesg));
     }
 
     public static Result _notFound (String mesg) {
-        return notFound (ix.idg.views.html.error.render(404, mesg));
+        return notFound(ix.idg.views.html.error.render(404, mesg));
     }
 
     public static Result _badRequest (String mesg) {
-        return badRequest (ix.idg.views.html.error.render(400, mesg));
+        return badRequest(ix.idg.views.html.error.render(400, mesg));
     }
 
     public static Result _internalServerError (Throwable t) {
@@ -819,8 +824,7 @@ public class IDGApp extends App implements Commons {
             Disease.class, Target.class, Ligand.class
         };
 
-        List<DataSource> sources = new ArrayList<DataSource>();
-        for (String la : labels ) {
+		List<DataSource> sources = new ArrayList<DataSource>();        for (String la : labels ) {
             DataSource ds = new DataSource (la);
             for (Class cls : entities) {
                 opts = new SearchOptions (cls, 1, 0, 10);
@@ -846,6 +850,7 @@ public class IDGApp extends App implements Commons {
             
             sources.add(ds);
         }
+        
 
         return sources.toArray(new DataSource[0]);
     }
@@ -880,9 +885,9 @@ public class IDGApp extends App implements Commons {
         throws Exception {
         final String key = "targets/"+t.id+"/diseases";
         return getOrElse
-            (key, new Callable<List<DiseaseRelevance>> () {
-                    public List<DiseaseRelevance> call () throws Exception {
-                        return getDiseaseRelevances (t);
+                (key, new Callable<List<DiseaseRelevance>>() {
+                    public List<DiseaseRelevance> call() throws Exception {
+                        return getDiseaseRelevances(t);
                     }
                 });
     }
@@ -894,7 +899,7 @@ public class IDGApp extends App implements Commons {
         List<Keyword> breadcrumb = getBreadcrumb (t);
         
         return ok (ix.idg.views.html
-                   .targetdetails.render(t, diseases, breadcrumb));
+                   .targetdetails.render(t, diseases, breadcrumb, new IdgDeadboltHandler()));
     }
 
     public static Result targetWarmCache (String secret) {
@@ -1109,6 +1114,7 @@ public class IDGApp extends App implements Commons {
         return prune;
     }
 
+
     static Result createTargetResult
             (TextIndexer.SearchResult result, int rows, int page) {
         TextIndexer.Facet[] facets = filter
@@ -1125,7 +1131,7 @@ public class IDGApp extends App implements Commons {
         return ok(ix.idg.views.html.targets.render
                   (page, rows, result.count(),
                    pages, decorate (Target.class, facets),
-                   targets, result.getKey()));
+                   targets, result.getKey(),new IdgDeadboltHandler()));
 
     }
 
@@ -1165,7 +1171,9 @@ public class IDGApp extends App implements Commons {
                    pages, decorate (facets), diseases));
     }
 
+   // @Restrict(value = {@Group("Admin")}, handlerKey = "idg")
     public static Result targets (String q, final int rows, final int page) {
+
         try {
             if (q != null && q.trim().length() == 0)
                 q = null;
@@ -1247,10 +1255,11 @@ public class IDGApp extends App implements Commons {
         return "\""+s+"\"";
     }
 
+
     static Result _targets (final String q, final int rows, final int page)
         throws Exception {
         final String key = "targets/"+Util.sha1(request ());
-        Logger.debug("Targets: q="+q+" rows="+rows+" page="+page+" key="+key);
+        Logger.debug("Targets: q=" + q + " rows=" + rows + " page=" + page + " key=" + key);
         
         final int total = TargetFactory.finder.findRowCount();
         if (request().queryString().containsKey("facet") || q != null) {
@@ -1301,25 +1310,43 @@ public class IDGApp extends App implements Commons {
             return getOrElse (key+"/result", new Callable<Result> () {
                     public Result call () throws Exception {
                         TextIndexer.Facet[] facets = filter
-                            (result.getFacets(), TARGET_FACETS);
+                                (result.getFacets(), TARGET_FACETS);
                         int _rows = Math.min(total, Math.max(1, rows));
-                        int[] pages = paging (_rows, page, total);
+                        int[] pages = paging(_rows, page, total);
                         
                         List<Target> targets = TargetFactory.getTargets
-                            (_rows, (page-1)*_rows, null);
+                                (_rows, (page - 1) * _rows, null);
 
-                        long start = System.currentTimeMillis();
+  						long start = System.currentTimeMillis();
+                       List<Target> filterTargets = new ArrayList<Target>();
+                        for(Target t : targets) {
+                            //Filter targets by role, permissions
+
+                            session().put("targetid", t.id.toString());
+                            filterTargets.add(filterTargetByAccessControl(t));
+
+                        }
+
                         Result r = ok (ix.idg.views.html.targets.render
-                                       (page, _rows, total, pages,
+                                (page, _rows, total, pages,
                                         decorate (facets),
-                                        targets, result.getKey()));
+                                        filterTargets, result.getKey(), new IdgDeadboltHandler()));
+
                         Logger.debug("rendering "+key+" in "
-                                     + (System.currentTimeMillis()-start)+"ms...");
+                                + (System.currentTimeMillis()-start)+"ms...");
                         return r;
                     }
                 });
         }
     }
+
+    @Dynamic(value = "viewDetails")
+    public static Target filterTargetByAccessControl(Target t){
+
+        String id = session("targetid");
+        return t;
+    }
+
 
     
     public static Result sequences (final String q,
@@ -1365,7 +1392,7 @@ public class IDGApp extends App implements Commons {
                                         pages, decorate
                                         (Target.class,
                                          filter (facets, TARGET_FACETS)),
-                                        targets, context.getId()));
+                                        targets, context.getId(),new IdgDeadboltHandler()));
                         }
                     });
         }
@@ -1391,9 +1418,9 @@ public class IDGApp extends App implements Commons {
                 Payload payload = _payloader.createPayload
                     ("Sequence Search", "text/plain", seq);
                 Call call = routes.IDGApp.targets(payload.id.toString(), 10, 1);
-                String[] idv = params.get("identity");
-                String id=null;
-                if(idv!=null)id=idv[0];
+
+                String[] ids = params.get("identity");
+                String id = ids[0];
                 return redirect (call.url()+"&type=sequence"
                                  + (id != null ? "&identity="+id :""));
             }
@@ -2836,7 +2863,7 @@ public class IDGApp extends App implements Commons {
                                         pages, decorate
                                         (Target.class,
                                          filter (facets, TARGET_FACETS)),
-                                        targets, context.getId()));
+                                        targets, context.getId(),new IdgDeadboltHandler()));
                         }
                     });
         }

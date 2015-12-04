@@ -20,6 +20,8 @@ import javax.persistence.Id;
 import javax.persistence.Entity;
 import javax.persistence.OptimisticLockException;
 
+import ix.core.models.*;
+import ix.core.models.Principal;
 import play.libs.Json;
 import play.*;
 import play.db.ebean.*;
@@ -323,7 +325,6 @@ public class EntityFactory extends Controller {
                 .setMaxRows(options.top)
                 .findList();
             Logger.debug(" => "+results.size()+" in "+(System.currentTimeMillis()-start)+"ms");
-
             return results;
         }
         catch (Exception ex) {
@@ -948,7 +949,7 @@ public class EntityFactory extends Controller {
      */
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
-        return update (id,field,type,finder, null);
+                return update (id,field,type,finder, null);
     }
     
     // This expects an update of the full record to be done using "/path/*"
@@ -1090,7 +1091,7 @@ public class EntityFactory extends Controller {
                     Logger.debug("paths["+i+"/"+paths.length+"]:"+paths[i]);
 
                     String pname = paths[i]; // field name
-                    Integer pindex = null;   // field index if field is a list
+                    Integer pindex = null; // field index if field is a list
 
                     Matcher matcher = regex.matcher(pname);
                     if (matcher.find()) {
@@ -1133,6 +1134,7 @@ public class EntityFactory extends Controller {
                                         (uri+": list index out bound "
                                          +pindex);
                                 Iterator it = ((Collection)val).iterator();
+
                                 for (int k = 0; it.hasNext()
                                          && k < pindex; ++k)
                                     val = it.next();
@@ -1143,7 +1145,7 @@ public class EntityFactory extends Controller {
                                      +fname+"\" is not an array or list");
                             }
                             Logger.debug(fname+"["+pindex+"] = "+val);
-                        } 
+                        }
                         
                         {
                             /*
@@ -1207,28 +1209,28 @@ public class EntityFactory extends Controller {
                              * for update
                              */
                             if(pindex == null){
-                                    try {
-                                        Method set = inst.getClass().getMethod
-                                            ("set"+bname, ftype);
-                                        set.invoke(inst, val);
-                                        changes.add(new Object[]{
-                                                        uri.toString(), 
-                                                        oldVal,
-                                                        val,
-                                                        temptype,
-                                                        tempid});
-                                    }
-                                    catch (Exception ex) {
-                                        Logger.error
-                                            ("Can't find bean setter for field \""
-                                             +fname+"\" in class "
-                                             +inst.getClass(),
-                                             ex);
-                                        
-                                        return internalServerError
-                                            ("Unable to map path "+uri+"!");
-                                    }
+                            try {
+                                Method set = inst.getClass().getMethod
+                                    ("set"+bname, ftype);
+                                set.invoke(inst, val);
+                                changes.add(new Object[]{
+                                                uri.toString(), 
+                                                oldVal,
+	                                                val,
+	                                                temptype,
+	                                                tempid});
                             }
+                            catch (Exception ex) {
+                                Logger.error
+                                    ("Can't find bean setter for field \""
+                                     +fname+"\" in class "
+                                     +inst.getClass(),
+                                     ex);
+                                
+                                return internalServerError
+                                    ("Unable to map path "+uri+"!");
+                            }
+                        }
                         }
 
                         if (val != null) {
@@ -1253,11 +1255,11 @@ public class EntityFactory extends Controller {
             
             //System.out.println((new ObjectMapper()).valueToTree(obj));
             
-            obj.update();
+                obj.update();
             rootChange[0]="/";
             rootChange[2]=obj;
             changes.add(rootChange);
-            
+
 
             //eventually, figure out enumerated changes directly
             
@@ -1276,7 +1278,7 @@ public class EntityFactory extends Controller {
 //                try {
 //                    e.save();
 //                    tx.commit();
-//                    Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
+                        //Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
 //                }
 //                catch (Exception ex) {
 //                      Logger.error(ex.getMessage());
@@ -1288,12 +1290,12 @@ public class EntityFactory extends Controller {
 //                }   
 //            }
             return ok (mapper.valueToTree(obj));
-        }
-        catch (Exception ex) {
+                    }
+                    catch (Exception ex) {
             ex.printStackTrace();
             Logger.error("Instance "+id, ex);
             return internalServerError (ex.getMessage());
-        }
+                    }
     } // update ()
     
     public static interface EntityCallable{
@@ -1883,6 +1885,10 @@ public class EntityFactory extends Controller {
                 +id.substring(20);
         }
         return UUID.fromString(id);
+    }
+
+    public interface EntityFilter {
+        public boolean hasAccess (Object grp, Object sub);
     }
     
     

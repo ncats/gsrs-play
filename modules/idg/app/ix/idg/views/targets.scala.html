@@ -2,18 +2,22 @@
 @import ix.idg.controllers.IDGApp
 @import ix.idg.controllers.Commons._
 @import ix.ncats.controllers.App.FacetDecorator
+@import be.objectify.deadbolt.java.views.html._
+@import ix.idg.security.IdgDeadboltHandler
 
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
-facets: Array[FacetDecorator], targets: List[Target], ctx: String )
+facets: Array[FacetDecorator], targets: List[Target], ctx: String, handlerIdg: IdgDeadboltHandler )
 
 
 @tabrow(t: Target) = {
     <tr id="row-@IDGApp.getId(t)">
         <td><input type="checkbox" class="cb-table-row" id="cb-@IDGApp.getId(t)" /></td>
-        <td><a id='load' onclick="showLoadModal()" 
-	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))">@t.name</a></td>
+        <td><a id='load' onclick="showLoadModal()"
+	   href="@ix.idg.controllers.routes.IDGApp.target(IDGApp.getId(t))"> @t.name</a></td>
 
-        <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip" data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
+       <td><span class="label label-@t.idgTDL.label" data-toggle="tooltip"
+        data-html="true" title="<p align='left'>@t.idgTDL.desc</p>">@t.idgTDL.name</span></td>
+        <td>@IDGApp.format(t.novelty)</td>
         <td>@t.idgFamily</td>
         <td>@IDGApp.format(t.novelty)</td>
         <td>@t.pubmedCount</td>

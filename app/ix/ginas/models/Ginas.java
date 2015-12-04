@@ -1,5 +1,6 @@
 package ix.ginas.models;
 
+import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
 import ix.utils.Global;
@@ -11,6 +12,8 @@ import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
@@ -52,15 +55,14 @@ public class Ginas extends Model {
     public boolean deprecated;
     
     @ManyToMany(cascade=CascadeType.PERSIST)
-    //@JoinColumn(name="id", referencedColumnName="uuid")
 //    @ManyToMany//(cascade=CascadeType.ALL)
 //    @JoinTable(name="ix_ginas_access",
 //          joinColumns=@JoinColumn
 //          (name="id", referencedColumnName="uuid")
 //      )
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
+    @JsonSerialize(using = GroupListSerializer.class)
+    @JsonDeserialize(using = GroupListDeserializer.class)
+    public List<Group> access = new ArrayList<Group>();
     
     public Ginas () {
     }

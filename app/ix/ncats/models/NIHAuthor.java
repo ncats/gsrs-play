@@ -1,6 +1,7 @@
 package ix.ncats.models;
 
 import play.db.ebean.Model;
+
 import javax.persistence.*;
 
 import ix.core.models.Author;
@@ -15,6 +16,8 @@ public class NIHAuthor extends Author {
 
     @Column(length=1024)
     public String dn; // distinguished name
+    
+    @Column(name = "u_id")
     public Long uid; // unique id
 
     @Column(length=32)

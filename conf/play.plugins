@@ -16,3 +16,4 @@
 3005:ix.core.plugins.StructureProcessorPlugin
 3010:ix.core.plugins.GinasRecordProcessorPlugin
 #4000:ix.core.plugins.SchedulerPlugin
+10000:be.objectify.deadbolt.java.DeadboltPlugin
