@@ -1,10 +1,9 @@
 <div>
    <label for={{type}} class="text-capitalize">Access</label>
-    <a ng-show="referenceobj.access" ng-click="toggleStage()" role="button"><i class="fa fa-lock fa-2x warning"></i></a>
+    <a ng-show="referenceobj.access" ng-click="toggleStage()" role="button"><access value = referenceobj.access></access></a>
     <div class="text-center">
 
     <a ng-hide="referenceobj.access" ng-click="toggleStage()" role="button" aria-label="Add a reference" id="{{type}}">
-        <i class="fa fa-unlock fa-2x warning" ng-hide="!stage"></i>
-        <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
+        <i class="fa fa-unlock fa-2x warning"></i></a>
     </div>
 </div>

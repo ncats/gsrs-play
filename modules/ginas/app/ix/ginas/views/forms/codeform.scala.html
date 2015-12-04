@@ -6,7 +6,7 @@
         <form class="form-horizontal" name="codeForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3 err-check">
-                    <text-input ng-model="code.code" field="code"  ></text-input>
+                    <text-input ng-model="code.code" field="code" ></text-input>
                 </div>
                 <div class="col-md-2 err-check">
                     <dropdown-select ng-model="code.system" field="system" cv = "CODE_SYSTEM" ></dropdown-select>
@@ -18,6 +18,9 @@
                     <text-input ng-model="code.description" field="description"></text-input>
                 </div>
                 <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="code" parent = "substance" divid="codeForm" type = "access"></form-selector>
+                </div>
+                <div class="col-md-1">
                     <form-selector referenceobj ="code" parent = "substance" divid="codeForm" type = "reference"></form-selector>
                 </div>
             </div>
@@ -28,26 +31,29 @@
         <div ng-repeat="obj in substance.codes">
             <div class ="row">
                 <hr>
-            <div class="col-md-1">
-                <delete-button delete="obj" path="codes"></delete-button>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path="codes"></delete-button>
+                </div>
+                <div class="col-md-3 err-check" >
+                    <text-view-edit obj = "obj" field="code" ></text-view-edit>
+                </div>
+                <div class="col-md-2 err-check" >
+                    <dropdown-view-edit obj = "obj" field="system" cv = "CODE_SYSTEM" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-2 err-check">
+                    <dropdown-view-edit obj = "obj" field="type" cv = "CODE_TYPE" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-3 err-check">
+                    <text-view-edit obj = "obj" field="description" ></text-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj ="obj" parent = "substance" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
             </div>
-            <div class="col-md-3 err-check" >
-                <text-view-edit obj = "obj" field="code"  ></text-view-edit>
-            </div>
-            <div class="col-md-2 err-check" >
-                <dropdown-view-edit obj = "obj" field="system" cv = "CODE_SYSTEM" ></dropdown-view-edit>
-            </div>
-            <div class="col-md-2 err-check">
-                <dropdown-view-edit obj = "obj" field="type" cv = "CODE_TYPE" ></dropdown-view-edit>
-            </div>
-            <div class="col-md-3 err-check">
-                <text-view-edit obj = "obj" field="description"  ></text-view-edit>
-            </div>
-            <div class="col-md-1 pull-right">
-                <form-selector referenceobj ="obj" parent = "substance"  type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
-            </div>
+            <div class = {{obj.$$hashKey}}></div>
         </div>
-        <div class = {{obj.$$hashKey}}></div>
     </div>
-</div>
 </div>

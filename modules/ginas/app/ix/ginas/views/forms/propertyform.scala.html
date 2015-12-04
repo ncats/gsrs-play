@@ -17,16 +17,18 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                 <div class="col-md-1">
                     <form-selector referenceobj= "property" divid="propertyForm" type = "amount"></form-selector>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <form-selector referenceobj= "property" divid="propertyForm" type = "parameter"></form-selector>
                 </div>
                 <div class="col-md-1">
                     <check-box ng-model="property.defining" field="defining" ></check-box>
                 </div>
                 <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="property" parent = "substance" divid="propertyForm" type = "access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="property" parent = "substance" divid="propertyForm" type = "reference"></form-selector>
                 </div>
-
             </div>
             <div class="propertyForm"></div>
             <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
@@ -50,11 +52,14 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                 <div class="col-md-1">
                     <form-selector referenceobj= "obj" formname="propertyForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <form-selector referenceobj= "obj" formname="propertyForm" type = "parameter" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="defining" ></check-box-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" formname="propertyForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="obj" parent = "substance" formname="propertyForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>

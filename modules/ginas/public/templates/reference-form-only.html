@@ -21,7 +21,11 @@
                 <div class="col-md-2">
                     <text-input ng-model="ref.url" field="url"></text-input>
                 </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="ref" parent="substance" divid="refForm" type="access"></form-selector>
+                </div>
             </div>
+            <div class="refForm"></div>
             <div class="row">
                 <hr>
                 <div class="col-md-1 pull-right">
@@ -51,8 +55,11 @@
             <div class="col-md-2">
                 <text-view-edit obj="reference" field="url"></text-view-edit>
             </div>
-
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj="reference" parent="substance" formname="refForm" type="access"
+                               divid={{obj.$$hashKey}} mode="edit"></form-selector>
+            </div>
         </div>
-        <hr>
+        <div class={{obj.$$hashKey}}></div>
     </div>
 </div>

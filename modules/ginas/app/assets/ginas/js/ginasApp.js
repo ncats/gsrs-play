@@ -1792,7 +1792,7 @@
                         break;
                     case "access":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><i class="fa fa-lock fa-2x warning"></i></a>');
+                            template = angular.element('<a ng-click ="toggleStage()"><access value = referenceobj.access></access></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -1804,6 +1804,21 @@
                         }
                         formHolder = '<access-form referenceobj = referenceobj parent = parent></access-form>';
                         break;
+                    case "textbox":
+                        if (attrs.mode == "edit") {
+                            template = angular.element('<a ng-click ="toggleStage()"><comment value = "referenceobj.comments"></comment></a>');
+                            element.append(template);
+                            $compile(template)(scope);
+                        } else {
+                            $templateRequest(baseurl + "assets/templates/comment-selector.html").then(function (html) {
+                                template = angular.element(html);
+                                element.append(template);
+                                $compile(template)(scope);
+                            });
+                        }
+                        formHolder = '<div ng-blur ="toggleStage()"><comment-form referenceobj = referenceobj parent = parent></comment-form></div>';
+                        break;
+
 
                 }
 
@@ -1875,8 +1890,6 @@
             },
             templateUrl: baseurl + "assets/templates/access-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
-
                 scope.validate = function () {
                     console.log(scope.referenceobj);
                     if (_.has(scope.referenceobj, 'access')) {
@@ -1895,6 +1908,21 @@
                 scope.deleteObj = function (obj, parent) {
                     parent.splice(_.indexOf(parent, obj), 1);
                 };
+            }
+        };
+    });
+
+    ginasApp.directive('commentForm', function () {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                referenceobj: '=',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/comment-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
             }
         };
     });
@@ -1998,6 +2026,31 @@
                 value: '='
             },
             template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display || value.units}}</span></div>'
+        };
+    });
+
+    ginasApp.directive('comment', function () {
+
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                value: '='
+            },
+            template: '<div><span class="comment">{{value|limitTo:10}}...</span></div>'
+        };
+    });
+
+
+    ginasApp.directive('access', function () {
+
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                value: '='
+            },
+            template: '<div><i class="fa fa-lock fa-2x warning"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
         };
     });
 

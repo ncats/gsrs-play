@@ -18,7 +18,10 @@
                     <check-box ng-model="name.preferred" field="preferred" ></check-box>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj= "name"  parent = "substance" divid="nameForm" type = "reference"></form-selector>
+                    <form-selector referenceobj= "name" parent = "substance" divid="nameForm" type = "access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj= "name" parent = "substance" divid="nameForm" type = "reference"></form-selector>
                 </div>
             </div>
             <div class="nameForm"></div>
@@ -29,21 +32,24 @@
         <div ng-repeat="obj in substance.unofficialNames">
             <div class ="row">
                 <hr>
-            <div class="col-md-1">
-                <delete-button delete="obj" path="unofficialNames"></delete-button>
-            </div>
-            <div class="col-md-3">
-                <text-view-edit obj = "obj" field = "name"></text-view-edit>
-            </div>
-            <div class="col-md-2">
-                <dropdown-view-edit obj= "obj" field = "type" cv = "NAME_TYPE"></dropdown-view-edit>
-            </div>
-            <div class="col-md-2">
-                <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
-            </div>
-            <div class="col-md-2">
-                <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
-            </div>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path="unofficialNames"></delete-button>
+                </div>
+                <div class="col-md-3">
+                    <text-view-edit obj = "obj" field = "name"></text-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj= "obj" field = "type" cv = "NAME_TYPE"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="obj" parent = "substance" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
