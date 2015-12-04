@@ -11,7 +11,9 @@ import ix.ginas.models.PrincipalListSerializer;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -40,12 +42,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class Name extends Ginas {
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
 
-	@ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_access")
-    @JsonSerialize(using = PrincipalListSerializer.class)
-    @JsonDeserialize(using = PrincipalListDeserializer.class)
-    public List<Principal> access = new ArrayList<Principal>();
-    
     @JSONEntity(title = "Name", isRequired = true)
     @Column(nullable=false)
     @Indexable(name="Name", suggest=true)
@@ -121,10 +117,32 @@ public class Name extends Ginas {
     @PrePersist
     @PreUpdate
     public void tidyName () {
-        if (name.length() > 255) {
+        if (name.getBytes().length > 255) {
             fullName = name;
-            name = name.substring(0,254);
+            name = truncateString(name,254);
+            
         }
+    }
+    
+    private static String truncateString(String s, int maxBytes){
+    	byte[] b = (s+"   ").getBytes();
+    	if(maxBytes>=b.length){
+    		return s;
+    	}
+    	boolean lastComplete=false;
+    	for(int i=maxBytes;i>=0;i--){
+    		if(lastComplete)
+    			return new String(Arrays.copyOf(b, i));
+    		if((b[i] & 0x80) ==0){
+    			return new String(Arrays.copyOf(b, i));
+    		}
+    		System.out.println(b[i]);
+    		if(b[i]==-79){
+    			lastComplete=true;
+    		}
+    	}
+    	
+    	return "";
     }
     
     /**

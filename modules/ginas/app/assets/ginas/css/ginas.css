@@ -143,7 +143,8 @@ div.box .on {
     padding: 0px;
 }
 
-#load-button {
+#load-button,
+#admin-button {
     padding: 0px;
     padding-right: 15px;
 }

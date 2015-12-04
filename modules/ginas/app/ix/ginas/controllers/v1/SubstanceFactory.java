@@ -1,9 +1,9 @@
 package ix.ginas.controllers.v1;
 
 import ix.core.NamedResource;
+
 import ix.core.controllers.EntityFactory;
-import ix.core.models.Structure;
-import ix.core.models.Value;
+import ix.core.models.*;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -13,17 +13,17 @@ import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
-import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.GinasV1ProblemHandler;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import play.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import gov.nih.ncgc.chemical.Chemical;
-import gov.nih.ncgc.chemical.ChemicalFactory;
-import play.Logger;
+
+import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
@@ -37,7 +37,7 @@ public class SubstanceFactory extends EntityFactory {
             new Model.Finder(UUID.class, ChemicalSubstance.class);
     static public final Model.Finder<UUID, ProteinSubstance> protfinder =
             new Model.Finder(UUID.class, ProteinSubstance.class);
-    
+
     public static Substance getSubstance (String id) {
         if(id==null)return null;
         return getSubstance (UUID.fromString(id));
@@ -69,7 +69,9 @@ public class SubstanceFactory extends EntityFactory {
 
     public static List<Substance> getSubstances
         (int top, int skip, String filter) {
-        return filter (new FetchOptions (top, skip, filter), finder);
+        SubstanceFilter subFilter = new SubstanceFilter();
+        List<Substance> substances = filter (new FetchOptions (top, skip, filter), finder);
+        return subFilter.filterByAccess(substances);
     }
     
     public static List<Substance> getSubstancesWithExactName
@@ -120,7 +122,7 @@ public class SubstanceFactory extends EntityFactory {
     public static Result create () {
         return create (Substance.class, finder);
     }
-    
+
     public static Result validate () {
         return validate (Substance.class, finder);
     }
@@ -230,5 +232,37 @@ public class SubstanceFactory extends EntityFactory {
             }
         }
         return finder.where().eq("structure.properties.term", hash).findList();
+    }
+
+
+    public static class SubstanceFilter implements EntityFilter {
+
+        UserProfile profile = getUserProfile();
+        Principal user = profile!= null? profile.user: null;
+        boolean access = false;
+
+        public boolean hasAccess(Object grp, Object sub){
+            Group group = (Group) grp;
+            Substance substance = (Substance) sub;
+            return substance.access.contains(group);
+        }
+
+           public List<Substance> filterByAccess (List<Substance> results) {
+               List<Substance> filteredSubstances = new ArrayList<Substance>();
+
+               for (Substance sub : results) {
+                   if(sub.access.isEmpty() || sub.access.size() == 0){
+                       filteredSubstances.add(sub);
+                   }
+                   if(user != null) {
+                    for(Group grp : profile.getGroups()){
+                        if (hasAccess(grp, sub)) {
+                            filteredSubstances.add(sub);
+                        }
+                    }
+                  }
+               }
+            return filteredSubstances;
+           }
     }
 }
