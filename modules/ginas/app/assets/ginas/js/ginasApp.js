@@ -2736,12 +2736,22 @@
                         'Content-Type': 'text/plain'
                     }
                 }).success(function (data) {
-                    CV[field] = data.content[0].terms;
+                        CV[field] = data.content[0].terms;
                 });
         };
 
         CV.retrieve = function(field){
-            return CV[field];
+            console.log(field);
+            if(field ==='NAME_TYPE'){
+                var temp = CV[field];
+                temp =_.remove(temp, function(n) {
+                   // console.log(n);
+                    return n.value !=='of';
+                });
+                return temp;
+            }else {
+                return CV[field];
+            }
         };
         return CV;
     });
