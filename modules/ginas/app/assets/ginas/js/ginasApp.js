@@ -1790,6 +1790,20 @@
                         }
                         formHolder = '<parameter-form referenceobj = referenceobj parent = parent></parameter-form>';
                         break;
+                    case "access":
+                        if (attrs.mode == "edit") {
+                            template = angular.element('<a ng-click ="toggleStage()"><i class="fa fa-lock fa-2x warning"></i></a>');
+                            element.append(template);
+                            $compile(template)(scope);
+                        } else {
+                            $templateRequest(baseurl + "assets/templates/access-selector.html").then(function (html) {
+                                template = angular.element(html);
+                                element.append(template);
+                                $compile(template)(scope);
+                            });
+                        }
+                        formHolder = '<access-form referenceobj = referenceobj parent = parent></access-form>';
+                        break;
 
                 }
 
@@ -1842,6 +1856,40 @@
                     }
                     scope.parameter = {};
                     scope.parameterForm.$setPristine();
+                };
+
+                scope.deleteObj = function (obj, parent) {
+                    parent.splice(_.indexOf(parent, obj), 1);
+                };
+            }
+        };
+    });
+
+    ginasApp.directive('accessForm', function () {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                referenceobj: '=',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/access-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+
+                scope.validate = function () {
+                    console.log(scope.referenceobj);
+                    if (_.has(scope.referenceobj, 'access')) {
+                        var temp = _.get(scope.referenceobj, 'access');
+                        temp.push(scope.access);
+                        _.set(scope.referenceobj, 'access', temp);
+                    } else {
+                        var x = [];
+                        x.push(angular.copy(scope.access));
+                        _.set(scope.referenceobj, 'access', x);
+                    }
+                    scope.access = {};
+                    scope.accessForm.$setPristine();
                 };
 
                 scope.deleteObj = function (obj, parent) {

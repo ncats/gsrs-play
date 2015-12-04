@@ -1,0 +1,24 @@
+<div class="row info" id="references">
+    <button class="btn btn-primary label-offset det">
+        Access Control&nbsp;<span class="badge" ng-show="parent.references.length>0">
+                        {{parent.references.length}}</span></button>
+    <a ng-click="$parent.toggleStage();" class="pull-right">
+        <i class="fa fa-times fa-2x danger"></i></a>
+
+    <div class="col-md-12">
+        <form class="form-horizontal" name="accessForm" id="add-name" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-4">
+                    <dropdown-select ng-model="access.type" field="type" cv="ACCESS_TYPE"></dropdown-select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-1 pull right">
+                    <a ng-click="reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                </div>
+            </div>
+        </form>
+    </div>
+    <hr>
+</div>

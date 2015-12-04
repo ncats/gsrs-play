@@ -10,7 +10,7 @@
                     <div class="col-md-3 err-check">
                         <text-input ng-model="officialname.name" field="name" required></text-input>
                     </div>
-                    <div class="col-md-2 err-check">
+                    <div class="col-md-1 err-check">
                         <multi-select ng-model="officialname.domain" field="domain" cv = "NAME_DOMAIN" ></multi-select>
                     </div>
                     <div class="col-md-2 err-check">
@@ -24,6 +24,9 @@
                     </div>
                     <div class="col-md-1">
                         <check-box ng-model="officialname.preferred" field="preferred" ></check-box>
+                    </div>
+                    <div class="col-md-1">
+                        <form-selector referenceobj ="officialname" parent = "substance" divid="officialNameForm" type = "access"></form-selector>
                     </div>
                     <div class="col-md-1 pull-right">
                         <form-selector referenceobj ="officialname" parent = "substance" divid="officialNameForm" type = "reference"></form-selector>
