@@ -12,6 +12,8 @@ import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
@@ -53,7 +55,6 @@ public class Ginas extends Model {
     public boolean deprecated;
     
     @ManyToMany(cascade=CascadeType.PERSIST)
-    //@JoinColumn(name="id", referencedColumnName="uuid")
 //    @ManyToMany//(cascade=CascadeType.ALL)
 //    @JoinTable(name="ix_ginas_access",
 //          joinColumns=@JoinColumn

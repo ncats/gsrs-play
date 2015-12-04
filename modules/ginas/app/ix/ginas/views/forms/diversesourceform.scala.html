@@ -1,4 +1,57 @@
-@import ix.ginas.controllers.GinasApp;
+<div class = "row info" >
+    <button class="btn btn-primary label-offset det">
+                        Source Materials</button>
+    <div class="col-md-12">
+        <div ng-if ="!equals({}, substance.structurallyDiverse)">
+        <form class="form-horizontal" name="diverseSourceForm" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-3 err-check">
+                    <dropdown-select ng-model="diverse.sourceMaterialClass" field="class" cv = "SOURCE_MATERIAL_CLASS" ></dropdown-select>
+                </div>
+                <div class="col-md-3 err-check">
+                    <dropdown-select ng-model="diverse.sourceMaterialType" field="type" cv = "SOURCE_MATERIAL_TYPE" ></dropdown-select>
+                </div>
+                <div class="col-md-3 err-check" ng-if="diverse.sourceMaterialClass.display=='ORGANISM'">
+                    <dropdown-select ng-model="diverse.sourceMaterialState" field="state" cv = "SOURCE_MATERIAL_STATE" ></dropdown-select>
+
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="diverse" parent = "substance"  type = "reference" divid="diverseSourceForm"></form-selector>
+                </div>
+            </div>
+            <div class="diverseSourceForm"></div>
+
+            <submit-buttons submit="diverse" form="diverseSourceForm" path="structurallyDiverse" list = false></submit-buttons>
+
+        </form>
+        </div>
+        <div ng-if ="equals({}, substance.structurallyDiverse)">
+            <div class ="row">
+                <hr>
+                <div class="col-md-3 err-check">
+                    <dropdown-view-edit obj = "substance.structurallyDiverse" field="sourceMaterialClass" cv = "SOURCE_MATERIAL_CLASS" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-3 err-check">
+                    <dropdown-view-edit obj = "substance.structurallyDiverse" field="sourceMaterialType" cv = "SOURCE_MATERIAL_TYPE" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-3 err-check">
+                    <dropdown-view-edit obj = "substance.structurallyDiverse" field="sourceMaterialState" cv = "SOURCE_MATERIAL_STATE" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj =substance.structurallyDiverse parent = "substance"  type = "reference"  divid="diverseSourceForm" mode="edit"></form-selector>
+                </div>
+            </div>
+            <div class="diverseSourceForm"></div>
+        </div>
+    </div>
+</div>
+@*
+
+
+
+
+
+
 <div class = "row info">
     <button class="btn btn-primary label-offset det">
                         Source Materials&nbsp;</button>
@@ -60,3 +113,4 @@
         </form>
     </div>
 </div>
+*@

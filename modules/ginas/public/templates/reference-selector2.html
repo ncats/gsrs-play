@@ -1,17 +1,9 @@
 <div>
    <label for={{type}} class="text-capitalize">References</label>
-    <!--     <br/>
-        <div ng-repeat="refobj in arr">
-            <span class="badge">{{refobj.references.length || '0' }}</span>
-            <a ng-click="edit(refobj.references)" role="button" aria-label="Add a reference"><i
-                    class="fa fa-plus fa-2x success" ng-show="stage"></i>
-                <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
-            <hr>
-        </div-->
+    <a ng-show="referenceobj.references" ng-click="toggleStage();" role="button"><span class="badge">{{referenceobj.references.length}}</span></a>
     <div class="text-center">
-        <span class="badge">{{referenceobj.references.length}}</span><br/>
-        <a ng-click="toggleStage()" role="button" aria-label="Add a reference" id="{{type}}"><i
-                class="fa fa-plus fa-2x success" ng-show="stage"></i>
-            <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
+    <a ng-hide="referenceobj.references" ng-click="toggleStage()" role="button" aria-label="Add a reference" id="{{type}}"><i
+            class="fa fa-plus fa-2x success" ng-show="stage"></i>
+        <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
     </div>
 </div>

@@ -6,7 +6,7 @@
 
 @(chem: PolymerSubstance, ctx: String = null)
 
-<div class="panel panel-default prot-list" ng-controller="SubstanceListController">
+<div class="panel panel-default prot-list">
     <div class="panel-heading prot-title">
     	
         <div class = "row">
@@ -25,8 +25,8 @@
         <div class = "row">
             <div class = "col-md-3">
                 <span class="label label-primary label-offset list-view-badge">POLYMER</span>
-                <img ng-click="toggle('@ix.ginas.controllers.routes.GinasApp.structure(chem.polymer.displayStructure.getId, "svg", 400,ctx)')"  class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                src='@ix.ginas.controllers.routes.GinasApp.structure(chem.polymer.displayStructure.getId, "svg", 150, ctx)'>
+                <div class = "magnify" ng-click = "showLarge('@chem.polymer.displayStructure.id', '@chem.approvalID');"><rendered id = '@chem.polymer.displayStructure.id'></rendered></div>
+
                 <div class = "row">
                     <div class = "col-md-12">
                         <ul class= "list-inline pull-right list-unstyled">
@@ -76,17 +76,7 @@
                     </div>
             </div>
         </div>
-        
-        
-        <div ng-show="bigview" class = "revealable row">
-            <div ng-show="initialized">
-                <div class = "col-md-12">
-                <img ng-src="{{src}}" ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                        >
-                        
-                </div>
-            </div>
-        </div>
-        
+        <div class="@chem.approvalID" ng-click="showLarge('', '@chem.approvalID')"></div>
+
     </div>
 </div><!--END panel panel-primary-->

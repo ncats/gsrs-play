@@ -5,13 +5,18 @@ import java.security.*;
 import java.util.*;
 import java.util.regex.*;
 import java.util.concurrent.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Modifier;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
 import javax.persistence.Entity;
 import javax.persistence.OptimisticLockException;
 
@@ -27,12 +32,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -43,6 +50,7 @@ import com.fasterxml.jackson.core.Version;
 import com.avaje.ebean.*;
 import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.event.BeanPersistListener;
+import com.avaje.ebean.bean.*;
 
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.models.ETag;
@@ -155,15 +163,49 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
+        
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             _serializationConfig = getSerializationConfig();
             for (Class v : views) {
                 _serializationConfig = _serializationConfig.withView(v);
             }
+            addHandler ();
+        }
+
+        void addHandler () {
+            addHandler (new DeserializationProblemHandler () {
+                    public boolean handleUnknownProperty
+                        (DeserializationContext ctx, JsonParser parser,
+                         JsonDeserializer deser, Object bean, String property) {
+                        return _handleUnknownProperty
+                            (ctx, parser, deser, bean, property);
+                    }
+                });
         }
         
         public EntityMapper () {
+            addHandler ();
+        }
+
+        public boolean _handleUnknownProperty
+            (DeserializationContext ctx, JsonParser parser,
+             JsonDeserializer deser, Object bean, String property) {
+            try {
+                Logger.warn("Unknown property \""
+                            +property+"\" (token="
+                            +parser.getCurrentToken()
+                            +") while parsing "
+                            +bean+"; skipping it..");
+                parser.skipChildren();
+            }
+            catch (IOException ex) {
+                ex.printStackTrace();
+                Logger.error
+                    ("Unable to handle unknown property!", ex);
+                return false;
+            }
+            return true;
         }
 
         public String toJson (Object obj) {
@@ -180,6 +222,63 @@ public class EntityFactory extends Controller {
                 Logger.trace("Can't write Json", ex);
             }
             return null;
+        }
+    }
+
+    protected static class EditHistory implements PropertyChangeListener {
+        List<Edit> edits = new ArrayList<Edit>();
+        ObjectMapper mapper = getEntityMapper ();
+        final public Edit edit;
+            
+        public EditHistory (String payload) throws Exception {
+            edit = new Edit ();
+            edit.path = request().uri(); // must be in a context
+            edit.newValue = payload;
+        }
+
+        public void add (Edit e) { edits.add(e); }
+        public List<Edit> edits () { return edits; }
+        public void attach (Object ebean) {
+            if (ebean instanceof EntityBean) {
+                ((EntityBean)ebean)._ebean_intercept()
+                    .addPropertyChangeListener(this);
+            }
+            else {
+                throw new IllegalArgumentException
+                    (ebean+" is not of an EntityBean!");
+            }
+        }
+        public void detach (Object ebean) {
+            if (ebean instanceof EntityBean) {
+                ((EntityBean)ebean)._ebean_intercept()
+                    .removePropertyChangeListener(this);
+            }
+            else {
+                throw new IllegalArgumentException
+                    (ebean+" is not of an EntityBean!");
+            }
+        }
+
+        public void propertyChange (PropertyChangeEvent e) {
+            Logger.debug("### "+e.getSource()+": propertyChange: name="
+                         +e.getPropertyName()+" old="+e.getOldValue()
+                         +" new="+e.getNewValue());
+            try {
+                Edit edit = new Edit ();
+                Object id = getId (e.getSource());
+                if (id != null)
+                    edit.refid = id.toString();
+                else
+                    Logger.warn("No id set of edit for "+e.getSource());
+                edit.kind = e.getSource().getClass().getName();
+                edit.path = e.getPropertyName();
+                edit.oldValue = mapper.writeValueAsString(e.getOldValue());
+                edit.newValue = mapper.writeValueAsString(e.getNewValue());
+                edits.add(edit);
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -273,6 +372,7 @@ public class EntityFactory extends Controller {
                 // TODO: Need to use Akka here!
                 // execute in the background to determine the actual number
                 // of rows that this query should return
+                /*
                 _threadPool.submit(new Runnable () {
                         public void run () {
                             FutureIds<T> future = 
@@ -297,6 +397,7 @@ public class EntityFactory extends Controller {
                             }
                         }
                     });
+                */
             }
         }
         
@@ -764,54 +865,54 @@ public class EntityFactory extends Controller {
         }
     }
 
-	protected static <K, T extends Model> Result validate(Class<T> type,
-			Model.Finder<K, T> finder) {
-		if (!request().method().equalsIgnoreCase("POST")) {
-			return badRequest("Only POST is accepted!");
-		}
+    protected static <K, T extends Model> Result validate(Class<T> type,
+                                                          Model.Finder<K, T> finder) {
+        if (!request().method().equalsIgnoreCase("POST")) {
+            return badRequest("Only POST is accepted!");
+        }
 
-		String content = request().getHeader("Content-Type");
-		if (content == null
-				|| (content.indexOf("application/json") < 0 && content
-						.indexOf("text/json") < 0)) {
-			return badRequest("Mime type \"" + content + "\" not supported!");
-		}
+        String content = request().getHeader("Content-Type");
+        if (content == null
+            || (content.indexOf("application/json") < 0 && content
+                .indexOf("text/json") < 0)) {
+            return badRequest("Mime type \"" + content + "\" not supported!");
+        }
 
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.addHandler(new DeserializationProblemHandler() {
-				public boolean handleUnknownProperty(
-						DeserializationContext ctx, JsonParser parser,
-						JsonDeserializer deser, Object bean, String property) {
-					try {
-						Logger.warn("Unknown property \"" + property
-								+ "\" (token=" + parser.getCurrentToken()
-								+ ") while parsing " + bean + "; skipping it..");
-						parser.skipChildren();
-					} catch (IOException ex) {
-						ex.printStackTrace();
-						Logger.error("Unable to handle unknown property!", ex);
-						return false;
-					}
-					return true;
-				}
-			});
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.addHandler(new DeserializationProblemHandler() {
+                    public boolean handleUnknownProperty(
+                                                         DeserializationContext ctx, JsonParser parser,
+                                                         JsonDeserializer deser, Object bean, String property) {
+                        try {
+                            Logger.warn("Unknown property \"" + property
+                                        + "\" (token=" + parser.getCurrentToken()
+                                        + ") while parsing " + bean + "; skipping it..");
+                            parser.skipChildren();
+                        } catch (IOException ex) {
+                            ex.printStackTrace();
+                            Logger.error("Unable to handle unknown property!", ex);
+                            return false;
+                        }
+                        return true;
+                    }
+                });
 
-			JsonNode node = request().body().asJson();
-			T inst = mapper.treeToValue(node, type);
-			//validation code here
-			
-			
+            JsonNode node = request().body().asJson();
+            T inst = mapper.treeToValue(node, type);
+            //validation code here
+                        
+                        
 
-			return created(mapper.valueToTree(inst));
-		} catch (Exception ex) {
-			return internalServerError(ex.getMessage());
-		}
-	}
+            return created(mapper.valueToTree(inst));
+        } catch (Exception ex) {
+            return internalServerError(ex.getMessage());
+        }
+    }
 
     protected static <K,T extends Model> 
-                                Result delete (K id, 
-                                               Model.Finder<K, T> finder) {
+        Result delete (K id, 
+                       Model.Finder<K, T> finder) {
         T inst = finder.ref(id);
         if (inst != null) {
             ObjectMapper mapper = getEntityMapper ();
@@ -836,7 +937,7 @@ public class EntityFactory extends Controller {
 
         return notFound (request().uri()+": No edit history found!");
     }
-
+    
     /**
      * Handle generic update to field, without special deserializationHandler
      * 
@@ -848,13 +949,15 @@ public class EntityFactory extends Controller {
      */
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
-    	return update(id,field,type,finder);
+                return update (id,field,type,finder, null);
     }
+    
     // This expects an update of the full record to be done using "/path/*"
     // or "/path/_"
     //TODO: allow high-level changes to be captured
     protected static <K, T extends Model> Result update 
-        (K id, String field, Class<T> type, Model.Finder<K, T> finder, DeserializationProblemHandler deserializationHandler) {
+        (K id, String field, Class<T> type, Model.Finder<K, T> finder,
+         DeserializationProblemHandler deserializationHandler) {
 
         if (!request().method().equalsIgnoreCase("PUT")) {
             return badRequest ("Only PUT is accepted!");
@@ -883,21 +986,21 @@ public class EntityFactory extends Controller {
                 type,
                 id};
         final Map<Object,Model> oldObjects = new HashMap<Object,Model>();
-		recursivelyApply(obj, "", new EntityCallable() {
-			@Override
-			public void call(Object m, String path) {
-				if (m instanceof Model) {
-					try {
-
-						Method f = EntityPersistAdapter.getIdSettingMethodForBean(m);
-						Object _id = EntityPersistAdapter.getIdForBean(m);
-						oldObjects.put(_id, (Model) m);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		});
+        recursivelyApply(obj, "", new EntityCallable() {
+                @Override
+                public void call(Object m, String path) {
+                    if (m instanceof Model) {
+                        try {
+                            
+                            Method f = EntityPersistAdapter.getIdSettingMethodForBean(m);
+                            Object _id = EntityPersistAdapter.getIdForBean(m);
+                            oldObjects.put(_id, (Model) m);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
         Principal principal = null;
         if (request().username() != null) {
             principal = _principalFinder
@@ -921,7 +1024,7 @@ public class EntityFactory extends Controller {
         try {
             ObjectMapper mapper = getEntityMapper ();
             if(deserializationHandler!=null)
-            	mapper.addHandler(deserializationHandler);
+                mapper.addHandler(deserializationHandler);
             JsonNode value = request().body().asJson();
 
             String[] paths = field.split("/");
@@ -929,54 +1032,54 @@ public class EntityFactory extends Controller {
                 && (paths[0].equals("_") || paths[0].equals("*"))) {
                 final T inst = mapper.treeToValue(value, type);
                 try {
-                	Method m=EntityPersistAdapter.getIdSettingMethodForBean(inst);
-                	m.invoke(inst, id);
+                    Method m=EntityPersistAdapter.getIdSettingMethodForBean(inst);
+                    m.invoke(inst, id);
                 }catch (Exception ex) {
-                	ex.printStackTrace();
+                    ex.printStackTrace();
                     return internalServerError (ex.getMessage());
                 }
                 obj=inst;
                 recursivelyApply(inst, "", new EntityCallable(){
-					@Override
-					public void call(Object m, String path) {
-						if(inst == m)return;
-						Model old=null;
-						if(m instanceof Model){
-							try{
+                        @Override
+                        public void call(Object m, String path) {
+                            if(inst == m)return;
+                            Model old=null;
+                            if(m instanceof Model){
+                                try{
+                                    
+                                    Method f=EntityPersistAdapter.getIdSettingMethodForBean(m);
+                                    Object _id=EntityPersistAdapter.getIdForBean(m);
 
-								Method f=EntityPersistAdapter.getIdSettingMethodForBean(m);
-								Object _id=EntityPersistAdapter.getIdForBean(m);
-
-								//Get old model, do something with it?
-								 old=oldObjects.get(_id);
-								if(_id==null){
-									//((Model) m).save();
-								}else{
-									if(f!=null){
-										f.invoke(m,_id);
-            }
-									
-									((Model)m).update(_id);
-									Logger.debug("Success updating:" + path);
-								}
-								
-							}catch(OptimisticLockException e){
-								
-								Logger.error("Lock error:" + path + "\t" + m.getClass().getName());
-								if(m instanceof Structure && old!=null){
-									Logger.error("Lock change:" + ((Structure)m).lastEdited + "\t" + ((Structure)old).lastEdited);	
-								}
-								if(m.getClass().getName().contains("tructure"))
-									e.printStackTrace();
-								
-								//Logger.debug((new ObjectMapper()).valueToTree(m).toString());
-							}catch(Exception e){
-								Logger.error("Error updating:" + path + "\t" + m.getClass().getName());
-								e.printStackTrace();
-								
-							}
-						}
-					}});
+                                    //Get old model, do something with it?
+                                    old=oldObjects.get(_id);
+                                    if(_id==null){
+                                        //((Model) m).save();
+                                    }else{
+                                        if(f!=null){
+                                            f.invoke(m,_id);
+                                        }
+                                                                        
+                                        ((Model)m).update(_id);
+                                        Logger.debug("Success updating:" + path);
+                                    }
+                                                                
+                                }catch(OptimisticLockException e){
+                                                                
+                                    Logger.error("Lock error:" + path + "\t" + m.getClass().getName());
+                                    if(m instanceof Structure && old!=null){
+                                        Logger.error("Lock change:" + ((Structure)m).lastEdited + "\t" + ((Structure)old).lastEdited);  
+                                    }
+                                    if(m.getClass().getName().contains("tructure"))
+                                        e.printStackTrace();
+                                                                
+                                    //Logger.debug((new ObjectMapper()).valueToTree(m).toString());
+                                }catch(Exception e){
+                                    Logger.error("Error updating:" + path + "\t" + m.getClass().getName());
+                                    e.printStackTrace();
+                                                                
+                                }
+                            }
+                        }});
                 
             } else {
                 Object inst = obj;
@@ -1031,12 +1134,10 @@ public class EntityFactory extends Controller {
                                         (uri+": list index out bound "
                                          +pindex);
                                 Iterator it = ((Collection)val).iterator();
-                                for (int k = 0; (val=it.next())!=null 
-                                         && k < pindex; ++k){
-                                	//Logger.debug(fname+"["+pindex+"] = "+val);	
-                            }
-                                
-                                
+
+                                for (int k = 0; it.hasNext()
+                                         && k < pindex; ++k)
+                                    val = it.next();
                             }
                             else {
                                 return badRequest 
@@ -1072,12 +1173,12 @@ public class EntityFactory extends Controller {
                                 }
                             }
                             else {
-                            	
+                                
                                 // check to see if it references an existing 
                                 // entity
                                 if (value != null && !value.isNull()) {
                                     try {
-                                    	Logger.debug("Saving ...." );
+                                        Logger.debug("Saving ...." );
                                         val = getJsonValue 
                                             (valp, value, f, pindex);
                                         Logger.debug("Saved" );
@@ -1135,13 +1236,13 @@ public class EntityFactory extends Controller {
                         if (val != null) {
                             ftype = val.getClass();
                             if (null != ftype.getAnnotation(Entity.class)) {
-                            	Object tid=EntityPersistAdapter.getIdForBean(val);
-                            	if(tid!=null){
-                            		tempid=tid;
-                            		temptype=ftype;
+                                Object tid=EntityPersistAdapter.getIdForBean(val);
+                                if(tid!=null){
+                                    tempid=tid;
+                                    temptype=ftype;
                                 }
-                                    }
-                                    }
+                            }
+                        }
                         inst = val;
                     }
                     catch (NoSuchFieldException ex) {
@@ -1164,7 +1265,7 @@ public class EntityFactory extends Controller {
             
 //            
 //            for (Object[] c : changes) {
-//            	
+//              
 //                Edit e = new Edit ((Class<?>) c[3], c[4]);
 //                
 //                e.path = (String)c[0];
@@ -1180,7 +1281,7 @@ public class EntityFactory extends Controller {
                         //Logger.debug("Edit "+e.id+" kind:"+e.kind+" old:"+e.oldValue+" new:"+e.newValue);
 //                }
 //                catch (Exception ex) {
-//                	Logger.error(ex.getMessage());
+//                      Logger.error(ex.getMessage());
 //                    Logger.trace
 //                        ("Can't persist Edit for "+type+":"+id, ex);
 //                }
@@ -1198,45 +1299,363 @@ public class EntityFactory extends Controller {
     } // update ()
     
     public static interface EntityCallable{
-    	public void call(Object m, String path);
-                    }   
-    protected static void recursivelyApply(Model entity, String path, EntityCallable c){
-    	try{
-	    	for(Field f: entity.getClass().getFields()){
-	    		Class type= f.getType();
-	    		Annotation e=type.getAnnotation(Entity.class);
-	    		
-	    		if(e!=null){
-	    			try {
-	    				Object nextEntity=f.get(entity);
-	    				
-	    				if(nextEntity instanceof Model)
-	    					recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
-					} catch (IllegalArgumentException e1) {
-						e1.printStackTrace();
-					} catch (IllegalAccessException e1) {
-						e1.printStackTrace();
+        public void call(Object m, String path);
+    }
+    protected static void recursivelyApply(Model entity, String path,
+                                           EntityCallable c){
+        try{
+            for(Field f: entity.getClass().getFields()){
+                Class type= f.getType();
+                Annotation e=type.getAnnotation(Entity.class);
+                        
+                if(e!=null){
+                    try {
+                        Object nextEntity=f.get(entity);
+                                        
+                        if(nextEntity instanceof Model)
+                            recursivelyApply((Model) nextEntity, path + "/" + f.getName(), c);
+                    } catch (IllegalArgumentException e1) {
+                        e1.printStackTrace();
+                    } catch (IllegalAccessException e1) {
+                        e1.printStackTrace();
+                    }
+                } else if (Collection.class.isAssignableFrom(type)) {
+                    Collection col = (Collection) f.get(entity);
+                    if(col!=null){
+                        int i=0;
+                        for(Object nextEntity:col){
+                            if(nextEntity instanceof Model)
+                                recursivelyApply((Model) nextEntity, path + "/" + f.getName() + "(" + i + ")",c);
+                            i++;
+                        }
+                    }
                 }
-	    		} else if (Collection.class.isAssignableFrom(type)) {
-	    			Collection col = (Collection) f.get(entity);
-	    			if(col!=null){
-	    				int i=0;
-	    				for(Object nextEntity:col){
-	    					if(nextEntity instanceof Model)
-	    						recursivelyApply((Model) nextEntity, path + "/" + f.getName() + "(" + i + ")",c);
-	    					i++;
-	    				}
-	    			}
-	    		}
-
+                        
             }
-    	}catch(Exception e){
-    		e.printStackTrace();
+        }catch(Exception e){
+            e.printStackTrace();
         }
-    	c.call(entity, path);
+        c.call(entity, path);
+    }
+
+    protected static Result updateEntity (Class<?> type) {
+
+        if (!request().method().equalsIgnoreCase("PUT")) {
+            return badRequest ("Only PUT is accepted!");
         }
 
+        String content = request().getHeader("Content-Type");
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
+            return badRequest ("Mime type \""+content+"\" not supported!");
+        }
+        JsonNode json = request().body().asJson();
+        return updateEntity (json, type);
+    }
 
+    protected static Result updateEntity (JsonNode json, Class<?> type) {
+        EntityMapper mapper = getEntityMapper ();       
+        Transaction tx = Ebean.beginTransaction();
+        try {       
+            Object value = mapper.treeToValue(json, type);
+            EditHistory eh = new EditHistory (json.toString());
+            value = instrument (eh, value, json);
+            
+            if (value != null) {
+                Object id = getId (value);
+                eh.edit.refid = id != null ? id.toString() : null;
+                eh.edit.kind = value.getClass().getName();
+                eh.edit.save();
+                for (Edit e : eh.edits()) {
+                    e.batch = eh.edit.id.toString();
+                    e.save();
+                }
+                Logger.debug("** New edit history "+eh.edit.id);
+            }
+            tx.commit();
+            
+            return ok (mapper.valueToTree(value));          
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            return internalServerError (ex.getMessage());
+        }
+        finally {
+            Ebean.endTransaction();
+        }
+    }
+
+    static List<Field> getFields (Object entity, Class... annotation) {
+        List<Field> fields = new ArrayList<Field>();
+        for (Field f : entity.getClass().getFields()) {
+            for (Class c : annotation) {
+                if (f.getAnnotation(c) != null) {
+                    fields.add(f);
+                    break;
+                }
+            }
+        }
+        return fields;
+    }
+    
+    static List getAnnotatedValues (Object entity, Class... annotation)
+        throws Exception {
+        List values = new ArrayList ();
+        for (Field f : getFields (entity, annotation)) {
+            Object v = f.get(entity);
+            if (v != null)
+                values.add(v);
+        }
+        return values;
+    }
+
+    static Object getId (Object entity) throws Exception {
+        Field f = getIdField (entity);
+        Object id = null;
+        if (f != null) {
+            id = f.get(entity);
+            if (id == null) { // now try bean method
+                try {
+                    Method m = entity.getClass().getMethod
+                        ("get"+getBeanName (f.getName()));
+                    id = m.invoke(entity, new Object[0]);
+                }
+                catch (NoSuchMethodException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        return id;
+    }
+
+    static Field getIdField (Object entity) throws Exception {
+        List<Field> fields = getFields (entity, Id.class);
+        return fields.isEmpty() ? null : fields.iterator().next();
+    }
+    
+    static boolean isValid (Field f) {
+        int mods = f.getModifiers();
+        return (!Modifier.isStatic(mods)
+                && !Modifier.isFinal(mods)
+                && !Modifier.isTransient(mods)
+                && f.getAnnotation(JsonIgnore.class) == null
+                && f.getAnnotation(Id.class) == null);
+    }
+
+    /**
+     * set value of field using property bean instead of field-based
+     * as it's not recognized by ebean
+     */
+    static Object setValue (Object instance, Field field, Object value)
+        throws Exception {
+        Logger.debug("** setValue: field "+field.getName()+"["
+                     +instance.getClass().getName()+"] value="+value);
+        
+        String method = "set" + getBeanName (field.getName());
+        Object old = field.get(instance);
+        try {
+            Method set = instance.getClass().getMethod
+                (method, field.getType());
+            set.invoke(instance, value);
+        }
+        catch (NoSuchMethodException ex) {
+            Logger.warn("No method \""+method
+                        +"\" found in class "+instance.getClass().getName());
+            if (instance instanceof EntityBean) {
+                // find the closest match?
+                Method set = null;
+                for (Method m : instance.getClass().getMethods()) {
+                    if (m.getName().startsWith("set")) {
+                        Class[] types = m.getParameterTypes();
+                        if (types.length == 1
+                            && types[0].isAssignableFrom(field.getType())) {
+                            // let's assume this is what we're looking for
+                            set = m;
+                            break;
+                        }
+                    }
+                }
+                
+                if (set == null) {
+                    throw ex;
+                }
+            }
+            else { // revert to field-based
+                field.set(instance, value);
+            }
+        }
+        return old;
+    }
+
+    static void debugBean (Object value) throws Exception {
+        if (value == null) {
+            return;
+        }
+        else if (!(value instanceof EntityBean)) {
+            Logger.warn("Not an EntityBean: "+value
+                        +"["+value.getClass().getName()+"]");
+            return;
+        }
+
+        EntityBean bean = (EntityBean)value;
+        EntityBeanIntercept ebi = bean._ebean_intercept();
+
+        Class cls = value.getClass();
+        int c = ebi.getPersistenceContext().size(cls);
+        Logger.debug("## There are "+c+" instance of "+cls.getName()+
+                     " in the Ebean persitence context!");
+        Logger.debug("## intercepting="+ebi.isIntercepting()
+                     +" dirty=" + ebi.isDirty()+" new="+ebi.isNew()
+                     +" ref="+ebi.isReference()
+                     +" context="+ebi.getPersistenceContext());
+    }
+
+    protected static Object instrument
+        (EditHistory eh, Object value, JsonNode json) throws Exception {
+        Class cls = value.getClass();
+        if (cls.getAnnotation(Entity.class) == null)
+            throw new IllegalArgumentException
+                ("Class "+cls.getName()+" is not an entity");
+
+        Field idf = getIdField (value);
+        if (idf == null)
+            throw new IllegalArgumentException
+                ("Entity "+cls.getName()+" has no Id field!");
+        
+        Model.Finder finder = new Model.Finder
+            (idf.getType(), value.getClass());
+
+        Object xval = null;
+        
+        Object id = idf.get(value);
+        if (id == null) {
+            // if this entity has no id set, then we see if there is a
+            // unique column defined.. if so, we retrieve it
+            List<Field> columns = getFields (value, Column.class);
+            // now check which field has unique annotation
+            for (Field f : columns) {
+                Column column = (Column)f.getAnnotation(Column.class);
+                if (column.unique()) {
+                    Logger.debug("Field \""+f.getName()
+                                 +"\" contains unique value for class "
+                                 +value.getClass().getName());
+                    xval = finder.where()
+                        .eq(column.name().equals("")
+                            ? f.getName() : column.name(),
+                            f.get(value))
+                        .findUnique();
+                    
+                    if (xval != null)
+                        id = getId (xval);
+                    
+                    break;
+                }
+            }
+        }
+        else {
+            xval = finder.byId(id);
+        }
+
+        Logger.debug(">>> "+id+" <=> "+value+" json="+json);
+        debugBean (xval);
+        
+        if (xval == null) {
+            // new object..
+            ((Model)value).save();
+            id = getId (value);
+            Logger.debug("<<< " + id);
+            
+            Edit e = new Edit (value.getClass(), id);
+            ObjectMapper mapper = new ObjectMapper ();
+            e.newValue = mapper.writeValueAsString(value);
+            eh.add(e);
+
+            return value;
+        }
+
+        eh.attach(xval);
+
+        // now sync up val and value
+        Map<Field, Object> values = new HashMap<Field, Object>();
+        for (Field f : cls.getFields()) {
+            JsonProperty prop = f.getAnnotation(JsonProperty.class);
+            JsonNode node = json.get(prop != null ? prop.value() : f.getName());
+
+            Class type = f.getType();       
+            Logger.debug("field \""+f.getName()+"\"["+type
+                         +"] valid="+isValid(f)
+                         +" node="+node);            
+            if (!isValid (f) || node == null)
+                continue;
+            
+            Object v = f.get(value);
+            if (v != null) {
+                if (type.getAnnotation(Entity.class) != null) {
+                    setValue (xval, f, instrument (eh, v, node));
+                }
+                else if (type.isArray()) {
+                    Class<?> t = type.getComponentType();
+                    if (t.getAnnotation(Entity.class) != null) {
+                        int len = Array.getLength(v);
+                        Object vv = f.get(xval);
+                        if (vv != null && Array.getLength(vv) > 0) {
+                            Logger.debug("$$ TODO: handle array properly!");
+                        }
+                        else {
+                            Object vals = Array.newInstance(t, len);
+                            for (int i = 0; i < len; ++i) {
+                                Object xv = Array.get(v, i);
+                                Array.set(vals, i,
+                                          instrument (eh, xv, node.get(i)));
+                            }
+                            setValue (xval, f, vals);
+                        }
+                    }
+                    else {
+                        // just copy over
+                        setValue (xval, f, v);
+                    }
+                }
+                else if (Collection.class.isAssignableFrom(type)) {
+                    Collection col = (Collection)v;
+                    //Logger.debug("Enter Collection.."+col.size());
+                    if (!col.isEmpty()) {
+                        Class t = getComponentType (f.getGenericType());
+                        //Logger.debug("..component type "+t);
+                        if (t.getAnnotation(Entity.class) != null) {
+                            Collection xcol = (Collection)f.get(xval);
+                            if (xcol == null) {
+                                setValue (xval, f, xcol = new ArrayList ());
+                            }
+                            // update the list wholesale..
+                            xcol.clear();
+                            
+                            int i = 0;
+                            for (Iterator it = col.iterator();
+                                 it.hasNext(); ++i) {
+                                Object xv = it.next();
+                                Logger.debug(i+": "+xv+" <=> "+node.get(i));
+                                xv = instrument (eh, xv, node.get(i));
+                                xcol.add(xv);
+                            }
+                        }
+                        else {
+                            setValue (xval, f, v);
+                        }
+                    }
+                }
+                else {
+                    setValue (xval, f, v);
+                }
+            }
+        }
+        ((Model)xval).update();
+        Logger.debug("<<< "+id);
+        eh.detach(xval);
+        
+        return xval;
+    }
+    
     protected static Object getJsonValue 
         (Object val, JsonNode value, Field field, Integer index) 
         throws Exception {
@@ -1363,12 +1782,12 @@ public class EntityFactory extends Controller {
             Array.set(val, index, mapper.treeToValue(value, c));
         }
         else if (Collection.class.isAssignableFrom(ftype)) {
-        	Logger.debug("Should be a collection dude");
+            Logger.debug("Should be a collection dude");
             Class<?> c = getComponentType (field.getGenericType());
             
             if (index == null || index < 0 
                 || index >= ((Collection)val).size()) {
-            	
+                
                 if (val == null) {
                     val = new ArrayList ();
                 }
@@ -1380,7 +1799,7 @@ public class EntityFactory extends Controller {
                 ((Collection)val).add(mapper.treeToValue(value, c));
             }
             else {
-            	Logger.debug("Yeah, there's an index");
+                Logger.debug("Yeah, there's an index");
                 ArrayList newval = new ArrayList ();
                 newval.addAll((Collection)val);
                 Object el = newval.get(index);
@@ -1425,7 +1844,7 @@ public class EntityFactory extends Controller {
         ObjectMapper mapper;
         Iterator<Map.Entry<String, JsonNode>> it = value.fields();
         while (it.hasNext()) {
-        	mapper = new ObjectMapper ();
+                mapper = new ObjectMapper ();
             Map.Entry<String, JsonNode> jf = it.next();
             String set = "set"+getBeanName (jf.getKey());
             Class<?> type = null;
@@ -1436,12 +1855,12 @@ public class EntityFactory extends Controller {
                 //@JsonDeserialize(using=KeywordListDeserializer.class)
                 JsonDeserialize jdes=bf.getAnnotation(JsonDeserialize.class);
                 if(jdes!=null){
-                	JsonDeserializer jder=jdes.using().newInstance();
-                	SimpleModule module =
-                			  new SimpleModule("CustomDeserializer",
-                			      new Version(1, 0, 0, null));
-                	module.addDeserializer(type, jder);
-                	mapper.registerModule(module);
+                        JsonDeserializer jder=jdes.using().newInstance();
+                        SimpleModule module =
+                                          new SimpleModule("CustomDeserializer",
+                                              new Version(1, 0, 0, null));
+                        module.addDeserializer(type, jder);
+                        mapper.registerModule(module);
                 }
                 m.invoke(bean, mapper.treeToValue(jf.getValue(), type));
             }

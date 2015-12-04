@@ -2,7 +2,8 @@
     <div>
         <label for="{{field}}" class="text-capitalize">{{field}}</label>
         <select class="form-control" title="{{field}}" name="{{field}}" id="{{field}}" ng-model=obj
-                ng-blur="editing(obj[field]);" ng-options="r.display for r in ::values track by r.display">
+                ng-blur="editing(obj[field]);" ng-options="r.display for r in values track by r.display">
+            <option class= "text-capitalize" value='' disabled selected><span class="text-capitalize">Select {{field}}...</span></option>
         </select>
     </div>
 </div>

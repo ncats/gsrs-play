@@ -485,6 +485,4 @@ public class Substance extends Ginas {
 		}
 		return status;
 	}
-	
-	
 }

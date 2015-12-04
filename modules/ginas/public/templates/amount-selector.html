@@ -1,20 +1,8 @@
 <div>
     <label for={{type}} class="text-capitalize">Amount</label>
-<!--
-    <br/>
-    <div ng-repeat="refobj in arr">
-        <a ng-show="refobj.amount" ng-click="edit(refobj)" role="button"><amount value = "refobj.amount"></amount></a>
-        <a  ng-hide="refobj.amount" ng-click="edit(refobj)" role="button" aria-label="Add an amount">
-            <i class="fa fa-plus fa-2x success" ng-show="stage"></i>
-            <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
-        <hr>
-    </div>
--->
-
         <a ng-show="referenceobj.amount" ng-click="toggleStage();" role="button"><amount value = "referenceobj.amount"></amount></a>
     <div class="text-center">
-    <br/>
-        <a  ng-hide="referenceobj.amount" ng-click="toggleStage()" role="button" aria-label="Add an amount" id="{{type}}"><i
+        <a ng-hide="referenceobj.amount" ng-click="toggleStage()" role="button" aria-label="Add an amount" id="{{type}}"><i
                 class="fa fa-plus fa-2x success" ng-show="stage"></i>
             <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
     </div>

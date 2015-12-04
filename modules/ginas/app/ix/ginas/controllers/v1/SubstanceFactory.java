@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import play.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
@@ -38,7 +39,7 @@ public class SubstanceFactory extends EntityFactory {
             new Model.Finder(UUID.class, ProteinSubstance.class);
 
     public static Substance getSubstance (String id) {
-    	if(id==null)return null;
+        if(id==null)return null;
         return getSubstance (UUID.fromString(id));
     }
 
@@ -130,46 +131,96 @@ public class SubstanceFactory extends EntityFactory {
         return delete (uuid, finder);
     }
 
-    public static Result update (UUID uuid, String field) {
-    	//if(true)return ok("###");
-		try {
-			JsonNode value = request().body().asJson();
-			Class subClass = Substance.class;
-			String typ = value.get("substanceClass").asText();
-			Substance.SubstanceClass type;
-			try {
-				type = Substance.SubstanceClass.valueOf(typ);
-			} catch (Exception e) {
-				throw new IllegalStateException("Unimplemented substance class:" + typ);
+    public static Result updateEntity () {
+        if (!request().method().equalsIgnoreCase("PUT")) {
+            return badRequest ("Only PUT is accepted!");
+        }
+
+        String content = request().getHeader("Content-Type");
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
+            return badRequest ("Mime type \""+content+"\" not supported!");
+        }
+        JsonNode json = request().body().asJson();
+
+        Class<? extends Substance> subClass = Substance.class;
+        String cls = json.get("substanceClass").asText();      
+        try {
+            Substance.SubstanceClass type =
+                Substance.SubstanceClass.valueOf(cls);
+            switch (type) {
+            case chemical:
+                subClass = ChemicalSubstance.class;
+                break;
+            case protein:
+                subClass = ProteinSubstance.class;
+                break;
+            case mixture:
+                subClass = MixtureSubstance.class;
+                break;
+            case polymer:
+                subClass = PolymerSubstance.class;
+                break;
+            case structurallyDiverse:
+                subClass = StructurallyDiverseSubstance.class;
+                break;
+            case specifiedSubstanceG1:
+                subClass = SpecifiedSubstanceGroup1Substance.class;
+                break;
+            case concept:               
+            default:
+                subClass = Substance.class;
+                break;
+            }
+        }
+        catch (Exception ex) {
+            Logger.warn("Unknown substance class: "+cls
+                        +"; treating as generic substance!");
+        }
+        
+        return updateEntity (json, subClass);
     }
-			switch (type) {
-				case chemical:
-					subClass = ChemicalSubstance.class;
-					break;
-				case protein:
-					subClass = ProteinSubstance.class;
-					break;
-				case mixture:
-					subClass = MixtureSubstance.class;
-					break;
-				case polymer:
-					subClass = PolymerSubstance.class;
-					break;
-				case structurallyDiverse:
-					subClass = StructurallyDiverseSubstance.class;
-					break;
-				case specifiedSubstanceG1:
-					subClass = SpecifiedSubstanceGroup1Substance.class;
-					break;
-				case concept:
-					subClass = Substance.class;
-					break;
-			}
-			return update(uuid, field, subClass, finder, new GinasV1ProblemHandler());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
+    
+    public static Result update (UUID uuid, String field) {
+        //if(true)return ok("###");
+        try {
+            JsonNode value = request().body().asJson();
+            Class subClass = Substance.class;
+            String typ = value.get("substanceClass").asText();
+            Substance.SubstanceClass type;
+            try {
+                type = Substance.SubstanceClass.valueOf(typ);
+            } catch (Exception e) {
+                throw new IllegalStateException("Unimplemented substance class:" + typ);
+            }
+            switch (type) {
+            case chemical:
+                subClass = ChemicalSubstance.class;
+                break;
+            case protein:
+                subClass = ProteinSubstance.class;
+                break;
+            case mixture:
+                subClass = MixtureSubstance.class;
+                break;
+            case polymer:
+                subClass = PolymerSubstance.class;
+                break;
+            case structurallyDiverse:
+                subClass = StructurallyDiverseSubstance.class;
+                break;
+            case specifiedSubstanceG1:
+                subClass = SpecifiedSubstanceGroup1Substance.class;
+                break;
+            case concept:
+                subClass = Substance.class;
+                break;
+            }
+            return update(uuid, field, subClass, finder, new GinasV1ProblemHandler());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static List<Substance> getCollsionChemicalSubstances(int i, int j,

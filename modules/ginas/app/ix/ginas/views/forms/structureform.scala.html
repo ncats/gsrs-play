@@ -22,7 +22,7 @@
                     <div class = "col-md-2"><strong>Defined Stereocenters</strong></div>
                     <div class = "col-md-1"><strong>EZ Centers</strong></div>
                     <div class = "col-md-1"><strong>Charge</strong></div>
-                    <div class = "col-md-2 text-right"><strong>Reference ID</strong></div>
+                    <div class = "col-md-2 text-right"><strong>References</strong></div>
                 </div>
                 <div class ="row" >
                     <div class = "col-md-3">
@@ -40,13 +40,14 @@
                     <div class = "col-md-1">
                     {{substance.charge}}
                     </div>
-                    <div ng-show="substance.structure.references.length > 0">
-                    @referenceview("structureForm", "structure")
+                    <div class="col-md-1 pull-right">
+                        <form-selector referenceobj =substance.structure parent = "substance" type = "reference" divid="structureForm" mode="edit"></form-selector>
                     </div>
           @*          <div ng-hide="substance.structure.references.length > 0">
                         <reference-selector ngModel='structure' references='substance.references'></reference-selector>
                     </div>*@
                 </div>
+                <div class="structureForm"></div>
             </form>
         </div>
     </div>

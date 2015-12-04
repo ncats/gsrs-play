@@ -1,7 +1,8 @@
 <div>
         <a href="#" ng-hide="obj._editing" ng-click="editing(obj);">{{obj[field]}}</a>
-        <textarea ng-show="obj._editing" type="text" class="form-control" ng-model=obj[field] ng-blur="editing(obj);"
-               title="{{field}}" name="{{field}}"></textarea>
+        <textarea ng-show="obj._editing || !obj[field]" type="text" class="form-control" ng-model=obj[field] ng-blur="editing(obj);"
+               placeholder ="{{field}}" title="{{field}}" name="{{field}}"></textarea>
+
 </div>
 
 

@@ -294,7 +294,7 @@ public class AdminFactory extends Controller {
 
     public static List<String> roleNamesByPrincipal(Principal cred) {
         List<Role> roles = rolesByPrincipal(cred);
-        List<String> roleList = new ArrayList<>();
+        List<String> roleList = new ArrayList<String>();
         for(Role r : roles){
             roleList.add(r.getName());
         }
@@ -303,7 +303,7 @@ public class AdminFactory extends Controller {
 
     public static List<String> aclNamesByPrincipal(Principal cred) {
         List<Acl> perms = permissionByPrincipal(cred);
-        List<String> permList = new ArrayList<>();
+        List<String> permList = new ArrayList<String>();
         for(Acl a : perms){
             permList.add(a.getValue());
         }
@@ -312,7 +312,7 @@ public class AdminFactory extends Controller {
 
     public static List<String> groupNamesByPrincipal(Principal cred) {
         List<Group> grps = groupsByPrincipal(cred);
-        List<String> grpList = new ArrayList<>();
+        List<String> grpList = new ArrayList<String>();
         for(Group g : grps){
             grpList.add(g.name);
         }
@@ -321,7 +321,7 @@ public class AdminFactory extends Controller {
 
     public static List<Group> groupsByPrincipal(Principal cred) {
         Long userId = cred.id;
-        List<Group> groupByUser = new ArrayList<>();
+        List<Group> groupByUser = new ArrayList<Group>();
         String sql = "select IX_CORE_GROUP_ID from IX_CORE_GROUP_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId";
         SqlQuery sqlQuery = Ebean.createSqlQuery(sql);
         sqlQuery.setParameter("userId", userId);
@@ -336,7 +336,7 @@ public class AdminFactory extends Controller {
 
     public static List<Acl> permissionByPrincipal(Principal cred) {
         Long userId = cred.id;
-        List<Acl> perByUser = new ArrayList<>();
+        List<Acl> perByUser = new ArrayList<Acl>();
         String sql = "select IX_CORE_ACL_ID from IX_CORE_ACL_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId";
         SqlQuery sqlQuery = Ebean.createSqlQuery(sql);
         sqlQuery.setParameter("userId", userId);

@@ -57,4 +57,8 @@ public class StructureFactory extends EntityFactory {
     public static Result update (UUID id, String field) {
         return update (id, field, Structure.class, finder);
     }
+
+    public static Result updateEntity () {
+        return EntityFactory.updateEntity(Structure.class);
+    }
 }
