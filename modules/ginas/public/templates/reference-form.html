@@ -12,6 +12,7 @@
                     <reference-apply ng-model="ref.apply" obj=obj referenceobj=reference parent=parent
                                      type="view"></reference-apply>
                 </div>
+
                 <div class="col-md-2">
                     <text-input ng-model="ref.citation" field="citation"></text-input>
                 </div>
@@ -27,9 +28,13 @@
                 <div class="col-md-2">
                     <text-input ng-model="ref.url" field="url"></text-input>
                 </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj="ref" parent="substance" divid="refForm" type="upload"></form-selector>
+                </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="ref" parent="substance" divid="refForm" type="access"></form-selector>
                 </div>
+
             </div>
             <div class="refForm"></div>
             <div class="row">
@@ -45,7 +50,7 @@
             <div class="col-md-1">
                 <reference-apply obj=reference referenceobj=referenceobj parent=parent type="edit"></reference-apply>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <text-view-edit obj="reference" field="citation"></text-view-edit>
             </div>
             <div class="col-md-2">
