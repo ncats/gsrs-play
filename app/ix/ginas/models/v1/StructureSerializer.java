@@ -3,7 +3,7 @@ package ix.ginas.models.v1;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,9 +14,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
-public class StructureSerializer extends JsonSerializer<Structure> {
+public class StructureSerializer extends JsonSerializer<GinasChemicalStructure> {
     public StructureSerializer () {}
-    public void serializeValue (Structure struc, JsonGenerator jgen,
+    public void serializeValue (GinasChemicalStructure struc, JsonGenerator jgen,
                                 SerializerProvider provider)
         throws IOException, JsonProcessingException {
         if (struc == null) {
@@ -25,7 +25,7 @@ public class StructureSerializer extends JsonSerializer<Structure> {
         }
         provider.defaultSerializeField("id", struc.id, jgen);
         provider.defaultSerializeField("created", struc.created, jgen);
-        provider.defaultSerializeField("modified", struc.lastEdited, jgen);
+        provider.defaultSerializeField("lastEdited", struc.lastEdited, jgen);
         provider.defaultSerializeField("deprecated", struc.deprecated, jgen);
         provider.defaultSerializeField("digest", struc.digest, jgen);
         provider.defaultSerializeField("molfile", struc.molfile, jgen);
@@ -46,6 +46,10 @@ public class StructureSerializer extends JsonSerializer<Structure> {
         provider.defaultSerializeField("ezCenters", struc.ezCenters, jgen);
         provider.defaultSerializeField("charge", struc.charge, jgen);
         provider.defaultSerializeField("mwt", struc.mwt, jgen);
+        provider.defaultSerializeField("references", struc.getReferences(), jgen);
+        provider.defaultSerializeField("access", struc.getAccess(), jgen);
+        
+        
         List<String> refs = new ArrayList<String>();
         
         for (Value val : struc.properties) {
@@ -53,15 +57,15 @@ public class StructureSerializer extends JsonSerializer<Structure> {
                 Keyword kw = (Keyword)val;
                 provider.defaultSerializeField("hash", kw.term, jgen);
             }
-            else if (Ginas.REFERENCE.equals(val.label)) {
+            else if (GinasSubData.REFERENCE.equals(val.label)) {
                 Keyword kw = (Keyword)val;
                 refs.add(kw.term);
             }
         }
-        provider.defaultSerializeField("references", refs, jgen);
+        //provider.defaultSerializeField("references", refs, jgen);
     }
     
-    public void serialize (Structure struc, JsonGenerator jgen,
+    public void serialize (GinasChemicalStructure struc, JsonGenerator jgen,
                            SerializerProvider provider)
         throws IOException, JsonProcessingException {
         jgen.writeStartObject();

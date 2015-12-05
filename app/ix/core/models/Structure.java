@@ -1,5 +1,7 @@
 package ix.core.models;
 
+import ix.utils.Global;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -8,9 +10,11 @@ import java.util.UUID;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
 import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
@@ -21,8 +25,9 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import play.db.ebean.Model;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -30,13 +35,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import ix.utils.Global;
-import play.db.ebean.Model;
-
 @MappedSuperclass
 @Entity
+@Inheritance
+@DiscriminatorValue("DEF")
 @Table(name = "ix_core_structure")
-public class Structure extends Model {
+public class Structure extends Model{
 
     @Id
     public UUID id;
@@ -106,7 +110,7 @@ public class Structure extends Model {
     public enum NYU {
         No, Yes, Unknown
     }
-
+    
     @Column(length = 128)
     public String digest; // digest checksum of the original structure
     
@@ -148,8 +152,6 @@ public class Structure extends Model {
     public Integer charge; // formal charge
     @Indexable(name = "Molecular Weight", dranges = { 0, 200, 400, 600, 800, 1000 }, format = "%1$.0f")
     public Double mwt; // molecular weight
-
-    public Integer count = 1; // moiety count?
     
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonView(BeanViews.Full.class)
@@ -169,7 +171,7 @@ public class Structure extends Model {
          * 
          * @JsonIgnore public transient Object mol; // a transient mol object
          */
-
+    public Integer count = 1; // moiety count?
     public Structure() {
     }
 

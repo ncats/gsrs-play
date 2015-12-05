@@ -3,7 +3,7 @@ package ix.ginas.models.v1;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.KeywordListDeserializer;
 import ix.ginas.models.PrincipalListDeserializer;
@@ -39,7 +39,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
 @Table(name="ix_ginas_name")
-public class Name extends Ginas {
+public class Name extends GinasSubData {
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
 
     @JSONEntity(title = "Name", isRequired = true)
@@ -88,15 +88,15 @@ public class Name extends Ginas {
     @JsonDeserialize(using=KeywordListDeserializer.class)
     public List<Keyword> nameJurisdiction = new ArrayList<Keyword>();
 
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_ref",
-               joinColumns=@JoinColumn
-               (name="ix_ginas_name_ref_uuid",
-               referencedColumnName="uuid")
-    )
-    @JsonSerialize(using=KeywordListSerializer.class)    
-    @JsonDeserialize(using=KeywordListDeserializer.class)
-    public List<Keyword> references = new ArrayList<Keyword>();    
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_name_ref",
+//               joinColumns=@JoinColumn
+//               (name="ix_ginas_name_ref_uuid",
+//               referencedColumnName="uuid")
+//    )
+//    @JsonSerialize(using=KeywordListSerializer.class)    
+//    @JsonDeserialize(using=KeywordListDeserializer.class)
+//    public List<Keyword> references = new ArrayList<Keyword>();    
     
     @JSONEntity(title = "Naming Organizations", format = "table")
     @ManyToMany(cascade=CascadeType.ALL)
@@ -161,7 +161,7 @@ public class Name extends Ginas {
     	//locators.add("TEST");
     	if(sub!=null){
     		//System.out.println("Real sub");
-	    	for(Keyword ref: this.references){
+	    	for(Keyword ref: this.getReferences()){
 	    		//System.out.println(ref.getValue());
 	    		Reference r=sub.getReferenceByUUID(ref.getValue());
 	    		
@@ -210,7 +210,7 @@ public class Name extends Ginas {
 					if(o2.isLanguage("en"))return 1;
 					return -1;
 				}
-				int refDiff=o2.references.size()-o1.references.size();
+				int refDiff=o2.getReferences().size()-o1.getReferences().size();
 				if(refDiff!=0){
 					return refDiff;
 				}

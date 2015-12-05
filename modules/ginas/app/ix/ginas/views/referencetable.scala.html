@@ -3,12 +3,12 @@
 @import ix.ginas.controllers.v1.ReferenceFactory 
 @import helper._ 
 
-@(refs: List[Keyword], id : String, colspan : Integer)
-@if(refs.length >= 1){
+@(refs: Collection[Keyword], id : String, colspan : Integer)
+@if(refs.size() >= 1){
 <td>
    <button class="btn btn-primary" type="button" data-toggle="collapse"
       data-target="#@id-reference" aria-expanded="false"
-      aria-controls="collapseExample">@refs.length</button>
+      aria-controls="collapseExample">@refs.size()</button>
 </td>
 </tr>
 <tr class="collapse" id="@id-reference">
@@ -45,6 +45,6 @@
 </tr>
 }else{
 <td>
-   <button class="btn btn-primary" type="button"  disabled="disabled">@refs.length</button>
+   <button class="btn btn-primary" type="button"  disabled="disabled">@refs.size()</button>
 </td>
 }

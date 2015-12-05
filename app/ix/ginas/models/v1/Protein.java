@@ -3,7 +3,7 @@ package ix.ginas.models.v1;
 
 import ix.core.models.Indexable;
 import ix.core.models.Value;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_protein")
-public class Protein extends Ginas {
+public class Protein extends GinasSubData {
     @Indexable(facet=true,name="Protein Type")
     public String proteinType;
     
@@ -56,11 +56,11 @@ public class Protein extends Ginas {
     @JoinTable(name="ix_ginas_protein_otherlinks")
     public List<OtherLinks> otherLinks = new ArrayList<OtherLinks>();
 
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_protein_reference")
-    @JsonSerialize(using=ReferenceListSerializer.class)
-    @JsonDeserialize(using=ReferenceListDeserializer.class)
-    public List<Value> references = new ArrayList<Value>();
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_protein_reference")
+//    @JsonSerialize(using=ReferenceListSerializer.class)
+//    @JsonDeserialize(using=ReferenceListDeserializer.class)
+//    public List<Value> references = new ArrayList<Value>();
 
     public Protein () {}
 

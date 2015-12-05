@@ -22,7 +22,7 @@
                 <td>@c.codeSystem</td>
                 <td>@GinasApp.getCV.getDisplay("CODE_TYPE",{c.`type`})</td>
                 <td>@c.comments</td>
-                @referencetable(c.references, c.code, 4)
+                @referencetable(c.getReferences(), c.code, 4)
             </tr>
         }
     </table>

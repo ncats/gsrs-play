@@ -1,9 +1,13 @@
 package ix.ginas.controllers.v1;
 
+import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import ix.core.NamedResource;
-
 import ix.core.controllers.EntityFactory;
-import ix.core.models.*;
+import ix.core.models.Group;
+import ix.core.models.Principal;
+import ix.core.models.Structure;
+import ix.core.models.UserProfile;
+import ix.core.models.Value;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -17,15 +21,14 @@ import ix.ginas.utils.GinasV1ProblemHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import play.Logger;
-import com.fasterxml.jackson.databind.JsonNode;
-
-
-import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import play.db.ebean.Model;
 import play.mvc.Result;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 @NamedResource(name="substances",
                type=Substance.class,
@@ -244,14 +247,15 @@ public class SubstanceFactory extends EntityFactory {
         public boolean hasAccess(Object grp, Object sub){
             Group group = (Group) grp;
             Substance substance = (Substance) sub;
-            return substance.access.contains(group);
+            return substance.getAccess().contains(group);
         }
 
            public List<Substance> filterByAccess (List<Substance> results) {
                List<Substance> filteredSubstances = new ArrayList<Substance>();
 
                for (Substance sub : results) {
-                   if(sub.access.isEmpty() || sub.access.size() == 0){
+            	   Set<Group> accessG = sub.getAccess();
+                   if(accessG==null || accessG.isEmpty() || accessG.size() == 0){
                        filteredSubstances.add(sub);
                    }
                    if(user != null) {

@@ -11,7 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 import ix.core.models.Value;
 import ix.core.models.Keyword;
 
@@ -29,7 +29,7 @@ public class ReferenceListDeserializer extends JsonDeserializer<List<Value>> {
             while ((token = parser.nextToken()) != JsonToken.END_ARRAY) {
                 if (token == JsonToken.VALUE_STRING) {
                     refs.add(new Keyword
-                             (Ginas.REFERENCE, parser.getValueAsString()));
+                             (GinasSubData.REFERENCE, parser.getValueAsString()));
                 }
             }
         }

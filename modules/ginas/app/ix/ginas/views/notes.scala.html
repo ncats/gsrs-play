@@ -16,7 +16,7 @@
     @for(n <- notes) {
       <tr>
         <td>@n.note</td>
-        @referencetable(n.references, n.note, 5)
+        @referencetable(n.getReferences(), n.note, 5)
       </tr>
     }
   </table>

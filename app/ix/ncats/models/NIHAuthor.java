@@ -1,12 +1,12 @@
 package ix.ncats.models;
 
-import play.db.ebean.Model;
-
-import javax.persistence.*;
-
 import ix.core.models.Author;
-import ix.core.models.Figure;
 import ix.core.models.Indexable;
+
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Lob;
 
 @Entity
 @DiscriminatorValue("NIH")

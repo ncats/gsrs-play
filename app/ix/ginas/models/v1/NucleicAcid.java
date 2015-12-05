@@ -1,7 +1,7 @@
 package ix.ginas.models.v1;
 
 
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @JSONEntity(title = "Nucleic Acid", isFinal = true)
-public class NucleicAcid extends Ginas {
+public class NucleicAcid extends GinasSubData {
 	@JSONEntity(title = "Linkages")
 	List<Linkage> linkages;
 	Modifications modifications;

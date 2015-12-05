@@ -24,7 +24,7 @@ import ix.ginas.models.*;
 @JSONEntity(title = "Reference", isFinal = true)
 @Entity
 @Table(name="ix_ginas_reference")
-public class Reference extends Ginas {
+public class Reference extends GinasSubData {
 
     @JSONEntity(title = "Citation Text", isRequired = true)
     @Column(nullable=false)

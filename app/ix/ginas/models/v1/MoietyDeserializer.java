@@ -18,7 +18,7 @@ public class MoietyDeserializer extends JsonDeserializer<Moiety> {
         JsonNode tree = parser.getCodec().readTree(parser);
         Moiety moiety = new Moiety ();
         moiety.structure =
-            parser.getCodec().treeToValue(tree, Structure.class);
+            parser.getCodec().treeToValue(tree, GinasChemicalStructure.class);
         JsonNode n = tree.get("count");
         if (n != null) {
             moiety.count = n.asInt();

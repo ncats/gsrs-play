@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ix.core.models.Indexable;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
@@ -15,7 +15,7 @@ import javax.persistence.Table;
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_subunit")
-public class Subunit extends Ginas {
+public class Subunit extends GinasSubData {
     @Lob
     @Basic(fetch=FetchType.EAGER)
     @Indexable(sequence=true)

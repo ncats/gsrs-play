@@ -1,10 +1,12 @@
 package ix.ginas.models.v1;
 
-import ix.core.controllers.AdminFactory;
-import ix.core.controllers.PrincipalFactory;
-import ix.core.models.*;
+import ix.core.models.BeanViews;
+import ix.core.models.Indexable;
+import ix.core.models.Keyword;
+import ix.core.models.Principal;
+import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
 import ix.ginas.models.PrincipalSerializer;
@@ -44,7 +46,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Table(name = "ix_ginas_substance")
 @Inheritance
 @DiscriminatorValue("SUB")
-public class Substance extends Ginas {
+public class Substance extends GinasCommonData {
 	private static final String DEFAULT_NO_NAME = "NO_NAME";
 
 	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH IMPORT";
@@ -455,10 +457,7 @@ public class Substance extends Ginas {
 		r.docType = "PROPERTY_IMPORT";
 		r.citation = property;
 		r.documentDate = new Date();
-		//r.tags.add(new Keyword(p.getClass().getName(), p.id + ""));
-		n.references.add(new Keyword("REFERENCE", 
-				r.uuid+""
-		));
+		n.addReference(r);
 		this.references.add(r);
 		this.notes.add(n);
 		return n;
@@ -467,14 +466,6 @@ public class Substance extends Ginas {
 		Note n = new Note();
 		n.note=note;
 		return n;
-	}
-	
-
-	public void addRestrictGroup(Group p){
-		this.access.add(p);
-	}
-	public void addRestrictGroup(String group){
-		addRestrictGroup(AdminFactory.registerGroupIfAbsent(new Group(group)));
 	}
 	
 

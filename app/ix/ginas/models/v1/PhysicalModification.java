@@ -11,12 +11,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 
 @Entity
 @Table(name="ix_ginas_physicalmod")
 @JSONEntity(title = "Physical Modification", isFinal = true)
-public class PhysicalModification extends Ginas {
+public class PhysicalModification extends GinasSubData {
     @JSONEntity(title = "Physical Modification Role", isRequired = true)
     @Column(nullable=false)
     public String physicalModificationRole;

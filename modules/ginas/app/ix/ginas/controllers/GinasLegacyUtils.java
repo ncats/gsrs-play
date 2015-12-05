@@ -13,7 +13,7 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.plugins.StructureProcessorPlugin.PayloadProcessor;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
 import ix.utils.Util;

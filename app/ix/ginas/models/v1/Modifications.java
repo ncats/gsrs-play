@@ -16,12 +16,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 
 @Entity
 @Table(name="ix_ginas_modifications")
 @JSONEntity(name = "modifications", title = "Modifications", isFinal = true)
-public class Modifications extends Ginas {
+public class Modifications extends GinasSubData {
     @JSONEntity(title = "Agent Modifications")
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_mod_agent")

@@ -1,6 +1,6 @@
 package ix.ginas.models.v1;
 
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 import ix.ginas.models.utils.JSONEntity;
 
 import java.util.List;
@@ -16,7 +16,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name="ix_ginas_ssg1")
-public class SpecifiedSubstanceGroup1 extends Ginas {
+public class SpecifiedSubstanceGroup1 extends GinasSubData {
 	@ManyToMany(cascade=CascadeType.ALL)
 	@JoinTable(name="ix_ginas_substance_ss_comp")
 	public List<SpecifiedSubstanceComponent> constituents;

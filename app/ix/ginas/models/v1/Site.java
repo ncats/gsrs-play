@@ -8,12 +8,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 
 @Entity
 @Table(name="ix_ginas_site")
 @JSONEntity(name = "site", title = "Site", isFinal = true)
-public class Site extends Ginas {
+public class Site extends GinasSubData {
     @JSONEntity(title = "Subunit Index")
     public Integer subunitIndex;
     

@@ -9,12 +9,12 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasSubData;
 
 
 @Entity
 @Table(name="ix_ginas_otherlinks")
-public class OtherLinks extends Ginas {
+public class OtherLinks extends GinasSubData {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_otherlinks_site")
     public List<Site> sites = new ArrayList<Site>();

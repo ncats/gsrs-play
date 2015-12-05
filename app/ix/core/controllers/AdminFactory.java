@@ -328,7 +328,7 @@ public class AdminFactory extends Controller {
         Set<SqlRow> sqlRows = sqlQuery.findSet();
 
         for (SqlRow row : sqlRows) {
-            groupByUser.add(groupfinder.byId((Long) row.get("ix_core_group_id")));
+            groupByUser.add(groupfinder.byId(((Number) row.get("ix_core_group_id")).longValue()));
         }
         return groupByUser;
     }
@@ -343,7 +343,7 @@ public class AdminFactory extends Controller {
         Set<SqlRow> sqlRows = sqlQuery.findSet();
 
         for (SqlRow row : sqlRows) {
-            perByUser.add(aclFinder.byId((Long) row.get("ix_core_acl_id")));
+            perByUser.add(aclFinder.byId(((Number) row.get("ix_core_acl_id")).longValue()));
         }
         return perByUser;
     }

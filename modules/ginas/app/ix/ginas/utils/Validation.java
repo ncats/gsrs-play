@@ -4,6 +4,7 @@ import ix.core.chem.StructureProcessor;
 import ix.core.models.Structure;
 import ix.core.models.Value;
 import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Substance;
@@ -124,7 +125,7 @@ public class Validation {
             //struc.count
             for(Structure m: moieties){
                 Moiety m2= new Moiety();
-                m2.structure=m;
+                m2.structure=(GinasChemicalStructure) m;
                 m2.count=m.count;
                 moietiesForSub.add(m2);
             }
@@ -168,7 +169,7 @@ public class Validation {
                 case APPLY_CHANGE:
                     Structure struc2=cs.structure;
                     //String omol = cs.structure.molfile;
-                    cs.structure=struc;
+                    cs.structure=(GinasChemicalStructure) struc;
                     cs.structure.molfile=struc2.molfile;
                     if(struc2.stereoChemistry!=null){
                         cs.structure.stereoChemistry=struc2.stereoChemistry;
