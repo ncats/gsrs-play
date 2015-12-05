@@ -242,7 +242,7 @@
                         'Content-Type': 'text/plain'
                     }
                 }).then(function (response) {
-                    console.log(response);
+                   // console.log(response);
                     return response.data.content;
                 });
                 return promise;
@@ -1729,7 +1729,7 @@
         };
     });
 
-    ginasApp.directive('formSelector', function ($modal, $compile, $templateRequest) {
+    ginasApp.directive('formSelector', function ($compile, $templateRequest) {
         return {
             restrict: 'E',
             replace: true,
@@ -2202,12 +2202,11 @@
         };
     });
 
-    ginasApp.directive('substanceChooserLite', function (nameFinder) {
+    ginasApp.directive('substanceChooserSelector', function ($templateRequest, $compile, nameFinder) {
         return {
-            templateUrl: baseurl + 'assets/templates/substancechooser.html',
+           // templateUrl: baseurl + 'assets/templates/substance-select.html',
             replace: true,
             restrict: 'E',
-            require: '^ngModel',
             scope: {
                 subref: '=ngModel',
                 formname: '=',
@@ -2215,19 +2214,47 @@
                 label: '@'
             },
             link: function (scope, element, attrs, ngModel) {
-                scope.loadSubstances = function ($query) {
-                    return nameFinder.search($query);
-                };
+                var formHolder;
+                var childScope;
+                var template;
+                scope.stage = true;
+                switch (attrs.type) {
+                    case "lite":
+                            $templateRequest(baseurl + "assets/templates/substance-select.html").then(function (html) {
+                                template = angular.element(html);
+                                element.append(template);
+                                $compile(template)(scope);
+                            });
+                        break;
+                    case "search":
+                            $templateRequest(baseurl + "assets/templates/substance-search.html").then(function (html) {
+                                template = angular.element(html);
+                                element.append(template);
+                                $compile(template)(scope);
+                            });
+                        formHolder = '<substance-search-form subref = "subref"></substance-search-form>';
+                        element.append(formHolder);
+                        break;
+                }
 
-                scope.createSubref = function (selectedItem) {
-                    console.log(selectedItem);
-                    var subref = {};
-                    subref.refuuid = selectedItem.uuid;
-                    subref.refPname = selectedItem._name;
-                    subref.approvalID = selectedItem.approvalID;
-                    subref.substanceClass = "reference";
-                    scope.subref = angular.copy(subref);
-
+                scope.toggleStage = function () {
+                    if (_.isUndefined(scope.subref)) {
+                        var x = {};
+                        _.set(scope, 'subref', x);
+                    }
+                    var result = document.getElementsByClassName(attrs.formname);
+                    var elementResult = angular.element(result);
+                    if (scope.stage === true) {
+                        scope.stage = false;
+                        childScope = scope.$new();
+                        var compiledDirective = $compile(formHolder);
+                        var directiveElement = compiledDirective(childScope);
+                        elementResult.append(directiveElement);
+                    } else {
+                        childScope.$destroy();
+                        elementResult.empty();
+                        scope.stage = true;
+                    }
                 };
             }
         };
@@ -2270,36 +2297,107 @@
         };
     });
 
-    ginasApp.directive('substanceView', function () {
+    ginasApp.directive('substanceSearchForm', function ($http) {
         return {
-            template: '<div><rendered id = {{subref.refuuid}}></rendered><br/><code>{{subref.refPname}}</code></div>',
+            restrict: 'E',
+            replace: true,
+            scope: {
+                subref: '='
+            },
+            templateUrl: baseurl + 'assets/templates/substanceSelector.html',
+            link: function(scope, element, attrs){
+                scope.results = {};
+                scope.searching = false;
+
+                scope.top = 8;
+                scope.testb = 0;
+
+                scope.createSubref = function (selectedItem) {
+                    console.log(selectedItem);
+                    var temp = {};
+                    temp.refuuid = selectedItem.uuid;
+                    temp.refPname = selectedItem._name;
+                    temp.approvalID = selectedItem.approvalID;
+                    temp.substanceClass = "reference";
+                    console.log(temp);
+                    scope.subref = angular.copy(temp);
+                    console.log(scope);
+
+                };
+
+                scope.fetch = function (term, skip) {
+                    var url = baseurl + "api/v1/substances/search?q=" +
+                        term + "*&top=" + scope.top + "&skip=" + skip;
+                    var responsePromise = $http.get(url);
+
+                    responsePromise.success(function (data, status, headers, config) {
+                     //   console.log(data);
+                        scope.searching = false;
+                        scope.results = data;
+                    });
+
+                    responsePromise.error(function (data, status, headers, config) {
+                        scope.searching = false;
+                    });
+                };
+
+                scope.search = function () {
+                    scope.searching = true;
+                    scope.fetch(scope.term, 0);
+                };
+
+
+                scope.nextPage = function () {
+                    scope.fetch(scope.term, scope.results.skip + scope.results.top);
+                };
+                scope.prevPage = function () {
+                    scope.fetch(scope.term, scope.results.skip - scope.results.top);
+                };
+
+            }
+        };
+    });
+
+
+
+        ginasApp.directive('substanceView', function () {
+        return {
             replace: true,
             restrict: 'E',
             scope: {
                 subref: '='
             },
+            template: '<div><rendered id = {{subref.refuuid}}></rendered><br/><code>{{subref.refPname}}</code></div>'
+        };
+    });
+
+    ginasApp.directive('substanceTypeahead', function (nameFinder) {
+        return {
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/substance-typeahead.html",
+            replace: true,
+            scope: {
+                subref: '=',
+                field: '@'
+            },
             link: function (scope, element, attrs) {
 
-                scope.editing = function (obj) {
-                    if (_.has(obj, '_editing')) {
-                        obj._editing = !obj._editing;
-                    } else {
-                        _.set(obj, '_editing', true);
-                    }
+                scope.createSubref = function (selectedItem) {
+                    console.log(selectedItem);
+                    var temp = {};
+                    temp.refuuid = selectedItem.uuid;
+                    temp.refPname = selectedItem._name;
+                    temp.approvalID = selectedItem.approvalID;
+                    temp.substanceClass = "reference";
+                    console.log(temp);
+                    scope.subref = angular.copy(temp);
+                    console.log(scope);
+
                 };
 
-
-                //  console.log(scope);
-                element.bind("click", function () {
-                    //  scope.$parent.temp= _.cloneDeep(scope.$parent.diverse);
-                    // console.log(scope);
-                    // scope.$parent.diverse = [];
-                    //console.log(scope);
-
-                    //subref = undefined;
-                    /*                                    console.log(element);
-                     console.log(scope);*/
-                });
+                scope.loadSubstances = function ($query) {
+                    return nameFinder.search($query);
+                };
             }
         };
     });
@@ -2756,11 +2854,9 @@
         };
 
         CV.retrieve = function(field){
-            console.log(field);
             if(field ==='NAME_TYPE'){
                 var temp = CV[field];
                 temp =_.remove(temp, function(n) {
-                   // console.log(n);
                     return n.value !=='of';
                 });
                 return temp;

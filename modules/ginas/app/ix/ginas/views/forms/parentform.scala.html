@@ -4,15 +4,15 @@
     <div class="col-md-12">
             <div class="row form-row">
                 <div class="col-md-3">
-                    <substance-chooser-lite ng-model ="substance.structurallyDiverse.parentSubstance" field ="parentSubstance" name ="parentSubstance" formname ="parentForm"></substance-chooser-lite>
+                    <substance-chooser-selector ng-model ="substance.structurallyDiverse.parentSubstance" field ="parentSubstance" name ="parentSubstance" formname ="parentForm" label ="Parent Substance" type = "lite"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">
-                    <substance-chooser-lite ng-model ="substance.structurallyDiverse.hybridSpeciesPaternalOrganism" field ="hybridSpeciesPaternalOrganism" name ="hybridSpeciesPaternalOrganism" formname ="parentForm"></substance-chooser-lite>
+                    <substance-chooser-selector ng-model ="substance.structurallyDiverse.hybridSpeciesPaternalOrganism" field ="hybridSpeciesPaternalOrganism" name ="hybridSpeciesPaternalOrganism" formname ="parentForm"  label ="Hybrid Paternal Organism" type = "lite"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">
-                    <substance-chooser-lite ng-model ="substance.structurallyDiverse.hybridSpeciesMaternalOrganism" field ="hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" formname ="parentForm"></substance-chooser-lite>
+                    <substance-chooser-selector ng-model ="substance.structurallyDiverse.hybridSpeciesMaternalOrganism" field ="hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" formname ="parentForm" label ="Hybrid Maternal Organism" type = "lite"></substance-chooser-selector>
                 </div>
             </div>
-        <p></p>
+        <div class = "parentForm"></div>
     </div>
 </div>
