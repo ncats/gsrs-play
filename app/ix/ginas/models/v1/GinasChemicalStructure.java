@@ -1,14 +1,6 @@
 package ix.ginas.models.v1;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import ix.core.models.AccessGroupRestricted;
-import ix.core.models.Author;
 import ix.core.models.Group;
-import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.ginas.models.GinasAccess;
@@ -16,11 +8,14 @@ import ix.ginas.models.GinasData;
 import ix.ginas.models.GinasReference;
 import ix.ginas.models.GroupListSerializer;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.Lob;
 import javax.persistence.OneToOne;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
