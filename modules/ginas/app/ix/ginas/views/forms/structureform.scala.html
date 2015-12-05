@@ -22,7 +22,9 @@
                     <div class = "col-md-2"><strong>Defined Stereocenters</strong></div>
                     <div class = "col-md-1"><strong>EZ Centers</strong></div>
                     <div class = "col-md-1"><strong>Charge</strong></div>
-                    <div class = "col-md-2 text-right"><strong>References</strong></div>
+                    <div class = "col-md-1"><strong>References</strong></div>
+                    <div class = "col-md-1 text-right"><strong>References</strong></div>
+
                 </div>
                 <div class ="row" >
                     <div class = "col-md-3">
@@ -39,6 +41,9 @@
                     </div>
                     <div class = "col-md-1">
                     {{substance.charge}}
+                    </div>
+                    <div class="col-md-1 pull-right">
+                        <form-selector referenceobj =substance.structure parent = "substance" type = "access" divid="structureForm" mode="edit"></form-selector>
                     </div>
                     <div class="col-md-1 pull-right">
                         <form-selector referenceobj =substance.structure parent = "substance" type = "reference" divid="structureForm" mode="edit"></form-selector>

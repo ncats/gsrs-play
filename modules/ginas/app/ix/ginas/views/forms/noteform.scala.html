@@ -1,5 +1,3 @@
-@import ix.ginas.controllers.GinasApp
-
 <div class = "row info">
     <button class="btn btn-primary label-offset det">
                         Notes&nbsp;<span class="badge" ng-show="substance.notes.length>0">
@@ -11,6 +9,9 @@
                     <text-box ng-model="note.note" field="note"></text-box>
                 </div>
                 <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="note" parent = "substance" divid="noteForm" type = "access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="note" parent = "substance" divid="noteForm" type = "reference"></form-selector>
                 </div>
             </div>
@@ -19,17 +20,20 @@
         </form>
 
         <div ng-repeat="obj in substance.notes">
-            <div  class ="row">
-            <hr>
-            <div class="col-md-1">
-                <delete-button delete="obj" path="notes"></delete-button>
-            </div>
-            <div class="col-md-10 err-check" id="name-div">
-                <text-box-view-edit obj="obj" field="note"></text-box-view-edit>
-            </div>
-            <div class="col-md-1 pull-right">
-                <form-selector referenceobj ="obj" parent = "substance"  type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
-            </div>
+            <div class ="row">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path="notes"></delete-button>
+                </div>
+                <div class="col-md-10 err-check" id="name-div">
+                    <text-box-view-edit obj="obj" field="note"></text-box-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>
         </div>

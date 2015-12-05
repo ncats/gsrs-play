@@ -1,0 +1,16 @@
+<div class="row info" id="references">
+    <button class="btn btn-primary label-offset det">
+        Access Control</button>
+    <a ng-click="$parent.toggleStage();" class="pull-right">
+        <i class="fa fa-times fa-2x danger"></i></a>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="accessForm" id="add-name" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-4">
+                    <multi-select ng-model=referenceobj.access field="access" cv="ACCESS_GROUP"></multi-select>
+                </div>
+            </div>
+        </form>
+    </div>
+    <hr>
+</div>
