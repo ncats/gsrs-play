@@ -60,6 +60,7 @@ public class Validation {
                 
                 
         for(Name n : s.names){
+        	try{
             List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstancesWithExactName(100, 0, n.name);
             if(sr!=null && !sr.isEmpty()){
                 Substance s2=sr.iterator().next();
@@ -74,6 +75,9 @@ public class Validation {
                     strat.processMessage(mes);
                 }
             }
+        	}catch(Exception e){
+        		e.printStackTrace();
+        	}
         }
 
         Logger.info("substance Class " + s.substanceClass);
@@ -125,7 +129,7 @@ public class Validation {
             //struc.count
             for(Structure m: moieties){
                 Moiety m2= new Moiety();
-                m2.structure=(GinasChemicalStructure) m;
+                m2.structure=new GinasChemicalStructure(m);
                 m2.count=m.count;
                 moietiesForSub.add(m2);
             }
@@ -169,7 +173,7 @@ public class Validation {
                 case APPLY_CHANGE:
                     Structure struc2=cs.structure;
                     //String omol = cs.structure.molfile;
-                    cs.structure=(GinasChemicalStructure) struc;
+                    cs.structure=new GinasChemicalStructure(struc);
                     cs.structure.molfile=struc2.molfile;
                     if(struc2.stereoChemistry!=null){
                         cs.structure.stereoChemistry=struc2.stereoChemistry;

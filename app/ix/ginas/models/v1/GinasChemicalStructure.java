@@ -29,6 +29,33 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @DiscriminatorValue("GSRS")
 public class GinasChemicalStructure extends Structure implements GinasData {
 
+	public GinasChemicalStructure(){
+		
+	}
+	
+	public GinasChemicalStructure(Structure s){
+		this.atropisomerism=s.atropisomerism;
+		this.charge=s.charge;
+		this.count=s.count;
+		//this.created=s.created;
+		this.definedStereo=s.definedStereo;
+		this.deprecated=s.deprecated;
+		this.digest=s.digest;
+		this.ezCenters=s.ezCenters;
+		this.formula=s.formula;
+		this.id=s.id;
+		this.lastEdited=s.lastEdited;
+		this.links=s.links;
+		this.molfile=s.molfile;
+		this.mwt=s.mwt;
+		this.opticalActivity=s.opticalActivity;
+		this.properties=s.properties;
+		this.smiles=s.smiles;
+		this.stereoCenters=s.stereoCenters;
+		this.stereoComments=s.stereoComments;
+		this.version=s.version;
+	}
+	
 	@JsonIgnore
 	@OneToOne(cascade = CascadeType.ALL)
 	GinasAccess recordAccess;
