@@ -1,0 +1,11 @@
+<div>
+    <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
+<a href = "#" ng-click="subref=null">
+    <div ng-show="subref">
+        <substance-view subref="subref" ng-show="subref" ></substance-view>
+    </div>
+</a>
+    <div ng-show="!subref"  id="{{field}}">
+    <substance-typeahead subref = "subref"></substance-typeahead>
+        </div>
+</div>

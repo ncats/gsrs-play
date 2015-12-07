@@ -1,21 +1,15 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
-<a href = "#" ng-click="subref=null">
-    <span ng-show="subref">
-        <substance-view subref="subref" ng-show="subref" ></substance-view>
-    </span>
-</a>
-
-    <div ng-show="!subref"  id="{{field}}">
+    <div ng-show="!subref" id="{{field}}">
         <tags-input custom-class="form-control" ng-blur="cancel()" ng-model=subref title="Substance Selector"
                     placeholder="Substance Name" id="substance" name="substance" display-property="_name"
                     key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag)'
                     template="tag-template">
-            <auto-complete source="loadSubstances($query)" max-results-to-show="25" min-length="1" debounce-delay="0" load-on-down-arrow="true"
+            <auto-complete source="loadSubstances($query)" max-results-to-show="25" min-length="1" debounce-delay="0"
+                           load-on-down-arrow="true"
                            template="autocomplete-template"></auto-complete>
         </tags-input>
     </div>
-<ng-messages for="form.name.$error" ng-if="form.name.$touched">
+    <ng-messages for="form.name.$error" ng-if="form.name.$touched">
         <ng-message when="required" class="help-block">*required</ng-message>
     </ng-messages>
 

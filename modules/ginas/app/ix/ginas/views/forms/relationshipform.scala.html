@@ -6,7 +6,7 @@
         <form class="form-horizontal" name="relationshipForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    <substance-chooser-lite ng-model ="relationship.relatedSubstance" field ="relatedSubstance" name ="relatedSubstance" formname ="relationshipForm" label = "Related Substance"></substance-chooser-lite>
+                    <substance-chooser-selector ng-model ="relationship.relatedSubstance" field ="parentSubstance" name ="parentSubstance" formname ="parentForm" label ="Parent Substance" type = "lite"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-select ng-model="relationship.type" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-select>

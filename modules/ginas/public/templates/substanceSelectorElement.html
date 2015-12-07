@@ -1,9 +1,11 @@
 <div>
 <div ng-hide="lite">
     <span ng-show="mymodel">
-        <code>{{mymodel.refPname}}</code>
-        <rendered id = mymodel.refuuid></rendered>
-    </span>
+        <!--<code>{{mymodel.refPname}}</code>-->
+        <!--<rendered id = mymodel.refuuid></rendered>-->
+    <!--</span>-->
+                <substance-view subref="mymodel" ng-show="mymodel"></substance-view>
+
     <span ng-hide="mymodel">
         <code>NO MATERIAL SELECTED</code>
     </span>
