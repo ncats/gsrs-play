@@ -37,7 +37,6 @@ public class GinasSubData extends GinasCommonData implements GinasData{
     
     @JsonProperty("references")    
     public void setReferences(Collection<String> references){
-    	System.out.println("Attempting reference set:" + references);
     	ObjectMapper om = new ObjectMapper();
     	Map mm = new HashMap();
     	mm.put("references", references);
