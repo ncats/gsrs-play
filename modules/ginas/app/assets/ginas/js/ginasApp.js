@@ -146,7 +146,7 @@
         var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-            return $http.get(url + name.toUpperCase() + "'", {
+            return $http.get(url + name.toUpperCase() + "'",{cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -233,16 +233,17 @@
     });
 
     ginasApp.service('nameFinder', function ($http) {
+
         var url = baseurl + "api/v1/substances/search?q=";
 
         var nameFinder = {
             search: function (query) {
-                var promise = $http.get(url + query + "*&top=10", {
+                var promise = $http.get(url + query + "*", {cache: true},{
                     headers: {
                         'Content-Type': 'text/plain'
                     }
                 }).then(function (response) {
-                   // console.log(response);
+                    console.log(response);
                     return response.data.content;
                 });
                 return promise;
@@ -274,7 +275,7 @@
         var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceRet = {
             getSubstances: function (name) {
-                var promise = $http.get(url + name.toUpperCase() + "'", {
+                var promise = $http.get(url + name.toUpperCase() + "'",{cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -297,7 +298,7 @@
                 if (!_.has(options, field)) {
                     if (!fetching[field]) {
                         fetching[field] = true;
-                        $http.get(url + field.toUpperCase() + "'", {
+                        $http.get(url + field.toUpperCase() + "'",{cache: true}, {
                             headers: {
                                 'Content-Type': 'text/plain'
                             }
@@ -340,7 +341,7 @@
         var url = baseurl + "api/v1/substances/search?q=";
 
         this.load = function (field) {
-            $http.get(url + field.toUpperCase(), {
+            $http.get(url + field.toUpperCase(),{cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -2328,10 +2329,10 @@
                 scope.fetch = function (term, skip) {
                     var url = baseurl + "api/v1/substances/search?q=" +
                         term + "*&top=" + scope.top + "&skip=" + skip;
-                    var responsePromise = $http.get(url);
+                    var responsePromise = $http.get(url,{cache: true});
 
                     responsePromise.success(function (data, status, headers, config) {
-                     //   console.log(data);
+                        console.log(data);
                         scope.searching = false;
                         scope.results = data;
                     });
@@ -2396,7 +2397,9 @@
                 };
 
                 scope.loadSubstances = function ($query) {
-                    return nameFinder.search($query);
+                    var results = nameFinder.search($query);
+                    console.log(results);
+                    return results;
                 };
             }
         };
@@ -2844,9 +2847,9 @@
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
         var CV={};
         CV.load = function(field){
-                return $http.get(url + field.toUpperCase() + "'", {
+                return $http.get(url + field.toUpperCase() + "'",{cache: true},{
                     headers: {
-                        'Content-Type': 'text/plain'
+                        'Content-Type': 'text/plain',cache: true
                     }
                 }).success(function (data) {
                         CV[field] = data.content[0].terms;
