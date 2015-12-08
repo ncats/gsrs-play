@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import javax.persistence.*;
 
 import ix.core.models.Structure;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 @Entity
 @Table(name="ix_ginas_polymer")
-public class Polymer extends GinasSubData {
+public class Polymer extends GinasCommonSubData {
     @OneToOne(cascade=CascadeType.ALL)
     public PolymerClassification classification;
 

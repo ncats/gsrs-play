@@ -10,12 +10,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.KeywordListSerializer;
 
 @Entity
 @Table(name="ix_ginas_polymerclass")
-public class PolymerClassification extends GinasSubData {
+public class PolymerClassification extends GinasCommonSubData {
     @Indexable(facet=true,name="Polymer Class")
     public String polymerClass;
     @Indexable(facet=true,name="Polymer Geometry")

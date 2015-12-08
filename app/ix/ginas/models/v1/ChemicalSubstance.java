@@ -26,7 +26,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
-import ix.ginas.models.GinasData;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.StructureSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 

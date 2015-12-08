@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.core.models.VIntArray;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.IntArraySerializer;
 import ix.ginas.models.IntArrayDeserializer;
 
 @Entity
 @Table(name="ix_ginas_unit")
-public class Unit extends GinasSubData {
+public class Unit extends GinasCommonSubData {
     @OneToOne(cascade=CascadeType.ALL)
     @JsonSerialize(using = IntArraySerializer.class)
     @JsonDeserialize(using = IntArrayDeserializer.class)

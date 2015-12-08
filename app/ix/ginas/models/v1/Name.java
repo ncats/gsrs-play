@@ -3,7 +3,8 @@ package ix.ginas.models.v1;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
-import ix.ginas.models.GinasSubData;
+import ix.core.models.Value;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.KeywordListDeserializer;
 import ix.ginas.models.PrincipalListDeserializer;
@@ -39,7 +40,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
 @Table(name="ix_ginas_name")
-public class Name extends GinasSubData {
+public class Name extends GinasCommonSubData {
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
 
     @JSONEntity(title = "Name", isRequired = true)
@@ -163,7 +164,7 @@ public class Name extends GinasSubData {
     		//System.out.println("Real sub");
 	    	for(Keyword ref: this.getReferences()){
 	    		//System.out.println(ref.getValue());
-	    		Reference r=sub.getReferenceByUUID(ref.getValue());
+	    		Reference r=sub.getReferenceByUUID(ref.getValue().toString());
 	    		
 	    		if(r!=null){
 	    			//System.out.println(r.citation);

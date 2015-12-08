@@ -20,6 +20,7 @@ import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
 import ix.ginas.models.v1.DisulfideLink;
+import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Glycosylation;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Modifications;
@@ -51,6 +52,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -918,18 +921,10 @@ public class GinasApp extends App {
         return values;
     }
 
-    public static List<Keyword> getStructureReferences(Structure s) {
-        List<Keyword> references = new ArrayList<Keyword>();
-        for (Value v : s.properties) {
-            Logger.info(v.label);
-            if (v.label.equals("GInAS Reference")) {
-                Keyword k = new Keyword(v.getValue().toString());
-                Logger.info(k.term);
-                references.add(k);
-            }
-        }
-
-        return references;
+    public static Set<Keyword> getStructureReferences(GinasChemicalStructure s) {
+    	if(s.getReferences()!=null)
+    		return s.getReferences();
+    	return new LinkedHashSet<Keyword>();
     }
 
         // ******************* PROTEINS

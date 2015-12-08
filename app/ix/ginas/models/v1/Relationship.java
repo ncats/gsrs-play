@@ -23,7 +23,7 @@ import ix.ginas.models.*;
 @JSONEntity(title = "Relationship", isFinal = true)
 @Entity
 @Table(name="ix_ginas_relationship")
-public class Relationship extends GinasSubData {
+public class Relationship extends GinasCommonSubData {
 //    @ManyToMany(cascade=CascadeType.ALL)
 //    @JoinTable(name="ix_ginas_relationship_ref")
 //    @JsonSerialize(using=KeywordListSerializer.class)    

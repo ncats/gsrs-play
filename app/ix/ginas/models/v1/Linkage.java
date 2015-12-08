@@ -1,11 +1,11 @@
 package ix.ginas.models.v1;
 
 
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 import java.util.List;
 
-public class Linkage extends GinasSubData {
+public class Linkage extends GinasCommonSubData {
 	String linkage;
 	List<Site> sites;
 

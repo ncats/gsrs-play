@@ -22,7 +22,7 @@ import ix.ginas.models.*;
 @JSONEntity(title = "Note", isFinal = true)
 @Entity
 @Table(name="ix_ginas_note")
-public class Note extends GinasSubData {
+public class Note extends GinasCommonSubData {
 
     /**
      * ideally we should be using List<Reference> here!

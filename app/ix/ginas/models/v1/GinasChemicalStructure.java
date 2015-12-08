@@ -3,10 +3,12 @@ package ix.ginas.models.v1;
 import ix.core.models.Group;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
-import ix.ginas.models.GinasAccess;
-import ix.ginas.models.GinasData;
-import ix.ginas.models.GinasReference;
+import ix.core.models.Value;
+import ix.ginas.models.GinasAccessContainer;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasReferenceContainer;
 import ix.ginas.models.GroupListSerializer;
+import ix.ginas.models.ReferenceListSerializer;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,7 +29,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @Entity
 @DiscriminatorValue("GSRS")
-public class GinasChemicalStructure extends Structure implements GinasData {
+public class GinasChemicalStructure extends Structure implements GinasAccessReferenceControlled {
 
 	public GinasChemicalStructure(){
 		
@@ -58,11 +60,11 @@ public class GinasChemicalStructure extends Structure implements GinasData {
 	
 	@JsonIgnore
 	@OneToOne(cascade = CascadeType.ALL)
-	GinasAccess recordAccess;
+	GinasAccessContainer recordAccess;
 
 	@JsonIgnore
 	@OneToOne(cascade = CascadeType.ALL)
-	GinasReference recordReference;
+	public GinasReferenceContainer recordReference;
 
 	@JsonProperty("access")
 	public void setAccess(Collection<String> access) {
@@ -72,7 +74,7 @@ public class GinasChemicalStructure extends Structure implements GinasData {
 		mm.put("entityType", this.getClass().getName());
 		JsonNode jsn = om.valueToTree(mm);
 		try {
-			recordAccess = om.treeToValue(jsn, GinasAccess.class);
+			recordAccess = om.treeToValue(jsn, GinasAccessContainer.class);
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -87,7 +89,7 @@ public class GinasChemicalStructure extends Structure implements GinasData {
 		return null;
 	}
 
-	@JsonSerialize(using = GroupListSerializer.class)
+	@JsonSerialize(using = ReferenceListSerializer.class)
 	public Set<Keyword> getReferences() {
 		if (recordReference != null) {
 			return recordReference.references;
@@ -97,14 +99,14 @@ public class GinasChemicalStructure extends Structure implements GinasData {
 
 	@JsonProperty("references")
 	public void setReferences(Collection<String> references) {
-		System.out.println("Attempting reference set:" + references);
 		ObjectMapper om = new ObjectMapper();
 		Map mm = new HashMap();
 		mm.put("references", references);
 		mm.put("entityType", this.getClass().getName());
 		JsonNode jsn = om.valueToTree(mm);
+		
 		try {
-			recordReference = om.treeToValue(jsn, GinasReference.class);
+			recordReference = om.treeToValue(jsn, GinasReferenceContainer.class);
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}

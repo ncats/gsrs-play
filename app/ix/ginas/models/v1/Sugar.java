@@ -1,11 +1,11 @@
 package ix.ginas.models.v1;
 
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 import java.util.List;
 import java.util.Map;
 
-public class Sugar extends GinasSubData {
+public class Sugar extends GinasCommonSubData {
 	List<Site> sites;
 	String sugar;
 

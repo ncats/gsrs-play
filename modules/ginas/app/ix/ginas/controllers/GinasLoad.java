@@ -9,7 +9,7 @@ import ix.core.plugins.PayloadPlugin;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.SubstanceFactory;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Relationship;
@@ -406,7 +406,7 @@ public class GinasLoad extends App {
         }
         return redirect(ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(sub)));
     }
-    public static boolean applyChanges(GinasSubData gold, GinasSubData gnew) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
+    public static boolean applyChanges(GinasCommonSubData gold, GinasCommonSubData gnew) throws IllegalArgumentException, IllegalAccessException, InvocationTargetException{
     	if(gnew==null)return false;
     	if(!gold.getClass().equals(gnew.getClass())){
     		throw new IllegalStateException("old type != new type");
@@ -450,24 +450,24 @@ public class GinasLoad extends App {
      * @throws IllegalArgumentException
      * @throws IllegalAccessException
      */
-    public static Map<String,GinasSubData> getEntityMap(GinasSubData ginasObject, Map<String,GinasSubData> gmap) throws IllegalArgumentException, IllegalAccessException{
-    	if(gmap == null)gmap = new HashMap<String,GinasSubData>();
+    public static Map<String,GinasCommonSubData> getEntityMap(GinasCommonSubData ginasObject, Map<String,GinasCommonSubData> gmap) throws IllegalArgumentException, IllegalAccessException{
+    	if(gmap == null)gmap = new HashMap<String,GinasCommonSubData>();
     	Field[] fields = ginasObject.getClass().getFields();
     	
     	for(Field f: fields){
     		if (!java.lang.reflect.Modifier.isStatic(f.getModifiers()) && 
         			!java.lang.reflect.Modifier.isFinal(f.getModifiers())) {
     			Object o = (Object)f.get(ginasObject);
-    			if(o!= null && o instanceof GinasSubData){
-    				gmap.put(((GinasSubData)o).getOrGenerateUUID().toString(), (GinasSubData)o);
-    				getEntityMap((GinasSubData)o,gmap);
+    			if(o!= null && o instanceof GinasCommonSubData){
+    				gmap.put(((GinasCommonSubData)o).getOrGenerateUUID().toString(), (GinasCommonSubData)o);
+    				getEntityMap((GinasCommonSubData)o,gmap);
     			}
     			
     			if(o!=null && Collection.class.isAssignableFrom(o.getClass())){
     				for(Object osub: (Collection)o){
-    					if(osub!= null && osub instanceof GinasSubData){
-    	    				gmap.put(((GinasSubData)osub).getOrGenerateUUID().toString(), (GinasSubData)osub);
-    	    				getEntityMap((GinasSubData)osub,gmap);
+    					if(osub!= null && osub instanceof GinasCommonSubData){
+    	    				gmap.put(((GinasCommonSubData)osub).getOrGenerateUUID().toString(), (GinasCommonSubData)osub);
+    	    				getEntityMap((GinasCommonSubData)osub,gmap);
     	    			}
     				}
     			}

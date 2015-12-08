@@ -3,10 +3,7 @@ package ix.ginas.models;
 import ix.core.controllers.AdminFactory;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
-import ix.core.models.Keyword;
 import ix.core.models.Principal;
-import ix.ginas.models.v1.Reference;
-import ix.ginas.models.v1.ReferenceListSerializer;
 import ix.utils.Global;
 
 import java.util.Collection;
@@ -72,7 +69,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     
     @JsonIgnore
     @OneToOne(cascade=CascadeType.ALL)
-    GinasAccess recordAccess;
+    GinasAccessContainer recordAccess;
     
     
    
@@ -86,7 +83,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     	mm.put("entityType", this.getClass().getName());
     	JsonNode jsn=om.valueToTree(mm);
     	try {
-			recordAccess= om.treeToValue(jsn, GinasAccess.class);
+			recordAccess= om.treeToValue(jsn, GinasAccessContainer.class);
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
@@ -139,7 +136,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
 
 	public void addRestrictGroup(Group p){
 		if(this.recordAccess==null){
-			this.recordAccess=new GinasAccess();
+			this.recordAccess=new GinasAccessContainer();
 		}
 		this.recordAccess.add(p);
 	}
