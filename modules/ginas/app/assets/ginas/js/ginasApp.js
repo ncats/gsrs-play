@@ -81,9 +81,6 @@
     });
 
 
-
-
-
     ginasApp.factory('polymerUtils', function () {
         var utils = {};
         utils.getAttachmentMapUnits = function (srus) {
@@ -146,7 +143,7 @@
         var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceFactory = {};
         substanceFactory.getSubstances = function (name) {
-            return $http.get(url + name.toUpperCase() + "'",{cache: true}, {
+            return $http.get(url + name.toUpperCase() + "'", {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -189,7 +186,7 @@
             "names.nameJurisdiction": "JURISDICTION",
             "names.domains": "NAME_DOMAIN",
             "names.languages": "LANGUAGE",
-            "codes.system": "CODE_SYSTEM",
+            "codes.codeSystem": "CODE_SYSTEM",
             "codes.type": "CODE_TYPE",
             "relationships.type": "RELATIONSHIP_TYPE",
             "relationships.interactionType": "INTERACTION_TYPE",
@@ -233,12 +230,11 @@
     });
 
     ginasApp.service('nameFinder', function ($http) {
-
         var url = baseurl + "api/v1/substances/search?q=";
 
         var nameFinder = {
             search: function (query) {
-                var promise = $http.get(url + query + "*", {cache: true},{
+                var promise = $http.get(url + query + "*", {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -275,7 +271,7 @@
         var url = baseurl + "api/v1/substances?filter=names.name='";
         var substanceRet = {
             getSubstances: function (name) {
-                var promise = $http.get(url + name.toUpperCase() + "'",{cache: true}, {
+                var promise = $http.get(url + name.toUpperCase() + "'", {cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -298,7 +294,7 @@
                 if (!_.has(options, field)) {
                     if (!fetching[field]) {
                         fetching[field] = true;
-                        $http.get(url + field.toUpperCase() + "'",{cache: true}, {
+                        $http.get(url + field.toUpperCase() + "'", {cache: true}, {
                             headers: {
                                 'Content-Type': 'text/plain'
                             }
@@ -341,7 +337,7 @@
         var url = baseurl + "api/v1/substances/search?q=";
 
         this.load = function (field) {
-            $http.get(url + field.toUpperCase(),{cache: true}, {
+            $http.get(url + field.toUpperCase(), {cache: true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
@@ -355,16 +351,17 @@
         };
     });
 
-    ginasApp.service('UUID', function(){
-            function s4() {
-                return Math.floor((1 + Math.random()) * 0x10000)
-                    .toString(16)
-                    .substring(1);
-            }
-        this.newID = function() {
-            var uuid= s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    ginasApp.service('UUID', function () {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+                .toString(16)
+                .substring(1);
+        }
+
+        this.newID = function () {
+            var uuid = s4() + s4() + '-' + s4() + '-' + s4() + '-' +
                 s4() + '-' + s4() + s4() + s4();
-            return(uuid);
+            return (uuid);
         };
     });
 
@@ -411,52 +408,54 @@
 
 
         $scope.toFormSubstance = function (apiSub) {
-
+            console.log(apiSub);
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
-            for (var i in apiSub.names) {
-                if (typeof apiSub.names[i].nameOrgs != "undefined") {
-                    for (var j in apiSub.names[i].nameOrgs) {
-                        if (apiSub.names[i].nameOrgs[j].deprecated) {
-                            apiSub.destructive = true;
-                        }
-                        apiSub.names[i].nameOrgs[j] = apiSub.names[i].nameOrgs[j].nameOrg;
-                    }
-                }
-            }
-
-
-            console.log($scope);
-            apiSub = $scope.expandCV(apiSub, "");
-            apiSub = $scope.splitNames(apiSub);
-
-            //var references = {};
-            //for (var v in apiSub.references) {
-            //    references[apiSub.references[v].uuid] = apiSub.references[v];
-            //    apiSub.references[v].id = v - 1 + 2;
+            //for (var i in apiSub.names) {
+            //    if (typeof apiSub.names[i].nameOrgs != "undefined") {
+            //        for (var j in apiSub.names[i].nameOrgs) {
+            //            if (apiSub.names[i].nameOrgs[j].deprecated) {
+            //                apiSub.destructive = true;
+            //            }
+            //            apiSub.names[i].nameOrgs[j] = apiSub.names[i].nameOrgs[j].nameOrg;
+            //        }
+            //    }
             //}
-            //apiSub = $scope.expandReferences(apiSub, references, 0);
+            //
+            //
+            //console.log($scope);
+            //apiSub = $scope.expandCV(apiSub, "");
+            //apiSub = $scope.splitNames(apiSub);
+
+/*            var references = {};
+            console.log(apiSub.references);
+
+            for (var v in apiSub.references) {
+                console.log(apiSub.references);
+                references[apiSub.references[v].uuid] = apiSub.references[v];
+                apiSub.references[v].id = v - 1 + 2;
+            }*/
+          //  apiSub = $scope.expandReferences(apiSub, references, 0);
 
 
             return apiSub;
         };
 
         $scope.fromFormSubstance = function (formSub) {
-
             if (formSub.officialNames || formSub.unofficialNames) {
                 _.forEach(formSub.officialNames, function (n) {
                     n.type = "of";
                 });
             }
-                if(_.isUndefined(formSub.officialNames)){
-                    formSub.names =  formSub.unofficialNames;
-                }else if(_.isUndefined(formSub.unofficialNames)){
-                    formSub.names =  formSub.officialNames;
-                }else{
-                    formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
-                }
-                delete formSub.officialNames;
-                delete formSub.unofficialNames;
+            if (_.isUndefined(formSub.officialNames)) {
+                formSub.names = formSub.unofficialNames;
+            } else if (_.isUndefined(formSub.unofficialNames)) {
+                formSub.names = formSub.officialNames;
+            } else {
+                formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
+            }
+            delete formSub.officialNames;
+            delete formSub.unofficialNames;
 
             if (formSub.q) {
                 delete formSub.q;
@@ -466,10 +465,9 @@
             }
 
             formSub = $scope.flattenCV(formSub);
-            formSub = $scope.collapseReferences(formSub, 0);
             if (formSub.moieties) {
-                _.forEach(formSub.moieties, function (m){
-                     m.id= UUID.newID();
+                _.forEach(formSub.moieties, function (m) {
+                    m.id = UUID.newID();
                 });
             }
             if (formSub.structure) {
@@ -750,9 +748,9 @@
 
         $scope.defaultSave = function (obj, form, path, list, name) {
             $scope.$broadcast('show-errors-check-validity');
-/*            console.log(obj);
-            console.log(form);
-            console.log($scope);*/
+            /*            console.log(obj);
+             console.log(form);
+             console.log($scope);*/
 
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
@@ -899,11 +897,11 @@
                     _.set($scope.substance, path + ".glycosylationType", obj.glycosylationType);
                     $scope.defaultSave(g, form, path + "." + obj.link + 'Glycosylation', list, objName);
                     break;
-/*                case "structurallyDiverse":
-                    var diverse = $scope.addFields(obj, path);
-                    $scope.defaultSave(diverse, form, path, list, objName);
+                /*                case "structurallyDiverse":
+                 var diverse = $scope.addFields(obj, path);
+                 $scope.defaultSave(diverse, form, path, list, objName);
 
-                    break;*/
+                 break;*/
                 case "references":
                     $scope.defaultSave(obj, form, path, list, objName);
                     break;
@@ -1015,26 +1013,8 @@
             return sub;
         };
 
-        $scope.collapseReferences = function (sub, depth) {
-            return sub;
-/*            for (var v in sub) {
-                if (depth > 0) {
-                    if (v === "references") {
-                        for (var r in sub[v]) {
-                            sub[v][r] = sub[v][r].uuid;
-                        }
-                    }
-                }
-                if (typeof sub[v] === "object") {
-                    $scope.collapseReferences(sub[v], depth + 1);
-                }
-            }
-            return sub;*/
-        };
-
-
         $scope.flattenCV = function (sub) {
-          //  console.log(sub);
+            //  console.log(sub);
             for (var v in sub) {
                 if ($scope.isCV(sub[v])) {
                     sub[v] = sub[v].value;
@@ -1610,7 +1590,7 @@
             }
         };
 
-        $scope.printff = function(){
+        $scope.printff = function () {
             console.log("SDFSDFSDFSDdf");
         };
     });
@@ -1697,7 +1677,7 @@
         };
     });
 
-    ginasApp.directive('rendered', function ($http) {
+    ginasApp.directive('rendered', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -1709,7 +1689,7 @@
         };
     });
 
-    ginasApp.directive('submitButtons', function ($modal) {
+    ginasApp.directive('submitButtons', function () {
 
         return {
             restrict: 'E',
@@ -1743,9 +1723,10 @@
             replace: true,
             scope: {
                 referenceobj: '=',
-                parent: '='
+                parent: '=',
+                field:'='
             },
-            link: function (scope, element, attrs, ngModel) {
+            link: function (scope, element, attrs) {
                 var formHolder;
                 var childScope;
                 var template;
@@ -1814,7 +1795,7 @@
                         break;
                     case "textbox":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><comment value = "referenceobj.comments"></comment></a>');
+                            template = angular.element('<a ng-click ="toggleStage()"><comment value = "referenceobj[field]"></comment></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -1840,7 +1821,6 @@
                         }
                         formHolder = '<div ng-blur ="toggleStage()"><comment-form referenceobj = referenceobj parent = parent></comment-form></div>';
                         break;
-
 
 
                 }
@@ -2212,7 +2192,7 @@
 
     ginasApp.directive('substanceChooserSelector', function ($templateRequest, $compile, nameFinder) {
         return {
-           // templateUrl: baseurl + 'assets/templates/substance-select.html',
+            // templateUrl: baseurl + 'assets/templates/substance-select.html',
             replace: true,
             restrict: 'E',
             scope: {
@@ -2228,18 +2208,18 @@
                 scope.stage = true;
                 switch (attrs.type) {
                     case "lite":
-                            $templateRequest(baseurl + "assets/templates/substance-select.html").then(function (html) {
-                                template = angular.element(html);
-                                element.append(template);
-                                $compile(template)(scope);
-                            });
+                        $templateRequest(baseurl + "assets/templates/substance-select.html").then(function (html) {
+                            template = angular.element(html);
+                            element.append(template);
+                            $compile(template)(scope);
+                        });
                         break;
                     case "search":
-                            $templateRequest(baseurl + "assets/templates/substance-search.html").then(function (html) {
-                                template = angular.element(html);
-                                element.append(template);
-                                $compile(template)(scope);
-                            });
+                        $templateRequest(baseurl + "assets/templates/substance-search.html").then(function (html) {
+                            template = angular.element(html);
+                            element.append(template);
+                            $compile(template)(scope);
+                        });
                         formHolder = '<substance-search-form subref = "subref"></substance-search-form>';
                         element.append(formHolder);
                         break;
@@ -2313,7 +2293,7 @@
                 subref: '='
             },
             templateUrl: baseurl + 'assets/templates/substanceSelector.html',
-            link: function(scope, element, attrs){
+            link: function (scope, element, attrs) {
                 scope.results = {};
                 scope.searching = false;
 
@@ -2336,7 +2316,7 @@
                 scope.fetch = function (term, skip) {
                     var url = baseurl + "api/v1/substances/search?q=" +
                         term + "*&top=" + scope.top + "&skip=" + skip;
-                    var responsePromise = $http.get(url,{cache: true});
+                    var responsePromise = $http.get(url, {cache: true});
 
                     responsePromise.success(function (data, status, headers, config) {
                         console.log(data);
@@ -2367,8 +2347,7 @@
     });
 
 
-
-        ginasApp.directive('substanceView', function () {
+    ginasApp.directive('substanceView', function () {
         return {
             replace: true,
             restrict: 'E',
@@ -2662,9 +2641,55 @@
                 format: '='
             },
             template: function () {
-                return '<button type="button" class="btn btn-primary" structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
+                return '<button type="button" class="btn btn-primary" aria-label ="export molfile" structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
             }
         };
+    });
+
+    //selector for which button to show, and the associalted modal window
+    ginasApp.directive('modalButton', function ($compile, $templateRequest) {
+        return {
+            restrict: 'E',
+            scope: {
+                type: '='
+            },
+
+//            <export-button structureid ="'@chem.structure.id'" ></export-button></li>
+
+            link: function (scope, element, attrs, ngModel) {
+                var modalWindow;
+                var childScope;
+                var template;
+                scope.stage = true;
+                switch (attrs.type) {
+                    case "upload":
+                        template = angular.element(' <a href = "#" aria-label="Export" structureid=structureid format=format export><i class="fa fa-upload fa-2x"></i></a>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        break;
+                    case "import":
+                        template = angular.element(' <a href = "#" aria-label="Import" structureid=structureid format=format export><i class="fa fa-clipboard fa-2x success"></i></a>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        break;
+                    case "export":
+                        template = angular.element(' <a href = "#" aria-label="Export" structureid=structureid format=format export><i class="fa fa-external-link fa-2x success"></i></a>');
+                        element.append(template);
+                        $compile(template)(scope);
+                        $templateRequest(baseurl + "assets/templates/molexport.html").then(function (html) {
+                            modalWindow = angular.element(html);
+                            //  modalWindow = '<substance-search-form subref = "subref"></substance-search-form>';
+                            element.append(modalWindow);
+
+                        });
+                        break;
+                }
+                scope.openModal = function () {
+                    console.log('clicked');
+                    modalWindow.modal('show');
+                }
+            }
+        }
     });
 
     ginasApp.directive('errorWindow', function () {
@@ -2714,6 +2739,10 @@
             });
         };
     });
+    ginasApp.service("molFetch", function ($http) {
+
+
+    });
 
     ginasApp.directive('molExport', function ($http) {
         return {
@@ -2762,7 +2791,7 @@
             link: function (scope, element, attrs, ngModel) {
                 scope.edit = false;
                 scope.editing = function () {
-                     scope.edit = !scope.edit;
+                    scope.edit = !scope.edit;
                 };
             }
         };
@@ -2848,29 +2877,27 @@
     });
 
 
-
-
-    ginasApp.factory('CV', function($http){
+    ginasApp.factory('CV', function ($http) {
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
-        var CV={};
-        CV.load = function(field){
-                return $http.get(url + field.toUpperCase() + "'",{cache: true},{
-                    headers: {
-                        'Content-Type': 'text/plain',cache: true
-                    }
-                }).success(function (data) {
-                        CV[field] = data.content[0].terms;
-                });
+        var CV = {};
+        CV.load = function (field) {
+            return $http.get(url + field.toUpperCase() + "'", {cache: true}, {
+                headers: {
+                    'Content-Type': 'text/plain', cache: true
+                }
+            }).success(function (data) {
+                CV[field] = data.content[0].terms;
+            });
         };
 
-        CV.retrieve = function(field){
-            if(field ==='NAME_TYPE'){
+        CV.retrieve = function (field) {
+            if (field === 'NAME_TYPE') {
                 var temp = CV[field];
-                temp =_.remove(temp, function(n) {
-                    return n.value !=='of';
+                temp = _.remove(temp, function (n) {
+                    return n.value !== 'of';
                 });
                 return temp;
-            }else {
+            } else {
                 return CV[field];
             }
         };
@@ -2888,10 +2915,10 @@
                 field: '@',
                 label: '@'
             },
-                link: function (scope, element, attrs) {
-                    CV.load(attrs.cv).then(function(){
-                        scope.values = CV.retrieve(attrs.cv);
-                    });
+            link: function (scope, element, attrs) {
+                CV.load(attrs.cv).then(function () {
+                    scope.values = CV.retrieve(attrs.cv);
+                });
             }
         };
     });
@@ -2909,12 +2936,12 @@
             },
             link: function (scope, element, attrs) {
                 if (!_.has(CV, attrs.cv)) {
-                    CV.load(attrs.cv).then(function(){
+                    CV.load(attrs.cv).then(function () {
                         scope.values = CV.retrieve(attrs.cv);
                     });
-                }else{
+                } else {
                     scope.values = CV.retrieve(attrs.cv);
-               }
+                }
 
                 scope.editing = function (obj) {
                     if (_.has(obj, '_editing')) {

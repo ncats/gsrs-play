@@ -163,13 +163,13 @@ public class PayloadPlugin extends Plugin {
         return null;
     }
     public static void qq(InputStream is) throws IOException{
-        System.out.println("########## SDF");
+       // System.out.println("########## SDF");
         BufferedReader buff = new BufferedReader(new InputStreamReader(is));
         String line;
         int c=0;
                 
         while((line=buff.readLine())!=null){
-            System.out.println(line);
+            //System.out.println(line);
             c++;
             if(c>10)break;
         }

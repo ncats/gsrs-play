@@ -1,51 +1,47 @@
-@import ix.ginas.controllers.GinasApp;
-
 <div class = "row info" >
     <button class="btn btn-primary label-offset det">
                       Mixture Components&nbsp;<span class="badge" ng-show="substance.mixture.components.length>0">
                         {{substance.mixture.components.length}}</span> </button>
     <div class="col-md-12">
-        <div class ="row header-row">
-            <div class="col-md-2"><strong>Component Substance</strong></div>
-            <div class="col-md-2"><strong>Type</strong></div>
-        </div>
-        <div ng-repeat="component in substance.mixture.components">
-            <div class="row">
-                        <div ng-show="component._editType=='edit'" class="text-center editreminder">
-                          Editing mixture component below.
-                        </div>
-                        <div  ng-hide="component._editType=='edit'">
-                        <div class ="col-md-2">
-                            <substance-chooser ng-model = "component.substance"></substance-chooser>
-                        </div>
-                       <div class = "col-md-6">
-                           <span href="#" editable-select="component.type"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('MIXTURE_TYPE') track by r.display" blur="submit">{{component.type.display}}</span>
-                       </div>
-                       </div>
-                         <div class="pull-right">
-                            <button  ng-hide="component._editType=='edit'" ng-click="setEditMixtureComponent(component)">Edit</button>
-                            <button  ng-show="component._editType=='edit'" ng-click="validate('mcomponent', 'mixtureForm', 'mixture.components', true);">Update</button>
-                            <button  ng-hide="component._editType=='edit'" ng-click="removeItem(substance.mixture.components, component)">Remove</button>
-                         </div>
-                       
-            </div>
-        </div>
-
-        <form class="form-horizontal" name="mixtureForm" id = "add-component" role="form" novalidate>
+        <form class="form-horizontal" name="componentForm" role="form" novalidate>
             <div class="row form-row">
-                <div class="col-md-2">
-                    <substance-chooser ng-model = "mcomponent.substance"></substance-chooser>
+                <div class="col-md-3">
+                    <substance-chooser-selector ng-model ="component.substance" field ="substance" name ="substance" formname ="componentForm" label ="Component Substance" type = "lite"></substance-chooser-selector>
                 </div>
-                <div class="col-md-6 err-check" show-errors>
-                    <select class="form-control" title="Mixture Type" id="type" name = "type" ng-model = "mcomponent.type" ng-options="r.display for r in lookup.getList('MIXTURE_TYPE') track by r.display" required>
-                        </select>
-                    <ng-messages for="mixtureForm.type.$error" ng-if="mixtureForm.type.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
+                <div class="col-md-3">
+                    <dropdown-select ng-model="component.type" field="type" cv = "MIXTURE_TYPE" ></dropdown-select>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="component" parent = "substance" divid="componentForm" type = "access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="component" parent = "substance" divid="componentForm" type = "reference"></form-selector>
                 </div>
             </div>
-            <submit-buttons submit="mcomponent" form="mixtureForm" path="mixture.components"></submit-buttons>
+            <div class="componentForm"></div>
+            <submit-buttons submit="component" form="componentForm" path="mixture.components"></submit-buttons>
         </form>
 
+        <div ng-repeat="obj in substance.mixture.components" >
+            <div class ="row">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path="relationships"></delete-button>
+                </div>
+                <div class="col-md-2">
+                    <substance-chooser-view-edit obj = "obj" field ="substance"></substance-chooser-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj = "obj" field="type" cv = "MIXTURE_TYPE" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" formname="componentForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" formname="componentForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+            </div>
+            <div class = {{obj.$$hashKey}}></div>
+        </div>
     </div>
 </div>

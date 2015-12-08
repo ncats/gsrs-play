@@ -272,7 +272,6 @@ public class RouteFactory extends Controller {
         try {
             Method m = getMethod (context, "page", 
                                   int.class, int.class, String.class);
-            System.out.println(m);
             if (m != null)
                 return (Result)m.invoke(null, top, skip, filter);
         }

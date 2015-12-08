@@ -127,7 +127,6 @@ public class GinasSearchAnalyzer implements SearchContextAnalyzer<Substance>{
 					public void serialize(Object arg0, JsonGenerator arg1,
 							SerializerProvider arg2) throws IOException,
 							JsonProcessingException {
-						System.out.println("Serializing:" + arg0.getClass().toString());
 						long l=System.currentTimeMillis();
 						serializer.serialize(arg0, arg1, arg2);
 						pw.println("Serializing:" + arg0.getClass().toString() + "\t" + (System.currentTimeMillis()-l));
