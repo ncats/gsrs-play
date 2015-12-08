@@ -2712,7 +2712,7 @@
                 }
                 $http({
                     method: 'GET',
-                    url: baseurl + 'export/' + scope.structureid + '.' + scope.format,
+                    url: baseurl + 'export/' + scope.structureid + '.' + format,
                     headers: {
                         'Content-Type': 'text/plain'
                     }
