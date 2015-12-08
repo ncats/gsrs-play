@@ -1016,11 +1016,11 @@
         };
 
         $scope.collapseReferences = function (sub, depth) {
-            for (var v in sub) {
+            return sub;
+/*            for (var v in sub) {
                 if (depth > 0) {
                     if (v === "references") {
                         for (var r in sub[v]) {
-
                             sub[v][r] = sub[v][r].uuid;
                         }
                     }
@@ -1029,7 +1029,7 @@
                     $scope.collapseReferences(sub[v], depth + 1);
                 }
             }
-            return sub;
+            return sub;*/
         };
 
 
@@ -1085,16 +1085,23 @@
             var sub = angular.copy($scope.substance);
             // console.log(angular.copy(sub));
             sub = $scope.fromFormSubstance(sub);
+            $scope.errorsArray=[];
             //   console.log(sub);
             $http.post(baseurl + 'register/validate', sub).success(function (response) {
                 var arr = [];
                 for (var i in response) {
                     if (response[i].messageType != "INFO")
-                        arr.push(response[i]);
+                            arr.push(response[i]);
                     if (response[i].messageType == "WARNING")
                         response[i].class = "alert-warning";
                     if (response[i].messageType == "ERROR")
                         response[i].class = "alert-danger";
+                    if (response[i].messageType == "INFO")
+                        response[i].class = "alert-info";
+                    if (response[i].messageType == "SUCCESS")
+                        response[i].class = "alert-success";
+                        
+  
                 }
                 $scope.errorsArray = arr;
             });

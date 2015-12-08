@@ -370,6 +370,11 @@ public class Substance extends GinasCommonData {
 		}
 		return null;
 	}
+	
+	@JsonIgnore
+	public boolean isApproved(){
+		return this.status.equalsIgnoreCase("Approved");
+	}
 
 	@JsonProperty("_approvalIDDisplay")
 	public String getApprovalIDDisplay() {
@@ -379,7 +384,10 @@ public class Substance extends GinasCommonData {
 		if (subRef != null) {
 			return subRef.approvalID;
 		}
-		return null;
+		if(!isApproved()){
+			return this.status + " record";
+		}
+		return "NO APPROVAL ID";
 	}
 
 	@JsonIgnore
@@ -475,5 +483,16 @@ public class Substance extends GinasCommonData {
 			return "Validated (UNII)";
 		}
 		return status;
+	}
+	
+	@JsonIgnore
+	 public String getLinkingID(){
+	        if(approvalID!=null){
+	                return approvalID;
+	        }
+	        if(uuid!=null){
+	                return uuid.toString().split("-")[0];
+	        }
+	        return getName();
 	}
 }

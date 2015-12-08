@@ -76,18 +76,19 @@ public class SubstanceFactory extends EntityFactory {
         List<Substance> substances = filter (new FetchOptions (top, skip, filter), finder);
         return subFilter.filterByAccess(substances);
     }
-    
+
+    //TODO: Doesn't support top/skip
     public static List<Substance> getSubstancesWithExactName
     (int top, int skip, String name) {
                 return finder.where().eq("names.name", name).findList();
         }
     
-    public static List<Substance> getChemicals
-        (int top, int skip, String filter) {
-        return filter (new FetchOptions (top, skip, filter), finder);
-    }
-    
-    
+    //TODO: Doesn't support top/skip
+    public static List<Substance> getSubstancesWithExactCode
+    (int top, int skip, String code, String codeSystem) {
+                return finder.where().and(com.avaje.ebean.Expr.eq("codes.code",code), com.avaje.ebean.Expr.eq("codes.codeSystem",codeSystem)).findList();
+        }
+        
     public static Integer getCount () {
         try {
             return getCount (finder);
@@ -238,35 +239,36 @@ public class SubstanceFactory extends EntityFactory {
     }
 
 
-    public static class SubstanceFilter implements EntityFilter {
+	public static class SubstanceFilter implements EntityFilter {
 
-        UserProfile profile = getUserProfile();
-        Principal user = profile!= null? profile.user: null;
-        boolean access = false;
+		UserProfile profile = getUserProfile();
+		Principal user = profile != null ? profile.user : null;
+		boolean access = false;
 
-        public boolean hasAccess(Object grp, Object sub){
-            Group group = (Group) grp;
-            Substance substance = (Substance) sub;
-            return substance.getAccess().contains(group);
-        }
+		public boolean hasAccess(Object grp, Object sub) {
+			Group group = (Group) grp;
+			Substance substance = (Substance) sub;
+			return substance.getAccess().contains(group);
+		}
 
-           public List<Substance> filterByAccess (List<Substance> results) {
-               List<Substance> filteredSubstances = new ArrayList<Substance>();
+		public List<Substance> filterByAccess(List<Substance> results) {
+			List<Substance> filteredSubstances = new ArrayList<Substance>();
 
-               for (Substance sub : results) {
-            	   Set<Group> accessG = sub.getAccess();
-                   if(accessG==null || accessG.isEmpty() || accessG.size() == 0){
-                       filteredSubstances.add(sub);
-                   }
-                   if(user != null) {
-                    for(Group grp : profile.getGroups()){
-                        if (hasAccess(grp, sub)) {
-                            filteredSubstances.add(sub);
-                        }
-                    }
-                  }
-               }
-            return filteredSubstances;
-           }
-    }
+			for (Substance sub : results) {
+				Set<Group> accessG = sub.getAccess();
+				if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
+					filteredSubstances.add(sub);
+				}else{
+					if (user != null) {
+						for (Group grp : profile.getGroups()) {
+							if (hasAccess(grp, sub)) {
+								filteredSubstances.add(sub);
+							}
+						}
+					}
+				}
+			}
+			return filteredSubstances;
+		}
+	}
 }
