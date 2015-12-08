@@ -4,8 +4,7 @@
                     placeholder="Substance Name" id="substance" name="substance" display-property="_name"
                     key-property="approvalID" add-from-autocomplete-only="true" on-tag-adding='createSubref($tag)'
                     template="tag-template">
-            <auto-complete source="loadSubstances($query)" max-results-to-show="25" min-length="1" debounce-delay="0"
-                           load-on-down-arrow="true"
+            <auto-complete source="loadSubstances($query)" max-results-to-show="10" min-length="1" debounce-delay="100"
                            template="autocomplete-template"></auto-complete>
         </tags-input>
     </div>
@@ -16,12 +15,10 @@
     <script type="text/ng-template" id="autocomplete-template">
         <div class="autocomplete-template">
             <div class="row text-center">
-<!--
                 <rendered id={{data.uuid}}></rendered>
--->
             </div>
             <div class="row text-center">
-                <span>{{data._name}}</span>
+                <span ng-bind-html="$highlight($getDisplayText())"></span>
             </div>
         </div>
     </script>

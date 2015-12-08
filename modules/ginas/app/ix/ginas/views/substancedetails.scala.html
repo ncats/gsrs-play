@@ -103,7 +103,7 @@
             @variantconcepts(sub)
             </div>
         }
-        @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
+        @if(sub.relationships.size() > 0) {
             <div class="row info" id="relationships">
             @relationships(sub.relationships)
             </div>
