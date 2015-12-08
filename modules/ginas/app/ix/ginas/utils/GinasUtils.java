@@ -193,6 +193,7 @@ public class GinasUtils {
                 switch (type) {
                 case chemical:
                     sub = mapper.treeToValue(tree, ChemicalSubstance.class);
+                    
 					try {
 						((ChemicalSubstance) sub).structure.smiles = ChemicalFactory
 								.DEFAULT_CHEMICAL_FACTORY()
@@ -201,7 +202,9 @@ public class GinasUtils {
 										Chemical.FORMAT_MOL)
 								.export(Chemical.FORMAT_SMILES);
 					} catch (Exception e) {
+						
 					}
+					
                     return sub;
                 case protein:
                     sub = mapper.treeToValue(tree, ProteinSubstance.class);
@@ -246,6 +249,7 @@ public class GinasUtils {
         try {
             if (theRecordToPersist instanceof ChemicalSubstance) {
                 persist((ChemicalSubstance) theRecordToPersist, index);
+                
             } else if (theRecordToPersist instanceof ProteinSubstance) {
                 Protein protein =
                     ((ProteinSubstance) theRecordToPersist).protein;
@@ -338,7 +342,9 @@ public class GinasUtils {
 
         @Override
         public Substance transformSubstance(JsonNode rec) throws Throwable {
-            return GinasUtils.makeSubstance(rec);
+            Substance sub= GinasUtils.makeSubstance(rec);
+            
+            return sub;
         }
     }
 

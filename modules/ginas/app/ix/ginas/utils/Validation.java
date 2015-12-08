@@ -171,22 +171,17 @@ public class Validation {
                 strat.processMessage(mes);
                 switch(mes.actionType){
                 case APPLY_CHANGE:
-                    Structure struc2=cs.structure;
-                    //String omol = cs.structure.molfile;
-                    cs.structure=new GinasChemicalStructure(struc);
-                    cs.structure.molfile=struc2.molfile;
-                    if(struc2.stereoChemistry!=null){
-                        cs.structure.stereoChemistry=struc2.stereoChemistry;
-                    }
-                    if(struc2.opticalActivity!=null){
-                        cs.structure.opticalActivity=struc2.opticalActivity;
-                    }
-                    if(struc2.stereoComments!=null){
-                        cs.structure.stereoComments=struc2.stereoComments;
-                    }
-                    if(struc2.atropisomerism!=null){
-                        cs.structure.atropisomerism=struc2.atropisomerism;
-                    }
+                    Structure struc2=new GinasChemicalStructure(struc);
+                    cs.structure.properties=struc2.properties;
+                    cs.structure.charge=struc2.charge;
+                    cs.structure.formula=struc2.formula;
+                    cs.structure.mwt=struc2.mwt;
+                    cs.structure.smiles=struc2.smiles;
+                    cs.structure.ezCenters=struc2.ezCenters;
+                    cs.structure.definedStereo=struc2.definedStereo;
+                    cs.structure.stereoCenters=struc2.stereoCenters;
+                    cs.structure.digest=struc2.digest;
+                    
                                         
                     mes.appliedChange=true;
                     break;

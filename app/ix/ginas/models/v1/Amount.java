@@ -12,12 +12,12 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 @JSONEntity(name = "amount", title = "Amount", isFinal = true)
 @Entity
 @Table(name="ix_ginas_amount")
-public class Amount extends GinasSubData {
+public class Amount extends GinasCommonSubData {
     @JSONEntity(title = "Amount Type", format = JSONConstants.CV_AMOUNT_TYPE, isRequired = true)
     public String type;
     

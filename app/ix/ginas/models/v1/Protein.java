@@ -3,7 +3,7 @@ package ix.ginas.models.v1;
 
 import ix.core.models.Indexable;
 import ix.core.models.Value;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_protein")
-public class Protein extends GinasSubData {
+public class Protein extends GinasCommonSubData {
     @Indexable(facet=true,name="Protein Type")
     public String proteinType;
     

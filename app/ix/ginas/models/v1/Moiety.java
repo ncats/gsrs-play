@@ -13,7 +13,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.models.Structure;
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 
 @JsonDeserialize(using = MoietyDeserializer.class)
@@ -21,7 +21,7 @@ import ix.ginas.models.GinasSubData;
 @JSONEntity(name = "moiety", title = "Moiety")
 @Entity
 @Table(name = "ix_ginas_moiety")
-public class Moiety extends GinasSubData {
+public class Moiety extends GinasCommonSubData {
 	@Id
 	public UUID uuid;
 	

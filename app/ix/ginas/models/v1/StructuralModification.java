@@ -11,12 +11,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 @Entity
 @Table(name="ix_ginas_structuralmod")
 @JSONEntity(title = "Structural Modification", isFinal = true)
-public class StructuralModification extends GinasSubData {
+public class StructuralModification extends GinasCommonSubData {
     @JSONEntity(title = "Modification Type", isRequired = true)
     @Column(nullable=false)
     public String structuralModificationType;

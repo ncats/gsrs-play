@@ -2,7 +2,7 @@ package ix.ginas.models.v1;
 
 
 import ix.core.models.Indexable;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name="ix_ginas_glycosylation")
 @JSONEntity(name = "glycosylation", title = "Glycosylation", isFinal = true)
-public class Glycosylation extends GinasSubData {
+public class Glycosylation extends GinasCommonSubData {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_glyco_csite",
                joinColumns=@JoinColumn

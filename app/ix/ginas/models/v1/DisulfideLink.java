@@ -1,7 +1,7 @@
 package ix.ginas.models.v1;
 
 
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import javax.persistence.Table;
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_disulfide")
-public class DisulfideLink extends GinasSubData {
+public class DisulfideLink extends GinasCommonSubData {
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_disulfide_site")
     public List<Site> sites = new ArrayList<Site>();

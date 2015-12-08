@@ -1,6 +1,6 @@
 package ix.ginas.models.v1;
 
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 
 import java.util.List;
@@ -16,7 +16,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name="ix_ginas_mixture")
-public class Mixture extends GinasSubData {
+public class Mixture extends GinasCommonSubData {
 	@ManyToMany(cascade=CascadeType.ALL)
 	@JoinTable(name="ix_ginas_substance_mix_comp")
 	public List<Component> components;

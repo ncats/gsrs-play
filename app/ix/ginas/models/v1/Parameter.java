@@ -8,12 +8,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 
 @Entity
 @Table(name="ix_ginas_parameter")
 @JSONEntity(title = "Parameter", isFinal = true)
-public class Parameter extends GinasSubData {
+public class Parameter extends GinasCommonSubData {
     @JSONEntity(title = "Parameter Name", isRequired = true)
     @Column(nullable=false)
     public String name;

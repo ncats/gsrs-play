@@ -2,7 +2,7 @@ package ix.ginas.models.v1;
 
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JSONEntity(title = "Code", isFinal = true)
 @Entity
 @Table(name="ix_ginas_code")
-public class Code extends GinasSubData {
+public class Code extends GinasCommonSubData {
     @JSONEntity(title = "Code system", format = JSONConstants.CV_CODE_SYSTEM)
     @Indexable(facet=true, name="Code System")
     public String codeSystem;

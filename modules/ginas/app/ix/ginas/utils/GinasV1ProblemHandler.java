@@ -3,7 +3,7 @@ package ix.ginas.utils;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.utils.GinasProcessingMessage;
 
 import java.io.IOException;
@@ -87,7 +87,7 @@ public class GinasV1ProblemHandler extends  DeserializationProblemHandler {
             if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
                 while (JsonToken.END_ARRAY != parser.nextToken()) {
                     String ref = parser.getValueAsString();
-                    refs.add(new Keyword (GinasSubData.REFERENCE, ref));
+                    refs.add(new Keyword (GinasCommonSubData.REFERENCE, ref));
                     ++nrefs;
                 }
             }

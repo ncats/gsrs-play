@@ -10,14 +10,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
-import ix.ginas.models.GinasSubData;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.v1.PartListDeserializer;
 import ix.ginas.models.utils.JSONEntity;
 
 @Entity
 @Table(name="ix_ginas_strucdiv")
-public class StructurallyDiverse extends GinasSubData {
+public class StructurallyDiverse extends GinasCommonSubData {
 
     @Indexable(name="Material Class", facet=true)
     public String sourceMaterialClass;
