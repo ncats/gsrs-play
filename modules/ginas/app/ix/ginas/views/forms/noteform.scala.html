@@ -3,7 +3,7 @@
                         Notes&nbsp;<span class="badge" ng-show="substance.notes.length>0">
                         {{substance.notes.length}}</span> </button>
     <div class="col-md-12">
-        <form class="form-horizontal" name="nameForm" id = "add-name" role="form" novalidate>
+        <form class="form-horizontal" name="noteForm" id = "add-name" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-10 err-check" id="name-div">
                     <text-box ng-model="note.note" field="note"></text-box>
@@ -16,7 +16,7 @@
                 </div>
             </div>
             <div class="noteForm"></div>
-            <submit-buttons submit="note" form="nameForm" path="notes"></submit-buttons>
+            <submit-buttons submit="note" form="noteForm" path="notes"></submit-buttons>
         </form>
 
         <div ng-repeat="obj in substance.notes">

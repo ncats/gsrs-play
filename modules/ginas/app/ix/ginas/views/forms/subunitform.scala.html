@@ -1,3 +1,47 @@
+@*
+<div class = "row info">
+    <button class="btn btn-primary label-offset det">
+                        Subunits&nbsp;<span class="badge" ng-show="substance.protein.subunits.length>0">
+                        {{substance.protein.subunits.length}}</span> </button>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="subunitForm" id = "add-name" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-12">
+                    <text-box ng-model= subunit.sequence field= "sequence"></text-box>
+                </div>
+            </div>
+            <submit-buttons submit="subunit" form="subunitForm" path="officialNames"></submit-buttons>
+        </form>
+
+        <div ng-repeat="obj in substance.protein.subunits">
+            <div class="row">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path="officialNames"></delete-button>
+                </div>
+                <div class="col-md-11">
+                    <text-box-view-edit ng-model= obj field= "comments"></text-box-view-edit>
+                </div>
+            </div>
+            <div class = {{obj.$$hashKey}}></div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<div class="row info" id="comments">
+    <a ng-click="$parent.toggleStage();" class="pull-right">
+        <i class="fa fa-times fa-2x danger"></i></a>
+    <div class="col-md-12">
+        <text-box ng-model= referenceobj.comments field= "comments"></text-box>
+    </div>
+    <hr>
+</div>
+
 
 @(parent : String)
 
@@ -19,9 +63,11 @@
               </div>
               <div ng-hide="sunit._editType=='edit'" class = "col-xs-2" ng-repeat="su in sunit.display">
 
- @*               the amino acid directive in ginasApp.js has a getTemplate function. This can be used to modify the tooltip
+ *@
+@*               the amino acid directive in ginasApp.js has a getTemplate function. This can be used to modify the tooltip
                   the amino acid has a series of boolean properties for existence of links/modifications. The ng-Class function can be used to
-                  retrieve a class name based on true or false properties, then highlighting can be applied.*@
+                  retrieve a class name based on true or false properties, then highlighting can be applied.*@@*
+
 
 
 
@@ -44,16 +90,20 @@
             </div>
         </div>
 
-           @*
+           *@
+@*
            Still working on having the sequences editable. The display is currently the sequence converted into an array of objects, so the whole thing cannot be editable.
            Should there be a string version undermeath? This could take up a lot of space.
-           *@
+           *@@*
 
 
 
+
+*@
 @*        <div class="col-md-12">
             <span href="#" editable-textarea="su.sequence" blur="submit">{{su.sequence}}</span>
-        </div>*@
+        </div>*@@*
+
 </div>
 </div>
 
@@ -86,3 +136,4 @@
     </form>
 </div>
         </div>
+*@
