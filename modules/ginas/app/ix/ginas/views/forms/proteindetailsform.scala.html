@@ -1,4 +1,31 @@
-
+<div class = "row info" >
+    <button class="btn btn-primary label-offset det">
+                        Details</button>
+    <div class="col-md-12">
+        <div class="row form-row">
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "substance.protein" field="proteinType" cv = "PROTEIN_TYPE" label="Protein Type"></dropdown-view-edit>
+            </div>
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "substance.protein" field="proteinSubType" cv = "PROTEIN_SUBTYPE" label="Protein Subtype"></dropdown-view-edit>
+            </div>
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "substance.protein" field="sequenceOrigin" cv = "SEQUENCE_ORIGIN" label="Sequence Origin"></dropdown-view-edit>
+            </div>
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "substance.protein" field="sequenceType" cv = "SEQUENCE_TYPE" label="Sequence Type"></dropdown-view-edit>
+            </div>
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj ="substance.protein" parent = "substance" divid="detailsForm" type = "access"></form-selector>
+            </div>
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj ="substance.protein" parent = "substance" divid="detailsForm" type = "reference"></form-selector>
+            </div>
+        </div>
+        <div class="detailsForm"></div>
+    </div>
+</div>
+@*
 
 
 
@@ -85,3 +112,4 @@
 </div>
 
 
+*@
