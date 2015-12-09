@@ -338,8 +338,7 @@ public class GinasLoad extends App {
         } catch (UnsupportedEncodingException e) {
                 messages.add(GinasProcessingMessage.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
                 }
-        ObjectMapper om = new ObjectMapper();
-        
+        ObjectMapper om = new ObjectMapper();        
         return ok(om.valueToTree(messages));
     }
     public static Result submitSubstance(){
