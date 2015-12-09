@@ -17,7 +17,7 @@
                     <text-input ng-model="ref.citation" field="citation"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="ref.docType" field="docType" cv="DOCUMENT_TYPE"></dropdown-select>
+                    <dropdown-select ng-model="ref.docType" field="docType" label ="Document Type" cv="DOCUMENT_TYPE"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <date-picker ng-model="ref.documentDate" field="documentDate"></date-picker>
@@ -54,7 +54,7 @@
                 <text-view-edit obj="reference" field="citation"></text-view-edit>
             </div>
             <div class="col-md-2">
-                <dropdown-view-edit obj="reference" field="doctype" cv="DOCUMENT_TYPE"></dropdown-view-edit>
+                <dropdown-view-edit obj="reference" field="docType" cv="DOCUMENT_TYPE"></dropdown-view-edit>
             </div>
             <div class="col-md-2">
                 <date-picker-view-edit obj="reference" field="documentDate"></date-picker-view-edit>

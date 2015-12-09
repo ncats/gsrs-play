@@ -1,6 +1,6 @@
 (function () {
     var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'ui.bootstrap.datetimepicker', 'LocalStorageModule', 'ngTagsInput', 'xeditable', 'ui.select'
+        'ui.bootstrap.datetimepicker', 'LocalStorageModule', 'ngTagsInput', 'xeditable', 'ui.select', 'jsonFormatter'
     ])
         .config(function (showErrorsConfigProvider, localStorageServiceProvider, $locationProvider) {
             showErrorsConfigProvider.showSuccess(true);
@@ -409,23 +409,58 @@
 
         $scope.toFormSubstance = function (apiSub) {
             console.log(apiSub);
+            var officialNames = [];
+            var unofficialNames = [];
+            var temp= [];
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
-            //for (var i in apiSub.names) {
-            //    if (typeof apiSub.names[i].nameOrgs != "undefined") {
-            //        for (var j in apiSub.names[i].nameOrgs) {
-            //            if (apiSub.names[i].nameOrgs[j].deprecated) {
-            //                apiSub.destructive = true;
-            //            }
-            //            apiSub.names[i].nameOrgs[j] = apiSub.names[i].nameOrgs[j].nameOrg;
-            //        }
-            //    }
-            //}
-            //
-            //
-            //console.log($scope);
-            //apiSub = $scope.expandCV(apiSub, "");
-            //apiSub = $scope.splitNames(apiSub);
+            if (_.has(apiSub, 'names')) {
+                console.log(apiSub.names);
+                _.forEach(apiSub.names, function (n) {
+                    console.log(n);
+                    if (!_.isUndefined(n.nameOrgs)) {
+                        /*_.forEach(n.nameOrgs, function (m) {
+                            console.log(m);
+                            temp.push(m.nameOrg);
+                            if (m.deprecated) {
+                                apiSub.destructive = true;
+                            }
+                         //   apiSub.names[i].nameOrgs[j] = apiSub.names[i].nameOrgs[j].nameOrg;
+                        });*/
+                        n.nameOrgs = temp;
+
+                    }
+
+
+                    if (n.type === "of") {
+                        officialNames.push(n);
+                    } else {
+                        unofficialNames.push(n);
+                    }
+
+
+                });
+
+                _.set(apiSub, 'officialNames', officialNames);
+                _.set(apiSub, 'unofficialNames', unofficialNames);
+                //sub.unofficialNames =  unofficialNames;
+
+                //  n.type = "of";
+            }
+            /*for (var i in apiSub.names) {
+                console.log(i);
+                if (typeof apiSub.names[i].nameOrgs != "undefined") {
+                    for (var j in apiSub.names[i].nameOrgs) {
+                        if (apiSub.names[i].nameOrgs[j].deprecated) {
+                            apiSub.destructive = true;
+                        }
+                        apiSub.names[i].nameOrgs[j] = apiSub.names[i].nameOrgs[j].nameOrg;
+                    }
+               }
+            }*/
+
+            apiSub = $scope.expandCV(apiSub, "");
+          //  apiSub = $scope.splitNames(apiSub);
 
 /*            var references = {};
             console.log(apiSub.references);
@@ -439,6 +474,28 @@
 
 
             return apiSub;
+        };
+
+        $scope.splitNames = function (sub) {
+            console.log(sub);
+         //   var names = sub.names;
+            var officialNames = [];
+            var unofficialNames = [];
+            if (_.has(sub.names)) {
+                console.log('dfgdfdf');
+                _.forEach(sub.names, function (n) {
+                    if (n.type == "of") {
+                        officialNames.push(n);
+                    } else {
+                        unofficialNames.push(n);
+                    }
+                });
+                    sub.unofficialNames = unofficialNames;
+                    sub.officialNames = officialNames;
+                    delete sub.names;
+                }
+            return sub;
+
         };
 
         $scope.fromFormSubstance = function (formSub) {
@@ -924,27 +981,6 @@
             } else {
                 el.selected = true;
             }
-        };
-
-        $scope.splitNames = function (sub) {
-            var names = sub.names;
-            var officialNames = [];
-            var unofficialNames = [];
-            if (names) {
-                for (var n in names) {
-                    var name = names[n];
-                    if (name.type.value == "of") {
-                        officialNames.push(name);
-                    } else {
-                        unofficialNames.push(name);
-                    }
-                    sub.unofficialNames = unofficialNames;
-                    sub.officialNames = officialNames;
-                    delete sub.names;
-                }
-            }
-            return sub;
-
         };
 
         $scope.changeSelect = function (val) {
@@ -1788,7 +1824,8 @@
                         break;
                     case "textbox":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><comment value = "referenceobj[field]"></comment></a>');
+                            //this only works if the attribute is named "comments" will probably need to be addressed later
+                            template = angular.element('<a ng-click ="toggleStage()"><comment value = "referenceobj.comments"></comment></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -2033,7 +2070,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><span class="comment">{{value|limitTo:10}}...</span></div>'
+            template: '<div><span class="comment">{{value|limitTo:40}}...</span></div>'
         };
     });
 
