@@ -26,10 +26,72 @@ import java.util.regex.Pattern;
 import play.Logger;
 
 public class Validation {
+	public static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
+    	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+    	try{
+	    	
+	        if(s==null){
+	            gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance cannot be parsed"));
+	            return gpm;
+	        }
+	        if(s.uuid==null){
+	        	UUID uuid=s.getOrGenerateUUID();
+	        	gpm.add(GinasProcessingMessage.INFO_MESSAGE("Substance had no UUID, generated one:" + uuid));
+	        }
+	        validateNames(s,gpm,strat);
+	        validateCodes(s,gpm,strat);
+	        validateRelationships(s,gpm,strat);
+	        validateNotes(s,gpm,strat);
+	        
+	
+	        Logger.info("substance Class " + s.substanceClass);
+
         
+	        switch(s.substanceClass){
+		        case chemical:
+		            gpm.addAll(validateAndPrepareChemical((ChemicalSubstance) s,strat));
+		            break;
+		        case concept:
+		            break;
+		        case mixture:
+		            break;
+		        case nucleicAcid:
+		            break;
+		        case polymer:
+		            break;
+		        case protein:
+		            break;
+		        case reference:
+		            break;
+		        case specifiedSubstanceG1:
+		            break;
+		        case specifiedSubstanceG2:
+		            break;
+		        case specifiedSubstanceG3:
+		            break;
+		        case specifiedSubstanceG4:
+		            break;
+		        case structurallyDiverse:
+		            break;
+		        case unspecifiedSubstance:
+		            break;
+		        default:
+		            break;
+	        }
+	        if(GinasProcessingMessage.ALL_VALID(gpm)){
+	        	gpm.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
+	        }
+        }catch(Exception e){
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
+        }
+        return gpm;
+    }
+	
+	
 	public static boolean validateReferenced(Substance s, GinasAccessReferenceControlled data,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat){
 		
 		boolean worked=true;
+		
 		Set<Keyword> references = data.getReferences();
 		if(references == null || references.size()<=0){
 			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference"));
@@ -221,66 +283,32 @@ public class Validation {
         s.relationships.removeAll(remnames);
         return true;
 	}
-    public static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
+    public static List<GinasProcessingMessage> validateStructureDuplicates(ChemicalSubstance cs){
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
-    	try{
-	    	
-	        if(s==null){
-	            gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance cannot be parsed"));
-	            return gpm;
-	        }
-	        if(s.uuid==null){
-	        	UUID uuid=s.getOrGenerateUUID();
-	        	gpm.add(GinasProcessingMessage.INFO_MESSAGE("Substance had no UUID, generated one:" + uuid));
-	        }
-	        validateNames(s,gpm,strat);
-	        validateCodes(s,gpm,strat);
-	        validateRelationships(s,gpm,strat);
-	        validateNotes(s,gpm,strat);
-	        
-	
-	        Logger.info("substance Class " + s.substanceClass);
-
-        
-	        switch(s.substanceClass){
-	        case chemical:
-	            gpm.addAll(validateAndPrepareChemical((ChemicalSubstance) s,strat));
-	            break;
-	        case concept:
-	            break;
-	        case mixture:
-	            break;
-	        case nucleicAcid:
-	            break;
-	        case polymer:
-	            break;
-	        case protein:
-	            break;
-	        case reference:
-	            break;
-	        case specifiedSubstanceG1:
-	            break;
-	        case specifiedSubstanceG2:
-	            break;
-	        case specifiedSubstanceG3:
-	            break;
-	        case specifiedSubstanceG4:
-	            break;
-	        case structurallyDiverse:
-	            break;
-	        case unspecifiedSubstance:
-	            break;
-	        default:
-	            break;
-	                
-	        }
-	        if(GinasProcessingMessage.ALL_VALID(gpm)){
-	        	gpm.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
-	        }
-        }catch(Exception e){
-        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
+    	try {
+            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getCollsionChemicalSubstances(100, 0, cs);
+                            
+            if(sr!=null && !sr.isEmpty()){    
+                int dupes=0;
+                GinasProcessingMessage mes=null;
+                for(Substance s:sr){
+                	
+                    if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
+                    	if(dupes<=0)mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has 1 possible duplicate:");
+                        dupes++;
+                        mes.addLink(s);
+                    }
+                }
+                if(dupes>0){
+                	if(dupes>1)
+                		mes.message="Structure has " + dupes + " possible duplicates:";
+                    gpm.add(mes);                                           
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return gpm;
+    	return gpm;
     }
     
     public static List<GinasProcessingMessage> validateAndPrepareChemical(ChemicalSubstance cs, GinasProcessingStrategy strat){
@@ -360,33 +388,7 @@ public class Validation {
 	                    break;
                 }
             }
-           
-            
-            try {
-                List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getCollsionChemicalSubstances(100, 0, cs);
-                                
-                if(sr!=null && !sr.isEmpty()){
-                    Substance dupe=null;        
-                    int dupes=0;
-                    GinasProcessingMessage mes=null;
-                    for(Substance s:sr){
-                    	
-                        if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
-                        	if(dupes<=0)mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has 1 possible duplicate:");
-                            dupes++;
-                            mes.addLink(s);
-                        }
-                    }
-                    if(dupes>0){
-                    	if(dupes>1)
-                    		mes.message="Structure has " + dupes + " possible duplicates:";
-                        gpm.add(mes);
-                        strat.processMessage(mes);                              
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            strat.addAndProcess(validateStructureDuplicates(cs), gpm);
             
         }else{
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a valid chemical structure"));

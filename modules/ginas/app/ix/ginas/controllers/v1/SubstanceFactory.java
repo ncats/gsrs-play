@@ -227,8 +227,7 @@ public class SubstanceFactory extends EntityFactory {
         }
     }
 
-    public static List<Substance> getCollsionChemicalSubstances(int i, int j,
-                                                                ChemicalSubstance cs) {
+    public static List<Substance> getCollsionChemicalSubstances(int i, int j, ChemicalSubstance cs) {
         String hash=null;
         for (Value val : cs.structure.properties) {
             if (Structure.H_LyChI_L4.equals(val.label)) {

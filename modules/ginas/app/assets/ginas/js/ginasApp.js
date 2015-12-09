@@ -1118,6 +1118,32 @@
                 $scope.errorsArray = arr;
             });
         };
+        
+        $scope.checkDuplicateChemicalSubstance = function () {
+            var sub = angular.copy($scope.substance);
+            sub = $scope.fromFormSubstance(sub);
+            $scope.structureErrorsArray=[];
+            $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
+                var arr = [];
+
+                for (var i in response) {
+                    console.log(response[i]);
+                    if (response[i].messageType != "INFO")
+                            arr.push(response[i]);
+                    if (response[i].messageType == "WARNING")
+                        response[i].class = "alert-warning";
+                    if (response[i].messageType == "ERROR")
+                        response[i].class = "alert-danger";
+                    if (response[i].messageType == "INFO")
+                        response[i].class = "alert-info";
+                    if (response[i].messageType == "SUCCESS")
+                        response[i].class = "alert-success";
+                        
+  
+                }
+                $scope.structureErrorsArray = arr;
+            });
+        };
 
         $scope.getSiteResidue = function (subunits, site) {
             var si = site.subunitIndex;

@@ -4,12 +4,20 @@ import ix.core.models.Keyword;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.v1.Substance;
 
+import java.util.Collection;
 import java.util.List;
 
 import play.Logger;
 
 public abstract class GinasProcessingStrategy {
 	public abstract void processMessage(GinasProcessingMessage gpm);
+	
+	public void addAndProcess(List<GinasProcessingMessage> source, List<GinasProcessingMessage> destination){
+		for(GinasProcessingMessage gpm: source){
+			this.processMessage(gpm);
+			destination.add(gpm);
+		}
+	}
 
 	public static enum HANDLING_TYPE {
 		MARK, FAIL, FORCE_IGNORE
