@@ -1,4 +1,4 @@
-<div class = "row info"  ng-cloak>
+<div class = "row info">
     <button class="btn btn-primary label-offset det">
                        Official Names&nbsp;<span class="badge" ng-show="substance.officialNames.length>0">
                         {{substance.officialNames.length}}</span> </button>
@@ -16,7 +16,7 @@
                     <multi-select ng-model="officialname.jurisdiction" field="jurisdiction" cv = "JURISDICTION" ></multi-select>
                 </div>
                 <div class="col-md-1 err-check">
-                    <multi-select ng-model="officialname.nameOrg" field="nameOrg" cv = "NAME_ORG" ></multi-select>
+                    <multi-select ng-model="officialname.nameOrgs" field="nameOrgs" cv = "NAME_ORG" label ="Name Org"></multi-select>
                 </div>
                 <div class="col-md-2 err-check">
                     <multi-select ng-model="officialname.languages" field="languages" cv = "LANGUAGE"></multi-select>
@@ -51,7 +51,7 @@
                     <multi-view-edit obj = "obj" field="jurisdiction" cv = "JURISDICTION" ></multi-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <multi-view-edit obj = "obj" field="nameOrg" cv = "NAME_ORG" ></multi-view-edit>
+                    <multi-view-edit obj = "obj" field="nameOrgs" cv = "NAME_ORG" ></multi-view-edit>
                 </div>
                 <div class="col-md-2">
                     <multi-view-edit obj = "obj" field="languages" cv = "LANGUAGE" ></multi-view-edit>

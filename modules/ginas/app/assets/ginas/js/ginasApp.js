@@ -411,27 +411,23 @@
             console.log(apiSub);
             var officialNames = [];
             var unofficialNames = [];
-            var temp= [];
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
             if (_.has(apiSub, 'names')) {
                 console.log(apiSub.names);
                 _.forEach(apiSub.names, function (n) {
-                    console.log(n);
-                    if (!_.isUndefined(n.nameOrgs)) {
-                        /*_.forEach(n.nameOrgs, function (m) {
-                            console.log(m);
-                            temp.push(m.nameOrg);
+                    var temp= [];
+                    if (n.nameOrgs.length > 0) {
+                        _.forEach(n.nameOrgs, function (m) {
                             if (m.deprecated) {
                                 apiSub.destructive = true;
                             }
-                         //   apiSub.names[i].nameOrgs[j] = apiSub.names[i].nameOrgs[j].nameOrg;
-                        });*/
+                            console.log(m.nameOrg);
+                            temp.push(m.nameOrg);
+                        });
                         n.nameOrgs = temp;
 
                     }
-
-
                     if (n.type === "of") {
                         officialNames.push(n);
                     } else {
