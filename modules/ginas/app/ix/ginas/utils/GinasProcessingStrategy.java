@@ -1,6 +1,7 @@
 package ix.ginas.utils;
 
 import ix.core.models.Keyword;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.v1.Substance;
 
 import java.util.List;
@@ -86,7 +87,7 @@ public abstract class GinasProcessingStrategy {
 		if (warningHandle == HANDLING_TYPE.MARK) {
 			for (GinasProcessingMessage gpm : list) {
 				if (gpm.messageType == GinasProcessingMessage.MESSAGE_TYPE.WARNING) {
-					cs.tags.add(new Keyword("WARNING"));
+					cs.tags.add(new Keyword(GinasCommonSubData.TAG, "WARNING"));
 					cs.addPropertyNote(gpm.message, "WARNING");
 					cs.addRestrictGroup("admin");
 				}

@@ -16,9 +16,12 @@ import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import play.Logger;
 
@@ -58,10 +61,44 @@ public class Validation {
 	                    remnames.add(n);
 	                    mes.appliedChange=true;
 	                }
+	               
 	            }else{
 	                if(n.preferred){
 	                    preferred=true;
 	                }
+	                Pattern p = Pattern.compile("(?:[ \\]])\\[([A-Z0-9]*)\\]");
+	                Matcher m=p.matcher(n.name);
+	                Set<String> locators = new LinkedHashSet<String>();
+                	if(m.find()){
+                		do{
+                			String loc=m.group(1);
+                		
+                			System.out.println("LOCATOR:" + loc);
+                			locators.add(loc);
+                		}while(m.find(m.start(1)));
+                	}
+                	if(locators.size()>0){
+                		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Names of form \"<NAME> [<TEXT>]\" are transformed to locators. The following locators will be added:" + locators.toString()).appliableChange(true);
+    	                gpm.add(mes);
+    	                strat.processMessage(mes);
+    	                if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+    	                    for(String loc:locators){
+    	                    	n.name=n.name.replace("[" + loc + "]", "").trim();
+    	                    }
+    	                    for(String loc:locators){
+    	                    	n.addLocator(s, loc);
+    	                    }
+    	                }
+                	}
+                	if(n.languages==null||n.languages.size()==0){
+                		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Must specify a language for each name. Defaults to \"English\"").appliableChange(true);
+    	                gpm.add(mes);
+    	                strat.processMessage(mes);
+    	                if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+    	                    if(n.languages==null)n.languages=new ArrayList<Keyword>();
+    	                    n.languages.add(new Keyword("en"));
+    	                }
+                	}
 	            }
 	            if(!validateReferenced(s,n,gpm,strat)){
 	            	return false;
@@ -351,6 +388,9 @@ public class Validation {
                 e.printStackTrace();
             }
             
+        }else{
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a valid chemical structure"));
+        	
         }
         return gpm;
     }
