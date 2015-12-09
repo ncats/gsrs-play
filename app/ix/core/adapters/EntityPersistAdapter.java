@@ -327,7 +327,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 try {
                     indexSequence = (String) seq.get(bean);
                     if(indexSequence!=null && indexSequence.length()>0){
-                        //System.out.println("Indexing sequence:" + _id + "\t" + _seqIndexer + "\t" + indexSequence);
                         if(_seqIndexer==null){
                             _seqIndexer=Play.application()
                                 .plugin(SequenceIndexerPlugin.class).getIndexer();
@@ -405,7 +404,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 Indexable ind= f.getAnnotation(Indexable.class);
                 
                 if (ind != null) {
-                    //System.out.println("Looking at" + f);
                     if(ind.sequence()){
                         return f;
                     }

@@ -1101,16 +1101,23 @@
             var sub = angular.copy($scope.substance);
             // console.log(angular.copy(sub));
             sub = $scope.fromFormSubstance(sub);
+            $scope.errorsArray=[];
             //   console.log(sub);
             $http.post(baseurl + 'register/validate', sub).success(function (response) {
                 var arr = [];
                 for (var i in response) {
                     if (response[i].messageType != "INFO")
-                        arr.push(response[i]);
+                            arr.push(response[i]);
                     if (response[i].messageType == "WARNING")
                         response[i].class = "alert-warning";
                     if (response[i].messageType == "ERROR")
                         response[i].class = "alert-danger";
+                    if (response[i].messageType == "INFO")
+                        response[i].class = "alert-info";
+                    if (response[i].messageType == "SUCCESS")
+                        response[i].class = "alert-success";
+                        
+  
                 }
                 $scope.errorsArray = arr;
             });
@@ -2742,7 +2749,7 @@
                 }
                 $http({
                     method: 'GET',
-                    url: baseurl + 'export/' + scope.structureid + '.' + scope.format,
+                    url: baseurl + 'export/' + scope.structureid + '.' + format,
                     headers: {
                         'Content-Type': 'text/plain'
                     }

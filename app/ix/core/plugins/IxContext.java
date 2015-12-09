@@ -203,9 +203,7 @@ public class IxContext extends Plugin {
                     Logger.info("Applying SQL loading:" + initFile.getCanonicalPath());
                     Statement s = DB.getConnection().createStatement();
                     String sqlRun = readFullFileToString(initFile);
-                    System.out.println(sqlRun);
                     sqlRun = interpretSQL(sqlRun);
-                    System.out.println("after:" + sqlRun);
                     for(String sqlLine : sqlRun.split(";")){
 	                    try{
 	                    	Logger.debug("applying load");
@@ -274,13 +272,12 @@ public class IxContext extends Plugin {
     			for(int i=1;i<evals.length-1;i++){
     				
     				String result = app.configuration().getString(evals[i]);
-    				System.out.println(evals[i] + ":" + result);
     				if(result!=null){
     					etotal++;
     					nline+=result;
     					
     				}else{
-    					System.out.println("Can't find variable: $" + evals[i] + "$, removing line.");
+    					//System.out.println("Can't find variable: $" + evals[i] + "$, removing line.");
     				}
     			}
     			nline+=evals[evals.length-1];

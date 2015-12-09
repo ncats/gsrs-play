@@ -137,7 +137,6 @@ public class Name extends GinasCommonSubData {
     		if((b[i] & 0x80) ==0){
     			return new String(Arrays.copyOf(b, i));
     		}
-    		System.out.println(b[i]);
     		if(b[i]==-79){
     			lastComplete=true;
     		}
