@@ -16,17 +16,82 @@ import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import play.Logger;
 
 public class Validation {
+	public static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
+    	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+    	try{
+	    	
+	        if(s==null){
+	            gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance cannot be parsed"));
+	            return gpm;
+	        }
+	        if(s.uuid==null){
+	        	UUID uuid=s.getOrGenerateUUID();
+	        	gpm.add(GinasProcessingMessage.INFO_MESSAGE("Substance had no UUID, generated one:" + uuid));
+	        }
+	        validateNames(s,gpm,strat);
+	        validateCodes(s,gpm,strat);
+	        validateRelationships(s,gpm,strat);
+	        validateNotes(s,gpm,strat);
+	        
+	
+	        Logger.info("substance Class " + s.substanceClass);
+
         
+	        switch(s.substanceClass){
+		        case chemical:
+		            gpm.addAll(validateAndPrepareChemical((ChemicalSubstance) s,strat));
+		            break;
+		        case concept:
+		            break;
+		        case mixture:
+		            break;
+		        case nucleicAcid:
+		            break;
+		        case polymer:
+		            break;
+		        case protein:
+		            break;
+		        case reference:
+		            break;
+		        case specifiedSubstanceG1:
+		            break;
+		        case specifiedSubstanceG2:
+		            break;
+		        case specifiedSubstanceG3:
+		            break;
+		        case specifiedSubstanceG4:
+		            break;
+		        case structurallyDiverse:
+		            break;
+		        case unspecifiedSubstance:
+		            break;
+		        default:
+		            break;
+	        }
+	        if(GinasProcessingMessage.ALL_VALID(gpm)){
+	        	gpm.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
+	        }
+        }catch(Exception e){
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
+        }
+        return gpm;
+    }
+	
+	
 	public static boolean validateReferenced(Substance s, GinasAccessReferenceControlled data,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat){
 		
 		boolean worked=true;
+		
 		Set<Keyword> references = data.getReferences();
 		if(references == null || references.size()<=0){
 			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference"));
@@ -58,10 +123,44 @@ public class Validation {
 	                    remnames.add(n);
 	                    mes.appliedChange=true;
 	                }
+	               
 	            }else{
 	                if(n.preferred){
 	                    preferred=true;
 	                }
+	                Pattern p = Pattern.compile("(?:[ \\]])\\[([A-Z0-9]*)\\]");
+	                Matcher m=p.matcher(n.name);
+	                Set<String> locators = new LinkedHashSet<String>();
+                	if(m.find()){
+                		do{
+                			String loc=m.group(1);
+                		
+                			System.out.println("LOCATOR:" + loc);
+                			locators.add(loc);
+                		}while(m.find(m.start(1)));
+                	}
+                	if(locators.size()>0){
+                		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Names of form \"<NAME> [<TEXT>]\" are transformed to locators. The following locators will be added:" + locators.toString()).appliableChange(true);
+    	                gpm.add(mes);
+    	                strat.processMessage(mes);
+    	                if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+    	                    for(String loc:locators){
+    	                    	n.name=n.name.replace("[" + loc + "]", "").trim();
+    	                    }
+    	                    for(String loc:locators){
+    	                    	n.addLocator(s, loc);
+    	                    }
+    	                }
+                	}
+                	if(n.languages==null||n.languages.size()==0){
+                		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Must specify a language for each name. Defaults to \"English\"").appliableChange(true);
+    	                gpm.add(mes);
+    	                strat.processMessage(mes);
+    	                if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+    	                    if(n.languages==null)n.languages=new ArrayList<Keyword>();
+    	                    n.languages.add(new Keyword("en"));
+    	                }
+                	}
 	            }
 	            if(!validateReferenced(s,n,gpm,strat)){
 	            	return false;
@@ -184,66 +283,32 @@ public class Validation {
         s.relationships.removeAll(remnames);
         return true;
 	}
-    public static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
+    public static List<GinasProcessingMessage> validateStructureDuplicates(ChemicalSubstance cs){
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
-    	try{
-	    	
-	        if(s==null){
-	            gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance cannot be parsed"));
-	            return gpm;
-	        }
-	        if(s.uuid==null){
-	        	UUID uuid=s.getOrGenerateUUID();
-	        	gpm.add(GinasProcessingMessage.INFO_MESSAGE("Substance had no UUID, generated one:" + uuid));
-	        }
-	        validateNames(s,gpm,strat);
-	        validateCodes(s,gpm,strat);
-	        validateRelationships(s,gpm,strat);
-	        validateNotes(s,gpm,strat);
-	        
-	
-	        Logger.info("substance Class " + s.substanceClass);
-
-        
-	        switch(s.substanceClass){
-	        case chemical:
-	            gpm.addAll(validateAndPrepareChemical((ChemicalSubstance) s,strat));
-	            break;
-	        case concept:
-	            break;
-	        case mixture:
-	            break;
-	        case nucleicAcid:
-	            break;
-	        case polymer:
-	            break;
-	        case protein:
-	            break;
-	        case reference:
-	            break;
-	        case specifiedSubstanceG1:
-	            break;
-	        case specifiedSubstanceG2:
-	            break;
-	        case specifiedSubstanceG3:
-	            break;
-	        case specifiedSubstanceG4:
-	            break;
-	        case structurallyDiverse:
-	            break;
-	        case unspecifiedSubstance:
-	            break;
-	        default:
-	            break;
-	                
-	        }
-	        if(GinasProcessingMessage.ALL_VALID(gpm)){
-	        	gpm.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
-	        }
-        }catch(Exception e){
-        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Internal error:" + e.getMessage()));
+    	try {
+            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getCollsionChemicalSubstances(100, 0, cs);
+                            
+            if(sr!=null && !sr.isEmpty()){    
+                int dupes=0;
+                GinasProcessingMessage mes=null;
+                for(Substance s:sr){
+                	
+                    if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
+                    	if(dupes<=0)mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has 1 possible duplicate:");
+                        dupes++;
+                        mes.addLink(s);
+                    }
+                }
+                if(dupes>0){
+                	if(dupes>1)
+                		mes.message="Structure has " + dupes + " possible duplicates:";
+                    gpm.add(mes);                                           
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return gpm;
+    	return gpm;
     }
     
     public static List<GinasProcessingMessage> validateAndPrepareChemical(ChemicalSubstance cs, GinasProcessingStrategy strat){
@@ -253,66 +318,30 @@ public class Validation {
         }
         String payload = cs.structure.molfile;
         if (payload != null) {
+        	Structure struc=null;
+        	
             List<Moiety> moietiesForSub = new ArrayList<Moiety>();
-            List<Structure> moieties = new ArrayList<Structure>();
-            Structure struc = StructureProcessor.instrument
-                (payload, moieties, false); // don't standardize
             
-            //struc.count
-            for(Structure m: moieties){
-                Moiety m2= new Moiety();
-                m2.structure=new GinasChemicalStructure(m);
-                m2.count=m.count;
-                moietiesForSub.add(m2);
+            {
+	            List<Structure> moieties = new ArrayList<Structure>();
+	            struc = StructureProcessor.instrument
+	                (payload, moieties, false); // don't standardize
+	            
+	            for(Structure m: moieties){
+	                Moiety m2= new Moiety();
+	                m2.structure=new GinasChemicalStructure(m);
+	                m2.count=m.count;
+	                moietiesForSub.add(m2);
+	            }
             }
             
-            if(cs.moieties.size()<moietiesForSub.size()){
+            if(cs.moieties==null || cs.moieties.size()!=moietiesForSub.size()){
                 GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Incorrect number of moeities").appliableChange(true);
                 gpm.add(mes);
                 strat.processMessage(mes);
                 switch(mes.actionType){
-                case APPLY_CHANGE:
-                    cs.moieties=moietiesForSub;
-                    mes.appliedChange=true;
-                    break;
-                case FAIL:
-                    break;
-                case DO_NOTHING:
-                case IGNORE:
-                default:
-                    break;
-                }               
-            }
-            String oldhash=null;
-            for (Value val : cs.structure.properties) {
-                if (Structure.H_LyChI_L4.equals(val.label)) {
-                    oldhash=val.getValue()+"";
-                }
-            }
-            
-            String newhash=null;
-            for (Value val : struc.properties) {
-                if (Structure.H_LyChI_L4.equals(val.label)) {
-                    newhash=val.getValue()+"";
-                }
-            }
-            
-            if(!newhash.equals(oldhash)){
-                GinasProcessingMessage mes=GinasProcessingMessage.INFO_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
-                gpm.add(mes);
-                strat.processMessage(mes);
-                switch(mes.actionType){
 	                case APPLY_CHANGE:
-	                    Structure struc2=new GinasChemicalStructure(struc);
-	                    cs.structure.properties=struc2.properties;
-	                    cs.structure.charge=struc2.charge;
-	                    cs.structure.formula=struc2.formula;
-	                    cs.structure.mwt=struc2.mwt;
-	                    cs.structure.smiles=struc2.smiles;
-	                    cs.structure.ezCenters=struc2.ezCenters;
-	                    cs.structure.definedStereo=struc2.definedStereo;
-	                    cs.structure.stereoCenters=struc2.stereoCenters;
-	                    cs.structure.digest=struc2.digest;
+	                    cs.moieties=moietiesForSub;
 	                    mes.appliedChange=true;
 	                    break;
 	                case FAIL:
@@ -322,36 +351,80 @@ public class Validation {
 	                default:
 	                    break;
                 }
+            }else{
+            	for(Moiety m:cs.moieties){
+            		struc = StructureProcessor.instrument(m.structure.molfile, null, false); // don't standardize
+            		strat.addAndProcess(validateChemicalStructure(m.structure,struc,strat),gpm);
+            	}
             }
-           
+            strat.addAndProcess(validateChemicalStructure(cs.structure,struc,strat),gpm);
+            strat.addAndProcess(validateStructureDuplicates(cs), gpm);
             
-            try {
-                List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getCollsionChemicalSubstances(100, 0, cs);
-                                
-                if(sr!=null && !sr.isEmpty()){
-                    Substance dupe=null;        
-                    int dupes=0;
-                    GinasProcessingMessage mes=null;
-                    for(Substance s:sr){
-                    	
-                        if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
-                        	if(dupes<=0)mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has 1 possible duplicate:");
-                            dupes++;
-                            mes.addLink(s);
-                        }
-                    }
-                    if(dupes>0){
-                    	if(dupes>1)
-                    		mes.message="Structure has " + dupes + " possible duplicates:";
-                        gpm.add(mes);
-                        strat.processMessage(mes);                              
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            
+        }else{
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a valid chemical structure"));
+        	
         }
         return gpm;
+    }
+    
+    public static List<GinasProcessingMessage> validateChemicalStructure(GinasChemicalStructure oldstr, Structure newstr, GinasProcessingStrategy strat){
+    	 List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+    	 
+    	 
+    	 String oldhash=newstr.getLychiv4Hash();
+         String newhash=newstr.getLychiv4Hash();
+         
+         if(!newhash.equals(oldhash)){
+             GinasProcessingMessage mes=GinasProcessingMessage.INFO_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
+             gpm.add(mes);
+             strat.processMessage(mes);
+             switch(mes.actionType){
+	                case APPLY_CHANGE:
+	                    Structure struc2=new GinasChemicalStructure(newstr);
+	                    oldstr.properties=struc2.properties;
+	                    oldstr.charge=struc2.charge;
+	                    oldstr.formula=struc2.formula;
+	                    oldstr.mwt=struc2.mwt;
+	                    oldstr.smiles=struc2.smiles;
+	                    oldstr.ezCenters=struc2.ezCenters;
+	                    oldstr.definedStereo=struc2.definedStereo;
+	                    oldstr.stereoCenters=struc2.stereoCenters;
+	                    oldstr.digest=struc2.digest;
+	                    mes.appliedChange=true;
+	                    break;
+	                case FAIL:
+	                    break;
+	                case DO_NOTHING:
+	                case IGNORE:
+	                default:
+	                    break;
+             }
+         }
+         if(oldstr.digest==null){
+        	 oldstr.digest=newstr.digest;
+         }
+         if(oldstr.smiles==null){
+        	 oldstr.smiles=newstr.digest;
+         }
+         if(oldstr.ezCenters==null){
+        	 oldstr.ezCenters=newstr.ezCenters;
+         }
+         if(oldstr.definedStereo==null){
+        	 oldstr.definedStereo=newstr.definedStereo;
+         }
+         if(oldstr.stereoCenters==null){
+        	 oldstr.stereoCenters=newstr.stereoCenters;
+         }
+         if(oldstr.mwt==null){
+        	 oldstr.mwt=newstr.mwt;
+         }
+         if(oldstr.formula==null){
+        	 oldstr.formula=newstr.formula;
+         }
+         if(oldstr.charge==null){
+        	 oldstr.charge=newstr.charge;
+         }
+         
+         return gpm;
     }
 }

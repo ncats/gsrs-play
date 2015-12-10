@@ -3,6 +3,7 @@ package ix.ginas.models;
 import ix.core.models.Keyword;
 import ix.core.models.Value;
 import ix.ginas.models.v1.Reference;
+import ix.ginas.models.v1.Substance;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -64,5 +65,9 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 	}
 	public void addReference(Reference r){
 		addReference(r.uuid.toString());
+	}
+	public void addReference(Reference r, Substance s){
+		s.references.add(r);
+		this.addReference(r);
 	}
 }

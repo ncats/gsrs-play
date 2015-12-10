@@ -145,6 +145,15 @@ public class Name extends GinasCommonSubData {
     	return "";
     }
     
+    public void addLocator(Substance sub, String loc){
+    	Reference r = new Reference();
+    	r.docType=Name.SRS_LOCATOR;
+    	r.citation=this.name + " [" + loc + "]";
+    	r.publicDomain=true;
+    	this.addReference(r,sub);
+    	sub.tags.add(new Keyword(this.TAG,loc));
+    }
+    
     /**
      * Returns the locators that have been added to this name record.
      * 
