@@ -318,66 +318,30 @@ public class Validation {
         }
         String payload = cs.structure.molfile;
         if (payload != null) {
+        	Structure struc=null;
+        	
             List<Moiety> moietiesForSub = new ArrayList<Moiety>();
-            List<Structure> moieties = new ArrayList<Structure>();
-            Structure struc = StructureProcessor.instrument
-                (payload, moieties, false); // don't standardize
             
-            //struc.count
-            for(Structure m: moieties){
-                Moiety m2= new Moiety();
-                m2.structure=new GinasChemicalStructure(m);
-                m2.count=m.count;
-                moietiesForSub.add(m2);
+            {
+	            List<Structure> moieties = new ArrayList<Structure>();
+	            struc = StructureProcessor.instrument
+	                (payload, moieties, false); // don't standardize
+	            
+	            for(Structure m: moieties){
+	                Moiety m2= new Moiety();
+	                m2.structure=new GinasChemicalStructure(m);
+	                m2.count=m.count;
+	                moietiesForSub.add(m2);
+	            }
             }
             
-            if(cs.moieties.size()<moietiesForSub.size()){
+            if(cs.moieties==null || cs.moieties.size()!=moietiesForSub.size()){
                 GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Incorrect number of moeities").appliableChange(true);
                 gpm.add(mes);
                 strat.processMessage(mes);
                 switch(mes.actionType){
-                case APPLY_CHANGE:
-                    cs.moieties=moietiesForSub;
-                    mes.appliedChange=true;
-                    break;
-                case FAIL:
-                    break;
-                case DO_NOTHING:
-                case IGNORE:
-                default:
-                    break;
-                }               
-            }
-            String oldhash=null;
-            for (Value val : cs.structure.properties) {
-                if (Structure.H_LyChI_L4.equals(val.label)) {
-                    oldhash=val.getValue()+"";
-                }
-            }
-            
-            String newhash=null;
-            for (Value val : struc.properties) {
-                if (Structure.H_LyChI_L4.equals(val.label)) {
-                    newhash=val.getValue()+"";
-                }
-            }
-            
-            if(!newhash.equals(oldhash)){
-                GinasProcessingMessage mes=GinasProcessingMessage.INFO_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
-                gpm.add(mes);
-                strat.processMessage(mes);
-                switch(mes.actionType){
 	                case APPLY_CHANGE:
-	                    Structure struc2=new GinasChemicalStructure(struc);
-	                    cs.structure.properties=struc2.properties;
-	                    cs.structure.charge=struc2.charge;
-	                    cs.structure.formula=struc2.formula;
-	                    cs.structure.mwt=struc2.mwt;
-	                    cs.structure.smiles=struc2.smiles;
-	                    cs.structure.ezCenters=struc2.ezCenters;
-	                    cs.structure.definedStereo=struc2.definedStereo;
-	                    cs.structure.stereoCenters=struc2.stereoCenters;
-	                    cs.structure.digest=struc2.digest;
+	                    cs.moieties=moietiesForSub;
 	                    mes.appliedChange=true;
 	                    break;
 	                case FAIL:
@@ -387,7 +351,13 @@ public class Validation {
 	                default:
 	                    break;
                 }
+            }else{
+            	for(Moiety m:cs.moieties){
+            		struc = StructureProcessor.instrument(m.structure.molfile, null, false); // don't standardize
+            		strat.addAndProcess(validateChemicalStructure(m.structure,struc,strat),gpm);
+            	}
             }
+            strat.addAndProcess(validateChemicalStructure(cs.structure,struc,strat),gpm);
             strat.addAndProcess(validateStructureDuplicates(cs), gpm);
             
         }else{
@@ -395,5 +365,66 @@ public class Validation {
         	
         }
         return gpm;
+    }
+    
+    public static List<GinasProcessingMessage> validateChemicalStructure(GinasChemicalStructure oldstr, Structure newstr, GinasProcessingStrategy strat){
+    	 List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+    	 
+    	 
+    	 String oldhash=newstr.getLychiv4Hash();
+         String newhash=newstr.getLychiv4Hash();
+         
+         if(!newhash.equals(oldhash)){
+             GinasProcessingMessage mes=GinasProcessingMessage.INFO_MESSAGE("Given structure hash disagrees with computed").appliableChange(true);
+             gpm.add(mes);
+             strat.processMessage(mes);
+             switch(mes.actionType){
+	                case APPLY_CHANGE:
+	                    Structure struc2=new GinasChemicalStructure(newstr);
+	                    oldstr.properties=struc2.properties;
+	                    oldstr.charge=struc2.charge;
+	                    oldstr.formula=struc2.formula;
+	                    oldstr.mwt=struc2.mwt;
+	                    oldstr.smiles=struc2.smiles;
+	                    oldstr.ezCenters=struc2.ezCenters;
+	                    oldstr.definedStereo=struc2.definedStereo;
+	                    oldstr.stereoCenters=struc2.stereoCenters;
+	                    oldstr.digest=struc2.digest;
+	                    mes.appliedChange=true;
+	                    break;
+	                case FAIL:
+	                    break;
+	                case DO_NOTHING:
+	                case IGNORE:
+	                default:
+	                    break;
+             }
+         }
+         if(oldstr.digest==null){
+        	 oldstr.digest=newstr.digest;
+         }
+         if(oldstr.smiles==null){
+        	 oldstr.smiles=newstr.digest;
+         }
+         if(oldstr.ezCenters==null){
+        	 oldstr.ezCenters=newstr.ezCenters;
+         }
+         if(oldstr.definedStereo==null){
+        	 oldstr.definedStereo=newstr.definedStereo;
+         }
+         if(oldstr.stereoCenters==null){
+        	 oldstr.stereoCenters=newstr.stereoCenters;
+         }
+         if(oldstr.mwt==null){
+        	 oldstr.mwt=newstr.mwt;
+         }
+         if(oldstr.formula==null){
+        	 oldstr.formula=newstr.formula;
+         }
+         if(oldstr.charge==null){
+        	 oldstr.charge=newstr.charge;
+         }
+         
+         return gpm;
     }
 }

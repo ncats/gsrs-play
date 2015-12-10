@@ -1,19 +1,19 @@
 package ix.ginas.models.v1;
 
+import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.utils.JSONEntity;
+
 import java.util.UUID;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import ix.core.models.Structure;
-import ix.core.models.Indexable;
-import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.GinasCommonSubData;
 
 
 @JsonDeserialize(using = MoietyDeserializer.class)

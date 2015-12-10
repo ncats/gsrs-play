@@ -9,8 +9,11 @@ import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -40,4 +43,12 @@ public class GinasAccessContainer {
 	public GinasAccessContainer(Object o){
 		this.entityType=o.getClass().getName();
 	}
+	
+//	@PreUpdate
+//	@PrePersist
+//	public void testPersist(){
+//		if(access.size()>0){
+//			System.out.println("Access:" + (new ObjectMapper()).valueToTree(access));
+//		}
+//	}
 }

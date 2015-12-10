@@ -28,6 +28,7 @@ import javax.persistence.Version;
 import play.db.ebean.Model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -225,5 +226,16 @@ public class Structure extends Model{
 
     public String getId() {
         return id != null ? id.toString() : null;
+    }
+    
+    @JsonIgnore
+    public String getLychiv4Hash(){
+    	 String newhash=null;
+    	 for (Value val : this.properties) {
+             if (Structure.H_LyChI_L4.equals(val.label)) {
+                 newhash=val.getValue()+"";
+             }
+         }
+    	 return newhash;
     }
 }

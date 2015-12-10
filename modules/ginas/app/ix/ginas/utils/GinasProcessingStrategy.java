@@ -4,12 +4,15 @@ import ix.core.models.Keyword;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.v1.Substance;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 
 import play.Logger;
 
 public abstract class GinasProcessingStrategy {
+	//TODO: add messages directly here
+	public List<GinasProcessingMessage> _localMessages = new ArrayList<GinasProcessingMessage>();
+	
 	public abstract void processMessage(GinasProcessingMessage gpm);
 	
 	public void addAndProcess(List<GinasProcessingMessage> source, List<GinasProcessingMessage> destination){
@@ -88,7 +91,6 @@ public abstract class GinasProcessingStrategy {
 				}
 			}
 		}
-
 	}
 
 	public void addWarnings(Substance cs, List<GinasProcessingMessage> list) {

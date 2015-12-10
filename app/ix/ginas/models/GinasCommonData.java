@@ -57,7 +57,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     public boolean deprecated;
     
 //    @ManyToMany(cascade=CascadeType.PERSIST)
-////    @ManyToMany//(cascade=CascadeType.ALL)
+//    @ManyToMany//(cascade=CascadeType.ALL)
 ////    @JoinTable(name="ix_ginas_access",
 ////          joinColumns=@JoinColumn
 ////          (name="id", referencedColumnName="uuid")
