@@ -44,6 +44,10 @@ public class Role extends Model implements be.objectify.deadbolt.core.models.Rol
         return role.name();
     }
 
+    public static Role newAdmin() {
+        return new Role(Kind.Admin);
+    }
+
     public static List<String> options(){
         List<String> vals = new ArrayList<String>();
         for (Kind role: Kind.values()) {

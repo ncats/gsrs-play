@@ -68,7 +68,7 @@ public class ApplicationTest {
         // Create and train mock repository
         UserProfile mockProfile = mock(UserProfile.class);
         List<Role> roles = new ArrayList<Role>();
-        roles.add(Role.newAdmin());
+        roles.add(new Role(Role.Kind.Admin));
         when(mockProfile.getRoles()).thenReturn(roles);
 
         Principal user = new Principal("John Test", "");
