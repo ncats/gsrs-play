@@ -3,11 +3,7 @@ package ix.ginas.controllers.v1;
 import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import ix.core.NamedResource;
 import ix.core.controllers.EntityFactory;
-import ix.core.models.Group;
-import ix.core.models.Principal;
-import ix.core.models.Structure;
-import ix.core.models.UserProfile;
-import ix.core.models.Value;
+import ix.core.models.*;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -243,7 +239,7 @@ public class SubstanceFactory extends EntityFactory {
 
 		UserProfile profile = getUserProfile();
 		Principal user = profile != null ? profile.user : null;
-		boolean access = false;
+        boolean hasAdmin = false;
 
 		public boolean hasAccess(Object grp, Object sub) {
 			Group group = (Group) grp;
@@ -253,6 +249,19 @@ public class SubstanceFactory extends EntityFactory {
 
 		public List<Substance> filterByAccess(List<Substance> results) {
 			List<Substance> filteredSubstances = new ArrayList<Substance>();
+
+            if(user != null){
+                if(user.isAdmin()) return results;
+                for(Role r : profile.getRoles()){
+                    if(r.getName().equalsIgnoreCase("Admin")){
+                        hasAdmin = true;
+                        break;
+                    }
+                }
+
+                if(hasAdmin) return results;
+
+            }
 
 			for (Substance sub : results) {
 				Set<Group> accessG = sub.getAccess();
