@@ -439,7 +439,7 @@ public class AdminFactory extends Controller {
                 // time between registration and being query-able
                 // The hashmap is a temporary measure to fix this.
                 // But still doesn't seem to fix it
-              //  justRegisteredCache.put(org.username, org);
+                alreadyRegistered.put(org.name, org);
 
                 return org;
             } catch (Exception ex) {
