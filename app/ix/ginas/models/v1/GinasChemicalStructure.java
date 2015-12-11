@@ -116,28 +116,19 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	public Set<Group> getAccessGroups() {
 		return getAccess();
 	}
-
-	@Override
-	public void addReference(String refUUID) {
-		// TODO Auto-generated method stub
-
+	public void addReference(String refUUID){
+		if(this.recordReference==null){
+			this.recordReference= new GinasReferenceContainer(this);
+		}
+		this.recordReference.references.add(new Keyword("REFERENCE", 
+				refUUID
+		));
 	}
-
-	@Override
-	public void addReference(Reference r) {
-		// TODO Auto-generated method stub
-
+	public void addReference(Reference r){
+		addReference(r.uuid.toString());
 	}
-
-	@Override
-	public void addRestrictGroup(Group p) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void addRestrictGroup(String group) {
-		// TODO Auto-generated method stub
-
+	public void addReference(Reference r, Substance s){
+		s.references.add(r);
+		this.addReference(r);
 	}
 }
