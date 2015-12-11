@@ -152,30 +152,6 @@
         return substanceFactory;
     }]);
 
-    ginasApp.service('ajaxlookup', function ($http) {
-        var url = baseurl + "api/v1/vocabularies?filter=domain='";
-        var options = {};
-        var fetching = {};
-        var elements = {
-            load: function (domain) {
-                if (!_.has(options, domain)) {
-                    if (!fetching[domain]) {
-                        fetching[domain] = true;
-                        var promise = $http.get(url + domain + "'", {
-                            headers: {
-                                'Content-Type': 'text/plain'
-                            }
-                        }).then(function (response) {
-                            return response.data.content;
-                        });
-                        return promise;
-                    }
-                }
-            }
-        };
-        return elements;
-    });
-
     ginasApp.service('lookup', function ($http) {
         var options = {};
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
@@ -248,24 +224,23 @@
         return nameFinder;
     });
 
-    ginasApp.service('substanceIDRetriever', ['$http', function ($http) {
+    ginasApp.factory('substanceIDRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances(";
-        var substanceIDRet = {
-            getSubstances: function (editId) {
-                console.log(editId);
-                var promise = $http.get(url + editId + ")?view=full", {
+        var editSubstance = {
+            getSubstance: function (editId) {
+                var promise = $http.get(url + editId + ")?view=full", {cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
                 }).then(function (response) {
-                    console.log(response);
                     return response.data;
                 });
                 return promise;
             }
         };
-        return substanceIDRet;
+        return editSubstance;
     }]);
+
 
     ginasApp.service('substanceRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances?filter=names.name='";
@@ -284,29 +259,28 @@
         return substanceRet;
     }]);
 
-    ginasApp.service('data', function ($http) {
+    ginasApp.factory('CVFields', function ($http) {
 
         var options = {};
         var fetching = {};
+        //var CV = {};
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
-        var data = {
+
+        var CV = {
             load: function (field) {
-                if (!_.has(options, field)) {
-                    if (!fetching[field]) {
-                        fetching[field] = true;
-                        $http.get(url + field.toUpperCase() + "'", {cache: true}, {
-                            headers: {
-                                'Content-Type': 'text/plain'
-                            }
-                        }).success(function (data) {
-                            console.log(data);
-                            options[field] = data.content[0].terms;
-                        });
-                    }
+                if (!_.has(CV, field)) {
+                    $http.get(url + field.toUpperCase() + "'", {cache: true}, {
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).success(function (data) {
+                        console.log(data);
+                        CV[field] = data.content[0].terms;
+                    });
                 }
             },
             search: function (field, query) {
-                return _.chain(options[field])
+                return _.chain(CV[field])
                     .filter(function (x) {
                         return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
                     })
@@ -315,8 +289,7 @@
             },
 
             lookup: function (field, query) {
-                console.log(options);
-                return _.chain(options[field])
+                return _.chain(CV[field])
                     .filter(function (x) {
                         return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
                     })
@@ -325,12 +298,18 @@
             },
 
             retrieve: function (field) {
-                console.log(field);
-                console.log(options);
-                return options[field];
+                if (field === 'NAME_TYPE') {
+                    var temp = angular.copy(CV[field]);
+                    temp = _.remove(temp, function (n) {
+                        return n.value !== 'of';
+                    });
+                    return temp;
+                } else {
+                    return CV[field];
+                }
             }
         };
-        return data;
+        return CV;
     });
 
     ginasApp.service('substanceSearch', function ($http, $q) {
@@ -367,7 +346,7 @@
     });
 
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, UUID, data, nameFinder, substanceSearch, substanceIDRetriever, lookup) {
+    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, UUID, CVFields, nameFinder, substanceSearch, substanceIDRetriever, lookup) {
 
         var ginasCtrl = this;
         $scope.ref = {};
@@ -427,13 +406,12 @@
 
 
         $scope.toFormSubstance = function (apiSub) {
-            console.log(apiSub);
+           // console.log(apiSub);
             var officialNames = [];
             var unofficialNames = [];
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
             if (_.has(apiSub, 'names')) {
-                console.log(apiSub.names);
                 _.forEach(apiSub.names, function (n) {
                     var temp = [];
                     if (n.nameOrgs.length > 0) {
@@ -441,7 +419,6 @@
                             if (m.deprecated) {
                                 apiSub.destructive = true;
                             }
-                            console.log(m.nameOrg);
                             temp.push(m.nameOrg);
                         });
                         n.nameOrgs = temp;
@@ -503,9 +480,15 @@
         };
 
         $scope.expandCV = function (sub, path) {
-
+            console.log(CVFields);
+            _.forIn(sub, function(v, k ){
+                var domain = _.snakeCase(k).toUpperCase();
+                temp = _.find(CVFields, domain);
+                console.log(temp);
+                console.log(_.snakeCase(k).toUpperCase());
+            });
             for (var v in sub) {
-
+              //  console.log(v);
                 var newpath = path;
                 if (newpath.length >= 1) {
                     if (!angular.isArray(sub)) {
@@ -516,11 +499,21 @@
                     newpath = newpath + v;
                 }
                 var newcv = lookup.getFromName(newpath, sub[v]);
+                var temp;
+                temp = _.find(CVFields, newpath);
+                /*                {
+                 console.log(field);
+                 console.log(CVFields[field]);
+                 //    return chr.age < 40;
+                 }));*/
+              //  console.log(newpath);
+            //    console.log(temp);
                 if (angular.isArray(sub[v])) {
                     newcv = null;
                 }
 
                 if (newcv !== null) {
+
                     var w = getDisplayFromCV(newcv.domain, newcv.value);
                     newcv.display = w;
                     sub[v] = newcv;
@@ -533,6 +526,33 @@
             }
             return sub;
         };
+
+        /*        lookup.getFromName = function (field, val) {
+         var domain = lookup[field];
+         if (typeof domain !== "undefined") {
+         return {
+         "display": getDisplayFromCV(domain, val),
+         "value": val,
+         "domain": domain
+         };
+         }
+         return null;
+         };
+
+         function getDisplayFromCV(domain, value) {
+         for (var i in window.CV_REQUEST.content) {
+         if (window.CV_REQUEST.content[i].domain === domain) {
+         var terms = window.CV_REQUEST.content[i].terms;
+         for (var t in terms) {
+         if (terms[t].value === value) {
+         return terms[t].display;
+         }
+         }
+         }
+         }
+         return value;
+         }*/
+
 
         $scope.flattenCV = function (sub) {
             //  console.log(sub);
@@ -641,9 +661,9 @@
             return site;
         };
 
-        $scope.cleanSequence = function (s) {
-            return s.replace(/[^A-Za-z]/g, '');
-        };
+        /*        $scope.cleanSequence = function (s) {
+         return s.replace(/[^A-Za-z]/g, '');
+         };*/
         $scope.getResidueAtSite = function (site) {
             var msub = $scope.getSubunitWithIndex(site.subunitIndex);
             if (msub === null)return null;
@@ -704,72 +724,26 @@
          return display;
          };*/
 
-        $scope.findName = function (aa) {
-            var ret;
-            if ($scope.substance.protein) {
-                ret = getDisplayFromCV("AMINO_ACID_RESIDUES", aa.toUpperCase());
-            } else {
-                ret = getDisplayFromCV("NUCLEIC_ACID_BASE", aa.toUpperCase());
-            }
-            /*
-             switch (aa.toUpperCase()) {
-             case 'A':
-             return "Alanine";
-             case 'C':
-             return "Cysteine";
-             case 'D':
-             return "Aspartic acid";
-             case 'E':
-             return "Glutamic acid";
-             case 'F':
-             return "Phenylalanine";
-             case 'G':
-             return "Glycine";
-             case 'H':
-             return "Histidine";
-             case 'I':
-             return "Isoleucine";
-             case 'K':
-             return "Lysine";
-             case 'L':
-             return "Leucine";
-             case 'M':
-             return "Methionine";
-             case 'N':
-             return "Asparagine";
-             case 'P':
-             return "Proline";
-             case 'Q':
-             return "Glutamine";
-             case 'R':
-             return "Arginine";
-             case 'S':
-             return "Serine";
-             case 'T':
-             return "Threonine";
-             case 'V':
-             return "Valine";
-             case 'W':
-             return "Tryptophan";
-             case 'Y':
-             return "Tyrosine";
+        /*        $scope.findName = function (aa) {
+         var ret;
+         if ($scope.substance.protein) {
+         ret = getDisplayFromCV("AMINO_ACID_RESIDUES", aa.toUpperCase());
+         } else {
+         ret = getDisplayFromCV("NUCLEIC_ACID_BASE", aa.toUpperCase());
+         }
 
-             default:
-             return "Tim forgot one";
-             }
-             */
-            return ret;
+         return ret;
 
-        };
+         };*/
 
-/*        $scope.getType = function (aa) {
-            if (aa == aa.toLowerCase()) {
-                return 'D';
-            }
-            else {
-                return 'L';
-            }
-        };*/
+        /*        $scope.getType = function (aa) {
+         if (aa == aa.toLowerCase()) {
+         return 'D';
+         }
+         else {
+         return 'L';
+         }
+         };*/
 
         $scope.defaultSave = function (obj, form, path, list, name) {
             $scope.$broadcast('show-errors-check-validity');
@@ -1026,18 +1000,18 @@
                 $scope.errorsArray = arr;
             });
         };
-        
+
         $scope.checkDuplicateChemicalSubstance = function () {
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
-            $scope.structureErrorsArray=[];
+            $scope.structureErrorsArray = [];
             $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
                 var arr = [];
 
                 for (var i in response) {
                     console.log(response[i]);
                     if (response[i].messageType != "INFO")
-                            arr.push(response[i]);
+                        arr.push(response[i]);
                     if (response[i].messageType == "WARNING")
                         response[i].class = "alert-warning";
                     if (response[i].messageType == "ERROR")
@@ -1046,8 +1020,8 @@
                         response[i].class = "alert-info";
                     if (response[i].messageType == "SUCCESS")
                         response[i].class = "alert-success";
-                        
-  
+
+
                 }
                 $scope.structureErrorsArray = arr;
             });
@@ -1454,6 +1428,7 @@
             console.log(input);
             var sub = JSON.parse(input);
             $scope.substance = sub;
+            //  $scope.substance = $scope.toFormSubstance(sub);
             console.log($scope);
         };
 
@@ -1461,27 +1436,36 @@
             console.log(bugForm);
         };
 
+
+        ///This gets rid of the very hacky method of passing the substance
         $scope.setEditId = function (editid) {
+            console.log(editid);
             localStorageService.set('editID', editid);
         };
+        /*
+         if (typeof $window.loadjson !== "undefined" &&
+         JSON.stringify($window.loadjson) !== "{}") {
+         var sub = $scope.toFormSubstance($window.loadjson);
+         $scope.substance = sub;
+         } else {*/
 
-        if (typeof $window.loadjson !== "undefined" &&
-            JSON.stringify($window.loadjson) !== "{}") {
-            var sub = $scope.toFormSubstance($window.loadjson);
-            $scope.substance = sub;
+        console.log($scope);
+        var edit = localStorageService.get('editID');
+        console.log(edit);
+        if (edit) {
+            localStorageService.remove('structureid');
+            substanceIDRetriever.getSubstance(edit).then(function (data) {
+                var sub = $scope.toFormSubstance(data);
+                $scope.substance = sub;
+
+              //This removes the substance, so reloading returns an empty form
+              //  localStorageService.remove('editID');
+            });
+
         } else {
-            var edit = localStorageService.get('editID');
-            if (edit) {
-                localStorageService.remove('structureid');
-                substanceIDRetriever.getSubstances(edit).then(function (data) {
-                    var sub = $scope.toFormSubstance(data);
-                    $scope.substance = sub;
-                    localStorageService.remove('editID');
-                });
-            } else {
-                $scope.substance = Substance;
-            }
+            $scope.substance = Substance;
         }
+
 
         $scope.loadSubstances = function ($query) {
             return nameFinder.search($query);
@@ -1515,6 +1499,7 @@
             console.log($scope);
         };
 
+        //method for injecting a large structure image on the browse page//
         $scope.showLarge = function (id, divid) {
             console.log(id);
             console.log(divid);
@@ -1949,29 +1934,6 @@
         };
     });
 
-    ginasApp.directive('subunitForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/subunit-form.html",
-            link: function (scope, element, attrs) {
-                scope.validate = function () {
-                    scope.subunit.index = scope.parent[scope.parent.substanceClass].subunits.length + 1;
-                    scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
-                    scope.subunit = {};
-                    scope.subunitForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    console.log(scope);
-                    scope.parent[scope.parent.substanceClass].subunits.splice(scope.parent[scope.parent.substanceClass].subunits.indexOf(obj), 1);
-                };
-            }
-        };
-    });
 
     ginasApp.directive('amountForm', function () {
         return {
@@ -2131,17 +2093,48 @@
 
     });
 
-    ginasApp.directive('subunit', function (CV) {
+    ginasApp.directive('subunitForm', function (CVFields) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/subunit-form.html",
+            link: function (scope, element, attrs) {
+
+                if (scope.parent.substanceClass === 'protein') {
+                    scope.residues = CVFields.load("AMINO_ACID_RESIDUES");
+                } else {
+                    scope.residues = CVFields.load("NUCLEIC_ACID_BASES");
+                }
+
+                scope.validate = function () {
+                    scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
+                    scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
+                    scope.subunit = {};
+                    scope.subunitForm.$setPristine();
+                };
+
+                scope.deleteObj = function (obj) {
+                    console.log(scope);
+                    scope.parent[scope.parent.substanceClass].subunits.splice(scope.parent[scope.parent.substanceClass].subunits.indexOf(obj), 1);
+                };
+            }
+        };
+    });
+
+    ginasApp.directive('subunit', function (CVFields) {
 
         return {
             restrict: 'E',
             scope: {
-                parent:'=',
-                obj:'='
+                parent: '=',
+                obj: '=',
+                residues: '='
             },
             link: function (scope, element, attrs, ngModelCtrl) {
-                console.log(scope);
-                scope.edit= false;
+                scope.edit = false;
                 scope.aaCheck = function (aa) {
                     var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
                     return !(/^[a-zA-Z]*$/.test(aa) == false || (_.indexOf(invalid, aa.toUpperCase()) >= 0));
@@ -2156,26 +2149,28 @@
                     }
                 };
 
-                if (scope.parent.substanceClass ==='protein'){
-                    CV.load("AMINO_ACID_RESIDUES").then(function () {
-                        scope.residues = CV.retrieve("AMINO_ACID_RESIDUES");
-                        scope.parseSubunit();
-                    });
-                } else {
-                    CV.load("NUCLEIC_ACID_RESIDUES").then(function () {
-                        scope.residues = CV.retrieve("AMINO_ACID_RESIDUES");
-                        scope.parseSubunit();
-                    });
-                }
 
-                scope.getName = function(aa) {
-                    var ret;
-                    _.forEach(scope.residues, function (r) {
-                        if(r.value === aa.toUpperCase()) {
-                            ret = r.display;
-                        }
-                    });
+                scope.getName = function (aa) {
+                    var field;
+                    if (scope.parent.substanceClass === 'protein') {
+                        field = "AMINO_ACID_RESIDUES";
+                    } else {
+                        field = "NUCLEIC_ACID_BASES";
+                    }
+
+                    var ret = CVFields.lookup(field, aa)[0].display;
+                    console.log(ret);
+                    /*                    var ret;
+                     _.forEach(scope.residues, function (r) {
+                     if(r.value === aa.toUpperCase()) {
+                     ret = r.display;
+                     }
+                     });*/
                     return ret;
+                };
+
+                scope.setResidues = function (type) {
+                    return CVFields.retrieve(type);
                 };
 
                 scope.parseSubunit = function () {
@@ -2184,15 +2179,15 @@
                         var obj = {};
                         obj.value = aa;
                         obj.valid = scope.aaCheck(aa);
-                        if(obj.valid){
-                            if(scope.obj.subunitIndex){
+                        if (obj.valid) {
+                            if (scope.obj.subunitIndex) {
                                 obj.subunitIndex = scope.obj.subunitIndex;
-                            }else {
+                            } else {
                                 obj.subunitIndex = scope.obj.index;
                             }
                             obj.residueIndex = _.indexOf(scope.obj.sequence, aa) - 1 + 2;
                             obj.name = scope.getName(aa);
-                            if (scope.parent.substanceClass ==='protein') {
+                            if (scope.parent.substanceClass === 'protein') {
                                 obj.type = scope.getType(aa);
                             }
                             if (aa.toUpperCase() == 'C') {
@@ -2206,6 +2201,8 @@
                     scope.subunitDisplay = display;
                     console.log(scope);
                 };
+                scope.parseSubunit();
+
 
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
                 scope.cleanSequence = function () {
@@ -2914,36 +2911,7 @@
         };
     });
 
-
-    ginasApp.factory('CV', function ($http) {
-        var url = baseurl + "api/v1/vocabularies?filter=domain='";
-        var CV = {};
-        CV.load = function (field) {
-            return $http.get(url + field.toUpperCase() + "'", {cache: true}, {
-                headers: {
-                    'Content-Type': 'text/plain', cache: true
-                }
-            }).success(function (data) {
-                CV[field] = data.content[0].terms;
-            });
-        };
-
-        CV.retrieve = function (field) {
-            if (field === 'NAME_TYPE') {
-                var temp = CV[field];
-                temp = _.remove(temp, function (n) {
-                    return n.value !== 'of';
-                });
-                return temp;
-            } else {
-                return CV[field];
-            }
-        };
-        return CV;
-    });
-
-
-    ginasApp.directive('dropdownSelect', function (CV) {
+    ginasApp.directive('dropdownSelect', function (CVFields) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/dropdown-select.html",
@@ -2954,14 +2922,16 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                CV.load(attrs.cv).then(function () {
-                    scope.values = CV.retrieve(attrs.cv);
-                });
+                CVFields.load(attrs.cv);
+
+                scope.getValues = function (field) {
+                    return CVFields.retrieve(attrs.cv);
+                };
             }
         };
     });
 
-    ginasApp.directive('dropdownViewEdit', function (CV) {
+    ginasApp.directive('dropdownViewEdit', function (CVFields) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/dropdown-view-edit.html",
@@ -2973,13 +2943,11 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                if (!_.has(CV, attrs.cv)) {
-                    CV.load(attrs.cv).then(function () {
-                        scope.values = CV.retrieve(attrs.cv);
-                    });
-                } else {
-                    scope.values = CV.retrieve(attrs.cv);
-                }
+                CVFields.load(attrs.cv);
+
+                scope.getValues = function () {
+                    return CVFields.retrieve(attrs.cv);
+                };
 
                 scope.editing = function (obj) {
                     if (_.has(obj, '_editing')) {
@@ -2992,7 +2960,7 @@
         };
     });
 
-    ginasApp.directive('multiSelect', function (data) {
+    ginasApp.directive('multiSelect', function (CVFields) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/multi-select.html",
@@ -3005,20 +2973,15 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                /*                ajaxlookup.load(attrs.cv).then(function(data){
-                 scope.values = data[0].terms;
-                 });*/
-                data.load(scope.cv);
-
+                CVFields.load(scope.cv);
                 scope.loadItems = function (cv, $query) {
-                    // data.load(cv);
-                    return data.search(cv, $query);
+                    return CVFields.search(cv, $query);
                 };
             }
         };
     });
 
-    ginasApp.directive('multiViewEdit', function (ajaxlookup, data) {
+    ginasApp.directive('multiViewEdit', function (CVFields) {
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/multi-view-edit.html",
@@ -3030,11 +2993,10 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                data.load(scope.cv);
+                CVFields.load(scope.cv);
 
                 scope.loadItems = function (cv, $query) {
-                    // data.load(cv);
-                    return data.search(cv, $query);
+                    return CVFields.search(cv, $query);
                 };
 
                 scope.editing = function (obj) {

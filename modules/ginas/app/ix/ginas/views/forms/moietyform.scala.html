@@ -4,8 +4,6 @@
     <button class="btn btn-primary label-offset det">
                       Moieties&nbsp;<span class="badge" ng-show="substance.moieties.length>0">
                         {{substance.moieties.length}}</span>  </button>
-    @*<a ng-show="!addingStructure" ng-click="addStructure()" aria-label="Add Structure"><i class = "fa fa-plus fa-2x success"></i></a>*@
-    @*<div ng-show="addingStructure">*@
     <div>
         <div class="col-md-12" id="structureSearcher">
 
@@ -25,12 +23,8 @@
                 <div class="row text-center">
                     <div class="col-md-2"><rendered id= {{::moiety.id}}></rendered></div>
                     <div class="col-md-1"><span class="badge badge-primary">{{moiety.count}}</span></div>
-@*
-
-                    <span href="#" editable-select="moiety.stereochemistry"  e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('STEREOCHEMISTRY_TYPE') track by r.display" blur="submit">{{moiety.stereochemistry}}</span>
-*@
                     <div class="col-md-1">
-                            <span href="#" editable-select="moiety.stereochemistry" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('STEREOCHEMISTRY_TYPE') track by r.display" blur="submit"><span class="badge">{{moiety.stereochemistry.display || moiety.stereochemistry}}</span>
+                            <span href="#" editable-select="moiety.stereochemistry" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('STEREOCHEMISTRY') track by r.display" blur="submit"><span class="badge">{{moiety.stereochemistry.display || moiety.stereochemistry}}</span>
                     </span></div>
                     <div class="col-md-1">
                         <span href="#" editable-select="moiety.opticalActivity" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('OPTICAL_ACTIVITY') track by r.display" blur="submit">
