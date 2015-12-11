@@ -20,6 +20,7 @@ import org.apache.lucene.document.IntDocValuesField;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.FloatDocValuesField;
 import org.apache.lucene.document.DoubleDocValuesField;
+
 import static org.apache.lucene.document.Field.Store.*;
 
 import org.apache.lucene.index.AtomicReaderContext;
@@ -34,19 +35,16 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.index.FieldInfo.IndexOptions;
-
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.util.BytesRef;
-
 import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.DisjunctionMaxQuery;
 import org.apache.lucene.search.Query;
@@ -428,11 +426,21 @@ public class SequenceIndexer {
                 public void run () {
                     try {
                         search (out, query, identity, gap);
-                        out.put(POISON_RESULT); // finish
+                        
                     }
                     catch (Exception ex) {
-                        ex.printStackTrace();
+                    	ex.printStackTrace();
                     }
+                    finally{
+                    	try {
+							out.put(POISON_RESULT);// finish
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							
+						} 
+                    }
+                    
                 }
             });
         

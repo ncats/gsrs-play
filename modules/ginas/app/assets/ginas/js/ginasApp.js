@@ -1934,7 +1934,6 @@
         };
     });
 
-
     ginasApp.directive('amountForm', function () {
         return {
             restrict: 'E',

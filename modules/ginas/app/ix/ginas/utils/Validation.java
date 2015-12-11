@@ -2,8 +2,9 @@ package ix.ginas.utils;
 
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Keyword;
+import ix.core.models.Payload;
 import ix.core.models.Structure;
-import ix.core.models.Value;
+import ix.core.plugins.PayloadPlugin;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -11,9 +12,12 @@ import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Note;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.Subunit;
+import ix.ginas.utils.GinasProcessingMessage.Link;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -24,8 +28,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import play.Logger;
+import play.Play;
+import play.mvc.Call;
 
 public class Validation {
+	static final PayloadPlugin _payload =
+	        Play.application().plugin(PayloadPlugin.class);
+	
 	public static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
     	try{
@@ -60,6 +69,7 @@ public class Validation {
 		        case polymer:
 		            break;
 		        case protein:
+		        	gpm.addAll(validateAndPrepareProtein((ProteinSubstance) s,strat));
 		            break;
 		        case reference:
 		            break;
@@ -88,6 +98,8 @@ public class Validation {
     }
 	
 	
+
+
 	public static boolean validateReferenced(Substance s, GinasAccessReferenceControlled data,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat){
 		
 		boolean worked=true;
@@ -197,7 +209,7 @@ public class Validation {
 	                        .WARNING_MESSAGE("Name '"
 	                                         + n.name
 	                                         + "' collides with existing name for substance:"
-	                                         ).addLink(s2);
+	                                         ).addSubstanceLink(s2);
 	                    gpm.add(mes);
 	                    strat.processMessage(mes);
 	                }
@@ -234,7 +246,7 @@ public class Validation {
 	                    GinasProcessingMessage mes = GinasProcessingMessage
 	                        .WARNING_MESSAGE("Code '"
 	                                         + n.code
-	                                         + "' collides with existing code & codeSystem for substance:").addLink(s2);
+	                                         + "' collides with existing code & codeSystem for substance:").addSubstanceLink(s2);
 	                    gpm.add(mes);
 	                    strat.processMessage(mes);
 	                }
@@ -296,7 +308,7 @@ public class Validation {
                     if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
                     	if(dupes<=0)mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has 1 possible duplicate:");
                         dupes++;
-                        mes.addLink(s);
+                        mes.addSubstanceLink(s);
                     }
                 }
                 if(dupes>0){
@@ -310,8 +322,56 @@ public class Validation {
         }
     	return gpm;
     }
-    
-    public static List<GinasProcessingMessage> validateAndPrepareChemical(ChemicalSubstance cs, GinasProcessingStrategy strat){
+    public static List<GinasProcessingMessage> validateSequenceDuplicates(ProteinSubstance cs){
+    	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+    	try {
+    		for(Subunit su : cs.protein.subunits){
+    			Payload payload = _payload.createPayload
+                        ("Sequence Search", "text/plain", su.sequence);
+	            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getNearCollsionProteinSubstancesToSubunit(10, 0, su);
+	            if(sr!=null && !sr.isEmpty()){    
+	                int dupes=0;
+	                GinasProcessingMessage mes=null;
+	                for(Substance s:sr){
+	                    if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
+	                    	if(dupes<=0){
+	                    		mes=GinasProcessingMessage.WARNING_MESSAGE("There is 1 substance with a similar sequence to subunit [" + su.subunitIndex + "]:");
+	                    		Link l = new Link();
+	                    		Call call = ix.ginas.controllers.routes.GinasApp.substances(payload.id.toString(), 16, 1);	                                     
+	                    		l.href=call.url()+"&type=sequence";
+	                    		l.text="Perform similarity search on subunit [" + su.subunitIndex + "]";
+	                    		//ix.ginas.controllers.GinasApp.sequenceSearch();
+	                    		
+	                    		mes.addLink(l);
+	                    	}
+	                        dupes++;
+	                        mes.addSubstanceLink(s);
+	                    }
+	                }
+	                if(dupes>0){
+	                	
+	                	if(dupes>1)
+	                		mes.message="There are " + dupes + " substances with a similar sequence to subunit [" + su.subunitIndex + "]:";
+	                    gpm.add(mes);                                           
+	                }
+	            }
+    		}
+        } catch (Exception e) {
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Error performing seqeunce search on protein:" + e.getMessage()));
+        }
+    	return gpm;
+    }
+
+	private static List<? extends GinasProcessingMessage> validateAndPrepareProtein(
+			ProteinSubstance cs, GinasProcessingStrategy strat) {
+		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+        if(cs.protein==null){
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Protein substance must have a protein element"));
+        }
+        strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
+        return gpm;
+	}
+    public static List<? extends GinasProcessingMessage> validateAndPrepareChemical(ChemicalSubstance cs, GinasProcessingStrategy strat){
         List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
         if(cs.structure==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a chemical structure"));
@@ -353,8 +413,8 @@ public class Validation {
                 }
             }else{
             	for(Moiety m:cs.moieties){
-            		struc = StructureProcessor.instrument(m.structure.molfile, null, false); // don't standardize
-            		strat.addAndProcess(validateChemicalStructure(m.structure,struc,strat),gpm);
+            		Structure struc2 = StructureProcessor.instrument(m.structure.molfile, null, false); // don't standardize
+            		strat.addAndProcess(validateChemicalStructure(m.structure,struc2,strat),gpm);
             	}
             }
             strat.addAndProcess(validateChemicalStructure(cs.structure,struc,strat),gpm);
