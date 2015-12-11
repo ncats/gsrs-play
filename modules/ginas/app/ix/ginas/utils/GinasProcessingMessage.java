@@ -63,10 +63,14 @@ public class GinasProcessingMessage {
 		return messageType == MESSAGE_TYPE.ERROR ||messageType == MESSAGE_TYPE.WARNING;
 	}
 	
-	public GinasProcessingMessage addLink(Substance s){
+	public GinasProcessingMessage addSubstanceLink(Substance s){
 		Link l = new Link();
 		l.href=ix.ginas.controllers.routes.GinasApp.substance(s.getLinkingID())+"";
 		l.text="[" + s.getApprovalIDDisplay() + "]" + s.getName();
+		this.links.add(l);
+		return this;
+	}
+	public GinasProcessingMessage addLink(Link l){
 		this.links.add(l);
 		return this;
 	}

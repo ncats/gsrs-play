@@ -1959,7 +1959,7 @@
             templateUrl: baseurl + "assets/templates/subunit-form.html",
             link: function (scope, element, attrs) {
                 scope.validate = function () {
-                    scope.subunit.index = scope.parent[scope.parent.substanceClass].subunits.length + 1;
+                    scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
                     scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
                     scope.subunit = {};
                     scope.subunitForm.$setPristine();

@@ -8,6 +8,7 @@ import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.UserProfile;
 import ix.core.models.Value;
+import ix.core.plugins.SequenceIndexerPlugin;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -17,14 +18,19 @@ import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
+import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasV1ProblemHandler;
+import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.ResultEnumeration;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
@@ -34,12 +40,15 @@ import com.fasterxml.jackson.databind.JsonNode;
                type=Substance.class,
                description="Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
-    static public final Model.Finder<UUID, Substance> finder =
+    private static final double SEQUENCE_IDENTITY_CUTOFF = 0.5;
+	static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
     static public final Model.Finder<UUID, ChemicalSubstance> chemfinder =
             new Model.Finder(UUID.class, ChemicalSubstance.class);
     static public final Model.Finder<UUID, ProteinSubstance> protfinder =
             new Model.Finder(UUID.class, ProteinSubstance.class);
+    public static SequenceIndexer _seqIndexer =
+            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
 
     public static Substance getSubstance (String id) {
         if(id==null)return null;
@@ -87,7 +96,12 @@ public class SubstanceFactory extends EntityFactory {
     public static List<Substance> getSubstancesWithExactCode
     (int top, int skip, String code, String codeSystem) {
                 return finder.where().and(com.avaje.ebean.Expr.eq("codes.code",code), com.avaje.ebean.Expr.eq("codes.codeSystem",codeSystem)).findList();
-        }
+    }
+    
+    public static List<Substance> getSubstancesWithSequenceID
+    (int top, int skip, String code, String codeSystem) {
+                return finder.where().and(com.avaje.ebean.Expr.eq("codes.code",code), com.avaje.ebean.Expr.eq("codes.codeSystem",codeSystem)).findList();
+    }
         
     public static Integer getCount () {
         try {
@@ -269,5 +283,63 @@ public class SubstanceFactory extends EntityFactory {
 			}
 			return filteredSubstances;
 		}
+	}
+
+
+	public static List<Substance> getNearCollsionProteinSubstances(int top,
+			int skip, ProteinSubstance cs) {
+		Set<Substance> dupes = new LinkedHashSet<Substance>();
+		if(_seqIndexer==null){
+			_seqIndexer =
+		            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+		}
+		for(Subunit subunit : cs.protein.subunits){
+			try{
+				ResultEnumeration re = _seqIndexer.search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
+				int i=0;
+				while(re.hasMoreElements()){
+					SequenceIndexer.Result r = re.nextElement();
+					List<ProteinSubstance> proteins = SubstanceFactory.protfinder
+			                .where().eq("protein.subunits.uuid", r.id).findList();
+					if(proteins!=null && proteins.size()>=0){
+						for(Substance s: proteins){
+							if(i>=skip)dupes.add(s);
+							i++;
+							if(dupes.size()>=top)break;
+						}
+					}
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+		return new ArrayList<Substance>(dupes);
+	}
+	public static List<Substance> getNearCollsionProteinSubstancesToSubunit(int top,
+			int skip, Subunit subunit) {
+		Set<Substance> dupes = new LinkedHashSet<Substance>();
+		if(_seqIndexer==null){
+			_seqIndexer =
+		            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+		}
+			try{
+				ResultEnumeration re = _seqIndexer.search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
+				int i=0;
+				while(re.hasMoreElements()){
+					SequenceIndexer.Result r = re.nextElement();
+					List<ProteinSubstance> proteins = SubstanceFactory.protfinder
+			                .where().eq("protein.subunits.uuid", r.id).findList();
+					if(proteins!=null && proteins.size()>=0){
+						for(Substance s: proteins){
+							if(i>=skip)dupes.add(s);
+							i++;
+							if(dupes.size()>=top)break;
+						}
+					}
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		return new ArrayList<Substance>(dupes);
 	}
 }
