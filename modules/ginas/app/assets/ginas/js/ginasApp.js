@@ -158,10 +158,17 @@
 
         var lookup = {
             "names.type": "NAME_TYPE",
+            "officialNames.type": "NAME_TYPE",
+            "unofficialNames.type": "NAME_TYPE",
             "names.nameOrgs": "NAME_ORG",
+            "officialNames.nameOrgs": "NAME_ORG",
             "names.nameJurisdiction": "JURISDICTION",
+            "officialNames.nameJurisdiction": "JURISDICTION",
             "names.domains": "NAME_DOMAIN",
+            "officialNames.domains": "NAME_DOMAIN",
             "names.languages": "LANGUAGE",
+            "officialNames.languages": "LANGUAGE",
+            "unofficialNames.languages": "LANGUAGE",
             "codes.codeSystem": "CODE_SYSTEM",
             "codes.type": "CODE_TYPE",
             "relationships.type": "RELATIONSHIP_TYPE",
@@ -261,9 +268,6 @@
 
     ginasApp.factory('CVFields', function ($http) {
 
-        var options = {};
-        var fetching = {};
-        //var CV = {};
         var lookup = {
             "stereoChemistry": "STEREOCHEMISTRY_TYPE",
             "names.type": "NAME_TYPE",
@@ -327,8 +331,8 @@
                 } else {
                     return CV[field];
                 }
-            },
-        }
+            }
+        };
         return CV;
     });
 
