@@ -36,11 +36,6 @@ public class Property extends GinasCommonSubData {
     @JoinTable(name = "ix_ginas_property_parameter")
     public List<Parameter> parameters = new ArrayList<Parameter>();
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "ix_ginas_property_reference")
-    @JsonSerialize(using = KeywordListSerializer.class)
-    public List<Keyword> references = new ArrayList<Keyword>();
-
     public Property() {
     }
 }
