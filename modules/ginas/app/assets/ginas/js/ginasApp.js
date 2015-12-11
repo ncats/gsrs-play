@@ -264,28 +264,48 @@
         var options = {};
         var fetching = {};
         //var CV = {};
+        var lookup = {
+            "stereoChemistry": "STEREOCHEMISTRY_TYPE",
+            "names.type": "NAME_TYPE",
+            "names.nameOrgs": "NAME_ORG",
+            "names.nameJurisdiction": "JURISDICTION",
+            "names.domains": "NAME_DOMAIN",
+            "names.languages": "LANGUAGE",
+            "codes.codeSystem": "CODE_SYSTEM",
+            "codes.type": "CODE_TYPE",
+            "relationships.type": "RELATIONSHIP_TYPE",
+            "relationships.interactionType": "INTERACTION_TYPE",
+            "relationships.qualification": "QUALIFICATION",
+            "references.docType": "DOCUMENT_TYPE"
+        };
+
+
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
 
         var CV = {
+            lookuptable: lookup,
+
             load: function (field) {
                 if (!_.has(CV, field)) {
-                    $http.get(url + field.toUpperCase() + "'", {cache: true}, {
+                    var promise = $http.get(url + field.toUpperCase() + "'", {cache: true}, {
                         headers: {
                             'Content-Type': 'text/plain'
                         }
                     }).success(function (data) {
-                        console.log(data);
                         CV[field] = data.content[0].terms;
+                        return CV[field];
                     });
+                    return promise;
                 }
             },
+
             search: function (field, query) {
-                return _.chain(CV[field])
-                    .filter(function (x) {
-                        return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
-                    })
-                    .sortBy('display')
-                    .value();
+                    return _.chain(CV[field])
+                        .filter(function (x) {
+                            return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                        })
+                        .sortBy('display')
+                        .value();
             },
 
             lookup: function (field, query) {
@@ -307,8 +327,8 @@
                 } else {
                     return CV[field];
                 }
-            }
-        };
+            },
+        }
         return CV;
     });
 
@@ -480,15 +500,9 @@
         };
 
         $scope.expandCV = function (sub, path) {
-            console.log(CVFields);
-            _.forIn(sub, function(v, k ){
-                var domain = _.snakeCase(k).toUpperCase();
-                temp = _.find(CVFields, domain);
-                console.log(temp);
-                console.log(_.snakeCase(k).toUpperCase());
-            });
+
             for (var v in sub) {
-              //  console.log(v);
+
                 var newpath = path;
                 if (newpath.length >= 1) {
                     if (!angular.isArray(sub)) {
@@ -499,21 +513,11 @@
                     newpath = newpath + v;
                 }
                 var newcv = lookup.getFromName(newpath, sub[v]);
-                var temp;
-                temp = _.find(CVFields, newpath);
-                /*                {
-                 console.log(field);
-                 console.log(CVFields[field]);
-                 //    return chr.age < 40;
-                 }));*/
-              //  console.log(newpath);
-            //    console.log(temp);
                 if (angular.isArray(sub[v])) {
                     newcv = null;
                 }
 
                 if (newcv !== null) {
-
                     var w = getDisplayFromCV(newcv.domain, newcv.value);
                     newcv.display = w;
                     sub[v] = newcv;
@@ -526,33 +530,6 @@
             }
             return sub;
         };
-
-        /*        lookup.getFromName = function (field, val) {
-         var domain = lookup[field];
-         if (typeof domain !== "undefined") {
-         return {
-         "display": getDisplayFromCV(domain, val),
-         "value": val,
-         "domain": domain
-         };
-         }
-         return null;
-         };
-
-         function getDisplayFromCV(domain, value) {
-         for (var i in window.CV_REQUEST.content) {
-         if (window.CV_REQUEST.content[i].domain === domain) {
-         var terms = window.CV_REQUEST.content[i].terms;
-         for (var t in terms) {
-         if (terms[t].value === value) {
-         return terms[t].display;
-         }
-         }
-         }
-         }
-         return value;
-         }*/
-
 
         $scope.flattenCV = function (sub) {
             //  console.log(sub);
@@ -687,63 +664,6 @@
             }
             return subs;
         };
-
-        /*        $scope.parseSubunit = function (sequence, subunit) {
-         var split = sequence.replace(/[^A-Za-z]/g, '').split('');
-         var display = [];
-         var obj = {};
-         var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
-         for (var i in split) {
-         var aa = split[i];
-         var valid = _.indexOf(invalid, aa.toUpperCase());
-         if (valid >= 0) {
-         obj.value = aa;
-         obj.valid = false;
-         obj.subunitIndex = subunit;
-         obj.residueIndex = i - 1 + 2;
-         display.push(obj);
-         obj = {};
-         } else {
-         obj.value = aa;
-         obj.valid = true;
-         obj.name = $scope.findName(aa);
-         if ($scope.substance.protein) {
-         obj.type = $scope.getType(aa);
-         }
-         obj.subunitIndex = subunit;
-         obj.residueIndex = i - 1 + 2;
-         if (aa.toUpperCase() == 'C') {
-         obj.cysteine = true;
-         }
-         display.push(obj);
-         obj = {};
-         }
-         }
-         this.display = display;
-         display = _.chunk(display, 10);
-         return display;
-         };*/
-
-        /*        $scope.findName = function (aa) {
-         var ret;
-         if ($scope.substance.protein) {
-         ret = getDisplayFromCV("AMINO_ACID_RESIDUES", aa.toUpperCase());
-         } else {
-         ret = getDisplayFromCV("NUCLEIC_ACID_BASE", aa.toUpperCase());
-         }
-
-         return ret;
-
-         };*/
-
-        /*        $scope.getType = function (aa) {
-         if (aa == aa.toLowerCase()) {
-         return 'D';
-         }
-         else {
-         return 'L';
-         }
-         };*/
 
         $scope.defaultSave = function (obj, form, path, list, name) {
             $scope.$broadcast('show-errors-check-validity');
