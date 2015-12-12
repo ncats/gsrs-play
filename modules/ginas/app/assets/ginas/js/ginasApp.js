@@ -174,7 +174,12 @@
             "relationships.type": "RELATIONSHIP_TYPE",
             "relationships.interactionType": "INTERACTION_TYPE",
             "relationships.qualification": "QUALIFICATION",
-            "references.docType": "DOCUMENT_TYPE"
+            "references.docType": "DOCUMENT_TYPE",
+            "protein.proteinType":"PROTEIN_TYPE",
+                "protein.proteinSubType": "PROTEIN_SUBTYPE",
+            "protein.sequenceOrigin":"SEQUENCE_ORIGIN",
+            "protein.sequenceTYPE":"SEQUENCE_TYPE"
+
         };
 
 
@@ -369,7 +374,6 @@
         };
     });
 
-
     ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, UUID, CVFields, nameFinder, substanceSearch, substanceIDRetriever, lookup) {
 
         var ginasCtrl = this;
@@ -403,7 +407,6 @@
             for (var i = 1; i <= min; i++) input.push(i);
             return input;
         };
-
 
         $scope.openSelector = function (path) {
             var modalInstance = $modal.open({
@@ -1360,33 +1363,30 @@
             console.log(bugForm);
         };
 
-
-        ///This gets rid of the very hacky method of passing the substance
         $scope.setEditId = function (editid) {
             console.log(editid);
             localStorageService.set('editID', editid);
         };
-        /*
+
          if (typeof $window.loadjson !== "undefined" &&
          JSON.stringify($window.loadjson) !== "{}") {
          var sub = $scope.toFormSubstance($window.loadjson);
          $scope.substance = sub;
-         } else {*/
-
-        console.log($scope);
-        var edit = localStorageService.get('editID');
-        console.log(edit);
-        if (edit) {
-            localStorageService.remove('structureid');
-            substanceIDRetriever.getSubstance(edit).then(function (data) {
-                var sub = $scope.toFormSubstance(data);
-                $scope.substance = sub;
-
-              //This removes the substance, so reloading returns an empty form
-              //  localStorageService.remove('editID');
-            });
-
-        } else {
+         } else {
+             console.log($scope);
+        //var edit = localStorageService.get('editID');
+        //console.log(edit);
+        //if (edit) {
+        //    localStorageService.remove('structureid');
+        //    substanceIDRetriever.getSubstance(edit).then(function (data) {
+        //        var sub = $scope.toFormSubstance(data);
+        //        $scope.substance = sub;
+        //
+        //      //This removes the substance, so reloading returns an empty form
+        //      //  localStorageService.remove('editID');
+        //    });
+        //
+        //} else {
             $scope.substance = Substance;
         }
 
@@ -2021,7 +2021,8 @@
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                kind: '@'
             },
             templateUrl: baseurl + "assets/templates/subunit-form.html",
             link: function (scope, element, attrs) {
@@ -2294,7 +2295,6 @@
             }
         };
     });
-
 
     ginasApp.directive('substanceView', function () {
         return {

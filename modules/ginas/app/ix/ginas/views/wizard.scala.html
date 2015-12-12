@@ -15,16 +15,15 @@
         }
         case "protein" => {
              <div>@forms.proteindetailsform()</div>
-            <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
+            <subunit-form referenceobj ="referenceobj" parent = substance kind = "protein"></subunit-form>
 @*
             <div>@forms.subunitform()</div>
-*@
-@*             <div>@forms.disulfideform()</div>
+*@             <div>@forms.disulfideform()</div>
              <div>@forms.otherlinksform()</div>
              <div>@forms.glycosylationform()</div>
              <div>@forms.agentmodificationform()</div>
              <div>@forms.structuralmodificationform()</div>
-             <div>@forms.physicalmodificationform()</div>*@
+             <div>@forms.physicalmodificationform()</div>
         }
         case "structurallyDiverse" => {
            <div>@forms.diversesourceform()</div>
@@ -127,13 +126,9 @@
         <button ng-click="submitpaster(paste); validate(substance)">paste</button>
 </div>
 
-
-@*    This part can go{
-
-*@@*        <script>
+      <script>
         var loadjson = @Html(json);
-        </script>*@@*
-    }*@
+        </script>
 
         <script type="text/ng-template" id="tag-template-script">
         <div class="tag-template" >

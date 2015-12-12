@@ -81,6 +81,15 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		return;
 	}
 
+	public void addRestrictGroup(Group group) {
+
+	}
+
+	public void addRestrictGroup(String group) {
+
+	}
+
+
 	@JsonSerialize(using = GroupListSerializer.class)
 	public Set<Group> getAccess() {
 		if (recordAccess != null) {
