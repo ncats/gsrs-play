@@ -175,10 +175,10 @@
             "relationships.interactionType": "INTERACTION_TYPE",
             "relationships.qualification": "QUALIFICATION",
             "references.docType": "DOCUMENT_TYPE",
-            "protein.proteinType":"PROTEIN_TYPE",
-                "protein.proteinSubType": "PROTEIN_SUBTYPE",
-            "protein.sequenceOrigin":"SEQUENCE_ORIGIN",
-            "protein.sequenceTYPE":"SEQUENCE_TYPE"
+            "protein.proteinType": "PROTEIN_TYPE",
+            "protein.proteinSubtype": "PROTEIN_SUBTYPE",
+            "protein.sequenceOrigin": "SEQUENCE_ORIGIN",
+            "protein.sequenceType": "SEQUENCE_TYPE"
 
         };
 
@@ -271,7 +271,7 @@
         return substanceRet;
     }]);
 
-    ginasApp.factory('CVFields', function ($http) {
+    ginasApp.factory('CVFields', function ($http, $q) {
 
         var lookup = {
             "stereoChemistry": "STEREOCHEMISTRY_TYPE",
@@ -290,7 +290,7 @@
 
 
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
-
+        var deferred = $q.defer();
         var CV = {
             lookuptable: lookup,
 
@@ -309,12 +309,12 @@
             },
 
             search: function (field, query) {
-                    return _.chain(CV[field])
-                        .filter(function (x) {
-                            return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
-                        })
-                        .sortBy('display')
-                        .value();
+                return _.chain(CV[field])
+                    .filter(function (x) {
+                        return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                    })
+                    .sortBy('display')
+                    .value();
             },
 
             lookup: function (field, query) {
@@ -433,7 +433,7 @@
 
 
         $scope.toFormSubstance = function (apiSub) {
-           // console.log(apiSub);
+            // console.log(apiSub);
             var officialNames = [];
             var unofficialNames = [];
             //first, flatten nameorgs, this is technically destructive
@@ -1368,25 +1368,25 @@
             localStorageService.set('editID', editid);
         };
 
-         if (typeof $window.loadjson !== "undefined" &&
-         JSON.stringify($window.loadjson) !== "{}") {
-         var sub = $scope.toFormSubstance($window.loadjson);
-         $scope.substance = sub;
-         } else {
-             console.log($scope);
-        //var edit = localStorageService.get('editID');
-        //console.log(edit);
-        //if (edit) {
-        //    localStorageService.remove('structureid');
-        //    substanceIDRetriever.getSubstance(edit).then(function (data) {
-        //        var sub = $scope.toFormSubstance(data);
-        //        $scope.substance = sub;
-        //
-        //      //This removes the substance, so reloading returns an empty form
-        //      //  localStorageService.remove('editID');
-        //    });
-        //
-        //} else {
+        if (typeof $window.loadjson !== "undefined" &&
+            JSON.stringify($window.loadjson) !== "{}") {
+            var sub = $scope.toFormSubstance($window.loadjson);
+            $scope.substance = sub;
+        } else {
+            console.log($scope);
+            //var edit = localStorageService.get('editID');
+            //console.log(edit);
+            //if (edit) {
+            //    localStorageService.remove('structureid');
+            //    substanceIDRetriever.getSubstance(edit).then(function (data) {
+            //        var sub = $scope.toFormSubstance(data);
+            //        $scope.substance = sub;
+            //
+            //      //This removes the substance, so reloading returns an empty form
+            //      //  localStorageService.remove('editID');
+            //    });
+            //
+            //} else {
             $scope.substance = Substance;
         }
 
@@ -2022,16 +2022,11 @@
             replace: true,
             scope: {
                 parent: '=',
-                kind: '@'
+                residues: '='
             },
             templateUrl: baseurl + "assets/templates/subunit-form.html",
             link: function (scope, element, attrs) {
-
-                if (scope.parent.substanceClass === 'protein') {
-                    scope.residues = CVFields.load("AMINO_ACID_RESIDUES");
-                } else {
-                    scope.residues = CVFields.load("NUCLEIC_ACID_BASES");
-                }
+                console.log(scope);
 
                 scope.validate = function () {
                     scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
@@ -2057,8 +2052,9 @@
                 obj: '=',
                 residues: '='
             },
-            link: function (scope, element, attrs, ngModelCtrl) {
+            link: function (scope, element, attrs) {
                 scope.edit = false;
+
                 scope.aaCheck = function (aa) {
                     var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
                     return !(/^[a-zA-Z]*$/.test(aa) == false || (_.indexOf(invalid, aa.toUpperCase()) >= 0));
@@ -2071,30 +2067,6 @@
                     else {
                         return 'L';
                     }
-                };
-
-
-                scope.getName = function (aa) {
-                    var field;
-                    if (scope.parent.substanceClass === 'protein') {
-                        field = "AMINO_ACID_RESIDUES";
-                    } else {
-                        field = "NUCLEIC_ACID_BASES";
-                    }
-
-                    var ret = CVFields.lookup(field, aa)[0].display;
-                    console.log(ret);
-                    /*                    var ret;
-                     _.forEach(scope.residues, function (r) {
-                     if(r.value === aa.toUpperCase()) {
-                     ret = r.display;
-                     }
-                     });*/
-                    return ret;
-                };
-
-                scope.setResidues = function (type) {
-                    return CVFields.retrieve(type);
                 };
 
                 scope.parseSubunit = function () {
@@ -2110,7 +2082,7 @@
                                 obj.subunitIndex = scope.obj.index;
                             }
                             obj.residueIndex = _.indexOf(scope.obj.sequence, aa) - 1 + 2;
-                            obj.name = scope.getName(aa);
+                            obj.name = (_.find(scope.residues, 'value', aa)).display;
                             if (scope.parent.substanceClass === 'protein') {
                                 obj.type = scope.getType(aa);
                             }
@@ -2123,10 +2095,7 @@
                     this.display = display;
                     display = _.chunk(display, 10);
                     scope.subunitDisplay = display;
-                    console.log(scope);
                 };
-                scope.parseSubunit();
-
 
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
                 scope.cleanSequence = function () {
@@ -2135,6 +2104,18 @@
                     }).toString().replace(/,/g, '');
                     scope.parseSubunit();
                 };
+
+                if (scope.parent.substanceClass === 'protein') {
+                    CVFields.load("AMINO_ACID_RESIDUES").then(function (data) {
+                        scope.residues = CVFields.retrieve("AMINO_ACID_RESIDUES");
+                        scope.parseSubunit();
+                    });
+                } else {
+                    CVFields.load("NUCLEIC_ACID_BASES").then(function (data) {
+                        scope.residues = CVFields.retrieve("NUCLEIC_ACID_BASES");
+                        scope.parseSubunit();
+                    });
+                }
             },
             templateUrl: baseurl + "assets/templates/subunit.html"
         };
