@@ -29,6 +29,7 @@ GET     /$context<[a-z0-9_]+>($id<[0-9]+>)/*field  ix.core.controllers.v1.RouteF
 GET     /$context<[a-z0-9_]+>  ix.core.controllers.v1.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
 GET     /$context<[a-z0-9_]+>/  ix.core.controllers.v1.RouteFactory.page(context: String, top: Int ?=10, skip: Int ?= 0, filter: String ?= null)
 POST    /$context<[a-z0-9_]+>  ix.core.controllers.v1.RouteFactory.create(context: String)
+PUT	/$context<[a-z0-9_]+>  ix.core.controllers.v1.RouteFactory.updateEntity(context: String)
 POST    /$context<[a-z0-9_]+>/@validate  ix.core.controllers.v1.RouteFactory.validate(context: String)
 PUT     /$context<[a-z0-9_]+>/$id<[0-9]+>/*field       ix.core.controllers.v1.RouteFactory.update(context: String, id:Long, field: String)
 PUT     /$context<[a-z0-9_]+>($id<[0-9]+>)/*field       ix.core.controllers.v1.RouteFactory.update(context: String, id:Long, field: String)

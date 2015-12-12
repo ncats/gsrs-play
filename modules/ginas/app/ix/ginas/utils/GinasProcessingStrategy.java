@@ -1,14 +1,26 @@
 package ix.ginas.utils;
 
 import ix.core.models.Keyword;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.v1.Substance;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import play.Logger;
 
 public abstract class GinasProcessingStrategy {
+	//TODO: add messages directly here
+	public List<GinasProcessingMessage> _localMessages = new ArrayList<GinasProcessingMessage>();
+	
 	public abstract void processMessage(GinasProcessingMessage gpm);
+	
+	public void addAndProcess(List<GinasProcessingMessage> source, List<GinasProcessingMessage> destination){
+		for(GinasProcessingMessage gpm: source){
+			this.processMessage(gpm);
+			destination.add(gpm);
+		}
+	}
 
 	public static enum HANDLING_TYPE {
 		MARK, FAIL, FORCE_IGNORE
@@ -79,14 +91,13 @@ public abstract class GinasProcessingStrategy {
 				}
 			}
 		}
-
 	}
 
 	public void addWarnings(Substance cs, List<GinasProcessingMessage> list) {
 		if (warningHandle == HANDLING_TYPE.MARK) {
 			for (GinasProcessingMessage gpm : list) {
 				if (gpm.messageType == GinasProcessingMessage.MESSAGE_TYPE.WARNING) {
-					cs.tags.add(new Keyword("WARNING"));
+					cs.tags.add(new Keyword(GinasCommonSubData.TAG, "WARNING"));
 					cs.addPropertyNote(gpm.message, "WARNING");
 					cs.addRestrictGroup("admin");
 				}

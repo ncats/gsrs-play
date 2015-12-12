@@ -2,7 +2,7 @@ package ix.ginas.models.v1;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.models.Keyword;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.utils.JSONEntity;
 
@@ -13,7 +13,7 @@ import java.util.List;
 @JSONEntity(title = "Property", isFinal = true)
 @Entity
 @Table(name = "ix_ginas_property")
-public class Property extends Ginas {
+public class Property extends GinasCommonSubData {
     @JSONEntity(title = "Property Name", isRequired = true)
     @Column(nullable = false)
     public String name;
@@ -35,11 +35,6 @@ public class Property extends Ginas {
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "ix_ginas_property_parameter")
     public List<Parameter> parameters = new ArrayList<Parameter>();
-
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "ix_ginas_property_reference")
-    @JsonSerialize(using = KeywordListSerializer.class)
-    public List<Keyword> references = new ArrayList<Keyword>();
 
     public Property() {
     }

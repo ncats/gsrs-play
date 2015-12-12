@@ -1,62 +1,22 @@
-@import ix.ginas.controllers.GinasApp;
-<div class = "row info">
+<div class = "row info" >
     <button class="btn btn-primary label-offset det">
-                        Source Materials&nbsp;</button>
+                        Source Materials</button>
     <div class="col-md-12">
-
-            <!-- Title bits -->
-
-        <div class = "row header-row">
-            <div class = "col-md-3">
-                <strong>Class</strong>
+        <div class="row form-row">
+                <div class="col-md-3 err-check">
+                    <dropdown-view-edit obj = "substance.structurallyDiverse" field="sourceMaterialClass" cv = "SOURCE_MATERIAL_CLASS" label="Source Material Class"></dropdown-view-edit>
+                </div>
+                <div class="col-md-3 err-check">
+                 <dropdown-view-edit obj = "substance.structurallyDiverse" field="sourceMaterialType" cv = "SOURCE_MATERIAL_TYPE" label="Source Material Type"></dropdown-view-edit>
+                </div>
+                <div class="col-md-3 err-check" ng-if="substance.structurallyDiverse.sourceMaterialClass.display=='ORGANISM'">
+                <dropdown-view-edit obj = "substance.structurallyDiverse" field="sourceMaterialState" cv = "SOURCE_MATERIAL_STATE" label="Source Material State"></dropdown-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj =substance.structurallyDiverse parent = "substance"  type = "reference"  divid="diverseSourceForm" ></form-selector>
+                </div>
             </div>
-            <div class = "col-md-3">
-                <strong>Type</strong>
-            </div>
-            <div class = "col-md-3" ng-if="substance.structurallyDiverse.sourceMaterialClass.display=='ORGANISM' || diverse.sourceMaterialClass.display=='ORGANISM'">
-                <strong>State</strong>
-            </div>
+        <p></p>
+            <div class="diverseSourceForm"></div>
         </div>
-
-
-        <div class = "row">
-            <hr>
-            <div class = "col-md-3">
-                <span href="#" editable-select="substance.structurallyDiverse.sourceMaterialClass" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_CLASS') track by r.display" blur="submit">{{substance.structurallyDiverse.sourceMaterialClass.display}}</span>
-            </div>
-            <div class = "col-md-3">
-                <span href="#" editable-select="substance.structurallyDiverse.sourceMaterialType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_TYPE') track by r.display" blur="submit">{{substance.structurallyDiverse.sourceMaterialType.display}}</span>
-            </div>
-            <div class = "col-md-3">
-                <span href="#" editable-select="substance.structurallyDiverse.sourceMaterialState" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_STATE') track by r.display" blur="submit">{{substance.structurallyDiverse.sourceMaterialState.display}}</span>
-            </div>
-        </div>
-
-        <form class="form-horizontal" name="diverseSourceForm" id = "add-ref" role="form" novalidate>
-            <div class="row form-row" ng-show="!diverseSourceForm.$submitted">
-                <div class="col-md-3 err-check" show-errors>
-                    <select class="form-control" ng-model ="diverse.sourceMaterialClass" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_CLASS') track by r.display" title="Source Class" id="source-class" name = "source-class" required></select>
-                    <ng-messages for="diverseForm.sourceMaterialClass.$error" ng-if="diverseForm.sourceMaterialClass.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-3 err-check" show-errors>
-                    <select class="form-control" title="Source Type" id="source-type" name = "source-type" ng-model = "diverse.sourceMaterialType" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_TYPE') track by r.display" required>
-                        </select>
-                    <ng-messages for="diverseForm.sourceMaterialType.$error" ng-if="diverseForm.sourceMaterialType.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-3 err-check" ng-if="diverse.sourceMaterialClass.display=='ORGANISM'" show-errors>
-                    <select class="form-control" title="Source State" id="source-state" name = "source-state" ng-model = "diverse.sourceMaterialState" ng-options="r.display for r in lookup.getList('SOURCE_MATERIAL_STATE') track by r.display" required>
-                        </select>
-                    <ng-messages for="diverseForm.sourceMaterialState.$error" ng-if="diverseForm.sourceMaterialState.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <reference-selector ngModel='structurallyDiverse' references='substance.references'></reference-selector>
-            </div>
-            <submit-buttons submit="diverse" form="diverseSourceForm" path="structurallyDiverse" list=false></submit-buttons>
-        </form>
     </div>
-</div>

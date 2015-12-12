@@ -10,6 +10,7 @@ import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordTransformer;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
+import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
@@ -487,9 +488,7 @@ public class GinasSDFUtils {
 			Name n = new Name();
 			n.name = name;
 			sub.names.add(n);
-			
-			n.references.add(new Keyword(makePathReference(sub, path).uuid
-					.toString()));
+			n.addReference(makePathReference(sub, path));
 		}
 
 		public static void ADD_SYSTEMATIC_NAME(Substance sub, String name,
@@ -498,8 +497,7 @@ public class GinasSDFUtils {
 			n.name = name;
 			n.type = "SN";
 			sub.names.add(n);
-			n.references.add(new Keyword(makePathReference(sub, path).uuid
-					.toString()));
+			n.addReference(makePathReference(sub, path));
 		}
 
 		public static void ADD_NAME_PREFERRED(Substance sub, String name,
@@ -508,8 +506,7 @@ public class GinasSDFUtils {
 			n.name = name;
 			n.preferred = true;
 			sub.names.add(n);
-			n.references.add(new Keyword(makePathReference(sub, path).uuid
-					.toString()));
+			n.addReference(makePathReference(sub, path));
 		}
 
 		public static void ADD_CODE(Substance sub, String code,
@@ -518,8 +515,7 @@ public class GinasSDFUtils {
 			n.code = code;
 			n.codeSystem = code_system;
 			sub.codes.add(n);
-			n.references.add(new Keyword(makePathReference(sub, path).uuid
-					.toString()));
+			n.addReference(makePathReference(sub, path));
 		}
 
 		public static void ADD_PROPERTY_NOTE(Substance sub, String note,
@@ -529,14 +525,13 @@ public class GinasSDFUtils {
 
 		public static void ADD_SIMPLE_NOTE(Substance sub, String note,
 				String path) {
-			sub.addNote(note).references.add(new Keyword(makePathReference(
-					sub, path).uuid.toString()));
+			sub.addNote(note).addReference(makePathReference(sub, path));
 		}
 
 		public static void SET_STRUCTURE(ChemicalSubstance csub,
 				String molfile, String path) {
 			if (csub.structure == null)
-				csub.structure = new Structure();
+				csub.structure = new GinasChemicalStructure();
 			csub.structure.molfile = molfile;
 
 		}
@@ -559,7 +554,7 @@ public class GinasSDFUtils {
 		
 		
 		ChemicalSubstance csub = new ChemicalSubstance(); 
-		csub.structure= new Structure();
+		csub.structure= new GinasChemicalStructure();
 		
 		for(PATH_MAPPER mapper:fieldMaps){			
 			for(String k:keyValueMap.keySet()){

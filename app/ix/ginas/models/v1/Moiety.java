@@ -1,19 +1,19 @@
 package ix.ginas.models.v1;
 
+import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.utils.JSONEntity;
+
 import java.util.UUID;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-import ix.core.models.Structure;
-import ix.core.models.Indexable;
-import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.Ginas;
 
 
 @JsonDeserialize(using = MoietyDeserializer.class)
@@ -21,13 +21,13 @@ import ix.ginas.models.Ginas;
 @JSONEntity(name = "moiety", title = "Moiety")
 @Entity
 @Table(name = "ix_ginas_moiety")
-public class Moiety extends Ginas {
+public class Moiety extends GinasCommonSubData {
 	@Id
 	public UUID uuid;
 	
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
-    public Structure structure;
+    public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Count")
     public Integer count;

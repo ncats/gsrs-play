@@ -32,7 +32,7 @@
                 
                 
                 <td>@if(n.preferred == true) {<i class="fa fa-check fa-2x success"></i> } else {}</td>
-                @referencetable(n.references, n.uuid.toString(), 5)
+                @referencetable(n.getReferences(), n.uuid.toString(), 5)
             </tr>
         }
     </table>

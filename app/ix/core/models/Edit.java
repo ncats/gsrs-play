@@ -20,11 +20,15 @@ public class Edit extends Model {
     @JsonIgnore
     @Id
     public UUID id; // internal random id
-    public final Date created = new Date ();
+    public final Long created = System.currentTimeMillis();
 
     public String refid; // edited entity
     public String kind;
 
+    // this edit belongs to a chain of edit history
+    @Column(length=64)
+    public String batch;
+        
     @ManyToOne(cascade=CascadeType.ALL)
     public Principal editor;
 
@@ -52,9 +56,11 @@ public class Edit extends Model {
     }
     
     public String getOldValue () {
-        return Global.getNamespace()+"/edits/"+id+"/$oldValue";
+        return oldValue != null
+            ? Global.getNamespace()+"/edits/"+id+"/$oldValue" : null;
     }
     public String getNewValue () {
-        return Global.getNamespace()+"/edits/"+id+"/$newValue";
+        return newValue != null
+            ? Global.getNamespace()+"/edits/"+id+"/$newValue" : null;
     }
 }

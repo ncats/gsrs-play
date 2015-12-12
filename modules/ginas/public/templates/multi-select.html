@@ -1,6 +1,6 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">{{field}}</label>
-    <tags-input custom-class="form-control" title="{{field}}" placeholder="{{field}}" id="{{field}}" name="{{field}}"
+    <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
+    <tags-input custom-class="form-control" title="{{field}}" placeholder="{{field}}" id="{{field}}" name="{{label}}"
                 ng-model="obj" ng-blur="editing(obj[field]);" display-property="display" key-property="value"
                 addFromAutocompleteOnly="true">
         <auto-complete source="loadItems(cv, $query)" min-length="2" debounce-delay="0"

@@ -3,7 +3,8 @@ package ix.ginas.models.v1;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
-import ix.ginas.models.Ginas;
+import ix.core.models.Value;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.KeywordListDeserializer;
 import ix.ginas.models.PrincipalListDeserializer;
@@ -11,7 +12,9 @@ import ix.ginas.models.PrincipalListSerializer;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -37,7 +40,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JSONEntity(title = "Name", isFinal = true)
 @Entity
 @Table(name="ix_ginas_name")
-public class Name extends Ginas {
+public class Name extends GinasCommonSubData {
     private static final String SRS_LOCATOR = "SRS_LOCATOR";
 
     @JSONEntity(title = "Name", isRequired = true)
@@ -86,15 +89,15 @@ public class Name extends Ginas {
     @JsonDeserialize(using=KeywordListDeserializer.class)
     public List<Keyword> nameJurisdiction = new ArrayList<Keyword>();
 
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_name_ref",
-               joinColumns=@JoinColumn
-               (name="ix_ginas_name_ref_uuid",
-               referencedColumnName="uuid")
-    )
-    @JsonSerialize(using=KeywordListSerializer.class)    
-    @JsonDeserialize(using=KeywordListDeserializer.class)
-    public List<Keyword> references = new ArrayList<Keyword>();    
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_name_ref",
+//               joinColumns=@JoinColumn
+//               (name="ix_ginas_name_ref_uuid",
+//               referencedColumnName="uuid")
+//    )
+//    @JsonSerialize(using=KeywordListSerializer.class)    
+//    @JsonDeserialize(using=KeywordListDeserializer.class)
+//    public List<Keyword> references = new ArrayList<Keyword>();    
     
     @JSONEntity(title = "Naming Organizations", format = "table")
     @ManyToMany(cascade=CascadeType.ALL)
@@ -115,10 +118,40 @@ public class Name extends Ginas {
     @PrePersist
     @PreUpdate
     public void tidyName () {
-        if (name.length() > 255) {
+        if (name.getBytes().length > 255) {
             fullName = name;
-            name = name.substring(0,254);
+            name = truncateString(name,254);
+            
         }
+    }
+    
+    private static String truncateString(String s, int maxBytes){
+    	byte[] b = (s+"   ").getBytes();
+    	if(maxBytes>=b.length){
+    		return s;
+    	}
+    	boolean lastComplete=false;
+    	for(int i=maxBytes;i>=0;i--){
+    		if(lastComplete)
+    			return new String(Arrays.copyOf(b, i));
+    		if((b[i] & 0x80) ==0){
+    			return new String(Arrays.copyOf(b, i));
+    		}
+    		if(b[i]==-79){
+    			lastComplete=true;
+    		}
+    	}
+    	
+    	return "";
+    }
+    
+    public void addLocator(Substance sub, String loc){
+    	Reference r = new Reference();
+    	r.docType=Name.SRS_LOCATOR;
+    	r.citation=this.name + " [" + loc + "]";
+    	r.publicDomain=true;
+    	this.addReference(r,sub);
+    	sub.tags.add(new Keyword(this.TAG,loc));
     }
     
     /**
@@ -137,9 +170,9 @@ public class Name extends Ginas {
     	//locators.add("TEST");
     	if(sub!=null){
     		//System.out.println("Real sub");
-	    	for(Keyword ref: this.references){
+	    	for(Keyword ref: this.getReferences()){
 	    		//System.out.println(ref.getValue());
-	    		Reference r=sub.getReferenceByUUID(ref.getValue());
+	    		Reference r=sub.getReferenceByUUID(ref.getValue().toString());
 	    		
 	    		if(r!=null){
 	    			//System.out.println(r.citation);
@@ -186,7 +219,7 @@ public class Name extends Ginas {
 					if(o2.isLanguage("en"))return 1;
 					return -1;
 				}
-				int refDiff=o2.references.size()-o1.references.size();
+				int refDiff=o2.getReferences().size()-o1.getReferences().size();
 				if(refDiff!=0){
 					return refDiff;
 				}

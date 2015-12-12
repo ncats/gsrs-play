@@ -1,7 +1,11 @@
 <div>
-    <span ng-hide="obj[field]._editing" ng-click="editing(obj[field]);">
-      <rendered id = "obj[field].refuuid"></rendered><br/><code>{{obj[field].refPname}}</code>
+
+    <label ng-if ="label" for="{{field}}" class="text-capitalize">{{label}}</label>
+    <a href = "#" ng-click="editing(obj[field]);">
+    <span ng-hide="obj[field]._editing" >
+      <rendered id = {{obj[field].refuuid}}></rendered><br/><code>{{obj[field].refPname}}</code>
     </span>
+    </a>
 
     <div ng-show="obj[field]._editing" id="{{field}}">
         <tags-input custom-class="form-control" ng-blur="obj[field]._editing = false" ng-model= s title="Substance Selector"
@@ -11,7 +15,7 @@
                            template="autocomplete-template"></auto-complete>
         </tags-input>
     </div>
-<ng-messages for="form.name.$error" ng-if="form.name.$touched">
+    <ng-messages for="form.name.$error" ng-if="form.name.$touched">
         <ng-message when="required" class="help-block">*required</ng-message>
     </ng-messages>
 </div>

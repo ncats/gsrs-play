@@ -5,18 +5,18 @@ import java.util.ArrayList;
 import javax.persistence.*;
 
 import ix.core.models.Structure;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasCommonSubData;
 
 @Entity
 @Table(name="ix_ginas_polymer")
-public class Polymer extends Ginas {
+public class Polymer extends GinasCommonSubData {
     @OneToOne(cascade=CascadeType.ALL)
     public PolymerClassification classification;
 
     @OneToOne(cascade=CascadeType.ALL)
-    public Structure displayStructure;
+    public GinasChemicalStructure displayStructure;
     @OneToOne(cascade=CascadeType.ALL)
-    public Structure idealizedStructure;
+    public GinasChemicalStructure idealizedStructure;
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_polymer_material")

@@ -301,50 +301,50 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             }
         }
         if(UPDATE_INDEX){
-        	reindex(bean);
+                reindex(bean);
         }
     }
+    
     public void reindex(Object bean){
-    	String _id=getIdForBeanAsString(bean);
-    	if(alreadyLoaded.containsKey(bean.getClass()+_id)){
-    		return;
-    	}
-    	
-    	
-    	try {      
-    		plugin.getIndexer().update(bean);
-    		if(bean instanceof Structure){
-    			if(_strucIndexer==null){
-    				_strucIndexer=Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
-    			}
-    			_strucIndexer.add(_id, ((Structure)bean).molfile);
-    		}
-    		
-    		Field seq=getSequenceIndexableField(bean);
-    		if(seq!=null){
-    			String indexSequence;
-				try {
-					indexSequence = (String) seq.get(bean);
-					if(indexSequence!=null && indexSequence.length()>0){
-		    			//System.out.println("Indexing sequence:" + _id + "\t" + _seqIndexer + "\t" + indexSequence);
-		    			if(_seqIndexer==null){
-		    				_seqIndexer=Play.application()
-		    			            .plugin(SequenceIndexerPlugin.class).getIndexer();
-		    			}
-		    			
-	    				_seqIndexer.add(_id, indexSequence);
-	    			}
-				} catch (Exception e){
-					e.printStackTrace();
-				}
-    		}
-    		alreadyLoaded.put(bean.getClass()+_id,_id);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        String _id=getIdForBeanAsString(bean);
+        if(alreadyLoaded.containsKey(bean.getClass()+_id)){
+            return;
+        }
+        
+        
+        try {      
+            plugin.getIndexer().update(bean);
+            if(bean instanceof Structure){
+                if(_strucIndexer==null){
+                    _strucIndexer=Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+                }
+                _strucIndexer.add(_id, ((Structure)bean).molfile);
+            }
+                
+            Field seq=getSequenceIndexableField(bean);
+            if(seq!=null){
+                String indexSequence;
+                try {
+                    indexSequence = (String) seq.get(bean);
+                    if(indexSequence!=null && indexSequence.length()>0){
+                        if(_seqIndexer==null){
+                            _seqIndexer=Play.application()
+                                .plugin(SequenceIndexerPlugin.class).getIndexer();
+                        }
+                                        
+                        _seqIndexer.add(_id, indexSequence);
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+            alreadyLoaded.put(bean.getClass()+_id,_id);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     public static Object getIdForBean(Object entity){
-    	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return null;
         }
         try {
@@ -352,7 +352,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             Field f=getIdFieldForBean(entity);
             id = f.get(entity);
             if (id != null) {
-            	return id;
+                return id;
             }
         }
         catch (Exception ex) {
@@ -361,7 +361,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         return null;
     }
     public static Field getIdFieldForBean(Object entity){
-    	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return null;
         }
         try {
@@ -376,38 +376,37 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         return null;
     }
     public static Method getIdSettingMethodForBean(Object entity){
-    	Field f=getIdFieldForBean(entity);
-    	for(Method m:entity.getClass().getMethods()){
-    		if(m.getName().toLowerCase().equals("set" + f.getName().toLowerCase())){
-    			return m;
-    		}
-    	}
-    	return null;
+        Field f=getIdFieldForBean(entity);
+        for(Method m:entity.getClass().getMethods()){
+            if(m.getName().toLowerCase().equals("set" + f.getName().toLowerCase())){
+                return m;
+            }
+        }
+        return null;
     }
     public static String getIdForBeanAsString(Object entity){
-    	Object id=getIdForBean(entity);
-    	if(id!=null)return id.toString();
-    	return null;
+        Object id=getIdForBean(entity);
+        if(id!=null)return id.toString();
+        return null;
     }
     public static String setIdForBean(Object entity){
-    	Object id=getIdForBean(entity);
-    	if(id!=null)return id.toString();
-    	return null;
+        Object id=getIdForBean(entity);
+        if(id!=null)return id.toString();
+        return null;
     }
     public static Field getSequenceIndexableField(Object entity){
-    	if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return null;
         }
         try {
-        	
+                
             for (Field f : entity.getClass().getFields()) {
-            	Indexable ind= f.getAnnotation(Indexable.class);
-            	
+                Indexable ind= f.getAnnotation(Indexable.class);
+                
                 if (ind != null) {
-                	//System.out.println("Looking at" + f);
-                	if(ind.sequence()){
-                		return f;
-                	}
+                    if(ind.sequence()){
+                        return f;
+                    }
                 }
                
             }
@@ -419,16 +418,14 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     }
     
 
-	public static boolean isUpdatingIndex() {
-		return UPDATE_INDEX;
-	}
+    public static boolean isUpdatingIndex() {
+        return UPDATE_INDEX;
+    }
 
-	public static void setUpdatingIndex(boolean update) {
-		if(update!=UPDATE_INDEX){
-			alreadyLoaded.clear();
-			UPDATE_INDEX = update;
-		}
-		
-	}
-	
+    public static void setUpdatingIndex(boolean update) {
+        if(update!=UPDATE_INDEX){
+            alreadyLoaded.clear();
+            UPDATE_INDEX = update;
+        }
+    }
 }

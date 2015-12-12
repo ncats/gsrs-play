@@ -8,14 +8,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasCommonSubData;
 import ix.core.models.Principal;
 import java.util.List;
 
 @JSONEntity(title = "Agent Modification", isFinal = true)
 @Entity
 @Table(name="ix_ginas_agentmod")
-public class AgentModification extends Ginas {
+public class AgentModification extends GinasCommonSubData {
     @JSONEntity(title = "Process")
     public String agentModificationProcess;
     

@@ -8,12 +8,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasCommonSubData;
 
 @Entity
 @Table(name="ix_ginas_substanceref")
 @JSONEntity(name = "substanceReference", isFinal = true)
-public class SubstanceReference extends Ginas {
+public class SubstanceReference extends GinasCommonSubData {
     @JSONEntity(title = "Substance Name")
     public String refPname;
     

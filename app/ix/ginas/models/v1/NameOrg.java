@@ -8,14 +8,14 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ix.core.models.Indexable;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.utils.JSONConstants;
 
 @Entity
 @Table(name="ix_ginas_nameorg")
 @JSONEntity(name = "nameOrg", title = "Naming Org", isFinal = true)
-public class NameOrg extends Ginas {
+public class NameOrg extends GinasCommonSubData {
     @JSONEntity(title = "Naming Organization", format = JSONConstants.CV_NAME_ORG, isRequired = true)
     @Column(nullable=false)
     public String nameOrg;

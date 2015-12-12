@@ -1,12 +1,12 @@
 <div>
     <div>
-        <label for="{{field}}" class="text-capitalize">{{field}}</label>
-        <input type="text" class="form-control" ng-model=obj title="{{field}}" id="{{field}}" placeholder = "{{field}}"
+        <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
+        <input type="text" class="form-control" ng-model=obj title="{{field}}" id="{{field}}" placeholder = "{{label || field}}"
                name="{{field}}"/>
-        <ng-messages for="form[name].$error" ng-if="form[name].$touched">
+<!--        <ng-messages for="form[name].$error" ng-if="form[name].$touched">
                     <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
                     <ng-message when="required" class="help-block">Substance name is required</ng-message>
-                </ng-messages>
+                </ng-messages>-->
     </div>
 </div>
 

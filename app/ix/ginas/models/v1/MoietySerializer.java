@@ -2,6 +2,7 @@ package ix.ginas.models.v1;
 
 import java.lang.reflect.*;
 import java.io.IOException;
+
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -10,9 +11,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ix.core.models.Structure;
 import ix.core.models.Keyword;
 import ix.core.models.Value;
+import ix.ginas.models.StructureSerializer;
 
 public class MoietySerializer extends JsonSerializer<Moiety> {
     StructureSerializer serializer = new StructureSerializer ();

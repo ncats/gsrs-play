@@ -11,9 +11,25 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-2 pull-right">
+                    <div class="col-md-12 pull-right">
+                        <button class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
                         <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export"><i class="fa fa-external-link fa-2x success"></i></a> &nbsp;
                         <a class= "pull-right padded" data-toggle="modal" data-target="#structureimport" aria-label="Import" ><i class="fa fa-clipboard fa-2x success"></i></a>
+                    </div>
+                </div>
+                <div class = "row" ng-repeat="err in structureErrorsArray">
+                    <div class="col-md-12">
+                        <div class="alert {{err.class}} alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"> 
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <span><h4>{{err.messageType}}</h4>
+                                <span>{{err.message}}</span>
+                                <div ng-repeat="link in err.links">
+                                    <a target = "_blank" href="{{link.href}}">{{link.text}}</a>
+                                </div>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div class ="row header-row">
@@ -22,7 +38,9 @@
                     <div class = "col-md-2"><strong>Defined Stereocenters</strong></div>
                     <div class = "col-md-1"><strong>EZ Centers</strong></div>
                     <div class = "col-md-1"><strong>Charge</strong></div>
-                    <div class = "col-md-2 text-right"><strong>Reference ID</strong></div>
+                    <div class = "col-md-1"><strong>References</strong></div>
+                    <div class = "col-md-1 text-right"><strong>Access</strong></div>
+
                 </div>
                 <div class ="row" >
                     <div class = "col-md-3">
@@ -40,13 +58,18 @@
                     <div class = "col-md-1">
                     {{substance.charge}}
                     </div>
-                    <div ng-show="substance.structure.references.length > 0">
-                    @referenceview("structureForm", "structure")
+                   
+                    <div class="col-md-1 pull-right">
+                        <form-selector referenceobj =substance.structure parent = "substance" type = "access" divid="structureForm" mode="edit"></form-selector>
                     </div>
-          @*          <div ng-hide="substance.structure.references.length > 0">
+                    <div class="col-md-1 pull-right">
+                        <form-selector referenceobj =substance.structure parent = "substance" type = "reference" divid="structureForm" mode="edit"></form-selector>
+                    </div>
+                    @*<div ng-hide="substance.structure.references.length > 0">
                         <reference-selector ngModel='structure' references='substance.references'></reference-selector>
                     </div>*@
                 </div>
+                <div class="structureForm"></div>
             </form>
         </div>
     </div>

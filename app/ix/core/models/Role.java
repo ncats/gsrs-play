@@ -13,11 +13,15 @@ import java.util.Map;
 @Table(name = "ix_core_role")
 public class Role extends Model implements be.objectify.deadbolt.core.models.Role {
     public enum Kind {
-        Guest,
-        User, // authenticated user
-        Owner,
+        Query,
+        DataEntry,
+        SuperDataEntry,
+        Updater,
+        SuperUpdate,
         Admin;
+        //Guest, Owner, Admin, User; //authenticated user
     }
+
 
     @Id
     public Long id;
@@ -38,18 +42,6 @@ public class Role extends Model implements be.objectify.deadbolt.core.models.Rol
     @Override
     public String getName() {
         return role.name();
-    }
-
-    public static Role newGuest() {
-        return new Role(Kind.Guest);
-    }
-
-    public static Role newUser() {
-        return new Role(Kind.User);
-    }
-
-    public static Role newOwner() {
-        return new Role(Kind.Owner);
     }
 
     public static Role newAdmin() {

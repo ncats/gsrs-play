@@ -26,6 +26,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.StructureSerializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 
@@ -34,12 +36,13 @@ import ix.utils.Global;
 @Entity
 @Inheritance
 @DiscriminatorValue("CHE")
-public class ChemicalSubstance extends Substance {
+public class ChemicalSubstance extends Substance  {
+	
     @JSONEntity(isRequired = true)
     @OneToOne(cascade=CascadeType.ALL)
     @Column(nullable=false)
     @JsonSerialize(using=StructureSerializer.class)
-    public Structure structure;
+    public GinasChemicalStructure structure;
     
     @JSONEntity(title = "Chemical Moieties", isRequired = true, minItems = 1)
     @ManyToMany(cascade=CascadeType.ALL)

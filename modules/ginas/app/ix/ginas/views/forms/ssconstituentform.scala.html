@@ -1,0 +1,59 @@
+<div class = "row info" >
+    <button class="btn btn-primary label-offset det">
+                      Constituents&nbsp;<span class="badge" ng-show="substance.specifiedSubstance.constituents.length>0">
+                        {{substance.specifiedSubstance.constituents.length}}</span> </button>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="constituentForm" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-3">
+                    <substance-chooser-selector ng-model ="component.substance" field ="substance" name ="substance" formname ="constituentForm" label ="Constituent Substance" type = "lite"></substance-chooser-selector>
+                </div>
+                <div class="col-md-3">
+                    <dropdown-select ng-model="component.type" field="type" cv = "MIXTURE_TYPE" ></dropdown-select>
+                </div>
+                <div class="col-md-3">
+                    <text-input ng-model="component.role" field="role" ></text-input>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj= "component" divid="constituentForm" type = "amount"></form-selector>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj ="component" parent = "substance" divid="constituentForm" type = "reference"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="component" parent = "substance" divid="constituentForm" type = "access"></form-selector>
+                </div>
+            </div>
+            <div class="constituentForm"></div>
+            <submit-buttons submit="component" form="constituentForm" path="specifiedSubstanceG1.constituents"></submit-buttons>
+        </form>
+
+        <div ng-repeat="obj in substance.specifiedSubstance.constituents" >
+            <div class ="row">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path="relationships"></delete-button>
+                </div>
+                <div class="col-md-2">
+                    <substance-chooser-view-edit obj = "obj" field ="substance"></substance-chooser-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj = "obj" field="type" cv = "MIXTURE_TYPE" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <text-view-edit obj = "obj" field="role"></text-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj= "obj" formname="constituentForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj ="obj" parent = "substance" formname="constituentForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" formname="constituentForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+            </div>
+            <div class = {{obj.$$hashKey}}></div>
+        </div>
+    </div>
+</div>

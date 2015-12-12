@@ -1,9 +1,15 @@
 package ix.ginas.controllers.v1;
 
+import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import ix.core.NamedResource;
-
 import ix.core.controllers.EntityFactory;
-import ix.core.models.*;
+import ix.core.models.Group;
+import ix.core.models.Principal;
+import ix.core.models.Role;
+import ix.core.models.Structure;
+import ix.core.models.UserProfile;
+import ix.core.models.Value;
+import ix.core.plugins.SequenceIndexerPlugin;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.MixtureSubstance;
@@ -13,32 +19,40 @@ import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
+import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasV1ProblemHandler;
+import ix.seqaln.SequenceIndexer;
+import ix.seqaln.SequenceIndexer.ResultEnumeration;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-
-import static ix.ncats.controllers.auth.Authentication.getUserProfile;
+import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Result;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 @NamedResource(name="substances",
                type=Substance.class,
                description="Resource for handling of GInAS substances")
 public class SubstanceFactory extends EntityFactory {
-    static public final Model.Finder<UUID, Substance> finder =
+    private static final double SEQUENCE_IDENTITY_CUTOFF = 0.5;
+	static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
     static public final Model.Finder<UUID, ChemicalSubstance> chemfinder =
             new Model.Finder(UUID.class, ChemicalSubstance.class);
     static public final Model.Finder<UUID, ProteinSubstance> protfinder =
             new Model.Finder(UUID.class, ProteinSubstance.class);
+    public static SequenceIndexer _seqIndexer =
+            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
 
     public static Substance getSubstance (String id) {
-    	if(id==null)return null;
+        if(id==null)return null;
         return getSubstance (UUID.fromString(id));
     }
 
@@ -72,18 +86,24 @@ public class SubstanceFactory extends EntityFactory {
         List<Substance> substances = filter (new FetchOptions (top, skip, filter), finder);
         return subFilter.filterByAccess(substances);
     }
-    
+
+    //TODO: Doesn't support top/skip
     public static List<Substance> getSubstancesWithExactName
     (int top, int skip, String name) {
                 return finder.where().eq("names.name", name).findList();
         }
     
-    public static List<Substance> getChemicals
-        (int top, int skip, String filter) {
-        return filter (new FetchOptions (top, skip, filter), finder);
+    //TODO: Doesn't support top/skip
+    public static List<Substance> getSubstancesWithExactCode
+    (int top, int skip, String code, String codeSystem) {
+                return finder.where().and(com.avaje.ebean.Expr.eq("codes.code",code), com.avaje.ebean.Expr.eq("codes.codeSystem",codeSystem)).findList();
     }
     
-    
+    public static List<Substance> getSubstancesWithSequenceID
+    (int top, int skip, String code, String codeSystem) {
+                return finder.where().and(com.avaje.ebean.Expr.eq("codes.code",code), com.avaje.ebean.Expr.eq("codes.codeSystem",codeSystem)).findList();
+    }
+        
     public static Integer getCount () {
         try {
             return getCount (finder);
@@ -130,50 +150,99 @@ public class SubstanceFactory extends EntityFactory {
         return delete (uuid, finder);
     }
 
-    public static Result update (UUID uuid, String field) {
-    	//if(true)return ok("###");
-		try {
-			JsonNode value = request().body().asJson();
-			Class subClass = Substance.class;
-			String typ = value.get("substanceClass").asText();
-			Substance.SubstanceClass type;
-			try {
-				type = Substance.SubstanceClass.valueOf(typ);
-			} catch (Exception e) {
-				throw new IllegalStateException("Unimplemented substance class:" + typ);
+    public static Result updateEntity () {
+        if (!request().method().equalsIgnoreCase("PUT")) {
+            return badRequest ("Only PUT is accepted!");
+        }
+
+        String content = request().getHeader("Content-Type");
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
+            return badRequest ("Mime type \""+content+"\" not supported!");
+        }
+        JsonNode json = request().body().asJson();
+
+        Class<? extends Substance> subClass = Substance.class;
+        String cls = json.get("substanceClass").asText();      
+        try {
+            Substance.SubstanceClass type =
+                Substance.SubstanceClass.valueOf(cls);
+            switch (type) {
+            case chemical:
+                subClass = ChemicalSubstance.class;
+                break;
+            case protein:
+                subClass = ProteinSubstance.class;
+                break;
+            case mixture:
+                subClass = MixtureSubstance.class;
+                break;
+            case polymer:
+                subClass = PolymerSubstance.class;
+                break;
+            case structurallyDiverse:
+                subClass = StructurallyDiverseSubstance.class;
+                break;
+            case specifiedSubstanceG1:
+                subClass = SpecifiedSubstanceGroup1Substance.class;
+                break;
+            case concept:               
+            default:
+                subClass = Substance.class;
+                break;
+            }
+        }
+        catch (Exception ex) {
+            Logger.warn("Unknown substance class: "+cls
+                        +"; treating as generic substance!");
+        }
+        
+        return updateEntity (json, subClass);
     }
-			switch (type) {
-				case chemical:
-					subClass = ChemicalSubstance.class;
-					break;
-				case protein:
-					subClass = ProteinSubstance.class;
-					break;
-				case mixture:
-					subClass = MixtureSubstance.class;
-					break;
-				case polymer:
-					subClass = PolymerSubstance.class;
-					break;
-				case structurallyDiverse:
-					subClass = StructurallyDiverseSubstance.class;
-					break;
-				case specifiedSubstanceG1:
-					subClass = SpecifiedSubstanceGroup1Substance.class;
-					break;
-				case concept:
-					subClass = Substance.class;
-					break;
-			}
-			return update(uuid, field, subClass, finder, new GinasV1ProblemHandler());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
+    
+    public static Result update (UUID uuid, String field) {
+        //if(true)return ok("###");
+        try {
+            JsonNode value = request().body().asJson();
+            Class subClass = Substance.class;
+            String typ = value.get("substanceClass").asText();
+            Substance.SubstanceClass type;
+            try {
+                type = Substance.SubstanceClass.valueOf(typ);
+            } catch (Exception e) {
+                throw new IllegalStateException("Unimplemented substance class:" + typ);
+            }
+            switch (type) {
+            case chemical:
+                subClass = ChemicalSubstance.class;
+                break;
+            case protein:
+                subClass = ProteinSubstance.class;
+                break;
+            case mixture:
+                subClass = MixtureSubstance.class;
+                break;
+            case polymer:
+                subClass = PolymerSubstance.class;
+                break;
+            case structurallyDiverse:
+                subClass = StructurallyDiverseSubstance.class;
+                break;
+            case specifiedSubstanceG1:
+                subClass = SpecifiedSubstanceGroup1Substance.class;
+                break;
+            case concept:
+                subClass = Substance.class;
+                break;
+            }
+            return update(uuid, field, subClass, finder, new GinasV1ProblemHandler());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
-    public static List<Substance> getCollsionChemicalSubstances(int i, int j,
-                                                                ChemicalSubstance cs) {
+    public static List<Substance> getCollsionChemicalSubstances(int i, int j, ChemicalSubstance cs) {
         String hash=null;
         for (Value val : cs.structure.properties) {
             if (Structure.H_LyChI_L4.equals(val.label)) {
@@ -184,34 +253,106 @@ public class SubstanceFactory extends EntityFactory {
     }
 
 
-    public static class SubstanceFilter implements EntityFilter {
+	public static class SubstanceFilter implements EntityFilter {
 
-        UserProfile profile = getUserProfile();
-        Principal user = profile!= null? profile.user: null;
-        boolean access = false;
+		UserProfile profile = getUserProfile();
+		Principal user = profile != null ? profile.user : null;
+        boolean hasAdmin = false;
 
-        public boolean hasAccess(Object grp, Object sub){
-            Group group = (Group) grp;
-            Substance substance = (Substance) sub;
-            return substance.access.contains(group);
-        }
+		public boolean hasAccess(Object grp, Object sub) {
+			Group group = (Group) grp;
+			Substance substance = (Substance) sub;
+			return substance.getAccess().contains(group);
+		}
 
-           public List<Substance> filterByAccess (List<Substance> results) {
-               List<Substance> filteredSubstances = new ArrayList<Substance>();
+		public List<Substance> filterByAccess(List<Substance> results) {
+			List<Substance> filteredSubstances = new ArrayList<Substance>();
 
-               for (Substance sub : results) {
-                   if(sub.access.isEmpty() || sub.access.size() == 0){
-                       filteredSubstances.add(sub);
-                   }
-                   if(user != null) {
-                    for(Group grp : profile.getGroups()){
-                        if (hasAccess(grp, sub)) {
-                            filteredSubstances.add(sub);
-                        }
+            if(user != null){
+                if(user.isAdmin()) return results;
+                for(Role r : profile.getRoles()){
+                    if(r.getName().equalsIgnoreCase("Admin")){
+                        hasAdmin = true;
+                        break;
                     }
-                  }
-               }
-            return filteredSubstances;
-           }
-    }
+                }
+                if(hasAdmin) return results;
+
+            }
+
+			for (Substance sub : results) {
+				Set<Group> accessG = sub.getAccess();
+				if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
+					filteredSubstances.add(sub);
+				}else{
+					if (user != null) {
+						for (Group grp : profile.getGroups()) {
+							if (hasAccess(grp, sub)) {
+								filteredSubstances.add(sub);
+							}
+						}
+					}
+				}
+			}
+			return filteredSubstances;
+		}
+	}
+
+
+	public static List<Substance> getNearCollsionProteinSubstances(int top,
+			int skip, ProteinSubstance cs) {
+		Set<Substance> dupes = new LinkedHashSet<Substance>();
+		if(_seqIndexer==null){
+			_seqIndexer =
+		            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+		}
+		for(Subunit subunit : cs.protein.subunits){
+			try{
+				ResultEnumeration re = _seqIndexer.search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
+				int i=0;
+				while(re.hasMoreElements()){
+					SequenceIndexer.Result r = re.nextElement();
+					List<ProteinSubstance> proteins = SubstanceFactory.protfinder
+			                .where().eq("protein.subunits.uuid", r.id).findList();
+					if(proteins!=null && proteins.size()>=0){
+						for(Substance s: proteins){
+							if(i>=skip)dupes.add(s);
+							i++;
+							if(dupes.size()>=top)break;
+						}
+					}
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+		return new ArrayList<Substance>(dupes);
+	}
+	public static List<Substance> getNearCollsionProteinSubstancesToSubunit(int top,
+			int skip, Subunit subunit) {
+		Set<Substance> dupes = new LinkedHashSet<Substance>();
+		if(_seqIndexer==null){
+			_seqIndexer =
+		            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+		}
+			try{
+				ResultEnumeration re = _seqIndexer.search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
+				int i=0;
+				while(re.hasMoreElements()){
+					SequenceIndexer.Result r = re.nextElement();
+					List<ProteinSubstance> proteins = SubstanceFactory.protfinder
+			                .where().eq("protein.subunits.uuid", r.id).findList();
+					if(proteins!=null && proteins.size()>=0){
+						for(Substance s: proteins){
+							if(i>=skip)dupes.add(s);
+							i++;
+							if(dupes.size()>=top)break;
+						}
+					}
+				}
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		return new ArrayList<Substance>(dupes);
+	}
 }

@@ -1,0 +1,25 @@
+<div>
+    <div class="row form-row">
+        <div class="col-md-6">
+            <strong>
+                Subunit {{obj.subunitIndex}}
+            </strong>
+            <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits"></delete-button>
+            <a ng-click="cleanSequence()"><i class="fa fa-magic fa-2x success"></i></a>
+            <a ng-click="edit = !edit"><i class="fa fa-pencil fa-2x"></i></a>
+        </div>
+    </div>
+    <div class="row">
+        <hr>
+        <div class="col-md-12" ng-show="edit">
+            <textarea ng-show="edit" type="text" class="form-control" ng-model=obj.sequence
+                      ng-blur="parseSubunit(); edit=false"></textarea>
+        </div>
+        <div ng-hide="edit" class="col-xs-2" ng-repeat="chunk in subunitDisplay">
+            <span ng-repeat="aa in chunk">
+                <amino-acid acid=aa></amino-acid>
+
+            </span>
+        </div>
+    </div>
+</div>

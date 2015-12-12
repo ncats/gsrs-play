@@ -12,11 +12,12 @@
                     <reference-apply ng-model="ref.apply" obj=obj referenceobj=reference parent=parent
                                      type="view"></reference-apply>
                 </div>
+
                 <div class="col-md-2">
                     <text-input ng-model="ref.citation" field="citation"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="ref.doctype" field="doctype" cv="DOCUMENT_TYPE"></dropdown-select>
+                    <dropdown-select ng-model="ref.docType" field="docType" label ="Document Type" cv="DOCUMENT_TYPE"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <date-picker ng-model="ref.documentDate" field="documentDate"></date-picker>
@@ -27,12 +28,21 @@
                 <div class="col-md-2">
                     <text-input ng-model="ref.url" field="url"></text-input>
                 </div>
-                <div class="row">
-                    <div class="col-md-1 pull right">
-                        <a ng-click="reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                        <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
-                    </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj="ref" parent="substance" divid="refForm" type="upload"></form-selector>
                 </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="ref" parent="substance" divid="refForm" type="access"></form-selector>
+                </div>
+
+            </div>
+            <div class="refForm"></div>
+            <div class="row">
+                <div class="col-md-1 pull-right">
+                    <a ng-click="reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                </div>
+            </div>
         </form>
 
         <div class="row" ng-repeat="reference in parent.references">
@@ -40,11 +50,11 @@
             <div class="col-md-1">
                 <reference-apply obj=reference referenceobj=referenceobj parent=parent type="edit"></reference-apply>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <text-view-edit obj="reference" field="citation"></text-view-edit>
             </div>
             <div class="col-md-2">
-                <dropdown-view-edit obj="reference" field="doctype" cv="DOCUMENT_TYPE"></dropdown-view-edit>
+                <dropdown-view-edit obj="reference" field="docType" cv="DOCUMENT_TYPE"></dropdown-view-edit>
             </div>
             <div class="col-md-2">
                 <date-picker-view-edit obj="reference" field="documentDate"></date-picker-view-edit>
@@ -55,8 +65,11 @@
             <div class="col-md-2">
                 <text-view-edit obj="reference" field="url"></text-view-edit>
             </div>
-
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj="reference" parent="substance" formname="refForm" type="access"
+                               divid={{obj.$$hashKey}} mode="edit"></form-selector>
+            </div>
         </div>
-        <hr>
+        <div class={{obj.$$hashKey}}></div>
     </div>
 </div>

@@ -3,7 +3,7 @@ package ix.ginas.utils;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
 import ix.core.models.Value;
-import ix.ginas.models.Ginas;
+import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.utils.GinasProcessingMessage;
 
 import java.io.IOException;
@@ -42,16 +42,16 @@ public class GinasV1ProblemHandler extends  DeserializationProblemHandler {
                                          (Structure.H_LyChI_L4,
                                           parser.getText()));
                 }
-                else if ("references".equals(property)) {
-                    //Logger.debug(property+": "+bean.getClass());
-                    if (bean instanceof Structure) {
-                        Structure struc = (Structure)bean;
-                        parseReferences (parser, struc.properties);
-                    }
-                    else {
-                        parsed = false;
-                    }
-                }
+//                else if ("references".equals(property)) {
+//                    //Logger.debug(property+": "+bean.getClass());
+//                    if (bean instanceof Structure) {
+//                        Structure struc = (Structure)bean;
+//                        parseReferences (parser, struc.properties);
+//                    }
+//                    else {
+//                        parsed = false;
+//                    }
+//                }
                 else if ("count".equals(property)) {
                     if (bean instanceof Structure) {
                         // need to handle this.
@@ -87,7 +87,7 @@ public class GinasV1ProblemHandler extends  DeserializationProblemHandler {
             if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
                 while (JsonToken.END_ARRAY != parser.nextToken()) {
                     String ref = parser.getValueAsString();
-                    refs.add(new Keyword (Ginas.REFERENCE, ref));
+                    refs.add(new Keyword (GinasCommonSubData.REFERENCE, ref));
                     ++nrefs;
                 }
             }

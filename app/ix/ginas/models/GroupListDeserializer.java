@@ -4,8 +4,8 @@ import ix.core.controllers.AdminFactory;
 import ix.core.models.Group;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,20 +15,20 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 
 
 
-public class GroupListDeserializer extends JsonDeserializer<List<Group>> {
+public class GroupListDeserializer extends JsonDeserializer<Set<Group>> {
     public GroupListDeserializer() {
     }
 
-    public List<Group> deserialize
+    public Set<Group> deserialize
             (JsonParser parser, DeserializationContext ctx)
             throws IOException, JsonProcessingException {
 
-        List<Group> groups = new ArrayList<Group>();
+    	Set<Group> groups = new LinkedHashSet<Group>();
         if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
             while (JsonToken.END_ARRAY != parser.nextToken()) {
+            	System.out.println("There's a group!?");
                 String name = parser.getValueAsString();
                 Group grp = AdminFactory.groupfinder.where().eq("name", name).findUnique();
-
                 if(grp == null){
                     grp = AdminFactory.registerGroupIfAbsent(new Group(name));
                 }

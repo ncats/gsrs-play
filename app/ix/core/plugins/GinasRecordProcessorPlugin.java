@@ -10,10 +10,9 @@ import ix.core.processing.RecordExtractor;
 import ix.core.processing.RecordTransformer;
 import ix.core.stats.Estimate;
 import ix.core.stats.Statistics;
+import ix.utils.Global;
 import ix.utils.Util;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -69,8 +68,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
     //  private static RecordTransformer _recordTransformer = 
     //                  new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
 
-    private static PrintWriter persistFailures;
-    private static PrintWriter transformFailures;
         
         
 
@@ -304,8 +301,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 e.printStackTrace();
                 applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_BAD);
                 ObjectMapper om = new ObjectMapper();
-                persistFailures.println(rec.name + "\t" + rec.message + "\t" + om.valueToTree(theRecord).toString().replace("\n", ""));
-                persistFailures.flush();
+                Global.PersistFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(theRecord).toString().replace("\n", ""));
             }
             updateJobIfNecessary(rec.job);                      
         }
@@ -547,8 +543,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     getInstance().decrementExtractionQueue();
                     Logger.error(e.getMessage());
                     ObjectMapper om = new ObjectMapper();
-                    transformFailures.println(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
-                    transformFailures.flush();
+                    Global.TransformFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
                 }finally{
                     updateJobIfNecessary(pr.job);
@@ -606,12 +601,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 .getInt("ix.ginas.maxrecordqueue", MAX_EXTRACTION_QUEUE);
                
         
-        try {
-            persistFailures = new PrintWriter("fail.persist.log");
-            transformFailures = new PrintWriter("fail.transform.log");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
        
         
         
@@ -683,8 +672,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         ProcessingJob job = new ProcessingJob();
         job.start = System.currentTimeMillis();
-        job.keys.add(new Keyword(
-                                 GinasRecordProcessorPlugin.class.getName(), pp.key));
+        job.keys.add(new Keyword(GinasRecordProcessorPlugin.class.getName(), pp.key));
         job.setExtractor(extractor);
         job.setPersister(persister);
                 
@@ -700,54 +688,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
         return pp.key;
     }
 
-    //  public String submit(Payload payload, 
-    //                  Class extractor, 
-    //                  Class transformer,
-    //                  Class persister, 
-    //                  Serializable extractInit,
-    //                  Serializable transformInit,
-    //                  Serializable persistInit) {
-    //          PayloadProcessor pp = new PayloadProcessor(payload);
-    //          
-    //          
-    //          ProcessingJob job = new ProcessingJob();
-    //          job.start = System.currentTimeMillis();
-    //          job.keys.add(new Keyword(
-    //                          GinasRecordProcessorPlugin.class.getName(), pp.key));
-    //          //annotate the extractor to use
-    //          job.keys.add(new Keyword(EXTRACTOR_KEYWORD, extractor.getName()));
-    //          job.keys.add(new Keyword(TRANSFORM_KEYWORD, transformer.getName()));
-    //          job.keys.add(new Keyword(PERSISTER_KEYWORD, persister.getName()));
-    //          
-    //          job.status = ProcessingJob.Status.PENDING;
-    //          job.payload = pp.payload;
-    //          job.message="Preparing payload for processing";
-    //          job.save();
-    //          storeStatisticsForJob(pp.key, new Statistics());
-    //          pp.jobId=job.id;
-    //          inbox.send(processor, pp);
-    //          
-    //          //jobCacheStatistics.put(pp.key, value);
-    //          return pp.key;
-    //  }
-        
-        
-    /*
-      public void submit(String struc, StructureReceiver receiver) {
-      try {
-      MolHandler mh = new MolHandler(struc);
-      submit(mh.getMolecule(), receiver);
-      } catch (Exception ex) {
-      ex.printStackTrace();
-      throw new IllegalArgumentException(
-      "Unable to parse input structure: " + struc);
-      }
-      }
-
-      public void submit(Molecule mol, StructureReceiver receiver) {
-      inbox.send(processor, new ReceiverProcessor(mol, receiver, indexer));
-      }
-    */
 
     /**
      * This is so as to give the user access to the same persistence queue as
@@ -783,8 +723,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
         }else{
             job = jobs.iterator().next();
         }
+        Logger.debug(job.status.toString());
         //If the job hasn't started yet, then start it
-        if (job.status==ProcessingJob.Status.PENDING) {
+        if (job.status==ProcessingJob.Status.PENDING || job.status==ProcessingJob.Status.COMPLETE) {
             //Logger.debug("Lemme try to process one...");
             try {
                 Logger.debug("Counting records");

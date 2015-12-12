@@ -326,7 +326,6 @@ public class StructureProcessor {
                             if(s!=null){
                                 s.count++;
                             }else{
-                                moiety.count=1;
                                 moietiesMap.put(hash,moiety);
                                 if (components != null)
                                     components.add(moiety);

@@ -1,20 +1,33 @@
 package ix.core.controllers;
 
-import com.avaje.ebean.*;
-import org.apache.commons.codec.digest.DigestUtils;
-import play.*;
-import play.db.ebean.*;
-import play.mvc.*;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
-
-import ix.core.models.*;
+import ix.core.models.Acl;
+import ix.core.models.Group;
+import ix.core.models.Namespace;
+import ix.core.models.Principal;
+import ix.core.models.Role;
+import ix.core.models.UserProfile;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.codec.digest.DigestUtils;
+
+import play.Logger;
+import play.db.ebean.Model;
+import play.mvc.BodyParser;
+import play.mvc.Controller;
+import play.mvc.Result;
+
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.SqlQuery;
+import com.avaje.ebean.SqlRow;
+import com.avaje.ebean.Transaction;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AdminFactory extends Controller {
     static final public Model.Finder<Long, Namespace> resFinder =
@@ -29,6 +42,9 @@ public class AdminFactory extends Controller {
             new Model.Finder(Long.class, UserProfile.class);
     public static final Model.Finder<Long, Group> groupfinder =
             new Model.Finder(Long.class, Group.class);
+    
+
+    public static Map<String,Group> alreadyRegistered = new ConcurrentHashMap<String,Group>();
 
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
@@ -294,7 +310,7 @@ public class AdminFactory extends Controller {
 
     public static List<String> roleNamesByPrincipal(Principal cred) {
         List<Role> roles = rolesByPrincipal(cred);
-        List<String> roleList = new ArrayList<>();
+        List<String> roleList = new ArrayList<String>();
         for(Role r : roles){
             roleList.add(r.getName());
         }
@@ -303,7 +319,7 @@ public class AdminFactory extends Controller {
 
     public static List<String> aclNamesByPrincipal(Principal cred) {
         List<Acl> perms = permissionByPrincipal(cred);
-        List<String> permList = new ArrayList<>();
+        List<String> permList = new ArrayList<String>();
         for(Acl a : perms){
             permList.add(a.getValue());
         }
@@ -312,7 +328,7 @@ public class AdminFactory extends Controller {
 
     public static List<String> groupNamesByPrincipal(Principal cred) {
         List<Group> grps = groupsByPrincipal(cred);
-        List<String> grpList = new ArrayList<>();
+        List<String> grpList = new ArrayList<String>();
         for(Group g : grps){
             grpList.add(g.name);
         }
@@ -321,14 +337,14 @@ public class AdminFactory extends Controller {
 
     public static List<Group> groupsByPrincipal(Principal cred) {
         Long userId = cred.id;
-        List<Group> groupByUser = new ArrayList<>();
+        List<Group> groupByUser = new ArrayList<Group>();
         String sql = "select IX_CORE_GROUP_ID from IX_CORE_GROUP_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId";
         SqlQuery sqlQuery = Ebean.createSqlQuery(sql);
         sqlQuery.setParameter("userId", userId);
         Set<SqlRow> sqlRows = sqlQuery.findSet();
 
         for (SqlRow row : sqlRows) {
-            groupByUser.add(groupfinder.byId((Long) row.get("ix_core_group_id")));
+            groupByUser.add(groupfinder.byId(((Number) row.get("ix_core_group_id")).longValue()));
         }
         return groupByUser;
     }
@@ -336,14 +352,14 @@ public class AdminFactory extends Controller {
 
     public static List<Acl> permissionByPrincipal(Principal cred) {
         Long userId = cred.id;
-        List<Acl> perByUser = new ArrayList<>();
+        List<Acl> perByUser = new ArrayList<Acl>();
         String sql = "select IX_CORE_ACL_ID from IX_CORE_ACL_PRINCIPAL ap where ap.IX_CORE_PRINCIPAL_ID = :userId";
         SqlQuery sqlQuery = Ebean.createSqlQuery(sql);
         sqlQuery.setParameter("userId", userId);
         Set<SqlRow> sqlRows = sqlQuery.findSet();
 
         for (SqlRow row : sqlRows) {
-            perByUser.add(aclFinder.byId((Long) row.get("ix_core_acl_id")));
+            perByUser.add(aclFinder.byId(((Number) row.get("ix_core_acl_id")).longValue()));
         }
         return perByUser;
     }
@@ -411,6 +427,9 @@ public class AdminFactory extends Controller {
 
     public static synchronized Group registerGroupIfAbsent(Group org) {
         Group grp = groupfinder.where().eq("name", org.name).findUnique();
+        if(grp==null){
+        	grp=alreadyRegistered.get(org.name);
+        }
         if (grp == null) {
             try {
                 org.save();
@@ -420,7 +439,7 @@ public class AdminFactory extends Controller {
                 // time between registration and being query-able
                 // The hashmap is a temporary measure to fix this.
                 // But still doesn't seem to fix it
-              //  justRegisteredCache.put(org.username, org);
+                alreadyRegistered.put(org.name, org);
 
                 return org;
             } catch (Exception ex) {
@@ -428,7 +447,7 @@ public class AdminFactory extends Controller {
                 throw new IllegalArgumentException(ex);
             }
         }
-        return org;
+        return grp;
     }
 
 

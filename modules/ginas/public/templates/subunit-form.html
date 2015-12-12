@@ -1,0 +1,22 @@
+<div class = "row info">
+    <button class="btn btn-primary label-offset det">
+
+        Subunits&nbsp;<span class="badge" ng-show="parent[parent.substanceClass].subunits.length>0">
+                        {{parent[parent.substanceClass].subunits.length}}</span> </button>
+    <div ng-repeat="obj in parent[parent.substanceClass].subunits">
+        <div class="col-md-12">
+            <subunit obj = obj parent = parent residues = residues kind = kind></subunit>
+        </div>
+        <div class = {{obj.$$hashKey}}></div>
+    </div>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="subunitForm" id = "add-name" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-12">
+                    <text-box ng-model= "subunit.sequence" field= "sequence" required></text-box>
+                </div>
+            </div>
+            <submit-buttons submit="subunit" form="subunitForm" path="subunits"></submit-buttons>
+        </form>
+    </div>
+</div>

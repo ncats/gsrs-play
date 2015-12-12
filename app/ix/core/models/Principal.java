@@ -50,6 +50,8 @@ public class Principal extends IxModel {
 
     @Email
     public String email;
+    
+    @Column(name = "is_admin")
     public boolean admin = false;
 
     @Column(length=1024)

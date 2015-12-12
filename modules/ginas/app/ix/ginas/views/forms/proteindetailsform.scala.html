@@ -1,81 +1,27 @@
-@import ix.ginas.controllers.GinasApp;
-<div class = "row info" id = "protein-details">
+<div class = "row info" >
     <button class="btn btn-primary label-offset det">
-                        Details&nbsp;</button>
+                        Details</button>
     <div class="col-md-12">
-
-            <!-- Title bits -->
-
-        <div class = "row header-row">
-            <div class = "col-md-2">
-                <strong>Protein Type</strong>
+        <div class="row form-row">
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "substance.protein" field="proteinType" cv = "PROTEIN_TYPE" label="Protein Type"></dropdown-view-edit>
             </div>
-            <div class = "col-md-4">
-                <strong>Protein Subtype</strong>
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "substance.protein" field="proteinSubType" cv = "PROTEIN_SUBTYPE" label="Protein Subtype"></dropdown-view-edit>
             </div>
-            <div class = "col-md-2">
-                <strong>Sequence Origin</strong>
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "substance.protein" field="sequenceOrigin" cv = "SEQUENCE_ORIGIN" label="Sequence Origin"></dropdown-view-edit>
             </div>
-            <div class = "col-md-2">
-                <strong>Sequence Type</strong>
+            <div class="col-md-2 err-check">
+                <dropdown-view-edit obj = "substance.protein" field="sequenceType" cv = "SEQUENCE_TYPE" label="Sequence Type"></dropdown-view-edit>
             </div>
-            <div class = "col-md-2 text-right">
-                <strong>Reference ID</strong>
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj ="substance.protein" parent = "substance" divid="detailsForm" type = "access"></form-selector>
             </div>
-        </div>
-        <div class = "row">
-           
-            <div class = "col-md-2">
-                <span href="#" editable-select="substance.protein.proteinType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('PROTEIN_TYPE') track by r.display" blur="submit">{{substance.protein.proteinType.display}}</span>
-            </div>
-            <div class = "col-md-4">
-                <span href="#" editable-select="substance.protein.proteinSubType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('PROTEIN_SUBTYPE') track by r.display" blur="submit">{{substance.protein.proteinSubType.display}}</span>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="substance.protein.sequenceOrigin" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SEQUENCE_ORIGIN') track by r.display" blur="submit">{{substance.protein.sequenceOrigin.display}}</span>
-            </div>
-            <div class = "col-md-2">
-                <span href="#" editable-select="substance.protein.sequenceType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('SEQUENCE_TYPE') track by r.display" blur="submit">{{substance.protein.sequenceType.display}}</span>
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj ="substance.protein" parent = "substance" divid="detailsForm" type = "reference"></form-selector>
             </div>
         </div>
-
-        <form class="form-horizontal" name="detForm" id = "add-ref" role="form" novalidate>
-            <div ng-show="!detForm.$submitted">
-            <div class="row form-row">
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Protein Type" id="type" name = "type" ng-model = "protein.proteinType" ng-options="r.display for r in lookup.getList('PROTEIN_TYPE') track by r.display" required>
-                        </select>
-                    <ng-messages for="editDetForm.proteinType.$error" ng-if="editDetForm.proteinType.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-4 err-check" show-errors>
-                    <select class="form-control" title="Protein Subtype" id="proteinSubType" name = "proteinSubType" ng-model = "protein.proteinSubType" ng-options="r.display for r in lookup.getList('PROTEIN_SUBTYPE') track by r.display" required>
-                        </select>
-                    <ng-messages for="detForm.proteinSubType.$error" ng-if="detForm.proteinSubType.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Sequence Origin" id="sequenceOrigin" name = "sequenceOrigin" ng-model = "protein.sequenceOrigin" ng-options="r.display for r in lookup.getList('SEQUENCE_ORIGIN') track by r.display" required>
-                        </select>
-                    <ng-messages for="detForm.sequenceOrigin.$error" ng-if="detForm.sequenceOrigin.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <div class="col-md-2 err-check" show-errors>
-                    <select class="form-control" title="Sequence Type" id="sequenceType" name = "sequenceType" ng-model = "protein.sequenceType" ng-options="r.display for r in lookup.getList('SEQUENCE_TYPE') track by r.display" required>
-                        </select>
-                    <ng-messages for="detForm.sequenceType.$error" ng-if="detForm.sequenceType.$touched">
-                        <ng-message when="required" class="help-block">*required</ng-message>
-                    </ng-messages>
-                </div>
-                <reference-selector ngModel='protein' references='substance.references'></reference-selector> 
-            </div>
-            <submit-buttons submit="protein" form="detForm" path="protein" list=false></submit-buttons>
-            </div>
-        </form>
+        <div class="detailsForm"></div>
     </div>
 </div>
-
-

@@ -1,7 +1,9 @@
 <div>
-        <a href="#" ng-click="editing(obj);">{{obj[field]}}</a>
-        <input ng-show="obj._editing" type="text" class="form-control" ng-model=obj[field] ng-blur="editing(obj);"
-               title="{{field}}" name="{{field}}"/>
+    <label ng-if ="label" for="{{field}}">{{label}}</label>
+<br>
+    <a href="#" ng-click="edit= !edit" ng-show="!edit">{{obj[field]}}</a>
+        <input ng-show="!obj[field] || edit" type="text" class="form-control" ng-model=obj[field] ng-blur="edit = !edit" ng-model-options="{ debounce: 500 }"
+               placeholder ="{{label || field}}" title="{{field}}" name="{{field}}"/>
 </div>
 
 

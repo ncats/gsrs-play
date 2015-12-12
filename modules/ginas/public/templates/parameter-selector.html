@@ -1,0 +1,9 @@
+<div class ="text-center">
+    <label for={{type}} class="text-capitalize">Parameters</label>
+        <a ng-show="referenceobj.parameters" ng-click="toggleStage();" role="button"><parameters parameters="referenceobj.parameters"></parameters></a>
+    <div class="text-center">
+        <a ng-hide="referenceobj.parameters" ng-click="toggleStage()" role="button" aria-label="Add a parameter" id="{{type}}"><i
+                class="fa fa-plus fa-2x success" ng-show="stage"></i>
+            <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
+    </div>
+</div>

@@ -7,6 +7,7 @@ import be.objectify.deadbolt.java.AbstractDynamicResourceHandler;
 import be.objectify.deadbolt.java.DeadboltHandler;
 import be.objectify.deadbolt.java.DynamicResourceHandler;
 import play.Logger;
+import play.Play;
 import play.mvc.Http;
 
 import java.util.HashMap;
@@ -25,6 +26,10 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                                              final String meta,
                                              final DeadboltHandler deadboltHandler,
                                              final Http.Context context) {
+                    	
+                    	if(Play.application().configuration()
+                        .getBoolean("ix.admin", false))return true;
+                    	
                         Subject subject = deadboltHandler.getSubject(context);
                         boolean allowed;
 

@@ -62,13 +62,14 @@ public class Authentication extends Controller {
         Principal cred;
         UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
 
+        System.out.println("auth1");
         if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
                 cred = profile.user;
         } else {
             cred = NIHLdapConnector.getEmployee(username, password);
             systemAuth = true;
         }
-
+        System.out.println("auth2");
         if (username.equalsIgnoreCase("caodac")
                 && password.equalsIgnoreCase("foobar")) {
             cred = new Principal();
@@ -79,7 +80,7 @@ public class Authentication extends Controller {
             flash("message", "Invalid credential!");
             return redirect(routes.Authentication.login(null));
         }
-
+        System.out.println("auth3");
 
 
         Transaction tx = Ebean.beginTransaction();
@@ -122,7 +123,7 @@ public class Authentication extends Controller {
         if (url != null) {
             return redirect(url);
         }
-
+        System.out.println("auth4:" + url);
         return redirect(routes.Authentication.secured());
     }
 

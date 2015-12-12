@@ -151,7 +151,6 @@ div.box .on {
 
 .chem-button {
     font-size: 14px;
-    font-weight: 600;
 }
 
 #grid {
@@ -597,6 +596,13 @@ i#grid-view-off {
     color: #ac2925;
 }
 
+.warning {
+    color: #f0ad4e;
+}
+
+.warning:hover {
+    color: #ec971f;
+}
 
 .err-check .help-block,.err-check .help-block-duplicate  {
     display: none;
@@ -858,4 +864,8 @@ sketcher svg>text{
             transform: perspective(140px) rotateY(180deg);
     opacity: 0; 
   }
+}
+
+.magnify{
+    cursor: -webkit-zoom-in;
 }

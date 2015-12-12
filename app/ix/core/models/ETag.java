@@ -18,6 +18,32 @@ public class ETag extends IxModel {
 
     @Column(length=4000)
     public String uri;
+    public String getNextPageUri(){
+    	Integer skip=this.skip;
+    	String nskip = "skip=" + (skip+top);
+    	String nuri = (uri+"").replace("skip=" + this.skip, nskip);
+    	if(!uri.contains("skip=" + skip)){
+    		if(nuri.contains("?")){
+    			nuri=nuri +"&" + nskip;
+    		}else{
+    			nuri=nuri +"?" + nskip;
+    		}
+    	}
+    	return nuri;
+    }
+    public String getPreviosPageUri(){
+    	Integer skip=this.skip;
+    	String nskip = "skip=" + Math.max((skip-top),0);
+    	String nuri = (uri+"").replace("skip=" + skip, nskip);
+    	if(!uri.contains("skip=" + skip)){
+    		if(nuri.contains("?")){
+    			nuri=nuri +"&" + nskip;
+    		}else{
+    			nuri=nuri +"?" + nskip;
+    		}
+    	}
+    	return nuri;
+    }
     public String path;
     @Column(length=10)
     public String method;
@@ -57,4 +83,6 @@ public class ETag extends IxModel {
 
         return id.toString();
     }
+    
+    
 }

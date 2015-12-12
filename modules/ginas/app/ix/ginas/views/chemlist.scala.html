@@ -6,7 +6,7 @@
 
 @(chem: ChemicalSubstance, ctx: String = null)
 
-<div class="panel panel-default prot-list" ng-controller="SubstanceListController">
+<div class="panel panel-default prot-list">
     <div class="panel-heading prot-title">
     	
         <div class = "row">
@@ -43,20 +43,23 @@
                     <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
                 }
 
-                <img ng-click="toggle('@ix.ginas.controllers.routes.GinasApp.structure(chem.structure.getId, "svg", 400,ctx)')" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                src='@ix.ginas.controllers.routes.GinasApp.structure(chem.structure.getId, "svg", 150, ctx)'>
-
+                <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID');"><rendered id = '@chem.structure.id'></rendered></div>
                 <div class = "row">
                     <div class = "col-md-12">
                         <ul class= "list-inline pull-right list-unstyled">
                             <li>
+
+@*
+                                <modal-button structureid ="'@chem.structure.id'" format="'sdf'" type ="export"></modal-button>
+*@
+
                                 <export-button structureid ="'@chem.structure.id'" format="'sdf'" ></export-button>
                             </li>
                             <li>
                                 <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click="passStructure('@chem.structure.id')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))"  target="_self" class="btn btn-primary" aria-label="Edit Chemical Substance"> <span class="fa fa-wrench chem-button"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" target="_self" class="btn btn-primary" aria-label="Edit Chemical Substance"> <span class="fa fa-pencil chem-button"></span></a>
                             </li>
                         </ul>
                     </div>
@@ -107,16 +110,6 @@
                     </div>
             </div>
         </div>
-        
-        
-        <div ng-show="bigview" class = "revealable row">
-            <div ng-show="initialized">
-                <div class = "col-md-12">
-                <img ng-src="{{src}}" ng-click="toggle()" class = "struc-thumb img-responsive" alt="Structure of @chem.getName()"
-                        >
-                        
-                </div>
-            </div>
-        </div>
+        <div class="@chem.approvalID" ng-click="showLarge('', '@chem.approvalID')"></div>
     </div>
 </div><!--END panel panel-primary-->

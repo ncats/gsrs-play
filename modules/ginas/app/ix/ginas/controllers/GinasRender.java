@@ -86,7 +86,6 @@ public class GinasRender {
 		String ret = tree.get("structure").get("molfile").asText();
 		JsonNode moieties = tree.get("moieties");
 		String btext = null;
-		System.out.println(moieties.size());
 		for (JsonNode moi : moieties) {
 			// System.out.println("OK");
 			String s = moi.get("stereochemistry").asText() + "";

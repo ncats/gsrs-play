@@ -272,7 +272,6 @@ public class RouteFactory extends Controller {
         try {
             Method m = getMethod (context, "page", 
                                   int.class, int.class, String.class);
-            System.out.println(m);
             if (m != null)
                 return (Result)m.invoke(null, top, skip, filter);
         }
@@ -300,7 +299,7 @@ public class RouteFactory extends Controller {
     
     public static Result validate (String context) {
         try {
-            Method m = getMethod (context, "create"); 
+            Method m = getMethod (context, "validate"); 
             if (m != null)
                 return (Result)m.invoke(null);
         }
@@ -308,7 +307,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.warn("Context {} has no method create()",context);
+        Logger.warn("Context {} has no method validate()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
@@ -323,6 +322,20 @@ public class RouteFactory extends Controller {
             return internalServerError (context);
         }
         Logger.warn("Context {} has no method update(Long,String)",context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+
+    public static Result updateEntity (String context) {
+        try {
+            Method m = getMethod (context, "updateEntity");
+            if (m != null)
+                return (Result)m.invoke(null);
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.warn("Context {} has no method updateEntity()",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 

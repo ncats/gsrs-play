@@ -1,4 +1,5 @@
 @import ix.core.models.Structure
+@import ix.ginas.models.v1.GinasChemicalStructure
 @import ix.ginas.controllers.GinasApp
 
 @(sub: ix.ginas.models.v1.ChemicalSubstance)
@@ -32,7 +33,7 @@
     
 }
 
-@makeTable(s: Structure, stype: String) = {
+@makeTable(s: GinasChemicalStructure, stype: String) = {
     <div class="table-responsive">
     <table class="table @stype-Table">
         <thead>
@@ -59,13 +60,13 @@
         </div>
 }
 
-@fillTable(s: Structure, stype: String) = {
+@fillTable(s: GinasChemicalStructure, stype: String) = {
 @if(stype == "structure") {
     <tr>
         <td>@s.formula</td>
         <td>@s.mwt</td>
         <td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
-        <td><span class="badge">@s.atropisomerism</span></td>
+        <td><span class="badge">@s.ezCenters</span></td>
         <td><span class="badge">@s.charge</span></td>
         @referencetable(GinasApp.getStructureReferences(s), "hi", 6)
     </tr>
@@ -109,7 +110,7 @@
             <div class = "row">
                 <div class = "col-md-6 col-md-offset-6">
                     <ul class= "form-inline pull-right list-unstyled" id = "exportSave">
-                        <li  class = "padded"> <export-button structureid ="'@sub.structure.id'" ></export-button></li>
+                        <li  class = "padded"> <export-button structureid ="'@sub.structure.id'" format="'sdf'" ></export-button></li>
                         <li class = "padded"><a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click=passStructure('@sub.structure.id')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
                         </li>
                         <li class = "padded">

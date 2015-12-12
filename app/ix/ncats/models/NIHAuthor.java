@@ -1,11 +1,12 @@
 package ix.ncats.models;
 
-import play.db.ebean.Model;
-import javax.persistence.*;
-
 import ix.core.models.Author;
-import ix.core.models.Figure;
 import ix.core.models.Indexable;
+
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Lob;
 
 @Entity
 @DiscriminatorValue("NIH")
@@ -15,6 +16,8 @@ public class NIHAuthor extends Author {
 
     @Column(length=1024)
     public String dn; // distinguished name
+    
+    @Column(name = "u_id")
     public Long uid; // unique id
 
     @Column(length=32)

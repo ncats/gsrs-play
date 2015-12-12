@@ -94,8 +94,8 @@
                 @GinasApp.getType(r.amount) @r.amount.average @r.amount.units
                 *@
             }</td>
-                @if(r.references != null && r.references.size() > 0) {
-                    @referencetable(r.references, "refs", 8)
+                @if(r.getReferences() != null && r.getReferences().size() > 0) {
+                    @referencetable(r.getReferences(), "refs", 8)
                 }
             </tr>
         }

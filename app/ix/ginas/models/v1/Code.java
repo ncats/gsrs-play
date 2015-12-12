@@ -1,28 +1,31 @@
 package ix.ginas.models.v1;
 
-import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.utils.JSONConstants;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import ix.core.models.Indexable;
-import ix.core.models.Principal;
 import ix.core.models.Keyword;
-import ix.ginas.models.*;
+import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.KeywordListSerializer;
+import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinTable;
+import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JSONEntity(title = "Code", isFinal = true)
 @Entity
 @Table(name="ix_ginas_code")
-public class Code extends Ginas {
+public class Code extends GinasCommonSubData {
     @JSONEntity(title = "Code system", format = JSONConstants.CV_CODE_SYSTEM)
     @Indexable(facet=true, name="Code System")
     public String codeSystem;
@@ -44,10 +47,10 @@ public class Code extends Ginas {
     @Basic(fetch=FetchType.EAGER)
     public String url;
 
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_code_reference")
-    @JsonSerialize(using=KeywordListSerializer.class)    
-    public List<Keyword> references = new ArrayList<Keyword>();
+//    @ManyToMany(cascade=CascadeType.ALL)
+//    @JoinTable(name="ix_ginas_code_reference")
+//    @JsonSerialize(using=KeywordListSerializer.class)    
+//    public List<Keyword> references = new ArrayList<Keyword>();
     
     public Code () {}
     public Code (String code) {
