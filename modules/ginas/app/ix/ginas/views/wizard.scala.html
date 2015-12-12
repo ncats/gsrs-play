@@ -15,15 +15,18 @@
         }
         case "protein" => {
              <div>@forms.proteindetailsform()</div>
-            <subunit-form referenceobj ="referenceobj" parent = substance residues = residues></subunit-form>
-@*
+            <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
+
+            @*
             <div>@forms.subunitform()</div>
 *@             <div>@forms.disulfideform()</div>
              <div>@forms.otherlinksform()</div>
              <div>@forms.glycosylationform()</div>
              <div>@forms.agentmodificationform()</div>
-             <div>@forms.structuralmodificationform()</div>
-             <div>@forms.physicalmodificationform()</div>
+             @*<div>@forms.structuralmodificationform()</div>*@
+            <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
+
+            <div>@forms.physicalmodificationform()</div>
         }
         case "structurallyDiverse" => {
            <div>@forms.diversesourceform()</div>
@@ -47,7 +50,7 @@
         case "nucleicAcid" => {
            <div>Nucleic Acid not implemented yet, still in development</div>
            <div>@forms.nucleicaciddetailsform()</div>
-            <subunit-form referenceobj ="referenceobj" parent = "substance"></subunit-form>
+            <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
 @*
             <div>@forms.subunitform()</div>
 *@

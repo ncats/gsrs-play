@@ -178,8 +178,10 @@
             "protein.proteinType": "PROTEIN_TYPE",
             "protein.proteinSubtype": "PROTEIN_SUBTYPE",
             "protein.sequenceOrigin": "SEQUENCE_ORIGIN",
-            "protein.sequenceType": "SEQUENCE_TYPE"
-
+            "protein.sequenceType": "SEQUENCE_TYPE",
+            "protein.modifications.structuralModifications.structuralModificationType": "STRUCTURAL_MODIFICATION_TYPE",
+            "protein.modifications.structuralModifications.locationType": "LOCATION_TYPE",
+            "protein.modifications.structuralModifications.extent": "EXTENT_TYPE"
         };
 
 
@@ -519,6 +521,7 @@
                 if (!angular.isArray(sub)) {
                     newpath = newpath + v;
                 }
+                console.log(newpath);
                 var newcv = lookup.getFromName(newpath, sub[v]);
                 if (angular.isArray(sub[v])) {
                     newcv = null;
@@ -1597,6 +1600,22 @@
                         formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
                         //    element.append(formHolder);
                         break;
+                    case "site":
+                        if (attrs.mode == "edit") {
+                            template = angular.element('<a ng-click ="toggleStage()"><amount value ="referenceobj.amount" ></amount></a>');
+                            element.append(template);
+                            $compile(template)(scope);
+                        } else {
+                            $templateRequest(baseurl + "assets/templates/site-selector.html").then(function (html) {
+                                template = angular.element(html);
+                                element.append(template);
+                                $compile(template)(scope);
+
+                            });
+                        }
+                        formHolder = '<site-form ></site-form>';
+                        //    element.append(formHolder);
+                        break;
                     case "reference":
                         if (attrs.mode == "edit") {
                             $templateRequest(baseurl + "assets/templates/reference-selector-view.html").then(function (html) {
@@ -2016,6 +2035,32 @@
 
     });
 
+    ginasApp.directive('structuralModificationForm', function (CVFields) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/structural-modifications-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+
+                scope.validate = function () {
+                   // scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
+                    scope.subunit = {};
+                    scope.subunitForm.$setPristine();
+                };
+
+                scope.deleteObj = function (obj) {
+                    console.log(scope);
+                    scope.parent[scope.parent.substanceClass].modifications.splice(scope.parent[scope.parent.substanceClass].modification.indexOf(obj), 1);
+                };
+            }
+        };
+    });
+
+
     ginasApp.directive('subunitForm', function (CVFields) {
         return {
             restrict: 'E',
@@ -2367,13 +2412,15 @@
                 siteContainer: '=ngModel',
                 siteList: '=',
                 displayType: '@',
-                residueRegex: '@'
+                residueRegex: '@',
+                parent: '='
             },
             templateUrl: baseurl + "assets/templates/site-selector.html",
             link: function (scope, element, attrs, parentCtrl) {
+                console.log(scope);
                 scope.validateSites = scope.$parent.validateSites;
                 scope.updateSiteList = scope.$parent.updateSiteList;
-                scope.subunits = scope.$parent.getSubunits();
+                scope.subunits = parent.subunits;
                 scope.range = function (min) {
                     var input = [];
                     for (var i = 1; i <= min; i++) input.push(i);
@@ -2386,9 +2433,9 @@
                     if (scope.residueRegex) {
                         var re = new RegExp(scope.residueRegex, 'ig');
                         var match;
-                        while ((match = re.exec(scope.subunits[su - 1].sequence)) !== null) {
-                            list.push(match.index + 1);
-                        }
+                        //while ((match = re.exec(scope.parent.subunits[su - 1].sequence)) !== null) {
+                        //    list.push(match.index + 1);
+                        //}
                         return list;
                     } else {
                         return scope.range(scope.subunits[su - 1].sequence.length);
