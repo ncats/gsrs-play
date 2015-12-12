@@ -1,5 +1,6 @@
 package ix.ginas.models.v1;
 
+import ix.core.controllers.AdminFactory;
 import ix.core.models.Group;
 import ix.core.models.Keyword;
 import ix.core.models.Structure;
@@ -81,13 +82,16 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		return;
 	}
 
-	public void addRestrictGroup(Group group) {
-
+	public void addRestrictGroup(Group p){
+		if(this.recordAccess==null){
+			this.recordAccess=new GinasAccessContainer();
+		}
+		this.recordAccess.add(p);
+	}
+	public void addRestrictGroup(String group){
+		addRestrictGroup(AdminFactory.registerGroupIfAbsent(new Group(group)));
 	}
 
-	public void addRestrictGroup(String group) {
-
-	}
 
 
 	@JsonSerialize(using = GroupListSerializer.class)
