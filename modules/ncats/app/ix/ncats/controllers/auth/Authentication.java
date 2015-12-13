@@ -174,6 +174,16 @@ public class Authentication extends Controller {
         return session != null ? session.profile : null;
     }
 
+    public static Principal getUser(){
+    	try{
+    		UserProfile up=getUserProfile();
+    		if(up!=null)return up.user;
+    	}catch(Exception e){
+    		//System.out.println("No user accessible");
+    	}
+    	return null;
+    }
+    
     public static Session getCachedSession(final String id) {
         Session session = null;
         if (id != null) {
@@ -197,7 +207,6 @@ public class Authentication extends Controller {
         if (session != null) {
             long current = System.currentTimeMillis();
             if ((current - session.accessed) > TIMEOUT) {
-                // expired
                 Logger.debug("Session " + session.id + " expired!");
                 flush(session);
             } else {
@@ -210,6 +219,7 @@ public class Authentication extends Controller {
         }
         return session;
     }
+    
 
     static void flush(Session session) {
         Transaction tx = Ebean.beginTransaction();

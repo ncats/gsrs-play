@@ -1,11 +1,6 @@
 package ix.ginas.models;
 
-import ix.core.controllers.AdminFactory;
-import ix.core.models.Group;
-import ix.core.models.Indexable;
-import ix.core.models.Principal;
-import ix.utils.Global;
-
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,9 +15,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
-import play.Logger;
-import play.db.ebean.Model;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,6 +22,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import ix.core.controllers.AdminFactory;
+import ix.core.models.Group;
+import ix.core.models.Indexable;
+import ix.core.models.Principal;
+import ix.utils.Global;
+import play.Logger;
+import play.db.ebean.Model;
 
 @MappedSuperclass
 public class GinasCommonData extends Model implements GinasAccessControlled{
@@ -43,6 +43,12 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     //TP: why is this final?
     public final Date created = new Date ();
     
+    @OneToOne(cascade=CascadeType.ALL)
+    @JsonSerialize(using = PrincipalSerializer.class)
+    @JsonDeserialize(using = PrincipalDeserializer.class)
+    @Indexable(facet = true, name = "Created By")
+    public Principal createdBy;
+    
     @Indexable(facet = true, name = "Last Edited Date")
     public Date lastEdited;
     
@@ -55,16 +61,6 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     
     //Where did this come from?
     public boolean deprecated;
-    
-//    @ManyToMany(cascade=CascadeType.PERSIST)
-//    @ManyToMany//(cascade=CascadeType.ALL)
-////    @JoinTable(name="ix_ginas_access",
-////          joinColumns=@JoinColumn
-////          (name="id", referencedColumnName="uuid")
-////      )
-//    @JsonSerialize(using = GroupListSerializer.class)
-//    @JsonDeserialize(using = GroupListDeserializer.class)
-//    public List<Group> access = new ArrayList<Group>();
     
     
     @JsonIgnore
@@ -102,12 +98,43 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     public GinasCommonData () {
     }
     
+    
+    @PrePersist
+    public void beforeCreate () {
+        
+    }
+    
     @PrePersist
     @PreUpdate
+    /**
+     * Called before saving. Updates with the current time and user
+     * for bookkeeping purposes. Note that this method currently uses
+     * reflection to find the current logged in user, as the method used
+     * is not found in the core module.
+     * 
+     * This method is not ideal for 2 reasons. First, the reflection 
+     * piece is ugly and hardcoded, making it difficult to maintain.
+     * Second, when doing a batch load, there is no method for fetching
+     * the user who submitted the record. These should be addressed in
+     * the future, ideally by having a submission "context" which can be
+     * referenced either here, or before reaching this point.
+     * 
+     */
     public void modified () {
         this.lastEdited = new Date ();
+        Class<?> act;
+		try {
+			act = Class.forName("ix.ncats.controllers.auth.Authentication");
+			Method method = act.getMethod("getUser");
+		    Principal p = ((Principal) method.invoke(null));
+		    if(p!=null)
+		    	this.lastEditedBy=p;
+		    //Principal p = ix.ncats.controllers.auth.Authentication.getUser();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
-
+    
     @JsonProperty("_self")
     @Indexable(indexed=false)
     public String getself () {

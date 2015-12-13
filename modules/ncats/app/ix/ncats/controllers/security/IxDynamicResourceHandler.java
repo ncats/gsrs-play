@@ -50,6 +50,34 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                         return allowed;
                     }
                 });
+        HANDLERS.put("canApprove",
+                new AbstractDynamicResourceHandler() {
+                    public boolean isAllowed(final String name,
+                                             final String meta,
+                                             final DeadboltHandler deadboltHandler,
+                                             final Http.Context context) {
+                    	Subject subject = deadboltHandler.getSubject(context);
+                        boolean allowed=false;
+
+                        DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
+
+                        if (analyzer.hasRole(subject, "SuperUpdate") ||
+                        		analyzer.hasRole(subject, "Update")
+                        		) {
+                            allowed = true;
+                        } else {
+                            // a call to view profile is probably a get request, so
+                            // the query string is used to provide info
+                            Map<String, String[]> queryStrings = context.request().queryString();
+                            String[] requestedNames = queryStrings.get("userName");
+                            allowed = requestedNames != null
+                                    && requestedNames.length == 1
+                                    && requestedNames[0].equals(subject.getIdentifier());
+                        }
+
+                        return allowed;
+                    }
+                });
     }
 
     //this will be invoked for Dynamic

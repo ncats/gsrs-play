@@ -174,8 +174,9 @@ public class Name extends GinasCommonSubData {
 	    		//System.out.println(ref.getValue());
 	    		Reference r=sub.getReferenceByUUID(ref.getValue().toString());
 	    		
-	    		if(r!=null){
+	    		if(r!=null && r.docType!=null){
 	    			//System.out.println(r.citation);
+	    			
 	    			if(r.docType.equals(Name.SRS_LOCATOR)){
 	    				try{
 	    					String tag=r.citation.split("\\[")[1].split("\\]")[0];

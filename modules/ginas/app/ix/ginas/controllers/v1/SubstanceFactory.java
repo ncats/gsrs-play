@@ -79,6 +79,13 @@ public class SubstanceFactory extends EntityFactory {
         return null;
         //return finder.where().eq("approvalID", approvalID).findUnique();
     }
+    public static Substance getSubstanceByApprovalID(String approvalID){
+    	List<Substance> list=GinasApp.resolve(finder,approvalID);
+        if(list!=null && list.size()>0){
+                return list.get(0);
+        }
+        return null;
+    }
 
     public static List<Substance> getSubstances
         (int top, int skip, String filter) {

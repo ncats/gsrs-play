@@ -541,13 +541,13 @@ public class SequenceIndexer {
             for (SEG s : remove)
                 segments.remove(s);
 
-            System.err.println("** ALIGNMENTS for "+me.getKey()+" **");
+            //System.err.println("** ALIGNMENTS for "+me.getKey()+" **");
             int max = 0;
             for (SEG seg : segments) {
                 //System.err.println(seg);
                 Alignment aln = align (seg, qs, seq);
                 if (aln.score > max) {
-                    System.err.println(aln);
+                    //System.err.println(aln);
                     max = aln.score;
                 }
                 result.alignments.add(aln);

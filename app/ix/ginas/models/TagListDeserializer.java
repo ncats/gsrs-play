@@ -1,7 +1,4 @@
-package ix.ginas.models.v1;
-
-import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.KeywordListDeserializer;
+package ix.ginas.models;
 
 public class TagListDeserializer extends KeywordListDeserializer {
     public TagListDeserializer () {

@@ -10,6 +10,7 @@ import ix.ginas.models.GinasCommonData;
 import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
 import ix.ginas.models.PrincipalSerializer;
+import ix.ginas.models.TagListDeserializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
 

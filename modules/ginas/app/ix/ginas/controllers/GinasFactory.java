@@ -1,5 +1,7 @@
 package ix.ginas.controllers;
 
+
+import be.objectify.deadbolt.java.actions.Dynamic;
 import java.util.List;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
@@ -7,6 +9,7 @@ import ix.core.controllers.PayloadFactory;
 import ix.core.models.Principal;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.GinasUtils;
 import play.Logger;
 import play.db.ebean.Model;
 import play.mvc.Result;
@@ -91,13 +94,30 @@ public class GinasFactory extends EntityFactory {
 			return GinasApp._internalServerError(ex);
 		}
 	}
+	
+	@Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result approve(String substanceId) {
+		List<Substance> substances = GinasApp.resolve(SubstanceFactory.finder,
+				substanceId);
+
+		try {
+			if (substances.size() == 1) {
+				Substance s=substances.get(0);
+				GinasUtils.approveSubstance(s);
+				s.save();
+				return ok("Substance approved with approvalID:" + s.approvalID);
+			}
+			throw new IllegalStateException("More than one substance matches that term");
+		} catch (Exception ex) {
+			return GinasApp._internalServerError(ex);
+		}
+	}
 
 	public static Result login() {
 		return ok(ix.ginas.views.html.login.render());
 	}
 
 	public static Principal byUsername(String user) {
-		// return GinasApp.SubstanceResult
 		return finder.where().eq("username", user).findUnique();
 	}
 

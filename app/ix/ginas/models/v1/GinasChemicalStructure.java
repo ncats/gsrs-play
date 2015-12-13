@@ -2,16 +2,21 @@ package ix.ginas.models.v1;
 
 import ix.core.controllers.AdminFactory;
 import ix.core.models.Group;
+import ix.core.models.Indexable;
 import ix.core.models.Keyword;
+import ix.core.models.Principal;
 import ix.core.models.Structure;
 import ix.core.models.Value;
 import ix.ginas.models.GinasAccessContainer;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.GinasReferenceContainer;
 import ix.ginas.models.GroupListSerializer;
+import ix.ginas.models.PrincipalDeserializer;
+import ix.ginas.models.PrincipalSerializer;
 import ix.ginas.models.ReferenceListSerializer;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -26,12 +31,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @Entity
 @DiscriminatorValue("GSRS")
 public class GinasChemicalStructure extends Structure implements GinasAccessReferenceControlled {
 
+	//TP: why is this final?
+    public final Date created = new Date ();
+    
+    @OneToOne(cascade=CascadeType.ALL)
+    @JsonSerialize(using = PrincipalSerializer.class)
+    @JsonDeserialize(using = PrincipalDeserializer.class)
+    @Indexable(facet = true, name = "Created By")
+    public Principal createdBy;
+	
 	public GinasChemicalStructure(){
 		
 	}
@@ -40,7 +55,6 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		this.atropisomerism=s.atropisomerism;
 		this.charge=s.charge;
 		this.count=s.count;
-		//this.created=s.created;
 		this.definedStereo=s.definedStereo;
 		this.deprecated=s.deprecated;
 		this.digest=s.digest;

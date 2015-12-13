@@ -50,7 +50,9 @@ import com.hazelcast.core.HazelcastInstance;
 
 public class GinasRecordProcessorPlugin extends Plugin {
     private static final int AKKA_TIMEOUT = 60000;
-        
+    
+//    
+    
         
     private static final String KEY_PROCESS_QUEUE_SIZE = "PROCESS_QUEUE_SIZE";
     //Hack variable for resisting buildup
@@ -108,101 +110,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         }
     }
 
-    /**
-     * Instead of creating separate classes for performing the different stages,
-     * we're going to do a bad thing by following the convention that each actor
-     * knows which method to call. Effectively we have the same instance that
-     * get passed through the actor pipeline. This goes against the
-     * recommendation that a message shouldn't have any state information!
-     */
-        
-    public static class ReceiverProcessor implements Serializable {
-        enum Stage {
-            Routing, Instrumentation, Persisting, Done
-        }
-
-        final StructureReceiver receiver;
-        //final Molecule mol;
-        final String key;
-        final StructureIndexer indexer;
-
-        Stage stage = Stage.Routing;
-
-        Structure struc;
-        StructureReceiver.Status status = StructureReceiver.Status.OK;
-        String mesg;
-
-        public ReceiverProcessor(
-                                 //Molecule mol, 
-                                
-                                 StructureReceiver receiver,
-                                 StructureIndexer indexer) {
-            //this.mol = mol;
-            this.receiver = receiver;
-            this.indexer = indexer;
-            this.key = randomKey(10);
-        }
-
-        Stage stage() {
-            return stage;
-        }
-
-        void routes() {
-            assert stage == Stage.Routing : "Not a valid stage (" + stage
-                + ") for routing!";
-            // next stage
-            stage = Stage.Instrumentation;
-        }
-
-        void instruments() {
-            assert stage == Stage.Instrumentation : "Not a valid stage ("
-                + stage + ") for instrumentation!";
-            Logger.debug("Instruments?");
-            try {
-                //                              if (mol != null) {
-                //                                      struc = StructureProcessor.instrument(mol);
-                //                              }
-                stage = Stage.Persisting;
-            } catch (Exception ex) {
-                error(ex);
-            }
-        }
-
-        void persists() {
-            assert stage == Stage.Persisting : "Not a valid stage (" + stage
-                + ") for persisting!";
-            try {
-                if (struc != null) {
-                    struc.save();
-                    //                                  indexer.add(receiver.getSource(), struc.id.toString(), mol);
-                }
-                stage = Stage.Done;
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                error(ex);
-            }
-        }
-
-        void done() {
-            receiver.receive(status, mesg, struc);
-        }
-
-        void error(Throwable t) {
-            status = StructureReceiver.Status.FAILED;
-            mesg = t.getMessage();
-            stage = Stage.Done;
-        }
-    }
-    /*
-      public static class PayloadRecord implements Serializable {
-      public final ProcessingJob job;
-      public final Molecule mol;
-
-      public PayloadRecord(ProcessingJob job, Molecule mol) {
-      this.job = job;
-      this.mol = mol;
-      }
-      }*/
+    
         
     public static class PayloadExtractedRecord<K> implements Serializable {
         public final ProcessingJob job;
@@ -289,39 +197,50 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         @Transactional
         public void persists() {
-            System.out.println("Persisting");
+//        	TRY_STUFF++;
+//        	System.out.println("Persisting total:" + TRY_STUFF);
             getInstance().decrementExtractionQueue();
+            //System.out.println("Now there are:" + getInstance().getRecordsProcessing() + " records");
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             try{
                 rec.job.getPersister().persist(this);
-                System.out.println("Last persist:" + System.currentTimeMillis());
                 Statistics stat=applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_GOOD);
-                //Logger.debug(stat.toString());
+
+                System.out.println("Persisted at :" + System.currentTimeMillis());
             }catch(Exception e){
                 e.printStackTrace();
                 applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_BAD);
                 ObjectMapper om = new ObjectMapper();
                 Global.PersistFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(theRecord).toString().replace("\n", ""));
             }
-            updateJobIfNecessary(rec.job);                      
+            
+            updateJobIfNecessary(rec.job);
         }
     }
 
     public synchronized static void updateJobIfNecessary(ProcessingJob job2) {
-        ProcessingJob job = ProcessingJobFactory.getJob(job2.id);
-        Statistics stat = getStatisticsForJob(job);
+    	ProcessingJob job = job2;
+    	try{
+    		job = ProcessingJobFactory.getJob(job2.id);
+    	}catch(Exception e){
+    		Logger.debug("Error refreshing job from database, using local copy");
+    	}
+    	
+    	Statistics stat = getStatisticsForJob(job);
         if (stat != null) {
             if (stat._isDone()) {
-                Logger.debug("I think it's done:" + stat.toString());
-                ObjectMapper om = new ObjectMapper();
-                job.stop = System.currentTimeMillis();
-                job.status = ProcessingJob.Status.COMPLETE;
-                job.statistics = om.valueToTree(stat).toString();
-               // job.
-                PersistModel pm = PersistModel.Update(job);
-                pm.persists();
+            	updateJob(job,stat);
             }
         }
+    }
+    public synchronized static void updateJob(ProcessingJob job,Statistics stat) {
+    	Logger.debug("I think it's done:" + stat.toString());
+        ObjectMapper om = new ObjectMapper();
+        job.stop = System.currentTimeMillis();
+        job.status = ProcessingJob.Status.COMPLETE;
+        job.statistics = om.valueToTree(stat).toString();
+        PersistModel pm = PersistModel.Update(job);
+        pm.persists();
     }
 
         
@@ -342,8 +261,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 PQ.submit(new PersistModelWorker((PersistModel) mesg));
             } else if (mesg instanceof TransformedRecord) {
                 PQ.submit(new PersistRecordWorker((TransformedRecord) mesg));
-            } else if (mesg instanceof ReceiverProcessor) {
-                PQ.submit(new ReceiverProcessorWorker((ReceiverProcessor) mesg));
             } else {
                 log.info("unhandled mesg: sender=" + sender() + " mesg=" + mesg);
                 unhandled(mesg);
@@ -385,34 +302,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         }
     }
 
-    static class ReceiverProcessorWorker implements
-                                             PersistenceQueue.PersistenceContext {
-        ReceiverProcessor receiver;
-
-        ReceiverProcessorWorker(ReceiverProcessor receiver) {
-            this.receiver = receiver;
-        }
-
-        public void persists() throws Exception {
-            switch (receiver.stage()) {
-            case Persisting:
-                receiver.persists();
-                // fall through
-
-            case Done:
-                receiver.done();
-                break;
-
-            default:
-                assert false : "Stage " + receiver.stage() + " shouldn't be "
-                    + "run in " + getClass().getName() + "!";
-            }
-        }
-
-        public Priority priority() {
-            return Priority.MEDIUM;
-        }
-    }
+   
 
     public static class Processor extends UntypedActor {
         LoggingAdapter log = Logging.getLogger(getContext().system(), this);
@@ -424,7 +314,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         }
 
         public void onReceive(Object mesg) {
-            if (mesg instanceof PayloadProcessor) {
+        	if (mesg instanceof PayloadProcessor) {
                 PayloadProcessor payload = (PayloadProcessor) mesg;
                 log.info("Received payload " + payload.id);
                                 
@@ -445,7 +335,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 if (child != null) {
                     // the given payload is currently processing
                     // at the moment!
-                    Logger.debug("Job already exists, dumbo.");
+                    Logger.debug("Job already exists");
                     ProcessingJob job = new ProcessingJob();
                     job.start = job.stop = System.currentTimeMillis();
                     job.keys.add(new Keyword(GinasRecordProcessorPlugin.class
@@ -458,7 +348,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     Logger.debug("Job already exists, still gonna persist.");
                     reporter.tell(PersistModel.Save(job), self());
                 } else {
-                    Logger.debug("Brand new job!");
                     child = context()
                         .actorOf(
                                  Props.create(Processor.class, indexer)
@@ -468,60 +357,23 @@ public class GinasRecordProcessorPlugin extends Plugin {
                                                                                      2))),
                                  payload.id);
                     context().watch(child);
-                    Logger.debug("About to process ... here it comes ... wait for it ...");
                     try {
-                        ProcessingJob job = process(reporter, child, self(),
+                        ProcessingJob job = process(reporter, 
+                        							child, 
+                        							self(),
                                                     payload);
-                        Logger.debug("YAY!");
+                        Logger.debug("Processed Job");
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
                                         
                     child.tell(new Broadcast(PoisonPill.getInstance()), self());
                 }
-                log.info("Persisted payload job, I think:" + payload.id);
-            } else if (mesg instanceof ReceiverProcessor) {
-                Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-                Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-                Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-                Logger.debug("###############OMG IM NOT GOOD WITH COMPUTER");
-                                
-                ReceiverProcessor receiver = (ReceiverProcessor) mesg;
-                switch (receiver.stage()) {
-                case Routing: {
-                    ActorRef actor = context()
-                        .actorOf(
-                                 Props.create(Processor.class, indexer)
-                                 .withRouter(
-                                             new FromConfig()
-                                             .withFallback(new SmallestMailboxRouter(
-                                                                                     1))),
-                                 receiver.key);
-                    context().watch(actor);
-                    try {
-                        // submit for
-                        receiver.routes();
-                        actor.tell(mesg, self()); // forward to next stage
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                        // notify the receiver we can't process the input
-                        receiver.error(ex);
-                        reporter.tell(mesg, self());
-                    }
-                    actor.tell(new Broadcast(PoisonPill.getInstance()), self());
-                }
-                    break;
-
-                case Instrumentation:
-                    receiver.instruments();
-                    reporter.tell(mesg, self());
-                    break;
-
-                default:
-                    assert false : "Stage " + receiver.stage() + " shouldn't "
-                        + "be running in " + getClass().getName() + "!";
-                }
             } else if (mesg instanceof PayloadExtractedRecord) {
+
+//            	TRY_STUFF_TS++;
+//                System.out.println("Starting Transform:" + TRY_STUFF_TS);
+//                
                 PayloadExtractedRecord pr = (PayloadExtractedRecord) mesg;
                                 
                 ProcessingRecord rec = new ProcessingRecord();
@@ -530,13 +382,17 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     Payload pay=pr.job.payload;
                     RecordTransformer rt=pr.job.getTransformer();
                     Object trans = rt.transform(pr, rec);
-                                        
+                    
                     if(trans==null){
                         throw new IllegalStateException("Transform error");
                     }
-                                        
+                    
+                    
+                    
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_GOOD);
-                                        
+
+                    //TRY_STUFF_TT++;
+                    //System.out.println("Telling Transform:" + TRY_STUFF_TT);
                     reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
                                         
                 }catch(Exception e){
@@ -545,10 +401,16 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     ObjectMapper om = new ObjectMapper();
                     Global.TransformFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
+                    try{
+                		updateJobIfNecessary(pr.job);
+                	}catch(Exception e2){
+                		e.printStackTrace();
+                	}
                 }finally{
-                    updateJobIfNecessary(pr.job);
-                    
+                	
                 }
+                //TRY_STUFF_TF++;
+                //System.out.println("Ending Transform:" + TRY_STUFF_TF);
                                 
             } else if (mesg instanceof Terminated) {
                 ActorRef actor = ((Terminated) mesg).actor();
@@ -556,25 +418,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 String id = actor.path().name();
                 int pos = id.indexOf(':');
                 if (pos > 0) {
-                    //                                  String jid = id.substring(pos + 1);
-                    //                                  try {
-                    //                                          ProcessingJob job = ProcessingJobFactory.getJob(jid);
-                    //                                          if (job != null) {
-                    //                                                  job.stop = System.currentTimeMillis();
-                    //                                                  job.status = ProcessingJob.Status.COMPLETE;
-                    //                                                  reporter.tell(PersistModel.Update(job), self());
-                    //                                                  log.info("done processing job {}!", jid);
-                    //                                          } else {
-                    //                                                  log.error("Failed to retrieve job " + jid);
-                    //                                          }
-                    //                                  } catch (Exception ex) {
-                    //                                          ex.printStackTrace();
-                    //                                          log.error("Failed to retrieve job " + jid + "; "
-                    //                                                          + ex.getMessage());
-                    //                                  }
+                   
                 } else {
-                    // receiver job
-                    // log.error("Invalid job id: "+id);
+                   
                 }
                 context().unwatch(actor);
             } else {
@@ -834,6 +680,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
         if(l==null)l=(long) 0;
         l++;
         queueStatistics.put(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE,l);
+
+//        System.out.println("Incrementing Total Records:" + l);
         //return l;
         //Logger.debug("Total Records:" + _extractedButNotTransformed);
     }
@@ -842,16 +690,20 @@ public class GinasRecordProcessorPlugin extends Plugin {
         Long l=queueStatistics.get(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE);
         if(l==null)l=(long) 0;
         l--;
+        
         queueStatistics.put(GinasRecordProcessorPlugin.KEY_PROCESS_QUEUE_SIZE,l);
-        //Logger.debug("Decrementing Total Records:" + l);
+//        System.out.println("Decrementing Total Records:" + l);
     }
     private void waitForProcessingRecordsCount(int max){
+    	int t=0;
         while(getRecordsProcessing()>=max){
-            try {
-                Thread.sleep(1);
+        	try {
+            	Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            t++;
+            if(t>8000)break;
         }
     }
     
@@ -859,7 +711,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
         return jobCacheStatistics.get(jobTerm);
     }
     public static Statistics getStatisticsForJob(ProcessingJob pj){
-        String k=pj.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+    	String k=pj.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
         return jobCacheStatistics.get(k);
     }
     
@@ -882,92 +734,4 @@ public class GinasRecordProcessorPlugin extends Plugin {
     }
     
 
-
-    /*********************************************
-     * Molecule bits for 
-     *  1. extracting from InputStream
-     *  2. transforming to Structure
-     *  3. persisting
-     * 
-     * @author peryeata
-     *
-     */
-    
-    /*
-      public static class MoleculePersister extends RecordPersister<Molecule,Structure>{
-      @Override
-      public void persist(PersistRecord<Molecule, Structure> prec) {
-      try {
-      if (prec.theRecordToPersist != null) {
-      prec.theRecordToPersist.save();
-      prec.indexer.add(prec.rec.job.payload.name, prec.theRecordToPersist.id.toString(), prec.theRecord);
-      prec.rec.xref = new XRef(prec.theRecordToPersist);
-      prec.rec.xref.save();
-      }
-      prec.rec.save();
-      Logger.debug("Saved struc " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.id : null)
-      + " record " + prec.rec.id);
-      } catch (Throwable t) {
-      t.printStackTrace();
-      }
-      }
-      }
-      public static class MoleculeTransformer extends RecordTransformer<Molecule,Structure>{
-      public Structure transform(PayloadRecordGeneric<Molecule> pr, ProcessingRecord rec){
-      rec.name = pr.theRecord.getName();
-      rec.job = pr.job;
-      rec.start = System.currentTimeMillis();
-      Structure struc = null;
-      try {
-      struc = StructureProcessor.instrument(pr.theRecord);
-      rec.stop = System.currentTimeMillis();
-      rec.status = ProcessingRecord.Status.OK;
-      } catch (Throwable t) {
-      rec.stop = System.currentTimeMillis();
-      rec.status = ProcessingRecord.Status.FAILED;
-      rec.message = t.getMessage();
-      t.printStackTrace();
-      }
-      return struc;
-      }
-      }
-      public static class MoleculeExtractor extends RecordExtractor<Molecule>{
-      MolImporter mi;
-      public MoleculeExtractor(InputStream is) {
-      super(is);
-      try{
-      mi = new MolImporter(is);
-      }catch(Exception e){
-                                
-      }
-      }
-
-      @Override
-      public Molecule getNextRecord() {
-      if(mi==null)return null;
-      try {
-      return mi.read();
-      } catch (IOException e) {
-      e.printStackTrace();
-      }
-      return null;
-      }
-
-      @Override
-      public void close() {
-      try{
-      if(mi!=null)
-      mi.close();
-      }catch(Exception e){
-      e.printStackTrace();
-      }
-      }
-
-      @Override
-      public RecordExtractor<Molecule> makeNewExtractor(InputStream is) {
-      return new MoleculeExtractor(is);
-      }
-                
-      }
-    */
 }
