@@ -1,0 +1,40 @@
+<div class="row info">
+    <button class="btn btn-primary label-offset det">
+        Physical Parameter&nbsp;</button>
+    <a ng-click="$parent.toggleStage();" class="pull-right">
+        <i class="fa fa-times fa-2x danger"></i></a>
+
+    <div class="col-md-12">
+        <form class="form-horizontal" name="physicalParameterForm" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2">
+                    <text-input ng-model="physicalParameter.parameterName" field="parameterName" label ="Parameter Name"></text-input>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj="physicalParameter" divid="physicalParameterForm" type="amount"></form-selector>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2 pull-right">
+                    <a ng-click="physicalParameter=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate();"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                </div>
+            </div>
+            <div class="physicalParameterForm"></div>
+        </form>
+        <div class="row" ng-repeat="param in referenceobj.physicalParameters">
+            <hr>
+            <div class="col-md-1">
+                <a ng-click="deleteObj(param, referenceobj.physicalParameters)"><i class="fa fa-times fa-2x danger"></i></a>
+            </div>
+            <div class="col-md-2">
+                <text-view-edit obj="param" field="parameterName" label ="Parameter Name"></text-view-edit>
+            </div>
+            <div class="col-md-1">
+                <form-selector referenceobj="param" parent="substance" formname="physicalParameterForm" type="amount"
+                               divid={{obj.$$hashKey}} mode="edit"></form-selector>
+            </div>
+        </div>
+        <div class={{obj.$$hashKey}}></div>
+    </div>
+</div>
