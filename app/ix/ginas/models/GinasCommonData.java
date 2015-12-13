@@ -27,6 +27,7 @@ import ix.core.controllers.AdminFactory;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
+import ix.ginas.models.utils.UserFetcher;
 import ix.utils.Global;
 import play.Logger;
 import play.db.ebean.Model;
@@ -104,8 +105,6 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
         
     }
     
-    @PrePersist
-    @PreUpdate
     /**
      * Called before saving. Updates with the current time and user
      * for bookkeeping purposes. Note that this method currently uses
@@ -120,19 +119,18 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
      * referenced either here, or before reaching this point.
      * 
      */
+    @PrePersist
+    @PreUpdate
     public void modified () {
         this.lastEdited = new Date ();
-        Class<?> act;
-		try {
-			act = Class.forName("ix.ncats.controllers.auth.Authentication");
-			Method method = act.getMethod("getUser");
-		    Principal p = ((Principal) method.invoke(null));
-		    if(p!=null)
-		    	this.lastEditedBy=p;
-		    //Principal p = ix.ncats.controllers.auth.Authentication.getUser();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+        Principal p1=UserFetcher.getActingUser();
+        if(p1!=null){
+    		lastEditedBy=p1;
+    		if(this.createdBy==null){
+    			createdBy=p1;
+        	}
+        }
+    	
     }
     
     @JsonProperty("_self")

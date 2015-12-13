@@ -46,6 +46,10 @@ public class StructureSerializer extends JsonSerializer<GinasChemicalStructure> 
         provider.defaultSerializeField("ezCenters", struc.ezCenters, jgen);
         provider.defaultSerializeField("charge", struc.charge, jgen);
         provider.defaultSerializeField("mwt", struc.mwt, jgen);
+        if(struc.createdBy!=null)
+        	provider.defaultSerializeField("createdBy", struc.createdBy.username, jgen);
+        if(struc.lastEditedBy!=null)
+        	provider.defaultSerializeField("lastEditedBy", struc.lastEditedBy.username, jgen);
         if(struc.recordReference!=null){
         	ObjectMapper om = new ObjectMapper();
         	JsonNode jsn=om.valueToTree(struc.recordReference);

@@ -1,20 +1,6 @@
 package ix.ginas.models.v1;
 
-import ix.core.controllers.AdminFactory;
-import ix.core.models.Group;
-import ix.core.models.Indexable;
-import ix.core.models.Keyword;
-import ix.core.models.Principal;
-import ix.core.models.Structure;
-import ix.core.models.Value;
-import ix.ginas.models.GinasAccessContainer;
-import ix.ginas.models.GinasAccessReferenceControlled;
-import ix.ginas.models.GinasReferenceContainer;
-import ix.ginas.models.GroupListSerializer;
-import ix.ginas.models.PrincipalDeserializer;
-import ix.ginas.models.PrincipalSerializer;
-import ix.ginas.models.ReferenceListSerializer;
-
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,6 +11,8 @@ import javax.persistence.CascadeType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,6 +21,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import ix.core.controllers.AdminFactory;
+import ix.core.models.Group;
+import ix.core.models.Indexable;
+import ix.core.models.Keyword;
+import ix.core.models.Principal;
+import ix.core.models.Structure;
+import ix.ginas.models.GinasAccessContainer;
+import ix.ginas.models.GinasAccessReferenceControlled;
+import ix.ginas.models.GinasReferenceContainer;
+import ix.ginas.models.GroupListSerializer;
+import ix.ginas.models.PrincipalDeserializer;
+import ix.ginas.models.PrincipalSerializer;
+import ix.ginas.models.ReferenceListSerializer;
+import ix.ginas.models.utils.UserFetcher;
 
 @Entity
 @DiscriminatorValue("GSRS")
@@ -46,6 +49,12 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     @JsonDeserialize(using = PrincipalDeserializer.class)
     @Indexable(facet = true, name = "Created By")
     public Principal createdBy;
+    
+    @OneToOne(cascade=CascadeType.ALL)
+    @JsonSerialize(using = PrincipalSerializer.class)
+    @JsonDeserialize(using = PrincipalDeserializer.class)
+    @Indexable(facet = true, name = "Last Edited By")
+    public Principal lastEditedBy;
 	
 	public GinasChemicalStructure(){
 		
@@ -143,6 +152,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	public Set<Group> getAccessGroups() {
 		return getAccess();
 	}
+	
 	public void addReference(String refUUID){
 		if(this.recordReference==null){
 			this.recordReference= new GinasReferenceContainer(this);
@@ -151,11 +161,25 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 				refUUID
 		));
 	}
+	
 	public void addReference(Reference r){
 		addReference(r.uuid.toString());
 	}
+	
 	public void addReference(Reference r, Substance s){
 		s.references.add(r);
 		this.addReference(r);
 	}
+	
+    @PrePersist
+    @PreUpdate
+    public void modifiedV2() {
+    	Principal p1=UserFetcher.getActingUser();
+    	if(p1!=null){
+    		lastEditedBy=p1;
+    		if(this.createdBy==null){
+    			createdBy=p1;
+        	}
+    	}
+    }
 }

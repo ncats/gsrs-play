@@ -197,15 +197,11 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 
         @Transactional
         public void persists() {
-//        	TRY_STUFF++;
-//        	System.out.println("Persisting total:" + TRY_STUFF);
             getInstance().decrementExtractionQueue();
-            //System.out.println("Now there are:" + getInstance().getRecordsProcessing() + " records");
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
             try{
                 rec.job.getPersister().persist(this);
                 Statistics stat=applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_GOOD);
-
                 System.out.println("Persisted at :" + System.currentTimeMillis());
             }catch(Exception e){
                 e.printStackTrace();
@@ -387,12 +383,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
                         throw new IllegalStateException("Transform error");
                     }
                     
-                    
-                    
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_GOOD);
 
-                    //TRY_STUFF_TT++;
-                    //System.out.println("Telling Transform:" + TRY_STUFF_TT);
                     reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
                                         
                 }catch(Exception e){
