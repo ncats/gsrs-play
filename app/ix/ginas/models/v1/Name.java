@@ -106,6 +106,8 @@ public class Name extends GinasCommonSubData {
     
     @JSONEntity(title = "Preferred Term")
     public boolean preferred;
+    
+    public boolean displayName;
 
     public Name () {}
     public Name (String name) {
@@ -196,18 +198,23 @@ public class Name extends GinasCommonSubData {
      * Utility function to sort names in nice display order.
      * 
      * Sort criteria:
-     * 		1) Preferred status
-     * 		2) Official status
-     * 		3) English first
-     * 		4) Number of References
-     * 		5) Name Type
-     * 		6) Alphabetical
+     *      1)
+     * 		2) Preferred status
+     * 		3) Official status
+     * 		4) English first
+     * 		5) Number of References
+     * 		6) Name Type
+     * 		7) Alphabetical
      * 
      */
     public static List<Name> sortNames(List<Name> nameList){
     	Collections.sort(nameList, new Comparator<Name>(){
 			@Override
 			public int compare(Name o1, Name o2) {
+				if(o1.isDisplayName()!= o2.isDisplayName()){
+					if(o1.isDisplayName())return 1;
+					return -1;
+				}
 				if(o1.preferred!=o2.preferred){
 					if(o2.preferred)return 1;
 					return -1;
@@ -231,6 +238,16 @@ public class Name extends GinasCommonSubData {
 			}    		
     	});
     	return nameList;
+    }
+    
+    @JsonIgnore
+    public boolean isDisplayName() {
+    	return displayName;
+	}
+    
+    @JsonIgnore
+    public void setIsDisplayName(boolean dn){
+    	displayName=dn;
     }
     
     

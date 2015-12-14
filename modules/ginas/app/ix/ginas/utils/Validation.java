@@ -124,7 +124,8 @@ public class Validation {
 	
 	
 	public static boolean validateNames(Substance s,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat ){
-		 boolean preferred=false;
+		 	boolean preferred=false;
+		 	int display=0;
 	        List<Name> remnames = new ArrayList<Name>();
 	        for(Name n : s.names){
 	            if(n == null){
@@ -139,6 +140,9 @@ public class Validation {
 	            }else{
 	                if(n.preferred){
 	                    preferred=true;
+	                }
+	                if(n.isDisplayName()){
+	                	display++;
 	                }
 	                Pattern p = Pattern.compile("(?:[ \\]])\\[([A-Z0-9]*)\\]");
 	                Matcher m=p.matcher(n.name);
@@ -186,7 +190,7 @@ public class Validation {
 	        }
 	                
 	        if(!preferred){
-	            GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have at least one (1) preferred name").appliableChange(true);
+	            GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have at least one (1) preferred name, Default to using:" + s.getName()).appliableChange(true);
 	            gpm.add(mes);
 	            strat.processMessage(mes);
 	            if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
@@ -196,6 +200,23 @@ public class Validation {
 	                    mes.appliedChange=true;
 	                }
 	            }
+	        }
+	        if(display==0){
+	            GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have at least one (1) preferred name, Default to using:" + s.getName()).appliableChange(true);
+	            gpm.add(mes);
+	            strat.processMessage(mes);
+	            if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+	                if(s.names.size()>0){
+	                    Name.sortNames(s.names);
+	                    s.names.get(0).setIsDisplayName(true);
+	                    mes.appliedChange=true;
+	                }
+	            }
+	        }
+	        if(display>1){
+	        	 GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("Substance can't have more than one (1) display name. Found " + display );
+		         gpm.add(mes);
+		         strat.processMessage(mes);
 	        }
 	                
 	                

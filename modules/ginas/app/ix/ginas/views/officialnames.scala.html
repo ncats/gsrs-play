@@ -15,6 +15,7 @@
                 <th>Naming Org</th>
                 <th>Language</th>
                 <th>Preferred</th>
+                <th>Display Name</th>
                 <th>References</th>
             </tr>
         </thead>
@@ -43,6 +44,9 @@
                 }
                 </td>
                 <td>@if(n.preferred == true) {
+                    <i class="fa fa-check fa-2x success"></i>
+                } else {}</td>
+                 <td>@if(n.isDisplayName() == true) {
                     <i class="fa fa-check fa-2x success"></i>
                 } else {}</td>
                 @referencetable(n.getReferences(), n.uuid.toString(), 5)
