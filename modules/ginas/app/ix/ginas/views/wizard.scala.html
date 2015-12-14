@@ -4,7 +4,8 @@
 
 
 @wizardfields(kind: String) = {
-
+    <div>@forms.nameform()</div>
+    <div>@forms.officialnameform()</div>
     @kind match {
         case "chemical" => {
             <div>@forms.structureform()</div>
@@ -19,11 +20,14 @@
 
             @*
             <div>@forms.subunitform()</div>
-*@             <div>@forms.disulfideform()</div>
+             <div>@forms.disulfideform()</div>
+                *@
              <div>@forms.otherlinksform()</div>
              <div>@forms.glycosylationform()</div>
              <div>@forms.agentmodificationform()</div>
-             @*<div>@forms.structuralmodificationform()</div>*@
+@*
+             <div>@forms.structuralmodificationform()</div>
+*@
             <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
             <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
 
@@ -68,13 +72,12 @@
         }
     }
 
-    @*<div>@forms.officialnameform()</div>*@
-    @*<div>@forms.nameform()</div>*@
-    @*<div>@forms.codeform()</div>*@
-    @*<div>@forms.relationshipform()</div>*@
-    @*<div>@forms.noteform()</div>*@
-    @*<div>@forms.propertyform()</div>*@
-    @*<reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>*@
+
+    <div>@forms.codeform()</div>
+    <div>@forms.relationshipform()</div>
+    <div>@forms.noteform()</div>
+    <div>@forms.propertyform()</div>
+    <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
     @*@forms.amountmodalform()*@
 
 }

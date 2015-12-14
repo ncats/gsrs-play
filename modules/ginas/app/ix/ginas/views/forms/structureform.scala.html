@@ -13,8 +13,8 @@
                 <div class="row">
                     <div class="col-md-12 pull-right">
                         <button class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
-                        <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export"><i class="fa fa-external-link fa-2x success"></i></a> &nbsp;
-                        <a class= "pull-right padded" data-toggle="modal" data-target="#structureimport" aria-label="Import" ><i class="fa fa-clipboard fa-2x success"></i></a>
+                        <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export" tooltip="Export Molfile"><i class="fa fa-external-link fa-2x success"></i></a> &nbsp;
+                        <a class= "pull-right padded" data-toggle="modal" data-target="#structureimport" aria-label="Import" tooltip="Import a molfile"><i class="fa fa-clipboard fa-2x success"></i></a>
                     </div>
                 </div>
                 <div class = "row" ng-repeat="err in structureErrorsArray">

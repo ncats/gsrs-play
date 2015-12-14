@@ -1,7 +1,7 @@
 <div class="row info">
     <button class="btn btn-primary label-offset det">
         Parameter&nbsp;</button>
-    <a ng-click="$parent.toggleStage();" class="pull-right">
+    <a ng-click="$parent.toggleStage();" class="pull-right" tooltip="Close">
         <i class="fa fa-times fa-2x danger"></i></a>
 
     <div class="col-md-12">
@@ -19,8 +19,8 @@
             </div>
             <div class="row">
                 <div class="col-md-2 pull-right">
-                    <a ng-click="parameter=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="validate();"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                    <a ng-click="parameter=null; reset();" aria-label="Clear" tooltip="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate();" tooltip="Save"><i class="fa fa-floppy-o fa-2x success"></i></a>
                 </div>
             </div>
             <div class="parameterForm"></div>

@@ -98,9 +98,7 @@
     <script
     src='@routes.Assets.at("javascripts/JSDraw3.2.3/Scilligence.JSDraw2.Pro.js")'></script>
     <script type="text/javascript">
-    	var session = {
-    		username:"@ix.ncats.controllers.auth.Authentication.getUser().username"	
-    	};
+    @*<!--    	var session = {username:"@ix.ncats.controllers.auth.Authentication.getUser().username"/};-->*@
     	var baseurl = "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/";
     </script>
     @*<!-- <script src='@routes.Assets.at("javascripts/marvin/js/marvinjslauncher.js")'></script> -->*@

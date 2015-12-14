@@ -385,6 +385,7 @@
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
+
         $scope.canApprove = function(){
         	var lastEdit=$scope.substance.lastEditedBy;
         	if(!lastEdit)
@@ -1481,12 +1482,6 @@
         };
     });
 
-    ginasApp.directive('structuralModification', function () {
-        return {
-            templateUrl: baseurl + "assets/templates/structuralmodification.html"
-        };
-    });
-
 //sugarSites
     ginasApp.directive('naSites', function () {
         return {
@@ -1599,7 +1594,7 @@
             scope: {
                 referenceobj: '=',
                 parent: '=',
-                field: '='
+                field: '@'
             },
             link: function (scope, element, attrs) {
                 var formHolder;
@@ -1637,7 +1632,7 @@
 
                             });
                        // }
-                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent></site-string-form>';
+                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent field = field></site-string-form>';
                         break;
                     case "reference":
                         if (attrs.mode == "edit") {
@@ -1977,22 +1972,11 @@
             scope: {
                 referenceobj: '=',
                 parent:'=',
-                sites: '='
+                sites: '=',
+                field: '='
             },
             link: function(scope, element, attrs){
                 console.log(scope);
-                scope.siteDisplayToSite = function (site) {
-                    var subres = site.split("_");
-
-                    if (site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g) === null) {
-                        throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
-                    }
-
-                    return {
-                        subunitIndex: subres[0] - 0,
-                        residueIndex: subres[1] - 0
-                    };
-                };
 
                 scope.sitesToDislaySites = function (sitest) {
                     var sites = [];
@@ -2048,42 +2032,22 @@
                     return disp;
                 };
 
-                scope.siteDisplayListToSiteList = function (slist) {
-                    var toks = slist.split(";");
-                    var sites = [];
-                    for (var i in toks) {
-                        var l = toks[i];
-                        if (l === "")continue;
-                        var rng = l.split("-");
-                        if (rng.length > 1) {
-                            var site1 = scope.siteDisplayToSite(rng[0]);
-                            var site2 = scope.siteDisplayToSite(rng[1]);
-                            if (site1.subunitIndex != site2.subunitIndex) {
-                                throw "\"" + rng + "\" is not a valid shorthand for a site range. Must be between the same subunits.";
-                            }
-                            if (site2.residueIndex <= site1.residueIndex) {
-                                throw "\"" + rng + "\" is not a valid shorthand for a site range. Second residue index must be greater than first.";
-                            }
-                            sites.push(site1);
-                            for (var j = site1.residueIndex + 1; j < site2.residueIndex; j++) {
-                                sites.push({
-                                    subunitIndex: site1.subunitIndex,
-                                    residueIndex: j
-                                });
-                            }
-                            sites.push(site2);
-                        } else {
-                            sites.push(scope.siteDisplayToSite(rng[0]));
-                        }
-                    }
-                    console.log(sites);
-                    return sites;
+                scope.validate = function(){
+console.log(scope.stage);
+                };
+
+                scope.print= function(){
+                    //console.log(scope.siteDisplayListToSiteList(scope.referenceobj.display));
+                    console.log("changing"+ scope.referenceobj.display);
+/*                    console.log(scope.referenceobj.display);
+                    console.log(scope.referenceobj.sites);*/
 
                 };
 
-                if(scope.referenceobj.sites.length > 0) {
+
+    /*            if(scope.referenceobj.sites.length > 0) {
                     scope.referenceobj.display = scope.sitesToDislaySites(scope.referenceobj.sites);
-                }
+                }*/
             },
             templateUrl: baseurl + "assets/templates/site-string-form.html"
         };
@@ -2136,7 +2100,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><i class="fa fa-lock fa-2x warning"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
+            template: '<div><i class="fa fa-lock fa-2x warning"  tooltip="Edit user access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
         };
     });
 
@@ -2261,6 +2225,56 @@
             templateUrl: baseurl + "assets/templates/structural-modifications-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
+
+                scope.siteDisplayListToSiteList = function (slist) {
+                    var toks = slist.split(";");
+                    var sites = [];
+                    for (var i in toks) {
+                        var l = toks[i];
+                        if (l === "")continue;
+                        var rng = l.split("-");
+                        if (rng.length > 1) {
+                            var site1 = scope.siteDisplayToSite(rng[0]);
+                            var site2 = scope.siteDisplayToSite(rng[1]);
+                            if (site1.subunitIndex != site2.subunitIndex) {
+                                throw "\"" + rng + "\" is not a valid shorthand for a site range. Must be between the same subunits.";
+                            }
+                            if (site2.residueIndex <= site1.residueIndex) {
+                                throw "\"" + rng + "\" is not a valid shorthand for a site range. Second residue index must be greater than first.";
+                            }
+                            sites.push(site1);
+                            for (var j = site1.residueIndex + 1; j < site2.residueIndex; j++) {
+                                sites.push({
+                                    subunitIndex: site1.subunitIndex,
+                                    residueIndex: j
+                                });
+                            }
+                            sites.push(site2);
+                        } else {
+                            sites.push(scope.siteDisplayToSite(rng[0]));
+                        }
+                    }
+                    console.log(sites);
+                    return sites;
+
+                };
+
+
+
+                scope.siteDisplayToSite = function (site) {
+                    var subres = site.split("_");
+
+                    if (site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g) === null) {
+                        throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
+                    }
+
+                    return {
+                        subunitIndex: subres[0] - 0,
+                        residueIndex: subres[1] - 0
+                    };
+                };
+
+               // scope.mod.display = scope.siteDisplayListToSiteList(scope.mod.sites) || "";
 
                 scope.validate = function () {
                     scope.parent.protein.modifications.structuralModifications.push(scope.mod);
