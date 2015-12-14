@@ -98,7 +98,8 @@
                 <button class="btn btn-primary" ng-hide="showJSON" ng-click="showJSON=true" >Show JSON</button>
                 <button class="btn btn-primary" ng-show="showJSON" ng-click="showJSON=false" >Hide JSON</button>
                 <button class="btn btn-primary" ng-click="validateSubstance(substance)">Validate</button></div>
-            <div class="col-md-1 pull-right">
+            <div class="col-md-2 pull-right">
+                <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance(substance)">Approve</button>
                 <button class="btn btn-primary" ng-click="submitSubstance(substance)">Submit</button>
             </div>
         </div>
