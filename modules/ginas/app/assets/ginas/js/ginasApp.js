@@ -385,6 +385,18 @@
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
+        $scope.canApprove = function(){
+        	var lastEdit=$scope.substance.lastEditedBy;
+        	if(!lastEdit)
+        		return false; 
+        	if($scope.substance.status==="approved"){
+        		return false;
+        	}
+        	if(lastEdit === session.username){
+        		return false;
+        	}
+        	return true;
+		};
 
         //local storage functions//
         $scope.unbind = localStorageService.bind($scope, 'enabled');
@@ -883,11 +895,15 @@
 
 
         $scope.submitSubstance = function () {
+        	var r = confirm("Are you sure you'd like to submit this substance?");
+			if (r != true) {
+            	return;
+			}
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
             if (_.has(sub, 'update')) {
                 $.ajax({
-                    url: 'http://localhost:9000/ginas/app/api/v1/substances(' + sub.uuid + ')/_',
+                    url: baseurl + 'api/v1/substances(' + sub.uuid + ')/_',
                     type: 'PUT',
                     beforeSend: function (request) {
                         request.setRequestHeader("Content-Type", "application/json");
@@ -903,6 +919,15 @@
                     alert("submitted!");
                 });
             }
+        };
+        $scope.approveSubstance = function () {
+        	var sub = angular.copy($scope.substance);
+            sub = $scope.fromFormSubstance(sub);
+            var keyid=sub.uuid.substr(0,8);
+            var r = confirm("Are you sure you want to approve this substance?");
+			if (r == true) {
+            	location.href=baseurl + "substance/" + keyid +"/approve";
+			}
         };
 
         $scope.validateSubstance = function () {
