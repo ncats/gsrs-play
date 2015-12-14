@@ -12,11 +12,11 @@
                 <div class="col-md-1 err-check">
                     <multi-select ng-model="officialname.domains" field="domains" cv = "NAME_DOMAIN" ></multi-select>
                 </div>
-                <div class="col-md-2 err-check">
-                    <multi-select ng-model="officialname.jurisdiction" field="jurisdiction" cv = "JURISDICTION" ></multi-select>
-                </div>
                 <div class="col-md-1 err-check">
                     <multi-select ng-model="officialname.nameOrgs" field="nameOrgs" cv = "NAME_ORG"></multi-select>
+                </div>
+                <div class="col-md-2 err-check">
+                    <multi-select ng-model="officialname.jurisdiction" field="nameJurisdiction" cv = "JURISDICTION" ></multi-select>
                 </div>
                 <div class="col-md-2 err-check">
                     <multi-select ng-model="officialname.languages" field="languages" cv = "LANGUAGE"></multi-select>
@@ -47,11 +47,11 @@
                 <div class="col-md-1">
                     <multi-view-edit obj = "obj" field="domains" cv = "NAME_DOMAIN" ></multi-view-edit>
                 </div>
-                <div class="col-md-2">
-                    <multi-view-edit obj = "obj" field="jurisdiction" cv = "JURISDICTION" ></multi-view-edit>
-                </div>
                 <div class="col-md-1">
                     <multi-view-edit obj = "obj" field="nameOrgs" cv = "NAME_ORG" ></multi-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <multi-view-edit obj = "obj" field="nameJurisdiction" cv = "JURISDICTION" ></multi-view-edit>
                 </div>
                 <div class="col-md-2">
                     <multi-view-edit obj = "obj" field="languages" cv = "LANGUAGE" ></multi-view-edit>

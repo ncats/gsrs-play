@@ -2,7 +2,7 @@
     <button class="btn btn-primary label-offset det">
         References&nbsp;<span class="badge" ng-show="parent.references.length>0">
                         {{parent.references.length}}</span></button>
-    <a ng-click="$parent.toggleStage();" class="pull-right">
+    <a ng-click="$parent.toggleStage();" class="pull-right" tooltip="Close">
         <i class="fa fa-times fa-2x danger"></i></a>
 
     <div class="col-md-12">
@@ -39,8 +39,8 @@
             <div class="refForm"></div>
             <div class="row">
                 <div class="col-md-1 pull-right">
-                    <a ng-click="reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                    <a ng-click="reset()" aria-label="Clear" tooltip="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate()" tooltip="Add"><i class="fa fa-floppy-o fa-2x success"></i></a>
                 </div>
             </div>
         </form>

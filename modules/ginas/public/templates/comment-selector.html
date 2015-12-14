@@ -2,7 +2,7 @@
     <label for={{type}} class="text-capitalize">Comments</label>
         <a ng-show="referenceobj.comments" ng-click="toggleStage();" role="button"><comment value = "referenceobj.comments"></comment></a>
     <div class="text-center">
-        <a ng-hide="referenceobj.comments" ng-click="toggleStage()" role="button" aria-label="Add comment" id="{{type}}"><i
+        <a ng-hide="referenceobj.comments" ng-click="toggleStage()" role="button" aria-label="Add comment" tooltip="Add a comment" id="{{type}}"><i
                 class="fa fa-plus fa-2x success" ng-show="stage"></i>
             <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
     </div>

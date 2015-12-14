@@ -20,11 +20,11 @@
                                      label="Location Type"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <form-selector referenceobj="mod" parent="substance" divid="strucModForm"
+                    <form-selector referenceobj="mod" parent="substance" field = "Sites" divid="strucModForm"
                                    type="site"></form-selector>
-                    <input type="text" class="form-control" ng-model="structuralModification._displaySites"
+                    <!--<input type="text" class="form-control" ng-model="structuralModification._displaySites"
                            title="Modification Sites" id="modsites" name="modsites"
-                           na-sites={{structuralModification}}/>
+                           na-sites={{structuralModification}}/>-->
                     <small class="error" ng-show="strucModForm.modsites.$error.siteInvalid">
                         {{strucModForm.modsites.$errorMsg.naSites}}
                     </small>
