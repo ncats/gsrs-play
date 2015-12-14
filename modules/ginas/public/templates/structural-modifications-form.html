@@ -74,12 +74,12 @@
                         <form-selector referenceobj="obj" parent="substance" type="site" divid={{obj.$$hashKey}}
                                        mode="edit"></form-selector>
                     </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <dropdown-view-edit obj="obj" field="extent" cv="EXTENT_TYPE"
                                         label="Extent"></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent="substance" type="amount" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj.extentAmount" parent="substance" type="amount" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">

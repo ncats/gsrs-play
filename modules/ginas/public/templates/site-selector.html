@@ -1,9 +1,8 @@
 <div class ="text-center">
-    {{referenceobj.sites.length}}
     <label for={{type}} class="text-capitalize">Sites</label>
-    <a ng-show="referenceobj.sites" ng-click="toggleStage();" role="button"><site-view value ="referenceobj.sites" ></site-view></a>
+    <a ng-show="referenceobj.sites.length>0" ng-click="toggleStage();" role="button"><site-view value ="referenceobj.display || referenceobj.sites" ></site-view></a>
     <div class="text-center">
-        <a ng-hide="referenceobj.sites" ng-click="toggleStage()" role="button" aria-label="Add Sites" id="{{type}}"><i
+        <a ng-hide="referenceobj.sites.length>0" ng-click="toggleStage()" role="button" aria-label="Add Sites" id="{{type}}"><i
                 class="fa fa-plus fa-2x success" ng-show="stage"></i>
             <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
     </div>

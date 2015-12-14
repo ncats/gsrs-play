@@ -1585,7 +1585,7 @@
                 switch (attrs.type) {
                     case "amount":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><amount value ="referenceobj.amount" ></amount></a>');
+                            template = angular.element('<a ng-click ="toggleStage()"><amount value ="referenceobj" ></amount></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -1599,20 +1599,20 @@
                         formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
-                        if (attrs.mode == "edit") {
+/*                        if (attrs.mode == "edit") {
                             console.log(scope.referenceobj.sites);
                             template = angular.element('<a ng-click ="toggleStage()"><site-view value ="referenceobj.sites" ></site-view></a>');
                             element.append(template);
                             $compile(template)(scope);
-                        } else {
+                        } else {*/
                             $templateRequest(baseurl + "assets/templates/site-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
 
                             });
-                        }
-                        formHolder = '<site-form ></site-form>';
+                       // }
+                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent></site-string-form>';
                         break;
                     case "reference":
                         if (attrs.mode == "edit") {
@@ -1632,7 +1632,7 @@
                         break;
                     case "parameter":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><parameters parameters ="referenceobj.parameters"></parameters></a>');
+                            template = angular.element('<a ng-click ="toggleStage()"><parameters parameters ="referenceobj"></parameters></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -1934,6 +1934,136 @@
         };
     });
 
+    ginasApp.directive('siteForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                sites: '=sites'
+            },
+            templateUrl: baseurl + "assets/templates/site-form.html"
+        };
+    });
+
+    ginasApp.directive('siteStringForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                referenceobj: '=',
+                parent:'=',
+                sites: '='
+            },
+            link: function(scope, element, attrs){
+                console.log(scope);
+                scope.siteDisplayToSite = function (site) {
+                    var subres = site.split("_");
+
+                    if (site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g) === null) {
+                        throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
+                    }
+
+                    return {
+                        subunitIndex: subres[0] - 0,
+                        residueIndex: subres[1] - 0
+                    };
+                };
+
+                scope.sitesToDislaySites = function (sitest) {
+                    var sites = [];
+                    angular.extend(sites, sitest);
+                    sites.sort(function (site1, site2) {
+                        var d = site1.subunitIndex - site2.subunitIndex;
+                        if (d === 0) {
+                            d = site1.residueIndex - site2.residueIndex;
+                        }
+                        return d;
+
+                    });
+                    var csub = 0;
+                    var cres = 0;
+                    var rres = 0;
+                    var finish = false;
+                    var disp = "";
+                    for (var i = 0; i < sites.length; i++) {
+
+                        var site = sites[i];
+                        if (site.subunitIndex == csub && site.residueIndex == cres)
+                            continue;
+                        finish = false;
+                        if (site.subunitIndex == csub) {
+                            if (site.residueIndex == cres + 1) {
+                                if (rres === 0) {
+                                    rres = cres;
+                                }
+                            } else {
+                                finish = true;
+                            }
+                        } else {
+                            finish = true;
+                        }
+                        if (finish && csub !== 0) {
+                            if (rres !== 0) {
+                                disp += csub + "_" + rres + "-" + csub + "_" + cres + ";";
+                            } else {
+                                disp += csub + "_" + cres + ";";
+                            }
+                            rres = 0;
+                        }
+                        csub = site.subunitIndex;
+                        cres = site.residueIndex;
+                    }
+                    if (sites.length > 0) {
+                        if (rres !== 0) {
+                            disp += csub + "_" + rres + "-" + csub + "_" + cres;
+                        } else {
+                            disp += csub + "_" + cres;
+                        }
+                    }
+                    return disp;
+                };
+
+                scope.siteDisplayListToSiteList = function (slist) {
+                    var toks = slist.split(";");
+                    var sites = [];
+                    for (var i in toks) {
+                        var l = toks[i];
+                        if (l === "")continue;
+                        var rng = l.split("-");
+                        if (rng.length > 1) {
+                            var site1 = scope.siteDisplayToSite(rng[0]);
+                            var site2 = scope.siteDisplayToSite(rng[1]);
+                            if (site1.subunitIndex != site2.subunitIndex) {
+                                throw "\"" + rng + "\" is not a valid shorthand for a site range. Must be between the same subunits.";
+                            }
+                            if (site2.residueIndex <= site1.residueIndex) {
+                                throw "\"" + rng + "\" is not a valid shorthand for a site range. Second residue index must be greater than first.";
+                            }
+                            sites.push(site1);
+                            for (var j = site1.residueIndex + 1; j < site2.residueIndex; j++) {
+                                sites.push({
+                                    subunitIndex: site1.subunitIndex,
+                                    residueIndex: j
+                                });
+                            }
+                            sites.push(site2);
+                        } else {
+                            sites.push(scope.siteDisplayToSite(rng[0]));
+                        }
+                    }
+                    console.log(sites);
+                    return sites;
+
+                };
+
+                if(scope.referenceobj.sites.length > 0) {
+                    scope.referenceobj.display = scope.sitesToDislaySites(scope.referenceobj.sites);
+                }
+            },
+            templateUrl: baseurl + "assets/templates/site-string-form.html"
+        };
+    });
+
     ginasApp.directive('amount', function () {
 
         return {
@@ -1955,7 +2085,7 @@
                 value: '='
             },
             link: function(scope){
-                console.log(scope);
+       //         console.log(scope);
             },
             template: '<div><span>{{value[0].subunitIndex}}_{{value[0].residueIndex}}; {{value[1].subunitIndex}}_{{value[1].residueIndex}}</span></div>'
         };
