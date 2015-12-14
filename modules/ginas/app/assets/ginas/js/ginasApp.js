@@ -533,7 +533,6 @@
                 if (!angular.isArray(sub)) {
                     newpath = newpath + v;
                 }
-                console.log(newpath);
                 var newcv = lookup.getFromName(newpath, sub[v]);
                 if (angular.isArray(sub[v])) {
                     newcv = null;
@@ -1382,8 +1381,8 @@
         $scope.submitpaster = function (input) {
             console.log(input);
             var sub = JSON.parse(input);
-            $scope.substance = sub;
-            //  $scope.substance = $scope.toFormSubstance(sub);
+          //  $scope.substance = sub;
+              $scope.substance = $scope.toFormSubstance(sub);
             console.log($scope);
         };
 
@@ -1623,11 +1622,11 @@
                             });
                         }
                         formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
-                        //    element.append(formHolder);
                         break;
                     case "site":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><amount value ="referenceobj.amount" ></amount></a>');
+                            console.log(scope.referenceobj.sites);
+                            template = angular.element('<a ng-click ="toggleStage()"><site-view value ="referenceobj.sites" ></site-view></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -1639,7 +1638,6 @@
                             });
                         }
                         formHolder = '<site-form ></site-form>';
-                        //    element.append(formHolder);
                         break;
                     case "reference":
                         if (attrs.mode == "edit") {
@@ -1669,7 +1667,21 @@
                                 $compile(template)(scope);
                             });
                         }
-                        formHolder = '<parameter-form referenceobj = referenceobj parent = parent></parameter-form>';
+                        formHolder = '<parameter-form referenceobj = referenceobj field="field" parent = parent></parameter-form>';
+                        break;
+                    case "physicalParameter":
+                        if (attrs.mode == "edit") {
+                            template = angular.element('<a ng-click ="toggleStage()"><parameters parameters ="referenceobj.parameters"></parameters></a>');
+                            element.append(template);
+                            $compile(template)(scope);
+                        } else {
+                            $templateRequest(baseurl + "assets/templates/parameter-selector.html").then(function (html) {
+                                template = angular.element(html);
+                                element.append(template);
+                                $compile(template)(scope);
+                            });
+                        }
+                        formHolder = '<physical-parameter-form referenceobj = referenceobj field = field parent = parent></physical-parameter-form>';
                         break;
                     case "access":
                         if (attrs.mode == "edit") {
@@ -1767,6 +1779,40 @@
                     }
                     scope.parameter = {};
                     scope.parameterForm.$setPristine();
+                };
+
+                scope.deleteObj = function (obj, parent) {
+                    parent.splice(_.indexOf(parent, obj), 1);
+                };
+            }
+        };
+    });
+
+    ginasApp.directive('physicalParameterForm', function () {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                referenceobj: '=',
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/physical-parameter-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+
+                scope.validate = function () {
+                    console.log(scope.referenceobj);
+                    if (_.has(scope.referenceobj, 'parameters')) {
+                        var temp = _.get(scope.referenceobj, 'parameters');
+                        temp.push(scope.physicalParameter);
+                        _.set(scope.referenceobj, 'parameters', temp);
+                    } else {
+                        var x = [];
+                        x.push(angular.copy(scope.physicalParameter));
+                        _.set(scope.referenceobj, 'parameters', x);
+                    }
+                    scope.physicalParameter = {};
+                    scope.physicalParameterForm.$setPristine();
                 };
 
                 scope.deleteObj = function (obj, parent) {
@@ -1925,6 +1971,21 @@
         };
     });
 
+    ginasApp.directive('siteView', function () {
+
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                value: '='
+            },
+            link: function(scope){
+                console.log(scope);
+            },
+            template: '<div><span>{{value[0].subunitIndex}}_{{value[0].residueIndex}}; {{value[1].subunitIndex}}_{{value[1].residueIndex}}</span></div>'
+        };
+    });
+
     ginasApp.directive('comment', function () {
 
         return {
@@ -1957,7 +2018,7 @@
             scope: {
                 parameters: '='
             },
-            template: '<div ng-repeat="p in parameters">{{p.name}} <amount value="p.amount"></amount></div>'
+            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.amount"></amount></div>'
         };
     });
 
@@ -2072,14 +2133,39 @@
                 console.log(scope);
 
                 scope.validate = function () {
-                   // scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
-                    scope.subunit = {};
-                    scope.subunitForm.$setPristine();
+                    scope.parent.protein.modifications.structuralModifications.push(scope.mod);
+                    scope.mod = {};
+                    scope.strucModForm.$setPristine();
                 };
 
                 scope.deleteObj = function (obj) {
                     console.log(scope);
-                    scope.parent[scope.parent.substanceClass].modifications.splice(scope.parent[scope.parent.substanceClass].modification.indexOf(obj), 1);
+                    scope.parentprotein.modifications.structuralModifications.splice(scope.parentprotein.modifications.structuralModificationsindexOf(obj), 1);
+                };
+            }
+        };
+    });
+
+    ginasApp.directive('physicalModificationForm', function (CVFields) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/physical-modification-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+
+                scope.validate = function () {
+                    scope.parent.protein.modifications.physicalModifications.push(scope.physicalModification);
+                    scope.physicalModification = {};
+                    scope.physicalModForm.$setPristine();
+                };
+
+                scope.deleteObj = function (obj) {
+                    console.log(scope);
+                    scope.parentprotein.modifications.physicalModifications.splice(scope.parentprotein.modifications.physicalModificationsindexOf(obj), 1);
                 };
             }
         };
@@ -2442,7 +2528,7 @@
             },
             templateUrl: baseurl + "assets/templates/site-selector.html",
             link: function (scope, element, attrs, parentCtrl) {
-                console.log(scope);
+                //console.log(scope);
                 scope.validateSites = scope.$parent.validateSites;
                 scope.updateSiteList = scope.$parent.updateSiteList;
                 scope.subunits = parent.subunits;

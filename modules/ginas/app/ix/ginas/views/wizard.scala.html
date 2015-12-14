@@ -25,8 +25,11 @@
              <div>@forms.agentmodificationform()</div>
              @*<div>@forms.structuralmodificationform()</div>*@
             <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
+            <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
 
+@*
             <div>@forms.physicalmodificationform()</div>
+*@
         }
         case "structurallyDiverse" => {
            <div>@forms.diversesourceform()</div>
@@ -65,14 +68,14 @@
         }
     }
 
-    <div>@forms.officialnameform()</div>
-    <div>@forms.nameform()</div>
-    <div>@forms.codeform()</div>
-    <div>@forms.relationshipform()</div>
-    <div>@forms.noteform()</div>
-    <div>@forms.propertyform()</div>
-    <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
-    @forms.amountmodalform()
+    @*<div>@forms.officialnameform()</div>*@
+    @*<div>@forms.nameform()</div>*@
+    @*<div>@forms.codeform()</div>*@
+    @*<div>@forms.relationshipform()</div>*@
+    @*<div>@forms.noteform()</div>*@
+    @*<div>@forms.propertyform()</div>*@
+    @*<reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>*@
+    @*@forms.amountmodalform()*@
 
 }
 

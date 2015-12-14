@@ -1,0 +1,47 @@
+<div class = "row info">
+    <button class="btn btn-primary label-offset det">
+        Physical Modifications&nbsp;<span class="badge" ng-show="parent.protein.modifications.physicalModifications.length>0">
+{{parent.protein.modifications.physicalModifications.length}}</span> </button>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="physicalModForm" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-3">
+                    <dropdown-select ng-model="physicalModification.physicalModificationRole" field="physicalModificationRole" label="Modification Role" cv = "PHYSICAL_MODIFICATION_ROLE" ></dropdown-select>
+                </div>
+                <div class="col-md-2">
+                    <form-selector referenceobj= "physicalModification" divid="physicalModForm" field = "physicalParameter" type = "physicalParameter"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="physicalModification" parent = "substance" divid="physicalModForm" type = "access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="physicalModification" parent = "substance" divid="physicalModForm" type = "reference"></form-selector>
+                </div>
+            </div>
+            <div class="physicalModForm"></div>
+            <submit-buttons submit="physicalModification" form="physicalModForm" path="physicalModifications"></submit-buttons>
+        </form>
+
+        <div ng-repeat="obj in parent.protein.modifications.physicalModifications">
+            <div class ="row">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path = "physicalModifications"></delete-button>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj = "obj" field="type" cv = "PHYSICAL_MODIFICATION_ROLE" ></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <form-selector referenceobj= "obj" formname="physicalModForm" type = "physicalParameter" divid={{obj.$$hashKey}} field = "physicalParameter" mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" formname="physicalModForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="obj" parent = "substance" formname="physicalModForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                </div>
+            </div>
+            <div class = {{obj.$$hashKey}}></div>
+        </div>
+    </div>
+</div>

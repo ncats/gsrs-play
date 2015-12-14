@@ -20,6 +20,8 @@
                                      label="Location Type"></dropdown-select>
                 </div>
                 <div class="col-md-2">
+                    <form-selector referenceobj="mod" parent="substance" divid="strucModForm"
+                                   type="site"></form-selector>
                     <input type="text" class="form-control" ng-model="structuralModification._displaySites"
                            title="Modification Sites" id="modsites" name="modsites"
                            na-sites={{structuralModification}}/>
@@ -57,7 +59,8 @@
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="structuralModificationType"
-                                        cv="STRUCTURAL_MODIFICATION_TYPE" label="Modification Type"></dropdown-view-edit>
+                                        cv="STRUCTURAL_MODIFICATION_TYPE"
+                                        label="Modification Type"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
                     <substance-chooser-view-edit obj="obj" field="molecularFragment"
@@ -67,9 +70,10 @@
                     <dropdown-view-edit obj="obj" field="locationType" cv="LOCATION_TYPE"
                                         label="Location Type"></dropdown-view-edit>
                 </div>
-                <div class="col-md-2">
-                    <site-selector ng-model="mod" parent = parent></site-selector>
-                </div>
+                    <div class="col-md-1">
+                        <form-selector referenceobj="obj" parent="substance" type="site" divid={{obj.$$hashKey}}
+                                       mode="edit"></form-selector>
+                    </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="extent" cv="EXTENT_TYPE"
                                         label="Extent"></dropdown-view-edit>
