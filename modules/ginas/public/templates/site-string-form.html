@@ -5,7 +5,7 @@
     <div class="col-md-12">
         <label for="{{field}}" class="text-capitalize">{{field}}</label>
         <textarea type="text" class="form-control" ng-blur="$parent.stage = !$parent.stage"
-                  ng-model="referenceobj.displayString" ng-change="print()" name="{{field}}" title="{{field}}"
+                  ng-model="referenceobj.displayString" ng-change="validate()" name="{{field}}" title="{{field}}"
                   id="{{field}}" placeholder="{{field}}"></textarea>
         <!--
         <text-box ng-model= referenceobj.display ng-change = "print()" field= "display"></text-box>
