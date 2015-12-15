@@ -1,16 +1,101 @@
 @import ix.core.models.Structure
+@import ix.ginas.models.v1.GinasChemicalStructure
+@import ix.ginas.models.v1.PolymerSubstance
+@import ix.ginas.models.v1.Polymer
 @import ix.ginas.controllers.GinasApp
 
 @(sub: ix.ginas.models.v1.PolymerSubstance)
 
-@substancedetails(sub){
-    <li role="presentation" class="active"><a href="#structureDetails">Definition</a></li>
 
+@structureImage(s: Structure, size: Integer, showstereo: Boolean = false) = {
+    <img class="struc-thumb img-responsive" alt="Display Structure of @sub.getName" title="Display Structure of @sub.getName"
+    src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size)'>
+    @if(showstereo){
+     <table class="table">
+        <thead>
+            <tr>
+                    <th>Stereochemistry</th>
+                    <th>Optical Activity</th>
+                    <th>Additional Stereochemistry</th>
+            </tr>
+        </thead>
+    <tr>
+    <td><span class="badge">@s.stereoChemistry</span></td>
+            <td><span class="badge">
+            @if(s.opticalActivity!=null){
+                @s.opticalActivity.toValue()
+            }else{
+                @s.opticalActivity
+            }
+            </span></td>
+            <td><span class="badge">@s.atropisomerism</span></td>
+            </tr>
+            </table>
+    }
+    
+}
 
-}  {
-    <div class="row info" id="names">
-   		<div class = "col-md-9">
-            <i>Not Implemented yet</i>
+@makeTable(s: GinasChemicalStructure, stype: String) = {
+    <div class="table-responsive">
+    <table class="table @stype-Table">
+        <thead>
+            <tr>
+                @if(stype == "moiety") {
+                    <th>Moiety Structure</th>
+                    <th>Moiety Count</th>
+                    <th>Moiety Stereochemistry</th>
+                    <th>Moiety Optical Activity</th>
+                    <th>Moiety Additional Stereochemistry</th>
+                }
+                <th>Molecular Formula</th>
+                <th>Molecular Weight</th>
+                <th>Defined Stereocenters</th>
+                <th>EZ Centers</th>
+                <th>Charge</th>
+                @if(stype != "moiety") {
+                    <th>Reference</th>
+                }
+            </tr>
+        </thead>
+        @fillTable(s, stype)
+    </table>
         </div>
+}
+
+@fillTable(s: GinasChemicalStructure, stype: String) = {
+@if(stype == "structure") {
+    <tr>
+        <td>@s.formula</td>
+        <td>@s.mwt</td>
+        <td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
+        <td><span class="badge">@s.ezCenters</span></td>
+        <td><span class="badge">@s.charge</span></td>
+        @referencetable(GinasApp.getStructureReferences(s), "hi", 6)
+    </tr>
+}
+}
+@substancedetails(sub){
+    <li role="presentation"  class="active"><a href="#structureDetails" prevent-default="" ng-click="scrollTo('structureDetails')">Display Structure</a></li>
+    } {
+    <div class="row info" id="structureDetails">
+        <h3>
+            <span class="label label-primary label-offset" id = "struc-label">Display Structure</span>
+        </h3>
+        <div class="col-md-5">
+            <div class = "row">
+            @structureImage(sub.polymer.displayStructure, 400,true)
+            </div>
+            <div class = "row">
+                <div class = "col-md-6 col-md-offset-6">
+                    <ul class= "form-inline pull-right list-unstyled" id = "exportSave">
+                        <li  class = "padded"> <export-button structureid ="'@sub.uuid'" format="'sdf'" ></export-button></li>
+                        <li class = "padded">
+                            <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))"  target="_self" class="btn btn-primary" aria-label="Edit Substance"> <span class="fa fa-wrench chem-button"></span></a>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">@makeTable(sub.polymer.displayStructure, "structure")</div>
     </div>
 }
+

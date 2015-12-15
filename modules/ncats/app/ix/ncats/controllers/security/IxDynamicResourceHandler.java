@@ -27,8 +27,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                                              final DeadboltHandler deadboltHandler,
                                              final Http.Context context) {
                     	
-                    	if(Play.application().configuration()
-                        .getBoolean("ix.admin", false))return true;
+                    	if(Play.application().configuration().getBoolean("ix.admin", false))return true;
                     	
                         Subject subject = deadboltHandler.getSubject(context);
                         boolean allowed;
@@ -79,6 +78,8 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                     }
                 });
     }
+    
+    
 
     //this will be invoked for Dynamic
     public boolean isAllowed(String name,
