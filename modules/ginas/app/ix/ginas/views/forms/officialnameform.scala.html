@@ -6,7 +6,7 @@
     <div class="col-md-12">
         <form class="form-horizontal" name="officialNameForm" id = "add-name" role="form" novalidate>
             <div class="row form-row">
-                <div class="col-md-3 err-check">
+                <div class="col-md-2 err-check">
                     <text-input ng-model="officialname.name" field="name" required></text-input>
                 </div>
                 <div class="col-md-1 err-check">
@@ -20,6 +20,9 @@
                 </div>
                 <div class="col-md-2 err-check">
                     <multi-select ng-model="officialname.languages" field="languages" cv = "LANGUAGE"></multi-select>
+                </div>
+                <div class="col-md-1">
+                    <check-box ng-model="officialname.display" field="display" ></check-box>
                 </div>
                 <div class="col-md-1">
                     <check-box ng-model="officialname.preferred" field="preferred" ></check-box>
@@ -50,11 +53,14 @@
                 <div class="col-md-1">
                     <multi-view-edit obj = "obj" field="nameOrgs" cv = "NAME_ORG" ></multi-view-edit>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <multi-view-edit obj = "obj" field="nameJurisdiction" cv = "JURISDICTION" ></multi-view-edit>
                 </div>
                 <div class="col-md-2">
                     <multi-view-edit obj = "obj" field="languages" cv = "LANGUAGE" ></multi-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="display" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>

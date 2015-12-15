@@ -6,8 +6,7 @@
 @wizardfields(kind: String) = {
 
     <title-header name = "substance._name" kind = "substance.substanceClass" ></title-header>
-    <div>@forms.nameform()</div>
-    <div>@forms.officialnameform()</div>
+
     @kind match {
         case "chemical" => {
             <div>@forms.structureform()</div>
@@ -74,7 +73,8 @@
         }
     }
 
-
+    <div>@forms.officialnameform()</div>
+    <div>@forms.nameform()</div>
     <div>@forms.codeform()</div>
     <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>

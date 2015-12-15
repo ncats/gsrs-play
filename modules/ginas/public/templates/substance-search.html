@@ -2,10 +2,11 @@
     <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
 <a href = "#" ng-click="subref=null">
     <div ng-show="subref">
+        {{subref.refPname}}
         <substance-view subref= subref ng-show="subref" ></substance-view>
     </div>
 </a>
     <div ng-show="!subref"  id="{{field}}">
-        <a ng-click ="toggleStage()"><i class="fa fa-search fa-2x"></i></a>
+        <a ng-click ="toggleStage()" tooltip="search for substance"><i class="fa fa-search fa-2x"></i></a>
     </div>
 </div>

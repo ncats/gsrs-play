@@ -3,7 +3,7 @@
     <br>
         <a href="#" ng-hide="obj[field]._editing" ng-click="editing(obj[field]);">{{obj[field].display}}</a>
         <select ng-show="obj[field]._editing || !obj[field].display" class="form-control" ng-model=obj[field] ng-change="obj[field]._editing=false;"
-                ng-options="r.display for r in getValues() track by r.display" placeholder ="{{field}}" title="{{field}}" name="{{field}}">
+                ng-options="r.display for r in values track by r.display" placeholder ="{{field}}" title="{{field}}" name="{{field}}">
                 <option class= "text-capitalize" value='' disabled selected>{{label || field}}...</option>
         </select>
 </div>

@@ -2,7 +2,9 @@
     <button class="btn btn-primary label-offset det">
                         Names&nbsp;<span class="badge" ng-show="substance.unofficialNames.length>0">
                         {{substance.unofficialNames.length}}</span> </button>
+@*
     <span><i class="fa fa-question-circle fa-lg"></i></span>
+*@
     <div class="col-md-12">
         <form class="form-horizontal" name="nameForm" id = "add-name" role="form" novalidate>
             <div class="row form-row">
@@ -14,6 +16,9 @@
                 </div>
                 <div class="col-md-2">
                     <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
+                </div>
+                <div class="col-md-1">
+                    <check-box ng-model="name.display" field="display" ></check-box>
                 </div>
                 <div class="col-md-1">
                     <check-box ng-model="name.preferred" field="preferred" ></check-box>
@@ -45,7 +50,10 @@
                 <div class="col-md-2">
                     <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="display" ></check-box-view-edit>
+                </div>
+                <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
