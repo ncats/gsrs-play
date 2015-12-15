@@ -26,7 +26,6 @@ public class GroupListDeserializer extends JsonDeserializer<Set<Group>> {
     	Set<Group> groups = new LinkedHashSet<Group>();
         if (parser.getCurrentToken() == JsonToken.START_ARRAY) {
             while (JsonToken.END_ARRAY != parser.nextToken()) {
-            	System.out.println("There's a group!?");
                 String name = parser.getValueAsString();
                 Group grp = AdminFactory.groupfinder.where().eq("name", name).findUnique();
                 if(grp == null){
