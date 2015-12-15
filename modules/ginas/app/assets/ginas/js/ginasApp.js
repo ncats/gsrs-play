@@ -895,6 +895,11 @@
 
 
         $scope.submitSubstance = function () {
+console.log($scope.nameForm);
+            if($scope.nameForm.$dirty){
+                alert('Name Form not saved');
+            }
+
         	var r = confirm("Are you sure you'd like to submit this substance?");
 			if (r != true) {
             	return;
@@ -1525,6 +1530,30 @@
             }
         };
     });
+
+    ginasApp.directive('titleHeader', function($compile){
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                name: '=',
+                kind: '='
+            },
+            link: function(scope, element, attrs){
+                console.log(scope);
+                if(scope.name){
+                    template = angular.element('<h1> Editing <code>' + scope.name+'</code></h1>');
+                    element.append(template);
+                    $compile(template)(scope);
+                }else{
+                    template = angular.element('<h1> Registering new <code> ' +  scope.kind+'</code></h1>');
+                    element.append(template);
+                    $compile(template)(scope);
+                }
+            }
+        };
+    });
+
 
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {

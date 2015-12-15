@@ -1,7 +1,7 @@
 <div>
     <div>
         <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
-        <input type="text" class="form-control" ng-model=obj title="{{field}}" id="{{field}}" placeholder = "{{label || field}}"
+        <input type="text" class="form-control" ng-model=obj  ng-blur ="{{}}" title="{{field}}" id="{{field}}" placeholder = "{{label || field}}"
                name="{{field}}"/>
 <!--        <ng-messages for="form[name].$error" ng-if="form[name].$touched">
                     <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>

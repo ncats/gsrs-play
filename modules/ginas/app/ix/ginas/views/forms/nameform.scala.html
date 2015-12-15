@@ -9,8 +9,8 @@
                 <div class="col-md-4">
                     <text-input ng-model="name.name" field="name" required></text-input>
                 </div>
-                <div class="col-md-2">
-                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" ></dropdown-select>
+                <div class="col-md-2 err-check" show-errors>
+                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" required></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>

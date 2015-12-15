@@ -4,6 +4,8 @@
 
 
 @wizardfields(kind: String) = {
+
+    <title-header name = "substance._name" kind = "substance.substanceClass" ></title-header>
     <div>@forms.nameform()</div>
     <div>@forms.officialnameform()</div>
     @kind match {
@@ -93,8 +95,7 @@
     *@
     <script src="@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
     <div ng-cloak>
-    
-     
+
         @wizardfields(kind)
         <div class = "row info">
             <div class="col-md-4">
