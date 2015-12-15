@@ -1,8 +1,14 @@
 @import ix.core.models.Structure
 @import ix.ginas.models.v1.GinasChemicalStructure
 @import ix.ginas.models.v1.PolymerSubstance
+@import ix.ginas.models.v1.Material
 @import ix.ginas.models.v1.Polymer
+@import ix.ginas.models.v1.ChemicalSubstance
+@import ix.ginas.models.v1.SubstanceReference
+
 @import ix.ginas.controllers.GinasApp
+@import ix.ginas.controllers.v1.SubstanceFactory
+
 
 @(sub: ix.ginas.models.v1.PolymerSubstance)
 
@@ -34,14 +40,93 @@
     }
     
 }
+@showMonomers(monomers: List[Material]) = {
+ <div class="table-responsive">
+    <table class="table ">
+        <thead>
+            <tr>
+                <th>Material</th>
+                <th>Material Name</th>
+                <th>Amount</th>
+                <th>Type</th>
+            </tr>
+        </thead>       
+        
+        @for(m <- monomers) {
+            <tr>
+                @substanceRefThumb(m.monomerSubstance)
+                <td>
+                @defining(m.monomerSubstance) { sub =>
+                    @if(sub != null && sub.getLinkingID() != null) {
+                        <a href="@ix.ginas.controllers.routes.GinasApp.substance(sub.getLinkingID())" target="_self">
+                        @sub.refPname
+                        </a>
+                    }
+                }
+                </td>
+                <td><span class="badge badge-primary">@{m.amount.`type`}</span>&nbsp;&nbsp;@Html(m.amount.toString())</td>
+                <td><span class="badge">@{m.`type`}</span></td>
+            </tr>
+        }    
+    </table>
+ </div>
+
+}
+
+@substanceRefThumb(subref : SubstanceReference) ={
+                @if(SubstanceFactory.getFullSubstance(subref) != null) {
+                    @defining(SubstanceFactory.getFullSubstance(subref)) { ref =>
+                        <td>
+                            @if(ref.getClass.toString.equals("class ix.ginas.models.v1.ChemicalSubstance")) {
+                                <img class="struc-thumb img-responsive" alt="Structure of @ref.getName()" title="Structure of @ref.getName()"
+                                src='@ix.ginas.controllers.routes.GinasApp.structure(ref.asInstanceOf[ChemicalSubstance].structure.getId, "svg", 150)'>
+                            } else {
+                                @if(ref.getClass.toString.equals("class ix.ginas.models.v1.StructurallyDiverseSubstance")) {
+
+                                } else {
+                                    @if(ref.getClass.toString.equals("class ix.ginas.models.v1.ProteinSubstance")) {
+                                        <img src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="img-responsive" id="" />
+                                    } else {
+                                        @if(ref.getClass.toString.equals("class ix.ginas.models.v1.MixtureSubstance")) {
+                                            <div class = "col-md-3">
+                                                <div class = "row">
+                                                    <div class = "col-md-1 pour">
+                                                        <i class="fa fa-flask fa-4x fa-rotate-90"></i>
+                                                    </div>
+                                                </div>
+                                                <div class ="row">
+                                                    <div class = "col-md-1 col-md-offset-1">
+                                                        <i class="fa fa-flask fa-4x"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        } else {
+                                            @if(ref.getClass.toString.equals("class ix.ginas.models.v1.PolymerSubstance")) {
+
+                                            } else {
+                                                @if(ref.substanceClass.equals("concept")) {
+                                                    <i class="fa fa-cloud fa-4x "></i>
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        </td>
+                    }
+                } else {
+                    <td><i>Substance not yet imported</i></td>
+
+                }
+}
 
 @makeTable(s: GinasChemicalStructure, stype: String) = {
     <div class="table-responsive">
     <table class="table @stype-Table">
         <thead>
             <tr>
-                @if(stype == "moiety") {
-                    <th>Moiety Structure</th>
+                @if(stype == "monomer") {
+                    <th>Monomer Name</th>
                     <th>Moiety Count</th>
                     <th>Moiety Stereochemistry</th>
                     <th>Moiety Optical Activity</th>
@@ -57,10 +142,12 @@
                 }
             </tr>
         </thead>
+        
         @fillTable(s, stype)
     </table>
         </div>
 }
+
 
 @fillTable(s: GinasChemicalStructure, stype: String) = {
 @if(stype == "structure") {
@@ -76,6 +163,8 @@
 }
 @substancedetails(sub){
     <li role="presentation"  class="active"><a href="#structureDetails" prevent-default="" ng-click="scrollTo('structureDetails')">Display Structure</a></li>
+    <li role="presentation"  class="active"><a href="#monomers" prevent-default="" ng-click="scrollTo('structureDetails')">Monomers</a></li>
+    <li role="presentation"  class="active"><a href="#srus" prevent-default="" ng-click="scrollTo('structureDetails')">Repeat Units</a></li>
     } {
     <div class="row info" id="structureDetails">
         <h3>
@@ -97,5 +186,16 @@
         </div>
         <div class="col-md-6">@makeTable(sub.polymer.displayStructure, "structure")</div>
     </div>
+    @if(sub.polymer.monomers.length > 0) {
+        <div class="row info" id="monomers">
+            <button class="btn btn-primary label-offset det">
+                Monomers&nbsp;<span class="badge"> @sub.polymer.monomers.length</span></button>
+            <div class="col-md-12">
+                
+                @showMonomers(sub.polymer.monomers)
+                
+            </div>
+        </div>
+    }
 }
 

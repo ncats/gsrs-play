@@ -65,10 +65,21 @@ public class Amount extends GinasCommonSubData {
     		val=average + "[<" + lowLimit + "]";
     	}
     	if(nonNumericValue!=null){
-    		
+    		val+=" { " + nonNumericValue + " }";
+    		val=val.trim();
     	}
+    	if(units!=null){
+    		val+= " (" + units + ")";
+    		val = val.trim();
+    	}
+    	if(val.trim().length()<=0){
+    		val="<i>empty value</i>";
+    	}
+//    	if(type!=null){
+//    		val= type + ": " + val;
+//    	}
     	
-    	return val+ " (" + units + ")"; 
+    	return val; 
     }
     
 }
