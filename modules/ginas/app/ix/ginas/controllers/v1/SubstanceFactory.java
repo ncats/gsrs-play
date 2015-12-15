@@ -21,6 +21,8 @@ import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasV1ProblemHandler;
+import ix.ncats.controllers.security.IxDeadboltHandler;
+import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
 
@@ -275,17 +277,10 @@ public class SubstanceFactory extends EntityFactory {
 		public List<Substance> filterByAccess(List<Substance> results) {
 			List<Substance> filteredSubstances = new ArrayList<Substance>();
 
-            if(user != null){
-                if(user.isAdmin()) return results;
-                for(Role r : profile.getRoles()){
-                    if(r.getName().equalsIgnoreCase("Admin")){
-                        hasAdmin = true;
-                        break;
-                    }
-                }
-                if(hasAdmin) return results;
-
-            }
+			if(IxDeadboltHandler.activeSessionHasPermission("isAdmin")){
+				return results;
+			}
+			
 
 			for (Substance sub : results) {
 				Set<Group> accessG = sub.getAccess();
