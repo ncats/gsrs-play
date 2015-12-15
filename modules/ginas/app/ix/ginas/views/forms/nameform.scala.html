@@ -16,6 +16,9 @@
                     <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
                 </div>
                 <div class="col-md-1">
+                    <check-box ng-model="name.display" field="display" ></check-box>
+                </div>
+                <div class="col-md-1">
                     <check-box ng-model="name.preferred" field="preferred" ></check-box>
                 </div>
                 <div class="col-md-1 pull-right">
@@ -45,7 +48,10 @@
                 <div class="col-md-2">
                     <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="display" ></check-box-view-edit>
+                </div>
+                <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
