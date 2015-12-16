@@ -1,11 +1,16 @@
 package ix.ginas.models.v1;
 
-import java.util.List;
-import java.util.ArrayList;
-import javax.persistence.*;
-
-import ix.core.models.Structure;
 import ix.ginas.models.GinasCommonSubData;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name="ix_ginas_polymer")
