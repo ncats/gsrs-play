@@ -35,14 +35,14 @@
 
         <form class="form-horizontal" name="glyForm" id = "add-code" role="form" novalidate editable-form shown="true">
             <div class="row form-row">
-                <div class="col-md-2 err-check" show-errors>
+                <div class="col-md-2">
                     <select ng-model="glyc.linkType" class="form-control" >
                         <option ng-repeat="n in ['N', 'C', 'O']">{{n}}</option>
                     </select>
                 </div>
                 <div class="col-md-10 err-check" show-errors>
                     <input type="text" class="form-control" ng-model ="glyc._displaySites" title="Glycoslylation Sites" id="glycSites" name = "glycSites" na-sites={{glyc}} />
-                    <small class="error" ng-show="glyForm.glycSites.$error.siteInvalid">{{sugarForm.glycSites.$errorMsg.naSites}}</small>
+                    <small class="error" ng-show="glyForm.glycSites.$error.siteInvalid">{{glyForm.glycSites.$errorMsg.naSites}}</small>
                 </div>
             </div>
             <submit-buttons submit="glyc" form="glyForm" path="protein.glycosylation.glycosites"></submit-buttons>
