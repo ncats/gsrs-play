@@ -13,16 +13,16 @@ import com.avaje.ebean.*;
 import com.avaje.ebean.config.*;
 import com.avaje.ebeaninternal.server.ddl.*;
 import com.avaje.ebeaninternal.api.*;
-
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
 
 import org.reflections.Reflections;
+
 import javax.persistence.Entity;
 import javax.persistence.Table;
-
 import javax.sql.DataSource;
+
 import com.jolbox.bonecp.*;
 
 
@@ -37,6 +37,17 @@ public class Evolution {
         this.source = source;
         this.md = MessageDigest.getInstance("SHA1");
         this.ddl = new File ("modules/ginas/conf/evolutions/"+source+"/1.sql");
+        
+        String postsqlfile = "conf/sql/post/ginas-oracle.sql";
+        System.out.println("=============================");
+        String postSQL=null;
+        try{
+        	postSQL = new Scanner(new File(postsqlfile)).useDelimiter("\\Z").next();
+        	System.out.println("postSQL:" + postSQL);
+        	
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
         
         Config root = ConfigFactory.parseFile(new File (file));
         Config ebean = root.getConfig("ebean");
@@ -53,7 +64,7 @@ public class Evolution {
         ds.setPassword(db.getString("password"));
         datasource = ds;
         
-        createDdl (models.split(","));
+        createDdl (models.split(","), postSQL);
         
         ds.close();
     }
@@ -81,7 +92,7 @@ public class Evolution {
         }
     }
 
-    public void createDdl (String[] models) throws Exception {
+    public void createDdl (String[] models, String postSQL) throws Exception {
         ServerConfig config = new ServerConfig();
         config.setName(source);
         config.loadFromProperties();
@@ -122,7 +133,7 @@ public class Evolution {
         }
 
         EbeanServer ebean = EbeanServerFactory.create(config);
-        String sql = applyDdl (ebean, config);
+        String sql = applyDdl (ebean, config,postSQL);
         if (sql != null) {
             if (!write (sql, false)) {
                 // check to see if if it's the same; if not, 
@@ -208,7 +219,7 @@ public class Evolution {
         return sb.toString();
     }
         
-    public String applyDdl (EbeanServer server, ServerConfig config)
+    public String applyDdl (EbeanServer server, ServerConfig config, String postSQL)
         throws SQLException {
         DdlGenerator ddl = new DdlGenerator();
         ddl.setup((SpiEbeanServer)server, config.getDatabasePlatform(), config);
@@ -228,6 +239,8 @@ public class Evolution {
         if (ups == null || ups.trim().isEmpty()) {
             return null;
         }
+        if(postSQL!=null)
+        	ups+="\n"+postSQL;
 
         Connection con = datasource.getConnection();
         try {

@@ -20,6 +20,7 @@ import org.reflections.Reflections;
 import play.Application;
 import play.GlobalSettings;
 import play.Logger;
+import play.Play;
 import play.api.mvc.EssentialFilter;
 import play.filters.gzip.GzipFilter;
 import play.libs.F.Promise;
@@ -174,11 +175,14 @@ public class Global extends GlobalSettings {
     public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
         
     	if(Play.application().configuration()
-			.getString("ix.ginas.debug.showheaders", false)){
+			.getBoolean("ix.ginas.debug.showheaders", false)){
 	    	Logger.debug("HEADERS ON REQUEST ===================");
+	    	String allheaders="";
 	    	for(String head:req.headers().keySet()){
-	    		System.out.println(head + "\t" + req.getHeader(head));
+	    		allheaders+=head + "\t" + req.getHeader(head) + "\n";
+	    		
 	    	}
+	    	Logger.debug(allheaders);
     	}
     	    	
         String real = req.getHeader("X-Real-IP");
