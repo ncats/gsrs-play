@@ -20,6 +20,7 @@ import org.reflections.Reflections;
 import play.Application;
 import play.GlobalSettings;
 import play.Logger;
+import play.Play;
 import play.api.mvc.EssentialFilter;
 import play.filters.gzip.GzipFilter;
 import play.libs.F.Promise;
@@ -29,9 +30,6 @@ import play.mvc.Http;
 import play.mvc.Http.RequestHeader;
 import play.mvc.Result;
 import scala.collection.JavaConverters;
-import scala.collection.Seq;
-import play.api.mvc.WithFilters;
-import julienrf.play.jsonp.Jsonp;
 
 public class Global extends GlobalSettings {
     static final Logger.ALogger AccessLogger = Logger.of("access");
@@ -175,12 +173,18 @@ public class Global extends GlobalSettings {
     
     @Override
     public play.api.mvc.Handler onRouteRequest (Http.RequestHeader req) {
-        /*
-        String p = req.path().substring("/idg".length()); 
-        if (p.startsWith("/idg")) {
-        //return ix.idg.Routes.routes().apply(req);
-        }
-        */
+        
+    	if(Play.application().configuration()
+			.getBoolean("ix.ginas.debug.showheaders", false)){
+	    	Logger.debug("HEADERS ON REQUEST ===================");
+	    	String allheaders="";
+	    	for(String head:req.headers().keySet()){
+	    		allheaders+=head + "\t" + req.getHeader(head) + "\n";
+	    		
+	    	}
+	    	Logger.debug(allheaders);
+    	}
+    	    	
         String real = req.getHeader("X-Real-IP");
         play.api.mvc.Handler h = super.onRouteRequest(req);
         
