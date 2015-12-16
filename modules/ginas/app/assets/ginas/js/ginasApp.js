@@ -2488,7 +2488,7 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 residues: '='
             },
             link: function (scope, element, attrs) {
-
+                var template;
                 if (scope.parent.substanceClass === 'protein') {
                 CVFields.fetch("AMINO_ACID_RESIDUES").then(function (data) {
                             scope.residues = data.data.content[0].terms;
@@ -2499,7 +2499,9 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                     });
                  });
                     } else {
-                    CVFields.load("NUCLEIC_ACID_BASES").then(function (data) {
+                    console.log("nucleinc asdasd");
+                    CVFields.fetch("NUCLEIC_ACID_BASE").then(function (data) {
+                        console.log(data);
                         scope.residues = data.data.content[0].terms;
                         $templateRequest(baseurl + "assets/templates/subunit-form.html").then(function (html) {
                             template = angular.element(html);
@@ -2538,11 +2540,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 console.log(scope);
                 scope.edit = false;
 
-                scope.aaCheck = function (aa) {
-                    var invalid = ['B', 'J', 'O', 'U', 'X', 'Z'];
-                    return !(/^[a-zA-Z]*$/.test(aa) == false || (_.indexOf(invalid, aa.toUpperCase()) >= 0));
-                };
-
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
                         return 'D';
@@ -2557,21 +2554,24 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                     _.forEach(scope.obj.sequence, function (aa) {
                         var obj = {};
                         obj.value = aa;
-                        obj.valid = scope.aaCheck(aa);
-                        if (obj.valid) {
+                var temp = (_.find(scope.residues, 'value', aa.toUpperCase()));
+                        if (!_.isUndefined(temp)) {
+                            obj.name = temp.display;
+                            obj.valid = true;
                             if (scope.obj.subunitIndex) {
                                 obj.subunitIndex = scope.obj.subunitIndex;
                             } else {
                                 obj.subunitIndex = scope.obj.index;
                             }
                             obj.residueIndex = _.indexOf(scope.obj.sequence, aa) - 1 + 2;
-                            obj.name = (_.find(scope.residues, 'value', aa.toUpperCase())).display;
                             if (scope.parent.substanceClass === 'protein') {
                                 obj.type = scope.getType(aa);
                             }
                             if (aa.toUpperCase() == 'C') {
                                 obj.cysteine = true;
                             }
+                        }else{
+                           obj.valid = false;
                         }
                         display.push(obj);
                     });
@@ -2583,7 +2583,10 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
                 scope.cleanSequence = function () {
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
-                        return scope.aaCheck(aa);
+                        var temp = (_.find(scope.residues, 'value', aa.toUpperCase()));
+                        if (!_.isUndefined(temp)) {
+                            return temp;
+                        }
                     }).toString().replace(/,/g, '');
                     scope.parseSubunit();
                 };
