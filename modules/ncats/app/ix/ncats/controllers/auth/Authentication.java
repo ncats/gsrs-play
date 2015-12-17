@@ -8,15 +8,19 @@ import java.util.concurrent.Callable;
 import java.util.logging.*;
 
 import be.objectify.deadbolt.core.models.Permission;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.*;
 import play.*;
 import play.Logger;
+import play.api.mvc.Request;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+
 import com.avaje.ebean.*;
 
 import ix.core.plugins.IxCache;
@@ -53,6 +57,109 @@ public class Authentication extends Controller {
         }
     }
 
+    public static boolean loginUserFromHeader(){
+    	return loginUserFromHeader();
+    }
+    public static boolean loginUserFromHeader(Http.Request r){
+    	
+		try {
+			if(r==null){
+				r=request();
+			}
+			if (Play.application().configuration()
+					.getBoolean("ix.authentication.trustheader")) {
+				String usernameheader = Play.application().configuration()
+						.getString("ix.authentication.usernameheader");
+				String username = r.getHeader(usernameheader);
+				
+				if (username != null) {
+					if (validateUserHeader(username,r)) {
+						setSessionUser(username);
+						return true;
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return false;
+    }
+    
+    public static boolean validateUserHeader(String username, Http.Request r){
+    	if(r==null){
+			r=request();
+		}
+    	if(Play.application().configuration().getBoolean("ix.authentication.trustheader")){
+    		String userHeader = Play.application().configuration().getString("ix.authentication.usernameheader");
+    		String headerUser=r.getHeader(userHeader);
+    		if(headerUser!=null && headerUser.equals(username)){
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
+    public static boolean allowNonAuthenticated(){
+    	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true);
+    }
+    
+    
+    private static UserProfile setSessionUser(String username){
+        boolean systemAuth = false;
+        UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+        Principal cred;
+        if(profile==null || !profile.active || profile.user == null){
+        	if(Play.application().configuration().getBoolean("ix.authentication.autoregister",false)){
+        		cred= PrincipalFactory.registerIfAbsent(new Principal(username, null));
+        	}else{
+        		throw new IllegalStateException("User:" + username + " is not an active user");
+        	}
+        }else{
+        	systemAuth=true;
+        	cred= profile.user;
+        }
+         
+        
+        Transaction tx = Ebean.beginTransaction();
+        try {
+        	List<UserProfile> users =
+                _profiles.where().eq("user.username", username).findList();
+
+            if (users == null || users.isEmpty()) {
+                profile = new UserProfile(cred);
+                profile.active = true;
+                profile.systemAuth = systemAuth;
+                profile.save();
+            } else {
+                profile = users.iterator().next();
+                profile.user.username = username;
+
+                if (!profile.active) {
+                    flash("message", "User is no longer active!");
+                    throw new IllegalStateException("User:" + username + " is not an active user");
+                }
+            }
+            Session session = new Session(profile);
+            session.save();
+
+            IxCache.set(session.id.toString(), session);
+
+            Logger.debug("** new session " + session.id
+                    + " created for user "
+                    + profile.user.username + "!");
+            session().clear();
+            session(SESSION, session.id.toString());
+            tx.commit();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.trace
+                    ("Can't update UserProfile for user " + username, ex);
+        } finally {
+            Ebean.endTransaction();
+        }
+        return profile;
+    }
+    
     public static Result authenticate(String url) {
         DynamicForm requestData = Form.form().bindFromRequest();
         String username = requestData.get("username");
@@ -69,55 +176,20 @@ public class Authentication extends Controller {
             cred = NIHLdapConnector.getEmployee(username, password);
             systemAuth = true;
         }
-        System.out.println("auth2");
         if (username.equalsIgnoreCase("caodac")
                 && password.equalsIgnoreCase("foobar")) {
             cred = new Principal();
             cred.username = username;
         }
-
         if (cred == null) {
             flash("message", "Invalid credential!");
             return redirect(routes.Authentication.login(null));
         }
         System.out.println("auth3");
-
-
-        Transaction tx = Ebean.beginTransaction();
-        try {
-        List<UserProfile> users =
-                _profiles.where().eq("user.username", username).findList();
-
-            if (users == null || users.isEmpty()) {
-                profile = new UserProfile(cred);
-                profile.active = true;
-                profile.systemAuth = systemAuth;
-                profile.save();
-            } else {
-                profile = users.iterator().next();
-                profile.user.username = username;
-
-                if (!profile.active) {
-                    flash("message", "User is no longer active!");
-                    return redirect(routes.Authentication.login(null));
-                }
-            }
-            Session session = new Session(profile);
-            session.save();
-
-            IxCache.set(session.id.toString(), session);
-
-            Logger.debug("** new session " + session.id
-                    + " created for user "
-                    + profile.user.username + "!");
-            session().clear();
-            session(SESSION, session.id.toString());
-            tx.commit();
-        } catch (Exception ex) {
-            Logger.trace
-                    ("Can't update UserProfile for user " + username, ex);
-        } finally {
-            Ebean.endTransaction();
+        try{
+        	setSessionUser(username);
+        }catch(Exception e){
+        	return internalServerError(e.getMessage());
         }
 
         if (url != null) {
@@ -153,12 +225,12 @@ public class Authentication extends Controller {
     @Security.Authenticated(Secured.class)
     @JsonIgnore
     public static Result secured() {
-        Session session = getSession();
+    	Session session = getSession();
         if (session.expired || !session.profile.active) {
             flash("message", "Session timeout; please login again!");
             return redirect(routes.Authentication.login(null));
         }
-
+        
        // scheduler.submit(session.id.toString());
 
         ObjectMapper mapper = new ObjectMapper();

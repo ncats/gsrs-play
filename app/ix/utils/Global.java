@@ -318,28 +318,27 @@ public class Global extends GlobalSettings {
         }
     }
  // For CORS
-    private class ActionWrapper extends Action.Simple {
-    public ActionWrapper(Action<?> action) {
-    this.delegate = action;
+    public class ActionWrapper extends Action.Simple {
+	    public ActionWrapper(Action<?> action) {
+	    	this.delegate = action;
+	    }
+	
+	    @Override
+	    public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
+	    Promise<Result> result = this.delegate.call(ctx);
+	    Http.Response response = ctx.response();
+	    response.setHeader("Access-Control-Allow-Origin", "*");
+	    response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET");   // Only allow POST
+	    response.setHeader("Access-Control-Max-Age", "300");          // Cache response for 5 minutes
+	    response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
+	    
+	    return result;
+	    }
     }
 
     @Override
-    public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
-    Promise<Result> result = this.delegate.call(ctx);
-    Http.Response response = ctx.response();
-    response.setHeader("Access-Control-Allow-Origin", "*");
-    response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET");   // Only allow POST
-    response.setHeader("Access-Control-Max-Age", "300");          // Cache response for 5 minutes
-    response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
-    
-    return result;
-    }
-    }
-
-    @Override
-    public Action<?> onRequest(Http.Request request,
-    java.lang.reflect.Method actionMethod) {
-    return new ActionWrapper(super.onRequest(request, actionMethod));
+    public Action<?> onRequest(Http.Request request,java.lang.reflect.Method actionMethod) {
+    	return new ActionWrapper(super.onRequest(request, actionMethod));
     }
     
     @Override
