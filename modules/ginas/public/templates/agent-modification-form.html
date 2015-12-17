@@ -1,0 +1,85 @@
+<div class="row info">
+    <button class="btn btn-primary label-offset det">
+        Agent Modifications&nbsp;<span class="badge"
+                                            ng-show="parent.protein.modifications.agentModifications.length>0">
+                        {{parent.protein.modifications.agentModifications.length}}</span></button>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="agentModForm" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2">
+                    <dropdown-select ng-model="agentMod.agentModificationProcess" field="agentModificationProcess"
+                                     cv="AGENT_MODIFICATION_PROCESS" label="Modification Process"></dropdown-select>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-select ng-model="agentMod.agentModificationRole" field="agentModificationRole"
+                                     cv="ROLE" label="Modification Role"></dropdown-select>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-select ng-model="agentMod.agentModificationType" field="agentModificationType"
+                                     cv="AGENT_MODIFICATION_TYPE" label="Modification Type"></dropdown-select>
+                </div>
+                <div class="col-md-2">
+                    <substance-chooser-selector ng-model="agentMod.agentSubstance" field="agentSubstance"
+                                                name="agentSubstance" formname="agentModForm"
+                                                label="Agent Substance" type="lite"></substance-chooser-selector>
+                </div>
+                                <div class="col-md-1">
+                    <form-selector referenceobj="agentMod" parent="substance" divid="agentModForm"
+                                   type="amount"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="agentMod" parent="substance" divid="agentModForm"
+                                   type="access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="agentMod" parent="substance" divid="agentModForm"
+                                   type="reference"></form-selector>
+                </div>
+            </div>
+            <div class="agentModForm"></div>
+            <submit-buttons submit="agentMod" form="agentModForm" path="agentModifications"></submit-buttons>
+        </form>
+
+
+        <div ng-repeat="obj in parent.protein.modifications.agentModifications">
+            <div class="row">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path="agentModifications"></delete-button>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj="obj" field="agentModificationProcess"
+                                        cv="AGENT_MODIFICATION_PROCESS"
+                                        label="Modification Process"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj="obj" field="agentModificationRole"
+                                        cv="ROLE"
+                                        label="Modification Role"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj="obj" field="agentModificationType"
+                                        cv="AGENT_MODIFICATION_TYPE"
+                                        label="Modification Type"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <substance-chooser-view-edit obj="obj" field="agentSubstance"
+                                                 label="Agent Substance"></substance-chooser-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj="obj.extentAmount" parent="substance" type="amount" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="obj" parent="substance" type="access" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="obj" parent="substance" type="reference" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+            </div>
+            <div class={{obj.$$hashKey}}></div>
+        </div>
+    </div>
+</div>

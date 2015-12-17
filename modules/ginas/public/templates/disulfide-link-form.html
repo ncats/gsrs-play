@@ -1,0 +1,54 @@
+<div class = "row info">
+    <!--
+        <div class = "row info" ng-show="substance.protein.subunits.length!==0">
+    -->
+    <button class="btn btn-primary label-offset det">
+        Disulfide Links&nbsp;<span class="badge" ng-show="parent.protein.disulfideLinks.length>0">
+                        {{parent.protein.disulfideLinks.length}}</span> </button>
+    <div class="col-md-12">
+        <span>Number of unspecified Cysteine residues: {{$parent.getAllCysteinsWithoutLinkage().length}}</span>
+        <form class="form-horizontal" name="disulfideLinksForm" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-1">
+                    <form-selector referenceobj="dis" field = "sites" parent="substance" divid="disulfideLinksForm"
+                                   type="site"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="dis" parent="parent" divid="disulfideLinksForm"
+                                   type="access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="dis" parent="parent" divid="disulfideLinksForm"
+                                   type="reference"></form-selector>
+                </div>
+            </div>
+            <div class="disulfideLinksForm"></div>
+            <submit-buttons submit="dis" form="disulfideLinksForm" path="disulfideLinks"></submit-buttons>
+        </form>
+
+
+        <div ng-repeat="obj in parent.protein.disulfideLinks">
+            <div class="row">
+                <hr>
+                <div class="col-md-1">
+                    <delete-button delete="obj" path="disulfideLinks"></delete-button>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj="obj" parent="substance" type="site" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="obj" parent="substance" type="access" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="obj" parent="substance" type="reference" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+            </div>
+            <div class={{obj.$$hashKey}}></div>
+        </div>
+    </div>
+</div>
+
+

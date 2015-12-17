@@ -1,11 +1,14 @@
 @import ix.ginas.controllers.GinasApp;
 
-<div class = "row info" ng-show="substance.protein.subunits.length!==0">
+<div class = "row info">
+@*<div class = "row info" ng-show="substance.protein.subunits.length!==0">*@
   <button class="btn btn-primary label-offset det">
- Other Links&nbsp;<span class="badge" ng-show="substance.protein.otherLinks.length>0">
+ Other Links&nbsp;<span class="badge" ng-show="substance.protein.otherLinks.length>=0">
                         {{substance.protein.otherLinks.length}}</span> </button>
-  @* <a ng-show="!addingCodes" ng-click="toggleForm(codeForm)" aria-label="Add Codes"><i class = "fa fa-plus fa-2x success"></i></a>
-  <a ng-show="addingCodes" ng-click="toggleForm(codeForm)" aria-label="Done"><i class = "fa fa-minus fa-2x danger"></i></a>*@
+@*    <button class="btn btn-primary label-offset det">
+ Other Links&nbsp;<span class="badge" ng-show="substance.protein.otherLinks.length>0">
+                        {{substance.protein.otherLinks.length}}</span> </button>*@
+
   <div class="col-md-12">
     <div class = "row header-row">
     <div class ="col-md-2">
@@ -33,7 +36,7 @@
         <div class = "col-md-2">
             <span href="#" editable-select="obj.linkageType" e-style="width: 100%" e-ng-options="r.display for r in lookup.getList('OTHER_LINKAGE_TYPE') track by r.display" blur="submit">{{obj.linkageType.display}}</span>
         </div>
-        <site-selector ng-model="obj" display-type="pair" size="2"></site-selector>
+        <site-selector ng-model="obj" parent=substance.protein display-type="pair" size="2"></site-selector>
         <div class="pull-right">
                     <button ng-click="removeItem(substance.protein.otherLinks, obj)">Remove</button>
         </div>
