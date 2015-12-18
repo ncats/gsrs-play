@@ -49,13 +49,15 @@
         <!--
                 <div ng-repeat="arr in parent.protein.glycosylation">
         -->
-        <div ng-repeat="obj in parent.protein.glycosylation.NGlycosylationSites">
-            {{obj.displayString}}
+        <div class="row" ng-repeat="obj in parent.protein.glycosylation |isArray">
+            {{obj}}
             <hr>
+            <div class="col-md-2">
             <dropdown-view-edit obj=obj field="glycosylationSite"
-                                cv="GLYCOSYLATION_SITE" label="Glycosylation Type"></dropdown-view-edit>
+                                cv="GLYCOSYLATION_SITE" label="Glycosylation Site"></dropdown-view-edit>
+                </div>
             <div class="col-md-1">
-                <form-selector referenceobj="obj.glycosylationSite" parent=parent type="site" field="sites" divid={{obj.$$hashKey}}
+                <form-selector referenceobj="obj" parent=parent type="site" field = "NGlycosylationSites" divid={{obj.$$hashKey}}
                                mode="edit"></form-selector>
             </div>
             <div class="col-md-1 pull-right">

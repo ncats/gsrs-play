@@ -14,8 +14,11 @@
                                      cv="OTHER_LINKAGE_TYPE" label="Linkage Type"></dropdown-select>
                 </div>
                                 <div class="col-md-1">
+<!--
+                    <site-selector ng-model="otherLink"></site-selector>
+-->
                     <form-selector referenceobj="otherLink" parent="parent" divid="otherLinksForm"
-                                   type="site"></form-selector>
+                                   type="site" displayType ="pair"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="otherLink" parent="parent" divid="otherLinksForm"

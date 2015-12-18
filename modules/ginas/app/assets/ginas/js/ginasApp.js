@@ -35,6 +35,12 @@
         };
     });
 
+    ginasApp.filter('isArray', function(){
+       return function (input){
+           var temp = _.pick(input, _.isArray);
+       };
+    });
+
     ginasApp.factory('Substance', function () {
         var Substance = {};
         var substanceClass = window.location.search.split('=')[1];
@@ -807,7 +813,7 @@
                 case "glycosites":
                     //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
                     //if(true)return "test";
-                  //  $scope.updateSiteList(obj);
+                    $scope.updateSiteList(obj);
                     // console.log(JSON.parse(JSON.stringify(obj)));
                     $scope.defaultSave(obj, form, path, list, objName);
                     break;
@@ -1163,16 +1169,24 @@
         };
         $scope.getAllSitesWithoutSugar = function () {
             var retsites = [];
+            console.log($scope.substance);
 
             if ($scope.substance.nucleicAcid && $scope.substance.nucleicAcid.sugars) {
 
                 var asites = [];
                 for (var i = 0; i < $scope.substance.nucleicAcid.sugars.length; i++) {
-                    asites = asites.concat($scope.substance.nucleicAcid.sugars[i].sites);
+
+                    var sugsites=$scope.substance.nucleicAcid.sugars[i].sites;
+                    if(!sugsites){
+                        sugsites=$scope.siteDisplayListToSiteList($scope.substance.nucleicAcid.sugars[i]._displaySites);
+                    }
+                    asites = asites.concat(sugsites);
                 }
                 var allsites = $scope.getAllSites();
                 var asitesmap = {};
                 var site;
+                console.log("getting asites");
+                console.log(asites);
                 for (var s in asites) {
 
                     site = asites[s];
@@ -1187,6 +1201,7 @@
             } else {
                 retsites = $scope.getAllSites();
             }
+            console.log(retsites);
             return retsites;
 
 
@@ -1347,6 +1362,7 @@
         };
 
         $scope.updateSiteList = function (obj, sitelist, fromlist) {
+            console.log("Updating site list");
             if (!sitelist) {
                 if (!obj.sites) {
                     obj.sites = [];
@@ -1369,6 +1385,7 @@
                     $scope.replaceArray(sitelist, $scope.siteDisplayListToSiteList(obj._displaySites));
                 }
                 obj._uniqueResidues = [];
+                console.log("SDGSDFGSDG");
                 obj._residueCounts = {};
                 for (var i in sitelist) {
                     var r = $scope.getResidueAtSite(sitelist[i]);
@@ -1661,8 +1678,11 @@
                         formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
+                        console.log(scope);
+                        console.log(attrs);
+                        scope.displayType = attrs.displayType;
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><site-view referenceobj = referenceobj parent = parent sites ="referenceobj.sites" ></site-view></a>');
+                            template = angular.element('<a ng-click ="toggleStage()"><site-view referenceobj = referenceobj parent = parent field = field sites ="referenceobj.sites" ></site-view></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -1675,7 +1695,7 @@
 
                             });
                         }
-                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent field = field></site-string-form>';
+                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent displayType =   displayType field = field></site-string-form>';
                         break;
                     case "reference":
                         if (attrs.mode == "edit") {
@@ -2016,7 +2036,8 @@
                 referenceobj: '=',
                 parent:'=',
                 sites: '=',
-                field: '='
+                field: '=',
+                displayType: '='
             },
             link: function(scope, element, attrs){
                 console.log(scope);
@@ -2190,12 +2211,16 @@
             scope: {
                 referenceobj: '=',
                 sites: '=',
-                parent:'='
+                parent:'=',
+                field:'=',
+                displayType: '='
             },
             link: function(scope){
                 console.log(scope);
 
-                scope.sitesToDisplaySites = function (sitest) {
+                scope.sitesToDisplaySites = function () {
+                    var sitest = scope.referenceobj[scope.field];
+            //        console.log(sitest);
                     var sites = [];
                     angular.extend(sites, sitest);
                     sites.sort(function (site1, site2) {
@@ -2575,7 +2600,8 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '='
+                parent: '=',
+                displayType: '='
             },
             templateUrl: baseurl + "assets/templates/other-links-form.html",
             link: function (scope, element, attrs) {
@@ -2654,7 +2680,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                     });
                  });
                     } else {
-                    console.log("nucleinc asdasd");
                     CVFields.fetch("NUCLEIC_ACID_BASE").then(function (data) {
                         console.log(data);
                         scope.residues = data.data.content[0].terms;
@@ -2999,15 +3024,13 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 siteContainer: '=ngModel',
                 siteList: '=',
                 displayType: '@',
-                residueRegex: '@',
-                parent: '='
+                residueRegex: '@'
             },
             templateUrl: baseurl + "assets/templates/site-form.html",
-            link: function (scope, element, attrs) {
-                console.log(scope);
+            link: function (scope, element, attrs, parentCtrl) {
                 scope.validateSites = scope.$parent.validateSites;
                 scope.updateSiteList = scope.$parent.updateSiteList;
-                scope.subunits = parent.subunits;
+                scope.subunits = scope.$parent.getSubunits();
                 scope.range = function (min) {
                     var input = [];
                     for (var i = 1; i <= min; i++) input.push(i);
@@ -3020,9 +3043,9 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                     if (scope.residueRegex) {
                         var re = new RegExp(scope.residueRegex, 'ig');
                         var match;
-                        //while ((match = re.exec(scope.parent.subunits[su - 1].sequence)) !== null) {
-                        //    list.push(match.index + 1);
-                        //}
+                        while ((match = re.exec(scope.subunits[su - 1].sequence)) !== null) {
+                            list.push(match.index + 1);
+                        }
                         return list;
                     } else {
                         return scope.range(scope.subunits[su - 1].sequence.length);
