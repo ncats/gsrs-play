@@ -15,7 +15,7 @@
                     <text-input ng-model="code.code" field="code" ></text-input>
                 </div>
                 <div class="col-md-3">
-                    <form-selector referenceobj= "code" divid="codeForm" field = "comments" type = "textbox" required></form-selector>
+                    <form-selector referenceobj= "code" divid="codeForm" field = "comments" label ="Code Text" type = "textbox" required></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="code" parent = "substance" divid="codeForm" type = "access"></form-selector>
@@ -44,7 +44,7 @@
                     <text-view-edit obj = "obj" field="code" ></text-view-edit>
                 </div>
                 <div class="col-md-3">
-                    <form-selector referenceobj= "obj" formname="codeForm" field="comments" type = "textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj= "obj" formname="codeForm" field="comments" label="Code Text" type = "textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="obj" parent = "substance" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>

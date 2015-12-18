@@ -1437,7 +1437,6 @@
             var sub = $scope.toFormSubstance($window.loadjson);
             $scope.substance = sub;
         } else {
-            console.log($scope);
             //var edit = localStorageService.get('editID');
             //console.log(edit);
             //if (edit) {
@@ -1653,14 +1652,14 @@
             scope: {
                 referenceobj: '=',
                 parent: '=',
-                field: '@'
+                field: '@',
+                label:'@'
             },
             link: function (scope, element, attrs) {
                 var formHolder;
                 var childScope;
                 var template;
                 scope.stage = true;
-
                 switch (attrs.type) {
                     case "amount":
                         if (attrs.mode == "edit") {
@@ -1678,16 +1677,12 @@
                         formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
-                        console.log(scope);
-                        console.log(attrs);
-                        scope.displayType = attrs.displayType;
+                        scope.displaytype = attrs.displaytype;
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><site-view referenceobj = referenceobj parent = parent field = field sites ="referenceobj.sites" ></site-view></a>');
+                            template = angular.element('<a ng-click ="toggleStage()"><site-view referenceobj = referenceobj parent = parent field = field></site-view></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
-                            console.log(scope);
-
                             $templateRequest(baseurl + "assets/templates/site-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
@@ -1695,7 +1690,7 @@
 
                             });
                         }
-                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent displayType =   displayType field = field></site-string-form>';
+                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent displaytype = displaytype field = field></site-string-form>';
                         break;
                     case "reference":
                         if (attrs.mode == "edit") {
@@ -1768,7 +1763,7 @@
                                 $compile(template)(scope);
                             });
                         }
-                        formHolder = '<div ng-blur ="toggleStage()"><comment-form referenceobj = referenceobj parent = parent></comment-form></div>';
+                        formHolder = '<div ng-blur ="toggleStage()"><comment-form referenceobj = referenceobj parent = parent label =label></comment-form></div>';
                         break;
                     case "upload":
                         if (attrs.mode == "edit") {
@@ -1918,7 +1913,8 @@
             replace: 'true',
             scope: {
                 referenceobj: '=',
-                parent: '='
+                parent: '=',
+                label:'@'
             },
             templateUrl: baseurl + "assets/templates/comment-form.html",
             link: function (scope, element, attrs) {
@@ -2037,12 +2033,37 @@
                 parent:'=',
                 sites: '=',
                 field: '=',
-                displayType: '='
+                displaytype: '=',
+                residueRegex:'@'
             },
             link: function(scope, element, attrs){
                 console.log(scope);
-/*                var v = scope.referenceobj.glycosylationSite.value;
-                scope.parent.protein.glycosylation[v]= referenceobj;*/
+                scope.subunits = scope.parent[scope.field].subunits;
+
+                scope.validResidues = function (su) {
+                    console.log(su);
+                    if (!su)return [];
+                    var list = [];
+                    if (scope.residueRegex) {
+                        var re = new RegExp(scope.residueRegex, 'ig');
+                        var match;
+                        while ((match = re.exec(scope.subunits[su - 1].sequence)) !== null) {
+                            list.push(match.index + 1);
+                        }
+                        return list;
+                    } else {
+                        return scope.subunits[su - 1].sequence.length;
+                    }
+                };
+                scope.range = function (min) {
+                    var input = [];
+                    for (var i = 1; i <= min; i++) input.push(i);
+                    return input;
+                };
+
+
+                /*                var v = scope.referenceobj.glycosylationSite.value;
+                                scope.parent.protein.glycosylation[v]= referenceobj;*/
                /* scope.sitesToDislaySites = function (sitest) {
                     var sites = [];
                     angular.extend(sites, sitest);
@@ -2213,7 +2234,7 @@
                 sites: '=',
                 parent:'=',
                 field:'=',
-                displayType: '='
+                displaytype: '='
             },
             link: function(scope){
                 console.log(scope);
@@ -2428,7 +2449,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
             },
             templateUrl: baseurl + "assets/templates/structural-modifications-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if(!scope.parent.protein.modifications){
                     scope.parent.protein.modifications ={};
                                     }
@@ -2463,7 +2483,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                             sites.push(scope.siteDisplayToSite(rng[0]));
                         }
                     }
-                    console.log(sites);
                     return sites;
 
                 };
@@ -2492,7 +2511,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 };
 
                 scope.deleteObj = function (obj) {
-                    console.log(scope);
                     scope.parentprotein.modifications.structuralModifications.splice(scope.parentprotein.modifications.structuralModifications.indexOf(obj), 1);
                 };
             }
@@ -2508,7 +2526,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
             },
             templateUrl: baseurl + "assets/templates/physical-modification-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if(!scope.parent.protein.modifications){
                     scope.parent.protein.modifications ={};
                 }
@@ -2522,7 +2539,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 };
 
                 scope.deleteObj = function (obj) {
-                    console.log(scope);
                     scope.parent.protein.modifications.physicalModifications.splice(scope.parent.protein.modifications.physicalModifications.indexOf(obj), 1);
                 };
             }
@@ -2538,7 +2554,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
             },
             templateUrl: baseurl + "assets/templates/agent-modification-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if(!scope.parent.protein.modifications){
                     scope.parent.protein.modifications ={};
 
@@ -2554,7 +2569,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 };
 
                 scope.deleteObj = function (obj) {
-                    console.log(scope);
                     scope.parent.protein.modifications.agentModifications.splice(scope.parent.protein.modifications.agentModifications.indexOf(obj), 1);
                 };
             }
@@ -2571,14 +2585,12 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
             },
             templateUrl: baseurl + "assets/templates/glycosylation-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if(!scope.parent.protein.glycosylation){
                     scope.parent.protein.glycosylation ={};
 
                 }
 
                 scope.validate = function () {
-                    console.log(scope);
                                     if(!scope.parent.protein.glycosylation[scope.glyc.glycosylationSite.value]) {
                      scope.parent.protein.glycosylation[scope.glyc.glycosylationSite.value] = [];
                      }
@@ -2588,7 +2600,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 };
 
                 scope.deleteObj = function (obj) {
-                    console.log(scope);
                     scope.parent.protein.glycosylation[field].splice(scope.parent.protein.glycosylation[field].indexOf(obj), 1);
                 };
             }
@@ -2605,7 +2616,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
             },
             templateUrl: baseurl + "assets/templates/other-links-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if(!scope.parent.protein.otherLinks){
                     scope.parent.protein.otherLinks =[];
 
@@ -2621,7 +2631,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 };
 
                 scope.deleteObj = function (obj) {
-                    console.log(scope);
                     scope.parent.protein.otherLinks.splice(scope.parent.protein.otherLinks.indexOf(obj), 1);
                 };
             }
@@ -2637,7 +2646,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
             },
             templateUrl: baseurl + "assets/templates/disulfide-link-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if(!scope.parent.protein.disulfideLinks){
                     scope.parent.protein.disulfideLinks =[];
 
@@ -2653,7 +2661,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 };
 
                 scope.deleteObj = function (obj) {
-                    console.log(scope);
                     scope.parent.protein.disulfideLinks.splice(scope.parent.protein.disulfideLinks.indexOf(obj), 1);
                 };
             }
@@ -3533,6 +3540,45 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
         };
     });
 
+    ginasApp.directive('dropdownNumberSelect', function () {
+        return {
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/dropdown-number-select.html",
+            replace: true,
+            scope: {
+                obj: '=ngModel',
+                field: '@',
+                label: '@',
+                number: '='
+            },
+            link: function (scope, element, attrs) {
+                console.log(scope);
+              scope.getValues= function() {
+                  var input = [];
+
+                  console.log(scope.number);
+                  for (var i = 1; i <= scope.number; i++) {
+                      input.push(i);
+                  }
+                  console.log(input);
+                  return input;
+              };
+            console.log(scope);
+
+                /*CVFields.fetch(attrs.cv).then(function (data) {
+                    if (attrs.cv === 'NAME_TYPE') {
+                        var temp = angular.copy(data.data.content[0].terms);
+                        temp = _.remove(temp, function (n) {
+                            return n.value !== 'of';
+                        });
+                        scope.values = temp;
+                    }else {
+                        scope.values = data.data.content[0].terms;
+                    }
+                });*/
+            }
+        };
+    });
     ginasApp.directive('multiSelect', function (CVFields) {
         return {
             restrict: 'E',

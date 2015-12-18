@@ -4,9 +4,9 @@
             <strong>
                 Subunit {{obj.subunitIndex}}
             </strong>
-            <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits"></delete-button>
-            <a ng-click="cleanSequence()"><i class="fa fa-magic fa-2x success"></i></a>
-            <a ng-click="edit = !edit"><i class="fa fa-pencil fa-2x"></i></a>
+            <delete-button delete="obj" parent=parent path="{{parent.substanceClass}}.subunits" tooltip="Delete sequence"></delete-button>
+            <a ng-click="cleanSequence()"tooltip="Clean sequence" ><i class="fa fa-magic fa-2x success"></i></a>
+            <a ng-click="edit = !edit"tooltip="Edit sequence" ><i class="fa fa-pencil fa-2x"></i></a>
         </div>
     </div>
     <div class="row">

@@ -1,0 +1,9 @@
+<div>
+    <div>
+        <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
+        <select class="form-control" title="{{field}}" name="{{field}}" id="{{field}}" ng-model=obj
+                ng-blur="editing(obj[field]);" ng-options="r for r in getValues()">
+            <option class= "text-capitalize" value='' disabled selected>{{label || field}}...</option>
+        </select>
+    </div>
+</div>
