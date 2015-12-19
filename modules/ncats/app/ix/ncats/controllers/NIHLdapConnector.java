@@ -18,6 +18,8 @@ public class NIHLdapConnector {
     static final String LDAP_AUTHENTICATION = "DIGEST-MD5";
     static final String LDAP_BASEDN = 
         "OU=Users,OU=NCATS,OU=NIH,OU=AD,DC=nih,DC=gov";
+    static final String LDAP_BASEDN2 = 
+        "OU=Users,OU=NCATS OD Transition,OU=NCATS,OU=NIH,OU=AD,DC=nih,DC=gov";
 
     private SearchControls userSearchControls = 
         new SearchControls (SearchControls.SUBTREE_SCOPE, 0, 0, 
@@ -89,13 +91,9 @@ public class NIHLdapConnector {
     public boolean authenticate () {
         return getEmployee () != null;
     }
-    
-    public List<Employee> list () throws Exception {
-        List<Employee> employees = new ArrayList<Employee>();
 
-        DirContext ctx = new InitialDirContext (env);        
-        NamingEnumeration<Binding> names = 
-            ctx.listBindings(new LdapName (LDAP_BASEDN));
+    void list (DirContext ctx, String basedn, List<Employee> employees) throws Exception {
+        NamingEnumeration<Binding> names = ctx.listBindings(new LdapName (basedn));
         while (names.hasMore()) {
             Binding b = names.next();
             LdapContext ldap = (LdapContext)b.getObject();
@@ -104,6 +102,13 @@ public class NIHLdapConnector {
                 employees.add(e);
             }
         }
+    }
+    
+    public List<Employee> list () throws Exception {
+        List<Employee> employees = new ArrayList<Employee>();
+        DirContext ctx = new InitialDirContext (env);
+        list (ctx, LDAP_BASEDN, employees);
+        list (ctx, LDAP_BASEDN2, employees);
         ctx.close();
         return employees;
     }

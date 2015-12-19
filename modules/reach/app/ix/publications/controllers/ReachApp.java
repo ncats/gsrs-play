@@ -25,6 +25,7 @@ import ix.core.controllers.EntityFactory;
 import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.controllers.XRefFactory;
+import ix.core.controllers.PredicateFactory;
 import ix.core.search.TextIndexer;
 import static ix.core.search.TextIndexer.*;
 import ix.ncats.controllers.reach.ProjectFactory;
@@ -33,7 +34,8 @@ import ix.utils.Global;
 import ix.utils.Util;
 
 public class ReachApp extends Controller {
-        
+    public static final String PUBLICATION_VANITY_ORDER = "PUBLICATION_VANITY_ORDER";
+    
     static public final int CACHE_TIMEOUT = 60*60;
     static public final int MAX_FACETS = 100;
     static final String YEAR_FACET = "Journal Year Published";
@@ -622,28 +624,77 @@ public class ReachApp extends Controller {
     }
 
     public static RSS[] getPubRSS (String q, int count) {
-        SearchResult results = getSearchResult (Publication.class, q, count);
-        Facet[] facets = filter (results.getFacets(), PUBLICATION_FACETS);
+        List<RSS> feed = new ArrayList<RSS>();
+        Set<Long> processed = new HashSet<Long>();
         
-        RSS[] feed = new RSS[Math.min(count, results.count())];
-        for (int i = 0; i < feed.length; ++i) {
-            Publication pub = (Publication)results.getMatches().get(i);
-            RSS rss = new RSS ();
-            rss.title = pub.title;
-            rss.link = Global.getHost()
-                +ix.publications.controllers
-                .routes.ReachApp.publication(pub.pmid);
-            rss.summary = pub.abstractText;
-            for (Facet f : facets) {
-                if ("Program".equals(f.getName()))
-                    for (FV v : f.getValues())
-                        rss.categories.add(v.getLabel());
+        String facet = request().getQueryString("facet");
+        if (facet != null && facet.startsWith("Principal/")) {
+            String user = facet.substring(facet.indexOf('/')+1);
+            List<Predicate> preds = PredicateFactory.finder.where()
+                .eq("predicate", user).findList();
+            if (!preds.isEmpty()) {
+                Predicate pred = preds.iterator().next();
+                Publication[] pubs = new Publication[pred.objects.size()];
+                for (XRef ref : pred.objects) {
+                    int p = -1;
+                    for (Value v : ref.properties) {
+                        if (PUBLICATION_VANITY_ORDER.equals(v.label)) {
+                            p = ((Long)v.getValue()).intValue();
+                            break;
+                        }
+                    }
+                    if (p > 0 && p <= pubs.length) {
+                        pubs[p-1] = (Publication)ref.deRef();
+                    }
+                }
+
+                for (int i = 0; i < pubs.length; ++i) {
+                    if (pubs[i] != null) {
+                        RSS rss = new RSS ();
+                        rss.title = pubs[i].title;
+                        rss.link = Global.getHost()
+                            +ix.publications.controllers
+                            .routes.ReachApp.publication(pubs[i].pmid);
+                        rss.summary = pubs[i].abstractText;
+                        rss.id = String.valueOf(pubs[i].id);
+                        rss.updated = TIMESTAMP;
+                        feed.add(rss);
+                        processed.add(pubs[i].pmid);
+                    }
+                }
+                Logger.debug("Publication vanity for \""+user+"\"..."+feed.size());
             }
-            rss.id = String.valueOf(pub.id);
-            rss.updated = TIMESTAMP;
-            feed[i] = rss;
         }
-        return feed;
+
+        if (feed.size() < count) {
+            SearchResult results = getSearchResult
+                (Publication.class, q, count);
+            Facet[] facets = filter (results.getFacets(), PUBLICATION_FACETS);
+
+            int size = Math.min(count - feed.size(), results.count());
+            for (int i = 0; i < size; ++i) {
+                Publication pub = (Publication)results.getMatches().get(i);
+                if (!processed.contains(pub.pmid)) {
+                    RSS rss = new RSS ();
+                    rss.title = pub.title;
+                    rss.link = Global.getHost()
+                        +ix.publications.controllers
+                        .routes.ReachApp.publication(pub.pmid);
+                    rss.summary = pub.abstractText;
+                    for (Facet f : facets) {
+                        if ("Program".equals(f.getName()))
+                            for (FV v : f.getValues())
+                                rss.categories.add(v.getLabel());
+                    }
+                    rss.id = String.valueOf(pub.id);
+                    rss.updated = TIMESTAMP;
+                    feed.add(rss);
+                    processed.add(pub.pmid);
+                }
+            }
+        }
+        
+        return feed.toArray(new RSS[0]);
     }
 
     public static Result pubrss (String q, String facet, int count) {

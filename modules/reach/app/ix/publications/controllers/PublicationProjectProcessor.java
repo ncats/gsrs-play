@@ -46,12 +46,15 @@ import ix.core.models.Attribute;
 import ix.core.models.Thumbnail;
 import ix.core.models.Organization;
 import ix.core.models.XRef;
+import ix.core.models.Predicate;
+import ix.core.models.VInt;
 import ix.ncats.models.Project;
 import ix.ncats.models.Employee;
 import ix.ncats.models.Program;
 
 import ix.core.controllers.PublicationFactory;
 import ix.core.controllers.OrganizationFactory;
+import ix.core.controllers.PredicateFactory;
 import ix.ncats.controllers.reach.EmployeeFactory;
 
 import ix.publications.views.html.*;
@@ -322,7 +325,7 @@ public class PublicationProjectProcessor extends Controller {
     }
     
     static class PublicationProcessor {
-        PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5;
+        PreparedStatement pstm, pstm2, pstm3, pstm4, pstm5, pstm6;
 
         public PublicationProcessor (Connection con) throws SQLException {
             pstm = con.prepareStatement
@@ -336,6 +339,8 @@ public class PublicationProjectProcessor extends Controller {
                 ("select * from publication where db_pub_id = ?");
             pstm5 = con.prepareStatement
                 ("select * from pub_author where db_pub_id = ?");
+            pstm6 = con.prepareStatement
+                ("select * from author_selected_pubs where pmid = ? ");
         }
 
         public void shutdown () {
@@ -345,6 +350,7 @@ public class PublicationProjectProcessor extends Controller {
                 pstm3.close();
                 pstm4.close();
                 pstm5.close();
+                pstm6.close();
             }
             catch (SQLException ex) {
                 ex.printStackTrace();
@@ -425,6 +431,46 @@ public class PublicationProjectProcessor extends Controller {
                 pub.save();
                 Logger.debug("+ New publication added "+pub.id
                              +": "+pub.title);
+
+                pstm6.setLong(1, pub.pmid);
+                ResultSet rset = pstm6.executeQuery();
+                Map<String, Integer> vanity = new HashMap<String, Integer>();
+                while (rset.next()) {
+                    int order = rset.getInt("pub_order");
+                    if (!rset.wasNull())
+                        vanity.put(rset.getString("author_uid"), order);
+                }
+                rset.close();
+                if (!vanity.isEmpty()) {
+                    // create vanity publication order for the author
+                    for (PubAuthor p : pub.authors) {
+                        if (p.author.username != null) {
+                            Integer order = vanity.get(p.author.username);
+                            if (order != null) {
+                                // we have vanity!
+                                List<Predicate> preds = PredicateFactory.finder.where
+                                    (Expr.and(Expr.eq("predicate", p.author.username),
+                                              Expr.eq("subject.refid", p.author.id)))
+                                    .findList();
+                                Predicate pred;
+                                if (preds.isEmpty()) {
+                                    pred = new Predicate (p.author.username);
+                                    pred.subject = new XRef (p.author);
+                                    pred.save();
+                                }
+                                else
+                                    pred = preds.iterator().next();
+                                XRef ref = new XRef (pub);
+                                ref.properties.add
+                                    (new VInt (ReachApp.PUBLICATION_VANITY_ORDER,
+                                               order.longValue()));
+                                ref.save();
+                                pred.objects.add(ref);
+                                pred.update();
+                            }
+                        }
+                    }
+                }
                 
                 // now create an xref with the tags
                 if (!tags.isEmpty()) {
@@ -746,6 +792,7 @@ public class PublicationProjectProcessor extends Controller {
             // now migrate publications
             ResultSet rset = stm.executeQuery
                 ("select * from publication "
+                 //+" where pmid in (24911489,25689131,26465675,16864780,25829283,17637779,17998484) "
                  //+"where rownum <= 100"
                  +"order by pmid, db_pub_id"
                 );
