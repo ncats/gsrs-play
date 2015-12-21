@@ -337,6 +337,15 @@ nav#main-pagination {
     font-size: 9pt;
 }
 
+.monodata{
+   font-family: monospace;
+   width: 100%;
+   height: 500px;
+   word-wrap: initial;
+   white-space: pre;
+   font-size: 9pt;
+}
+
 #strucThumbSearch {
     z-index: 9;
 }

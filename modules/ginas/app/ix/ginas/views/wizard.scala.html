@@ -91,8 +91,8 @@
         @wizardfields(kind)
         <div class = "row info">
             <div class="col-md-4">
-                <button class="btn btn-primary" ng-hide="showJSON" ng-click="showJSON=true" >Show JSON</button>
-                <button class="btn btn-primary" ng-show="showJSON" ng-click="showJSON=false" >Hide JSON</button>
+                <button class="btn btn-primary" ng-hide="showJSON" ng-click="toggleJSONView()" >Show JSON</button>
+                <button class="btn btn-primary" ng-show="showJSON" ng-click="toggleJSONView()" >Hide JSON</button>
                 <button class="btn btn-primary" ng-click="validateSubstance(substance)">Validate</button></div>
             <div class="col-md-2 pull-right">
                 <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance(substance)">Approve</button>
@@ -116,10 +116,15 @@
         </div>
     </div>
     <div class ="row info" ng-show="showJSON">
-        <json-formatter json=substance open="666"></json-formatter>
-@*
-       // <pre>{{substance | json}}</pre>
-*@
+	<div>
+		<span ng-show="viewStyle=='object'">Showing JSON Object structure</span>
+		<span ng-show="viewStyle=='text'">Showing Raw JSON </span>
+	</div>	
+	<button class="btn btn-primary" ng-show="viewStyle!=='text'" ng-click="setViewStype('text')" >Show Raw</button>
+        <button class="btn btn-primary" ng-show="viewStyle!=='object'" ng-click="setViewStype('object')" >Show Object</button>
+	
+        <json-formatter ng-show="viewStyle=='object'" json=submitSubstance open="666"></json-formatter>
+	<textarea ng-show="viewStyle=='text'" class="monodata">{{submitSubstancePretty}}</textarea>
     </div>
     <div class="row info"><div class = "col-md-12">
         <textarea class="form-control" rows="10" ng-model="paste"></textarea>
