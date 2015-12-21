@@ -86,7 +86,6 @@
         return Substance;
     });
 
-
     ginasApp.factory('polymerUtils', function () {
         var utils = {};
         utils.getAttachmentMapUnits = function (srus) {
@@ -168,6 +167,7 @@
             "unofficialNames.type": "NAME_TYPE",
             "names.nameOrgs": "NAME_ORG",
             "officialNames.nameOrgs": "NAME_ORG",
+            "unofficialNames.nameOrgs": "NAME_ORG",
             "names.nameJurisdiction": "JURISDICTION",
             "officialNames.nameJurisdiction": "JURISDICTION",
             "names.domains": "NAME_DOMAIN",
@@ -260,7 +260,6 @@
         };
         return editSubstance;
     }]);
-
 
     ginasApp.service('substanceRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances?filter=names.name='";
@@ -476,12 +475,15 @@
             if (_.has(apiSub, 'names')) {
                 _.forEach(apiSub.names, function (n) {
                     var temp = [];
-                    if (n.nameOrgs.length > 0) {
+                    console.log(n);
+                    if (n.nameOrgs && n.nameOrgs.length > 0) {
                         _.forEach(n.nameOrgs, function (m) {
+                            console.log(m);
                             if (m.deprecated) {
                                 apiSub.destructive = true;
                             }
-                            temp.push(m.nameOrg);
+                            temp.push(m);
+                           // temp.push(m.nameOrg);
                         });
                         n.nameOrgs = temp;
                     }
@@ -680,9 +682,7 @@
             return site;
         };
 
-        /*        $scope.cleanSequence = function (s) {
-         return s.replace(/[^A-Za-z]/g, '');
-         };*/
+
         $scope.getResidueAtSite = function (site) {
             var msub = $scope.getSubunitWithIndex(site.subunitIndex);
             if (msub === null)return null;
@@ -926,6 +926,7 @@
 			}
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
+            console.log(JSON.stringify(sub));
             if (_.has(sub, 'update')) {
                 $.ajax({
                     url: baseurl + 'api/v1/substances(' + sub.uuid + ')/_',
@@ -1690,6 +1691,7 @@
 
                             });
                         }
+                        console.log(scope);
                         formHolder = '<site-string-form referenceobj = referenceobj parent = parent displaytype = displaytype field = field></site-string-form>';
                         break;
                     case "reference":
@@ -2041,7 +2043,6 @@
                 scope.subunits = scope.parent[scope.field].subunits;
 
                 scope.validResidues = function (su) {
-                    console.log(su);
                     if (!su)return [];
                     var list = [];
                     if (scope.residueRegex) {
@@ -2052,19 +2053,22 @@
                         }
                         return list;
                     } else {
-                        return scope.subunits[su - 1].sequence.length;
+                        return scope.subunits[su - 1].sequence;
                     }
                 };
-                scope.range = function (min) {
-                    var input = [];
-                    for (var i = 1; i <= min; i++) input.push(i);
-                    return input;
+
+                var values = _.range(1,scope.subunits.length+1);
+
+                scope.getValues = function() {
+                    return values;
                 };
 
+                scope.validResiduesLength = function (su) {
+                    return _.range(1,scope.validResidues(su).length+1);
+                };
 
-                /*                var v = scope.referenceobj.glycosylationSite.value;
-                                scope.parent.protein.glycosylation[v]= referenceobj;*/
-               /* scope.sitesToDislaySites = function (sitest) {
+/*
+                scope.sitesToDisplaySites = function (sitest) {
                     var sites = [];
                     angular.extend(sites, sitest);
                     sites.sort(function (site1, site2) {
@@ -2117,7 +2121,7 @@
                     }
                     return disp;
                 };
-                */
+
 
                 scope.siteDisplayToSite = function (site) {
                     var subres = site.split("_");
@@ -2163,50 +2167,24 @@
                     return sites;
 
                 };
+*/
 
 
-/*                scope.validate = function(){
-/!*                    scope.sites=siteDisplayListToSiteList(scope.referenceobj.displayString);
-                    if(scope.parent.protein.glycosylation) {
-                        scope.parent.protein.glycosylation[v] = scope.sites;*!/
-                   // }
-                };*/
+                scope.stringify= function(sitelist){
+                    console.log(sitelist);
+                    var r = _.map(_.sortByAll(sitelist, ['subunitIndex', 'residueIndex']), _.values);
+                    console.log(r);
+                    var display = r[0][0]+ "_"+r[0][1]+ "-" + r[1][0] + "_" + r[1][1] + ";";
+                    return display;
+                };
 
+              //  scope.displayString = scope.stringify(scope.referenceobj.siteList);
                 scope.validate = function () {
                     console.log("clicked this");
-
-                    console.log(scope.referenceobj.glycosylationSite.value);
-                    scope.parent.protein.glycosylation[scope.referenceobj.glycosylationSite.value].push(scope.referenceobj);
-                    scope.referenceobj = {};
-                    scope.glycosylationForm.$setPristine();
-                };
-
-                scope.print= function(){
-                    console.log("changing"+ scope.referenceobj.display);
-
-                    var site = scope.referenceobj.displayString;
-                        var subres = site.split("_");
-
-                        if (site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g) === null) {
-                            throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
-                            return temp;
-                        }
-
-                        return {
-                            subunitIndex: subres[0] - 0,
-                            residueIndex: subres[1] - 0
-                        };
-                    //console.log(scope.siteDisplayListToSiteList(scope.referenceobj.display));
-/*                    console.log(scope.referenceobj.display);
-                    console.log(scope.referenceobj.sites);*/
+                   scope.referenceobj.displayString = scope.stringify(scope.referenceobj.siteList);
+                    console.log(scope);
 
                 };
-
-
-/*               if(scope.referenceobj.sites.length > 0) {
-                   console.log(scope.referenceobj);
-                    scope.referenceobj.display = scope.sitesToDislaySites(scope.referenceobj.sites);
-                }*/
             },
             templateUrl: baseurl + "assets/templates/site-string-form.html"
         };
@@ -2234,12 +2212,13 @@
                 sites: '=',
                 parent:'=',
                 field:'=',
-                displaytype: '='
+                displaytype: '=',
+                value: '@'
             },
             link: function(scope){
                 console.log(scope);
 
-                scope.sitesToDisplaySites = function () {
+             /*   scope.sitesToDisplaySites = function () {
                     var sitest = scope.referenceobj[scope.field];
             //        console.log(sitest);
                     var sites = [];
@@ -2294,14 +2273,14 @@
                     }
                     console.log(disp);
                     return disp;
-                };
+                };*/
 
-scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
+//scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
 
 
 
             },
-            template: '<div><span>{{referenceobj.displayString | limitTo:50}}</span></div>'
+            template: '<div><span>{{referenceobj}}</span></div>'
         };
     });
 
@@ -2620,6 +2599,7 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                     scope.parent.protein.otherLinks =[];
 
                 }
+
                 /*                if(!scope.parent.protein.glycosylation.agentModifications) {
                  scope.parent.protein.glycosylation.agentModifications = [];
                  }*/
@@ -2650,9 +2630,15 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                     scope.parent.protein.disulfideLinks =[];
 
                 }
-                /*                if(!scope.parent.protein.glycosylation.agentModifications) {
-                 scope.parent.protein.glycosylation.agentModifications = [];
-                 }*/
+
+                scope.getAllCysteinesWithoutLinkage = function(){
+                    var count =0;
+                    _.forEach(scope.parent.protein.subunits, function(subunit){
+                        count += subunit.cysteineIndices.length;
+                    });
+                    return count;
+                };
+
                 scope.validate = function () {
 
                     scope.parent.protein.disulfideLinks.push(scope.dis);
@@ -2726,7 +2712,6 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
             link: function (scope, element, attrs) {
                 console.log(scope);
                 scope.edit = false;
-
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
                         return 'D';
@@ -2737,8 +2722,10 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 };
 
                 scope.parseSubunit = function () {
-                        var display = [];
-                    _.forEach(scope.obj.sequence, function (aa) {
+                   // scope.obj.cysteineCount= 0;
+                    scope.obj.cysteineIndices = [];
+                    var display = [];
+                    _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
                         obj.value = aa;
                 var temp = (_.find(scope.residues, 'value', aa.toUpperCase()));
@@ -2750,12 +2737,13 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                             } else {
                                 obj.subunitIndex = scope.obj.index;
                             }
-                            obj.residueIndex = _.indexOf(scope.obj.sequence, aa) - 1 + 2;
+                            obj.residueIndex = index - 1 + 2;
                             if (scope.parent.substanceClass === 'protein') {
                                 obj.type = scope.getType(aa);
                             }
                             if (aa.toUpperCase() == 'C') {
                                 obj.cysteine = true;
+                                scope.obj.cysteineIndices.push(index);
                             }
                         }else{
                            obj.valid = false;
@@ -3552,19 +3540,23 @@ scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.sites);
                 number: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
-              scope.getValues= function() {
-                  var input = [];
+                scope.values = [];
+                console.log(scope.number);
+                scope.range = function (min) {
+                    var input = [];
+                    for (var i = 1; i <= min; i++) input.push(i);
+                    return input;
+                };
+                if(_.isArray(scope.number)){
+                    console.log(scope.number);
+                    scope.values = scope.range(scope.number.length);
 
-                  console.log(scope.number);
-                  for (var i = 1; i <= scope.number; i++) {
-                      input.push(i);
-                  }
-                  console.log(input);
-                  return input;
-              };
-            console.log(scope);
-
+                }else {
+                    scope.values = scope.range(scope.number);
+                }
+/*                scope.getValues = function() {
+                    return values;
+                };*/
                 /*CVFields.fetch(attrs.cv).then(function (data) {
                     if (attrs.cv === 'NAME_TYPE') {
                         var temp = angular.copy(data.data.content[0].terms);

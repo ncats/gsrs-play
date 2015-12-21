@@ -6,7 +6,6 @@
         Other Links&nbsp;<span class="badge" ng-show="parent.protein.otherLinks.length>0">
                         {{parent.protein.otherLinks.length}}</span> </button>
     <div class="col-md-12">
-        <span>Number of unspecified Cysteine residues: {{$parent.getAllCysteinsWithoutLinkage().length}}</span>
         <form class="form-horizontal" name="otherLinksForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
@@ -14,9 +13,6 @@
                                      cv="OTHER_LINKAGE_TYPE" label="Linkage Type"></dropdown-select>
                 </div>
                                 <div class="col-md-1">
-<!--
-                    <site-selector ng-model="otherLink"></site-selector>
--->
                     <form-selector referenceobj="otherLink" parent="parent" field ="protein" divid="otherLinksForm"
                                    type="site" displaytype ="pair"></form-selector>
                 </div>

@@ -20,6 +20,7 @@
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
 @*             <div>@forms.otherlinksform()</div>
            <div>@forms.disulfideform()</div>*@
+            <div ng-if = "substance.protein.subunits.length>0">
             <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
             <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
 
@@ -27,6 +28,7 @@
             <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
             <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
             <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
+                </div>
         }
         case "structurallyDiverse" => {
            <div>@forms.diversesourceform()</div>
