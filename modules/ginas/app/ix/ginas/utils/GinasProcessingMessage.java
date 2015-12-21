@@ -64,6 +64,9 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public boolean isProblem(){
 		return messageType == MESSAGE_TYPE.ERROR ||messageType == MESSAGE_TYPE.WARNING;
 	}
+	public boolean isError(){
+		return messageType == MESSAGE_TYPE.ERROR;
+	}
 	
 	public GinasProcessingMessage addSubstanceLink(Substance s){
 		Link l = new Link();

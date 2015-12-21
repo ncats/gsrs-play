@@ -138,7 +138,10 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result edits (UUID uuid) {
-        return edits (uuid, Substance.class);
+    	Substance sub = finder.byId(uuid);
+    	
+    	
+        return edits (uuid, sub.getClass());
     }
 
     public static Result getUUID (UUID uuid, String expand) {
@@ -163,7 +166,7 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result updateEntity () {
-    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
+    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
     	
         if (!request().method().equalsIgnoreCase("PUT")) {
             return badRequest ("Only PUT is accepted!");
@@ -175,10 +178,12 @@ public class SubstanceFactory extends EntityFactory {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
         JsonNode json = request().body().asJson();
-
+        
         Class<? extends Substance> subClass = Substance.class;
-        String cls = json.get("substanceClass").asText();      
+        String cls = null;
+              
         try {
+        	cls= json.get("substanceClass").asText();
             Substance.SubstanceClass type =
                 Substance.SubstanceClass.valueOf(cls);
             switch (type) {
@@ -210,12 +215,12 @@ public class SubstanceFactory extends EntityFactory {
             Logger.warn("Unknown substance class: "+cls
                         +"; treating as generic substance!");
         }
-        
+        System.out.println("going to update");
         return updateEntity (json, subClass, sv);
     }
     
     public static Result update (UUID uuid, String field) {
-    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
+    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
     	
         //if(true)return ok("###");
         try {

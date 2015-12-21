@@ -16,13 +16,16 @@ public class SubstanceValidator implements Validator<Substance>{
 	
 	@Override
 	public boolean validate(Substance s, List<ValidationMessage> validation) {
-		List<GinasProcessingMessage> vlad =Validation.validateAndPrepare(s, _strategy);
-		if(validation!=null){
+		List<GinasProcessingMessage> vlad =Validation.validateAndPrepare(s, _strategy);			
+		
+		if(validation!=null && vlad!=null){
 			for(ValidationMessage gpm:vlad){
 				validation.add(gpm);
 			}
 		}
-		return GinasProcessingMessage.ALL_VALID(vlad);
+		boolean allow=_strategy.handleMessages(s, vlad);
+		_strategy.addWarnings(s, vlad);
+		return allow;
 	}
 
 	@Override

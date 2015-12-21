@@ -56,6 +56,7 @@ public abstract class GinasProcessingStrategy {
 			}
 		};
 	}
+	
 
 	public static GinasProcessingStrategy ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED() {
 		return ACCEPT_APPLY_ALL_WARNINGS().markFailed();
@@ -75,11 +76,14 @@ public abstract class GinasProcessingStrategy {
 		this.failType = HANDLING_TYPE.FORCE_IGNORE;
 		return this;
 	}
-
-	public void handleMessages(Substance cs, List<GinasProcessingMessage> list) {
+	
+	
+	public boolean handleMessages(Substance cs, List<GinasProcessingMessage> list) {
+		boolean allow=true;
 		for (GinasProcessingMessage gpm : list) {
 			Logger.debug("######### " + gpm.toString());
 			if (gpm.actionType == GinasProcessingMessage.ACTION_TYPE.FAIL) {
+				allow=false;
 				if (failType == HANDLING_TYPE.FAIL) {
 					throw new IllegalStateException(gpm.message);
 				} else if (failType == HANDLING_TYPE.MARK) {
@@ -91,12 +95,14 @@ public abstract class GinasProcessingStrategy {
 				}
 			}
 		}
+		return allow;
 	}
 
 	public void addWarnings(Substance cs, List<GinasProcessingMessage> list) {
 		if (warningHandle == HANDLING_TYPE.MARK) {
 			for (GinasProcessingMessage gpm : list) {
 				if (gpm.messageType == GinasProcessingMessage.MESSAGE_TYPE.WARNING) {
+					
 					cs.tags.add(new Keyword(GinasCommonSubData.TAG, "WARNING"));
 					cs.addPropertyNote(gpm.message, "WARNING");
 					cs.addRestrictGroup("admin");
