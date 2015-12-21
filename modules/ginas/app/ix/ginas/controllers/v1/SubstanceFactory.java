@@ -138,10 +138,7 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result edits (UUID uuid) {
-    	Substance sub = finder.byId(uuid);
-    	
-    	
-        return edits (uuid, sub.getClass());
+    	return edits (uuid, Substance.getAllClasses());
     }
 
     public static Result getUUID (UUID uuid, String expand) {
