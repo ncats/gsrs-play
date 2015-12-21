@@ -947,15 +947,20 @@ public class EntityFactory extends Controller {
     }
 
     protected static Result edits (Object id, Class<?>... cls) {
+    	List<Edit> edits = new ArrayList<Edit>();
+    	
         for (Class<?> c : cls) {
-            List<Edit> edits = EditFactory.finder.where
+            List<Edit> tmpedits = EditFactory.finder.where
                 (Expr.and(Expr.eq("refid", id.toString()),
                           Expr.eq("kind", c.getName())))
                 .findList();
-            if (!edits.isEmpty()) {
-                ObjectMapper mapper = getEntityMapper ();
-                return ok (mapper.valueToTree(edits));
+            if(tmpedits!=null){
+            	edits.addAll(tmpedits);
             }
+        }
+        if (!edits.isEmpty()) {
+            ObjectMapper mapper = getEntityMapper ();
+            return ok (mapper.valueToTree(edits));
         }
 
         return notFound (request().uri()+": No edit history found!");
