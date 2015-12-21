@@ -20,7 +20,9 @@ import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasV1ProblemHandler;
+import ix.ginas.utils.SubstanceValidator;
 import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
@@ -152,7 +154,8 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result validate () {
-        return validate (Substance.class, finder);
+    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
+    	return validate (Substance.class, finder, sv);
     }
 
     public static Result delete (UUID uuid) {
@@ -160,6 +163,8 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result updateEntity () {
+    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
+    	
         if (!request().method().equalsIgnoreCase("PUT")) {
             return badRequest ("Only PUT is accepted!");
         }
@@ -206,10 +211,12 @@ public class SubstanceFactory extends EntityFactory {
                         +"; treating as generic substance!");
         }
         
-        return updateEntity (json, subClass);
+        return updateEntity (json, subClass, sv);
     }
     
     public static Result update (UUID uuid, String field) {
+    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
+    	
         //if(true)return ok("###");
         try {
             JsonNode value = request().body().asJson();
@@ -244,7 +251,7 @@ public class SubstanceFactory extends EntityFactory {
                 subClass = Substance.class;
                 break;
             }
-            return update(uuid, field, subClass, finder, new GinasV1ProblemHandler());
+            return update(uuid, field, subClass, finder, new GinasV1ProblemHandler(), sv);
         } catch (Exception e) {
             e.printStackTrace();
             return null;

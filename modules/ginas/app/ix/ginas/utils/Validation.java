@@ -32,6 +32,8 @@ import play.Play;
 import play.mvc.Call;
 
 public class Validation {
+	
+	
 	static final PayloadPlugin _payload =
 	        Play.application().plugin(PayloadPlugin.class);
 	
@@ -86,6 +88,7 @@ public class Validation {
 		        case unspecifiedSubstance:
 		            break;
 		        default:
+		        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance class \"" +s.substanceClass + "\" is not valid" ));
 		            break;
 	        }
 	        if(GinasProcessingMessage.ALL_VALID(gpm)){
