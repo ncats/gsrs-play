@@ -52,6 +52,8 @@ import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.event.BeanPersistListener;
 import com.avaje.ebean.bean.*;
 
+import ix.core.ValidationMessage;
+import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.models.ETag;
 import ix.core.models.ETagRef;
@@ -816,10 +818,15 @@ public class EntityFactory extends Controller {
         }
         return ok (node);
     }
-
     @Transactional
     protected static <K, T extends Model> 
         Result create (Class<T> type, Model.Finder<K, T> finder) {
+    	
+    	return create(type,finder,null);
+    }
+    @Transactional
+    protected static <K, T extends Model> 
+        Result create (Class<T> type, Model.Finder<K, T> finder, Validator<T> validator) {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest ("Only POST is accepted!");
         }
@@ -856,7 +863,13 @@ public class EntityFactory extends Controller {
             
             JsonNode node = request().body().asJson();
             T inst = mapper.treeToValue(node, type);
-            inst.save();
+            if(validator!=null){
+	            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
+	            if(!validator.validate(inst,validationMessages)){
+	            	return validationResponse(false, validationMessages);
+	            }
+            }
+	        inst.save();
 
             return created (mapper.valueToTree(inst));
         }
@@ -866,7 +879,7 @@ public class EntityFactory extends Controller {
     }
 
     protected static <K, T extends Model> Result validate(Class<T> type,
-                                                          Model.Finder<K, T> finder) {
+                                                          Model.Finder<K, T> finder, Validator<T> validator) {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest("Only POST is accepted!");
         }
@@ -900,14 +913,24 @@ public class EntityFactory extends Controller {
 
             JsonNode node = request().body().asJson();
             T inst = mapper.treeToValue(node, type);
-            //validation code here
-                        
-                        
-
-            return created(mapper.valueToTree(inst));
+            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
+            boolean valid=false;
+            if(validator.validate(inst,validationMessages)){
+            	valid=true;
+            }else{
+            	valid=false;
+            }
+            return validationResponse(valid, validationMessages);
         } catch (Exception ex) {
             return internalServerError(ex.getMessage());
         }
+    }
+    protected static Result validationResponse(boolean valid, List<ValidationMessage> validationMessages){
+    	ObjectMapper mapper = new ObjectMapper();
+    	Map wrapper = new HashMap();
+        wrapper.put("valid", valid);
+        wrapper.put("messages", validationMessages);
+        return created(mapper.valueToTree(wrapper));
     }
 
     protected static <K,T extends Model> 
@@ -924,15 +947,20 @@ public class EntityFactory extends Controller {
     }
 
     protected static Result edits (Object id, Class<?>... cls) {
+    	List<Edit> edits = new ArrayList<Edit>();
+    	
         for (Class<?> c : cls) {
-            List<Edit> edits = EditFactory.finder.where
+            List<Edit> tmpedits = EditFactory.finder.where
                 (Expr.and(Expr.eq("refid", id.toString()),
                           Expr.eq("kind", c.getName())))
                 .findList();
-            if (!edits.isEmpty()) {
-                ObjectMapper mapper = getEntityMapper ();
-                return ok (mapper.valueToTree(edits));
+            if(tmpedits!=null){
+            	edits.addAll(tmpedits);
             }
+        }
+        if (!edits.isEmpty()) {
+            ObjectMapper mapper = getEntityMapper ();
+            return ok (mapper.valueToTree(edits));
         }
 
         return notFound (request().uri()+": No edit history found!");
@@ -949,7 +977,7 @@ public class EntityFactory extends Controller {
      */
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder) {
-                return update (id,field,type,finder, null);
+                return update (id,field,type,finder, null, null);
     }
     
     // This expects an update of the full record to be done using "/path/*"
@@ -957,7 +985,7 @@ public class EntityFactory extends Controller {
     //TODO: allow high-level changes to be captured
     protected static <K, T extends Model> Result update 
         (K id, String field, Class<T> type, Model.Finder<K, T> finder,
-         DeserializationProblemHandler deserializationHandler) {
+         DeserializationProblemHandler deserializationHandler, Validator<T> validator) {
 
         if (!request().method().equalsIgnoreCase("PUT")) {
             return badRequest ("Only PUT is accepted!");
@@ -1031,6 +1059,10 @@ public class EntityFactory extends Controller {
             if (paths.length == 1 
                 && (paths[0].equals("_") || paths[0].equals("*"))) {
                 final T inst = mapper.treeToValue(value, type);
+                List<ValidationMessage> validationMessages = new ArrayList<ValidationMessage>();
+                if(!validator.validate(inst,validationMessages)){
+	            	return validationResponse(false, validationMessages);
+	            }
                 try {
                     Method m=EntityPersistAdapter.getIdSettingMethodForBean(inst);
                     m.invoke(inst, id);
@@ -1350,14 +1382,23 @@ public class EntityFactory extends Controller {
             return badRequest ("Mime type \""+content+"\" not supported!");
         }
         JsonNode json = request().body().asJson();
-        return updateEntity (json, type);
+        return updateEntity (json, type, null);
+    }
+    protected static Result updateEntity (JsonNode json, Class<?> type) {
+        return updateEntity (json, type, null);
     }
 
-    protected static Result updateEntity (JsonNode json, Class<?> type) {
+    protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
         EntityMapper mapper = getEntityMapper ();       
         Transaction tx = Ebean.beginTransaction();
         try {       
             Object value = mapper.treeToValue(json, type);
+            if(validator!=null){
+	            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
+	            if(!validator.validate(value,validationMessages)){
+	            	return validationResponse(false, validationMessages);
+	            }
+            }
             EditHistory eh = new EditHistory (json.toString());
             value = instrument (eh, value, json);
             

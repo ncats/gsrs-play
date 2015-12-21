@@ -32,6 +32,8 @@ import play.Play;
 import play.mvc.Call;
 
 public class Validation {
+	
+	
 	static final PayloadPlugin _payload =
 	        Play.application().plugin(PayloadPlugin.class);
 	
@@ -86,6 +88,7 @@ public class Validation {
 		        case unspecifiedSubstance:
 		            break;
 		        default:
+		        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance class \"" +s.substanceClass + "\" is not valid" ));
 		            break;
 	        }
 	        if(GinasProcessingMessage.ALL_VALID(gpm)){
@@ -100,12 +103,12 @@ public class Validation {
 	
 
 
-	public static boolean validateReferenced(Substance s, GinasAccessReferenceControlled data,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat){
+	public static boolean validateReferenced(Substance s, GinasAccessReferenceControlled data,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat, boolean required){
 		
 		boolean worked=true;
 		
 		Set<Keyword> references = data.getReferences();
-		if(references == null || references.size()<=0){
+		if(required && (references == null || references.size()<=0)){
 			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference"));
 			worked=false;
 		}else{
@@ -178,7 +181,7 @@ public class Validation {
     	                }
                 	}
 	            }
-	            if(!validateReferenced(s,n,gpm,strat)){
+	            if(!validateReferenced(s,n,gpm,strat,true)){
 	            	return false;
 	            }
 	        }
@@ -253,7 +256,7 @@ public class Validation {
 	                    mes.appliedChange=true;
 	                }
 	            }
-	            if(!validateReferenced(s,n,gpm,strat)){
+	            if(!validateReferenced(s,n,gpm,strat,true)){
 	            	return false;
 	            }
 	        }
@@ -290,7 +293,7 @@ public class Validation {
                     mes.appliedChange=true;
                 }
             }
-            if(!validateReferenced(s,n,gpm,strat)){
+            if(!validateReferenced(s,n,gpm,strat, true)){
             	return false;
             }
         }
@@ -309,7 +312,7 @@ public class Validation {
                     mes.appliedChange=true;
                 }
             }
-            if(!validateReferenced(s,n,gpm,strat)){
+            if(!validateReferenced(s,n,gpm,strat,false)){
             	return false;
             }
         }
@@ -361,7 +364,6 @@ public class Validation {
 	                    		Call call = ix.ginas.controllers.routes.GinasApp.substances(payload.id.toString(), 16, 1);	                                     
 	                    		l.href=call.url()+"&type=sequence";
 	                    		l.text="Perform similarity search on subunit [" + su.subunitIndex + "]";
-	                    		//ix.ginas.controllers.GinasApp.sequenceSearch();
 	                    		
 	                    		mes.addLink(l);
 	                    	}

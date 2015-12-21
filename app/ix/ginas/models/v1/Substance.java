@@ -496,4 +496,18 @@ public class Substance extends GinasCommonData {
 	        }
 	        return getName();
 	}
+
+	public static Class<?>[] getAllClasses() {
+		return new Class<?>[]{
+			Substance.class,
+			ChemicalSubstance.class,
+			ProteinSubstance.class,
+			NucleicAcidSubstance.class,
+			StructurallyDiverseSubstance.class,
+			MixtureSubstance.class,
+			PolymerSubstance.class,
+			SpecifiedSubstanceGroup1Substance.class
+		};
+		
+	}
 }

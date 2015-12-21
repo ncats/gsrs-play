@@ -1,12 +1,13 @@
 package ix.ginas.utils;
 
+import ix.core.ValidationMessage;
 import ix.ginas.models.v1.Substance;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class GinasProcessingMessage {
+public class GinasProcessingMessage implements ValidationMessage{
 	public enum MESSAGE_TYPE{WARNING, ERROR, INFO, SUCCESS};
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
 	
@@ -59,8 +60,12 @@ public class GinasProcessingMessage {
 		}
 		return valid;
 	}
+	
 	public boolean isProblem(){
 		return messageType == MESSAGE_TYPE.ERROR ||messageType == MESSAGE_TYPE.WARNING;
+	}
+	public boolean isError(){
+		return messageType == MESSAGE_TYPE.ERROR;
 	}
 	
 	public GinasProcessingMessage addSubstanceLink(Substance s){

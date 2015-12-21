@@ -405,18 +405,30 @@
         $scope.cutoff = 0.8;
         $scope.stage = true;
 
+        $scope.toggleJSONView = function(){
+                $scope.submitSubstance=$scope.fromFormSubstance($scope.substance);
+                $scope.submitSubstancePretty=JSON.stringify($scope.submitSubstance,null,2);
+                $scope.showJSON=!$scope.showJSON;
+                if(!$scope.viewStyle){
+                        $scope.viewStyle='object';
+                }
+        }
+        $scope.setViewStype = function(style){
+                $scope.viewStyle=style;
+        }
+
         $scope.canApprove = function(){
-        	var lastEdit=$scope.substance.lastEditedBy;
-        	if(!lastEdit)
-        		return false; 
-        	if($scope.substance.status==="approved"){
-        		return false;
-        	}
-        	if(lastEdit === session.username){
-        		return false;
-        	}
-        	return true;
-		};
+                var lastEdit=$scope.substance.lastEditedBy;
+                if(!lastEdit)
+                        return false; 
+                if($scope.substance.status==="approved"){
+                        return false;
+                }
+                if(lastEdit === session.username){
+                        return false;
+                }
+                return true;
+                };
 
         //local storage functions//
         $scope.unbind = localStorageService.bind($scope, 'enabled');
@@ -920,10 +932,10 @@
                 alert('Name Form not saved');
             }*/
 
-        	var r = confirm("Are you sure you'd like to submit this substance?");
-			if (r != true) {
-            	return;
-			}
+                var r = confirm("Are you sure you'd like to submit this substance?");
+                        if (r != true) {
+                    return;
+                        }
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
             console.log(JSON.stringify(sub));
@@ -947,13 +959,13 @@
             }
         };
         $scope.approveSubstance = function () {
-        	var sub = angular.copy($scope.substance);
+                var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
             var keyid=sub.uuid.substr(0,8);
             var r = confirm("Are you sure you want to approve this substance?");
-			if (r == true) {
-            	location.href=baseurl + "substance/" + keyid +"/approve";
-			}
+                        if (r == true) {
+                    location.href=baseurl + "substance/" + keyid +"/approve";
+                        }
         };
 
         $scope.validateSubstance = function () {
@@ -1784,7 +1796,7 @@
 
 
                 }
-
+        
 
                 scope.toggleStage = function () {
                     if (_.isUndefined(scope.referenceobj)) {
