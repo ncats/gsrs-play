@@ -1,8 +1,8 @@
 <div class ="text-center">
     <label for={{type}} class="text-capitalize">Sites</label>
 <br>
-    <site-view value ="referenceobj.displayString" ></site-view>
-    <a ng-show="referenceobj.displayString" ng-click="toggleStage();" role="button">{{referenceobj.displayString}}</a>
+    <a ng-show="referenceobj.displayString" ng-click="toggleStage();" role="button"><site-view referenceobj ="referenceobj"></site-view></a>
+
     <div class="text-center">
         <a ng-hide="referenceobj.displayString" ng-click="toggleStage()" role="button" aria-label="Add Sites" tooltip="Add Sites" id="{{type}}"><i
                 class="fa fa-plus fa-2x success" ng-show="stage"></i>

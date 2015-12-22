@@ -11,7 +11,7 @@
             <div class="row form-row">
                 <div class="col-md-1">
                     <form-selector referenceobj="dis" field = "protein" parent="parent" divid="disulfideLinksForm"
-                                   type="site" displaytype ="pair"></form-selector>
+                                   type="site" residueregex = 'C' displaytype ="pair"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="dis" parent="parent" divid="disulfideLinksForm"
@@ -23,7 +23,7 @@
                 </div>
             </div>
             <div class="disulfideLinksForm"></div>
-            <submit-buttons submit="dis" form="disulfideLinksForm" path="disulfideLinks"></submit-buttons>
+            <submit-buttons submit="dis" form="disulfideLinksForm" path="protein.disulfideLinks"></submit-buttons>
         </form>
 
 
@@ -31,7 +31,7 @@
             <div class="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj" path="disulfideLinks"></delete-button>
+                    <delete-button delete="obj" path="protein.disulfideLinks"></delete-button>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj="obj" parent="substance" type="site" divid={{obj.$$hashKey}}
