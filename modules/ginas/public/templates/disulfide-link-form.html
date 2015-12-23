@@ -1,29 +1,37 @@
-<div class = "row info">
+<div class="row info">
     <!--
         <div class = "row info" ng-show="substance.protein.subunits.length!==0">
     -->
     <button class="btn btn-primary label-offset det">
         Disulfide Links&nbsp;<span class="badge" ng-show="parent.protein.disulfideLinks.length>0">
-                        {{parent.protein.disulfideLinks.length}}</span> </button>
+                        {{parent.protein.disulfideLinks.length}}</span></button>
     <div class="col-md-12">
         <span>Number of unspecified Cysteine residues: {{getAllCysteinesWithoutLinkage()}}</span>
+
         <form class="form-horizontal" name="disulfideLinksForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-1">
-                    <form-selector referenceobj="dis" field = "protein" parent="parent" divid="disulfideLinksForm"
-                                   type="site" residueregex = 'C' displaytype ="pair"></form-selector>
+                    <form-selector referenceobj="disulfideLinks" parent="parent" field="protein" path="disulfideLinks"
+                                   divid="disulfideLinksForm"
+                                   type="site" residueregex='C' displaytype="pair"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="dis" parent="parent" divid="disulfideLinksForm"
+                    <form-selector referenceobj="disulfideLinks" parent="parent" divid="disulfideLinksForm"
                                    type="access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="dis" parent="parent" divid="disulfideLinksForm"
+                    <form-selector referenceobj="disulfideLinks" parent="parent" divid="disulfideLinksForm"
                                    type="reference"></form-selector>
                 </div>
             </div>
             <div class="disulfideLinksForm"></div>
-            <submit-buttons submit="dis" form="disulfideLinksForm" path="protein.disulfideLinks"></submit-buttons>
+            <div class="row">
+                <div class="col-md-1 pull-right">
+                    <a ng-click="reset()" aria-label="Clear" tooltip="Clear"><i
+                            class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate()" tooltip="Add"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                </div>
+            </div>
         </form>
 
 
@@ -34,7 +42,7 @@
                     <delete-button delete="obj" path="protein.disulfideLinks"></delete-button>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent="substance" type="site" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj" parent=parent type="site" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">

@@ -44,8 +44,8 @@
                 </div>
             </div>
         </form>
-
-        <div class="row" ng-repeat="reference in parent.references">
+        <div ng-repeat="reference in parent.references">
+        <div class="row" >
             <hr>
             <div class="col-md-1">
                 <reference-apply obj=reference referenceobj=referenceobj parent=parent type="edit"></reference-apply>
@@ -67,9 +67,10 @@
             </div>
             <div class="col-md-1 pull-right">
                 <form-selector referenceobj="reference" parent="substance" formname="refForm" type="access"
-                               divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                               divid={{reference.$$hashKey}} mode="edit"></form-selector>
             </div>
         </div>
-        <div class={{obj.$$hashKey}}></div>
+        <div class={{reference.$$hashKey}}></div>
+            </div>
     </div>
 </div>
