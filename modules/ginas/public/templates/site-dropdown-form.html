@@ -1,0 +1,107 @@
+<div class="row info">
+    <button class="btn btn-primary label-offset det">
+        Sites&nbsp;</button>
+    <a ng-click="$parent.toggleStage();" class="pull-right">
+        <i class="fa fa-times fa-2x danger"></i></a>
+
+    <div class="col-md-12">
+
+        <form class="form-horizontal" name="siteForm" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2">
+<label for="subunitIndex" class="text-capitalize">Residue Index</label>
+                    <select ng-model="siteList[0].subunitIndex" class="form-control"
+                            id="subunitIndex" ng-options="r for r in getSubunitRange()">
+                        <option class="text-capitalize" value='' disabled selected>Subunit Index</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+<label for="residueIndex" class="text-capitalize">Residue Index</label>
+                    <select ng-model="siteList[0].residueIndex" class="form-control"
+                            id="residueIndex"
+                            ng-options="r for r in validResidues(siteList[0].subunitIndex)">
+                        <option class="text-capitalize" value='' disabled selected>Residue Index</option>
+                    </select>
+                </div>
+                <div class="col-md-1 text-center">
+                    <i class="fa fa-link fa-rotate-270 fa-2x"></i>
+                </div>
+               <div class="col-md-2">
+                    <label for="endSubunitIndex" class="text-capitalize">Residue Index</label>
+                    <select ng-model="siteList[1].subunitIndex" class="form-control"
+                            id="endSubunitIndex" ng-options="r for r in getSubunitRange()">
+                        <option class="text-capitalize" value='' disabled selected>Subunit Index</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="endResidueIndex" class="text-capitalize">Residue Index</label>
+                    <select ng-model="siteList[1].residueIndex" class="form-control"
+                            id="endResidueIndex"
+                            ng-options="r for r in validResidues(siteList[1].subunitIndex)">
+                        <option class="text-capitalize" value='' disabled selected>Residue Index</option>
+                    </select>
+                </div>
+            </div>
+            <div class="refForm"></div>
+            <div class="row">
+                <div class="col-md-1 pull-right">
+                    <a ng-click="reset()" aria-label="Clear" tooltip="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate()" tooltip="Add"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                </div>
+            </div>
+        </form>
+        <div ng-repeat="sites in referenceobj">
+         <div class="row" >
+             <div class="col-md-1">
+                 <a ng-click="deleteObj(sites)"><i class="fa fa-times fa-2x danger"></i></a>
+             </div>
+             <div class = "col-md-2">
+                 <a href="#" ng-click = "edit=true"><site-view referenceobj = sites></site-view></a>
+                 </div>
+             </div>
+            <div class="row" ng-show="edit">
+             <hr>
+             <div class="col-md-2">
+                 <label ng-if ="label" for="{{field}}">{{label}}</label>
+                 <br>
+                 <select class="form-control" ng-model=sites[0].subunitIndex
+                         ng-options="r for r in getSubunitRange()" placeholder ="Subunit Index" title="{{field}}" name="{{field}}">
+                     <option class= "text-capitalize" value='' disabled selected>Subunit Index</option>
+                 </select>
+             </div>
+             <div class="col-md-2">
+                 <label ng-if ="label" for="{{field}}">{{label}}</label>
+                 <br>
+                 <select class="form-control" ng-model=sites[0].residueIndex
+                         ng-options="r for r in validResidues(sites[0].subunitIndex)" placeholder ="Residue Index" title="{{field}}" name="{{field}}">
+                     <option class= "text-capitalize" value='' disabled selected>Residue Index</option>
+                 </select>
+             </div>
+             <div class="col-md-1 text-center">
+                 <i class="fa fa-link fa-rotate-270 fa-2x"></i>
+             </div>
+             <div class="col-md-2">
+                 <label ng-if ="label" for="{{field}}">{{label}}</label>
+                 <br>
+                 <select class="form-control" ng-model=sites[1].subunitIndex ng-options="r for r in getSubunitRange()" placeholder ="Subunit Index" title="{{field}}" name="{{field}}">
+                     <option class= "text-capitalize" value='' disabled selected>Subunit Index</option>
+                 </select>
+             </div>
+             <div class="col-md-2">
+                 <label ng-if ="label" for="{{field}}">{{label}}</label>
+                 <br>
+                 <select class="form-control" ng-model=sites[1].residueIndex ng-options="r for r in validResidues(sites[1].subunitIndex)" placeholder ="Residue Index" title="{{field}}" name="{{field}}">
+                     <option class= "text-capitalize" value='' disabled selected>Residue Index</option>
+                 </select>
+             </div>
+           <!--  <div class="col-md-1">
+             <form-selector referenceobj="sites" parent="parent" field = field path= path divid={{sites.$$hashKey}}
+                                type="site" residueregex = 'C' displaytype ="pair" mode="edit"></form-selector>
+             </div>-->
+        </div>
+        <div class={{sites.$$hashKey}}></div>
+            </div>
+    </div>
+</div>
+
+
