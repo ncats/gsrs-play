@@ -132,6 +132,36 @@
         }
     }
 
+    @defining(sub.protein.otherLinks.length) { count =>
+        @if(count > 0) {
+            <div class="row info" id="otherLinks">
+                <button class="btn btn-primary label-offset det">
+                    Other Links&nbsp;<span class="badge head"> @count</span></button>
+                <div class="col-md-12">
+                    <table class="table table-striped" id="otherLinks-Table">
+                        <thead>
+                            <tr><th>Linkage Type</th>
+                                <th>Residue Index</th>
+                            </tr>
+                        </thead>
+                        @for(otherLink <- sub.protein.otherLinks) {
+                            <tr>
+                                <td>@otherLink.linkageTypeg</td>
+                            @for(s <- otherLink.sites) {
+
+                                <td>@s.subunitIndex _ @s.residueIndex</td>
+                                <td></td>
+                            }
+                            </tr>
+                        }
+
+                    </table>
+                </div>
+            </div>
+        }
+    }
+
+
     @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
         @if(count > 0) {
             <div class="row info" id="glyco">

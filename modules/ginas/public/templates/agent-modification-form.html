@@ -7,16 +7,16 @@
         <form class="form-horizontal" name="agentModForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
+                    <dropdown-select ng-model="agentMod.agentModificationType" field="agentModificationType"
+                                     cv="AGENT_MODIFICATION_TYPE" label="Modification Type"></dropdown-select>
+                </div>
+                <div class="col-md-2">
                     <dropdown-select ng-model="agentMod.agentModificationProcess" field="agentModificationProcess"
                                      cv="AGENT_MODIFICATION_PROCESS" label="Modification Process"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <dropdown-select ng-model="agentMod.agentModificationRole" field="agentModificationRole"
                                      cv="ROLE" label="Modification Role"></dropdown-select>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-select ng-model="agentMod.agentModificationType" field="agentModificationType"
-                                     cv="AGENT_MODIFICATION_TYPE" label="Modification Type"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <substance-chooser-selector ng-model="agentMod.agentSubstance" field="agentSubstance"
@@ -48,6 +48,11 @@
                     <delete-button delete="obj" path="agentModifications"></delete-button>
                 </div>
                 <div class="col-md-2">
+                    <dropdown-view-edit obj="obj" field="agentModificationType"
+                                        cv="AGENT_MODIFICATION_TYPE"
+                                        label="Modification Type"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="agentModificationProcess"
                                         cv="AGENT_MODIFICATION_PROCESS"
                                         label="Modification Process"></dropdown-view-edit>
@@ -56,11 +61,6 @@
                     <dropdown-view-edit obj="obj" field="agentModificationRole"
                                         cv="ROLE"
                                         label="Modification Role"></dropdown-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-view-edit obj="obj" field="agentModificationType"
-                                        cv="AGENT_MODIFICATION_TYPE"
-                                        label="Modification Type"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
                     <substance-chooser-view-edit obj="obj" field="agentSubstance"
