@@ -34,15 +34,15 @@
                                      label="Extent"></dropdown-select>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="mod" parent="substance" divid="strucModForm"
+                    <form-selector referenceobj="mod" parent="parent" divid="strucModForm"
                                    type="amount"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="mod" parent="substance" divid="strucModForm"
+                    <form-selector referenceobj="mod" parent="parent" divid="strucModForm"
                                    type="access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="mod" parent="substance" divid="strucModForm"
+                    <form-selector referenceobj="mod" parent="parent" divid="strucModForm"
                                    type="reference"></form-selector>
                 </div>
             </div>
@@ -55,7 +55,7 @@
             <div class="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj" path="unofficialNames"></delete-button>
+                    <delete-button delete="obj" path="protein.modifications.structuralModifications"></delete-button>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="structuralModificationType"
@@ -71,7 +71,7 @@
                                         label="Location Type"></dropdown-view-edit>
                 </div>
                     <div class="col-md-1">
-                        <form-selector referenceobj="obj" parent="substance" type="site" divid={{obj.$$hashKey}}
+                        <form-selector referenceobj="obj" parent="parent" type="site" divid={{obj.$$hashKey}}
                                        mode="edit"></form-selector>
                     </div>
                 <div class="col-md-1">

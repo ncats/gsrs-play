@@ -49,7 +49,7 @@
         <!--
                 <div ng-repeat="arr in parent.protein.glycosylation">
         -->
-        <div class="row" ng-repeat="obj in parent.protein.glycosylation |isArray">
+        <div class="row" ng-repeat="obj in glycs | isArray:parent.protein.glycosylation">
             {{obj}}
             <hr>
             <div class="col-md-2">

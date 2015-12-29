@@ -37,7 +37,9 @@
 
     ginasApp.filter('isArray', function () {
         return function (input) {
+            console.log(input);
             var temp = _.pick(input, _.isArray);
+            console.log(temp);
         };
     });
 
@@ -488,10 +490,8 @@
             if (_.has(apiSub, 'names')) {
                 _.forEach(apiSub.names, function (n) {
                     var temp = [];
-                    console.log(n);
                     if (n.nameOrgs && n.nameOrgs.length > 0) {
                         _.forEach(n.nameOrgs, function (m) {
-                            console.log(m);
                             if (m.deprecated) {
                                 apiSub.destructive = true;
                             }
@@ -515,21 +515,23 @@
         };
 
         $scope.fromFormSubstance = function (formSub) {
+            console.log(formSub);
             if (formSub.officialNames || formSub.unofficialNames) {
                 _.forEach(formSub.officialNames, function (n) {
                     n.type = "of";
                 });
             }
-            if (_.isUndefined(formSub.officialNames)) {
-                formSub.names = formSub.unofficialNames;
-            } else if (_.isUndefined(formSub.unofficialNames)) {
-                formSub.names = formSub.officialNames;
-            } else {
-                formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
+            if(!formSub.names) {
+                if (_.isUndefined(formSub.officialNames)) {
+                    formSub.names = formSub.unofficialNames;
+                } else if (_.isUndefined(formSub.unofficialNames)) {
+                    formSub.names = formSub.officialNames;
+                } else {
+                    formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
+                }
+                delete formSub.officialNames;
+                delete formSub.unofficialNames;
             }
-            delete formSub.officialNames;
-            delete formSub.unofficialNames;
-
             if (formSub.q) {
                 delete formSub.q;
             }
@@ -971,7 +973,7 @@
 
         $scope.validateSubstance = function () {
             var sub = angular.copy($scope.substance);
-            // console.log(angular.copy(sub));
+            console.log(angular.copy(sub));
             sub = $scope.fromFormSubstance(sub);
             $scope.errorsArray = [];
             //   console.log(sub);
@@ -1676,7 +1678,7 @@
                 switch (attrs.type) {
                     case "amount":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><amount value ="referenceobj" ></amount></a>');
+                            template = angular.element('<a ng-click ="toggleStage()"><amount value ="referenceobj.amount" ></amount></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -1690,11 +1692,11 @@
                         formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
-                        scope.displaytype = attrs.displaytype;
+                        scope.formtype = attrs.formtype;
                         scope.residueregex = attrs.residueregex;
                         scope.mode = attrs.mode;
                         if (attrs.mode == "edit") {
-                         template = angular.element('<a ng-click ="toggleStage()"><site-view referenceobj=referenceobj parent = parent>{{referenceobj.displayString}}</site-view></a>');
+                         template = angular.element('<a ng-click ="toggleStage()"><site-view referenceobj=referenceobj parent = parent></site-view></a>');
                          element.append(template);
                          $compile(template)(scope);
                          } else {
@@ -1705,7 +1707,7 @@
 
                         });
                            }
-                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent mode=mode displaytype = displaytype residueregex=residueregex field = field></site-string-form>';
+                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent mode=mode residueregex=residueregex formtype = formtype></site-string-form>';
                         break;
                     case "reference":
                         if (attrs.mode == "edit") {
@@ -1800,9 +1802,7 @@
 
 
                 scope.toggleStage = function () {
-                    console.log(attrs);
                     if (_.isUndefined(scope.referenceobj)) {
-                        console.log("creating ref");
                         var x = {};
                         _.set(scope, 'referenceobj', x);
                     }
@@ -1820,8 +1820,6 @@
                         scope.stage = true;
 
                     }
-                    console.log(scope);
-
                 };
             }
         };
@@ -2046,7 +2044,7 @@
         };
     });
 
-    ginasApp.directive('siteStringForm', function () {
+    ginasApp.directive('siteStringForm', function ($compile, $templateRequest) {
         return {
             restrict: 'E',
             replace: true,
@@ -2054,31 +2052,38 @@
                 referenceobj: '=',
                 parent: '=',
                 mode: '=',
-                field: '=',
-                displaytype: '=',
+                formtype: '=',
                 residueregex: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
-                scope.edit = false;
-                if (scope.mode == "edit") {
-                    scope.siteList = scope.referenceobj;
-                }
-
                 scope.subunits = scope.parent[scope.parent.substanceClass].subunits;
 
+                if(scope.formtype =="pair") {
+                    $templateRequest(baseurl + "assets/templates/site-dropdown-form.html").then(function (html) {
+                        template = angular.element(html);
+                        element.append(template);
+                        $compile(template)(scope);
+                    });
+                }else {
+                    $templateRequest(baseurl + "assets/templates/site-string-form.html").then(function (html) {
+                        template = angular.element(html);
+                        element.append(template);
+                        $compile(template)(scope);
 
+                    });
+                }
 
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-                //this gets called way more than it should, and on hovering over subunits...
+                //this gets called when the siteform is open, and on hovering over subunits...
                 scope.validResidues = function (su) {
+                //    console.log("hi");
                     if (!su)return [];
                     var list = [];
                     if (scope.residueregex) {
                         var ret = scope.parent[scope.parent.substanceClass].subunits[su - 1].cysteineIndices;
                         if (scope.parent.protein.disulfideLinks.length > 0) {
                             _.forEach(scope.parent.protein.disulfideLinks, function (siteList) {
-                                _.forEach(siteList.siteList, function (site) {
+                                _.forEach(siteList.sites, function (site) {
                                     var v;
                                     if (site.subunitIndex == (su)) {
                                         v = _.remove(ret, function (n) {
@@ -2101,65 +2106,6 @@
                     }
                 };
 
-                scope.getSubunitRange = function () {
-                    return _.range(1, scope.subunits.length + 1);
-                };
-
-                scope.validate = function () {
- console.log(scope);
-                    console.log(scope);
-                    if (scope.referenceobj.length > 0) {
-                        scope.referenceobj.push(angular.copy(scope.siteList));
-                    } else {
-                        var x = [];
-                        x.push(angular.copy(scope.siteList));
-                        _.set(scope, 'referenceobj', x);
-                    }
-                    scope.siteList = {};
-                    scope.siteForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.referenceobj.splice(scope.referenceobj.indexOf(obj), 1);
-                };
-            },
-            templateUrl: function(scope, elem, attrs) {
-                console.log(scope);
-                if(scope.mode =="pair"){
-                return baseurl + "assets/templates/site-dropdown-form.html";
-                }else{
-                    return baseurl + "assets/templates/site-string-form.html";
-
-                }
-
-            }
-        };
-    });
-
-    ginasApp.directive('amount', function () {
-
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                value: '='
-            },
-            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display || value.units}}</span></div>'
-        };
-    });
-
-    ginasApp.directive('siteView', function () {
-
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                referenceobj: '='
-            },
-            link: function (scope, attrs, element) {
-                    console.log(scope);
-                console.log(scope.referenceobj.sites);
-
                 scope.siteDisplayToSite = function (site) {
                     var subres = site.split("_");
 
@@ -2174,8 +2120,8 @@
                 };
 
                 scope.siteDisplayListToSiteList = function (slist) {
+                    console.log(slist);
                     var toks = slist.split(";");
-                    console.log(toks);
                     var sites = [];
                     for (var i in toks) {
                         var l = toks[i];
@@ -2206,7 +2152,8 @@
 
                 };
 
-                scope.sitesToDislaySites = function (sitest) {
+                scope.sitesToDisplaySites = function (sitest) {
+                    console.log(sitest);
                     var sites = [];
                     angular.extend(sites, sitest);
                     sites.sort(function (site1, site2) {
@@ -2260,47 +2207,110 @@
                     return disp;
                 };
 
-/*                scope.makeSiteList= function(){
-                    scope.referenceobj.sites = scope.siteDisplayListToSiteList(scope.referenceobj.displayString);
-                };*/
-/*
+                scope.getSubunitRange = function () {
+                    return _.range(1, scope.subunits.length + 1);
+                };
 
+                scope.makeSiteList = function(){
+                    scope.referenceobj.sites= scope.siteDisplayListToSiteList(scope.referenceobj.displayString);
+                };
 
+                scope.redraw = function () {
+                    scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.referenceobj.sites);
+                };
 
+                scope.deleteObj = function (obj) {
+                    scope.referenceobj.splice(scope.referenceobj.indexOf(obj), 1);
+                };
+           }
+        };
+    });
 
+    ginasApp.directive('amount', function () {
 
-                scope.stringify = function () {
-                    var display;
-                    if(!_.isUndefined(scope.referenceobj)){
-                   //     console.log(scope.referenceobj);
-                        if(!_.isEmpty(scope.referenceobj)){
-                      //  console.log(scope.referenceobj);
-                        var r = _.map(_.sortByAll(scope.referenceobj, ['subunitIndex', 'residueIndex']), _.values);
-                        display = r[0][0] + "_" + r[0][1] + "->" + r[1][0] + "_" + r[1][1] + ";";
-                    }else{
-                        display =  "";
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                value: '='
+            },
+            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display || value.units}}</span></div>'
+        };
+    });
+
+    ginasApp.directive('siteView', function ($compile) {
+
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                referenceobj: '=',
+                parent:'='
+            },
+            link: function (scope, element, attrs) {
+                    console.log(scope);
+
+                scope.sitesToDisplaySites = function (sitest) {
+                    var sites = [];
+                    angular.extend(sites, sitest);
+                    sites.sort(function (site1, site2) {
+                        var d = site1.subunitIndex - site2.subunitIndex;
+                        if (d === 0) {
+                            d = site1.residueIndex - site2.residueIndex;
+                        }
+                        return d;
+
+                    });
+                    var csub = 0;
+                    var cres = 0;
+                    var rres = 0;
+                    var finish = false;
+                    var disp = "";
+                    for (var i = 0; i < sites.length; i++) {
+
+                        var site = sites[i];
+                        if (site.subunitIndex == csub && site.residueIndex == cres)
+                            continue;
+                        finish = false;
+                        if (site.subunitIndex == csub) {
+                            if (site.residueIndex == cres + 1) {
+                                if (rres === 0) {
+                                    rres = cres;
+                                }
+                            } else {
+                                finish = true;
+                            }
+                        } else {
+                            finish = true;
+                        }
+                        if (finish && csub !== 0) {
+                            if (rres !== 0) {
+                                disp += csub + "_" + rres + "-" + csub + "_" + cres + ";";
+                            } else {
+                                disp += csub + "_" + cres + ";";
+                            }
+                            rres = 0;
+                        }
+                        csub = site.subunitIndex;
+                        cres = site.residueIndex;
                     }
-                    }else{
-                            display ="";
+                    if (sites.length > 0) {
+                        if (rres !== 0) {
+                            disp += csub + "_" + rres + "-" + csub + "_" + cres;
+                        } else {
+                            disp += csub + "_" + cres;
+                        }
                     }
-                    scope.display =  display;
-                };*/
+                    return disp;
+                };
 
 
-                if(scope.referenceobj.sites){
-                    console.log('site list exists');
-                    scope.referenceobj.displayString = scope.sitesToDislaySites(scope.referenceobj.sites);
-                }else{
-                    console.log('no site list');
-                    scope.referenceobj.sites = scope.siteDisplayListToSiteList(scope.referenceobj.displayString);
+                if(!_.isUndefined(scope.referenceobj)) {
+                    console.log(scope.referenceobj);
+                    scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.referenceobj.sites);
                 }
-
-
                 },
-            template: '<div><span>{{referenceobj.displayString}}</span></div>'
-/*
-            template: '<div><span>{{stringify()}}</span></div>'
-*/
+           template: '<div><span>{{referenceobj.displayString}}</span></div>'
         };
     });
 
@@ -2444,6 +2454,7 @@
             restrict: 'E',
             replace: true,
             scope: {
+                referenceobj :'=',
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/structural-modifications-form.html",
@@ -2463,7 +2474,7 @@
                 };
 
                 scope.deleteObj = function (obj) {
-                    scope.parentprotein.modifications.structuralModifications.splice(scope.parentprotein.modifications.structuralModifications.indexOf(obj), 1);
+                    scope.parent.protein.modifications.structuralModifications.splice(scope.parent.protein.modifications.structuralModifications.indexOf(obj), 1);
                 };
             }
         };
@@ -2593,13 +2604,14 @@
             scope: {
                 parent: '=',
                 referenceobj: '=',
-                displayType: '=',
-                residueregex: '='
+                formype: '@',
+                residueregex: '@'
 
             },
             templateUrl: baseurl + "assets/templates/disulfide-link-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
+
                 if (!scope.parent.protein.disulfideLinks) {
                     scope.parent.protein.disulfideLinks = [];
 
@@ -2608,8 +2620,9 @@
                 scope.getAllCysteinesWithoutLinkage = function () {
                     var count = 0;
                        _.forEach(scope.parent.protein.subunits, function(subunit){
-                           console.log(subunit);
-                     count += subunit.cysteineIndices.length;
+                           if(!_.isUndefined(subunit.cysteineIndices)) {
+                               count += subunit.cysteineIndices.length;
+                           }
                      });
                      if(scope.parent.protein.disulfideLinks.length>0){
                      count -= scope.parent.protein.disulfideLinks.length*2;
@@ -2619,9 +2632,9 @@
 
                 scope.validate = function () {
                     console.log(scope);
-                    scope.parent.protein.disulfideLinks = scope.disulfideLink;
-                    // scope.dis = {};
-                    //  scope.disulfideLinksForm.$setPristine();
+                    scope.parent.protein.disulfideLinks.push(scope.disulfideLink);
+                    scope.disulfideLink = {};
+                    scope.disulfideLinksForm.$setPristine();
                 };
 
                 scope.deleteObj = function (obj) {
@@ -3321,7 +3334,7 @@
                         var arr = _.get(scope.parent, attrs.path);
                         arr.splice(arr.indexOf(scope.obj), 1);
                     } else {
-                        scope.substance[attrs.path].splice(scope.substance[attrs.path].indexOf(scope.obj), 1);
+                        scope.parent[attrs.path].splice(scope.parent[attrs.path].indexOf(scope.obj), 1);
                     }
                 };
             }
