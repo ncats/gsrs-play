@@ -50,9 +50,6 @@
            <div>Nucleic Acid not implemented yet, still in development</div>
            <div>@forms.nucleicaciddetailsform()</div>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
-@*
-            <div>@forms.subunitform()</div>
-*@
            <div>@forms.nucleicacidsugarform()</div>
            <div>@forms.nucleicacidlinkageform()</div>
         }
@@ -63,13 +60,12 @@
             <h2>Unknown substance class: @kind</h2>    
         }
     }
-
-    <div>@forms.officialnameform()</div>
-    <div>@forms.nameform()</div>
-    <div>@forms.codeform()</div>
-    <div>@forms.relationshipform()</div>
-    <div>@forms.noteform()</div>
-    <div>@forms.propertyform()</div>
+    <official-name-form></official-name-form>
+    <name-form></name-form>
+    <code-form></code-form>
+    <relationship-form></relationship-form>
+    <note-form></note-form>
+    <property-form></property-form>
    <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
 }
 

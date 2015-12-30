@@ -1,18 +1,23 @@
 <div class = "row info">
     <button class="btn btn-primary label-offset det">
-                        Names&nbsp;<span class="badge" ng-show="substance.unofficialNames.length>0">
+        Names&nbsp;<span class="badge" ng-show="substance.unofficialNames.length>0">
                         {{substance.unofficialNames.length}}</span> </button>
-@*
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-*@
+
+<!--    <span><i class="fa fa-question-circle fa-lg"></i></span>-->
+
     <div class="col-md-12">
         <form class="form-horizontal" name="nameForm" id = "add-name" role="form" novalidate>
             <div class="row form-row">
-                <div class="col-md-4">
-                    <text-input ng-model="name.name" field="name" required></text-input>
-                </div>
+                <div class="col-md-4 err-check" show-errors>
+                     <text-input ng-model="name.name" field="name" name ="name" id ="name" form="nameForm" required></text-input>
+                    <div ng-messages ="nameForm.name.$error" ng-if="nameForm.name.$touched">
+                        <div ng-message ="required" class="danger">Substance name is required</div>
+                        <!--<div ng-message ="duplicate" class="help-block">Name already exists in Ginas</div>-->
+                    </div>
+                    </div>
+
                 <div class="col-md-2 err-check" show-errors>
-                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" required></dropdown-select>
+                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" name = "type" required></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
@@ -31,7 +36,7 @@
                 </div>
             </div>
             <div class="nameForm"></div>
-            <submit-buttons submit="name" form="nameForm" path="unofficialNames"></submit-buttons>
+            <submit-buttons submit="name" form="nameForm" path="names"></submit-buttons>
         </form>
 
 
