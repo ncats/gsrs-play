@@ -1,12 +1,43 @@
 <div class="row info">
     <button class="btn btn-primary label-offset det">
-        Glycosylation&nbsp;<span class="badge" ng-show="parent.protein.glycosylation.count>0">
-                        {{parent.protein.glycosylation.count}}</span></button>
+        Glycosylation&nbsp;<span class="badge" ng-show="count>0">
+                        {{count}}</span></button>
     <div class="col-md-12">
         <form class="form-horizontal" name="glycosylationForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-4">
+            <div class="row form-row" >
+                <div class="col-md-3">
                     <dropdown-view-edit obj="parent.protein.glycosylation" field="glycosylationType"
+                                        cv="GLYCOSYLATION_TYPE"
+                                        label="Glycosylation Type"></dropdown-view-edit>
+                </div>
+
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="parent.protein.glycosylation" parent="parent" type="access" divid="glycosylationForm"
+                                   mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="parent.protein.glycosylation" parent="parent" type="reference" divid="glycosylationForm"
+                                   mode="edit"></form-selector>
+                </div>
+            </div>
+
+            <div class="row form-row">
+                <div ng-repeat="obj in arrays">
+                    <div class="col-md-2">
+                        <form-selector referenceobj="obj" parent=parent type="site" divid="glycosylationForm"
+                                       mode="edit"></form-selector>
+                    </div>
+                </div>
+            </div>
+            <br>
+
+            <div class="glycosylationForm"></div>
+
+
+   <!--
+            <div class="row form-row" >
+                <div class="col-md-4">
+                    <dropdown-view-edit obj="glyc.glycosylation" field="glycosylationType"
                                         cv="GLYCOSYLATION_TYPE" label="Glycosylation Type"></dropdown-view-edit>
                 </div>
             </div>
@@ -14,11 +45,11 @@
                 <div class="col-md-2">
                     <dropdown-select ng-model="glyc.glycosylationSite" field="Glycosylation Site"
                                      cv="GLYCOSYLATION_SITE" label="Glycosylation Site"></dropdown-select>
-                    <!--                    <form-selector referenceobj="mod" parent="substance" field="sites" divid="glycosylationForm"
-                                                       type="site"></form-selector>-->
-                    <!-- <input type="text" class="form-control" ng-model="structuralModification._displaySites"
+                    &lt;!&ndash;                    <form-selector referenceobj="mod" parent="substance" field="sites" divid="glycosylationForm"
+                                                       type="site"></form-selector>&ndash;&gt;
+                    &lt;!&ndash; <input type="text" class="form-control" ng-model="structuralModification._displaySites"
                             title="Modification Sites" id="modsites" name="modsites"
-                            na-sites={{structuralModification}}/>-->
+                            na-sites={{structuralModification}}/>&ndash;&gt;
                     <small class="error" ng-show="glycosylationForm.modsites.$error.siteInvalid">
                         {{glycosylationForm.modsites.$errorMsg.naSites}}
                     </small>
@@ -41,34 +72,40 @@
                 <a ng-click="reset()" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
                 <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
             </div>
-            <!--
                         <submit-buttons submit="glyc" form="glycosylationForm" path="glycosylation"></submit-buttons>
-            -->
         </form>
-
-        <!--
-                <div ng-repeat="arr in parent.protein.glycosylation">
-        -->
-        <div class="row" ng-repeat="obj in glycs | isArray:parent.protein.glycosylation">
-            {{obj}}
+        <div ng-if="count > 0">
+        <div class="row form-row" >
             <hr>
-            <div class="col-md-2">
-            <dropdown-view-edit obj=obj field="glycosylationSite"
-                                cv="GLYCOSYLATION_SITE" label="Glycosylation Site"></dropdown-view-edit>
-                </div>
-            <div class="col-md-1">
-                <form-selector referenceobj="obj" parent=parent type="site" field = "NGlycosylationSites" divid={{obj.$$hashKey}}
+
+            <div class="col-md-3">
+                <dropdown-view-edit obj="parent.protein.glycosylation" field="glycosylationType"
+                                    cv="GLYCOSYLATION_TYPE"
+                                    label="Glycosylation Type"></dropdown-view-edit>
+            </div>
+
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.name}}
                                mode="edit"></form-selector>
             </div>
             <div class="col-md-1 pull-right">
-                <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}
-                               mode="edit"></form-selector>
-            </div>
-            <div class="col-md-1 pull-right">
-                <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}
+                <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.name}}
                                mode="edit"></form-selector>
             </div>
         </div>
-        <div class={{obj.$$hashKey}}></div>
+
+        <div class="row form-row">
+            <div ng-repeat="obj in arrays">
+                <div class="col-md-2">
+                    <form-selector referenceobj="obj" parent=parent type="site" divid={{obj.name}}
+                                   mode="edit"></form-selector>
+                </div>
+            </div>
+        </div>
+        <br>
+
+        <div class={{obj.name}}></div>
     </div>
+    </div>-->
+</div>
 </div>

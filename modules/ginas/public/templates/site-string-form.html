@@ -3,7 +3,7 @@
         <i class="fa fa-times fa-2x danger"></i></a>
 
     <div class="col-md-12">
-        <label for="{{field}}" class="text-capitalize">{{field}}</label>
+        <label for="{{field}}" class="text-capitalize">{{referenceobj.field || 'Sites'}}</label>
         <textarea type="text" class="form-control" ng-blur="makeSiteList()"
                   ng-model="referenceobj.displayString" name="{{field}}" title="{{field}}"
                   id="{{field}}" placeholder="{{field}}"></textarea>
@@ -11,5 +11,4 @@
         <text-box ng-model= referenceobj.display ng-change = "print()" field= "display"></text-box>
 -->
     </div>
-    <hr>
 </div>

@@ -18,8 +18,6 @@
         case "protein" => {
              <div>@forms.proteindetailsform()</div>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
-@*             <div>@forms.otherlinksform()</div>
-           <div>@forms.disulfideform()</div>*@
             <div ng-if = "substance.protein.subunits.length>0">
             <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
             <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
@@ -72,9 +70,7 @@
     <div>@forms.relationshipform()</div>
     <div>@forms.noteform()</div>
     <div>@forms.propertyform()</div>
-@*    <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
-    *@@*@@*forms.amountmodalform()*@@*
-*@
+   <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
 }
 
 @ginas("Register", kind) {

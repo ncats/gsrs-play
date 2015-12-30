@@ -12,34 +12,9 @@
             });
         });
 
-    ginasApp.filter('range', function () {
-        return function (input, min, max) {
-            console.log(input);
-            min = parseInt(min); //Make string input int
-            max = parseInt(max);
-            for (var i = min; i < max; i++)
-                input.push(i);
-            return input;
-        };
-    });
-
-    ginasApp.filter('arrays', function () {
-        return function (input) {
-            var obj = {};
-            _.forIn(input, function (value, key) {
-                if (_.isArray(value)) {
-                    _.set(obj, key, value);
-                }
-            });
-            return obj;
-        };
-    });
-
     ginasApp.filter('isArray', function () {
         return function (input) {
-            console.log(input);
-            var temp = _.pick(input, _.isArray);
-            console.log(temp);
+            return _.pick(input, _.isArray);
         };
     });
 
@@ -187,6 +162,8 @@
             "protein.proteinSubtype": "PROTEIN_SUBTYPE",
             "protein.sequenceOrigin": "SEQUENCE_ORIGIN",
             "protein.sequenceType": "SEQUENCE_TYPE",
+            "property.type": "PROPERTY_TYPE",
+            "protein.glycosylation.glycosylationType": "GLYCOSYLATION_TYPE",
             "protein.modifications.structuralModifications.structuralModificationType": "STRUCTURAL_MODIFICATION_TYPE",
             "protein.modifications.structuralModifications.locationType": "LOCATION_TYPE",
             "protein.modifications.structuralModifications.extent": "EXTENT_TYPE"
@@ -1695,18 +1672,19 @@
                         scope.formtype = attrs.formtype;
                         scope.residueregex = attrs.residueregex;
                         scope.mode = attrs.mode;
-                        if (attrs.mode == "edit") {
+/*                        if (attrs.mode == "edit") {
+                            console.log(attrs);
                          template = angular.element('<a ng-click ="toggleStage()"><site-view referenceobj=referenceobj parent = parent></site-view></a>');
                          element.append(template);
                          $compile(template)(scope);
-                         } else {
+                         } else {*/
                         $templateRequest(baseurl + "assets/templates/site-selector.html").then(function (html) {
                             template = angular.element(html);
                             element.append(template);
                             $compile(template)(scope);
 
                         });
-                           }
+  //                         }
                         formHolder = '<site-string-form referenceobj = referenceobj parent = parent mode=mode residueregex=residueregex formtype = formtype></site-string-form>';
                         break;
                     case "reference":
@@ -2307,7 +2285,11 @@
 
                 if(!_.isUndefined(scope.referenceobj)) {
                     console.log(scope.referenceobj);
+                    if(_.has(scope.referenceobj, 'sites')){
                     scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.referenceobj.sites);
+                    }else{
+                        scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.referenceobj);
+                    }
                 }
                 },
            template: '<div><span>{{referenceobj.displayString}}</span></div>'
@@ -2449,7 +2431,7 @@
 
     });
 
-    ginasApp.directive('structuralModificationForm', function (CVFields) {
+    ginasApp.directive('structuralModificationForm', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -2480,7 +2462,7 @@
         };
     });
 
-    ginasApp.directive('physicalModificationForm', function (CVFields) {
+    ginasApp.directive('physicalModificationForm', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -2508,7 +2490,7 @@
         };
     });
 
-    ginasApp.directive('agentModificationForm', function (CVFields) {
+    ginasApp.directive('agentModificationForm', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -2538,7 +2520,7 @@
         };
     });
 
-    ginasApp.directive('glycosylationForm', function (CVFields) {
+    ginasApp.directive('glycosylationForm', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -2548,10 +2530,23 @@
             },
             templateUrl: baseurl + "assets/templates/glycosylation-form.html",
             link: function (scope, element, attrs) {
+                console.log(scope);
+                scope.count= 0;
                 if (!scope.parent.protein.glycosylation) {
                     scope.parent.protein.glycosylation = {};
 
                 }
+                var arrays =  _.pick(scope.parent.protein.glycosylation, _.isArray);
+                scope.arrays =_.forOwn(arrays, function(value, key) {
+                    console.log(value);
+                    scope.count += value.length;
+                    var ret = _.set(arrays[key], 'field', _.startCase(key));
+                    var ret = _.set(arrays[key], 'name',key);
+                    console.log(key);
+                    console.log(value);
+                    console.log(_.first(key));
+                });
+                //  scope.parsed =
 
                 scope.validate = function () {
                     if (!scope.parent.protein.glycosylation[scope.glyc.glycosylationSite.value]) {
@@ -2569,7 +2564,7 @@
         };
     });
 
-    ginasApp.directive('otherLinksForm', function (CVFields) {
+    ginasApp.directive('otherLinksForm', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -2597,7 +2592,7 @@
         };
     });
 
-    ginasApp.directive('disulfideLinkForm', function (CVFields) {
+    ginasApp.directive('disulfideLinkForm', function () {
         return {
             restrict: 'E',
             replace: true,
@@ -2691,7 +2686,7 @@
         };
     });
 
-    ginasApp.directive('subunit', function (CVFields) {
+    ginasApp.directive('subunit', function () {
 
         return {
             restrict: 'E',
@@ -2762,7 +2757,7 @@
         };
     });
 
-    ginasApp.directive('substanceChooserSelector', function ($templateRequest, $compile, nameFinder) {
+    ginasApp.directive('substanceChooserSelector', function ($templateRequest, $compile) {
         return {
             // templateUrl: baseurl + 'assets/templates/substance-select.html',
             replace: true,
