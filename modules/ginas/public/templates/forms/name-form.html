@@ -6,18 +6,18 @@
 <!--    <span><i class="fa fa-question-circle fa-lg"></i></span>-->
 
     <div class="col-md-12">
-        <form class="form-horizontal" name="nameForm" id = "add-name" role="form" novalidate>
+        <ng-form name="nameForm" id = "add-name">
             <div class="row form-row">
-                <div class="col-md-4 err-check" show-errors>
-                     <text-input ng-model="name.name" field="name" name ="name" id ="name" form="nameForm" required></text-input>
+                <div class="col-md-4 err-check" >
+                     <text-input ng-model="name.name" field="name" name ="name" id ="name" form="nameForm" validate = true duplicate></text-input>
                     <div ng-messages ="nameForm.name.$error" ng-if="nameForm.name.$touched">
-                        <div ng-message ="required" class="danger">Substance name is required</div>
-                        <!--<div ng-message ="duplicate" class="help-block">Name already exists in Ginas</div>-->
+                        <div ng-message ="required" class="help-block">Substance name is required</div>
+                        <div ng-message ="duplicate" class="help-block">Name already exists in Ginas</div>
                     </div>
                     </div>
 
-                <div class="col-md-2 err-check" show-errors>
-                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" name = "type" required></dropdown-select>
+                <div class="col-md-2 ">
+                    <dropdown-select ng-model="name.type" field="type" cv = "NAME_TYPE" name = "type"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
@@ -36,8 +36,8 @@
                 </div>
             </div>
             <div class="nameForm"></div>
-            <submit-buttons submit="name" form="nameForm" path="names"></submit-buttons>
-        </form>
+            <submit-buttons submit="name" form="nameForm" path="unofficialNames"></submit-buttons>
+        </ng-form>
 
 
         <div ng-repeat="obj in substance.unofficialNames">

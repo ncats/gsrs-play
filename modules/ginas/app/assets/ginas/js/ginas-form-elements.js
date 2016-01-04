@@ -85,6 +85,38 @@
         return CV;
     });
 
+    ginasFormElements.factory('isDuplicate', function ($q, substanceFactory) {
+        return function dupCheck(modelValue) {
+                var deferred = $q.defer();
+            if(!_.isUndefined(modelValue)) {
+                substanceFactory.getSubstances(modelValue)
+                    .success(function (response) {
+                        if (response.count >= 1) {
+                            deferred.reject();
+                        } else {
+                            deferred.resolve();
+                        }
+                    });
+            }else {
+                deferred.resolve();
+            }
+                return deferred.promise;
+        };
+    });
+
+    ginasFormElements.factory('substanceFactory', ['$http', function ($http) {
+        var url = baseurl + "api/v1/substances?filter=names.name='";
+        var substanceFactory = {};
+        substanceFactory.getSubstances = function (name) {
+            return $http.get(url + name.toUpperCase() + "'", {cache: true}, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            });
+        };
+        return substanceFactory;
+    }]);
+
     ginasFormElements.directive('checkBox', function () {
         return {
             restrict: 'E',
@@ -317,9 +349,11 @@
                 obj: '=ngModel',
                 field: '@',
                 label: '@',
-                form:'@'
+                form:'@',
+                validate:'='
             },
-            link: function(scope){console.log(scope);}
+            link: function(scope, element){console.log(scope);
+            }
         };
     });
 
@@ -338,6 +372,16 @@
                 scope.editing = function () {
                     scope.edit = !scope.edit;
                 };
+            }
+        };
+    });
+
+    ginasFormElements.directive('duplicate', function (isDuplicate) {
+        return {
+            restrict: 'A',
+            require: 'ngModel',
+            link: function (scope, element, attrs, ngModel) {
+                ngModel.$asyncValidators.duplicate = isDuplicate;
             }
         };
     });

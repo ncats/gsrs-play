@@ -100,36 +100,6 @@
         return utils;
     });
 
-    ginasApp.factory('isDuplicate', function ($q, substanceFactory) {
-        return function dupCheck(modelValue) {
-            console.log(modelValue);
-            var deferred = $q.defer();
-            substanceFactory.getSubstances(modelValue)
-                .success(function (response) {
-                    console.log(response);
-                    if (response.count >= 1) {
-                        deferred.reject();
-                    } else {
-                        deferred.resolve();
-                    }
-                });
-            return deferred.promise;
-        };
-    });
-
-    ginasApp.factory('substanceFactory', ['$http', function ($http) {
-        var url = baseurl + "api/v1/substances?filter=names.name='";
-        var substanceFactory = {};
-        substanceFactory.getSubstances = function (name) {
-            return $http.get(url + name.toUpperCase() + "'", {cache: true}, {
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            });
-        };
-        return substanceFactory;
-    }]);
-
     ginasApp.service('lookup', function ($http) {
         var options = {};
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
@@ -287,13 +257,17 @@
     });
 
     ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, lookup) {
-console.log($scope.nameForm);
 console.log($scope);
         var ginasCtrl = this;
         $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
+
+        $scope.scrollTo = function (prmElementToScrollTo) {
+            $location.hash(prmElementToScrollTo);
+            $anchorScroll();
+        };
 
         $scope.toggleJSONView = function () {
             $scope.submitSubstance = $scope.fromFormSubstance($scope.substance);
@@ -434,11 +408,6 @@ console.log($scope);
             return formSub;
         };
 
-        $scope.scrollTo = function (prmElementToScrollTo) {
-            $location.hash(prmElementToScrollTo);
-            $anchorScroll();
-        };
-
         $scope.expandCV = function (sub, path) {
 
             for (var v in sub) {
@@ -496,7 +465,7 @@ console.log($scope);
             return false;
         };
 
-        $scope.setLinkProperty = function (site, bridge, property) {
+/*        $scope.setLinkProperty = function (site, bridge, property) {
             _.set(site, property, true);
             site.bridge = bridge;
         };
@@ -518,7 +487,6 @@ console.log($scope);
             site.residueIndex = obj.residueIndex - 1 + 1;
             return site;
         };
-
 
         $scope.parseLink = function (obj, path) {
             var link = [];
@@ -559,11 +527,10 @@ console.log($scope);
             return link;
         };
 
-
         $scope.parseGlycosylation = function (obj, path) {
-            /*            if (!$scope.substance.protein.glycosylation.count) {
+            /!*            if (!$scope.substance.protein.glycosylation.count) {
              $scope.substance.protein.glycosylation.count = 0;
-             }*/
+             }*!/
             var link = obj.link;
             var site = $scope.makeSite(obj);
             site.link = link;
@@ -576,8 +543,7 @@ console.log($scope);
             tempSite = $scope.findSite(subunit.display, obj.residueIndex - 1 + 1);
             tempSite.glycosylationSite = true;
             return site;
-        };
-
+        };*/
 
         $scope.getResidueAtSite = function (site) {
             var msub = $scope.getSubunitWithIndex(site.subunitIndex);
@@ -605,9 +571,9 @@ console.log($scope);
 
         $scope.defaultSave = function (obj, form, path, list, name) {
             $scope.$broadcast('show-errors-check-validity');
-            /*            console.log(obj);
+                        console.log(obj);
              console.log(form);
-             console.log($scope);*/
+             console.log($scope);
 
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
@@ -627,11 +593,13 @@ console.log($scope);
                         _.set($scope.substance, path, x);
                     }
                 }
-                $scope[name] = {};
-                $scope.reset(form);
                 form.$setSubmitted(true);
+                $scope[name] = {};
                 $scope.$broadcast('show-errors-reset');
-                $scope.reset(form);
+                $scope[form.$name].$setPristine();
+                //form.$setValidity(true);
+                console.log(form);
+
                 console.log($scope);
             } else {
                 console.log(form);
@@ -671,22 +639,6 @@ console.log($scope);
 
         };
 
-        $scope.addFields = function (obj, path) {
-            if (!_.has($scope.substance, path)) {
-                return obj;
-            }
-            var temp = _.get($scope.substance, [path]);
-            console.log(temp);
-            console.log(obj);
-            _.forIn(obj, function (value, key) {
-                temp[key] = value;
-                console.log(value, key);
-            });
-            console.log(temp);
-            return temp;
-        };
-
-
         //Method for pushing temporary objects into the final message
         //Note: This was changed to use a full path for type.
         //That means that passing something like "nucleicAcid.type"
@@ -700,14 +652,9 @@ console.log($scope);
             console.log(obj);
             var v = path.split(".");
             var type = _.last(v);
-            //  console.log(type);
-            var subClass = ($scope.substance.substanceClass);
             switch (type) {
                 case "sugars":
                 case "linkages":
-                // case "disulfideLinks":
-                //   case "otherLinks":
-                case "glycosites":
                     //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
                     //if(true)return "test";
                     $scope.updateSiteList(obj);
@@ -716,13 +663,13 @@ console.log($scope);
                     break;
                 default:
                 //    if (obj._editType !== "edit") {
+                    console.log('saving');
                         $scope.defaultSave(obj, form, path, list, objName);
 /*                        console.log($scope);
                     }
                     //obj._editType = "add";*/
                     break;
             }
-            //$scope[objName] = {};
         };
 
 /*        $scope.toggle = function (el) {
@@ -741,15 +688,16 @@ console.log($scope);
             console.log(val);
         };*/
 
-        $scope.remove = function (obj, field) {
+/*        $scope.remove = function (obj, field) {
             var index = Substance[field].indexOf(obj);
             Substance[field].splice(index, 1);
-        };
+        };*/
 
         $scope.reset = function (form) {
             console.log(form);
+           // $scope.$broadcast('show-errors-reset');
             form.$setPristine();
-            $scope.$broadcast('show-errors-reset');
+            console.log(form);
         };
 
         $scope.selected = false;
@@ -770,11 +718,16 @@ console.log($scope);
 
 
         $scope.submitSubstance = function () {
+           // $scope.$broadcast('show-errors-check-validity');
+
             /*console.log($scope.nameForm);
              if($scope.nameForm.$dirty){
              alert('Name Form not saved');
              }*/
-
+            console.log($scope.nameForm.$valid);
+           if(!$scope.nameForm.$valid) {
+                alert("not valid");
+           }
             var r = confirm("Are you sure you'd like to submit this substance?");
             if (r != true) {
                 return;
@@ -1446,16 +1399,6 @@ console.log($scope);
                     elem.scrollspy('refresh');
                 }, 200);
             }, true);
-        };
-    });
-
-    ginasApp.directive('duplicate', function (isDuplicate) {
-        return {
-            restrict: 'A',
-            require: 'ngModel',
-            link: function (scope, element, attrs, ngModel) {
-                ngModel.$asyncValidators.duplicate = isDuplicate;
-            }
         };
     });
 
