@@ -55,7 +55,7 @@ object ApplicationBuild extends Build {
       ,"org.webjars" % "jquery-ui-themes" % "1.11.2"
       ,"org.webjars" % "angularjs" % "1.4.7"
       ,"org.webjars" % "angular-ui-bootstrap" % "0.13.3"
-      ,"org.webjars" % "font-awesome" % "4.2.0"
+      ,"org.webjars" % "font-awesome" % "4.5.0"
       ,"org.webjars" % "html5shiv" % "3.7.2"
       ,"org.webjars" % "requirejs" % "2.1.15"
       ,"org.webjars" % "respond" % "1.4.2"

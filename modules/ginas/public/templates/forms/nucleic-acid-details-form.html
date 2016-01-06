@@ -1,0 +1,29 @@
+<div class = "row info" >
+    <button class="btn btn-primary label-offset det">
+                        Nucleic Acid Classification&nbsp;</button>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>
+    <div class="col-md-12">
+            <div class="row form-row">
+                <div class="col-md-2 err-check">
+                    <dropdown-view-edit obj = "substance.nucleicAcid" field="nucleicAcidType" cv = "NUCLEIC_ACID_TYPE" label="Nucleic Acid Type"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2 err-check">
+                    <dropdown-view-edit obj = "substance.nucleicAcid" field="nucleicAcidSubType" cv = "NUCLEIC_ACID_SUBTYPE" label="Nucleic Acid Subtype"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2 err-check">
+                    <dropdown-view-edit obj = "substance.nucleicAcid" field="sequenceOrigin" cv = "NUCLEIC_ACID_SEQUENCE_ORIGIN" label="Sequence Origin"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2 err-check">
+                    <dropdown-view-edit obj = "substance.nucleicAcid" field="sequenceType" cv = "SEQUENCE_TYPE" label="Sequence Type"></dropdown-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="substance.nucleicAcid" parent = "substance" divid="naDetailsForm" type = "access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj ="substance.nucleicAcid" parent = "substance" divid="naDetailsForm" type = "reference"></form-selector>
+                </div>
+            </div>
+            <div class="naDetailsForm"></div>
+        </div>
+    </div>
+

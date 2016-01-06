@@ -1,0 +1,71 @@
+<div class = "row info">
+    <button class="btn btn-primary label-offset det">
+       Sugars&nbsp;</button>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>
+    <div class="col-md-12">
+        <ng-form class="form-horizontal" name="sugarForm" novalidate>
+            <span>Number of unspecified sugars: {{getAllSites()}}</span>
+            <div class="row form-row">
+                <div class="col-md-2">
+                    <dropdown-select ng-model="sugar.sugar" field="sugar"
+                                     cv="NUCLEIC_ACID_SUGAR"></dropdown-select>
+                </div>
+                                <div class="col-md-1">
+                    <form-selector referenceobj= sugar parent="parent" field ="sites" divid="sugarForm"
+                                   type="site"></form-selector>
+                                    <small class="error" ng-show="sugarForm.sugarsites.$error.siteInvalid">{{sugarForm.sugarsites.$errorMsg.naSites}}</small>
+                </div>
+                <div class="col-md-3">
+                    <label for= "apply">Apply to Remaining Sites</label>
+                    <br>
+                    <a ng-click="applyAll();" name= "apply" aria-label="Apply to all remaining sites" tooltip="Apply to all remaining sites"><i class="fa fa-clone fa-2x success"></i></a>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="sugar" parent="parent" divid="sugarForm"
+                                   type="access"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="sugar" parent="parent" divid="sugarForm"
+                                   type="reference"></form-selector>
+                </div>
+            </div>
+            <div class="sugarForm"></div>
+            <submit-buttons submit="sugar" form="sugarForm" path="sugars"></submit-buttons>
+        </ng-form>
+
+
+        <div ng-repeat="obj in parent.nucleicAcid.sugars">
+            <div class="row">
+                <hr>
+                <div class="col-md-1">
+                    <a ng-click="deleteObj(obj)"><i class="fa fa-times fa-2x danger"></i></a>
+<!--
+                    <delete-button delete="obj" path="nucleicAcid.sugars" ng-click="deleteObj(obj);"></delete-button>
+-->
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj="obj" field="sugar"
+                                        cv="NUCLEIC_ACID_SUGAR"
+                                        label="Sugar"></dropdown-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+                <div class="col-md-2">
+                    <label for= "num">Number of Sites</label>
+                    <div id = "num">{{obj.sites.length}} of {{getAllSites()}}</div>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}
+                                   mode="edit"></form-selector>
+                </div>
+            </div>
+            <div class={{obj.$$hashKey}}></div>
+        </div>
+    </div>
+</div>

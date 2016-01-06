@@ -613,11 +613,11 @@ i#grid-view-off {
     color: #ec971f;
 }
 
-.err-check .help-block,.err-check .help-block-duplicate  {
+.form-group .help-block, .form-group .help-block-duplicate  {
     display: none;
 }
 
-.err-check.has-error .help-block, .err-check .help-block-duplicate {
+.form-group.has-error .help-block, .form-group .help-block-duplicate {
     display: block;
 }
 

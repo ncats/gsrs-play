@@ -1,9 +1,9 @@
 <div class ="text-center">
     <label for={{type}} class="text-capitalize">{{referenceobj.field || 'Sites'}}</label>
 <br>
-    <a ng-show="referenceobj.displayString || referenceobj.displayString ==''" ng-click="toggleStage();" role="button"><site-view referenceobj=referenceobj parent = parent></site-view></a>
+    <a ng-show="referenceobj.$displayString || referenceobj.$displayString ==''" ng-click="toggleStage();" role="button"><site-view referenceobj=referenceobj parent = parent></site-view></a>
     <div class="text-center">
-        <a ng-hide="referenceobj.displayString" ng-click="toggleStage()" role="button" aria-label="Add Sites" tooltip="Add {{referenceobj.field || 'Sites'}}" id="{{type}}"><i
+        <a ng-hide="referenceobj.$displayString" ng-click="toggleStage()" role="button" aria-label="Add Sites" tooltip="Add {{referenceobj.field || 'Sites'}}" id="{{type}}"><i
                 class="fa fa-plus fa-2x success" ng-show="stage"></i>
             <i class="fa fa-minus fa-2x danger" ng-show="!stage"></i></a>
     </div>
