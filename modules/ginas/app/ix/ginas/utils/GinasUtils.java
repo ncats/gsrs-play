@@ -340,15 +340,10 @@ public class GinasUtils {
 
 		public GinasDumpExtractor(InputStream is) {
 			super(is);
-			// Logger.debug("I'm going to make a nice reader for everyone to
-			// use!");
 			try {
-				buff = new BufferedReader(new InputStreamReader(is));
-				// Logger.debug("####################################### Making
-				// reader ");
+				buff = new BufferedReader(new InputStreamReader(is, "UTF8"));
 			} catch (Exception e) {
-				// Logger.debug("Pfft ... just kidding, I hate readers
-				// anyway.");
+				
 			}
 
 		}
