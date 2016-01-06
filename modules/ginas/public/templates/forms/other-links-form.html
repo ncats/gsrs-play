@@ -5,6 +5,7 @@
     <button class="btn btn-primary label-offset det">
         Other Links&nbsp;<span class="badge" ng-show="parent.protein.otherLinks.length>0">
                         {{parent.protein.otherLinks.length}}</span> </button>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>
     <div class="col-md-12">
         <form class="form-horizontal" name="otherLinksForm" role="form" novalidate>
             <div class="row form-row">
@@ -14,7 +15,7 @@
                 </div>
                                 <div class="col-md-1">
                     <form-selector referenceobj= "otherLink" parent="parent" field ="protein" divid="otherLinksForm"
-                                   type="site" displaytype ="pair"></form-selector>
+                                   type="site" formtype ="pair"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="otherLink" parent="parent" divid="otherLinksForm"
@@ -43,7 +44,7 @@
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj="obj" parent="parent" type="site" divid={{obj.$$hashKey}}
-                                   mode="edit"></form-selector>
+                                   mode="edit" formtype="pair"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}

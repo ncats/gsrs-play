@@ -4,8 +4,7 @@
     var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'ui.bootstrap.datetimepicker', 'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements'
     ])
-        .config(function (showErrorsConfigProvider, localStorageServiceProvider, $locationProvider) {
-            showErrorsConfigProvider.showSuccess(true);
+        .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');
             $locationProvider.html5Mode({
@@ -335,7 +334,6 @@ console.log($scope);
 
         $scope.lookup = lookup;
 
-
         $scope.toFormSubstance = function (apiSub) {
             // console.log(apiSub);
             var officialNames = [];
@@ -569,43 +567,109 @@ console.log($scope);
             return subs;
         };
 
-        $scope.defaultSave = function (obj, form, path, list, name) {
-            $scope.$broadcast('show-errors-check-validity');
-                        console.log(obj);
-             console.log(form);
-             console.log($scope);
+        $scope.defaultSave = function (obj, form, path) {
 
+        };
+
+        //Method for pushing temporary objects into the final message
+        //Note: This was changed to use a full path for type.
+        //That means that passing something like "nucleicAcid.type"
+        //for type, will store the form object into that path inside
+        //the substance, unless otherwise caught in the switch.
+        //This simplifies some things.
+        $scope.validate = function (objName, form, path) {
+            $scope.$broadcast('show-errors-check-validity');
+            var obj = $scope[objName];
+            var v = path.split(".");
+            var type = _.last(v);
+            switch (type) {
+                case "sugars":
+                case "linkages":
+                  //  $scope.updateSiteList(obj);
+                        break;
+                default:
+                    break;
+            }
+            console.log(obj);
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
-                    if (!list) {
-                        _.set($scope.substance, path, obj);
-                    } else {
-                        var temp = _.get($scope.substance, path);
-                        temp.push(obj);
-                        _.set($scope.substance, path, temp);
-                    }
+                    var temp = _.get($scope.substance, path);
+                    temp.push(obj);
+                    _.set($scope.substance, path, temp);
                 } else {
-                    if (!list) {
-                        _.set($scope.substance, path, obj);
-                    } else {
-                        var x = [];
-                        x.push(angular.copy(obj));
-                        _.set($scope.substance, path, x);
-                    }
+                    var x = [];
+                    x.push(angular.copy(obj));
+                    _.set($scope.substance, path, x);
                 }
-                form.$setSubmitted(true);
-                $scope[name] = {};
-                $scope.$broadcast('show-errors-reset');
-                $scope[form.$name].$setPristine();
-                //form.$setValidity(true);
-                console.log(form);
+
+               // console.log($scope);
+               /// form.$setSubmitted(true);
+                $scope[objName] = null;
 
                 console.log($scope);
+                form.$setPristine();
+                form.$setUntouched();
+                $scope.$broadcast('show-errors-reset');
+                // form.$setValidity();
+               // form.$error= {};
+
             } else {
-                console.log(form);
                 console.log("Invalid");
             }
+
+
         };
+
+        $scope.checkErrors = function(){
+            console.log($scope.substanceForm);
+            if(_.has($scope.substanceForm, '$error')){
+                console.log($scope.substanceForm.$error);
+                _.forEach($scope.substanceForm.$error, function(error){
+                    console.log(error);
+                });
+            }
+        };
+
+        $scope.submitSubstance = function () {
+           //  $scope.$broadcast('show-errors-check-validity');
+          //      $scope.checkErrors();
+            /*console.log($scope.nameForm);
+             if($scope.nameForm.$dirty){
+             alert('Name Form not saved');
+             }*/
+/*            console.log($scope);
+            if(!$scope.substanceForm.$valid) {
+                alert("not valid");
+            }*/
+            var r = confirm("Are you sure you'd like to submit this substance?");
+            if (r != true) {
+                return;
+            }
+            var sub = angular.copy($scope.substance);
+            sub = $scope.fromFormSubstance(sub);
+            console.log(JSON.stringify(sub));
+            if (_.has(sub, 'update')) {
+                $.ajax({
+                    url: baseurl + 'api/v1/substances(' + sub.uuid + ')/_',
+                    type: 'PUT',
+                    beforeSend: function (request) {
+                        request.setRequestHeader("Content-Type", "application/json");
+                    },
+                    data: JSON.stringify(sub),
+                    success: function (data) {
+                        alert('Load was performed.');
+                    }
+                });
+            } else {
+                $http.post(baseurl + 'register/submit', sub).success(function () {
+                    console.log("success");
+                    alert("submitted!");
+                });
+            }
+        };
+
+
+/*
 
         $scope.siteDisplayListToSiteList = function (slist) {
             var toks = slist.split(";");
@@ -638,39 +702,9 @@ console.log($scope);
             return sites;
 
         };
+*/
 
-        //Method for pushing temporary objects into the final message
-        //Note: This was changed to use a full path for type.
-        //That means that passing something like "nucleicAcid.type"
-        //for type, will store the form object into that path inside
-        //the substance, unless otherwise caught in the switch.
-        //This simplifies some things.
-        $scope.validate = function (objName, form, path, list) {
-            console.log($scope);
-            console.log(form);
-            var obj = $scope[objName];
-            console.log(obj);
-            var v = path.split(".");
-            var type = _.last(v);
-            switch (type) {
-                case "sugars":
-                case "linkages":
-                    //console.log($scope.checkSites(obj.displaySites,$scope.substance.nucleicAcid.subunits,obj));
-                    //if(true)return "test";
-                    $scope.updateSiteList(obj);
-                    // console.log(JSON.parse(JSON.stringify(obj)));
-                    $scope.defaultSave(obj, form, path, list, objName);
-                    break;
-                default:
-                //    if (obj._editType !== "edit") {
-                    console.log('saving');
-                        $scope.defaultSave(obj, form, path, list, objName);
-/*                        console.log($scope);
-                    }
-                    //obj._editType = "add";*/
-                    break;
-            }
-        };
+
 
 /*        $scope.toggle = function (el) {
             console.log(el);
@@ -695,7 +729,7 @@ console.log($scope);
 
         $scope.reset = function (form) {
             console.log(form);
-           // $scope.$broadcast('show-errors-reset');
+           $scope.$broadcast('show-errors-reset');
             form.$setPristine();
             console.log(form);
         };
@@ -717,43 +751,7 @@ console.log($scope);
         };
 
 
-        $scope.submitSubstance = function () {
-           // $scope.$broadcast('show-errors-check-validity');
 
-            /*console.log($scope.nameForm);
-             if($scope.nameForm.$dirty){
-             alert('Name Form not saved');
-             }*/
-            console.log($scope.nameForm.$valid);
-           if(!$scope.nameForm.$valid) {
-                alert("not valid");
-           }
-            var r = confirm("Are you sure you'd like to submit this substance?");
-            if (r != true) {
-                return;
-            }
-            var sub = angular.copy($scope.substance);
-            sub = $scope.fromFormSubstance(sub);
-            console.log(JSON.stringify(sub));
-            if (_.has(sub, 'update')) {
-                $.ajax({
-                    url: baseurl + 'api/v1/substances(' + sub.uuid + ')/_',
-                    type: 'PUT',
-                    beforeSend: function (request) {
-                        request.setRequestHeader("Content-Type", "application/json");
-                    },
-                    data: JSON.stringify(sub),
-                    success: function (data) {
-                        alert('Load was performed.');
-                    }
-                });
-            } else {
-                $http.post(baseurl + 'register/submit', sub).success(function () {
-                    console.log("success");
-                    alert("submitted!");
-                });
-            }
-        };
         $scope.approveSubstance = function () {
             var sub = angular.copy($scope.substance);
             sub = $scope.fromFormSubstance(sub);
@@ -828,7 +826,7 @@ console.log($scope);
             return "";
         };
 
-        $scope.siteDisplayToSite = function (site) {
+/*        $scope.siteDisplayToSite = function (site) {
             var subres = site.split("_");
 
             if (site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g) === null) {
@@ -909,11 +907,11 @@ console.log($scope);
             }
             return sites;
 
-        };
+        };*/
 
-        $scope.getAllSites = function (link) {
+/*        $scope.getAllSites = function (link) {
             return $scope.siteDisplayListToSiteList($scope.getAllSitesDisplay(link));
-        };
+        };*/
         $scope.getAllSitesMatching = function (regexFilter) {
             var subs = $scope.getSubunits();
             var list = [];
@@ -934,7 +932,7 @@ console.log($scope);
             return $scope.getAllSites();
         };
 
-        $scope.getAllLeftoverSitesDisplay = function (link) {
+/*        $scope.getAllLeftoverSitesDisplay = function (link) {
             if (link) {
                 return $scope.sitesToDislaySites($scope.getAllSitesWithoutLinkage());
             } else {
@@ -975,8 +973,9 @@ console.log($scope);
             return retsites;
 
 
-        };
-        $scope.getAllSitesWithoutSugar = function () {
+        };*/
+
+       /* $scope.getAllSitesWithoutSugar = function () {
             var retsites = [];
             console.log($scope.substance);
 
@@ -1014,8 +1013,8 @@ console.log($scope);
             return retsites;
 
 
-        };
-        $scope.getAllSitesWithoutLinkage = function () {
+        };*/
+/*        $scope.getAllSitesWithoutLinkage = function () {
             var retsites = [];
 
             if ($scope.substance.nucleicAcid && $scope.substance.nucleicAcid.linkages) {
@@ -1088,7 +1087,7 @@ console.log($scope);
                     }
                 }
             return asites;
-        };
+        };*/
 
         $scope.removeItem = function (list, item) {
             _.remove(list, function (someItem) {
@@ -1128,7 +1127,7 @@ console.log($scope);
 
         };
 
-        $scope.validateSites = function (dispSites, link) {
+/*        $scope.validateSites = function (dispSites, link) {
             var subunits = $scope.getSubunits();
 
             var t = $scope.checkSites(dispSites, subunits, link);
@@ -1221,7 +1220,7 @@ console.log($scope);
             dest.length = 0;
             $scope.pushArrayIntoArray(dest, src);
             return dest;
-        };
+        };*/
 
         $scope.submitpaster = function (input) {
             console.log(input);
@@ -1427,7 +1426,7 @@ console.log($scope);
         };
     });
 
-    ginasApp.directive('siteView', function ($compile) {
+    ginasApp.directive('siteView', function (siteList) {
 
         return {
             restrict: 'E',
@@ -1437,72 +1436,18 @@ console.log($scope);
                 parent:'='
             },
             link: function (scope, element, attrs) {
-                   // console.log(scope);
-
-                scope.sitesToDisplaySites = function (sitest) {
-                    var sites = [];
-                    angular.extend(sites, sitest);
-                    sites.sort(function (site1, site2) {
-                        var d = site1.subunitIndex - site2.subunitIndex;
-                        if (d === 0) {
-                            d = site1.residueIndex - site2.residueIndex;
-                        }
-                        return d;
-
-                    });
-                    var csub = 0;
-                    var cres = 0;
-                    var rres = 0;
-                    var finish = false;
-                    var disp = "";
-                    for (var i = 0; i < sites.length; i++) {
-
-                        var site = sites[i];
-                        if (site.subunitIndex == csub && site.residueIndex == cres)
-                            continue;
-                        finish = false;
-                        if (site.subunitIndex == csub) {
-                            if (site.residueIndex == cres + 1) {
-                                if (rres === 0) {
-                                    rres = cres;
-                                }
-                            } else {
-                                finish = true;
-                            }
-                        } else {
-                            finish = true;
-                        }
-                        if (finish && csub !== 0) {
-                            if (rres !== 0) {
-                                disp += csub + "_" + rres + "-" + csub + "_" + cres + ";";
-                            } else {
-                                disp += csub + "_" + cres + ";";
-                            }
-                            rres = 0;
-                        }
-                        csub = site.subunitIndex;
-                        cres = site.residueIndex;
-                    }
-                    if (sites.length > 0) {
-                        if (rres !== 0) {
-                            disp += csub + "_" + rres + "-" + csub + "_" + cres;
-                        } else {
-                            disp += csub + "_" + cres;
-                        }
-                    }
-                    return disp;
-                };
-
-
                 if(!_.isUndefined(scope.referenceobj)) {
                     if(_.has(scope.referenceobj, 'sites')){
-                    scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.referenceobj.sites);
+                    scope.referenceobj.$displayString = siteList.siteString(scope.referenceobj.sites);
+
                     }else{
-                        scope.referenceobj.displayString = scope.sitesToDisplaySites(scope.referenceobj);
+                        scope.referenceobj.$displayString = siteList.siteString(scope.referenceobj);
                     }
                 }
-                },
-           template: '<div><span>{{referenceobj.displayString}}</span></div>'
+              //  console.log(scope);
+
+            },
+           template: '<div><div><span>{{referenceobj.$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
         };
     });
 
@@ -1588,7 +1533,6 @@ console.log($scope);
                 residues: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.edit = false;
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
@@ -1631,6 +1575,7 @@ console.log($scope);
                     //this.display = display;
                     display = _.chunk(display, 10);
                     scope.subunitDisplay = display;
+                    scope.parent.$subunitDisplay.push(display);
                 };
 
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
@@ -1890,7 +1835,7 @@ console.log($scope);
         };
     });
 
-    ginasApp.directive('siteSelector', function () {
+/*    ginasApp.directive('siteSelector', function () {
         return {
             restrict: 'E',
             scope: {
@@ -1952,7 +1897,7 @@ console.log($scope);
                 );
             }
         };
-    });
+    });*/
 
     //Ok, this needs to be re-evaluated a bit.
     //Right now, it always round trips, but that doesn't always make sense.
@@ -2242,7 +2187,7 @@ console.log($scope);
                 console.log(scope);
                 console.log("hi");
             },
-            template: '<span><h1>{{message}}ffffffffffff</h1></span>'
+            template: '<span><h1>{{message}}</h1></span>'
 
         };
     });

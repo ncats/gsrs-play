@@ -2,13 +2,14 @@
     <button class="btn btn-primary label-offset det">
                        Official Names&nbsp;<span class="badge" ng-show="substance.officialNames.length>0">
                         {{substance.officialNames.length}}</span> </button>
-
+    <span><i class="fa fa-question-circle fa-lg"></i></span>
     <div class="col-md-12">
-        <ng-form class="form-horizontal" name="officialNameForm" id = "add-name" role="form" novalidate>
+        <ng-form name="officialNameForm" id = "add-name" novalidate isolate-form>
             <div class="row form-row">
-                <div class="col-md-2 err-check" show-errors>
-                    <text-input ng-model="officialname.name" field="name" name = "name" validate = true duplicate></text-input>
-                    <div ng-messages ="officialNameForm.$error" ng-if="officialNameForm.name.$touched">
+                <div class="col-md-2">
+                    <text-input ng-model="officialname.name" field="name" name = "name" validate = true></text-input>
+                    <pre>{{ officialNameForm.name | json }}</pre>
+                    <div ng-messages ="officialNameForm.name.$error" ng-if="officialNameForm.name.$touched">
                                <div ng-message ="duplicate" class="danger">Name already exists in Ginas</div>
                     </div>
                 </div>

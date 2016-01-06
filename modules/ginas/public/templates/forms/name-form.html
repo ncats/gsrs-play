@@ -2,18 +2,18 @@
     <button class="btn btn-primary label-offset det">
         Names&nbsp;<span class="badge" ng-show="substance.unofficialNames.length>0">
                         {{substance.unofficialNames.length}}</span> </button>
-
-<!--    <span><i class="fa fa-question-circle fa-lg"></i></span>-->
+   <span><i class="fa fa-question-circle fa-lg"></i></span>
 
     <div class="col-md-12">
-        <ng-form name="nameForm" id = "add-name">
+        <ng-form name="nameForm" id = "add-name" novalidate isolate-form>
             <div class="row form-row">
-                <div class="col-md-4 err-check" >
-                     <text-input ng-model="name.name" field="name" name ="name" id ="name" form="nameForm" validate = true duplicate></text-input>
-                    <div ng-messages ="nameForm.name.$error" ng-if="nameForm.name.$touched">
-                        <div ng-message ="required" class="help-block">Substance name is required</div>
-                        <div ng-message ="duplicate" class="help-block">Name already exists in Ginas</div>
-                    </div>
+                <div class="col-md-4" >
+                     <text-input ng-model="name.name" field="name" name ="name" id ="name" form="nameForm" validate="true"></text-input>
+                    <pre>{{ nameForm.name | json }}</pre>
+                    <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
+                        <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
+                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                    </ng-messages>
                     </div>
 
                 <div class="col-md-2 ">
@@ -32,7 +32,7 @@
                     <form-selector referenceobj= "name" parent = "substance" divid="nameForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj= "name" parent = "substance" divid="nameForm" type = "reference"></form-selector>
+                    <form-selector referenceobj= "name" parent = "substance" divid="nameForm" type = "reference" required></form-selector>
                 </div>
             </div>
             <div class="nameForm"></div>

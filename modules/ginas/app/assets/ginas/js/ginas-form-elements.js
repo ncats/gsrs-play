@@ -352,7 +352,8 @@
                 form:'@',
                 validate:'='
             },
-            link: function(scope, element){console.log(scope);
+            link: function(scope, element){
+                //console.log(scope);
             }
         };
     });
@@ -381,6 +382,8 @@
             restrict: 'A',
             require: 'ngModel',
             link: function (scope, element, attrs, ngModel) {
+               // console.log(ngModel);
+              //  console.log(scope);
                 ngModel.$asyncValidators.duplicate = isDuplicate;
             }
         };

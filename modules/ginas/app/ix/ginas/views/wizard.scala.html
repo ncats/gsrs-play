@@ -8,14 +8,14 @@
     <title-header name = "substance._name" kind = "substance.substanceClass" ></title-header>
     @kind match {
         case "chemical" => {
-@*            <div>@forms.structureform()</div>
-            <div>@forms.moietyform()</div>*@
+            <div>@forms.structureform()</div>
+            <div>@forms.moietyform()</div>
         }
         case "mixture" => {
-           <div>@forms.mixturecomponentselectform()</div>
+           <mixture-component-select-form></mixture-component-select-form>
         }
         case "protein" => {
-@*             <div>@forms.proteindetailsform()</div>
+             <protein-details-form></protein-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.protein.subunits.length>0">
             <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
@@ -24,14 +24,14 @@
             <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
             <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
             <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
-                </div>*@
+                </div>
         }
         case "structurallyDiverse" => {
-           <div>@forms.diversesourceform()</div>
-           <div ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'">@forms.diverseorganismform()</div>
-            <div>@forms.diversedetailsform()</div>
-            <div>@forms.parentform()</div>
-            <div>@forms.partform()</div>
+           <diverse-source-form></diverse-source-form>
+           <diverse-organism-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'"></diverse-organism-form>
+            <diverse-details-form></diverse-details-form>
+            <parent-form></parent-form>
+            <part-form></part-form>
 
 
         }
@@ -47,25 +47,35 @@
         }
         case "nucleicAcid" => {
            <div>Nucleic Acid not implemented yet, still in development</div>
-           <div>@forms.nucleicaciddetailsform()</div>
+           <nucleic-acid-details-form></nucleic-acid-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
-           <div>@forms.nucleicacidsugarform()</div>
+            <div ng-if = "substance.$subunitDisplay.length>0">
+            <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
+            <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
+                </div>
+
+@*
+            <div>@forms.nucleicacidsugarform()</div>
+*@
+
+@*
            <div>@forms.nucleicacidlinkageform()</div>
+*@
         }
         case "specifiedSubstanceG1" => {
-            <div>@forms.ssconstituentform()</div>
+            <ss-constituent-form></ss-constituent-form>
         }
         case x =>{
             <h2>Unknown substance class: @kind</h2>    
         }
     }
-    @*<official-name-form></official-name-form>*@
+   <official-name-form></official-name-form>
     <name-form></name-form>
-@*    <code-form></code-form>
+    <code-form></code-form>
     <relationship-form></relationship-form>
     <note-form></note-form>
     <property-form></property-form>
-   <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>*@
+   <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
 }
 
 @ginas("Register", kind) {
@@ -81,7 +91,7 @@
     <div ng-cloak>
         <form class="form-horizontal" name ="substanceForm" role ="form" novalidate>
         @wizardfields(kind)
-            </form>
+
         <div class = "row info">
             <div class="col-md-4">
                 <button class="btn btn-primary" ng-hide="showJSON" ng-click="toggleJSONView()" >Show JSON</button>
@@ -92,7 +102,8 @@
                 <button class="btn btn-primary" ng-click="submitSubstance(substance)">Submit</button>
             </div>
         </div>
-        <div class = "row" ng-repeat="err in errorsArray">
+            <pre>Substance Form valid = {{ substanceForm.$valid | json }}</pre>
+            <div class = "row" ng-repeat="err in errorsArray">
             <div class="col-md-12">
                 <div class="alert {{err.class}} alert-dismissible" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
@@ -105,8 +116,8 @@
                     </span>
                 </div>
             </div>
-
         </div>
+        </form>
     </div>
     <div class ="row info" ng-show="showJSON">
 	<div>
