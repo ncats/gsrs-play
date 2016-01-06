@@ -8,6 +8,7 @@ import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
+
 import com.avaje.ebean.*;
 
 import ix.core.controllers.EntityFactory;
@@ -65,5 +66,14 @@ public class CodeFactory extends EntityFactory {
 
     public static Result update (UUID uuid, String field) {
         return update (uuid, field, Code.class, finder);
+    }
+    public static String getMostRecentCode(String codeSystem, String like){
+    	List<Code> subs=finder.where().and(com.avaje.ebean.Expr.like("code",like), com.avaje.ebean.Expr.eq("codeSystem",codeSystem)).order().desc("code").setMaxRows(1).findList();
+    	if(subs!=null && !subs.isEmpty()){
+    		System.out.println("#####################FOUND CODE:" + subs.get(0).code);
+    		return subs.get(0).code;
+    	}
+    	System.out.println("################# NO CODE!");
+    	return null;
     }
 }

@@ -104,9 +104,16 @@ public class Name extends GinasCommonSubData {
     @JoinTable(name="ix_ginas_name_nameorg")
     public List<NameOrg> nameOrgs = new ArrayList<NameOrg>();
     
+    
     @JSONEntity(title = "Preferred Term")
+    /**
+     * There can be many preferred terms per substance
+     */
     public boolean preferred;
     
+    /**
+     * There can only be 1 display name per substance
+     */
     public boolean displayName;
 
     public Name () {}

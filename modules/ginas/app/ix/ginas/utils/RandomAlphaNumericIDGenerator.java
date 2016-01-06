@@ -94,5 +94,4 @@ public abstract class RandomAlphaNumericIDGenerator extends IDGenerator<String>{
 		}
 		return true;
 	}
-
 }
