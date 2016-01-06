@@ -538,7 +538,6 @@
     ginasForms.service('siteAdder', function (siteList){
 
         this.getAll = function (type, display) {
-            console.log(display);
             var temp = [];
             _.forEach(display, function (arr) {
                 _.forEach(arr, function (subunit) {
@@ -551,8 +550,6 @@
         };
 
         this.getAllSitesWithout = function (type, display) {
-            console.log(display);
-
             var temp = [];
             _.forEach(display, function (arr) {
             _.forEach(arr, function (subunit) {
@@ -569,7 +566,6 @@
 
         this.applyAll = function (type, parent, obj) {
             var plural = type+"s";
-            console.log(parent);
             if (parent.nucleicAcid[plural].length == 0) {
                 if(type =='linkage'){
                     obj.$displayString = siteList.allSites(parent, 'nucleicAcid', type);
@@ -605,19 +601,11 @@
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
             link: function (scope, attrs, element) {
-                console.log(scope);
                 scope.sugar = {};
 
                 if (!scope.parent.nucleicAcid.sugars) {
                     scope.parent.nucleicAcid.sugars = [];
                 }
-
-                scope.$watch(scope.parent.$subunitDisplaylength, function(newValue, oldValue){
-                if(newValue) {
-                    console.log('chganged');
-                    scope.getAllSites();
-                }
-                });
 
                 scope.getAllSites = function () {
                     return siteAdder.getAll('sugar', scope.parent.$subunitDisplay).length + siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
@@ -629,9 +617,7 @@
                 };
 
                 scope.validate = function () {
-                    console.log(scope.parent);
                     _.forEach(scope.sugar.sites, function (site) {
-                        console.log(site);
                         _.set(scope.parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'sugar', true);
                     });
                     scope.parent.nucleicAcid.sugars.push(scope.sugar);

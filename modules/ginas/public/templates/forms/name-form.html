@@ -9,7 +9,6 @@
             <div class="row form-row">
                 <div class="col-md-4" >
                      <text-input ng-model="name.name" field="name" name ="name" id ="name" form="nameForm" validate="true"></text-input>
-                    <pre>{{ nameForm.name | json }}</pre>
                     <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
                         <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
                         <ng-message when="required" class="help-block">Substance name is required</ng-message>

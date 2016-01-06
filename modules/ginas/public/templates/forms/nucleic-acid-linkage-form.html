@@ -1,10 +1,11 @@
 <div class = "row info">
     <button class="btn btn-primary label-offset det">
        Linkages&nbsp;</button>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>
+
     <div class="col-md-12">
         <ng-form class="form-horizontal" name="linkageForm" novalidate>
             <span>Number of unspecified linkages: {{noLinkages}}</span>
-            <span><i class="fa fa-question-circle fa-lg"></i></span>
             <div class="row form-row">
                 <div class="col-md-2">
                     <dropdown-select ng-model="linkage.linkage" field="linkage"

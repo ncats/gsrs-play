@@ -4,7 +4,7 @@
     <span><i class="fa fa-question-circle fa-lg"></i></span>
     <div class="col-md-12">
         <ng-form class="form-horizontal" name="sugarForm" novalidate>
-            <span>Number of unspecified sugars: {{noSugars}}</span>
+            <span>Number of unspecified sugars: {{getAllSites()}}</span>
             <div class="row form-row">
                 <div class="col-md-2">
                     <dropdown-select ng-model="sugar.sugar" field="sugar"

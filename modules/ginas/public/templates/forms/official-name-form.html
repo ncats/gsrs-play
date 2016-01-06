@@ -8,7 +8,6 @@
             <div class="row form-row">
                 <div class="col-md-2">
                     <text-input ng-model="officialname.name" field="name" name = "name" validate = true></text-input>
-                    <pre>{{ officialNameForm.name | json }}</pre>
                     <div ng-messages ="officialNameForm.name.$error" ng-if="officialNameForm.name.$touched">
                                <div ng-message ="duplicate" class="danger">Name already exists in Ginas</div>
                     </div>
