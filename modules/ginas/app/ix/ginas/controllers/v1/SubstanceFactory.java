@@ -12,6 +12,7 @@ import ix.core.models.Value;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.ProteinSubstance;
@@ -29,6 +30,7 @@ import ix.seqaln.SequenceIndexer;
 import ix.seqaln.SequenceIndexer.ResultEnumeration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -90,6 +92,23 @@ public class SubstanceFactory extends EntityFactory {
         }
         return null;
     }
+    public static String getMostRecentCode(String codeSystem, String like){
+    	List<Substance> subs=finder.where().and(com.avaje.ebean.Expr.like("codes.code",like), com.avaje.ebean.Expr.eq("codes.codeSystem",codeSystem)).orderBy("codes.code").setMaxRows(1).findList();
+    	List<String> retCodes = new ArrayList<String>();
+    	if(subs!=null){
+    		if(subs.size()>=1){
+    		Substance sub=subs.get(0);
+    		for(Code c: sub.codes){
+    			if(c.codeSystem.equals(codeSystem)){
+    				retCodes.add(c.code);
+    			}
+    		}
+    		}
+    	}
+    	if(retCodes.size()==0)return null;
+    	Collections.sort(retCodes);
+    	return retCodes.get(0);
+    }
 
     public static List<Substance> getSubstances
         (int top, int skip, String filter) {
@@ -110,10 +129,6 @@ public class SubstanceFactory extends EntityFactory {
                 return finder.where().and(com.avaje.ebean.Expr.eq("codes.code",code), com.avaje.ebean.Expr.eq("codes.codeSystem",codeSystem)).findList();
     }
     
-    public static List<Substance> getSubstancesWithSequenceID
-    (int top, int skip, String code, String codeSystem) {
-                return finder.where().and(com.avaje.ebean.Expr.eq("codes.code",code), com.avaje.ebean.Expr.eq("codes.codeSystem",codeSystem)).findList();
-    }
         
     public static Integer getCount () {
         try {
@@ -285,6 +300,7 @@ public class SubstanceFactory extends EntityFactory {
 
 		public List<Substance> filterByAccess(List<Substance> results) {
 			List<Substance> filteredSubstances = new ArrayList<Substance>();
+	    	
 
 			if(IxDeadboltHandler.activeSessionHasPermission("isAdmin")){
 				return results;

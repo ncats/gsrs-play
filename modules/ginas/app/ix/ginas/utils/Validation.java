@@ -33,7 +33,17 @@ import play.mvc.Call;
 
 public class Validation {
 	
+	private static CodeSequentialGenerator seqGen=null;
 	
+	static{
+		String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
+		String codeSystemSuffix = Play.application().configuration().getString("ix.ginas.generatedcode.suffix", null);
+		int length = Play.application().configuration().getInt("ix.ginas.generatedcode.length", 10);
+		boolean padding = Play.application().configuration().getBoolean("ix.ginas.generatedcode.padding", true);
+		if(codeSystem!=null){
+			seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
+		}
+	}
 	static final PayloadPlugin _payload =
 	        Play.application().plugin(PayloadPlugin.class);
 	
@@ -53,6 +63,8 @@ public class Validation {
 	        validateCodes(s,gpm,strat);
 	        validateRelationships(s,gpm,strat);
 	        validateNotes(s,gpm,strat);
+	        
+	       
 	        
 	
 	        Logger.info("substance Class " + s.substanceClass);
@@ -91,6 +103,23 @@ public class Validation {
 		        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance class \"" +s.substanceClass + "\" is not valid" ));
 		            break;
 	        }
+	        if(seqGen!=null){
+		        boolean hasCode = false;
+		        for(Code c:s.codes){
+		        	if(c.codeSystem.equals(seqGen.getCodeSystem())){
+		        		hasCode=true;
+		        	}
+		        }
+		        if(!hasCode){
+		        	try{
+			        	Code c=seqGen.addCode(s);
+			        	System.out.println("Generating new code:" + c.code);
+		        	}catch(Exception e){
+		        		e.printStackTrace();
+		        	}
+		        }
+	        }
+	        
 	        if(GinasProcessingMessage.ALL_VALID(gpm)){
 	        	gpm.add(GinasProcessingMessage.SUCCESS_MESSAGE("Substance is valid"));
 	        }
@@ -281,6 +310,9 @@ public class Validation {
 	        }
 	        return true;
 	}
+	
+	
+	
 	public static boolean validateRelationships(Substance s,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat ){
         List<Relationship> remnames = new ArrayList<Relationship>();
         for(Relationship n : s.relationships){
