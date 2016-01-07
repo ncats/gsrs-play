@@ -20,10 +20,19 @@
 
 
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
-        var deferred = $q.defer();
         var CV = {
             lookuptable: lookup,
 
+            count: function(){
+                 url = baseurl + "api/v1/vocabularies";
+                return $http.get(url,{cache:true},{
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function (data) {
+                    return data;
+                });
+            },
             load: function (field) {
                 if (!_.has(CV, field)) {
                     var promise = $http.get(url + field.toUpperCase() + "'&top=999", {cache: true}, {

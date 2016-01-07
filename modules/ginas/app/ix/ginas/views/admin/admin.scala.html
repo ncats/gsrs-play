@@ -3,8 +3,30 @@
 } {
     <h3></h3>
 } {
-<ul>
-        <li><a href= "@ix.ncats.controllers.crud.routes.Administration.listPrincipals()" id ="admin-button" target="_self"><button class="btn btn-default">
-                        Users</button></a></li>
-                        </ul> 
+    <uib-tabset>
+        <uib-tab>
+            <uib-tab-heading>
+                User Management <i class ="fa fa-users fa-2x"></i>
+            </uib-tab-heading>
+            @users()
+        </uib-tab>
+        <uib-tab select="">
+            <uib-tab-heading>
+                Data Management <i class ="fa fa-database fa-2x"></i>
+            </uib-tab-heading>
+            @load()
+        </uib-tab>
+        <uib-tab select="">
+            <uib-tab-heading>
+                CV Management <i class ="fa fa-briefcase fa-2x"></i>
+            </uib-tab-heading>
+            <cv-form></cv-form>
+        </uib-tab>
+@*        <uib-tab select="">
+            <uib-tab-heading>
+                Rebuild Index <i class ="fa fa-refresh fa-2x"></i>
+            </uib-tab-heading>
+            @rebuild()
+        </uib-tab>*@
+    </uib-tabset>
 }

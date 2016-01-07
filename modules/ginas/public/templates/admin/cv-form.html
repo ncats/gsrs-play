@@ -1,0 +1,24 @@
+<div class="row info">
+    <button class="btn btn-primary label-offset det">
+        Controlled Vocabulary&nbsp;<span class="badge">
+                        {{count}}</span></button>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>
+                <uib-tabset justified="true">
+                    <uib-tab select="create()">
+                        <uib-tab-heading>
+                            <i class="fa fa-plus-circle fa-4x success"></i><br>Add New Domain</a>
+                        </uib-tab-heading>
+                    </uib-tab>
+                    <uib-tab select="edit()">
+                        <uib-tab-heading>
+                            <i class="fa fa-pencil-square fa-4x"></i><br>Edit Domain</a>
+                        </uib-tab-heading>
+                    </uib-tab>
+                    <uib-tab select="import()">
+                        <uib-tab-heading>
+                            <i class="fa fa-download fa-4x success"></i><br>Import CV</a>
+                        </uib-tab-heading>
+                    </uib-tab>
+                </uib-tabset>
+                <div class="cvForm"></div>
+</div>

@@ -18,7 +18,7 @@
 
         <div class="collapse navbar-collapse navbar-default" id="menubar">
             <ul class="nav navbar-nav pull-left">
-              <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self"><span>Home</span></a></li>
+              <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self" alt ="Home" aria-label="Return Home"><i class ="fa fa-home fa-2x"></i></a></li>
               <li><a href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
               @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                   <li><a href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>Register Substance</span></a></li>
@@ -35,12 +35,11 @@
                 <ul class="nav navbar-nav pull-right">
                    
                 @dynamic(name ="isAdmin" , handler= new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    @if(GinasLoad.ALLOW_LOAD) {
+@*                    @if(GinasLoad.ALLOW_LOAD) {
                         <li><a href= "@ix.ginas.controllers.routes.GinasLoad.load()" id ="load-button" target="_self"><button class="btn btn-default">
                             Load Data</button></a></li>
-                    }
-                    <li><a href= "/ginas/app/admin" id ="admin-button" target="_self"><button class="btn btn-default">
-                        Admin</button></a></li>
+                    }*@
+                    <li><a href= "/ginas/app/admin" id ="admin-button" target="_self">Admin</a></li>
                 }
                
                 

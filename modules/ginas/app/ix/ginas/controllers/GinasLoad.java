@@ -129,8 +129,51 @@ public class GinasLoad extends App {
 		}
 
 		DynamicForm requestData = Form.form().bindFromRequest();
+		String type = requestData.get("file-type");
+Logger.info("type =" + type);
+		try{
+		Payload payload = payloadPlugin.parseMultiPart("file-name",
+				request());
+		switch (type){
+			case "JSON":
+				Logger.info("JOS =" + type);
+				if (!GinasLoad.OLD_LOAD) {
+					String id = ginasRecordProcessorPlugin
+							.submit(payload,
+									ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
+									ix.ginas.utils.GinasUtils.GinasSubstancePersister.class);
+					return redirect(ix.ginas.controllers.routes.GinasLoad
+							.monitorProcess(id));
+					// return ok("Running job " + id + " payload is " +
+					// payload.name + " also " + payload.id);
+				} else {
+					// Old way
+					return GinasLegacyUtils
+							.processDump(
+									ix.utils.Util
+											.getUncompressedInputStreamRecursive(payloadPlugin
+													.getPayloadAsStream(payload)),
+									false);
+				}
+			case "SD":
+				Logger.info("SD =" + type);
 
-		try {
+				payload.save();
+				Map<String, FieldStatistics> m = GinasSDFExtractor
+						.getFieldStatistics(payload, 100);
+				return ok(ix.ginas.views.html.admin.sdfimportmapping.render(
+						payload, new ArrayList<FieldStatistics>(m.values())));
+			default:
+				return badRequest("Neither json-dump nor "
+						+ "sd-file is specified!");
+		}
+
+		} catch (Exception ex) {
+			return _internalServerError(ex);
+		}
+
+
+	/*	try {
 
 			Payload sdpayload = payloadPlugin.parseMultiPart("sd-file",
 					request());
@@ -172,8 +215,9 @@ public class GinasLoad extends App {
 			}
 		} catch (Exception ex) {
 			return _internalServerError(ex);
-		}
+		}*/
 	}
+
 
 	public static Result loadSDF(String payloadUUID) {
 		Payload sdpayload = PayloadFactory.getPayload(UUID

@@ -1,44 +1,68 @@
-@ix.ginas.views.html.ginas("Load Data", "null") {
-    @ix.ginas.views.html.menu()
-} {
-    <h3></h3>
-} {
-
-    <div class="container">
-        <div class="row">
-            <div class = "col-md-8 col-md-offset-2">
-                <h1 class="cover-heading">ginas JSON Loader</h1>
+<div class="row info">
+    <button class="btn btn-primary label-offset det">
+        Data Management&nbsp;</button>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>
+    <div class="col-md-12">
                 <form class="form-horizontal" role="form" method="POST"
                 enctype="multipart/form-data"
-                action="@ix.ginas.controllers.routes.GinasLoad.loadJSON()">
-                   <div class="form-group">
-                        <label for="json-dump"
-                        class="col-sm-3 control-label">JSON Dump File</label>
-                        <div class="col-sm-9">
-                            <input type="file"
-                            class="form-control"
-                            name="json-dump"
-                            id="json-dump">
+                action="@ix.ginas.controllers.routes.GinasLoad.loadJSON()" novalidate>
+                    <div class="row form-row">
+                        <div class="col-md-2">
+                            <label for="file-type">Select File Type</label>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-control" name ="file-type">
+                                <option value="JSON">JSON Dump File</option>
+                                <option value="SD">SD File</option>
+                            </select>
                         </div>
                     </div>
-                        <div class="form-group">
-                        <label for="sd-file"
-                        class="col-sm-3 control-label">SD File</label>
-                        <div class="col-sm-9">
-                            <input type="file"
-                            class="form-control"
-                            name="sd-file"
-                            id="sd-file">
+                    <div class="row form-row">
+                        <div class="col-md-2">
+                            <label for="file-name">Browse</label>
+                        </div>
+                        <div class="col-md-6">
+                            <file-field ng-model="uploadFile"><i class ="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                            <br>
+                            {{uploadFile.name}}
                         </div>
                     </div>
-                    <div class="form-group">
-                        <div class="col-sm-offset-10 col-sm-2">
-                            <button type="submit" class="btn btn-default">Load</button>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-offset-10 col-md-2">
+                            <button type="submit" class="btn btn-success">Load</button>
                         </div>
                     </div>
                 </form>
-
             </div>
-        </div>
-    </div>
-}
+@*
+@jobs()
+*@
+@* <form class="form-horizontal" role="form" method="POST"
+enctype="multipart/form-data">
+<div class="form-group">
+<label for="file-type"
+class="col-sm-3 control-label">Select File Type</label>
+<div class="col-sm-3">
+<select class="form-control">
+<option>JSON Dump File</option>
+<option>SD File</option>
+</select>
+</div>
+<div class="col-sm-6">
+<input type="file"
+name="json-dump"
+id="json-dump">
+<i class ="fa fa-folder-open fa-lg"></i>
+</div>
+</div>
+<div class="form-group">
+<div class="col-sm-offset-10 col-sm-2">
+<button ng-click="@ix.ginas.controllers.routes.GinasLoad.loadJSON()" class="btn btn-default">Load</button>
+</div>
+</div>
+
+</form>
+
+*@
+</div>
