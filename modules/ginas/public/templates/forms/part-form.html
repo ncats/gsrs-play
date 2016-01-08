@@ -1,0 +1,27 @@
+<div class = "row info">
+    <button class="btn btn-primary label-offset det">
+                        Parts & Fractions&nbsp;<span class="badge" ng-show="substance.structurallyDiverse.part.length>0">
+                        {{substance.structurallyDiverse.part.length}}</span> </button>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>
+
+    <div class="col-md-12">
+            <div class="row form-row">
+                <div class="col-md-3">
+                    <label for="partLocation">Part Location</label>
+                    <dropdown-view-edit obj="substance.structurallyDiverse" field="partLocation" cv = "PART_LOCATION" name ="partLocation"></dropdown-view-edit>
+                </div>
+                <div class="col-md-3">
+                    <label for="part">Part</label>
+                    <multi-view-edit obj="substance.structurallyDiverse" field="part" cv = "PART" id ="part"></multi-view-edit>
+                </div>
+                <div class="col-md-3">
+                    <text-view-edit obj = "substance.structurallyDiverse" field="fractionName" label="Fraction Name"></text-view-edit>
+                </div>
+                <div class="col-md-3">
+                    <dropdown-view-edit obj = "substance.structurallyDiverse" field="fractionMaterialType" cv = "FRACTION_MATERIAL_TYPE" label="Fraction Material Type"></dropdown-view-edit>
+                </div>
+
+            </div>
+        <p></p>
+    </div>
+</div>

@@ -5,11 +5,16 @@
 
 @wizardfields(kind: String) = {
 
-    <title-header name = "substance._name" kind = "substance.substanceClass" ></title-header>
+    <title-header name = "substance._name" kind = "substance.substanceClass"></title-header>
     @kind match {
         case "chemical" => {
             <div>@forms.structureform()</div>
+@*
+            <moiety-form parent = substance></moiety-form>
+*@
+
             <div>@forms.moietyform()</div>
+
         }
         case "mixture" => {
            <mixture-component-select-form></mixture-component-select-form>
@@ -27,12 +32,14 @@
                 </div>
         }
         case "structurallyDiverse" => {
+           <diverse-type-form parent = substance></diverse-type-form>
+            <div ng-if="substance.diverseType=='part' || substance.diverseType=='whole'">
            <diverse-source-form></diverse-source-form>
            <diverse-organism-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'"></diverse-organism-form>
-            <diverse-details-form></diverse-details-form>
+            <diverse-details-form  ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'"></diverse-details-form>
             <parent-form></parent-form>
-            <part-form></part-form>
-
+            <part-form ng-if="substance.diverseType=='part'"></part-form>
+            </div>
 
         }
         case "concept" => {

@@ -1,6 +1,37 @@
 (function () {
     var ginasForms = angular.module('ginasForms', ['bootstrap.fileField']);
 
+    ginasForms.factory('toggler', function ($compile) {
+        var factory = {};
+        var childScope;
+        factory.stageCheck = function () {
+            return this.stage;
+        };
+
+        factory.toggle = function (scope, element, div, obj) {
+            console.log(obj);
+            scope.referenceobj = obj;
+            console.log("in the toggler)");
+            console.log(scope);
+            var result = document.getElementsByClassName(element);
+            var elementResult = angular.element(result);
+            if (scope.stage === true) {
+                scope.stage = false;
+                childScope = scope.$new();
+                var compiledDirective = $compile(div);
+                var directiveElement = compiledDirective(childScope);
+                elementResult.append(directiveElement);
+            } else {
+                console.log("destroy");
+                childScope.$destroy();
+                elementResult.empty();
+                scope.stage = true;
+                console.log(scope);
+
+            }
+        };
+    return factory;
+    });
 
     ginasForms.directive('accessForm', function () {
         return {
@@ -12,6 +43,7 @@
             },
             templateUrl: baseurl + "assets/templates/forms/access-form.html",
             link: function (scope, element, attrs) {
+                console.log(scope);
                 scope.validate = function () {
                     console.log(scope.referenceobj);
                     if (_.has(scope.referenceobj, 'access')) {
@@ -212,6 +244,30 @@
         };
     });
 
+    ginasForms.directive('diverseTypeForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
+            link: function(scope, element, attrs){
+                console.log(scope);
+                scope.parent.diverseType = "";
+
+                scope.checkType = function() {
+                    if (scope.parent.diverseType === 'whole') {
+                        console.log("whole)");
+                        _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
+                    }else{
+                        _.set(scope.parent.structurallyDiverse, 'part', []);
+                    }
+                };
+            }
+        };
+    });
+
     ginasForms.directive('editCvForm', function () {
         return {
             restrict: 'E',
@@ -224,7 +280,7 @@
         };
     });
 
-    ginasForms.directive('formSelector', function ($compile, $templateRequest) {
+    ginasForms.directive('formSelector', function ($compile, $templateRequest, toggler) {
         return {
             restrict: 'E',
             replace: true,
@@ -232,17 +288,24 @@
                 referenceobj: '=',
                 parent: '=',
                 field: '@',
-                label: '@'
+                label: '@',
+                divid: '@'
             },
             link: function (scope, element, attrs) {
                 var formHolder;
                 var childScope;
                 var template;
+                scope.toggle = function(){
+                    console.log(scope);
+                    toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
+                };
                 scope.stage = true;
+
                 switch (attrs.type) {
                     case "amount":
+                        console.log(scope);
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><amount value ="referenceobj.amount" ></amount></a>');
+                            template = angular.element('<a ng-click ="toggle()"><amount value ="referenceobj.amount" ></amount></a>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -436,11 +499,23 @@
             templateUrl: baseurl + "assets/templates/admin/load-cv-form.html"
         };
     });
+
     ginasForms.directive('mixtureComponentSelectForm', function () {
         return {
             restrict: 'E',
             replace: true,
             templateUrl: baseurl + "assets/templates/forms/mixture-component-select-form.html"
+        };
+    });
+
+    ginasForms.directive('moietyForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/moiety-form.html"
         };
     });
 

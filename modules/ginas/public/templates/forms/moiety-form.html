@@ -1,0 +1,34 @@
+<div class = "row info">
+    <button class="btn btn-primary label-offset det">
+                      Moieties&nbsp;<span class="badge" ng-show="parent.moieties.length>0">
+                        {{parent.moieties.length}}</span>  </button>
+        <div class="col-md-12" id="structureSearcher">
+            <div ng-repeat="obj in parent.moieties">
+                <div class ="row">
+                    <hr>
+                    <div class="col-md-2">
+                        <rendered id= {{::obj.id}}></rendered>
+                    </div>
+                    <div class="col-md-1">
+                        <span class="badge badge-primary">{{obj.count}}</span>
+                    </div>
+                    <div class="col-md-1">
+                        <span class="badge" ng-click ="show = true">{{obj.stereochemistry.display || obj.stereochemistry}}</span>
+                        <dropdown-view-edit ng-show="show" obj= "obj" field = "stereochemistry" cv = "STEREOCHEMISTRY_TYPE"></dropdown-view-edit>
+                    </div>
+                    <div class="col-md-1">
+                        <dropdown-view-edit obj= "obj" field = "opticalActivity" label ="Optical Activity" cv = "OPTICAL_ACTIVITY"></dropdown-view-edit>
+                    </div>
+                    <div class="col-md-1">
+                        <dropdown-view-edit obj= "obj" field = "atropisomerism" cv = "ATROPISOMERISM"></dropdown-view-edit>
+                    </div>
+                    <div class="col-md-2">{{obj.formula}}</div>
+                    <div class="col-md-1">{{obj.mwt}}</div>
+                    <div class="col-md-1"><span class="badge">{{obj.definedStereo}} / {{obj.stereoCenters}}</span></div>
+                    <div class="col-md-1"><span class="badge">{{obj.ezCenters}}</span></div>
+                    <div class="col-md-1"><span class="badge">{{obj.charge}}</span></div>
+                </div>
+            </div>
+        </div>
+
+</div>
