@@ -2,7 +2,7 @@
     var tagsInput = angular.module('ngTagsInput', []);
 
     var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'ui.bootstrap.datetimepicker', 'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin'
+        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin'
     ])
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
@@ -263,28 +263,6 @@ console.log($scope);
         $scope.cutoff = 0.8;
         $scope.stage = true;
 
-//login modal
-        $scope.open = function (size) {
-
-            var modalInstance = $uibModal.open({
-                animation: $scope.animationsEnabled,
-                templateUrl: 'myModalContent.html',
-                controller: 'ModalInstanceCtrl',
-                size: size,
-                resolve: {
-                    items: function () {
-                        return $scope.items;
-                    }
-                }
-            });
-
-            modalInstance.result.then(function (selectedItem) {
-                $scope.selected = selectedItem;
-            }, function () {
-                $log.info('Modal dismissed at: ' + new Date());
-            });
-        };
-
         $scope.scrollTo = function (prmElementToScrollTo) {
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
@@ -316,6 +294,11 @@ console.log($scope);
             return true;
         };
 
+        $scope.moment = function(time){
+            console.log(time);
+            console.log(moment(time).fromNow());
+            return moment(time).fromNow();
+        };
         //local storage functions//
         $scope.unbind = localStorageService.bind($scope, 'enabled');
         this.enabled = function getItem(key) {

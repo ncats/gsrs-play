@@ -157,10 +157,8 @@ public class BuildInfo {
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
-      libraryDependencies += "org.webjars" % "momentjs" % "2.10.3",
-      libraryDependencies += "org.webjars" % "angular-bootstrap-datetimepicker" % "0.3.8",
-      libraryDependencies += "org.webjars" % "angular-ui-select" % "0.11.2",
-      libraryDependencies += "org.webjars" % "lodash" % "3.9.0",
+      libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
+      libraryDependencies += "org.webjars" % "lodash" % "3.10.1",
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 
