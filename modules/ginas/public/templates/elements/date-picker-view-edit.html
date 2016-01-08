@@ -1,11 +1,5 @@
 <div>
-    <a href="#" ng-click="open($event);">{{obj[field]}}</a>
-
-    <p ng-show="status.opened" class="input-group">
-        <input type="text" class="form-control" datepicker-popup ng-model="obj[field]"
-               is-open="status.opened" ng-required="true"/>
-         <span class="input-group-btn">
-    <button type="button" class="btn btn-default" ng-click="open($event)"><i class="fa fa-calendar"></i></button>
-</span>
-    </p>
+    <a href="#" ng-click="open($event);">{{obj[field] | date:'longDate' }}</a>
+        <uib-datepicker-popup datepicker-append-to-body="true" ng-model="obj[field]"
+               is-open="status.opened" ng-required="true"></uib-datepicker-popup>
 </div>

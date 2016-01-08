@@ -59,6 +59,10 @@ body, html {
     border-radius: 4px;
 }
 
+.nav-tabs {
+    border-bottom: none;
+}
+
 .label-offset {
     margin-left: -16px;
     border-radius: 0 .25em .25em 0;
@@ -878,3 +882,4 @@ sketcher svg>text{
 .magnify{
     cursor: -webkit-zoom-in;
 }
+

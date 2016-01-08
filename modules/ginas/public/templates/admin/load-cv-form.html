@@ -1,0 +1,20 @@
+<div class="row">
+    <form class="form-horizontal" role="form" method="POST"
+          enctype="multipart/form-data"
+          action="@ix.ginas.controllers.routes.GinasLoad.loadJSON()">
+        <div class="row form-row">
+            <div class="col-md-6">
+                <file-field ng-model="uploadFile"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                <br>
+                {{uploadFile.name}}
+            </div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-3">
+                <h2>Pending future release</h2>
+                <button type="submit" class="btn btn-default" disabled>Load</button>
+            </div>
+        </div>
+    </form>
+</div>

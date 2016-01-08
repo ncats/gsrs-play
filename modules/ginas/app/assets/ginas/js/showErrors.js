@@ -9,7 +9,7 @@
             linkFn = function(scope, el, attrs, formCtrl) {
                 var blurred, inputEl, inputName, inputNgEl, toggleClasses;
                 blurred = false;
-                inputEl = el[0].querySelector('.form-control[name]');
+                inputEl = el[0].querySelector('[name]');
                 inputNgEl = angular.element(inputEl);
                 inputName = $interpolate(inputNgEl.attr('name') || '')(scope);
                 if (!inputName) {

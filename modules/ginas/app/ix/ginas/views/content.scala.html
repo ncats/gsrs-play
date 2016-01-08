@@ -20,7 +20,7 @@
                     <div class="btn btn-primary hidden-md hidden-lg" ng-hide="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
                         <i class="fa fa-filter"></i> Hide Filters
                     </div>
-            <div collapse="isCollapsed" class="panel-group">
+            <div uib-collapse="isCollapsed" class="panel-group">
                         @ix.ncats.views.html.filters(facets)                        
                     </div>
                 </div>

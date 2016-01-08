@@ -1,5 +1,5 @@
 (function () {
-    var ginasForms = angular.module('ginasForms', []);
+    var ginasForms = angular.module('ginasForms', ['bootstrap.fileField']);
 
 
     ginasForms.directive('accessForm', function () {
@@ -99,6 +99,48 @@
         };
     });
 
+    ginasForms.directive('cvForm', function ($compile, CVFields) {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope:{},
+            templateUrl: baseurl + "assets/templates/admin/cv-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+                var formHolder;
+               // scope.stage= true;
+                CVFields.count().then(function (response) {
+                    scope.count = response.data.total;
+                });
+
+                scope.edit = function(){
+                    formHolder ='<edit-cv-form></edit-cv-form>';
+                    scope.toggleStage();
+                };
+
+                scope.create = function(){
+                    formHolder ='<new-cv-form></new-cv-form>';
+                    scope.toggleStage();
+                  };
+
+                scope.import = function(){
+                    formHolder ='<load-cv-form></load-cv-form>';
+                    scope.toggleStage();
+                };
+
+                scope.toggleStage = function () {
+                    var result = document.getElementsByClassName('cvForm');
+                    var elementResult = angular.element(result);
+                    elementResult.empty();
+                    childScope = scope.$new();
+                    var compiledDirective = $compile(formHolder);
+                    var directiveElement = compiledDirective(childScope);
+                    elementResult.append(directiveElement);
+                };
+            }
+        };
+    });
+
     ginasForms.directive('disulfideLinkForm', function () {
         return {
             restrict: 'E',
@@ -167,6 +209,18 @@
             restrict: 'E',
             replace: true,
             templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html"
+        };
+    });
+
+    ginasForms.directive('editCvForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {},
+            templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
+            link: function(scope){
+                console.log(scope);
+            }
         };
     });
 
@@ -375,6 +429,13 @@
         };
     });
 
+    ginasForms.directive('loadCvForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/admin/load-cv-form.html"
+        };
+    });
     ginasForms.directive('mixtureComponentSelectForm', function () {
         return {
             restrict: 'E',
@@ -388,6 +449,18 @@
             restrict: 'E',
             replace: true,
             templateUrl: baseurl + "assets/templates/forms/name-form.html"
+        };
+    });
+
+    ginasForms.directive('newCvForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {},
+            templateUrl: baseurl + "assets/templates/admin/new-cv-form.html",
+            link: function(scope){
+
+            }
         };
     });
 
