@@ -1,5 +1,6 @@
 package ix.core.adapters;
 
+import ix.core.EntityProcessor;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.models.Structure;
@@ -11,6 +12,7 @@ import ix.seqaln.SequenceIndexer;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,20 +44,22 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     private TextIndexerPlugin plugin = 
         Play.application().plugin(TextIndexerPlugin.class);
 
-    private Map<String, List<Method>> preInsertCallback = 
-        new HashMap<String, List<Method>>();
-    private Map<String, List<Method>> postInsertCallback = 
-        new HashMap<String, List<Method>>();
-    private Map<String, List<Method>> preUpdateCallback = 
-        new HashMap<String, List<Method>>();
-    private Map<String, List<Method>> postUpdateCallback = 
-        new HashMap<String, List<Method>>();
-    private Map<String, List<Method>> preDeleteCallback = 
-        new HashMap<String, List<Method>>();
-    private Map<String, List<Method>> postDeleteCallback = 
-        new HashMap<String, List<Method>>();
-    private Map<String, List<Method>> postLoadCallback = 
-        new HashMap<String, List<Method>>();
+    private Map<String, List<Hook>> preInsertCallback = 
+        new HashMap<String, List<Hook>>();
+    private Map<String, List<Hook>> postInsertCallback = 
+        new HashMap<String, List<Hook>>();
+    private Map<String, List<Hook>> preUpdateCallback = 
+        new HashMap<String, List<Hook>>();
+    private Map<String, List<Hook>> postUpdateCallback = 
+        new HashMap<String, List<Hook>>();
+    private Map<String, List<Hook>> preDeleteCallback = 
+        new HashMap<String, List<Hook>>();
+    private Map<String, List<Hook>> postDeleteCallback = 
+        new HashMap<String, List<Hook>>();
+    private Map<String, List<Hook>> postLoadCallback = 
+        new HashMap<String, List<Hook>>();
+    
+    private Map<Class, EntityProcessor> extraProcessors=new HashMap<Class,EntityProcessor>();
     
     public static SequenceIndexer _seqIndexer = Play.application()
             .plugin(SequenceIndexerPlugin.class).getIndexer();
@@ -67,6 +71,119 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     private static boolean UPDATE_INDEX = false;
     
     public EntityPersistAdapter () {
+    	List<Object> ls= Play.application().configuration().getList("ix.core.entityprocessors",null);
+    	if(ls!=null){
+    		for(Object o:ls){
+    			if(o instanceof Map){
+	    			Map m = (Map)o;
+	    			String entityClass=(String) m.get("class");
+	    			String processorClass=(String) m.get("processor");
+	    			String debug="Setting up processors for [" + entityClass + "] ... ";
+	    			try {
+	    				
+						Class entityCls = Class.forName(entityClass);
+						Class processorCls = Class.forName(processorClass);
+						extraProcessors.put(entityCls, (EntityProcessor) processorCls.newInstance());
+						Logger.info(debug + "done");
+					} catch (Exception e) {
+						Logger.info(debug + "failed");
+						e.printStackTrace();
+					}
+	    			
+	    			
+	    			
+    			}
+    			
+    		}
+    	}
+    	
+    	
+    	
+    }
+    
+    public static interface Hook{
+    	public void invoke(Object o) throws Exception;
+    	public String getName();
+    }
+    public static class InstanceMethodHook implements Hook{
+    	public Method m;
+    	
+    	public InstanceMethodHook(Method m){
+    		this.m=m;
+    	}
+    	
+		@Override
+		public void invoke(Object o) throws Exception {
+			m.invoke(o);
+		}
+
+		@Override
+		public String getName() {
+			return m.getName();
+		}
+    }
+    public static class StaticMethodHook implements Hook{
+    	public Method m;
+    	
+    	public StaticMethodHook(Method m){
+    		this.m=m;
+    	}
+    	
+		@Override
+		public void invoke(Object o) throws Exception {
+			m.invoke(null,o);
+		}
+
+		@Override
+		public String getName() {
+			return m.getName();
+		}
+    }
+    public static class EntityProcessorHook implements Hook{
+    	private EntityProcessor ep;
+    	private Method useMethod;
+    	public EntityProcessorHook(EntityProcessor ep, Class<?> hookAnnotation){
+    		this.ep=ep;
+    		try{
+	    		if(hookAnnotation.equals(PrePersist.class)){
+					useMethod=ep.getClass().getMethod("prePersist",Object.class);
+					
+	    		}else if(hookAnnotation.equals(PostPersist.class)){
+					useMethod=ep.getClass().getMethod("postPersist",Object.class);
+					
+	    		}else if(hookAnnotation.equals(PreUpdate.class)){
+					useMethod=ep.getClass().getMethod("preUpdate",Object.class);
+					
+	    		}else if(hookAnnotation.equals(PostUpdate.class)){
+					useMethod=ep.getClass().getMethod("postUpdate",Object.class);
+					
+	    		}else if(hookAnnotation.equals(PreRemove.class)){
+					useMethod=ep.getClass().getMethod("preRemove",Object.class);
+					
+	    		}else if(hookAnnotation.equals(PostRemove.class)){
+					useMethod=ep.getClass().getMethod("postRemove",Object.class);
+					
+	    		}else if(hookAnnotation.equals(PostLoad.class)){
+					useMethod=ep.getClass().getMethod("postLoad",Object.class);
+	    		}
+    		}catch(Exception e){
+    			e.printStackTrace();
+    		}
+    		
+    	} 
+    	
+		@Override
+		public void invoke(Object o) throws Exception {
+			if(useMethod!=null){
+				useMethod.invoke(ep, o);
+			}
+		}
+
+		@Override
+		public String getName() {
+			return useMethod.getName();
+		}
+    	
     }
 
     boolean debug (int level) {
@@ -87,19 +204,41 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 register (PostLoad.class, cls, m, postLoadCallback);
             }
         }
+        for(Class c:extraProcessors.keySet()){
+        	if(c.isAssignableFrom(cls)){
+        		EntityProcessor ep =extraProcessors.get(c);
+        		Logger.info("Adding processor hooks... " + ep.getClass().getName() + " for "+ cls.getName());
+        		
+        		registerProcessor(cls,ep,preInsertCallback,PrePersist.class);
+        		registerProcessor(cls,ep,postInsertCallback,PostPersist.class);
+        		registerProcessor(cls,ep,preUpdateCallback,PreUpdate.class);
+        		registerProcessor(cls,ep,postUpdateCallback,PostUpdate.class);
+        		registerProcessor(cls,ep,preDeleteCallback,PreRemove.class);
+        		registerProcessor(cls,ep,postDeleteCallback,PostRemove.class);
+        		registerProcessor(cls,ep,postLoadCallback,PostLoad.class);
+        		
+        	}
+        }
         return registered;
+    }
+    void registerProcessor(Class cls, EntityProcessor ep, Map<String, List<Hook>> registry, Class<?> hookAnnotation){
+    	List<Hook> methods = registry.get(cls.getName());
+    	if (methods == null) {
+            registry.put(cls.getName(), methods = new ArrayList<Hook>());
+        }
+        methods.add(new EntityProcessorHook(ep,hookAnnotation));
     }
 
     void register (Class annotation,
-                   Class cls, Method m, Map<String, List<Method>> registry) {
+                   Class cls, Method m, Map<String, List<Hook>> registry) {
         if (m.isAnnotationPresent(annotation)) {
             Logger.info("Method \""+m.getName()+"\"["+cls.getName()
                         +"] is registered for "+annotation.getName());
-            List<Method> methods = registry.get(cls.getName());
+            List<Hook> methods = registry.get(cls.getName());
             if (methods == null) {
-                registry.put(cls.getName(), methods = new ArrayList<Method>());
+                registry.put(cls.getName(), methods = new ArrayList<Hook>());
             }
-            methods.add(m);
+            methods.add(new InstanceMethodHook(m));
         }
     }
     
@@ -107,9 +246,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public boolean preInsert (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
         String name = bean.getClass().getName();
-        List<Method> methods = preInsertCallback.get(name);
+        List<Hook> methods = preInsertCallback.get(name);
         if (methods != null) {
-            for (Method m : methods) {
+            for (Hook m : methods) {
                 try {
                     m.invoke(bean);
                 }
@@ -129,9 +268,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         Object bean = request.getBean();
         String name = bean.getClass().getName();
         try {
-            List<Method> methods = postInsertCallback.get(name);
+            List<Hook> methods = postInsertCallback.get(name);
             if (methods != null) {
-                for (Method m : methods) {
+                for (Hook m : methods) {
                     try {
                         m.invoke(bean);
                     }
@@ -156,9 +295,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         Object bean = request.getBean();
         String name = bean.getClass().getName();
 
-        List<Method> methods = preUpdateCallback.get(name);
+        List<Hook> methods = preUpdateCallback.get(name);
         if (methods != null) {
-            for (Method m : methods) {
+            for (Hook m : methods) {
                 try {
                     m.invoke(bean);
                 }
@@ -213,9 +352,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
         try {
             String name = cls.getName();
-            List<Method> methods = postUpdateCallback.get(name);
+            List<Hook> methods = postUpdateCallback.get(name);
             if (methods != null) {
-                for (Method m : methods) {
+                for (Hook m : methods) {
                     try {
                         m.invoke(bean);
                     }
@@ -240,9 +379,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         Object bean = request.getBean();
         String name = bean.getClass().getName();
         
-        List<Method> methods = preDeleteCallback.get(name);
+        List<Hook> methods = preDeleteCallback.get(name);
         if (methods != null) {
-            for (Method m : methods) {
+            for (Hook m : methods) {
                 try {
                     if (m != null) {
                         m.invoke(bean);
@@ -263,9 +402,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         Object bean = request.getBean();
         String name = bean.getClass().getName();
 
-        List<Method> methods = postDeleteCallback.get(name);
+        List<Hook> methods = postDeleteCallback.get(name);
         if (methods != null) {
-            for (Method m : methods) {
+            for (Hook m : methods) {
                 try {
                     m.invoke(bean);
                 }
@@ -288,9 +427,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     @Override
     public void postLoad (Object bean, Set<String> includedProperties) {
         String name = bean.getClass().getName();
-        List<Method> methods = postLoadCallback.get(name);
+        List<Hook> methods = postLoadCallback.get(name);
         if (methods != null) {
-            for (Method m : methods) {
+            for (Hook m : methods) {
                 try {
                     m.invoke(bean);
                 }

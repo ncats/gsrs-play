@@ -205,7 +205,7 @@ public class Name extends GinasCommonSubData {
      * Utility function to sort names in nice display order.
      * 
      * Sort criteria:
-     *      1)
+     *      1) Display Name
      * 		2) Preferred status
      * 		3) Official status
      * 		4) English first
