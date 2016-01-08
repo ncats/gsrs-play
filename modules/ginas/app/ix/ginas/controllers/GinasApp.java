@@ -1541,9 +1541,9 @@ public class GinasApp extends App {
         response().setHeader("EXPORT-WARNINGS",om.valueToTree(messages).toString() +"___");
                 try {
                         if (format.equalsIgnoreCase("mol")){
-                                return ok(c.export(Chemical.FORMAT_MOL));
+                                return ok(c.export(Chemical.FORMAT_MOL).replaceAll(".*Marvin.*"," G-SRS "));
                         }else if (format.equalsIgnoreCase("sdf")){
-                                return ok(c.export(Chemical.FORMAT_SDF));
+                                return ok(c.export(Chemical.FORMAT_SDF).replaceAll(".*Marvin.*"," G-SRS "));
                         }else if (format.equalsIgnoreCase("smiles")){
                                 return ok(c.export(Chemical.FORMAT_SMILES));
                         }else if (format.equalsIgnoreCase("cdx")){

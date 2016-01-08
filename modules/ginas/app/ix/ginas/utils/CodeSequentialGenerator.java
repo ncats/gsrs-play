@@ -40,6 +40,7 @@ public class CodeSequentialGenerator extends SequentialNumericIDGenerator{
 		Code c = new Code();
 		c.codeSystem=this.codeSystem;
 		c.code=this.generateID();
+		c.type="PRIMARY";
 		return c;
 	}
 	public Code addCode(Substance s){

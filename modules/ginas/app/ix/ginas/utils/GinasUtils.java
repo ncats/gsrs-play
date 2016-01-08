@@ -113,7 +113,7 @@ public class GinasUtils {
 				codesset = codesset + "\n";
 			}
 			codesset += cd.code;
-			if (!cd.type.equals("PRIMARY")) {
+			if (!"PRIMARY".equals(cd.type)) {
 				codesset += " [" + cd.type + "]";
 			}
 			c.setProperty(cd.codeSystem, codesset);
