@@ -106,9 +106,10 @@ create table ix_core_etagref (
 
 create table ix_core_edit (
   id                        varchar(40) not null,
-  created                   timestamp,
+  created                   bigint,
   refid                     varchar(255),
   kind                      varchar(255),
+  batch                     varchar(64),
   editor_id                 bigint,
   path                      varchar(1024),
   comments                  clob,
@@ -129,12 +130,13 @@ create table ix_ncats_clinical_eligibility (
 
 create table ix_core_event (
   id                        bigint not null,
-  title                     varchar(1024),
+  title                     varchar(255),
   description               clob,
   url                       varchar(1024),
-  event_start               timestamp,
-  event_end                 timestamp,
-  is_duration               boolean,
+  start_time                bigint,
+  end_time                  bigint,
+  unit                      integer,
+  constraint ck_ix_core_event_unit check (unit in (0,1,2,3,4,5,6,7)),
   constraint pk_ix_core_event primary key (id))
 ;
 
@@ -305,7 +307,7 @@ create table ix_core_principal (
   provider                  varchar(255),
   username                  varchar(255),
   email                     varchar(255),
-  admin                     boolean,
+  is_admin                  boolean,
   uri                       varchar(1024),
   selfie_id                 bigint,
   version                   bigint not null,
@@ -319,35 +321,35 @@ create table ix_core_principal (
   institution_id            bigint,
   ncats_employee            boolean,
   dn                        varchar(1024),
-  uid                       bigint,
+  u_id                      bigint,
   phone                     varchar(32),
   biography                 clob,
   title                     varchar(255),
   research                  clob,
   is_lead                   boolean,
   dept                      integer,
-  role                      integer,
+  area                      integer,
   constraint ck_ix_core_principal_dept check (dept in (0,1,2,3)),
-  constraint ck_ix_core_principal_role check (role in (0,1,2,3,4)),
+  constraint ck_ix_core_principal_area check (area in (0,1,2,3,4)),
+  constraint uq_ix_core_principal_username unique (username),
   constraint pk_ix_core_principal primary key (id))
 ;
 
 create table ix_core_procjob (
   id                        bigint not null,
-  jobkey                    varchar(255) not null,
-  invoker                   varchar(255),
   status                    integer,
   job_start                 bigint,
   job_stop                  bigint,
   message                   clob,
+  statistics                clob,
   owner_id                  bigint,
   payload_id                varchar(40),
+  last_update               timestamp not null,
   constraint ck_ix_core_procjob_status check (status in (0,1,2,3,4,5,6)),
-  constraint uq_ix_core_procjob_jobkey unique (jobkey),
   constraint pk_ix_core_procjob primary key (id))
 ;
 
-create table ix_core_procrecord (
+create table ix_core_procrec (
   id                        bigint not null,
   rec_start                 bigint,
   rec_stop                  bigint,
@@ -356,8 +358,28 @@ create table ix_core_procrecord (
   message                   clob,
   xref_id                   bigint,
   job_id                    bigint,
-  constraint ck_ix_core_procrecord_status check (status in (0,1,2,3)),
-  constraint pk_ix_core_procrecord primary key (id))
+  last_update               timestamp not null,
+  constraint ck_ix_core_procrec_status check (status in (0,1,2,3,4)),
+  constraint pk_ix_core_procrec primary key (id))
+;
+
+create table ix_ncats_program (
+  id                        bigint not null,
+  name                      varchar(64),
+  fullname                  varchar(255),
+  constraint pk_ix_ncats_program primary key (id))
+;
+
+create table ix_ncats_project (
+  id                        bigint not null,
+  title                     varchar(2048),
+  objective                 clob,
+  scope                     clob,
+  opportunities             clob,
+  team                      varchar(255),
+  is_public                 boolean,
+  curation_id               bigint,
+  constraint pk_ix_ncats_project primary key (id))
 ;
 
 create table ix_core_pubauthor (
@@ -406,8 +428,18 @@ create table ix_core_role (
   id                        bigint not null,
   role                      integer,
   principal_id              bigint,
-  constraint ck_ix_core_role_role check (role in (0,1,2,3)),
+  constraint ck_ix_core_role_role check (role in (0,1,2,3,4,5)),
   constraint pk_ix_core_role primary key (id))
+;
+
+create table ix_core_session (
+  id                        varchar(40) not null,
+  profile_id                bigint,
+  created                   bigint,
+  accessed                  bigint,
+  location                  varchar(255),
+  expired                   boolean,
+  constraint pk_ix_core_session primary key (id))
 ;
 
 create table ix_core_stitch (
@@ -419,10 +451,10 @@ create table ix_core_stitch (
 ;
 
 create table ix_core_structure (
-  id                        bigint not null,
-  namespace_id              bigint,
+  dtype                     varchar(10) not null,
+  id                        varchar(40) not null,
   created                   timestamp,
-  modified                  timestamp,
+  last_edited               timestamp,
   deprecated                boolean,
   digest                    varchar(128),
   molfile                   clob,
@@ -437,11 +469,33 @@ create table ix_core_structure (
   ez_centers                integer,
   charge                    integer,
   mwt                       double,
+  count                     integer,
   version                   bigint not null,
   constraint ck_ix_core_structure_stereo check (stereo in (0,1,2,3,4,5)),
   constraint ck_ix_core_structure_optical check (optical in (0,1,2,3,4)),
   constraint ck_ix_core_structure_atropi check (atropi in (0,1,2)),
   constraint pk_ix_core_structure primary key (id))
+;
+
+create table ix_core_timeline (
+  id                        bigint not null,
+  name                      varchar(255),
+  constraint pk_ix_core_timeline primary key (id))
+;
+
+create table ix_core_userprof (
+  id                        bigint not null,
+  namespace_id              bigint,
+  created                   timestamp,
+  modified                  timestamp,
+  deprecated                boolean,
+  user_id                   bigint,
+  active                    boolean,
+  hashp                     varchar(255),
+  salt                      varchar(255),
+  system_auth               boolean,
+  version                   bigint not null,
+  constraint pk_ix_core_userprof primary key (id))
 ;
 
 create table ix_core_value (
@@ -564,10 +618,16 @@ create table _ix_ncats_840372f9_2 (
   constraint pk__ix_ncats_840372f9_2 primary key (ix_ncats_clinical_eligibility_exclusion_id, ix_core_value_id))
 ;
 
-create table ix_core_event_figure (
+create table ix_core_event_prop (
   ix_core_event_id               bigint not null,
-  ix_core_figure_id              bigint not null,
-  constraint pk_ix_core_event_figure primary key (ix_core_event_id, ix_core_figure_id))
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_core_event_prop primary key (ix_core_event_id, ix_core_value_id))
+;
+
+create table ix_core_event_link (
+  ix_core_event_id               bigint not null,
+  ix_core_xref_id                bigint not null,
+  constraint pk_ix_core_event_link primary key (ix_core_event_id, ix_core_xref_id))
 ;
 
 create table ix_ncats_grant_investigator (
@@ -630,6 +690,60 @@ create table ix_core_predicate_property (
   constraint pk_ix_core_predicate_property primary key (ix_core_predicate_id, ix_core_value_id))
 ;
 
+create table ix_core_procjob_key (
+  ix_core_procjob_id             bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_core_procjob_key primary key (ix_core_procjob_id, ix_core_value_id))
+;
+
+create table ix_core_procrec_prop (
+  ix_core_procrec_id             bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_core_procrec_prop primary key (ix_core_procrec_id, ix_core_value_id))
+;
+
+create table ix_ncats_project_program (
+  ix_ncats_project_id            bigint not null,
+  ix_ncats_program_id            bigint not null,
+  constraint pk_ix_ncats_project_program primary key (ix_ncats_project_id, ix_ncats_program_id))
+;
+
+create table ix_ncats_project_keyword (
+  ix_ncats_project_id            bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_ncats_project_keyword primary key (ix_ncats_project_id, ix_core_value_id))
+;
+
+create table ix_ncats_project_member (
+  ix_ncats_project_id            bigint not null,
+  ix_core_principal_id           bigint not null,
+  constraint pk_ix_ncats_project_member primary key (ix_ncats_project_id, ix_core_principal_id))
+;
+
+create table ix_ncats_project_collaborator (
+  ix_ncats_project_id            bigint not null,
+  ix_core_principal_id           bigint not null,
+  constraint pk_ix_ncats_project_collaborator primary key (ix_ncats_project_id, ix_core_principal_id))
+;
+
+create table ix_ncats_project_figure (
+  ix_ncats_project_id            bigint not null,
+  ix_core_figure_id              bigint not null,
+  constraint pk_ix_ncats_project_figure primary key (ix_ncats_project_id, ix_core_figure_id))
+;
+
+create table ix_ncats_project_milestone (
+  ix_ncats_project_id            bigint not null,
+  ix_core_event_id               bigint not null,
+  constraint pk_ix_ncats_project_milestone primary key (ix_ncats_project_id, ix_core_event_id))
+;
+
+create table ix_ncats_project_publication (
+  ix_ncats_project_id            bigint not null,
+  ix_core_publication_id         bigint not null,
+  constraint pk_ix_ncats_project_publication primary key (ix_ncats_project_id, ix_core_publication_id))
+;
+
 create table ix_core_publication_keyword (
   ix_core_publication_id         bigint not null,
   ix_core_value_id               bigint not null,
@@ -673,15 +787,27 @@ create table ix_core_stitch_attribute (
 ;
 
 create table ix_core_structure_property (
-  ix_core_structure_id           bigint not null,
+  ix_core_structure_id           varchar(40) not null,
   ix_core_value_id               bigint not null,
   constraint pk_ix_core_structure_property primary key (ix_core_structure_id, ix_core_value_id))
 ;
 
 create table ix_core_structure_link (
-  ix_core_structure_id           bigint not null,
+  ix_core_structure_id           varchar(40) not null,
   ix_core_xref_id                bigint not null,
   constraint pk_ix_core_structure_link primary key (ix_core_structure_id, ix_core_xref_id))
+;
+
+create table ix_core_timeline_event (
+  ix_core_timeline_id            bigint not null,
+  ix_core_event_id               bigint not null,
+  constraint pk_ix_core_timeline_event primary key (ix_core_timeline_id, ix_core_event_id))
+;
+
+create table ix_core_userprof_prop (
+  ix_core_userprof_id            bigint not null,
+  ix_core_value_id               bigint not null,
+  constraint pk_ix_core_userprof_prop primary key (ix_core_userprof_id, ix_core_value_id))
 ;
 
 create table ix_core_xref_property (
@@ -737,7 +863,11 @@ create sequence ix_core_principal_seq;
 
 create sequence ix_core_procjob_seq;
 
-create sequence ix_core_procrecord_seq;
+create sequence ix_core_procrec_seq;
+
+create sequence ix_ncats_program_seq;
+
+create sequence ix_ncats_project_seq;
 
 create sequence ix_core_pubauthor_seq;
 
@@ -749,7 +879,9 @@ create sequence ix_core_role_seq;
 
 create sequence ix_core_stitch_seq;
 
-create sequence ix_core_structure_seq;
+create sequence ix_core_timeline_seq;
+
+create sequence ix_core_userprof_seq;
 
 create sequence ix_core_value_seq;
 
@@ -791,22 +923,28 @@ alter table ix_core_procjob add constraint fk_ix_core_procjob_owner_17 foreign k
 create index ix_ix_core_procjob_owner_17 on ix_core_procjob (owner_id);
 alter table ix_core_procjob add constraint fk_ix_core_procjob_payload_18 foreign key (payload_id) references ix_core_payload (id) on delete restrict on update restrict;
 create index ix_ix_core_procjob_payload_18 on ix_core_procjob (payload_id);
-alter table ix_core_procrecord add constraint fk_ix_core_procrecord_xref_19 foreign key (xref_id) references ix_core_xref (id) on delete restrict on update restrict;
-create index ix_ix_core_procrecord_xref_19 on ix_core_procrecord (xref_id);
-alter table ix_core_procrecord add constraint fk_ix_core_procrecord_job_20 foreign key (job_id) references ix_core_procjob (id) on delete restrict on update restrict;
-create index ix_ix_core_procrecord_job_20 on ix_core_procrecord (job_id);
-alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_21 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_pubauthor_author_21 on ix_core_pubauthor (author_id);
-alter table ix_core_publication add constraint fk_ix_core_publication_journa_22 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
-create index ix_ix_core_publication_journa_22 on ix_core_publication (journal_id);
-alter table ix_ncats_hcs_reagent add constraint fk_ix_ncats_hcs_reagent_names_23 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_ncats_hcs_reagent_names_23 on ix_ncats_hcs_reagent (namespace_id);
-alter table ix_core_role add constraint fk_ix_core_role_principal_24 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
-create index ix_ix_core_role_principal_24 on ix_core_role (principal_id);
-alter table ix_core_structure add constraint fk_ix_core_structure_namespac_25 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_structure_namespac_25 on ix_core_structure (namespace_id);
-alter table ix_core_xref add constraint fk_ix_core_xref_namespace_26 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
-create index ix_ix_core_xref_namespace_26 on ix_core_xref (namespace_id);
+alter table ix_core_procrec add constraint fk_ix_core_procrec_xref_19 foreign key (xref_id) references ix_core_xref (id) on delete restrict on update restrict;
+create index ix_ix_core_procrec_xref_19 on ix_core_procrec (xref_id);
+alter table ix_core_procrec add constraint fk_ix_core_procrec_job_20 foreign key (job_id) references ix_core_procjob (id) on delete restrict on update restrict;
+create index ix_ix_core_procrec_job_20 on ix_core_procrec (job_id);
+alter table ix_ncats_project add constraint fk_ix_ncats_project_curation_21 foreign key (curation_id) references ix_core_curation (id) on delete restrict on update restrict;
+create index ix_ix_ncats_project_curation_21 on ix_ncats_project (curation_id);
+alter table ix_core_pubauthor add constraint fk_ix_core_pubauthor_author_22 foreign key (author_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_pubauthor_author_22 on ix_core_pubauthor (author_id);
+alter table ix_core_publication add constraint fk_ix_core_publication_journa_23 foreign key (journal_id) references ix_core_journal (id) on delete restrict on update restrict;
+create index ix_ix_core_publication_journa_23 on ix_core_publication (journal_id);
+alter table ix_ncats_hcs_reagent add constraint fk_ix_ncats_hcs_reagent_names_24 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_ncats_hcs_reagent_names_24 on ix_ncats_hcs_reagent (namespace_id);
+alter table ix_core_role add constraint fk_ix_core_role_principal_25 foreign key (principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_role_principal_25 on ix_core_role (principal_id);
+alter table ix_core_session add constraint fk_ix_core_session_profile_26 foreign key (profile_id) references ix_core_userprof (id) on delete restrict on update restrict;
+create index ix_ix_core_session_profile_26 on ix_core_session (profile_id);
+alter table ix_core_userprof add constraint fk_ix_core_userprof_namespace_27 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_userprof_namespace_27 on ix_core_userprof (namespace_id);
+alter table ix_core_userprof add constraint fk_ix_core_userprof_user_28 foreign key (user_id) references ix_core_principal (id) on delete restrict on update restrict;
+create index ix_ix_core_userprof_user_28 on ix_core_userprof (user_id);
+alter table ix_core_xref add constraint fk_ix_core_xref_namespace_29 foreign key (namespace_id) references ix_core_namespace (id) on delete restrict on update restrict;
+create index ix_ix_core_xref_namespace_29 on ix_core_xref (namespace_id);
 
 
 
@@ -866,9 +1004,13 @@ alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_nc_01
 
 alter table _ix_ncats_840372f9_2 add constraint fk__ix_ncats_840372f9_2_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
-alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
+alter table ix_core_event_prop add constraint fk_ix_core_event_prop_ix_core_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
 
-alter table ix_core_event_figure add constraint fk_ix_core_event_figure_ix_co_02 foreign key (ix_core_figure_id) references ix_core_figure (id) on delete restrict on update restrict;
+alter table ix_core_event_prop add constraint fk_ix_core_event_prop_ix_core_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_core_event_link add constraint fk_ix_core_event_link_ix_core_01 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
+
+alter table ix_core_event_link add constraint fk_ix_core_event_link_ix_core_02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
 
 alter table ix_ncats_grant_investigator add constraint fk_ix_ncats_grant_investigato_01 foreign key (ix_ncats_grant_id) references ix_ncats_grant (id) on delete restrict on update restrict;
 
@@ -910,6 +1052,42 @@ alter table ix_core_predicate_property add constraint fk_ix_core_predicate_prope
 
 alter table ix_core_predicate_property add constraint fk_ix_core_predicate_property_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
+alter table ix_core_procjob_key add constraint fk_ix_core_procjob_key_ix_cor_01 foreign key (ix_core_procjob_id) references ix_core_procjob (id) on delete restrict on update restrict;
+
+alter table ix_core_procjob_key add constraint fk_ix_core_procjob_key_ix_cor_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_core_procrec_prop add constraint fk_ix_core_procrec_prop_ix_co_01 foreign key (ix_core_procrec_id) references ix_core_procrec (id) on delete restrict on update restrict;
+
+alter table ix_core_procrec_prop add constraint fk_ix_core_procrec_prop_ix_co_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_program add constraint fk_ix_ncats_project_program_i_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_program add constraint fk_ix_ncats_project_program_i_02 foreign key (ix_ncats_program_id) references ix_ncats_program (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_keyword add constraint fk_ix_ncats_project_keyword_i_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_keyword add constraint fk_ix_ncats_project_keyword_i_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_member add constraint fk_ix_ncats_project_member_ix_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_member add constraint fk_ix_ncats_project_member_ix_02 foreign key (ix_core_principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_collaborator add constraint fk_ix_ncats_project_collabora_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_collaborator add constraint fk_ix_ncats_project_collabora_02 foreign key (ix_core_principal_id) references ix_core_principal (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_figure add constraint fk_ix_ncats_project_figure_ix_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_figure add constraint fk_ix_ncats_project_figure_ix_02 foreign key (ix_core_figure_id) references ix_core_figure (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_milestone add constraint fk_ix_ncats_project_milestone_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_milestone add constraint fk_ix_ncats_project_milestone_02 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_publication add constraint fk_ix_ncats_project_publicati_01 foreign key (ix_ncats_project_id) references ix_ncats_project (id) on delete restrict on update restrict;
+
+alter table ix_ncats_project_publication add constraint fk_ix_ncats_project_publicati_02 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
+
 alter table ix_core_publication_keyword add constraint fk_ix_core_publication_keywor_01 foreign key (ix_core_publication_id) references ix_core_publication (id) on delete restrict on update restrict;
 
 alter table ix_core_publication_keyword add constraint fk_ix_core_publication_keywor_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
@@ -945,6 +1123,14 @@ alter table ix_core_structure_property add constraint fk_ix_core_structure_prope
 alter table ix_core_structure_link add constraint fk_ix_core_structure_link_ix__01 foreign key (ix_core_structure_id) references ix_core_structure (id) on delete restrict on update restrict;
 
 alter table ix_core_structure_link add constraint fk_ix_core_structure_link_ix__02 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
+
+alter table ix_core_timeline_event add constraint fk_ix_core_timeline_event_ix__01 foreign key (ix_core_timeline_id) references ix_core_timeline (id) on delete restrict on update restrict;
+
+alter table ix_core_timeline_event add constraint fk_ix_core_timeline_event_ix__02 foreign key (ix_core_event_id) references ix_core_event (id) on delete restrict on update restrict;
+
+alter table ix_core_userprof_prop add constraint fk_ix_core_userprof_prop_ix_c_01 foreign key (ix_core_userprof_id) references ix_core_userprof (id) on delete restrict on update restrict;
+
+alter table ix_core_userprof_prop add constraint fk_ix_core_userprof_prop_ix_c_02 foreign key (ix_core_value_id) references ix_core_value (id) on delete restrict on update restrict;
 
 alter table ix_core_xref_property add constraint fk_ix_core_xref_property_ix_c_01 foreign key (ix_core_xref_id) references ix_core_xref (id) on delete restrict on update restrict;
 
@@ -1006,7 +1192,9 @@ drop table if exists _ix_ncats_840372f9_2;
 
 drop table if exists ix_core_event;
 
-drop table if exists ix_core_event_figure;
+drop table if exists ix_core_event_prop;
+
+drop table if exists ix_core_event_link;
 
 drop table if exists ix_core_figure;
 
@@ -1056,7 +1244,29 @@ drop table if exists ix_core_principal;
 
 drop table if exists ix_core_procjob;
 
-drop table if exists ix_core_procrecord;
+drop table if exists ix_core_procjob_key;
+
+drop table if exists ix_core_procrec;
+
+drop table if exists ix_core_procrec_prop;
+
+drop table if exists ix_ncats_program;
+
+drop table if exists ix_ncats_project;
+
+drop table if exists ix_ncats_project_program;
+
+drop table if exists ix_ncats_project_keyword;
+
+drop table if exists ix_ncats_project_member;
+
+drop table if exists ix_ncats_project_collaborator;
+
+drop table if exists ix_ncats_project_figure;
+
+drop table if exists ix_ncats_project_milestone;
+
+drop table if exists ix_ncats_project_publication;
 
 drop table if exists ix_core_pubauthor;
 
@@ -1078,6 +1288,8 @@ drop table if exists ix_ncats_hcs_reagent_property;
 
 drop table if exists ix_core_role;
 
+drop table if exists ix_core_session;
+
 drop table if exists ix_core_stitch;
 
 drop table if exists ix_core_stitch_attribute;
@@ -1087,6 +1299,14 @@ drop table if exists ix_core_structure;
 drop table if exists ix_core_structure_property;
 
 drop table if exists ix_core_structure_link;
+
+drop table if exists ix_core_timeline;
+
+drop table if exists ix_core_timeline_event;
+
+drop table if exists ix_core_userprof;
+
+drop table if exists ix_core_userprof_prop;
 
 drop table if exists ix_core_value;
 
@@ -1144,7 +1364,11 @@ drop sequence if exists ix_core_principal_seq;
 
 drop sequence if exists ix_core_procjob_seq;
 
-drop sequence if exists ix_core_procrecord_seq;
+drop sequence if exists ix_core_procrec_seq;
+
+drop sequence if exists ix_ncats_program_seq;
+
+drop sequence if exists ix_ncats_project_seq;
 
 drop sequence if exists ix_core_pubauthor_seq;
 
@@ -1156,7 +1380,9 @@ drop sequence if exists ix_core_role_seq;
 
 drop sequence if exists ix_core_stitch_seq;
 
-drop sequence if exists ix_core_structure_seq;
+drop sequence if exists ix_core_timeline_seq;
+
+drop sequence if exists ix_core_userprof_seq;
 
 drop sequence if exists ix_core_value_seq;
 

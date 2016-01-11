@@ -11,21 +11,32 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class MoldevApp extends App {
     static Connection hcsConn;
     static ObjectMapper mapper = new ObjectMapper();
     static final String VERSION = "1.0.1";
 
-    private static void makeConnection()  {
-        hcsConn = DB.getConnection();
+    static void makeConnection() {
+        hcsConn = DB.getConnection("moldev");
     }
 
-    private static void closeConnection() throws SQLException {
+    static void closeConnection() throws SQLException {
         hcsConn.close();
     }
 
-    private String getRepositoryPath() {
+    static boolean isNumber(String s) {
+        try {
+            Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        return true;
+    }
+
+    static String getRepositoryPath() {
         return Configuration.root().getString("moldev.repo");
     }
 
@@ -100,4 +111,55 @@ public class MoldevApp extends App {
 
         return ok(sb.toString()).as("text/html");
     }
+
+
+    static class WellImage {
+        int row, col;
+        Set<String> paths;
+
+        WellImage() {
+            paths = new TreeSet<>();
+        }
+
+        WellImage(int row, int col, Set<String> paths) {
+            this.row = row;
+            this.col = col;
+            this.paths = paths;
+        }
+
+        public boolean equals(Object o) {
+            if (!(o instanceof WellImage)) return false;
+            WellImage wi = (WellImage) o;
+            return row == wi.row && col == wi.col;
+        }
+
+        // from http://stackoverflow.com/a/15878758/58681
+        public int hashCode() {
+            int res = Math.max(row, col);
+            res = (res << 16) | (res >>> 16);  // exchange top and bottom 16 bits.
+            res = res ^ Math.min(row, col);
+            return res;
+        }
+
+        public int getRow() {
+            return row;
+        }
+
+        public void setRow(int row) {
+            this.row = row;
+        }
+
+        public int getCol() {
+            return col;
+        }
+
+        public void setCol(int col) {
+            this.col = col;
+        }
+
+        public Set<String> getPaths() {
+            return paths;
+        }
+    }
+
 }

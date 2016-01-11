@@ -1,6 +1,12 @@
-GET         /info            ix.ncats.moldev.controllers.MoldevApp.info
-GET         /pcstatus        ix.ncats.moldev.controllers.MoldevApp.getJobStatus
+GET        /info                                 ix.ncats.moldev.controllers.MoldevApp.info()
+GET        /pcstatus                             ix.ncats.moldev.controllers.MoldevApp.getJobStatus()
+GET        /plates                               ix.ncats.moldev.controllers.MoldevPlateApp.getPlates()
+GET        /plates/:id                           ix.ncats.moldev.controllers.MoldevPlateApp.getPlate(id: String)
+GET        /plates/:id/images/:wavelength        ix.ncats.moldev.controllers.MoldevPlateApp.getPlateImages(id: String, wavelength: String, montage: String ?= "true")
+
+
+
 #GET         /reagents        ix.ncats.controllers.hcs.ReagentSelectionApp.reagents(q: String ?= null, rows: Int ?= 20, page: Int ?= 1)
 
-->          /                ix.ncats.Routes
-->          /                ix.Routes
+->         /                                     ix.ncats.Routes
+->         /                                     ix.Routes
