@@ -172,6 +172,7 @@ public class BuildInfo {
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.apache.poi" % "poi" % "3.13",
+      libraryDependencies += "javax.media" % "jai_core" % "1.1.3",
         javacOptions ++= javaBuildOptions
     ).dependsOn(ncats).aggregate(ncats)
 
