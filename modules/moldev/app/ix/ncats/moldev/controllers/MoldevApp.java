@@ -2,6 +2,7 @@ package ix.ncats.moldev.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.sun.jersey.api.NotFoundException;
 import ix.ncats.controllers.App;
 import play.Configuration;
 import play.db.DB;
@@ -139,6 +140,48 @@ public class MoldevApp extends App {
         return ok(sb.toString()).as("text/plain");
     }
 
+    public static Result isDataAvailable(String plateName, String settingsName) throws SQLException {
+        makeConnection();
+        PreparedStatement pst = hcsConn.prepareStatement("SELECT assays.assay_id," +
+                "  assay_name," +
+                "  settings_name," +
+                "  table_id," +
+                "  row_count," +
+                "  assay_plates.*" +
+                " FROM assays, plates, assay_plates" +
+                " WHERE plate_name    like ? " +
+                " AND assay_plates.plate_id = plates.plate_id" +
+                " AND assays.assay_id        = assay_plates.assay_id" +
+                " AND assays.settings_name like ?" +
+                " AND assay_plates.to_delete = 0");
+        pst.setString(1, "%" + plateName + "%");
+        pst.setString(2, "%" + settingsName + "%");
+        ResultSet resultSet = pst.executeQuery();
+
+        int nassay = 0;
+        String tableName = null;
+        while (resultSet.next()) {
+            tableName = resultSet.getString("table_id");
+            nassay++;
+        }
+        System.out.println("tableName = " + tableName);
+        if (nassay != 1 || tableName == null) {
+            System.out.println("isDataAvailable: No assay data for this combination of plate & settings name");
+            return notFound("No assay data for this combination of plate & settings name");
+        }
+        pst.clearParameters();
+
+        // OK, now pull out the table data
+        pst = hcsConn.prepareStatement("select * from " + tableName + " where rownum < 2");
+        resultSet = pst.executeQuery();
+        boolean status = resultSet.next();
+        resultSet.close();
+        pst.close();
+        closeConnection();
+
+        if (!status) return notFound("No data available for " + plateName + "/" + settingsName);
+        return ok("true").as("text/plain");
+    }
     static class WellImage {
         int row, col;
         Set<String> paths;
