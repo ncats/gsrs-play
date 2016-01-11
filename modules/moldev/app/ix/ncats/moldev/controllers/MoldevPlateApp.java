@@ -30,8 +30,8 @@ public class MoldevPlateApp extends MoldevApp {
             node.put("global_id", rs.getString("global_id"));
             root.add(node);
         }
-        pst.clearParameters();
         pst.close();
+        rs.close();
         closeConnection();
         return ok(root);
     }
@@ -95,6 +95,7 @@ public class MoldevPlateApp extends MoldevApp {
 
         JsonNode wells = mapper.valueToTree(whash.values());
         wellNodes.put("wells", wells);
+        closeConnection();
         return ok(wellNodes);
     }
 
@@ -136,6 +137,8 @@ public class MoldevPlateApp extends MoldevApp {
         ArrayNode wlsNode = mapper.createArrayNode();
         for (String wl : wls) wlsNode.add(wl);
         node.put("wavelengths", wlsNode);
+
+        closeConnection();
         return ok(node);
     }
 

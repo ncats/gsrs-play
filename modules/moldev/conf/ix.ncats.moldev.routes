@@ -10,8 +10,7 @@ GET        /assays                                                              
 GET        /export/acumen                                                                 ix.ncats.moldev.controllers.MoldevExportApp.export(format="acumen", plateName: String ?= null, settingsName: String ?= null, aid: String ?= null, aggFunc: String ?= null)
 GET        /export/excel                                                                  ix.ncats.moldev.controllers.MoldevExportApp.export(format="excel", plateName: String ?= null, settingsName: String ?= null, aid: String ?= null, aggFunc: String ?= null)
 
-GET        /images/:plateName/$row<[0-9]+>/$col<[0-9]+>/$siteid<[0-9]+>/:waveId           ix.ncats.moldev.controllers.MoldevImageApp.getImage(plateName: String, row: Integer, col: Integer, siteid: Long, waveId: String, thumb: String ?= "false")
-GET        /pngimages/:plateName/$row<[0-9]+>/$col<[0-9]+>/$siteid<[0-9]+>/:waveId        ix.ncats.moldev.controllers.MoldevImageApp.getPngImage(plateName: String, row: Integer, col: Integer, siteid: Long, waveId: String, thumb: String ?= "false")
+GET        /images/:plateName/$row<[0-9]+>/$col<[0-9]+>/$siteid<[0-9]+>/:waveId           ix.ncats.moldev.controllers.MoldevImageApp.getImage(plateName: String, row: Integer, col: Integer, siteid: Long, waveId: String, thumb: String ?= "false", format: String ?= "png")
 
 
 

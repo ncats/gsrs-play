@@ -391,6 +391,7 @@ public class MoldevExportApp extends MoldevApp {
         }
 
         pst.close();
+        resultSet.close();
         closeConnection();
         log.info("Done");
     }
