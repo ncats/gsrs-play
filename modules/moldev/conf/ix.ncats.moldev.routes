@@ -1,0 +1,6 @@
+GET         /info            ix.ncats.moldev.controllers.MoldevApp.info
+GET         /pcstatus        ix.ncats.moldev.controllers.MoldevApp.getJobStatus
+#GET         /reagents        ix.ncats.controllers.hcs.ReagentSelectionApp.reagents(q: String ?= null, rows: Int ?= 20, page: Int ?= 1)
+
+->          /                ix.ncats.Routes
+->          /                ix.Routes

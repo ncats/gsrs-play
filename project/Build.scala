@@ -1,9 +1,8 @@
-import sbt._
-import Keys._
 import play._
+import sbt.Keys._
+import sbt._
 //import play.PlayImport._
 import play.Play.autoImport._
-import PlayKeys._
 
 object ApplicationBuild extends Build {
   val branch = "git rev-parse --abbrev-ref HEAD".!!.trim
@@ -168,6 +167,12 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
+
+  val moldev = Project("moldev", file("modules/moldev"))
+    .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
+      libraryDependencies ++= commonDependencies,
+      javacOptions ++= javaBuildOptions
+    ).dependsOn(ncats).aggregate(ncats)
 
   val srs = Project("srs", file("modules/srs"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
