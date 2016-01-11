@@ -1,7 +1,6 @@
 package ix.ncats.moldev.controllers;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.nih.ncgc.imaging.MolDevUtils;
@@ -20,7 +19,6 @@ public class MoldevPlateApp extends MoldevApp {
         makeConnection();
         PreparedStatement pst = hcsConn.prepareStatement("select plate_id, plate_name, plate_description, time_created, global_id from plates order by plate_id");
         ResultSet rs = pst.executeQuery();
-        ObjectMapper mapper = new ObjectMapper();
         ArrayNode root = mapper.createArrayNode();
         while (rs.next()) {
             ObjectNode node = mapper.createObjectNode();
@@ -51,7 +49,6 @@ public class MoldevPlateApp extends MoldevApp {
         pst.setLong(1, plateId);
         ResultSet rs = pst.executeQuery();
 
-        ObjectMapper mapper = new ObjectMapper();
         String plateName = "";
         while (rs.next()) {
             plateName = rs.getString("plate_name");
@@ -111,7 +108,6 @@ public class MoldevPlateApp extends MoldevApp {
         pst.setLong(1, plateId);
         ResultSet rs = pst.executeQuery();
 
-        ObjectMapper mapper = new ObjectMapper();
         ObjectNode node = mapper.createObjectNode();
         int nrow = -1;
         int ncol = -1;

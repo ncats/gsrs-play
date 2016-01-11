@@ -112,6 +112,32 @@ public class MoldevApp extends App {
         return ok(sb.toString()).as("text/html");
     }
 
+    public static Result listPlatesAndAssays(String plateName, String settingsName) throws SQLException {
+        if (plateName == null || settingsName == null)
+            return badRequest("Invalid plate name and/or settings name");
+        makeConnection();
+        PreparedStatement pst = hcsConn.prepareStatement("SELECT assays.assay_id," +
+                "  assays.settings_name," +
+                "  assay_plates.plate_id, plate_name, " +
+                "  to_char(assays.time_created, 'YYYY-MM-DD HH24:MI') as time " +
+                " FROM assays, plates, assay_plates" +
+                " WHERE plate_name    like ? " +
+                " AND assay_plates.plate_id = plates.plate_id" +
+                " AND assays.assay_id        = assay_plates.assay_id" +
+                " AND assays.settings_name like ?" +
+                " AND assay_plates.to_delete = 0 order by time desc");
+        pst.setString(1, "%" + plateName + "%");
+        pst.setString(2, "%" + settingsName + "%");
+        ResultSet resultSet = pst.executeQuery();
+        StringBuilder sb = new StringBuilder();
+        while (resultSet.next()) {
+            for (int i = 1; i <= 4; i++) sb.append(resultSet.getObject(i)).append("\t");
+            sb.append(resultSet.getObject(5)).append("\n");
+        }
+        pst.close();
+        closeConnection();
+        return ok(sb.toString()).as("text/plain");
+    }
 
     static class WellImage {
         int row, col;

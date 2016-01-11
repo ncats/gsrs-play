@@ -171,7 +171,8 @@ public class BuildInfo {
   val moldev = Project("moldev", file("modules/moldev"))
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
-      javacOptions ++= javaBuildOptions
+      libraryDependencies += "org.apache.poi" % "poi" % "3.13",
+        javacOptions ++= javaBuildOptions
     ).dependsOn(ncats).aggregate(ncats)
 
   val srs = Project("srs", file("modules/srs"))
