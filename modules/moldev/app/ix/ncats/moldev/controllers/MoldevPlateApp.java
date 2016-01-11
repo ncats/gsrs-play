@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import gov.nih.ncgc.imaging.MolDevUtils;
 import play.mvc.Result;
+import play.mvc.Results;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -36,6 +37,9 @@ public class MoldevPlateApp extends MoldevApp {
     }
 
     public static Result getPlateImages(String id, String wavelength, String montage) throws SQLException {
+        if (request().hasHeader("If-Modified-Since"))
+            return Results.status(304);
+
         makeConnection();
         MolDevUtils mdu = new MolDevUtils(getRepositoryPath());
         boolean makeMontage = montage != null && montage.toLowerCase().equals("true");
@@ -43,7 +47,7 @@ public class MoldevPlateApp extends MoldevApp {
         Long plateId;
         if (isNumber(id)) plateId = Long.parseLong(id);
         else plateId = mdu.getMXPlateId(id);
-        if (plateId == null) return notFound("No such plate: " + id);
+        if (plateId == null || plateId == -1) return notFound("No such plate: " + id);
 
         PreparedStatement pst = hcsConn.prepareStatement("select plate_id, plate_name, plate_description, time_created, global_id, x_wells, y_wells from plates where plate_id = ?");
         pst.setLong(1, plateId);
@@ -70,7 +74,7 @@ public class MoldevPlateApp extends MoldevApp {
 
             String path;
             if (!makeMontage) path = "/images/" + plateName + "/" + row + "/" + col + "/" + sid + "/" + wavelength;
-            else path = "/images/" + plateName + "/" + row + "/" + col + "/-1/" + wavelength;
+            else path = "/images/" + plateName + "/" + row + "/" + col + "/0/" + wavelength;
 
             WellImage wi;
             String key = row + "#" + col;
@@ -95,14 +99,16 @@ public class MoldevPlateApp extends MoldevApp {
     }
 
     public static Result getPlate(String id) throws SQLException, IllegalAccessException, ClassNotFoundException, InstantiationException {
+        if (request().hasHeader("If-Modified-Since"))
+            return Results.status(304);
+
         makeConnection();
         MolDevUtils mdu = new MolDevUtils(getRepositoryPath());
 
         Long plateId;
         if (isNumber(id)) plateId = Long.parseLong(id);
         else plateId = mdu.getMXPlateId(id);
-
-        if (plateId == null) return notFound("No such plate: " + id);
+        if (plateId == null || plateId == -1) return notFound("No such plate: " + id);
 
         PreparedStatement pst = hcsConn.prepareStatement("select plate_id, plate_name, plate_description, time_created, global_id, x_wells, y_wells from plates where plate_id = ?");
         pst.setLong(1, plateId);

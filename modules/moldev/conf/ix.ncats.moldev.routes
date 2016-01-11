@@ -1,16 +1,19 @@
-GET        /info                                 ix.ncats.moldev.controllers.MoldevApp.info()
-GET        /pcstatus                             ix.ncats.moldev.controllers.MoldevApp.getJobStatus()
-GET        /list                                 ix.ncats.moldev.controllers.MoldevApp.listPlatesAndAssays(plateName: String ?= null, settingsName: String ?= null)
+GET        /info                                                                          ix.ncats.moldev.controllers.MoldevApp.info()
+GET        /pcstatus                                                                      ix.ncats.moldev.controllers.MoldevApp.getJobStatus()
+GET        /list                                                                          ix.ncats.moldev.controllers.MoldevApp.listPlatesAndAssays(plateName: String ?= null, settingsName: String ?= null)
 
-GET        /plates                               ix.ncats.moldev.controllers.MoldevPlateApp.getPlates()
-GET        /plates/:id                           ix.ncats.moldev.controllers.MoldevPlateApp.getPlate(id: String)
-GET        /plates/:id/images/:wavelength        ix.ncats.moldev.controllers.MoldevPlateApp.getPlateImages(id: String, wavelength: String, montage: String ?= "true")
-GET        /assays                               ix.ncats.moldev.controllers.MoldevAssayApp.getAssays
+GET        /plates                                                                        ix.ncats.moldev.controllers.MoldevPlateApp.getPlates()
+GET        /plates/:id                                                                    ix.ncats.moldev.controllers.MoldevPlateApp.getPlate(id: String)
+GET        /plates/:id/images/:wavelength                                                 ix.ncats.moldev.controllers.MoldevPlateApp.getPlateImages(id: String, wavelength: String, montage: String ?= "true")
+GET        /assays                                                                        ix.ncats.moldev.controllers.MoldevAssayApp.getAssays
 
-GET        /export/acumen                        ix.ncats.moldev.controllers.MoldevExportApp.export(format="acumen", plateName: String ?= null, settingsName: String ?= null, aid: String ?= null, aggFunc: String ?= null)
-GET        /export/excel                         ix.ncats.moldev.controllers.MoldevExportApp.export(format="excel", plateName: String ?= null, settingsName: String ?= null, aid: String ?= null, aggFunc: String ?= null)
+GET        /export/acumen                                                                 ix.ncats.moldev.controllers.MoldevExportApp.export(format="acumen", plateName: String ?= null, settingsName: String ?= null, aid: String ?= null, aggFunc: String ?= null)
+GET        /export/excel                                                                  ix.ncats.moldev.controllers.MoldevExportApp.export(format="excel", plateName: String ?= null, settingsName: String ?= null, aid: String ?= null, aggFunc: String ?= null)
 
-#GET         /reagents        ix.ncats.controllers.hcs.ReagentSelectionApp.reagents(q: String ?= null, rows: Int ?= 20, page: Int ?= 1)
+GET        /images/:plateName/$row<[0-9]+>/$col<[0-9]+>/$siteid<[0-9]+>/:waveId           ix.ncats.moldev.controllers.MoldevImageApp.getImage(plateName: String, row: Integer, col: Integer, siteid: Long, waveId: String, thumb: String ?= "false")
+GET        /pngimages/:plateName/$row<[0-9]+>/$col<[0-9]+>/$siteid<[0-9]+>/:waveId        ix.ncats.moldev.controllers.MoldevImageApp.getPngImage(plateName: String, row: Integer, col: Integer, siteid: Long, waveId: String, thumb: String ?= "false")
 
-->         /                                     ix.ncats.Routes
-->         /                                     ix.Routes
+
+
+->         /                                                                              ix.ncats.Routes
+->         /                                                                              ix.Routes

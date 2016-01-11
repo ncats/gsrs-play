@@ -1,6 +1,5 @@
 package ix.ncats.moldev.controllers;
 
-import com.sun.jersey.api.NotFoundException;
 import gov.nih.ncgc.rnai.statistics.BaseStats;
 import gov.nih.ncgc.util.GuhaMisc;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +11,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Row;
+import play.Logger;
 import play.mvc.Result;
 
 import java.io.ByteArrayOutputStream;
@@ -26,12 +26,15 @@ import java.util.regex.Pattern;
  * @author Rajarshi Guha
  */
 public class MoldevExportApp extends MoldevApp {
+    static Logger log;
+
     static Object[][] data;
     static List<String> header, keys;
 
 
     public static Result export(String format, String plateName, String settingsName, String aid, String aggFunc)
             throws ClassNotFoundException, SQLException, InstantiationException, IllegalAccessException, IOException {
+        response().setHeader(CACHE_CONTROL, "max-age=3600");
         switch (format) {
             case "acumen":
                 return exportAcumen(plateName, settingsName, aid, aggFunc);
@@ -49,7 +52,7 @@ public class MoldevExportApp extends MoldevApp {
             exportData(plateName, settingsName, aid, aggFunc);
         } catch (IllegalArgumentException e) {
             return badRequest("Invalid plate name and/or settings name");
-        } catch (NotFoundException e) {
+        } catch (IOException e) {
             return notFound(e.getMessage());
         }
 
@@ -85,7 +88,7 @@ public class MoldevExportApp extends MoldevApp {
             exportData(plateName, settingsName, aid, aggFunc);
         } catch (IllegalArgumentException e) {
             return badRequest("Invalid plate name and/or settings name");
-        } catch (NotFoundException e) {
+        } catch (IOException e) {
             return notFound(e.getMessage());
         }
 
@@ -234,7 +237,7 @@ public class MoldevExportApp extends MoldevApp {
             String settingsName,
             String aid,
             String aggFunc
-    ) throws IllegalAccessException, SQLException, InstantiationException, ClassNotFoundException {
+    ) throws IllegalAccessException, SQLException, InstantiationException, ClassNotFoundException, IOException {
         if (plateName == null && settingsName == null && aid == null)
             throw new IllegalArgumentException();
 
@@ -270,12 +273,12 @@ public class MoldevExportApp extends MoldevApp {
                 nassay++;
             }
             if (tableName == null) {
-                System.out.println("No assay data for this combination of plate & settings name");
-                throw new NotFoundException("No assay data for this combination of plate & settings name");
+                log.error("No assay data for this combination of plate & settings name");
+                throw new IOException("No assay data for this combination of plate & settings name");
             }
             if (nassay != 1) {
-                System.out.println("Multiple assay tables for this combination of plate & settings name");
-                throw new NotFoundException("Multiple assay tables for for this combination of plate & settings name");
+                log.error("Multiple assay tables for this combination of plate & settings name");
+                throw new IOException("Multiple assay tables for for this combination of plate & settings name");
             }
             pst.clearParameters();
         } else { // just query by aid
@@ -286,7 +289,7 @@ public class MoldevExportApp extends MoldevApp {
             tableName = resultSet.getString("table_id");
         }
 
-        System.out.print("Got assay (" + tableName + ") for  " + plateName + " | " + settingsName + "  ");
+        log.info("Got assay (" + tableName + ") for  " + plateName + " | " + settingsName + "  ");
         // OK, now pull out the table data
         pst = hcsConn.prepareStatement("select * from " + tableName + " order by well, cell_id");
         ResultSet resultSet = pst.executeQuery();
@@ -306,8 +309,8 @@ public class MoldevExportApp extends MoldevApp {
         //read in the first row
         boolean status = resultSet.next();
         if (!status) {
-            System.out.println("Assay table [" + tableName + "] had no data!");
-            throw new NotFoundException("Assay table [" + tableName + "] had no data!");
+            log.error("Assay table [" + tableName + "] had no data!");
+            throw new IOException("Assay table [" + tableName + "] had no data!");
         }
 
         String wellId = resultSet.getString("well");
@@ -389,7 +392,7 @@ public class MoldevExportApp extends MoldevApp {
 
         pst.close();
         closeConnection();
-        System.out.println("Done");
+        log.info("Done");
     }
 
     private static String getPlateNameByAssayId(String aid, Connection con) throws SQLException, IllegalAccessException, InstantiationException, ClassNotFoundException {
