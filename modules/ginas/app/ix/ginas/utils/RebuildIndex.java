@@ -12,6 +12,7 @@ import javax.persistence.Id;
 
 import org.reflections.Reflections;
 
+import play.Logger;
 import play.db.ebean.Model;
 
 import com.avaje.ebean.Query;
@@ -38,7 +39,7 @@ public class RebuildIndex  {
         			idClass=f.getType();
         		}
         	}
-        	System.out.println(eclass + "\t" + idClass);
+        	//System.out.println(eclass + "\t" + idClass);
         	Model.Finder finder = new Model.Finder(idClass, eclass);
         	int page=0;
         	int pageSize=10;
@@ -50,7 +51,11 @@ public class RebuildIndex  {
 	        	List l=q.findList();
 	        	ObjectMapper om = new ObjectMapper();
 	        	for(Object o:l){
-	        		String v=om.valueToTree(o).toString();
+	        		try{
+	        			String v=om.valueToTree(o).toString();
+	        		}catch(Exception e){
+	        			Logger.info("Error serializing entity:" + o);
+	        		}
 	        	}
 	        	UPDATE_MESSAGE="Records Processed:" + (page+1)*pageSize + " of " + rcount +  " in " + (System.currentTimeMillis()-start) + "ms";
 	        	if(l.isEmpty() || (page+1)*pageSize > rcount)break;
