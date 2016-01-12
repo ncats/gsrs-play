@@ -601,6 +601,16 @@ i#grid-view-off {
 .success:hover{
     color: #398439;
 }
+.whole{
+    color: #5cb85c;
+    transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.3s;
+    font-size:5em;
+
+}
+
+.whole:hover{
+    color: #398439;
+}
 
 .danger{
    color: #d9534f;
@@ -614,6 +624,15 @@ i#grid-view-off {
 }
 
 .warning:hover {
+    color: #ec971f;
+}
+.part {
+    color: #f0ad4e;
+    transition:all cubic-bezier(0.250, 0.460, 0.450, 0.940) 0.3s;
+    font-size:5em;
+}
+
+.part:hover {
     color: #ec971f;
 }
 
