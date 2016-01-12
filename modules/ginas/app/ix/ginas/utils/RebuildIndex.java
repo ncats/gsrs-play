@@ -42,7 +42,7 @@ public class RebuildIndex  {
         	//System.out.println(eclass + "\t" + idClass);
         	Model.Finder finder = new Model.Finder(idClass, eclass);
         	int page=0;
-        	int pageSize=10;
+        	int pageSize=100;
         	int rcount=finder.findRowCount(); 
         	while(true){
 	        	Query q=finder.query();
@@ -54,6 +54,7 @@ public class RebuildIndex  {
 	        		try{
 	        			String v=om.valueToTree(o).toString();
 	        		}catch(Exception e){
+	        			e.printStackTrace();
 	        			Logger.info("Error serializing entity:" + o);
 	        		}
 	        	}
@@ -62,7 +63,7 @@ public class RebuildIndex  {
 	        	page++;
         	}
         	page=0;
-        	pageSize=10;
+        	pageSize=100;
         }
         EntityPersistAdapter.setUpdatingIndex(false);
         UPDATE_MESSAGE="Complete.\nTotal Time:" + (System.currentTimeMillis()-start) + "ms";

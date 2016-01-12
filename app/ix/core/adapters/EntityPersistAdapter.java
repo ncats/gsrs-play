@@ -477,7 +477,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                     e.printStackTrace();
                 }
             }
-            alreadyLoaded.put(bean.getClass()+_id,_id);
+            if(_id!=null)
+            	alreadyLoaded.put(bean.getClass()+_id,_id);
         } catch (IOException e) {
             e.printStackTrace();
         }
