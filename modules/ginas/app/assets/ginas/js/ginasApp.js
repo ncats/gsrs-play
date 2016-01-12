@@ -134,7 +134,8 @@
             "protein.modifications.structuralModifications.extent": "EXTENT_TYPE",
             "structurallyDiverse.sourceMaterialClass" : "SOURCE_MATERIAL_CLASS",
             "structurallyDiverse.sourceMaterialType" : "SOURCE_MATERIAL_TYPE",
-            "structurallyDiverse.sourceMaterialState" : "SOURCE_MATERIAL_STATE"
+            "structurallyDiverse.sourceMaterialState" : "SOURCE_MATERIAL_STATE",
+            "component.type":"MIXTURE_TYPE"
         };
 
 
@@ -271,17 +272,8 @@ console.log($scope);
             $anchorScroll();
         };
 
-        $scope.toggleJSONView = function () {
-            $scope.submitSubstance = $scope.fromFormSubstance($scope.substance);
-            $scope.submitSubstancePretty = JSON.stringify($scope.submitSubstance, null, 2);
-            $scope.showJSON = !$scope.showJSON;
-            if (!$scope.viewStyle) {
-                $scope.viewStyle = 'object';
-            }
-        };
-
-        $scope.setViewStype = function (style) {
-            $scope.viewStyle = style;
+        $scope.viewToggle = function(){
+            $scope.submitSubstance = $scope.fromFormSubstance(angular.copy($scope.substance));
         };
 
         $scope.canApprove = function () {
