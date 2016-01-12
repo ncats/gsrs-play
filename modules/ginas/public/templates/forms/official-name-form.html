@@ -1,9 +1,8 @@
 <div class = "row info">
-    <button class="btn btn-primary label-offset det">
-                       Official Names&nbsp;<span class="badge" ng-show="substance.officialNames.length>0">
-                        {{substance.officialNames.length}}</span> </button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="officialNames" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <ng-form name="officialNameForm" id = "add-name" novalidate isolate-form>
             <div class="row form-row">
                 <div class="col-md-2">
@@ -19,7 +18,7 @@
                     <multi-select ng-model="officialname.nameOrgs" field="nameOrgs" cv = "NAME_ORG"></multi-select>
                 </div>
                 <div class="col-md-2 err-check">
-                    <multi-select ng-model="officialname.jurisdiction" field="nameJurisdiction" cv = "JURISDICTION" ></multi-select>
+                    <multi-select ng-model="officialname.nameJurisdiction" field="nameJurisdiction" cv = "JURISDICTION" ></multi-select>
                 </div>
                 <div class="col-md-2 err-check">
                     <multi-select ng-model="officialname.languages" field="languages" cv = "LANGUAGE"></multi-select>
@@ -31,17 +30,17 @@
                     <check-box ng-model="officialname.preferred" field="preferred" ></check-box>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="officialname" parent = "substance" divid="officialNameForm" type = "access"></form-selector>
+                    <form-selector referenceobj ="officialname" parent = "parent" divid="officialNameForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="officialname" parent = "substance" divid="officialNameForm" type = "reference"></form-selector>
+                    <form-selector referenceobj ="officialname" parent = "parent" divid="officialNameForm" type = "reference"></form-selector>
                 </div>
             </div>
             <div class="officialNameForm"></div>
             <submit-buttons submit="officialname" form="officialNameForm" path="officialNames"></submit-buttons>
         </ng-form>
 
-        <div ng-repeat="obj in substance.officialNames">
+        <div ng-repeat="obj in parent.officialNames">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
@@ -69,10 +68,10 @@
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj ="obj" parent = "substance" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

@@ -1,0 +1,9 @@
+<div class ="col-md-4 col-md-pull-left">
+    <button class="btn btn-primary label-offset det text-capitalize" ng-click="toggle();">
+        <i ng-show="iscollapsed" class="fa fa-caret-right"></i>
+        <i ng-hide="iscollapsed" class="fa fa-caret-down"></i>
+        {{heading}}&nbsp;<span class="badge" ng-show="parent[path].length>0">
+                        {{parent[path].length}}</span> </button>
+    <span ng-click ="showInfo()" uib-tooltip="click for description"><i class="fa fa-question-circle fa-lg"></i></span>
+    <div class={{type}}></div>
+</div>

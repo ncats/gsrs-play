@@ -1,20 +1,20 @@
 <div class = "row info" >
-    <button class="btn btn-primary label-offset det">
-                        Organism Details</button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="organismDetails" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <div class="row form-row">
-            <div class="col-md-3 err-check">
-                <text-view-edit obj = "substance.structurallyDiverse" field="organismFamily" label="Organism Family"></text-view-edit>
+            <div class="col-md-3">
+                <text-view-edit obj = "parent.structurallyDiverse" field="organismFamily" label="Organism Family"></text-view-edit>
             </div>
-            <div class="col-md-3 err-check">
-                <text-view-edit obj = "substance.structurallyDiverse" field="organismGenus" label="Organism Genus"></text-view-edit>
+            <div class="col-md-3">
+                <text-view-edit obj = "parent.structurallyDiverse" field="organismGenus" label="Organism Genus"></text-view-edit>
             </div>
-            <div class="col-md-3 err-check">
-                <text-view-edit obj = "substance.structurallyDiverse" field="organismSpecies" label="Organism Species"></text-view-edit>
+            <div class="col-md-3">
+                <text-view-edit obj = "parent.structurallyDiverse" field="organismSpecies" label="Organism Species"></text-view-edit>
             </div>
-            <div class="col-md-3 err-check">
-                <text-view-edit obj = "substance.structurallyDiverse" field="organismAuthor" label="Organism Author"></text-view-edit>
+            <div class="col-md-3">
+                <text-view-edit obj = "parent.structurallyDiverse" field="organismAuthor" label="Organism Author"></text-view-edit>
             </div>
         </div>
         <p></p>

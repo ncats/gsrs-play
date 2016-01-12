@@ -1,9 +1,7 @@
 <div class = "row info" >
-    <button class="btn btn-primary label-offset det">
-                      Constituents&nbsp;<span class="badge" ng-show="substance.specifiedSubstance.constituents.length>0">
-                        {{substance.specifiedSubstance.constituents.length}}</span> </button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-
+    <div class="row">
+        <form-header type="constituents" path= "specifiedSubstance.constituents" parent="parent"></form-header>
+    </div>
     <div class="col-md-12">
         <form class="form-horizontal" name="constituentForm" role="form" novalidate>
             <div class="row form-row">
@@ -20,17 +18,17 @@
                     <form-selector referenceobj= "component" divid="constituentForm" type = "amount"></form-selector>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj ="component" parent = "substance" divid="constituentForm" type = "reference"></form-selector>
+                    <form-selector referenceobj ="component" parent = "parent" divid="constituentForm" type = "reference"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="component" parent = "substance" divid="constituentForm" type = "access"></form-selector>
+                    <form-selector referenceobj ="component" parent = "parent" divid="constituentForm" type = "access"></form-selector>
                 </div>
             </div>
             <div class="constituentForm"></div>
             <submit-buttons submit="component" form="constituentForm" path="specifiedSubstanceG1.constituents"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in substance.specifiedSubstance.constituents" >
+        <div ng-repeat="obj in parent.specifiedSubstance.constituents" >
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -49,10 +47,10 @@
                     <form-selector referenceobj= "obj" formname="constituentForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj ="obj" parent = "substance" formname="constituentForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="constituentForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" formname="constituentForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="constituentForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

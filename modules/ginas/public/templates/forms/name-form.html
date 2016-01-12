@@ -1,17 +1,15 @@
 <div class = "row info">
-    <button class="btn btn-primary label-offset det">
-        Names&nbsp;<span class="badge" ng-show="substance.unofficialNames.length>0">
-                        {{substance.unofficialNames.length}}</span> </button>
-   <span><i class="fa fa-question-circle fa-lg"></i></span>
-
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="unofficialNames" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <ng-form name="nameForm" id = "add-name" novalidate isolate-form>
             <div class="row form-row">
                 <div class="col-md-4" >
                      <text-input ng-model="name.name" field="name" name ="name" id ="name" form="nameForm" validate="true"></text-input>
                     <ng-messages for="nameForm.name.$error" ng-if="nameForm.name.$touched">
                         <ng-message when="duplicate" class="help-block">Name already exists in Ginas</ng-message>
-                        <ng-message when="required" class="help-block">Substance name is required</ng-message>
+                        <ng-message when="required" class="help-block">parent name is required</ng-message>
                     </ng-messages>
                     </div>
 
@@ -28,10 +26,10 @@
                     <check-box ng-model="name.preferred" field="preferred" ></check-box>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj= "name" parent = "substance" divid="nameForm" type = "access"></form-selector>
+                    <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj= "name" parent = "substance" divid="nameForm" type = "reference" required></form-selector>
+                    <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "reference" required></form-selector>
                 </div>
             </div>
             <div class="nameForm"></div>
@@ -39,7 +37,7 @@
         </ng-form>
 
 
-        <div ng-repeat="obj in substance.unofficialNames">
+        <div ng-repeat="obj in parent.unofficialNames">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -61,10 +59,10 @@
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

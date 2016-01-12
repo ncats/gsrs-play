@@ -1,12 +1,8 @@
 <div class = "row info">
-<!--
-    <div class = "row info" ng-show="substance.protein.subunits.length!==0">
--->
-    <button class="btn btn-primary label-offset det">
-        Other Links&nbsp;<span class="badge" ng-show="parent.protein.otherLinks.length>0">
-                        {{parent.protein.otherLinks.length}}</span> </button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="otherLinks" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="otherLinksForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">

@@ -1,8 +1,8 @@
 <div class = "row info" >
-    <button class="btn btn-primary label-offset det">
-                        Details</button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="proteinDetails" parent="substance" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <div class="row form-row">
             <div class="col-md-2 err-check">
                 <dropdown-view-edit obj = "substance.protein" field="proteinType" cv = "PROTEIN_TYPE" label="Protein Type"></dropdown-view-edit>

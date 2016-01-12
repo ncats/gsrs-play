@@ -1,10 +1,8 @@
 <div class="row info">
-    <button class="btn btn-primary label-offset det">
-        Amount&nbsp;</button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <a ng-click="$parent.toggleStage();" class="pull-right">
-        <i class="fa fa-times fa-2x danger"></i></a>
-
+    <div class="row">
+        <form-header type="amount" parent="substance"></form-header>
+        <close-button></close-button>
+    </div>
     <div class="col-md-12">
         <form class="form-horizontal" name="amountForm" role="form" novalidate>
             <div class="row form-row">
@@ -36,7 +34,7 @@
             <div class="row">
                 <div class="col-md-2 pull-right">
                     <a ng-click="amount=null; reset();" aria-label="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
-                    <a ng-click="validate(); $parent.toggleStage()"><i class="fa fa-check fa-2x success"></i></a>
+                    <a ng-click="validate(); $parent.toggle()"><i class="fa fa-check fa-2x success"></i></a>
                 </div>
             </div>
         </form>

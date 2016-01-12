@@ -1,26 +1,25 @@
 <div class = "row info">
-    <button class="btn btn-primary label-offset det">
-                        Notes&nbsp;<span class="badge" ng-show="substance.notes.length>0">
-                        {{substance.notes.length}}</span> </button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="notes" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="noteForm" id = "add-name" role="form" novalidate>
             <div class="row form-row">
-                <div class="col-md-10 err-check" id="name-div">
+                <div class="col-md-10">
                     <text-box ng-model="note.note" field="note"></text-box>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="note" parent = "substance" divid="noteForm" type = "access"></form-selector>
+                    <form-selector referenceobj ="note" parent = "parent" divid="noteForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="note" parent = "substance" divid="noteForm" type = "reference"></form-selector>
+                    <form-selector referenceobj ="note" parent = "parent" divid="noteForm" type = "reference"></form-selector>
                 </div>
             </div>
             <div class="noteForm"></div>
             <submit-buttons submit="note" form="noteForm" path="notes"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in substance.notes">
+        <div ng-repeat="obj in parent.notes">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -30,10 +29,10 @@
                     <text-box-view-edit obj="obj" field="note"></text-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

@@ -1,7 +1,7 @@
 <div class = "row info">
-    <button class="btn btn-primary label-offset det">
-                      Moieties&nbsp;<span class="badge" ng-show="parent.moieties.length>0">
-                        {{parent.moieties.length}}</span>  </button>
+    <div class="row">
+        <form-header type="moieties" parent="substance"></form-header>
+    </div>
         <div class="col-md-12" id="structureSearcher">
             <div ng-repeat="obj in parent.moieties">
                 <div class ="row">

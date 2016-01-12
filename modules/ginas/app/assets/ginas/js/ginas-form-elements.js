@@ -398,4 +398,16 @@
         };
     });
 
+    ginasFormElements.directive('closeButton', function (isDuplicate) {
+        return {
+            restrict: 'E',
+            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
+        };
+    });
+
+
+
+
+
+
 })();

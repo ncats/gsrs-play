@@ -1,14 +1,10 @@
-@import ix.core.controllers.AdminFactory
 @import ix.core.models.UserProfile
-@import be.objectify.deadbolt.java.views.html.dynamicOr
-@import play.api.data.Forms._
 
-@(profs: List[UserProfile],currentSortBy: String, currentOrder: String, currentFilter: String)
-
-    @****************************************
-    * Helper generating navigation links    *
-    ****************************************@
-@link(newPage:Int, newSortBy:String) = @{
+@(profs: List[UserProfile], currentSortBy: String, currentOrder: String, currentFilter: String)
+@****************************************
+* Helper generating navigation links *
+****************************************@
+@link(newPage: Int, newSortBy: String) = @{
 
     var sortBy = currentSortBy
     var order = currentOrder
@@ -44,8 +40,10 @@
     @**********************************
     * Helper generating table headers *
     ***********************************@
-@header(key:String, title:String) = {
-    <th class="@key.replace(".","_") header @if(currentSortBy == key) @{if(currentOrder == "asc") "headerSortDown" else "headerSortUp"}">
+@header(key: String, title: String) = {
+    <th class="@key.replace(".", "_") header @if(currentSortBy == key) @{
+        if(currentOrder == "asc") "headerSortDown" else "headerSortUp"
+    }">
         <a href="@link(0, key)">@title</a>
     </th>
 }
@@ -60,36 +58,38 @@
 
     <div id="actions">
 
-        <a class="btn success" id="add" href="@ix.ncats.controllers.crud.routes.Administration.create()">Add a new User</a>
+        <a class="btn success" id="add" href="@ix.ncats.controllers.crud.routes.Administration.create()">
+            Add a new User</a>
 
     </div>
+    <div class="row">
+        <div class = "col-md-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        @header("user.username", "User Name")
+                        @header("user.admin", "Admin")
+                        @header("active", "Active")
+                        @header("user.email", "Email")
+                    </tr>
+                </thead>
+                <tbody>
 
-    <table class="table table-striped">
-            <thead>
-                <tr>
-                    @header("user.username", "User Name")
-                    @header("user.admin", "Admin")
-                    @header("active", "Active")
-                    @header("user.email", "Email")
-                </tr>
-            </thead>
-            <tbody>
+                    <form>
+                    @for(p <- profs) {
+                        @tabrow(p)
+                    }
+                    </form>
 
-                <form>
-                      @for(p <- profs) {
-                            @tabrow(p)
-                        }
-                </form>
-
-            </tbody>
-        </table>
-
-       <div id="pagination" class="pagination">
-           @**      @if(profs.length > 1) {
-            @ix.ncats.views.html.pagination(1, 10, 30, null)(HtmlFormat.empty)
-      }**@
+                </tbody>
+            </table>
         </div>
-
+    </div>
+    <div id="pagination" class="pagination">
+        @** @if(profs.length > 1) {
+        @ix.ncats.views.html.pagination(1, 10, 30, null)(HtmlFormat.empty)
+        }**@
+    </div>
 
 
 }

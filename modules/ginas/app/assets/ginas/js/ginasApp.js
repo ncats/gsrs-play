@@ -131,7 +131,10 @@
             "protein.glycosylation.glycosylationType": "GLYCOSYLATION_TYPE",
             "protein.modifications.structuralModifications.structuralModificationType": "STRUCTURAL_MODIFICATION_TYPE",
             "protein.modifications.structuralModifications.locationType": "LOCATION_TYPE",
-            "protein.modifications.structuralModifications.extent": "EXTENT_TYPE"
+            "protein.modifications.structuralModifications.extent": "EXTENT_TYPE",
+            "structurallyDiverse.sourceMaterialClass" : "SOURCE_MATERIAL_CLASS",
+            "structurallyDiverse.sourceMaterialType" : "SOURCE_MATERIAL_TYPE",
+            "structurallyDiverse.sourceMaterialState" : "SOURCE_MATERIAL_STATE"
         };
 
 
@@ -582,9 +585,10 @@ console.log($scope);
         //for type, will store the form object into that path inside
         //the substance, unless otherwise caught in the switch.
         //This simplifies some things.
-        $scope.validate = function (objName, form, path) {
+        $scope.validate = function (obj, form, path) {
+            console.log($scope);
             $scope.$broadcast('show-errors-check-validity');
-            var obj = $scope[objName];
+           // var obj = $scope[objName];
             var v = path.split(".");
             var type = _.last(v);
             switch (type) {
@@ -609,7 +613,7 @@ console.log($scope);
 
                // console.log($scope);
                /// form.$setSubmitted(true);
-                $scope[objName] = null;
+                obj = {};
 
                 console.log($scope);
                 form.$setPristine();
@@ -617,9 +621,10 @@ console.log($scope);
                 $scope.$broadcast('show-errors-reset');
                 // form.$setValidity();
                // form.$error= {};
-
+                return true;
             } else {
                 console.log("Invalid");
+                return false;
             }
 
 
@@ -1330,7 +1335,7 @@ console.log($scope);
     });
 
 //sugarSites
-    ginasApp.directive('naSites', function () {
+/*    ginasApp.directive('naSites', function () {
         return {
             require: 'ngModel',
             link: function (scope, ele, attrs, c) {
@@ -1371,7 +1376,7 @@ console.log($scope);
                 });
             }
         };
-    });
+    });*/
 
     ginasApp.directive('titleHeader', function ($compile) {
         return {
@@ -1494,8 +1499,8 @@ console.log($scope);
 
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';
-        var validTool = '<a href="#" class= "aminoAcid" tooltip="{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}} ({{acid.type}}-{{acid.name}})">{{acid.value}}</a>';
-        var invalidTool = '<a href="#" class= "invalidAA" tooltip-class="invalidTool" tooltip="INVALID">{{acid.value}}</a>';
+        var validTool = '<a href="#" class= "aminoAcid" uib-tooltip="{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}} ({{acid.type}}-{{acid.name}})">{{acid.value}}</a>';
+        var invalidTool = '<a href="#" class= "invalidAA" tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>';
         var space = '&nbsp;';
         var close = '</div>';
         getTemplate = function (aa) {

@@ -1,16 +1,31 @@
 (function () {
     var ginasForms = angular.module('ginasForms', ['bootstrap.fileField']);
 
-    ginasForms.factory('toggler', function ($compile) {
-        var factory = {};
+    ginasForms.service('toggler', function ($compile, $templateRequest) {
+
         var childScope;
-        factory.stageCheck = function () {
+        this.stageCheck = function () {
             return this.stage;
         };
 
-        factory.toggle = function (scope, element, div, obj) {
-            console.log(obj);
-            scope.referenceobj = obj;
+        this.show = function(scope, element, url){
+                var template ="";
+                var result = document.getElementsByClassName(scope.type);
+                var elementResult = angular.element(result);
+                if (scope.stage === true) {
+                    scope.stage = false;
+                    $templateRequest(url).then(function (html) {
+                        template = angular.element(html);
+                        elementResult.append(template);
+                        $compile(elementResult)(scope);
+                    });
+                } else {
+                    elementResult.empty();
+                    scope.stage = true;
+                }
+        };
+
+        this.toggle = function (scope, element, newForm) {
             console.log("in the toggler)");
             console.log(scope);
             var result = document.getElementsByClassName(element);
@@ -18,19 +33,64 @@
             if (scope.stage === true) {
                 scope.stage = false;
                 childScope = scope.$new();
-                var compiledDirective = $compile(div);
+                var compiledDirective = $compile(newForm);
                 var directiveElement = compiledDirective(childScope);
                 elementResult.append(directiveElement);
+                console.log(childScope);
             } else {
                 console.log("destroy");
+                console.log(childScope);
                 childScope.$destroy();
                 elementResult.empty();
                 scope.stage = true;
+                console.log(childScope);
                 console.log(scope);
 
             }
         };
-    return factory;
+    });
+
+    ginasForms.directive('formHeader', function ($compile, $templateRequest, toggler) {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
+                type: '@',
+                referenceobj: '=',
+                parent: '=',
+                path: '@',
+                iscollapsed: '='
+            },
+            templateUrl: baseurl + "assets/templates/selectors/form-header.html",
+            link: function (scope, element, attrs) {
+                scope.stage = true;
+                scope.length =0;
+                scope.heading = _.startCase(scope.type);
+                if(_.isUndefined(scope.path)){
+                    scope.path = scope.type;
+                }
+                if(!_.isUndefined(scope.parent[scope.path])){
+                    scope.length = _.get(scope.parent, scope.path).length;
+                }
+                if(scope.length==0){
+                    scope.iscollapsed = true;
+                }
+/*                console.log(scope.path);
+                console.log(_.get(scope.parent, scope.path));*/
+/*                if(_.isUndefined(scope.parent[scope.path]) || scope.parent[scope.path].length == 0){
+                    scope.iscollapsed=false;
+                }*/
+
+                scope.showInfo = function () {
+                    var url = baseurl + "assets/templates/info/code-info.html";
+                    toggler.show(scope, type, url);
+                };
+
+                scope.toggle = function () {
+                    scope.iscollapsed = !scope.iscollapsed;
+                };
+            }
+        };
     });
 
     ginasForms.directive('accessForm', function () {
@@ -101,17 +161,28 @@
             restrict: 'E',
             replace: true,
             scope: {
-                amount: '=amount'
+                amount: '=',
+                referenceobj: '=',
+                parent:'='
             },
-            templateUrl: baseurl + "assets/templates/forms/amount-form.html"
+            templateUrl: baseurl + "assets/templates/forms/amount-form.html",
+            link: function(scope){
+                console.log(scope);
+            }
         };
     });
 
-    ginasForms.directive('codeForm', function () {
+    ginasForms.directive('codeForm', function ($compile, $templateRequest, toggler) {
         return {
             restrict: 'E',
             replace: true,
-            templateUrl: baseurl + "assets/templates/forms/code-form.html"
+            templateUrl: baseurl + "assets/templates/forms/code-form.html",
+            scope:{
+                parent: '='
+            },
+            link: function(scope, element, attrs){
+                scope.iscollapsed = false;
+                }
         };
     });
 
@@ -224,6 +295,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/diverse-details-form.html"
         };
     });
@@ -232,6 +306,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
         };
     });
@@ -240,7 +317,13 @@
         return {
             restrict: 'E',
             replace: true,
-            templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html"
+            scope:{
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html",
+            link: function(scope, element){
+    console.log(scope);
+            }
         };
     });
 
@@ -292,9 +375,16 @@
                 divid: '@'
             },
             link: function (scope, element, attrs) {
+//                console.log(scope);
                 var formHolder;
                 var childScope;
                 var template;
+
+                if (_.isUndefined(scope.referenceobj)) {
+                    var x = {};
+                    _.set(scope, 'referenceobj', x);
+                }
+
                 scope.toggle = function(){
                     console.log(scope);
                     toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
@@ -316,7 +406,7 @@
 
                             });
                         }
-                        formHolder = '<amount-form amount=referenceobj.amount></amount-form>';
+                        formHolder = '<amount-form referenceobj = referenceobj parent = parent amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
                         scope.formtype = attrs.formtype;
@@ -504,6 +594,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/mixture-component-select-form.html"
         };
     });
@@ -523,6 +616,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/name-form.html"
         };
     });
@@ -531,7 +627,9 @@
         return {
             restrict: 'E',
             replace: true,
-            scope: {},
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/admin/new-cv-form.html",
             link: function(scope){
 
@@ -543,6 +641,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/note-form.html"
         };
     });
@@ -551,6 +652,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-details-form.html"
         };
     });
@@ -835,6 +939,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/official-name-form.html"
         };
     });
@@ -905,6 +1012,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/parent-form.html"
         };
     });
@@ -913,6 +1023,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/part-form.html"
         };
     });
@@ -983,6 +1096,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent:'='
+            },
             templateUrl: baseurl + "assets/templates/forms/property-form.html"
         };
     });
@@ -991,6 +1107,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/protein-details-form.html"
         };
     });
@@ -1068,6 +1187,8 @@
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
+
+
                 console.log(scope);
                 scope.validate = function () {
                     if (!_.isUndefined(scope.ref.citation)) {
@@ -1143,6 +1264,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/relationship-form.html"
         };
     });
@@ -1245,6 +1369,9 @@
         return {
             restrict: 'E',
             replace: true,
+            scope:{
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/forms/ss-constituent-form.html"
         };
     });
@@ -1286,19 +1413,32 @@
             restrict: 'E',
             replace: true,
             scope: {
-                objectName: '@submit',
+                obj: '=submit',
                 form: '=form',
                 path: '@path'
             },
             templateUrl: baseurl + "assets/templates/submit-buttons.html",
             link: function (scope, element, attrs) {
                 scope.validate = function () {
-                    scope.$parent.validate(scope.objectName, scope.form, scope.path);
+                    if (!scope.$parent.validate) {
+                        if (scope.$parent.$parent.validate(scope.obj, scope.form, scope.path)) {
+                            scope.reset();
+                        }
+                    } else {
+                        if (scope.$parent.validate(scope.obj, scope.form, scope.path)) {
+                            scope.reset();
+                        }
+                    }
                     scope.$broadcast('show-errors-reset');
                 };
                 scope.reset = function () {
-                    scope.$parent[scope.objectName] = null;
-                    scope.$parent.reset(scope.form);
+                    scope.obj = null;
+                    if (!scope.$parent.reset) {
+                        scope.$parent.$parent.reset(scope.form);
+
+                    } else {
+                        scope.$parent.reset(scope.form);
+                    }
                 };
             }
         };

@@ -1,10 +1,8 @@
 <div class="row info">
-    <button class="btn btn-primary label-offset det">
-        Agent Modifications&nbsp;<span class="badge"
-                                            ng-show="parent.protein.modifications.agentModifications.length>0">
-                        {{parent.protein.modifications.agentModifications.length}}</span></button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="agentModifications" path ="protein.modifications.agentModifications" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse ="iscollapsed">
         <form class="form-horizontal" name="agentModForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
@@ -25,15 +23,15 @@
                                                 label="Agent Substance" type="lite"></substance-chooser-selector>
                 </div>
                                 <div class="col-md-1">
-                    <form-selector referenceobj="agentMod" parent="substance" divid="agentModForm"
+                    <form-selector referenceobj="agentMod" parent="parent" divid="agentModForm"
                                    type="amount"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="agentMod" parent="substance" divid="agentModForm"
+                    <form-selector referenceobj="agentMod" parent="parent" divid="agentModForm"
                                    type="access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="agentMod" parent="substance" divid="agentModForm"
+                    <form-selector referenceobj="agentMod" parent="parent" divid="agentModForm"
                                    type="reference"></form-selector>
                 </div>
             </div>
@@ -68,15 +66,15 @@
                                                  label="Agent Substance"></substance-chooser-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj.extentAmount" parent="substance" type="amount" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj.extentAmount" parent="parent" type="amount" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="substance" type="access" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="substance" type="reference" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
                 </div>
             </div>

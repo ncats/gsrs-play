@@ -1,10 +1,9 @@
 <div class="row info" id="references">
-    <button class="btn btn-primary label-offset det">
-        References&nbsp;<span class="badge" ng-show="parent.references.length>0">
-                        {{parent.references.length}}</span></button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
-        <form class="form-horizontal" name="refForm" id="add-name" role="form" novalidate>
+    <div class="row">
+        <form-header type="references" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="refOnlyForm" id="add-name" role="form" novalidate>
             <div class="row form-row">
 
                 <div class="col-md-2">
@@ -23,10 +22,9 @@
                     <text-input ng-model="ref.url" field="url"></text-input>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="ref" parent="substance" divid="refForm" type="access"></form-selector>
+                    <form-selector referenceobj="ref" parent="parent" divid="refOnlyForm" type="access"></form-selector>
                 </div>
             </div>
-            <div class="refForm"></div>
             <div class="row">
                 <hr>
                 <div class="col-md-1 pull-right">
@@ -34,6 +32,8 @@
                     <a ng-click="validate()"><i class="fa fa-floppy-o fa-2x success"></i></a>
                 </div>
             </div>
+            <div class="refOnlyForm"></div>
+
         </form>
 
         <div class="row" ng-repeat="reference in parent.references">
@@ -57,7 +57,7 @@
                 <text-view-edit obj="reference" field="url"></text-view-edit>
             </div>
             <div class="col-md-1 pull-right">
-                <form-selector referenceobj="reference" parent="substance" formname="refForm" type="access"
+                <form-selector referenceobj="reference" parent="parent" formname="refOnlyForm" type="access"
                                divid={{obj.$$hashKey}} mode="edit"></form-selector>
             </div>
         </div>

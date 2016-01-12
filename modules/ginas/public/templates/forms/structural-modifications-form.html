@@ -1,12 +1,14 @@
 <div class="row info">
-    <button class="btn btn-primary label-offset det">
+    <div class="row">
+        <form-header type="structuralModifications" path="protein.modifications.structuralModifications" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+<!--    <button class="btn btn-primary label-offset det">
         Structural Modifications&nbsp;<span class="badge"
                                             ng-show="parent.protein.modifications.structuralModifications.length>0">
                         {{parent.protein.modifications.structuralModifications.length}}</span></button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>-->
 
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="strucModForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
@@ -82,15 +84,15 @@
                                         label="Extent"></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj.extentAmount" parent="substance" type="amount" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj.extentAmount" parent="parent" type="amount" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="substance" type="access" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="substance" type="reference" divid={{obj.$$hashKey}}
+                    <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
                 </div>
             </div>

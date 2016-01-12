@@ -1,6 +1,8 @@
 <div class="row info">
-    <a ng-click="$parent.toggleStage();" class="pull-right">
-        <i class="fa fa-times fa-2x danger"></i></a>
+    <div class="row">
+        <form-header type="comment" parent="substance"></form-header>
+        <close-button></close-button>
+    </div>
     <div class="col-md-12">
         <text-box ng-model= referenceobj.comments field= "comments"></text-box>
     </div>

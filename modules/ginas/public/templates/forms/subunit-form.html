@@ -1,9 +1,12 @@
 <div class = "row info">
+        <div class="row">
+            <form-header type="subunits" path= "[parent.substanceClass].subunits" parent="parent"></form-header>
+        </div>
+<!--
     <button class="btn btn-primary label-offset det">
-
         Subunits&nbsp;<span class="badge" ng-show="parent[parent.substanceClass].subunits.length>0">
                         {{parent[parent.substanceClass].subunits.length}}</span> </button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
+    <span><i class="fa fa-question-circle fa-lg"></i></span>-->
 
     <div ng-repeat="obj in parent[parent.substanceClass].subunits">
         <div class="col-md-12">

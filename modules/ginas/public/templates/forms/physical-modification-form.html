@@ -1,10 +1,15 @@
 <div class = "row info">
+    <div class="row">
+        <form-header type="physicalModifications" path ="protein.modifications.physicalModification" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+<!--
     <button class="btn btn-primary label-offset det">
         Physical Modifications&nbsp;<span class="badge" ng-show="parent.protein.modifications.physicalModifications.length>0">
 {{parent.protein.modifications.physicalModifications.length}}</span> </button>
     <span><i class="fa fa-question-circle fa-lg"></i></span>
+-->
 
-    <div class="col-md-12">
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="physicalModForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
@@ -14,10 +19,10 @@
                     <form-selector referenceobj= "physicalModification" divid="physicalModForm" field = "physicalParameter" type = "physicalParameter"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="physicalModification" parent = "substance" divid="physicalModForm" type = "access"></form-selector>
+                    <form-selector referenceobj ="physicalModification" parent = "parent" divid="physicalModForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="physicalModification" parent = "substance" divid="physicalModForm" type = "reference"></form-selector>
+                    <form-selector referenceobj ="physicalModification" parent = "parent" divid="physicalModForm" type = "reference"></form-selector>
                 </div>
             </div>
             <div class="physicalModForm"></div>
@@ -37,10 +42,10 @@
                     <form-selector referenceobj= "obj" formname="physicalModForm" type = "physicalParameter" divid={{obj.$$hashKey}} field = "physicalParameter" mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" formname="physicalModForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="physicalModForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" formname="physicalModForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="physicalModForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

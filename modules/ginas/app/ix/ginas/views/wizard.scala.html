@@ -8,16 +8,20 @@
     <title-header name = "substance._name" kind = "substance.substanceClass"></title-header>
     @kind match {
         case "chemical" => {
+@*
             <div>@forms.structureform()</div>
+*@
 @*
             <moiety-form parent = substance></moiety-form>
 *@
 
+@*
             <div>@forms.moietyform()</div>
+*@
 
         }
         case "mixture" => {
-           <mixture-component-select-form></mixture-component-select-form>
+           <mixture-component-select-form parent = substance></mixture-component-select-form>
         }
         case "protein" => {
              <protein-details-form></protein-details-form>
@@ -34,11 +38,11 @@
         case "structurallyDiverse" => {
            <diverse-type-form parent = substance></diverse-type-form>
             <div ng-if="substance.diverseType=='part' || substance.diverseType=='whole'">
-           <diverse-source-form></diverse-source-form>
-           <diverse-organism-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'"></diverse-organism-form>
-            <diverse-details-form  ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'"></diverse-details-form>
-            <parent-form></parent-form>
-            <part-form ng-if="substance.diverseType=='part'"></part-form>
+           <diverse-source-form parent = substance></diverse-source-form>
+           <diverse-organism-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
+            <diverse-details-form  ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-details-form>
+            <parent-form parent = substance></parent-form>
+            <part-form ng-if="substance.diverseType=='part'" parent = substance></part-form>
             </div>
 
         }
@@ -54,7 +58,7 @@
         }
         case "nucleicAcid" => {
            <div>Nucleic Acid not implemented yet, still in development</div>
-           <nucleic-acid-details-form></nucleic-acid-details-form>
+           <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.$subunitDisplay.length>0">
             <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
@@ -70,18 +74,18 @@
 *@
         }
         case "specifiedSubstanceG1" => {
-            <ss-constituent-form></ss-constituent-form>
+            <ss-constituent-form parent = substance></ss-constituent-form>
         }
         case x =>{
             <h2>Unknown substance class: @kind</h2>    
         }
     }
-   <official-name-form></official-name-form>
-    <name-form></name-form>
-    <code-form></code-form>
-    <relationship-form></relationship-form>
-    <note-form></note-form>
-    <property-form></property-form>
+   <official-name-form parent = substance></official-name-form>
+    <name-form parent = substance></name-form>
+    <code-form parent = substance></code-form>
+    <relationship-form parent = substance></relationship-form>
+    <note-form parent = substance></note-form>
+    <property-form parent = substance></property-form>
    <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
 }
 

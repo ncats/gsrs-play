@@ -1,10 +1,8 @@
 <div class = "row info">
-    <button class="btn btn-primary label-offset det">
-Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
-{{substance.properties.length}}</span> </button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="properties" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="propertyForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
@@ -26,17 +24,17 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                     <check-box ng-model="property.defining" field="defining" ></check-box>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="property" parent = "substance" divid="propertyForm" type = "access"></form-selector>
+                    <form-selector referenceobj ="property" parent = "parent" divid="propertyForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="property" parent = "substance" divid="propertyForm" type = "reference"></form-selector>
+                    <form-selector referenceobj ="property" parent = "parent" divid="propertyForm" type = "reference"></form-selector>
                 </div>
             </div>
             <div class="propertyForm"></div>
             <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in substance.properties">
+        <div ng-repeat="obj in parent.properties">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -61,10 +59,10 @@ Properties&nbsp;<span class="badge" ng-show="substance.properties.length>0">
                     <check-box-view-edit obj = "obj" field="defining" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" formname="propertyForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" formname="propertyForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

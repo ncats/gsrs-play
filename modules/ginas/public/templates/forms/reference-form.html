@@ -1,11 +1,8 @@
 <div class="row info" id="references">
-    <button class="btn btn-primary label-offset det">
-        References&nbsp;<span class="badge" ng-show="parent.references.length>0">
-                        {{parent.references.length}}</span></button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <a ng-click="$parent.toggleStage();" class="pull-right" tooltip="Close">
-        <i class="fa fa-times fa-2x danger"></i></a>
-
+    <div class="row">
+        <form-header type="references" parent="substance"></form-header>
+        <close-button></close-button>
+    </div>
     <div class="col-md-12">
         <form class="form-horizontal" name="refForm" id="add-name" role="form" novalidate>
             <div class="row form-row">
@@ -18,7 +15,8 @@
                     <text-input ng-model="ref.citation" field="citation"></text-input>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-select ng-model="ref.docType" field="docType" label ="Document Type" cv="DOCUMENT_TYPE"></dropdown-select>
+                    <dropdown-select ng-model="ref.docType" field="docType" label="Document Type"
+                                     cv="DOCUMENT_TYPE"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <date-picker ng-model="ref.documentDate" field="documentDate"></date-picker>
@@ -29,49 +27,50 @@
                 <div class="col-md-2">
                     <text-input ng-model="ref.url" field="url"></text-input>
                 </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj="ref" parent="substance" divid="refForm" type="upload"></form-selector>
-                </div>
+                <!--                <div class="col-md-1">
+                                    <form-selector referenceobj="ref" parent="parent" divid="refForm" type="upload"></form-selector>
+                                </div>-->
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="ref" parent="substance" divid="refForm" type="access"></form-selector>
+                    <form-selector referenceobj="ref" parent="parent" divid="refForm" type="access"></form-selector>
                 </div>
-
             </div>
             <div class="refForm"></div>
             <div class="row">
                 <div class="col-md-1 pull-right">
-                    <a ng-click="reset()" aria-label="Clear" tooltip="Clear"><i class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="reset()" aria-label="Clear" tooltip="Clear"><i
+                            class="fa fa-eraser fa-2x danger"></i></a>
                     <a ng-click="validate()" tooltip="Add"><i class="fa fa-floppy-o fa-2x success"></i></a>
                 </div>
             </div>
         </form>
         <div ng-repeat="reference in parent.references">
-        <div class="row" >
-            <hr>
-            <div class="col-md-1">
-                <reference-apply obj=reference referenceobj=referenceobj parent=parent type="edit"></reference-apply>
+            <div class="row">
+                <hr>
+                <div class="col-md-1">
+                    <reference-apply obj=reference referenceobj=referenceobj parent=parent
+                                     type="edit"></reference-apply>
+                </div>
+                <div class="col-md-2">
+                    <text-view-edit obj="reference" field="citation"></text-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj="reference" field="docType" cv="DOCUMENT_TYPE"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <date-picker-view-edit obj="reference" field="documentDate"></date-picker-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <multi-view-edit obj="reference" field="tags" cv="DOCUMENT_COLLECTION"></multi-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <text-view-edit obj="reference" field="url"></text-view-edit>
+                </div>
+                <div class="col-md-1 pull-right">
+                    <form-selector referenceobj="reference" parent="substance" formname="refForm" type="access"
+                                   divid={{reference.$$hashKey}} mode="edit"></form-selector>
+                </div>
             </div>
-            <div class="col-md-2">
-                <text-view-edit obj="reference" field="citation"></text-view-edit>
-            </div>
-            <div class="col-md-2">
-                <dropdown-view-edit obj="reference" field="docType" cv="DOCUMENT_TYPE"></dropdown-view-edit>
-            </div>
-            <div class="col-md-2">
-                <date-picker-view-edit obj="reference" field="documentDate"></date-picker-view-edit>
-            </div>
-            <div class="col-md-2">
-                <multi-view-edit obj="reference" field="tags" cv="DOCUMENT_COLLECTION"></multi-view-edit>
-            </div>
-            <div class="col-md-2">
-                <text-view-edit obj="reference" field="url"></text-view-edit>
-            </div>
-            <div class="col-md-1 pull-right">
-                <form-selector referenceobj="reference" parent="substance" formname="refForm" type="access"
-                               divid={{reference.$$hashKey}} mode="edit"></form-selector>
-            </div>
+            <div class={{reference.$$hashKey}}></div>
         </div>
-        <div class={{reference.$$hashKey}}></div>
-            </div>
     </div>
 </div>

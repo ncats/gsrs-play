@@ -1,9 +1,8 @@
 <div class = "row info" >
-    <button class="btn btn-primary label-offset det">
-                      Relationships&nbsp;<span class="badge" ng-show="substance.relationships.length>0">
-                        {{substance.relationships.length}}</span> </button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <div class="col-md-12">
+    <div class="row">
+        <form-header type="relationships" parent="parent" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="relationshipForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
@@ -22,23 +21,23 @@
                     <dropdown-select ng-model="relationship.qualification" field="qualification" cv = "QUALIFICATION" ></dropdown-select>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj= "relationship" divid="relationshipForm" type = "amount"></form-selector>
+                    <form-selector referenceobj= "relationship" parent = "parent" divid="relationshipForm" type = "amount"></form-selector>
                 </div>
                 <div class="col-md-2">
                     <substance-chooser-selector ng-model ="relationship.mediatorSubstance" field ="mediatorSubstance" name ="mediatorSubstance" formname ="relationshipForm" label ="Mediator Substance" type = "lite"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="relationship" parent = "substance" divid="relationshipForm" type = "access"></form-selector>
+                    <form-selector referenceobj ="relationship" parent = "parent" divid="relationshipForm" type = "access"></form-selector>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj ="relationship" parent = "substance" divid="relationshipForm" type = "reference"></form-selector>
+                    <form-selector referenceobj ="relationship" parent = "parent" divid="relationshipForm" type = "reference"></form-selector>
                 </div>
             </div>
             <div class="relationshipForm"></div>
             <submit-buttons submit="relationship" form="relationshipForm" path="relationships"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in substance.relationships" >
+        <div ng-repeat="obj in parent.relationships" >
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -66,10 +65,10 @@
                     <substance-chooser-view-edit obj = "obj" field ="mediatorSubstance" label = "Mediator Substance"></substance-chooser-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" formname="relationshipForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "substance" formname="relationshipForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

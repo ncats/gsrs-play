@@ -1,9 +1,8 @@
-<div class="row info" id="references">
-    <button class="btn btn-primary label-offset det">
-        Access Control</button>
-    <span><i class="fa fa-question-circle fa-lg"></i></span>
-    <a ng-click="$parent.toggleStage();" class="pull-right">
-        <i class="fa fa-times fa-2x danger"></i></a>
+<div class="row info" id="access">
+    <div class="row">
+        <form-header type="access" parent="parent"></form-header>
+        <close-button></close-button>
+    </div>
     <div class="col-md-12">
         <form class="form-horizontal" name="accessForm" id="add-name" role="form" novalidate>
             <div class="row form-row">
