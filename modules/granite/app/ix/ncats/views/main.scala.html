@@ -1,0 +1,87 @@
+@(title: String)(content: Html)
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>@title</title>
+<link rel='shortcut icon' type='image/png'
+	href='@routes.Assets.at("images/favicon.png")'>
+<script type='text/javascript'
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.js"))'></script>
+
+<script type='text/javascript'
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.dataTables.js"))'></script>	
+<script type='text/javascript'
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("moment.js"))'></script>
+		<script type='text/javascript'
+	src='@routes.WebJarAssets.at(WebJarAssets.locate("jquery-ui.js"))'></script>		
+
+<link rel='stylesheet'
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("bootstrap.min.css"))'>
+<link rel='stylesheet'
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("jquery.dataTables.css"))'>
+
+<script type='text/javascript'
+	src='@routes.Assets.at("javascripts/search.js")'></script>
+<link rel='stylesheet'
+	href='@routes.WebJarAssets.at(WebJarAssets.locate("smoothness/jquery-ui.min.css"))'>
+<link rel="stylesheet" type="text/css"
+	href='@routes.Assets.at("stylesheets/dataTables.jqueryui.css")'>
+<link rel="stylesheet" type="text/css"
+	href='@routes.Assets.at("stylesheets/overwrite.css")'>
+
+
+<script>
+$(document).ready(function() {
+    $('#grantDetailTable').DataTable({
+   
+    });
+    $('#investigatorDetailTable').DataTable({
+    	"searching": false,
+        "paging": false,
+        "jQueryUI": true
+        });
+    $('#organizationDetailTable').DataTable({
+        "jQueryUI": true	
+    });
+    
+} );
+</script>
+ <script>
+  $(function() {
+    $( "#tabs" ).tabs();
+  });
+  </script>
+  
+<script>
+        $(document).ready(function () {
+         $(function() {
+         var icons = {
+              header: "ui-icon-triangle-1-e",
+              activeHeader: "ui-icon-triangle-1-s"
+            };
+         	$( "#accordion" ).accordion({
+         		icons: icons,
+         		collapsible: true,
+         		heightStyle: "content"
+         
+         	});
+           });
+         });
+      </script>  
+  
+
+</head>
+<header class="margin20 nrm nlm">
+	<div class="banner">
+
+		<h1>Granite</h1>
+		<h5>The bedrock of collaboration</h5>
+	</div>
+</header>
+<body>
+	<div class="container-fluid">@content</div>
+</body>
+<!--  ALL CHART DRAWING NEEDS TO GO IN THE BOTTOM -->
+
+</html>
