@@ -33,7 +33,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		String line = "";
 		String cvsSplitBy = "\t";
 		try {
-			BufferedReader br = new BufferedReader(new InputStreamReader(is));
+			BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF8"));
 			while ((line = br.readLine()) != null) {
 				String[] cvTerm = line.split(cvsSplitBy);
 				String category = cvTerm[0];

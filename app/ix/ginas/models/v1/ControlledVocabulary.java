@@ -30,6 +30,3 @@ public class ControlledVocabulary extends IxModel{
 	public List<VocabularyTerm> terms;	
 
 }
-
-
-
