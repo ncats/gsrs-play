@@ -26,6 +26,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
@@ -497,6 +498,18 @@ public class Substance extends GinasCommonData {
 	        return getName();
 	}
 
+	@PreUpdate
+	public void updateVersion(){
+		Integer i=0;
+		try{
+			i = Integer.parseInt(this.version);
+		}catch(Exception e){
+			
+		}
+		i++;
+		this.version=i+"";
+	}
+	
 	public static Class<?>[] getAllClasses() {
 		return new Class<?>[]{
 			Substance.class,
@@ -510,4 +523,5 @@ public class Substance extends GinasCommonData {
 		};
 		
 	}
+	
 }
