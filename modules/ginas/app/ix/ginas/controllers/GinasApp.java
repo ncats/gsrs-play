@@ -1454,6 +1454,11 @@ public class GinasApp extends App {
         String terms = CV.getCV(field);
         return ok(terms);
     }
+/*
+    public static Result getCVField(String field) {
+        String terms = CV.getCV(field);
+        return ok(terms);
+    }*/
 
     /**
      * Renders a chemical structure from structure ID

@@ -31,7 +31,7 @@ public class ETag extends IxModel {
     	}
     	return nuri;
     }
-    public String getPreviosPageUri(){
+    public String getPreviousPageUri(){
     	Integer skip=this.skip;
     	String nskip = "skip=" + Math.max((skip-top),0);
     	String nuri = (uri+"").replace("skip=" + skip, nskip);

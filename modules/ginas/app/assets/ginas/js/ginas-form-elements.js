@@ -24,8 +24,18 @@
             lookuptable: lookup,
 
             count: function(){
-                 url = baseurl + "api/v1/vocabularies";
-                return $http.get(url,{cache:true},{
+                 var counturl = baseurl + "api/v1/vocabularies";
+                return $http.get(counturl,{cache:true},{
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function (data) {
+                    return data;
+                });
+            },
+            all: function(){
+                 var allurl = baseurl + "api/v1/vocabularies?top=999";
+                return $http.get(allurl,{cache:true},{
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -125,6 +135,33 @@
         };
         return substanceFactory;
     }]);
+
+    ginasFormElements.service('download', function($location, $http){
+        createURL = function(){
+            console.log('creating url');
+            var current = ($location.$$url).split('app')[1];
+            var ret = baseurl + "api/v1" +current;
+            console.log(ret);
+            return ret;
+        };
+        var download = {};
+
+        download.fetch = function(){
+            console.log('fetching');
+            var url = createURL();
+            return $http.get(url,{cache:true}, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (data) {
+                console.log(data);
+                return data.content;
+            });
+
+        };
+        return download;
+    });
+
 
     ginasFormElements.directive('checkBox', function () {
         return {
@@ -405,9 +442,40 @@
         };
     });
 
-
-
-
-
-
+    ginasFormElements.directive('downloadButton', function ($compile, download) {
+        return {
+            restrict:'E',
+            scope:{
+                data: '='
+            },
+            link:function (scope, elm, attrs) {
+                    var json;
+                    var url;
+                    if(_.isUndefined(scope.data)){
+                        download.fetch().then(function (data) {
+                            console.log(data);
+                           json =  JSON.stringify(data.data);
+                            var b= new Blob([json], {type: "application/json"});
+                            url = URL.createObjectURL(b);
+                            elm.append($compile(
+                                '<a class="btn btn-primary" download="results.json"' +
+                                'href="' + url + '" target = "_sef">' +
+                                '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
+                                '</a>'
+                            )(scope));
+                        });
+                    }else {
+                        json = JSON.stringify(scope.data);
+                        var b = new Blob([json], {type: "application/json"});
+                        url = URL.createObjectURL(b);
+                        elm.append($compile(
+                            '<a class="btn btn-primary" download="results.json"' +
+                            'href="' + url + '" target = "_sef">' +
+                            '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
+                            '</a>'
+                        )(scope));
+                    }
+            }
+        };
+    });
 })();

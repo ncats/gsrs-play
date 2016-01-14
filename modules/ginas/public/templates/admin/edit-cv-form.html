@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row info">
 <button class="btn btn-primary label-offset det">
         Edit CV
     </button>
@@ -8,15 +8,17 @@
         <form class="form-horizontal" name="cvEditForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <text-input ng-model="cv.domain" field="domain" name="domain" id="domain" form="cvEditForm"
+                        <dropdown-select ng-model ="vocab" field="domain" cv = "domain"></dropdown-select>
+                    </div>
+<!--                    <text-input ng-model="cv.domain" field="domain" name="domain" id="domain" form="cvEditForm"
                                 validate="true"></text-input>
-                </div>
+                </div>-->
                 <br>
-                <a ng-click="create= true" aria-label="Create" tooltip="Create Domain"><i
+                <a ng-click="getValues()" aria-label="Create" tooltip="Create Domain"><i
                         class="fa fa-check fa-2x success"></i></a>
 
             </div>
-            <div class="row form-row" ng-if="create">
+<!--            <div class="row form-row" ng-if="create">
 
                 <div class="col-md-3">
                     <text-input ng-model="vt.value" field="value" name="value" id="value" form="cvEditForm"
@@ -36,39 +38,30 @@
                 </div>
             </div>
             Coming Soon
-            <submit-buttons submit="vt" form="cvEditForm" path="cvs"></submit-buttons>
+            <submit-buttons submit="vt" form="cvEditForm" path="cvs"></submit-buttons>-->
         </form>
 
-        <div ng-repeat="obj in cv.vt">
+        <div ng-repeat="obj in values" ng-if="create">
             <div class="row">
-                <hr>
-                <div class="col-md-1">
+<hr>
+<!--                <div class="col-md-1">
                     <delete-button delete="obj" path="codes"></delete-button>
+                </div>-->
+                <div class="col-md-2">
+                    <text-view-edit obj="obj" field="value"></text-view-edit>
                 </div>
-                <div class="col-md-2 err-check">
-                    <dropdown-view-edit obj="obj" field="codeSystem" cv="CODE_SYSTEM"></dropdown-view-edit>
+                <div class="col-md-2">
+                    <text-view-edit obj="obj" field="display"></text-view-edit>
                 </div>
-                <div class="col-md-2 err-check">
-                    <dropdown-view-edit obj="obj" field="type" cv="CODE_TYPE"></dropdown-view-edit>
+                <div class="col-md-2">
+                    <text-view-edit obj="obj" field="description"></text-view-edit>
                 </div>
-                <div class="col-md-2 err-check">
-                    <text-view-edit obj="obj" field="code"></text-view-edit>
+                <div class="col-md-2">
+                    <text-view-edit obj="obj" field="origin"></text-view-edit>
                 </div>
-                <div class="col-md-3">
-                    <form-selector referenceobj="obj" formname="codeForm" field="comments" label="Code Text"
-                                   type="textbox"
-                                   divid={{obj.$$hashKey}} mode="edit"></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="substance" type="access" divid={{obj.$$hashKey}}
-                                   mode="edit"></form-selector>
-                </div>
-                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="substance" type="reference" divid={{obj.$$hashKey}}
-                                   mode="edit"></form-selector>
+
                 </div>
             </div>
             <div class={{obj.$$hashKey}}></div>
         </div>
     </div>
-</div>

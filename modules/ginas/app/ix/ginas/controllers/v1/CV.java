@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ix.ginas.models.v1.ControlledVocabulary;
 import ix.ginas.models.v1.VocabularyTerm;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by sheilstk on 6/29/15.
  */
@@ -28,10 +31,32 @@ public class CV {
         return "[{display: 'no values', value: '{null}'}]";
     }
 
-    public static String getCV(String domain) {
+    public List<String>  getDomain () {
+        ObjectMapper mapper = new ObjectMapper();
+        List<ControlledVocabulary> cv1 = ControlledVocabularyFactory
+                .getDomain();
+        if (cv1 != null) {
+            List<String> domains = new ArrayList<String>();
+            for(ControlledVocabulary c : cv1){
+                domains.add(c.domain);
+            }
+            JsonNode j = mapper.valueToTree(domains);
+            return domains;
+        }
+
+/*
+        return "[{display: 'no values', value: '{null}'}]";
+*/
+        return null;
+    }
+
+    public static String getCV (String domain) {
         return new CV().getField(domain);
     }
 
+    public static List<String> getCVDomains (){
+        return new CV().getDomain();
+    }
     /**
      * Returns the proper display term for value.
      * <p/>

@@ -260,7 +260,6 @@
     });
 
     ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, lookup) {
-console.log($scope);
         var ginasCtrl = this;
         $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
@@ -290,8 +289,6 @@ console.log($scope);
         };
 
         $scope.moment = function(time){
-            console.log(time);
-            console.log(moment(time).fromNow());
             return moment(time).fromNow();
         };
         //local storage functions//
@@ -363,6 +360,14 @@ console.log($scope);
                 _.set(apiSub, 'officialNames', officialNames);
                 _.set(apiSub, 'unofficialNames', unofficialNames);
             }
+
+            _.transform(apiSub, function(result, value, key) {
+                console.log(result);
+                console.log(key);
+                console.log(value);
+               // console.log( result[key]);
+
+            });
             apiSub = $scope.expandCV(apiSub, "");
             return apiSub;
         };
