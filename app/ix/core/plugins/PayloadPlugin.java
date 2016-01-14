@@ -1,23 +1,29 @@
 package ix.core.plugins;
 
-import java.io.*;
-import java.util.List;
-import java.security.MessageDigest;
+import ix.core.controllers.FileDataFactory;
+import ix.core.controllers.PayloadFactory;
+import ix.core.models.FileData;
+import ix.core.models.Payload;
+import ix.utils.Util;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.DigestInputStream;
-    
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
-
+import play.Application;
 import play.Logger;
 import play.Plugin;
-import play.Application;
 import play.mvc.Http;
-
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.Transaction;
-
-import ix.core.models.Payload;
-import ix.core.controllers.PayloadFactory;
-import ix.utils.Util;
 
 public class PayloadPlugin extends Plugin {
     private final Application app;
@@ -40,6 +46,8 @@ public class PayloadPlugin extends Plugin {
     }
 
     public boolean enabled () { return true; }
+    
+    
     public Payload createPayload (String name, String mime, InputStream is)
         throws Exception {
         MessageDigest md = MessageDigest.getInstance("SHA1");
@@ -67,7 +75,9 @@ public class PayloadPlugin extends Plugin {
             Logger.debug("payload already loaded as "+payload.id);
             try{
             	File f=PayloadFactory.getFile(payload);
-            	if(!f.exists())throw new IllegalStateException("payload deleted");
+            	if(!f.exists()){
+            		Logger.error("Payload deleted");
+            	}
             	save=false;
             }catch(Exception e){
             	Logger.debug(payload.name+" file not found");
@@ -80,13 +90,70 @@ public class PayloadPlugin extends Plugin {
             
             payload.save();
             if (payload.id != null) {
-                tmp.renameTo(new File (ctx.payload, payload.id.toString()));
+                persistFile(tmp,payload);
             }
             Logger.debug(payload.name+" => "+payload.id + " " +payload.sha1);
+        }else{
+        	if(getPayload(payload)==null){
+        		 persistFile(tmp,payload);
+        	}
         }
         
         
         return payload;
+    }
+    
+    private File persistFile(File tmpFile, Payload payload){
+    	//file system persist
+    	File saveFile = new File (ctx.payload, payload.id.toString());
+    	tmpFile.renameTo(saveFile);
+    	
+    	//database persist
+    	
+    	List<FileData> found =
+                FileDataFactory.finder.where().eq("sha1", payload.sha1).findList();
+    	if (found.isEmpty()){
+	    	try {
+	    		FileData fd = new FileData();
+				fd.data=inputStreamToByteArray(getPayloadAsStream(payload));
+				fd.mimeType=payload.mimeType;
+				fd.sha1=payload.sha1;
+				fd.size=payload.size;
+				fd.save();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+    	}
+    	return saveFile;
+    }
+    private FileData getFileDataFromPayload(Payload payload){
+    	List<FileData> found =
+                FileDataFactory.finder.where().eq("sha1", payload.sha1).findList();
+    	if(found.isEmpty()){
+    		return null;
+    	}
+    	return found.iterator().next();
+    }
+    private File saveStreamLocal(Payload p, InputStream is) throws IOException, NoSuchAlgorithmException{
+    	 File tmp = File.createTempFile("___", ".tmp", ctx.payload);
+    	 MessageDigest md = MessageDigest.getInstance("SHA1");
+    	 FileOutputStream fos = new FileOutputStream (tmp);
+         DigestInputStream dis = new DigestInputStream (is, md);
+         
+         byte[] buf = new byte[2048];
+         Payload payload = new Payload ();            
+         payload.size = 0l;
+         for (int nb; (nb = dis.read(buf, 0, buf.length)) > 0; ) {
+             fos.write(buf, 0, nb);
+             payload.size += nb;
+         }
+         dis.close();
+         fos.close();
+         payload.sha1 = Util.toHex(md.digest());
+         if(!payload.sha1.equals(p.sha1)){
+        	 Logger.warn("Recorded SHA1 different than computed SHA1");
+         }
+         return persistFile(tmp, p);
     }
 
     public Payload createPayload (String name, String mime, byte[] content)
@@ -98,7 +165,20 @@ public class PayloadPlugin extends Plugin {
         throws Exception {
         return createPayload (name, mime, content.getBytes("utf8"));
     }
-    
+    private byte[] inputStreamToByteArray(InputStream is) throws IOException{
+    			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+    			int nRead;
+    			byte[] data = new byte[16384];
+
+    			while ((nRead = is.read(data, 0, data.length)) != -1) {
+    			  buffer.write(data, 0, nRead);
+    			}
+
+    			buffer.flush();
+
+    			return buffer.toByteArray();
+    }
     /**
      * Create a payload from a form submission. If there is no
      * multi-part data associated with that field, returns null.
@@ -144,11 +224,20 @@ public class PayloadPlugin extends Plugin {
     public File getPayload (Payload pl) {
         File file = new File (ctx.payload, pl.id.toString());
         if (!file.exists()) {
+        	FileData fd=getFileDataFromPayload(pl);
+        	if(fd!=null){
+        		try{
+        			file = saveStreamLocal(pl,new ByteArrayInputStream(fd.data));
+        			return file;
+        		}catch(Exception e){
+        			Logger.warn("Error caching file:" + e.getMessage());
+        		}
+        	}
             return null;
         }
         return file;
     }
-
+    
     public InputStream getPayloadAsStream (Payload pl) {
         File file = getPayload (pl);
         if (file != null) {
@@ -162,34 +251,10 @@ public class PayloadPlugin extends Plugin {
         }
         return null;
     }
-    public static void qq(InputStream is) throws IOException{
-       // System.out.println("########## SDF");
-        BufferedReader buff = new BufferedReader(new InputStreamReader(is));
-        String line;
-        int c=0;
-                
-        while((line=buff.readLine())!=null){
-            //System.out.println(line);
-            c++;
-            if(c>10)break;
-        }
-    }
-    
     public InputStream getPayloadAsStreamUncompressed(Payload pl){
-        try{
-            return getPayloadAsStreamUncompressedT(pl);
-        }catch(Exception e){
-
-        }
-        return null;
-    }
-    public InputStream getPayloadAsStreamUncompressedT(Payload pl){
-        
-
         InputStream is = getPayloadAsStream(pl);
         if(is==null)return null;
         try {
-
             return ix.utils.Util.getUncompressedInputStreamRecursive(is);
         } catch (IOException e) {
             Logger.trace("Problem uncompressing stream", e);

@@ -34,12 +34,16 @@ public class Payload extends Model {
     public String mimeType; // mime type
     @Column(name="capacity")
     public Long size;
+    
 
     @ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_core_payload_property")
     public List<Value> properties = new ArrayList<Value>();
+
+    public Payload () {
+    	
+    }
     
-    public Payload () {}
     public Value addIfAbsent (Value prop) {
         if (prop != null) {
             if (prop.id != null) 
