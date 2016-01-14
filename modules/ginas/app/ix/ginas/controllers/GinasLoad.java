@@ -217,6 +217,22 @@ Logger.info("type =" + type);
 			return _internalServerError(ex);
 		}*/
 	}
+	
+	public static Result uploadFile() {
+		DynamicForm requestData = Form.form().bindFromRequest();
+		String type = requestData.get("file-type");
+		Logger.info("type =" + type);
+		try {
+			Payload payload = payloadPlugin.parseMultiPart("file-name",
+					request());
+			//Need something to persist payloads in the database as a blob
+			
+
+		} catch (Exception ex) {
+			return _internalServerError(ex);
+		}
+
+	}
 
 
 	public static Result loadSDF(String payloadUUID) {
