@@ -16,6 +16,7 @@ POST        /sequence			        ix.ginas.controllers.GinasApp.sequenceSearch
 GET         /report                     ix.ginas.controllers.GinasFactory.report
 GET         /wizard                     ix.ginas.controllers.GinasFactory.wizard(kind: String ?= null)
 POST        /load                       ix.ginas.controllers.GinasLoad.loadJSON
+POST        /upload                     ix.ginas.controllers.GinasLoad.uploadFile
 GET         /load                       ix.ginas.controllers.GinasLoad.load
 POST        /register/submit            ix.ginas.controllers.GinasLoad.submitSubstance
 POST        /loadSDF/:payloadID         ix.ginas.controllers.GinasLoad.loadSDF(payloadID : String)

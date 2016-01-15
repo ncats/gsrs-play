@@ -1,8 +1,5 @@
 package ix.ginas.models.v1;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import ix.core.models.Indexable;
 import ix.ginas.models.GinasCommonSubData;
 
