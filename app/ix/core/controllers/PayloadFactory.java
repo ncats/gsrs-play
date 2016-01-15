@@ -5,12 +5,16 @@ import java.security.*;
 import java.util.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
 
 import play.*;
 import play.db.ebean.*;
 import play.data.*;
 import play.mvc.*;
-
+import ix.core.models.Figure;
 import ix.core.models.Payload;
 import ix.core.NamedResource;
 import ix.core.plugins.PayloadPlugin;
@@ -33,7 +37,31 @@ public class PayloadFactory extends EntityFactory {
         return page (top, skip, filter, finder);
     }
 
+    public static class FileWithNewName extends File{
+    	String name;
+    	public FileWithNewName(File f, String name){
+    		super(f.toURI());
+    		this.name=name;
+    	}
+		public String getName() {
+			return name;
+		}
+    }
+    
     public static Result get (UUID id, String select) {
+        String format = request().getQueryString("format");
+        if (format != null) {
+        	if (format.equalsIgnoreCase("raw")) {
+                Payload payload = finder.byId(id);
+                if (payload != null) {
+                    response().setContentType(payload.mimeType);
+                    return ok (new FileWithNewName(getFile(payload), payload.name));
+                }
+            }
+            else {
+                return badRequest ("Unknown format \""+format+"\"!");
+            }
+        }
         return get (id, select, finder);
     }
 
@@ -54,13 +82,13 @@ public class PayloadFactory extends EntityFactory {
     public static File getFile (UUID id) {
         Payload payload = getPayload (id);
         if (payload != null) {
-            return payloadPlugin.getPayload(payload);
+            return payloadPlugin.getPayloadFile(payload);
         }
         return null;
     }
 
     public static File getFile (Payload payload) {
-        return payloadPlugin.getPayload(payload);
+        return payloadPlugin.getPayloadFile(payload);
     }
 
     public static InputStream getStream (String id) {
