@@ -1,0 +1,28 @@
+<div class = "row info" >
+    <div class="row">
+        <form-header type="polymerClassification" parent="substance" iscollapsed = "iscollapsed"></form-header>
+    </div>
+    <div class="col-md-12" uib-collapse="iscollapsed">
+        <div class="row form-row">
+            <div class="col-md-2">
+                <dropdown-view-edit obj = "substance.polymer.classification" field="polymerClass" cv = "POLYMER_CLASS" label="Polymer Class"></dropdown-view-edit>
+            </div>
+            <div class="col-md-2">
+                <dropdown-view-edit obj = "substance.polymer.classification" field="polymerSubclass" cv = "POLYMER_SUBCLASS" label="Polymer Subclass"></dropdown-view-edit>
+            </div>
+            <div class="col-md-2">
+                <dropdown-view-edit obj = "substance.polymer.polymerGeometry" field="polymerGeometry" cv = "POLYMER_GEOMETRY" label="Polymer Geometry"></dropdown-view-edit>
+            </div>
+            <div class="col-md-2">
+                <dropdown-view-edit obj = "substance.polymer.sourceType" field="sourceType" cv = "POLYMER_SOURCE_TYPE" label="Polymer Source Type"></dropdown-view-edit>
+            </div>
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj ="substance.polymer" parent = "substance" divid="polymerClassificationForm" type = "access"></form-selector>
+            </div>
+            <div class="col-md-1 pull-right">
+                <form-selector referenceobj ="substance.polymer" parent = "substance" divid="polymerClassificationForm" type = "reference"></form-selector>
+            </div>
+        </div>
+        <div class="polymerClassificationForm"></div>
+    </div>
+</div>

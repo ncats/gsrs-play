@@ -3,8 +3,8 @@
 
     ginasFormElements.factory('CVFields', function ($http, $q) {
 
-        var lookup = {
-            "stereoChemistry": "STEREOCHEMISTRY_TYPE",
+        var lookup = {};
+/*            "stereoChemistry": "STEREOCHEMISTRY_TYPE",
             "names.type": "NAME_TYPE",
             "names.nameOrgs": "NAME_ORG",
             "names.nameJurisdiction": "JURISDICTION",
@@ -15,13 +15,79 @@
             "relationships.type": "RELATIONSHIP_TYPE",
             "relationships.interactionType": "INTERACTION_TYPE",
             "relationships.qualification": "QUALIFICATION",
-            "references.docType": "DOCUMENT_TYPE"
-        };
+            "references.docType": "DOCUMENT_TYPE"*/
+
 
 
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
         var CV = {
+/*
             lookuptable: lookup,
+*/          //lookup: {},
+
+            init: function(){
+               var lookup = $http.get( baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'",{cache:true},{
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function (data) {
+                    console.log(data);
+                    return data.content[0].terms;
+                });
+                console.log(lookup);
+            },
+
+            getDomain: function(path){
+                console.log(lookup);
+                var patharr = path.split('.');
+                if(patharr.length>2){
+                    patharr=  _.takeRight(patharr, 2);
+             //       console.log(patharr);
+                }
+                var pathString = _.join(patharr, '.');
+             //   console.log(pathString);
+/*                return $http.get( baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'",{cache:true},{
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function (data) {*/
+                //    console.log(pathString);
+                   // console.log(data);
+                   // lookup = data.content[0].terms;
+                 //   console.log(lookup);
+                    var domain = _.find(lookup, function(cv) {
+                        console.log(cv);
+                        return cv.value == pathString;
+                    });
+                    if(!_.isUndefined(domain)){
+                        domain = domain.display;
+                //        console.log(domain);
+                    }
+                  console.log(domain);
+                    return domain;
+             //   });
+            },
+
+            getCV: function(domain){
+                return $http.get(url + domain.toUpperCase() + "'", {cache: true}, {
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function (data) {
+                    //CV[field] = data.content[0].terms;
+                      console.log(data);
+                    return data;
+                });
+            },
+
+            lookup: function (domain, value) {
+                return _.chain(getCV(domain))
+                    .filter(function (x) {
+                        return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                    })
+                    .sortBy('value')
+                    .value();
+            },
 
             count: function(){
                  var counturl = baseurl + "api/v1/vocabularies";
@@ -44,6 +110,7 @@
                 });
             },
             load: function (field) {
+               // console.log(lookup);
                 if (!_.has(CV, field)) {
                     var promise = $http.get(url + field.toUpperCase() + "'&top=999", {cache: true}, {
                         headers: {
@@ -58,6 +125,7 @@
             },
 
             fetch: function (field) {
+               // console.log(lookup);
                 //if (!_.has(CV, field)) {
                 return $http.get(url + field.toUpperCase() + "'", {cache: true}, {
                     headers: {

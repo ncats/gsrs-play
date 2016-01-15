@@ -412,7 +412,7 @@
 
                 switch (attrs.type) {
                     case "amount":
-                        console.log(scope);
+                    //    console.log(scope);
                         if (attrs.mode == "edit") {
                             template = angular.element('<a ng-click ="toggle()"><amount value ="referenceobj.amount" ></amount></a>');
                             element.append(template);
@@ -1125,6 +1125,45 @@
                     parent.splice(_.indexOf(parent, obj), 1);
                 };
             }
+        };
+    });
+
+    ginasForms.directive('polymerClassificationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope:{
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-classification-form.html"
+        };
+    });
+
+    ginasForms.directive('polymerMonomerForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope:{
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-monomer-form.html",
+            link: function(scope){
+            console.log(scope);
+        }
+        };
+    });
+
+    ginasForms.directive('polymerSruForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope:{
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
+            link: function(scope){
+            console.log(scope);
+        }
         };
     });
 

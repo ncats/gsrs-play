@@ -43,7 +43,9 @@
                     <span class="label label-danger label-offset list-view-badge">@chem.structure.stereoChemistry</span>
                 }
 
-                <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID');"><rendered id = '@chem.structure.id'></rendered></div>
+                <div class = "magnify" ng-click = "showLarge('@chem.structure.id', '@chem.approvalID', '@ctx');">
+                    <rendered id = '@chem.structure.id' ctx='@ctx'></rendered>
+                </div>
                 <div class = "row">
                     <div class = "col-md-12">
                         <ul class= "list-inline pull-right list-unstyled">
@@ -110,6 +112,6 @@
                     </div>
             </div>
         </div>
-        <div class="@chem.approvalID" ng-click="showLarge('', '@chem.approvalID')"></div>
+        <div class="@chem.approvalID" ng-click="showLarge('@chem.structure.id', '@chem.approvalID')"></div>
     </div>
 </div><!--END panel panel-primary-->

@@ -8,16 +8,16 @@
     <title-header name = "substance._name" kind = "substance.substanceClass"></title-header>
     @kind match {
         case "chemical" => {
-@*
+
             <div>@forms.structureform()</div>
-*@
+
 @*
             <moiety-form parent = substance></moiety-form>
 *@
 
-@*
+
             <div>@forms.moietyform()</div>
-*@
+
 
         }
         case "mixture" => {
@@ -51,10 +51,18 @@
         }
         case "polymer" => {
            <div>Polymer not implemented yet, still in development</div>
+            <polymer-classification-form parent=substance></polymer-classification-form>
+            <polymer-monomer-form parent=substance></polymer-monomer-form>
+            <div>@forms.polymerstructureform()</div>
+
+            <polymer-sru-form parent=substance></polymer-sru-form>
+@*
            <div>@forms.polymerclassificationform()</div>
            <div>@forms.polymermonomerselectform()</div>
-           <div>@forms.polymerstructureform()</div>
-           <div>@forms.polymersruform()</div>           
+*@
+@*
+           <div>@forms.polymersruform()</div>
+*@
         }
         case "nucleicAcid" => {
            <div>Nucleic Acid not implemented yet, still in development</div>
