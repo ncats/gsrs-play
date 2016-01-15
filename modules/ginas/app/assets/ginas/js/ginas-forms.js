@@ -231,6 +231,15 @@
                     scope.toggleStage();
                 };
 
+                scope.download = function(){
+                    CVFields.all().then(function (response) {
+                        console.log(response);
+                        scope.cv = response.data.content;
+                        formHolder = '<save-cv-form cv = cv></save-cv-form>';
+                        scope.toggleStage();
+                    });
+                };
+
                 scope.toggleStage = function () {
                     var result = document.getElementsByClassName('cvForm');
                     var elementResult = angular.element(result);
@@ -351,14 +360,24 @@
         };
     });
 
-    ginasForms.directive('editCvForm', function () {
+    ginasForms.directive('editCvForm', function (CVFields) {
         return {
             restrict: 'E',
             replace: true,
-            scope: {},
+            scope: {
+                parent: '='
+            },
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function(scope){
                 console.log(scope);
+                scope.getValues = function(){
+                    console.log(scope);
+                    CVFields.fetch(scope.vocab.value).then(function (data) {
+                        console.log(data);
+                        scope.values = data.data.content[0].terms;
+                    });
+                    scope.create=true;
+                }
             }
         };
     });
@@ -587,6 +606,23 @@
             restrict: 'E',
             replace: true,
             templateUrl: baseurl + "assets/templates/admin/load-cv-form.html"
+        };
+    });
+
+    ginasForms.directive('saveCvForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                cv: '='
+            },
+            templateUrl: baseurl + "assets/templates/admin/save-cv-form.html",
+            link: function(scope, element, attrs){
+                console.log(scope);
+
+
+
+            }
         };
     });
 

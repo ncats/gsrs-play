@@ -28,6 +28,10 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		return finder.where().eq("domain", domain).findUnique();
 	}
 
+	public static List<ControlledVocabulary> getDomain() {
+		return finder.where().select("domain").findList();
+	}
+
 	public static void loadSeedCV(InputStream is) {
 		Map<String, List<VocabularyTerm>> map = new TreeMap<String, List<VocabularyTerm>>();
 		String line = "";
@@ -69,10 +73,15 @@ public class ControlledVocabularyFactory extends EntityFactory {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
+		//map.put("domain", domainTerm);
 		Logger.debug("Pre loaded");
-		
+		ControlledVocabulary domains = new ControlledVocabulary();
+			domains.domain="DOMAIN";
 		for (String domain : map.keySet()) {
+			VocabularyTerm domainTerm = new VocabularyTerm();
+			domainTerm.value = domain;
+			domainTerm.display = domain;
+			domains.terms.add(domainTerm);
 			ControlledVocabulary cv = new ControlledVocabulary();
 			cv.domain = domain;
 			cv.terms = map.get(domain);
@@ -81,6 +90,15 @@ public class ControlledVocabularyFactory extends EntityFactory {
 					vt.save();
 				}
 				cv.save();
+				//System.err.println("Worked:" + domain);
+			}catch(Exception e){
+				//System.err.println("Failed:" + domain);
+			}
+			try{
+				for(VocabularyTerm vt:domains.terms){
+					vt.save();
+				}
+				domains.save();
 				//System.err.println("Worked:" + domain);
 			}catch(Exception e){
 				//System.err.println("Failed:" + domain);

@@ -1,0 +1,80 @@
+.banner{
+	background-image:url("../images/granitebanner200.jpg");
+	height: 150px;
+}
+.banner h1{
+	color: #e86710;
+	font-size:10em;
+	font-weight: bold;
+	padding-left: 20px;
+}
+.banner h5{
+	color: #ffffff;
+	font-size:2em;
+	font-weight: bold;
+		padding-top: 35px;
+	padding-left: 30px;
+}
+.tile-content icon{
+	background:none;
+}
+[class^="icon-"], [class*=" icon-"]{
+	width:200px;
+	background-image: none;
+}
+.metro .horizontal-menu li a {
+	font-size:1.5rem;
+}
+.gridster ul{
+	list-style: none;
+		  margin-left: auto ;
+  margin-right: auto ;
+}
+body{
+	background-color: #303030
+}
+.container{
+	background-color:#ffffff
+}
+#example{
+	color:black;
+}
+.metro .fluent-menu .tabs-content {
+	height:132px;
+}
+.tabs .metro .tile {
+	width:160px;
+}
+.table{
+	color:black;
+}
+.frame{
+	color:black;
+}
+.phr{
+	color:purple;
+	width:900px;
+
+}
+
+.tabs {
+	background-color:white;
+}
+.frames{
+	background-color:white;
+}
+
+td.details-control {
+    background: url('../images/details_open.png') no-repeat center center;
+    cursor: pointer;
+}
+tr.shown td.details-control {
+    background: url('../images/details_close.png') no-repeat center center;
+}
+
+.container-fluid{
+	background-color:#ffffff
+}
+
+}
+	
