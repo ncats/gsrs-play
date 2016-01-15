@@ -158,7 +158,7 @@ public class BuildInfo {
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
       libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
-      libraryDependencies += "org.webjars" % "lodash" % "3.10.1",
+      libraryDependencies += "org.webjars" % "lodash" % "4.0.0",
       javacOptions ++= javaBuildOptions
   ).dependsOn(ncats).aggregate(ncats)
 

@@ -153,6 +153,7 @@
 
 
         lookup.getFromName = function (field, val) {
+          //  console.log(field);
             var domain = lookup[field];
             if (typeof domain !== "undefined") {
                 return {
@@ -259,7 +260,8 @@
         };
     });
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q, localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, lookup) {
+    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
+                                                     localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, CVFields, lookup) {
         var ginasCtrl = this;
         $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
@@ -332,11 +334,16 @@
         $scope.lookup = lookup;
 
         $scope.toFormSubstance = function (apiSub) {
-            // console.log(apiSub);
+/*
+            console.log(apiSub);
+            console.log(_.keysIn(apiSub));
+*/
+
             var officialNames = [];
             var unofficialNames = [];
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
+            apiSub = $scope.expandCV(apiSub, "");
             if (_.has(apiSub, 'names')) {
                 _.forEach(apiSub.names, function (n) {
                     var temp = [];
@@ -361,14 +368,14 @@
                 _.set(apiSub, 'unofficialNames', unofficialNames);
             }
 
-            _.transform(apiSub, function(result, value, key) {
+/*            _.transform(apiSub, function(result, value, key) {
                 console.log(result);
                 console.log(key);
                 console.log(value);
                // console.log( result[key]);
 
-            });
-            apiSub = $scope.expandCV(apiSub, "");
+            });*/
+
             return apiSub;
         };
 
@@ -424,6 +431,15 @@
                 if (!angular.isArray(sub)) {
                     newpath = newpath + v;
                 }
+/*                CVFields.getDomain(newpath).then(function(data){
+                     console.log(data);
+                    var domain = data.data;
+                    });
+                console.log(domain);
+                if(!_.isUndefined(domain)){
+                    console.log(domain);
+                    var cv = CVFields.getCV(domain);
+                }*/
                 var newcv = lookup.getFromName(newpath, sub[v]);
                 if (angular.isArray(sub[v])) {
                     newcv = null;
@@ -1138,7 +1154,7 @@
                 $scope[path] = null;
             }
         };
-
+/*
         $scope.setEditMonomer = function (mon) {
             if (mon) {
                 $scope.component = mon;
@@ -1147,7 +1163,7 @@
                 $scope.component = null;
             }
 
-        };
+        };*/
         $scope.setEditSRU = function (sru) {
             if (sru) {
                 $scope.srucomponent = sru;
@@ -1325,15 +1341,19 @@
         };
 
         //method for injecting a large structure image on the browse page//
-        $scope.showLarge = function (id, divid) {
-            console.log(id);
-            console.log(divid);
+        $scope.showLarge = function (id, divid, ctx) {
             var result = document.getElementsByClassName(divid);
             var elementResult = angular.element(result);
             if ($scope.stage === true) {
                 $scope.stage = false;
                 childScope = $scope.$new();
-                var compiledDirective = $compile('<rendered size="500" id =' + id + '></rendered>');
+                var rend;
+                if(!_.isUndefined(ctx)){
+                 rend ='<rendered size="500" id='+id+' ctx='+ctx+'></rendered>';
+                }else{
+                    rend = '<rendered size="500" id='+id+'></rendered>';
+                }
+                var compiledDirective = $compile(rend);
                 var directiveElement = compiledDirective(childScope);
                 elementResult.append(directiveElement);
             } else {
@@ -1432,15 +1452,27 @@
         };
     });
 
-    ginasApp.directive('rendered', function () {
+    ginasApp.directive('rendered', function ($compile) {
         return {
             restrict: 'E',
             replace: true,
             scope: {
                 id: '@',
-                size: '@'
+                size: '@',
+                ctx: '@'
             },
-            template: '<img ng-src=\"' + baseurl + 'img/{{id}}.svg?size={{size||150}}\">'
+            link: function(scope, element){
+              console.log(scope.id);
+                var url = baseurl+ 'img/'+scope.id+'.svg?size={{size||150}}';
+                if(!_.isUndefined(scope.ctx)) {
+                    url += '&context={{ctx}}';
+                }
+                console.log(url);
+                var template = angular.element('<img ng-src='+url+'>');
+                element.append(template);
+                $compile(template)(scope);
+            }
+         //   template: '<img ng-src=\"' + baseurl + 'img/'+id+'.svg?size={{size||150}}&context={{ctx}}\">'
         };
     });
 
@@ -1630,7 +1662,7 @@
             // templateUrl: baseurl + 'assets/templates/substance-select.html',
             replace: true,
             restrict: 'E',
-            require: 'ngModel',
+            //require: 'ngModel',
             scope: {
                 subref: '=ngModel',
                 formname: '=',
@@ -1638,6 +1670,7 @@
                 label: '@'
             },
             link: function (scope, element, attrs, ngModel) {
+                console.log(scope);
                 var formHolder;
                 var childScope;
                 var template;
@@ -1728,7 +1761,7 @@
             scope: {
                 subref: '='
             },
-            templateUrl: baseurl + 'assets/templates/substanceSelector.html',
+            templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
             link: function (scope, element, attrs) {
                 console.log(scope);
                 scope.results = {};
@@ -1747,7 +1780,7 @@
                     console.log(temp);
                     scope.subref = angular.copy(temp);
                     console.log(scope);
-
+                    scope.$parent.$parent.toggleStage();
                 };
 
                 scope.fetch = function (term, skip) {
@@ -1835,16 +1868,16 @@
                 mymodel: '=ngModel',
                 lite: '=lite'
             },
-            templateUrl: baseurl + "assets/templates/substanceSelectorElement.html",
+            templateUrl: baseurl + "assets/templates/selectors/substanceSelectorElement.html",
             link: function (scope) {
-                /*
+
                  console.log(scope);
-                 */
+
                 scope.openSelector = function (parentRef, instanceName, test) {
                     //console.log(test);
                     var modalInstance = $modal.open({
                         animation: true,
-                        templateUrl: baseurl + 'assets/templates/substanceSelector.html',
+                        templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
                         controller: 'SubstanceSelectorInstanceController',
                         size: 'lg'
 
