@@ -8,23 +8,23 @@
     <title-header name = "substance._name" kind = "substance.substanceClass"></title-header>
     @kind match {
         case "chemical" => {
-@*
+
             <div>@forms.structureform()</div>
-*@
+
 @*
             <moiety-form parent = substance></moiety-form>
 *@
 
-@*
+
             <div>@forms.moietyform()</div>
-*@
+
 
         }
         case "mixture" => {
            <mixture-component-select-form parent = substance></mixture-component-select-form>
         }
         case "protein" => {
-             <protein-details-form></protein-details-form>
+            <protein-details-form></protein-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.protein.subunits.length>0">
             <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
@@ -33,7 +33,7 @@
             <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
             <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
             <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
-                </div>
+            </div>
         }
         case "structurallyDiverse" => {
            <diverse-type-form parent = substance></diverse-type-form>

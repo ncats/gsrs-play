@@ -457,6 +457,30 @@
             return sub;
         };
 
+        $scope.resolveMol = function (structure){
+                console.log("resolve");
+
+                var url = window.strucUrl;
+                
+                
+                $http({
+                        method: 'POST',
+                        url: url,
+                        data: structure.molfile,
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).success(function (data) {
+                        $scope.substance.structure=data.structure;
+                        $scope.substance.moieties=data.moieties;
+                        
+                        //this is rather hacky, should be extracted and abstracted
+                        $('#structureimport').modal('hide');
+                    });
+                
+                
+        }
+
         $scope.isCV = function (ob) {
             if (typeof ob !== "object") return false;
             if (ob === null) return false;

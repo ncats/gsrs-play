@@ -313,7 +313,7 @@ public class StructureProcessor {
         // used to not duplicate moieties
         Map<String, Structure> moietiesMap = new HashMap<String,Structure>();
         //System.err.println("+++++++++ "+frags.length+" components!");
-        if (frags.length > 1) {
+        if (frags.length >= 1 && components!=null) {
             for (int i = 0; i < frags.length; ++i) {
                 Structure moiety = new Structure ();
                 //System.err.println("+++++++++++++ component "+i+"!");
@@ -377,6 +377,7 @@ public class StructureProcessor {
 
     public static String toHex (byte[] binary) {
         StringBuilder sb = new StringBuilder ();
+        
         for (int i = 0; i < binary.length; ++i) {
             sb.append(String.format("%1$02x", binary[i] & 0xff));
         }

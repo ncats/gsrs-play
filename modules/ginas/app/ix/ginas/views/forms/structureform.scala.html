@@ -94,7 +94,8 @@
             </div>
         </div>
     </div>
-        <!-- Modal -->
+    
+    <!-- Modal -->
     <div class="modal fade" id="structureimport" tabindex="-1" role="dialog" aria-labelledby="myModalLabelimport" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -102,7 +103,7 @@
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="myModalLabelimport">Structure Import</h4>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body mol-data-import">
                     <form class="form" role="import" method="GET"
                     action="" id = "filereader">
                         <div class="form-group">
@@ -110,21 +111,22 @@
                                 <div class="col-md-3">
                                     <div class="form-group">
                                         <label for="exampleInputFile">Load File</label>
-                                        <input type="button" value="Choose File" onclick="window.FileContentsGrabber.append('mol-sequence')" id="exampleInputFile">
+                                        <input type="button" value="Choose File" onclick="window.FileContentsGrabber.set('mol-sequence');" id="exampleInputFile">
                                         <p class="help-block">or</p>
                                     </div>
                                 </div>
                             </div>
                             <div class = "row">
                                 <div class="col-md-12">
-                                    <label for="description-det">Enter molfile, smiles or systematic name:</label>
-                                    <textarea spellcheck="false" class="form-control" rows="10" ng-model="structure.molfile" ng-trim="false" ng-change=" " id="mol-sequence"></textarea>
+                                    <label for="description-det">Enter molfile or smiles:</label>
+                                    <textarea spellcheck="false" class="form-control" rows="10" ng-model="structure.molfile" ng-trim="false" id="mol-sequence"></textarea>
                                 </div>
+                                <input style="display:none" ng-model="structure._setWatch" ng-change="resolveMol(structure)" id="mol-sequence-monitor"></input>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default" ng-click="structure.molfile=null;" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" ng-click="resolveMol(structure)" data-dismiss="modal">Import</button>
+                            <button id="close-import-button" type="button" class="btn btn-primary" ng-click="resolveMol(structure)" data-dismiss="modal">Import</button>
                         </div>
                     </form>
                 </div>

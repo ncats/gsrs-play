@@ -1676,58 +1676,56 @@ public class App extends Authentication {
         return ups;
     }
 
-    @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
-    public static Result molinstrument () {
-        //String mime = request().getHeader("Content-Type");
-        //Logger.debug("molinstrument: content-type: "+mime);
-        
-        ObjectMapper mapper = EntityFactory.getEntityMapper();
-        ObjectNode node = mapper.createObjectNode();
-        try {
-            String payload = request().body().asText();
-            payload=ChemCleaner.getCleanMolfile(payload);
-            if (payload != null) {
-                List<Structure> moieties = new ArrayList<Structure>();
-                
-                try{
-                        Structure struc = StructureProcessor.instrument
-                            (payload, moieties, false); // don't standardize!
-                        // we should be really use the PersistenceQueue to do this
-                        // so that it doesn't block
-                        struc.save();
-                        
-                                        
-                        
-                        for (Structure m : moieties)
-                            m.save();
-                        node.put("structure", mapper.valueToTree(struc));
-                        node.put("moieties", mapper.valueToTree(moieties));
-                }catch(Exception e){
-                        
-                }
-                try{
-                                        Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
-                                                        .createChemical(payload, Chemical.FORMAT_AUTO);
-                                        
-                        Collection<StructuralUnit> o = PolymerDecode.DecomposePolymerSU(c,true);
-                        for(StructuralUnit su:o){
-                                Structure struc = StructureProcessor.instrument
-                                    (su.structure, null, false);
-                                struc.save();
-                                su._structure=struc;
-                        }
-                        node.put("structuralUnits", mapper.valueToTree(o));
-                }catch(Exception e){
-                    Logger.error("Can't enumerate polymer", e);
-                }
-            }
-        }
-        catch (Exception ex) {
-            Logger.error("Can't process payload", ex);
-            return internalServerError ("Can't process mol payload");       
-        }
-        return ok (node);
-    }
+	@BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
+	public static Result molinstrument() {
+		// String mime = request().getHeader("Content-Type");
+		// Logger.debug("molinstrument: content-type: "+mime);
+
+		ObjectMapper mapper = EntityFactory.getEntityMapper();
+		ObjectNode node = mapper.createObjectNode();
+		try {
+			String payload = request().body().asText();
+			payload = ChemCleaner.getCleanMolfile(payload);
+			if (payload != null) {
+				List<Structure> moieties = new ArrayList<Structure>();
+
+				try {
+					Structure struc = StructureProcessor.instrument(payload,
+							moieties, false); // don't standardize!
+					// we should be really use the PersistenceQueue to do this
+					// so that it doesn't block
+					struc.save();
+
+					for (Structure m : moieties)
+						m.save();
+					node.put("structure", mapper.valueToTree(struc));
+					node.put("moieties", mapper.valueToTree(moieties));
+				} catch (Exception e) {
+
+				}
+				try {
+					Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
+							.createChemical(payload, Chemical.FORMAT_AUTO);
+
+					Collection<StructuralUnit> o = PolymerDecode
+							.DecomposePolymerSU(c, true);
+					for (StructuralUnit su : o) {
+						Structure struc = StructureProcessor.instrument(
+								su.structure, null, false);
+						struc.save();
+						su._structure = struc;
+					}
+					node.put("structuralUnits", mapper.valueToTree(o));
+				} catch (Exception e) {
+					Logger.error("Can't enumerate polymer", e);
+				}
+			}
+		} catch (Exception ex) {
+			Logger.error("Can't process payload", ex);
+			return internalServerError("Can't process mol payload");
+		}
+		return ok(node);
+	}
 
     public static String getSequence (String id) {
         return getSequence (id, 0);

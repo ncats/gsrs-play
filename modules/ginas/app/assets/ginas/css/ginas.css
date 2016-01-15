@@ -903,3 +903,6 @@ sketcher svg>text{
     cursor: -webkit-zoom-in;
 }
 
+.mol-data-import{
+    padding: 40px;
+}

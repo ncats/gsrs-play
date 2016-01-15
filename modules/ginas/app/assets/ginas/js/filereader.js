@@ -46,11 +46,25 @@ var FileContentsGrabber = {
     append: function (target) {
         this.getFileContents(function (txt) {
             $('#' + target).append(txt);
+            $('#' + target).trigger("input");
+        });
+    },
+    set: function (target, cback) {
+        this.getFileContents(function (txt) {
+            $('#' + target).val(txt);
+            $('#' + target).trigger("input");
+            if(cback){
+                cback();
+            }else{
+                    $('#' + target + "-monitor").val("set" + Math.random());
+                    $('#' + target + "-monitor").trigger("input");
+            }
+            
         });
     },
     moldata: function (target) {
         var mol = $('#' + target).append(txt);
-        console.log(mol);
+        $('#' + target).trigger("input");
     }
 };
 

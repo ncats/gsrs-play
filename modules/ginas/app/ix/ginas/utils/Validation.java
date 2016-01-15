@@ -18,6 +18,7 @@ import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasProcessingMessage.Link;
+import ix.ginas.utils.PeptideInterpreter.Protein;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -431,6 +432,18 @@ public class Validation {
         if(cs.structure==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Chemical substance must have a chemical structure"));
         }
+        
+        try {
+			ix.ginas.utils.PeptideInterpreter.Protein p=PeptideInterpreter.getAminoAcidSequence(cs.structure.molfile);
+			if(p!=null && p.subunits.size()>=1 && p.subunits.get(0).sequence.length()>2){
+				GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substance may be represented as protein as well. Seqence:[" +p.toString() + "]");
+				gpm.add(mes);
+	            strat.processMessage(mes);
+			}
+		} catch (Exception e) {
+			
+		}
+        
         String payload = cs.structure.molfile;
         if (payload != null) {
         	Structure struc=null;
