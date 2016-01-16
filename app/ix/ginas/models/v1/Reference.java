@@ -27,7 +27,6 @@ import ix.ginas.models.*;
 public class Reference extends GinasCommonSubData {
 
     @JSONEntity(title = "Citation Text", isRequired = true)
-    @Column(nullable=false)
     @Lob
     public String citation;
     
