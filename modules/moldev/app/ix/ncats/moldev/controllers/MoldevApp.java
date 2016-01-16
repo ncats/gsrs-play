@@ -2,7 +2,6 @@ package ix.ncats.moldev.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.sun.jersey.api.NotFoundException;
 import ix.ncats.controllers.App;
 import play.Configuration;
 import play.db.DB;
