@@ -69,9 +69,9 @@
            <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.$subunitDisplay.length>0">
-            <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
-            <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
-                </div>
+                <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
+                <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
+            </div>
 
 @*
             <div>@forms.nucleicacidsugarform()</div>

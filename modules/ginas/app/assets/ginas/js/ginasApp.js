@@ -1552,7 +1552,7 @@
 
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';
-        var validTool = '<a href="#" class= "aminoAcid" uib-tooltip="{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}} ({{acid.type}}-{{acid.name}})">{{acid.value}}</a>';
+        var validTool = '<a href="#" class= "aminoAcid" uib-tooltip="{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}} ({{acid.type}}{{acid.name}})">{{acid.value}}</a>';
         var invalidTool = '<a href="#" class= "invalidAA" tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>';
         var space = '&nbsp;';
         var close = '</div>';
@@ -1599,10 +1599,10 @@
                 scope.edit = false;
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
-                        return 'D';
+                        return 'D-';
                     }
                     else {
-                        return 'L';
+                        return 'L-';
                     }
                 };
 
@@ -1622,7 +1622,7 @@
                             } else {
                                 obj.subunitIndex = scope.obj.index;
                             }
-                            obj.residueIndex = index - 1 + 2;
+                            obj.residueIndex = index - 0 + 1;
                             if (scope.parent.substanceClass === 'protein') {
                                 obj.type = scope.getType(aa);
                             }
