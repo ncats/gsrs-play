@@ -7,6 +7,7 @@ import java.util.zip.ZipInputStream;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
 import java.security.*;
 
 import play.Logger;
@@ -91,6 +92,17 @@ public class Util {
         return null;
     }
 
+    public static String URLEncode (String value) {
+        try {
+            String decode = URLDecoder.decode(value, "UTF-8");
+            return decode.replaceAll("[\\s+]", "%20");
+        }
+        catch (Exception ex) {
+            Logger.trace("Can't decode value: "+value, ex);
+        }
+        return value;
+    }
+    
     private Util () {
     }
 
