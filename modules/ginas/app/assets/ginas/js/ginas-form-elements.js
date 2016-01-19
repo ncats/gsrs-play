@@ -208,7 +208,7 @@
         createURL = function(){
             console.log('creating url');
             var current = ($location.$$url).split('app')[1];
-            var ret = baseurl + "api/v1" +current;
+            var ret = baseurl + "api/v1" +current +'?view=full';
             console.log(ret);
             return ret;
         };
