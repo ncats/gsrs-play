@@ -625,17 +625,19 @@
         $scope.validate = function (obj, form, path) {
             console.log($scope);
             $scope.$broadcast('show-errors-check-validity');
-           // var obj = $scope[objName];
-            var v = path.split(".");
-            var type = _.last(v);
-            switch (type) {
-                case "sugars":
-                case "linkages":
-                  //  $scope.updateSiteList(obj);
+/*           // var obj = $scope[objName];
+            if(!_.isUndefined(path)) {
+                var v = path.split(".");
+                var type = _.last(v);
+                switch (type) {
+                    case "sugars":
+                    case "linkages":
+                        //  $scope.updateSiteList(obj);
                         break;
-                default:
-                    break;
-            }
+                    default:
+                        break;
+                }
+            }*/
             console.log(obj);
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
@@ -1270,7 +1272,6 @@
         };*/
 
         $scope.submitpaster = function (input) {
-            console.log(input);
             var sub = JSON.parse(input);
             //  $scope.substance = sub;
             $scope.substance = $scope.toFormSubstance(sub);
@@ -1462,12 +1463,10 @@
                 ctx: '@'
             },
             link: function(scope, element){
-              console.log(scope.id);
                 var url = baseurl+ 'img/'+scope.id+'.svg?size={{size||150}}';
                 if(!_.isUndefined(scope.ctx)) {
                     url += '&context={{ctx}}';
                 }
-                console.log(url);
                 var template = angular.element('<img ng-src='+url+'>');
                 element.append(template);
                 $compile(template)(scope);
@@ -1613,9 +1612,7 @@
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
                         obj.value = aa;
-                        console.log(scope.residues);
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
-                        console.log(temp);
                         if (!_.isUndefined(temp)) {
                             obj.name = temp.display;
                             obj.valid = true;
@@ -1637,7 +1634,6 @@
                         }
                         display.push(obj);
                     });
-                    //this.display = display;
                     display = _.chunk(display, 10);
                     scope.subunitDisplay = display;
                     scope.parent.$subunitDisplay.push(display);
@@ -2124,8 +2120,6 @@
             scope: {
                 type: '='
             },
-
-//            <export-button structureid ="'@chem.structure.id'" ></export-button></li>
 
             link: function (scope, element, attrs, ngModel) {
                 var modalWindow;

@@ -3,8 +3,8 @@
 
     ginasFormElements.factory('CVFields', function ($http, $q) {
 
-        var lookup = {};
-/*            "stereoChemistry": "STEREOCHEMISTRY_TYPE",
+        var lookup = {/*
+            "stereoChemistry": "STEREOCHEMISTRY_TYPE",
             "names.type": "NAME_TYPE",
             "names.nameOrgs": "NAME_ORG",
             "names.nameJurisdiction": "JURISDICTION",
@@ -16,7 +16,7 @@
             "relationships.interactionType": "INTERACTION_TYPE",
             "relationships.qualification": "QUALIFICATION",
             "references.docType": "DOCUMENT_TYPE"*/
-
+        };
 
 
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
