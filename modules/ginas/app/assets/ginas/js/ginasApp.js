@@ -263,7 +263,7 @@
     ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
                                                      localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, CVFields, lookup) {
         var ginasCtrl = this;
-        $scope.select = ['Substructure', 'Similarity'];
+//        $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;

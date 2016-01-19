@@ -19,8 +19,9 @@
 
                         <div class="form-group col-md-2">
                             <label class="sr-only" for="search-selection">Search Type</label>
-                            <select class="form-control" id="search-selection" name="type" ng-model ="type" >
-                                <option ng-repeat="v in select" value="{{v}}">{{v}}</option>
+                            <select class="form-control" id="search-selection" name="type" ng-model = "type" >
+                                <option value="Substructure" selected>Substructure</option>
+                                <option value="Similarity">Similarity</option>
                             </select>
                             <label class="sr-only" for="tanimoto-cutoff">Tanimoto threshold</label>
 
