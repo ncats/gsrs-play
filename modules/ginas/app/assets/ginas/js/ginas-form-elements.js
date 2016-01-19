@@ -503,12 +503,82 @@
         };
     });
 
-    ginasFormElements.directive('closeButton', function (isDuplicate) {
+    ginasFormElements.directive('closeButton', function () {
         return {
             restrict: 'E',
             template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
         };
     });
+
+    ginasFormElements.directive('resolveButton', function ($compile, resolver, toggler) {
+        return {
+            restrict: 'E',
+            scope:{
+                name: '=',
+                parent: '='
+            },
+            template: '<div class ="col-md-1 pull-left"><button class="btn btn-primary" ng-click="resolve(name);">Resolve Name</button></div>',
+            link: function(scope,element, attrs){
+                scope.stage=true;
+                scope.resolve= function(name){
+/*                    var result = document.getElementsByClassName(attrs.divid);
+                    var elementResult = angular.element(result);*/
+                    resolver.resolve(name).then(function(data){
+                        console.log(data.data);
+                        _.set(scope, 'data', data.data);
+                        if(data.data.length>0) {
+                            var template = angular.element('<substance-viewer data= data parent = parent></substance-viewer>');
+                        }else{
+                            template = angular.element('<div><h3>Name does not resolve to existing structure</h3></div>');
+                        }
+                        toggler.toggle(scope, attrs.divid, template);
+/*                        elementResult.append(template);
+                        $compile(template)(scope);*/
+                    });
+
+                    scope.close= function(){
+                        toggler.toggle(scope, attrs.divid, template);
+                    }
+                }
+            }
+        };
+    });
+
+    ginasFormElements.service('resolver', function($location, $http){
+        var resolver = {};
+
+        resolver.resolve= function(name){
+            var url = baseurl + "resolve/"+name;
+            return $http.get(url,{cache:true}, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (data) {
+                return data;
+            });
+        };
+
+        return resolver;
+    });
+
+ginasFormElements.directive('substanceViewer', function(){
+    return{
+        restrict: 'E',
+        scope:{
+            data: '=',
+            parent: '='
+        },
+        templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
+        link: function(scope,element, attrs) {
+            console.log(scope);
+            scope.select = function(selected){
+                console.log(selected);
+                _.set(scope.parent, 'structure', selected.value);
+                scope.$parent.close();
+            };
+        }
+    }
+});
 
     ginasFormElements.directive('downloadButton', function ($compile, download) {
         return {
@@ -546,4 +616,8 @@
             }
         };
     });
+
+
+
+
 })();

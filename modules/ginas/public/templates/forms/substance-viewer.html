@@ -1,0 +1,25 @@
+<div>
+    <div class="row info">
+            <div class="col-md-3 thumb-col" ng-repeat="item in data">
+                <div class="panel panel-default" ng-click="select(item)">
+                    <div class="panel-heading">
+                        <p class="text-right" data-toggle="tooltip" title="Approval ID">
+                            <a href="#" ng-click="$event.preventDefault(); selected.item = item">
+                                <code>{{item.source}}</code>
+                            </a>
+                        </p>
+                    </div>
+                    <div class="panel-body struc-img">
+                        <rendered smiles = {{item.value.smiles}}></rendered>
+                        <div class="row stereo">
+                            <div class="col-md-10">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-footer nameDiv" data-toggle="tooltip" title="{{item.name}}">
+                        Click structure to select
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

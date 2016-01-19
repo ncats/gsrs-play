@@ -102,7 +102,6 @@
             },
             link: function(scope, element, attrs){
                 scope.stage=true;
-                console.log(scope);
                 var template;
                 var url = baseurl + "assets/templates/info/";
                 if(attrs.mark =="exclaim") {

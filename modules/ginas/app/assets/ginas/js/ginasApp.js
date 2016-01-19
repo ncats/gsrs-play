@@ -269,6 +269,7 @@
         $scope.stage = true;
 
         $scope.scrollTo = function (prmElementToScrollTo) {
+            console.log(prmElementToScrollTo);
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
         };
@@ -1433,10 +1434,13 @@
                 size: '@',
                 ctx: '@'
             },
-            link: function(scope, element){
+            link: function(scope, element, attrs){
                 var url = baseurl+ 'img/'+scope.id+'.svg?size={{size||150}}';
                 if(!_.isUndefined(scope.ctx)) {
                     url += '&context={{ctx}}';
+                }
+                if(attrs.smiles){
+                    url =baseurl+ "render/"+attrs.smiles;
                 }
                 var template = angular.element('<img ng-src='+url+'>');
                 element.append(template);
