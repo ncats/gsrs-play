@@ -263,7 +263,7 @@
     ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
                                                      localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, CVFields, lookup) {
         var ginasCtrl = this;
-        $scope.select = ['Substructure', 'Similarity'];
+//        $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
@@ -346,6 +346,7 @@
             apiSub = $scope.expandCV(apiSub, "");
             if (_.has(apiSub, 'names')) {
                 _.forEach(apiSub.names, function (n) {
+                    console.log(n);
                     var temp = [];
                     if (n.nameOrgs && n.nameOrgs.length > 0) {
                         _.forEach(n.nameOrgs, function (m) {
@@ -357,7 +358,8 @@
                         });
                         n.nameOrgs = temp;
                     }
-                    if (n.type === "of") {
+                    if (n.type === "of" || n.type.value ==="of") {
+                        console.log(n);
                         officialNames.push(n);
                     } else {
                         unofficialNames.push(n);
@@ -495,7 +497,7 @@
                     });
                 
                 
-        }
+        };
 
         $scope.isCV = function (ob) {
             if (typeof ob !== "object") return false;
@@ -625,17 +627,19 @@
         $scope.validate = function (obj, form, path) {
             console.log($scope);
             $scope.$broadcast('show-errors-check-validity');
-           // var obj = $scope[objName];
-            var v = path.split(".");
-            var type = _.last(v);
-            switch (type) {
-                case "sugars":
-                case "linkages":
-                  //  $scope.updateSiteList(obj);
+/*           // var obj = $scope[objName];
+            if(!_.isUndefined(path)) {
+                var v = path.split(".");
+                var type = _.last(v);
+                switch (type) {
+                    case "sugars":
+                    case "linkages":
+                        //  $scope.updateSiteList(obj);
                         break;
-                default:
-                    break;
-            }
+                    default:
+                        break;
+                }
+            }*/
             console.log(obj);
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
@@ -751,29 +755,6 @@
         };
 */
 
-
-
-/*        $scope.toggle = function (el) {
-            console.log(el);
-            if (!el)return;
-            if (_.has(el, "selected")) {
-                el.selected = !el.selected;
-            } else {
-                el.selected = true;
-            }
-        };
-
-        $scope.changeSelect = function (val) {
-            console.log(val);
-            val = !val;
-            console.log(val);
-        };*/
-
-/*        $scope.remove = function (obj, field) {
-            var index = Substance[field].indexOf(obj);
-            Substance[field].splice(index, 1);
-        };*/
-
         $scope.reset = function (form) {
             console.log(form);
            $scope.$broadcast('show-errors-reset');
@@ -782,14 +763,6 @@
         };
 
         $scope.selected = false;
-/*
-        $scope.info = function (scope, element) {
-            console.log($scope);
-            console.log(scope);
-            console.log(element);
-            $scope.selected = !$scope.selected;
-        };*/
-
 
         $scope.fetch = function ($query) {
             console.log($query);
@@ -1270,7 +1243,6 @@
         };*/
 
         $scope.submitpaster = function (input) {
-            console.log(input);
             var sub = JSON.parse(input);
             //  $scope.substance = sub;
             $scope.substance = $scope.toFormSubstance(sub);
@@ -1462,12 +1434,10 @@
                 ctx: '@'
             },
             link: function(scope, element){
-              console.log(scope.id);
                 var url = baseurl+ 'img/'+scope.id+'.svg?size={{size||150}}';
                 if(!_.isUndefined(scope.ctx)) {
                     url += '&context={{ctx}}';
                 }
-                console.log(url);
                 var template = angular.element('<img ng-src='+url+'>');
                 element.append(template);
                 $compile(template)(scope);
@@ -1613,9 +1583,7 @@
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
                         obj.value = aa;
-                        console.log(scope.residues);
-                        var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
-                        console.log(temp);
+                        var temp = (_.find(scope.residues, 'value', aa.toUpperCase()));
                         if (!_.isUndefined(temp)) {
                             obj.name = temp.display;
                             obj.valid = true;
@@ -1637,7 +1605,6 @@
                         }
                         display.push(obj);
                     });
-                    //this.display = display;
                     display = _.chunk(display, 10);
                     scope.subunitDisplay = display;
                     scope.parent.$subunitDisplay.push(display);
@@ -2124,8 +2091,6 @@
             scope: {
                 type: '='
             },
-
-//            <export-button structureid ="'@chem.structure.id'" ></export-button></li>
 
             link: function (scope, element, attrs, ngModel) {
                 var modalWindow;
