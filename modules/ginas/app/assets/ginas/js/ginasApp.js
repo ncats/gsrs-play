@@ -346,6 +346,7 @@
             apiSub = $scope.expandCV(apiSub, "");
             if (_.has(apiSub, 'names')) {
                 _.forEach(apiSub.names, function (n) {
+                    console.log(n);
                     var temp = [];
                     if (n.nameOrgs && n.nameOrgs.length > 0) {
                         _.forEach(n.nameOrgs, function (m) {
@@ -357,7 +358,8 @@
                         });
                         n.nameOrgs = temp;
                     }
-                    if (n.type === "of") {
+                    if (n.type === "of" || n.type.value ==="of") {
+                        console.log(n);
                         officialNames.push(n);
                     } else {
                         unofficialNames.push(n);
@@ -495,7 +497,7 @@
                     });
                 
                 
-        }
+        };
 
         $scope.isCV = function (ob) {
             if (typeof ob !== "object") return false;
@@ -753,29 +755,6 @@
         };
 */
 
-
-
-/*        $scope.toggle = function (el) {
-            console.log(el);
-            if (!el)return;
-            if (_.has(el, "selected")) {
-                el.selected = !el.selected;
-            } else {
-                el.selected = true;
-            }
-        };
-
-        $scope.changeSelect = function (val) {
-            console.log(val);
-            val = !val;
-            console.log(val);
-        };*/
-
-/*        $scope.remove = function (obj, field) {
-            var index = Substance[field].indexOf(obj);
-            Substance[field].splice(index, 1);
-        };*/
-
         $scope.reset = function (form) {
             console.log(form);
            $scope.$broadcast('show-errors-reset');
@@ -784,14 +763,6 @@
         };
 
         $scope.selected = false;
-/*
-        $scope.info = function (scope, element) {
-            console.log($scope);
-            console.log(scope);
-            console.log(element);
-            $scope.selected = !$scope.selected;
-        };*/
-
 
         $scope.fetch = function ($query) {
             console.log($query);
