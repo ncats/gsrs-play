@@ -1583,7 +1583,7 @@
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
                         obj.value = aa;
-                        var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
+                        var temp = (_.find(scope.residues, 'value', aa.toUpperCase()));
                         if (!_.isUndefined(temp)) {
                             obj.name = temp.display;
                             obj.valid = true;

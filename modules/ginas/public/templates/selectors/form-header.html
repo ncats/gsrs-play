@@ -4,6 +4,9 @@
         <i ng-hide="iscollapsed" class="fa fa-caret-down"></i>
         {{heading}}&nbsp;<span class="badge" ng-show="parent[path].length>0">
                         {{parent[path].length}}</span> </button>
+    <info-button path= {{path}} type = {{type}} ></info-button>
+<!--
     <span ng-click ="showInfo()" uib-tooltip="click for description"><i class="fa fa-question-circle fa-lg"></i></span>
+-->
     <div class={{type}}></div>
 </div>
