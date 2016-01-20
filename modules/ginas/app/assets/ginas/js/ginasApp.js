@@ -1684,6 +1684,7 @@
                         var directiveElement = compiledDirective(childScope);
                         elementResult.append(directiveElement);
                     } else {
+                        scope.q =null;
                         childScope.$destroy();
                         elementResult.empty();
                         scope.stage = true;
@@ -1725,6 +1726,7 @@
                   //  scope.subref = angular.copy(temp);
                     _.set(scope.referenceobj, scope.field, angular.copy(temp));
                 //    console.log(scope);
+                    scope.q =null;
                     scope.$parent.$parent.toggleStage();
                 };
 
