@@ -41,7 +41,10 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
     protected Structure resolve (InputStream is) throws IOException {
         MolImporter mi = new MolImporter (is);
         try {
-            return StructureProcessor.instrument(mi.read(), null, false);
+            Structure struc =
+                StructureProcessor.instrument(mi.read(), null, true);
+            struc.save();
+            return struc;
         }
         finally {
             mi.close();
