@@ -3,9 +3,13 @@ package ix.ginas.models.v1;
 //import gov.nih.ncats.informatics.ginas.shared.model.v1.utils.JSONEntity;
 
 
+import javax.persistence.CascadeType;
+import javax.persistence.OneToOne;
+
 //@JSONEntity(name = "nucleicAcidSubstance", title = "Nucleic Acid Substance")
 public class NucleicAcidSubstance extends Substance {
-	NucleicAcid nucleicAcid;
+	@OneToOne(cascade= CascadeType.ALL)
+	public NucleicAcid nucleicAcid;
 
 	public NucleicAcid getNucleicAcid() {
 		return nucleicAcid;

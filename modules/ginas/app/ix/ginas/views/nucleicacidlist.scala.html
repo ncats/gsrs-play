@@ -1,21 +1,17 @@
 @import ix.core.models.Structure
 @import ix.ginas.controllers.GinasApp
-@import ix.ginas.models.v1.ProteinSubstance
-@import ix.ginas.models.v1.Protein
-@import ix.ginas.models.v1.Glycosylation
+@import ix.ginas.models.v1.NucleicAcidSubstance
+@(nuc: NucleicAcidSubstance, ctx: String = null)
 
-@import ix.ginas.models.v1.ProteinSubstance
-@(prot: ProteinSubstance, ctx: String = null)
-
-<div class="panel panel-default prot-list" >
-    <div class="panel-heading prot-title">
+<div class="panel panel-default nuc-list" >
+    <div class="panel-heading nuc-title">
         <div class = "row">
             <div class = "col-md-10">
-                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(prot))" target="_self">@prot.getName()</a></h3>
+                <h3> <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(nuc))" target="_self">@nuc.getName()</a></h3>
             </div>
-            <div class = "col-md-2 prot-approvID">
-                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(prot))" target="_self">
-                    <code>@prot.approvalID</code></a>
+            <div class = "col-md-2 nuc-approvID">
+                <h4 class= "text-right"><a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(nuc))" target="_self">
+                    <code>@nuc.approvalID</code></a>
                 </h4>
             </div>
         </div>
@@ -31,16 +27,18 @@
                                 @*
                                     This should be another export
                                 *@
-                                <export-button structureid ="'@prot.uuid'" format="'fas'" ></export-button>
+                                <export-button structureid ="'@nuc.uuid'" format="'fas'" ></export-button>
                             </li>
                             <li>
                                 @*
                                 This should be a sequence search
                                 *@
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
+@*
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(nuc.nucleicAcid.subunits(0).uuid.toString())" target="_self" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
+*@
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" class="btn btn-primary" aria-label="Edit Protein Substance"> <span class="fa fa-pencil chem-button"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(nuc))"  target="_self" class="btn btn-primary" aria-label="Edit nucleicAcid Substance"> <span class="fa fa-pencil chem-button"></span></a>
                             </li>
                         </ul>
                     </div>
@@ -53,7 +51,7 @@
                         <h5>Other Names:</h5>
                     </div>
                     <div class = "col-md-10">
-                        <h5>@ix.ginas.controllers.GinasApp.namesList(prot.names)</h5>
+                        <h5>@ix.ginas.controllers.GinasApp.namesList(nuc.names)</h5>
                     </div>
                 </div>
                 <div class = "row">
@@ -61,17 +59,7 @@
                         <h5>Codes:</h5>
                     </div>
                     <div class = "col-md-10">
-                        <h5>@ix.ginas.controllers.GinasApp.codesList(prot.codes)</h5>
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5>Glycosylation:</h5>
-                    </div>
-                    <div class = "col-md-10">
-                        <h5>@prot.protein.glycosylation.CGlycosylationSites.length</h5>
-                        <h5>@prot.protein.glycosylation.NGlycosylationSites.length</h5>
-                        <h5>@prot.protein.glycosylation.OGlycosylationSites.length</h5>
+                        <h5>@ix.ginas.controllers.GinasApp.codesList(nuc.codes)</h5>
                     </div>
                 </div>
             </div>
@@ -79,31 +67,33 @@
             <div class = "col-md-2">
                 <div class = "row">
                     <div class = "col-md-12">
-                        Subunits: <span class = "badge">@prot.protein.subunits.length</span>
+@*
+                        Subunits: <span class = "badge">@nuc.nucleicAcid.subunits.length</span>
+*@
                     </div>
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Date approved: <h6>{{@prot.approved.getTime() | date: 'mediumDate'}}</h6>
+                        Date approved: <h6>{{@nuc.approved.getTime() | date: 'mediumDate'}}</h6>
                     </div>
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Last modified: <h6>{{moment(@prot.approved.getTime())}}</h6>
+                        Last modified: <h6>{{moment(@nuc.approved.getTime())}}</h6>
                     </div>
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        <code>@prot.getDisplayStatus()  version: @prot.version</code>
+                        <code>@nuc.getDisplayStatus()  version: @nuc.version</code>
                     </div>
                 </div>
             </div>
         </div>
-	@if(ctx != null) {
+@*	@if(ctx != null) {
         <div ng-show="bigview" class = "revealable row">
             <div ng-show="initialized">
               <div class = "col-md-12">
-		  @for(subunit <- prot.protein.subunits) {
+		  @for(subunit <- nuc.nucleicAcid.subunits) {
 		      @defining(GinasApp.getSeqAlignment(ctx,subunit.uuid.toString)){ r =>
   		         @if(r != null) {
 			 <br>
@@ -118,6 +108,6 @@
               </div>
             </div>
         </div>
-	}
+	}*@
     </div>
 </div>
