@@ -25,6 +25,12 @@ public class SiteContainer extends GinasCommonSubData{
 	@JsonIgnore
 	String _siteClob;
 	
+	String siteType;
+	
+	public SiteContainer(String type){
+		this.siteType=type;
+	}
+	
 	public List<Site> getSites(){
 		ObjectMapper om = new ObjectMapper();
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

@@ -1,19 +1,9 @@
 package ix.ginas.models.v1;
 
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.GinasCommonSubData;
 
-@Entity
-@Table(name="ix_ginas_site")
 @JSONEntity(name = "site", title = "Site", isFinal = true)
-public class Site extends GinasCommonSubData {
+public class Site {
     @JSONEntity(title = "Subunit Index")
     public Integer subunitIndex;
     

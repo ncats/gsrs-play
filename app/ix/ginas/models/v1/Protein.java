@@ -16,6 +16,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -65,9 +66,11 @@ public class Protein extends GinasCommonSubData {
     public Protein () {}
 
     @JsonIgnore
+    @Transient
     private Map<String, String> _modifiedCache=null;
+  
+    @JsonIgnore
     public Map<String, String> getModifiedSites(){
-    	Map<String, String> _modifiedCache = null;
     	if(_modifiedCache!=null){
     		return _modifiedCache;
     	}
@@ -101,8 +104,16 @@ public class Protein extends GinasCommonSubData {
 	    		}
 	    	}
     	}
-    	
-    	//TODO: Need otherlinks as well
+    	if(this.otherLinks!=null){
+    		//modifications
+	    	for(OtherLinks sm : this.otherLinks){
+	    		if(sm.getSites()!=null){
+	    			for(Site s: sm.getSites()){
+	    				_modifiedCache.put(s.toString(),"otherLinkage");
+	    	    	}
+	    		}
+	    	}
+    	}
     	return _modifiedCache;
     }
     

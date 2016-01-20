@@ -27,7 +27,7 @@ public class Sugar extends GinasCommonSubData {
     }
     public void setSites(List<Site> sites){
     	if(siteContainer==null){
-    		siteContainer=new SiteContainer();
+    		siteContainer=new SiteContainer(this.getClass().getName());
     	}
     	siteContainer.setSites(sites);
     }

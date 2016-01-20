@@ -23,7 +23,6 @@ public class OtherLinks extends GinasCommonSubData {
 	@OneToOne(cascade=CascadeType.ALL)
     SiteContainer siteContainer;
     public List<Site> getSites(){
-    	System.out.println(siteContainer);
     	if(siteContainer!=null){
     		return siteContainer.getSites();
     	}
@@ -31,7 +30,7 @@ public class OtherLinks extends GinasCommonSubData {
     }
     public void setSites(List<Site> sites){
     	if(siteContainer==null){
-    		siteContainer=new SiteContainer();
+    		siteContainer=new SiteContainer(this.getClass().getName());
     	}
     	siteContainer.setSites(sites);
     }
