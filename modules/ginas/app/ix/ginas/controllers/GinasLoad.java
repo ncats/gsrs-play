@@ -8,6 +8,7 @@ import ix.core.models.Payload;
 import ix.core.models.ProcessingJob;
 import ix.core.plugins.GinasRecordProcessorPlugin;
 import ix.core.plugins.PayloadPlugin;
+import ix.core.plugins.PayloadPlugin.PayloadPersistType;
 import ix.core.search.TextIndexer;
 import ix.core.search.TextIndexer.Facet;
 import ix.ginas.controllers.v1.SubstanceFactory;
@@ -123,18 +124,17 @@ public class GinasLoad extends App {
 	}
 
 	public static Result loadJSON() {
-
 		if (!ALLOW_LOAD) {
 			return badRequest("Invalid request!");
 		}
 
 		DynamicForm requestData = Form.form().bindFromRequest();
 		String type = requestData.get("file-type");
-Logger.info("type =" + type);
-		try{
-		Payload payload = payloadPlugin.parseMultiPart("file-name",
-				request());
-		switch (type){
+		Logger.info("type =" + type);
+		try {
+			Payload payload = payloadPlugin.parseMultiPart("file-name",
+					request(), PayloadPersistType.TEMP);
+			switch (type) {
 			case "JSON":
 				Logger.info("JOS =" + type);
 				if (!GinasLoad.OLD_LOAD) {
@@ -148,12 +148,9 @@ Logger.info("type =" + type);
 					// payload.name + " also " + payload.id);
 				} else {
 					// Old way
-					return GinasLegacyUtils
-							.processDump(
-									ix.utils.Util
-											.getUncompressedInputStreamRecursive(payloadPlugin
-													.getPayloadAsStream(payload)),
-									false);
+					return GinasLegacyUtils.processDump(ix.utils.Util
+							.getUncompressedInputStreamRecursive(payloadPlugin
+									.getPayloadAsStream(payload)), false);
 				}
 			case "SD":
 				Logger.info("SD =" + type);
@@ -166,56 +163,12 @@ Logger.info("type =" + type);
 			default:
 				return badRequest("Neither json-dump nor "
 						+ "sd-file is specified!");
-		}
-
-		} catch (Exception ex) {
-			return _internalServerError(ex);
-		}
-
-
-	/*	try {
-
-			Payload sdpayload = payloadPlugin.parseMultiPart("sd-file",
-					request());
-
-			if (sdpayload != null) {
-				sdpayload.save();
-				Map<String, FieldStatistics> m = GinasSDFExtractor
-						.getFieldStatistics(sdpayload, 100);
-				return ok(ix.ginas.views.html.admin.sdfimportmapping.render(
-						sdpayload, new ArrayList<FieldStatistics>(m.values())));
-			} else {
-				Payload payload = payloadPlugin.parseMultiPart("json-dump",
-						request());
-
-				if (payload != null) {
-					// New way:
-					if (!GinasLoad.OLD_LOAD) {
-						String id = ginasRecordProcessorPlugin
-								.submit(payload,
-										ix.ginas.utils.GinasUtils.GinasDumpExtractor.class,
-										ix.ginas.utils.GinasUtils.GinasSubstancePersister.class);
-						return redirect(ix.ginas.controllers.routes.GinasLoad
-								.monitorProcess(id));
-						// return ok("Running job " + id + " payload is " +
-						// payload.name + " also " + payload.id);
-					} else {
-						// Old way
-						return GinasLegacyUtils
-								.processDump(
-										ix.utils.Util
-												.getUncompressedInputStreamRecursive(payloadPlugin
-														.getPayloadAsStream(payload)),
-										false);
-					}
-				} else {
-					return badRequest("Neither json-dump nor "
-							+ "sd-file is specified!");
-				}
 			}
+
 		} catch (Exception ex) {
 			return _internalServerError(ex);
-		}*/
+		}
+
 	}
 	
 	public static Result uploadFile() {
@@ -224,14 +177,19 @@ Logger.info("type =" + type);
 		Logger.info("type =" + type);
 		try {
 			Payload payload = payloadPlugin.parseMultiPart("file-name",
-					request());
-			//Need something to persist payloads in the database as a blob
-			
-
+					request(), PayloadPersistType.PERM);
+			if(payload!=null){
+				//Need something to persist payloads in the database as a blob
+				ObjectMapper om = new ObjectMapper();
+				JsonNode jsn= om.valueToTree(payload);
+				((com.fasterxml.jackson.databind.node.ObjectNode)jsn).put("url", payloadPlugin.getUrlForPayload(payload));
+				return ok(jsn);
+			}else{
+				throw new IllegalStateException("Failed to upload file. Was 'file-name' specified?");
+			}
 		} catch (Exception ex) {
 			return _internalServerError(ex);
 		}
-
 	}
 
 

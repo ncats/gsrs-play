@@ -18,9 +18,7 @@
                                      cv="ROLE" label="Modification Role"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-selector ng-model="agentMod.agentSubstance" field="agentSubstance"
-                                                name="agentSubstance" formname="agentModForm"
-                                                label="Agent Substance" type="lite"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="agentMod" field ="agentSubstance" name ="agentSubstance" formname ="agentModForm" label ="Agent Substance" type = "search"></substance-chooser-selector>
                 </div>
                                 <div class="col-md-1">
                     <form-selector referenceobj="agentMod" parent="parent" divid="agentModForm"
@@ -62,8 +60,7 @@
                                         label="Modification Role"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-view-edit obj="obj" field="agentSubstance"
-                                                 label="Agent Substance"></substance-chooser-view-edit>
+                    <substance-chooser-selector referenceobj ="obj" field ="agentSubstance" name ="agentSubstance" formname ={{obj.$$hashKey}} label ="Agent Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj="obj.extentAmount" parent="parent" type="amount" divid={{obj.$$hashKey}}

@@ -4,9 +4,9 @@ import ix.core.controllers.FileDataFactory;
 import ix.core.controllers.PayloadFactory;
 import ix.core.models.FileData;
 import ix.core.models.Payload;
+import ix.utils.Global;
 import ix.utils.Util;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -14,7 +14,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -22,15 +22,32 @@ import java.util.List;
 
 import play.Application;
 import play.Logger;
+import play.Play;
 import play.Plugin;
 import play.mvc.Http;
 
 public class PayloadPlugin extends Plugin {
-    private final Application app;
+    private static final String IX_CORE_FILES_PERSIST_LOCATION = "ix.core.files.persist.location";
+	private static final String PERSIST_LOCATION_DB = "<DB>";
+	private static final String PERSIST_LOCATION_FILE = "<NULL>";
+	
+	
+	private final Application app;
     private IxContext ctx;
+    
+    public enum PayloadPersistType{
+    	TEMP,
+    	PERM
+    }
+    private String storageLocation;
+   
 
     public PayloadPlugin (Application app) {
         this.app = app;
+        storageLocation = app
+    			.configuration()
+    			.getString(PayloadPlugin.IX_CORE_FILES_PERSIST_LOCATION,
+    					PayloadPlugin.PERSIST_LOCATION_FILE);
     }
 
     public void onStart () {
@@ -48,7 +65,7 @@ public class PayloadPlugin extends Plugin {
     public boolean enabled () { return true; }
     
     
-    public Payload createPayload (String name, String mime, InputStream is)
+    public Payload createPayload (String name, String mime, InputStream is, PayloadPersistType persistType)
         throws Exception {
         MessageDigest md = MessageDigest.getInstance("SHA1");
         File tmp = File.createTempFile("___", ".tmp", ctx.payload);
@@ -90,12 +107,12 @@ public class PayloadPlugin extends Plugin {
             
             payload.save();
             if (payload.id != null) {
-                persistFile(tmp,payload);
+                persistFile(tmp,payload,persistType);
             }
             Logger.debug(payload.name+" => "+payload.id + " " +payload.sha1);
         }else{
-        	if(getPayload(payload)==null){
-        		 persistFile(tmp,payload);
+        	if(getPayloadFile(payload)==null){
+        		 persistFile(tmp,payload,persistType);
         	}
         }
         
@@ -103,26 +120,48 @@ public class PayloadPlugin extends Plugin {
         return payload;
     }
     
-    private File persistFile(File tmpFile, Payload payload){
+    public String getUrlForPayload(Payload p){
+    	return Global.getRef(p)+"?format=raw";
+    }
+    
+    private File persistFile(File tmpFile, Payload payload, PayloadPersistType ptype){
     	//file system persist
     	File saveFile = new File (ctx.payload, payload.id.toString());
     	tmpFile.renameTo(saveFile);
     	
     	//database persist
-    	
-    	List<FileData> found =
-                FileDataFactory.finder.where().eq("sha1", payload.sha1).findList();
-    	if (found.isEmpty()){
-	    	try {
-	    		FileData fd = new FileData();
-				fd.data=inputStreamToByteArray(getPayloadAsStream(payload));
-				fd.mimeType=payload.mimeType;
-				fd.sha1=payload.sha1;
-				fd.size=payload.size;
-				fd.save();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+    	if(ptype==PayloadPersistType.PERM){
+			if(storageLocation.equals(PayloadPlugin.PERSIST_LOCATION_DB)){
+		    	List<FileData> found =
+		                FileDataFactory.finder.where().eq("sha1", payload.sha1).findList();
+		    	if (found.isEmpty()){
+			    	try {
+			    		FileData fd = new FileData();
+						fd.data=inputStreamToByteArray(getPayloadAsStream(payload));
+						fd.mimeType=payload.mimeType;
+						fd.sha1=payload.sha1;
+						fd.size=payload.size;
+						fd.save();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+		    	}
+    		}else if(storageLocation.equals(PayloadPlugin.PERSIST_LOCATION_FILE)){
+    			//do nothing
+    		}else{
+    			File f = new File(storageLocation);
+    			if(!f.exists()){
+    				f.mkdirs();
+    			}
+    			File newLoc = new File(f,payload.id.toString());
+    			if(!newLoc.exists()){
+    				try {
+						Files.copy(saveFile.toPath(),newLoc.toPath());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+    			}
+    		}
     	}
     	return saveFile;
     }
@@ -153,12 +192,12 @@ public class PayloadPlugin extends Plugin {
          if(!payload.sha1.equals(p.sha1)){
         	 Logger.warn("Recorded SHA1 different than computed SHA1");
          }
-         return persistFile(tmp, p);
+         return persistFile(tmp, p,PayloadPersistType.PERM);
     }
 
     public Payload createPayload (String name, String mime, byte[] content)
         throws Exception {
-        return createPayload (name, mime, new ByteArrayInputStream (content));
+        return createPayload (name, mime, new ByteArrayInputStream (content), PayloadPersistType.TEMP);
     }
 
     public Payload createPayload (String name, String mime, String content)
@@ -183,12 +222,21 @@ public class PayloadPlugin extends Plugin {
      * Create a payload from a form submission. If there is no
      * multi-part data associated with that field, returns null.
      * 
+     * The persistType gives a hint as to how the data is to
+     * be persisted. PayloadPersistType.TEMP would imply that the
+     * data is not expected to be used in a long term fashion, and
+     * can be deleted from its persistence area after some time.
+     * 
+     * PayloadPersistType.PERM implies that the data is meant to be
+     * kept until explicitly removed.
+     * 
      * @param field
      * @param request
+     * @param persistType
      * @return
      * @throws IOException
      */
-    public Payload parseMultiPart (String field, Http.Request request)
+    public Payload parseMultiPart (String field, Http.Request request, PayloadPersistType persistType)
         throws IOException {
         
         Http.MultipartFormData body = request.body().asMultipartFormData();
@@ -212,7 +260,7 @@ public class PayloadPlugin extends Plugin {
         try {
             payload = createPayload (part.getFilename(),
                                      part.getContentType(),
-                                     new FileInputStream (part.getFile()));
+                                     new FileInputStream (part.getFile()),persistType);
         }
         catch (Throwable t) {
             Logger.trace("Can't save payload", t);
@@ -220,26 +268,58 @@ public class PayloadPlugin extends Plugin {
         
         return payload;
     }
+    /**
+     * By defualt, 
+     * @param field
+     * @param request
+     * @return
+     * @throws IOException
+     */
+    public Payload parseMultiPart (String field, Http.Request request)
+            throws IOException {
+            return parseMultiPart(field,request,PayloadPersistType.TEMP);
+        }
 
-    public File getPayload (Payload pl) {
+    public File getPayloadFile (Payload pl) {
         File file = new File (ctx.payload, pl.id.toString());
         if (!file.exists()) {
-        	FileData fd=getFileDataFromPayload(pl);
-        	if(fd!=null){
-        		try{
-        			file = saveStreamLocal(pl,new ByteArrayInputStream(fd.data));
-        			return file;
-        		}catch(Exception e){
-        			Logger.warn("Error caching file:" + e.getMessage());
-        		}
-        	}
-            return null;
+        	if(storageLocation.equals(PayloadPlugin.PERSIST_LOCATION_DB)){
+        		FileData fd=getFileDataFromPayload(pl);
+            	if(fd!=null){
+            		try{
+            			file = saveStreamLocal(pl,new ByteArrayInputStream(fd.data));
+            			return file;
+            		}catch(Exception e){
+            			Logger.warn("Error caching file:" + e.getMessage());
+            		}
+            	}
+                return null;
+    		}else if(storageLocation.equals(PayloadPlugin.PERSIST_LOCATION_FILE)){
+    			return null;
+    		}else{
+    			File f = new File(storageLocation);
+    			if(!f.exists()){
+    				return null;
+    			}
+    			File newLoc = new File(f,pl.id.toString());
+    			if(newLoc.exists()){
+    				try{
+	    				file = saveStreamLocal(pl,new FileInputStream(newLoc));
+	        			return file;
+    				}catch(Exception e){
+    					e.printStackTrace();
+    				}
+    			}
+    			return null;
+    		}
+        	
         }
         return file;
     }
     
+    
     public InputStream getPayloadAsStream (Payload pl) {
-        File file = getPayload (pl);
+        File file = getPayloadFile (pl);
         if (file != null) {
             try {
                 

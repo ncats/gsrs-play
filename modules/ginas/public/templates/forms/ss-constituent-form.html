@@ -12,7 +12,7 @@
                     <dropdown-select ng-model="component.type" field="type" cv = "MIXTURE_TYPE" ></dropdown-select>
                 </div>
                 <div class="col-md-3">
-                    <text-input ng-model="component.role" field="role" ></text-input>
+                    <dropdown-select ng-model="component.role" field="role" cv = "CONSTITUENT_ROLE"></dropdown-select>
                 </div>
                 <div class="col-md-1">
                     <form-selector referenceobj= "component" divid="constituentForm" type = "amount"></form-selector>

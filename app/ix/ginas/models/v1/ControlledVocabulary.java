@@ -3,14 +3,10 @@ package ix.ginas.models.v1;
 import ix.core.models.Indexable;
 import ix.core.models.IxModel;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 
 @Entity
@@ -25,10 +21,13 @@ public class ControlledVocabulary extends IxModel{
 	@Column(unique=true)
 	@Indexable(name="Domain", facet=true)
 	public String domain;
-	
+
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_cv_terms")
     //@JsonView(BeanViews.Full.class)
-	public List<VocabularyTerm> terms;	
+	public List<VocabularyTerm> terms;
+
+
+
 
 }

@@ -86,6 +86,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.sf.ehcache.Element;
 import ix.ncats.controllers.auth.*;
+import ix.ncats.resolvers.*;
 
 /**
  * Basic plumbing for an App
@@ -1677,56 +1678,54 @@ public class App extends Authentication {
     }
 
     @BodyParser.Of(value = BodyParser.Text.class, maxLength = 1024 * 1024)
-    public static Result molinstrument () {
-        //String mime = request().getHeader("Content-Type");
-        //Logger.debug("molinstrument: content-type: "+mime);
-        
+    public static Result molinstrument() {
+        // String mime = request().getHeader("Content-Type");
+        // Logger.debug("molinstrument: content-type: "+mime);
+
         ObjectMapper mapper = EntityFactory.getEntityMapper();
         ObjectNode node = mapper.createObjectNode();
         try {
             String payload = request().body().asText();
-            payload=ChemCleaner.getCleanMolfile(payload);
+            payload = ChemCleaner.getCleanMolfile(payload);
             if (payload != null) {
                 List<Structure> moieties = new ArrayList<Structure>();
-                
-                try{
-                        Structure struc = StructureProcessor.instrument
-                            (payload, moieties, false); // don't standardize!
-                        // we should be really use the PersistenceQueue to do this
-                        // so that it doesn't block
-                        struc.save();
-                        
-                                        
-                        
-                        for (Structure m : moieties)
-                            m.save();
-                        node.put("structure", mapper.valueToTree(struc));
-                        node.put("moieties", mapper.valueToTree(moieties));
-                }catch(Exception e){
-                        
+
+                try {
+                    Structure struc = StructureProcessor.instrument
+                        (payload, moieties, false); // don't standardize!
+                    // we should be really use the PersistenceQueue to do this
+                    // so that it doesn't block
+                    struc.save();
+
+                    for (Structure m : moieties)
+                        m.save();
+                    node.put("structure", mapper.valueToTree(struc));
+                    node.put("moieties", mapper.valueToTree(moieties));
+                } catch (Exception e) {
+
                 }
-                try{
-                                        Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
-                                                        .createChemical(payload, Chemical.FORMAT_AUTO);
-                                        
-                        Collection<StructuralUnit> o = PolymerDecode.DecomposePolymerSU(c,true);
-                        for(StructuralUnit su:o){
-                                Structure struc = StructureProcessor.instrument
-                                    (su.structure, null, false);
-                                struc.save();
-                                su._structure=struc;
-                        }
-                        node.put("structuralUnits", mapper.valueToTree(o));
-                }catch(Exception e){
+                try {
+                    Chemical c = ChemicalFactory.DEFAULT_CHEMICAL_FACTORY()
+                        .createChemical(payload, Chemical.FORMAT_AUTO);
+
+                    Collection<StructuralUnit> o = PolymerDecode
+                        .DecomposePolymerSU(c, true);
+                    for (StructuralUnit su : o) {
+                        Structure struc = StructureProcessor.instrument
+                            (su.structure, null, false);
+                        struc.save();
+                        su._structure = struc;
+                    }
+                    node.put("structuralUnits", mapper.valueToTree(o));
+                } catch (Exception e) {
                     Logger.error("Can't enumerate polymer", e);
                 }
             }
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             Logger.error("Can't process payload", ex);
-            return internalServerError ("Can't process mol payload");       
+            return internalServerError("Can't process mol payload");
         }
-        return ok (node);
+        return ok(node);
     }
 
     public static String getSequence (String id) {
@@ -1829,5 +1828,45 @@ public class App extends Authentication {
         */
         
         return nodes;
+    }
+
+    public static Result resolve (final String name) {
+        final String key = "resolve/"+name;
+        try {
+            return getOrElse (key, new Callable<Result> () {
+                    public Result call () throws Exception {
+                        return _resolve (name);
+                    }
+                });
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+            Logger.error("Can't resolve \""+name+"\"!", ex);
+        }
+        
+        return internalServerError
+            ("Internal server error: unable to resolve \""+name+"\"!"); 
+    }
+
+    final static Resolver[] RESOLVERS = new Resolver[] {
+        new NCIStructureResolver (),
+        new PubChemStructureResolver ()
+    };
+    static Result _resolve (String name) throws Exception {
+        ObjectMapper mapper = new ObjectMapper ();
+        
+        ArrayNode results = mapper.createArrayNode();
+        for (Resolver r : RESOLVERS) {
+            Object value = r.resolve(name);
+            if (value != null) {
+                ObjectNode node = mapper.createObjectNode();
+                node.put("source", r.getName());
+                node.put("kind", r.getType().getName());
+                node.put("value", mapper.valueToTree(value));
+                results.add(node);
+            }
+        }
+
+        return ok (results);
     }
 }

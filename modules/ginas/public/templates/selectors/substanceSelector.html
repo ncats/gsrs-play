@@ -1,24 +1,16 @@
-
-
-
-
-
-
 <div>
-
+<!--
     <div class="l-body">
 
         <div class="row input-group">
 
-            <div class="col-md-11 norightpadding">
+            <div class="col-md-3 norightpadding">
                 <form ng-submit="search()">
 
                     <input type="text"
                            ng-model="term"
                            class="form-control typeahead" id="selectsearchbar"
                            title="Search" placeholder="Search ..." name="q">
-
-
                 </form>
             </div>
             <div class="col-md-1 noleftpadding">
@@ -28,43 +20,41 @@
                                 </button>
                             </span>
             </div>
+        </div>-->
+
+    <div class="panel-body">
+        <loading ng-show="searching"></loading>
+        <div ng-hide="searching" class="row hidden-xs grid">
+            <div class="col-md-3" ng-repeat="item in results.content">
+                <a ng-click="createSubref(item)">
+                    <div>
+                        <rendered id={{item.uuid}}></rendered>
+                        <br><code>{{item._name}}</code>
+                    </div>
+                </a>
+            </div>
         </div>
+    </div>
 
         <div class="btn-toolbar" role="toolbar">
             <div class="btn-group" role="group">
                 <h3><span class="label label-default">{{ results.total }}</span></h3>
             </div>
-            <div class="btn-group" role="group">
+            <div class="btn-group" role="group" ng-if="results.total>4">
                 <ul class="pagination">
                     <li>
                         <a href='#' aria-label="Previous"
-                           ng-click="prevPage()"
-                                >
-                            <span aria-hidden="true" class="fa fa-angle-double-left"></span>
+                           ng-click="prevPage()">
+                            <i class="fa fa-angle-double-right"></i>
                         </a>
                     </li>
                     <li>
                         <a href='#' aria-label="Next"
-                           ng-click="nextPage()"
-                                >
-                            <span aria-hidden="true" class="fa fa-angle-double-right"></span>
+                           ng-click="nextPage()">
+                            <i class="fa fa-angle-double-right"></i>
                         </a>
                     </li>
                 </ul>
             </div>
         </div>
-        <div class="panel-body">
-            <loading ng-show="searching"></loading>
-            <div ng-hide="searching" class="row hidden-xs" id="grid">
-                <div class="col-md-3" ng-repeat="item in results.content">
-                    <a href='#' ng-click="createSubref(item)">
-                        <div>
-                            <rendered id={{item.uuid}}></rendered>
-                            <br><code>{{item._name}}</code>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>

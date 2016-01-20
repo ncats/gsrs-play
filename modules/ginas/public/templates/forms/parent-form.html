@@ -5,13 +5,13 @@
     <div class="col-md-12" uib-collapse="iscollapsed">
             <div class="row form-row">
                 <div class="col-md-3">
-                    <substance-chooser-selector ng-model ="parent.structurallyDiverse.parentSubstance" field ="parentSubstance" name ="parentSubstance" formname ="parentForm" label ="Parent Substance" type = "lite"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="parent.structurallyDiverse" field ="parentSubstance" name ="parentSubstance" label ="Parent Substance" formname ="parentForm" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">
-                    <substance-chooser-selector ng-model ="parent.structurallyDiverse.hybridSpeciesPaternalOrganism" field ="hybridSpeciesPaternalOrganism" name ="hybridSpeciesPaternalOrganism" formname ="parentForm"  label ="Hybrid Paternal Organism" type = "lite"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="parent.structurallyDiverse" field ="hybridSpeciesPaternalOrganism" name ="hybridSpeciesPaternalOrganism" formname ="parentForm" label ="Hybrid Paternal Organism" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">
-                    <substance-chooser-selector ng-model ="parent.structurallyDiverse.hybridSpeciesMaternalOrganism" field ="hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" formname ="parentForm" label ="Hybrid Maternal Organism" type = "lite"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="parent.structurallyDiverse" field ="hybridSpeciesMaternalOrganism" name ="hybridSpeciesMaternalOrganism" formname ="parentForm" label ="Hybrid Maternal Organism" type = "search"></substance-chooser-selector>
                 </div>
             </div>
         <div class = "parentForm"></div>

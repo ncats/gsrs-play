@@ -3,7 +3,7 @@
 
     ginasFormElements.factory('CVFields', function ($http, $q) {
 
-        var lookup = {
+        var lookup = {/*
             "stereoChemistry": "STEREOCHEMISTRY_TYPE",
             "names.type": "NAME_TYPE",
             "names.nameOrgs": "NAME_ORG",
@@ -15,13 +15,79 @@
             "relationships.type": "RELATIONSHIP_TYPE",
             "relationships.interactionType": "INTERACTION_TYPE",
             "relationships.qualification": "QUALIFICATION",
-            "references.docType": "DOCUMENT_TYPE"
+            "references.docType": "DOCUMENT_TYPE"*/
         };
 
 
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
         var CV = {
+/*
             lookuptable: lookup,
+*/          //lookup: {},
+
+            init: function(){
+               var lookup = $http.get( baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'",{cache:true},{
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function (data) {
+                    console.log(data);
+                    return data.content[0].terms;
+                });
+                console.log(lookup);
+            },
+
+            getDomain: function(path){
+                console.log(lookup);
+                var patharr = path.split('.');
+                if(patharr.length>2){
+                    patharr=  _.takeRight(patharr, 2);
+             //       console.log(patharr);
+                }
+                var pathString = _.join(patharr, '.');
+             //   console.log(pathString);
+/*                return $http.get( baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'",{cache:true},{
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function (data) {*/
+                //    console.log(pathString);
+                   // console.log(data);
+                   // lookup = data.content[0].terms;
+                 //   console.log(lookup);
+                    var domain = _.find(lookup, function(cv) {
+                        console.log(cv);
+                        return cv.value == pathString;
+                    });
+                    if(!_.isUndefined(domain)){
+                        domain = domain.display;
+                //        console.log(domain);
+                    }
+                  console.log(domain);
+                    return domain;
+             //   });
+            },
+
+            getCV: function(domain){
+                return $http.get(url + domain.toUpperCase() + "'", {cache: true}, {
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).success(function (data) {
+                    //CV[field] = data.content[0].terms;
+                      console.log(data);
+                    return data;
+                });
+            },
+
+            lookup: function (domain, value) {
+                return _.chain(getCV(domain))
+                    .filter(function (x) {
+                        return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                    })
+                    .sortBy('value')
+                    .value();
+            },
 
             count: function(){
                  var counturl = baseurl + "api/v1/vocabularies";
@@ -44,6 +110,7 @@
                 });
             },
             load: function (field) {
+               // console.log(lookup);
                 if (!_.has(CV, field)) {
                     var promise = $http.get(url + field.toUpperCase() + "'&top=999", {cache: true}, {
                         headers: {
@@ -58,6 +125,7 @@
             },
 
             fetch: function (field) {
+               // console.log(lookup);
                 //if (!_.has(CV, field)) {
                 return $http.get(url + field.toUpperCase() + "'", {cache: true}, {
                     headers: {
@@ -140,7 +208,7 @@
         createURL = function(){
             console.log('creating url');
             var current = ($location.$$url).split('app')[1];
-            var ret = baseurl + "api/v1" +current;
+            var ret = baseurl + "api/v1" +current +'?view=full';
             console.log(ret);
             return ret;
         };
@@ -435,10 +503,150 @@
         };
     });
 
-    ginasFormElements.directive('closeButton', function (isDuplicate) {
+    ginasFormElements.directive('closeButton', function () {
         return {
             restrict: 'E',
             template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
+        };
+    });
+
+    ginasFormElements.directive('resolveButton', function ($compile, resolver, toggler) {
+        return {
+            restrict: 'E',
+            scope:{
+                name: '=',
+                parent: '='
+            },
+            template: '<div class ="col-md-1 pull-left"><button class="btn btn-primary" ng-click="resolve(name);">Resolve Name</button></div>',
+            link: function(scope,element, attrs){
+                scope.stage=true;
+                scope.resolve= function(name){
+/*                    var result = document.getElementsByClassName(attrs.divid);
+                    var elementResult = angular.element(result);*/
+                    resolver.resolve(name).then(function(data){
+                        console.log(data.data);
+                        _.set(scope, 'data', data.data);
+                        if(data.data.length>0) {
+                            var template = angular.element('<substance-viewer data= data parent = parent></substance-viewer>');
+                        }else{
+                            template = angular.element('<div><h3>Name does not resolve to existing structure</h3></div>');
+                        }
+                        toggler.toggle(scope, attrs.divid, template);
+/*                        elementResult.append(template);
+                        $compile(template)(scope);*/
+                    });
+
+                    scope.close= function(){
+                        toggler.toggle(scope, attrs.divid, template);
+                    }
+                }
+            }
+        };
+    });
+
+    ginasFormElements.service('resolver', function($location, $http){
+        var resolver = {};
+
+        resolver.resolve= function(name){
+            var url = baseurl + "resolve/"+name;
+            return $http.get(url,{cache:true}, {
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (data) {
+                return data;
+            });
+        };
+
+        return resolver;
+    });
+
+ginasFormElements.directive('substanceViewer', function(){
+    return{
+        restrict: 'E',
+        scope:{
+            data: '=',
+            parent: '='
+        },
+        templateUrl: baseurl + "assets/templates/forms/substance-viewer.html",
+        link: function(scope,element, attrs) {
+            console.log(scope);
+            scope.select = function(selected){
+                console.log(selected);
+                _.set(scope.parent, 'structure', selected.value);
+                scope.$parent.close();
+            };
+        }
+    }
+});
+
+    ginasFormElements.directive('substanceTypeahead', function (nameFinder) {
+        return {
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/elements/substance-typeahead.html",
+            replace: true,
+            scope: {
+                subref: '=',
+                field: '@'
+            },
+            link: function (scope, element, attrs) {
+
+                scope.createSubref = function (selectedItem) {
+                    console.log(selectedItem);
+                    var temp = {};
+                    temp.refuuid = selectedItem.uuid;
+                    temp.refPname = selectedItem._name;
+                    temp.approvalID = selectedItem.approvalID;
+                    temp.substanceClass = "reference";
+                    console.log(temp);
+                    scope.subref = angular.copy(temp);
+                    console.log(scope);
+
+                };
+
+                scope.loadSubstances = function ($query) {
+                    var results = nameFinder.search($query);
+             //       console.log(results);
+                    return results;
+                };
+            }
+        };
+    });
+
+    ginasFormElements.directive('substanceChooserViewEdit', function (nameFinder) {
+        return {
+            templateUrl: baseurl + 'assets/templates/elements/substancechooser-view-edit.html',
+            replace: true,
+            restrict: 'E',
+            scope: {
+                obj: '=',
+                field: '@',
+                label: '@'
+            },
+            link: function (scope, element, attrs) {
+                scope.loadSubstances = function ($query) {
+                    return nameFinder.search($query);
+                };
+
+                scope.createSubref = function (selectedItem) {
+                    var subref = {};
+                    subref.refuuid = selectedItem.uuid;
+                    subref.refPname = selectedItem._name;
+                    subref.approvalID = selectedItem.approvalID;
+                    subref.substanceClass = "reference";
+                    scope.obj[scope.field] = angular.copy(subref);
+                    scope.diverse = [];
+                };
+
+                scope.editing = function (obj) {
+                    if (_.has(obj, '_editing')) {
+                        obj._editing = !obj._editing;
+                    } else {
+                        _.set(obj, '_editing', true);
+                    }
+                };
+
+            }
         };
     });
 
@@ -478,4 +686,8 @@
             }
         };
     });
+
+
+
+
 })();

@@ -1,0 +1,10 @@
+<div>
+    <div class="row grid">
+        <div class="col-md-3 text-center" ng-repeat="item in data">
+            <a ng-click="select(item)">
+                <rendered id={{item.value.id}}></rendered>
+                <br><code>{{item.source}}</code>
+            </a>
+        </div>
+    </div>
+</div>

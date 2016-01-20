@@ -27,7 +27,7 @@ import ix.ginas.models.*;
 public class Reference extends GinasCommonSubData {
 
     @JSONEntity(title = "Citation Text", isRequired = true)
-    @Column(nullable=false)
+    @Lob
     public String citation;
     
     @JSONEntity(title = "Reference Type", format = JSONConstants.CV_DOCUMENT_TYPE, values = "JSONConstants.ENUM_DOCUMENTTYPE", isRequired = true)

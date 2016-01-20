@@ -1,6 +1,6 @@
 <div class = "row info">
     <div class="row">
-        <form-header type="unofficialNames" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="otherNames" parent="parent" path = "unofficialNames" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <ng-form name="nameForm" id = "add-name" novalidate isolate-form>
@@ -32,6 +32,9 @@
                     <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "reference" required></form-selector>
                 </div>
             </div>
+            <div class="row form-row">
+                    <resolve-button name="name.name" parent = "parent" divid="nameForm"></resolve-button>
+                </div>
             <div class="nameForm"></div>
             <submit-buttons submit="name" form="nameForm" path="unofficialNames"></submit-buttons>
         </ng-form>

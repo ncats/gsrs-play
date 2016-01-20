@@ -3,19 +3,13 @@ package ix.ginas.controllers.v1;
 import java.util.*;
 import java.io.*;
 
-import play.libs.Json;
 import play.*;
 import play.db.ebean.*;
-import play.data.*;
 import play.mvc.*;
 
-import com.avaje.ebean.*;
-
 import ix.core.controllers.EntityFactory;
-import ix.ginas.models.*;
 import ix.ginas.models.v1.*;
 import ix.core.NamedResource;
-import ix.ginas.controllers.*;
 
 @NamedResource(name = "vocabularies", type = ControlledVocabulary.class, description = "Resource for handling of CV used in GInAS")
 public class ControlledVocabularyFactory extends EntityFactory {
@@ -33,33 +27,40 @@ public class ControlledVocabularyFactory extends EntityFactory {
 	}
 
 	public static void loadSeedCV(InputStream is) {
-		Map<String, List<VocabularyTerm>> map = new TreeMap<String, List<VocabularyTerm>>();
+		Map<String, List<VocabularyTerm>> map = new TreeMap<>();
 		String line = "";
 		String cvsSplitBy = "\t";
+		ControlledVocabulary domains = new ControlledVocabulary();
+		domains.domain="CV_DOMAIN";
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF8"));
 			while ((line = br.readLine()) != null) {
 				String[] cvTerm = line.split(cvsSplitBy);
 				String category = cvTerm[0];
+				String field = cvTerm[1];
+				VocabularyTerm domainTerm = new VocabularyTerm();
+				domainTerm.value = field;
+				domainTerm.display = category;
+				Logger.info("field " +field);
 				VocabularyTerm cv = new VocabularyTerm();
 				int l = cvTerm.length;
-				if (l >= 2) {
-					cv.value = cvTerm[1];
+				if (l >= 3) {
+					cv.value = cvTerm[2];
 				} else {
 					cv.value = null;
 				}
-				if (l >= 3) {
-					cv.display = cvTerm[2];
+				if (l >= 4) {
+					cv.display = cvTerm[3];
 				} else {
 					cv.display = null;
 				}
-				if (l >= 4) {
-					cv.description = cvTerm[3];
+				if (l >= 5) {
+					cv.description = cvTerm[4];
 				} else {
 					cv.description = null;
 				}
-				if (l >= 5) {
-					cv.origin = cvTerm[4];
+				if (l >= 6) {
+					cv.origin = cvTerm[5];
 				} else {
 					cv.origin = null;
 				}
@@ -67,21 +68,15 @@ public class ControlledVocabularyFactory extends EntityFactory {
 				if (temp == null) {
 					temp = new ArrayList<VocabularyTerm>();
 					map.put(category, temp);
+					domains.terms.add(domainTerm);
 				}
 				temp.add(cv);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//map.put("domain", domainTerm);
 		Logger.debug("Pre loaded");
-		ControlledVocabulary domains = new ControlledVocabulary();
-			domains.domain="DOMAIN";
 		for (String domain : map.keySet()) {
-			VocabularyTerm domainTerm = new VocabularyTerm();
-			domainTerm.value = domain;
-			domainTerm.display = domain;
-			domains.terms.add(domainTerm);
 			ControlledVocabulary cv = new ControlledVocabulary();
 			cv.domain = domain;
 			cv.terms = map.get(domain);

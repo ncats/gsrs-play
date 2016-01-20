@@ -63,7 +63,6 @@
             },
             templateUrl: baseurl + "assets/templates/selectors/form-header.html",
             link: function (scope, element, attrs) {
-                scope.stage = true;
                 scope.length =0;
                 scope.heading = _.startCase(scope.type);
                 if(_.isUndefined(scope.path)){
@@ -80,17 +79,50 @@
 /*                if(_.isUndefined(scope.parent[scope.path]) || scope.parent[scope.path].length == 0){
                     scope.iscollapsed=false;
                 }*/
-
+/*
                 scope.showInfo = function () {
                     var url = baseurl + "assets/templates/info/code-info.html";
                     toggler.show(scope, type, url);
-                };
+                };*/
 
                 scope.toggle = function () {
                     scope.iscollapsed = !scope.iscollapsed;
                 };
             }
         };
+    });
+
+    ginasForms.directive('infoButton', function($compile, toggler){
+        return{
+         restrict: 'E',
+            replace:'true',
+            scope:{
+                type: '@',
+                path: '@'
+            },
+            link: function(scope, element, attrs){
+                scope.stage=true;
+                var template;
+                var url = baseurl + "assets/templates/info/";
+                if(attrs.mark =="exclaim") {
+                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-exclamation-circle fa-lg" uib-tooltip="click for description"></i></span>');
+                }else {
+                    template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-question-circle fa-lg"  uib-tooltip="click for description"></i></span>');
+                }
+                element.append(template);
+                $compile(template)(scope);
+                if(attrs.info){
+                    url = url+ attrs.info+'-info.html';
+                }else{
+                    url = url+ 'code-info.html';
+                }
+
+
+                scope.showInfo = function () {
+                    toggler.show(scope, type, url);
+                };
+            }
+        }
     });
 
     ginasForms.directive('accessForm', function () {
@@ -412,7 +444,7 @@
 
                 switch (attrs.type) {
                     case "amount":
-                        console.log(scope);
+                    //    console.log(scope);
                         if (attrs.mode == "edit") {
                             template = angular.element('<a ng-click ="toggle()"><amount value ="referenceobj.amount" ></amount></a>');
                             element.append(template);
@@ -1125,6 +1157,45 @@
                     parent.splice(_.indexOf(parent, obj), 1);
                 };
             }
+        };
+    });
+
+    ginasForms.directive('polymerClassificationForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope:{
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-classification-form.html"
+        };
+    });
+
+    ginasForms.directive('polymerMonomerForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope:{
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-monomer-form.html",
+            link: function(scope){
+            console.log(scope);
+        }
+        };
+    });
+
+    ginasForms.directive('polymerSruForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope:{
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
+            link: function(scope){
+            console.log(scope);
+        }
         };
     });
 

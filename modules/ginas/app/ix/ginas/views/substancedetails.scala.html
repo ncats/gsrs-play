@@ -83,13 +83,11 @@
                 </div>
             </div>
         }
+    <div class="row info" id="names">
     @if(sub.getOfficialNames.size() > 0) {
-        <div class="row info" id="names">
-        @officialnames(sub.getOfficialNames(), sub)
-        </div>
-    }
 
-        <div class="row info">
+        @officialnames(sub.getOfficialNames(), sub)
+    }
         @names(sub.getNonOfficialNames(), sub)
         </div>
 

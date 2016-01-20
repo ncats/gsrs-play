@@ -1,12 +1,15 @@
 <div>
     <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
-<a href = "#" ng-click="subref=null">
-    <div ng-show="subref">
-        {{subref.refPname}}
-        <substance-view subref= subref ng-show="subref" ></substance-view>
+<a ng-click="referenceobj[field]=null">
+    <div ng-if=referenceobj[field]>
+        <substance-view subref= referenceobj[field]></substance-view>
     </div>
 </a>
-    <div ng-show="!subref"  id="{{field}}">
-        <a ng-click ="toggleStage()" tooltip="search for substance"><i class="fa fa-search fa-2x"></i></a>
+    <div class="input-group" ng-show="!referenceobj[field]"  id="{{field}}">
+        <input type="text" class="form-control" ng-model= q  id="struc-search"  placeholder="Search ..." name="search">
+          <span class="input-group-btn">
+        <button class ="btn btn-default" ng-click ="toggleStage()" uib-tooltip="search for substance"><i class="fa fa-search"></i></button>
+              </span>
+        </div>
     </div>
 </div>

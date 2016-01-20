@@ -8,23 +8,23 @@
     <title-header name = "substance._name" kind = "substance.substanceClass"></title-header>
     @kind match {
         case "chemical" => {
-@*
+
             <div>@forms.structureform()</div>
-*@
+
 @*
             <moiety-form parent = substance></moiety-form>
 *@
 
-@*
+
             <div>@forms.moietyform()</div>
-*@
+
 
         }
         case "mixture" => {
            <mixture-component-select-form parent = substance></mixture-component-select-form>
         }
         case "protein" => {
-             <protein-details-form></protein-details-form>
+            <protein-details-form></protein-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.protein.subunits.length>0">
             <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
@@ -33,7 +33,7 @@
             <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
             <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
             <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
-                </div>
+            </div>
         }
         case "structurallyDiverse" => {
            <diverse-type-form parent = substance></diverse-type-form>
@@ -51,27 +51,27 @@
         }
         case "polymer" => {
            <div>Polymer not implemented yet, still in development</div>
+            <polymer-classification-form parent=substance></polymer-classification-form>
+            <polymer-monomer-form parent=substance></polymer-monomer-form>
+            <div>@forms.polymerstructureform()</div>
+
+            <polymer-sru-form parent=substance></polymer-sru-form>
+@*
            <div>@forms.polymerclassificationform()</div>
            <div>@forms.polymermonomerselectform()</div>
-           <div>@forms.polymerstructureform()</div>
-           <div>@forms.polymersruform()</div>           
+*@
+@*
+           <div>@forms.polymersruform()</div>
+*@
         }
         case "nucleicAcid" => {
            <div>Nucleic Acid not implemented yet, still in development</div>
            <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
             <div ng-if = "substance.$subunitDisplay.length>0">
-            <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
-            <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
-                </div>
-
-@*
-            <div>@forms.nucleicacidsugarform()</div>
-*@
-
-@*
-           <div>@forms.nucleicacidlinkageform()</div>
-*@
+                <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
+                <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
+            </div>
         }
         case "specifiedSubstanceG1" => {
             <ss-constituent-form parent = substance></ss-constituent-form>
@@ -139,6 +139,9 @@
         <button class="btn btn-primary" ng-show="raw" ng-click="raw=false" >Show Object</button>
         <json-formatter ng-show="!raw" json=submitSubstance open="666"></json-formatter>
 	<pre ng-show="raw">{{substance | json}}</pre>
+    </div>
+    <div class="row info"><div class = "col-md-12">
+        <textarea class="form-control" rows="10" ng-model="paste"></textarea>
     </div>
     <div class ="row info">
         <button ng-click="submitpaster(paste); validate(substance)">paste</button>
