@@ -104,6 +104,7 @@
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
 
         var lookup = {
+            "moieties.stereochemistry": "STEREOCHEMISTRY_TYPE",
             "names.type": "NAME_TYPE",
             "officialNames.type": "NAME_TYPE",
             "unofficialNames.type": "NAME_TYPE",
@@ -267,14 +268,13 @@
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
-
         $scope.scrollTo = function (prmElementToScrollTo) {
-            console.log(prmElementToScrollTo);
+            //  console.log(prmElementToScrollTo);
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
         };
 
-        $scope.viewToggle = function(){
+        $scope.viewToggle = function () {
             $scope.submitSubstance = $scope.fromFormSubstance(angular.copy($scope.substance));
         };
 
@@ -291,7 +291,7 @@
             return true;
         };
 
-        $scope.moment = function(time){
+        $scope.moment = function (time) {
             return moment(time).fromNow();
         };
         //local storage functions//
@@ -311,34 +311,34 @@
         };
         ///
 
-       /* $scope.openSelector = function (path) {
-            var modalInstance = $modal.open({
-                animation: true,
-                templateUrl: baseurl + 'assets/templates/substanceSelector.html',
-                controller: 'SubstanceSelectorInstanceController',
-                size: 'lg'
+        /* $scope.openSelector = function (path) {
+         var modalInstance = $modal.open({
+         animation: true,
+         templateUrl: baseurl + 'assets/templates/substanceSelector.html',
+         controller: 'SubstanceSelectorInstanceController',
+         size: 'lg'
 
-            });
+         });
 
-            modalInstance.result.then(function (selectedItem) {
-                var subref = {};
-                subref.refuuid = selectedItem.uuid;
-                subref.refPname = selectedItem._name;
-                subref.approvalID = selectedItem.approvalID;
-                subref.substanceClass = "reference";
-                _.set($scope, path, subref);
-                console.log($scope);
-            });
-        };
-*/
+         modalInstance.result.then(function (selectedItem) {
+         var subref = {};
+         subref.refuuid = selectedItem.uuid;
+         subref.refPname = selectedItem._name;
+         subref.approvalID = selectedItem.approvalID;
+         subref.substanceClass = "reference";
+         _.set($scope, path, subref);
+         console.log($scope);
+         });
+         };
+         */
 
-        $scope.lookup = lookup;
+            $scope.lookup = lookup;
 
         $scope.toFormSubstance = function (apiSub) {
-/*
-            console.log(apiSub);
-            console.log(_.keysIn(apiSub));
-*/
+            /*
+             console.log(apiSub);
+             console.log(_.keysIn(apiSub));
+             */
 
             var officialNames = [];
             var unofficialNames = [];
@@ -355,11 +355,11 @@
                                 apiSub.destructive = true;
                             }
                             //temp.push(m);
-                             temp.push(m.nameOrg);
+                            temp.push(m.nameOrg);
                         });
                         n.nameOrgs = temp;
                     }
-                    if (n.type === "of" || n.type.value ==="of") {
+                    if (n.type === "of" || n.type.value === "of") {
                         console.log(n);
                         officialNames.push(n);
                     } else {
@@ -371,13 +371,13 @@
                 _.set(apiSub, 'unofficialNames', unofficialNames);
             }
 
-/*            _.transform(apiSub, function(result, value, key) {
-                console.log(result);
-                console.log(key);
-                console.log(value);
-               // console.log( result[key]);
+            /*            _.transform(apiSub, function(result, value, key) {
+             console.log(result);
+             console.log(key);
+             console.log(value);
+             // console.log( result[key]);
 
-            });*/
+             });*/
 
             return apiSub;
         };
@@ -389,7 +389,7 @@
                     n.type = "of";
                 });
             }
-            if(!formSub.names) {
+            if (!formSub.names) {
                 if (_.isUndefined(formSub.officialNames)) {
                     formSub.names = formSub.unofficialNames;
                 } else if (_.isUndefined(formSub.unofficialNames)) {
@@ -421,6 +421,112 @@
             return formSub;
         };
 
+      /*  $scope.expandCV = function (sub, path) {
+            for (var v in sub) {
+
+                var newpath = path;
+                if (newpath.length >= 1) {
+                    if (!angular.isArray(sub)) {
+                        newpath += ".";
+                    }
+                }
+                if (!angular.isArray(sub)) {
+                    newpath = newpath + v;
+                }
+                console.log(newpath);
+                var newcv = lookup.getFromName(newpath, sub[v]);
+                /!* var newcv;
+                 CVFields.getDomain(newpath).then(function (data) {
+                 console.log(data);
+                 if (!_.isUndefined(data)) {
+                 console.log("CV field for " + newpath + " exists: " + data);
+                 newcv = data;
+                 }
+
+                 //  var newcv = lookup.getFromName(newpath, sub[v]);
+                 console.log(newcv);
+                 if (angular.isArray(sub[v])) {
+                 newcv = null;
+                 }
+                 *!/
+                if (!_.isNull(newcv) && !_.isUndefined(newcv)) {
+                    var w = getDisplayFromCV(newcv.domain, newcv.value);
+                    /!*  var w;
+                     CVFields.getCV(newcv).then(function (data) {
+                     console.log(data);
+                     var cv = data.data.content[0].terms;
+                     console.log(newcv);
+                     console.log(cv);
+                     console.log(sub[v]);
+                     w = _.find(cv, ['value', sub[v]]);
+                     console.log(w);
+                     });*!/
+                    newcv.display = w;
+                    sub[v] = newcv;
+
+                } else {
+                    if (typeof sub[v] === "object") {
+                        $scope.expandCV(sub[v], newpath);
+                    }
+                }
+                // });
+                //}
+            }
+            return sub;
+        };
+
+           /!* console.log(sub);
+                var domain;
+            var newcv = null;
+            var cv;
+            var newpath = path;
+
+            _.forEach(_.keysIn(sub), function(field, key){
+/!*                console.log(_.isObject(field));
+                console.log(field);
+                console.log(_.isObject(sub[field]));
+                console.log(sub[field]);*!/
+                console.log(sub[field]+ " is an array " + _.isArray(sub[field]));
+               if(!_.isObject(sub[field])){
+                   console.log("string");
+                   console.log(field);
+                   console.log(sub[field]);
+                 //  console.log(field);
+                 console.log("path for: " +field);
+                   console.log(newpath);
+                   CVFields.getDomain(newpath).then(function (data) {
+                       console.log(data);
+                       if (!_.isUndefined(data)) {
+                           console.log("CV field for " +newpath+" exists: "+ data);
+                           domain = data;
+                           CVFields.getCV(domain).then(function (data) {
+                               console.log(data);
+                               cv = data.data.content[0].terms;
+                               console.log(domain);
+                               console.log(cv);
+                               console.log(sub[field]);
+                               newcv = _.find(cv, ['value', sub[field]]);
+                               if (newcv !== null) {
+                                   console.log(newcv);
+                                   sub[field] = newcv;
+                                   console.log(sub[field])
+                               }
+                           });
+
+                           //   sub[v] = cv;
+                       }
+                   });
+
+               }else{
+                   console.log(field+ " is an object");
+                   console.log(sub[field]);
+                   newpath = newpath +"."+ field;
+                   console.log(newpath);
+                   $scope.expandCV(sub[field], newpath);
+
+               }
+            });*!/*/
+
         $scope.expandCV = function (sub, path) {
 
             for (var v in sub) {
@@ -434,15 +540,6 @@
                 if (!angular.isArray(sub)) {
                     newpath = newpath + v;
                 }
-/*                CVFields.getDomain(newpath).then(function(data){
-                     console.log(data);
-                    var domain = data.data;
-                    });
-                console.log(domain);
-                if(!_.isUndefined(domain)){
-                    console.log(domain);
-                    var cv = CVFields.getCV(domain);
-                }*/
                 var newcv = lookup.getFromName(newpath, sub[v]);
                 if (angular.isArray(sub[v])) {
                     newcv = null;

@@ -1,6 +1,6 @@
 <div class = "row info">
     <div class="row">
-        <form-header type="moieties" parent="substance"></form-header>
+        <form-header type="moieties" parent="parent"></form-header>
     </div>
         <div class="col-md-12" id="structureSearcher">
             <div ng-repeat="obj in parent.moieties">
@@ -10,23 +10,37 @@
                         <rendered id= {{::obj.id}}></rendered>
                     </div>
                     <div class="col-md-1">
-                        <span class="badge badge-primary">{{obj.count}}</span>
+                        <label for="count">Moiety Count</label>
+                        <span class="badge badge-primary" id = "count">{{obj.count}}</span>
                     </div>
                     <div class="col-md-1">
+<!--
                         <span class="badge" ng-click ="show = true">{{obj.stereochemistry.display || obj.stereochemistry}}</span>
-                        <dropdown-view-edit ng-show="show" obj= "obj" field = "stereochemistry" cv = "STEREOCHEMISTRY_TYPE"></dropdown-view-edit>
+-->
+                        <dropdown-view-edit obj= "obj" field = "stereochemistry" label="Stereo Chemistry" cv = "STEREOCHEMISTRY_TYPE"></dropdown-view-edit>
                     </div>
                     <div class="col-md-1">
+
                         <dropdown-view-edit obj= "obj" field = "opticalActivity" label ="Optical Activity" cv = "OPTICAL_ACTIVITY"></dropdown-view-edit>
                     </div>
                     <div class="col-md-1">
-                        <dropdown-view-edit obj= "obj" field = "atropisomerism" cv = "ATROPISOMERISM"></dropdown-view-edit>
+                        <dropdown-view-edit obj= "obj" field = "atropisomerism" label="Additional Stereochemistry" cv = "ATROPISOMERISM"></dropdown-view-edit>
                     </div>
-                    <div class="col-md-2">{{obj.formula}}</div>
-                    <div class="col-md-1">{{obj.mwt}}</div>
-                    <div class="col-md-1"><span class="badge">{{obj.definedStereo}} / {{obj.stereoCenters}}</span></div>
-                    <div class="col-md-1"><span class="badge">{{obj.ezCenters}}</span></div>
-                    <div class="col-md-1"><span class="badge">{{obj.charge}}</span></div>
+                    <div class="col-md-2">
+                        <label for="formula">Formula</label>
+                       <span id = "formula">{{obj.formula}}</span></div>
+                    <div class="col-md-1">
+                        <label for="mwt">Molecular Weight</label>
+                        <span id ="mwt">{{obj.mwt}}</span></div>
+                    <div class="col-md-1">
+                        <label for="stereo">Defined Stereocenters</label>
+                        <span id = "stereo" class="badge">{{obj.definedStereo}} / {{obj.stereoCenters}}</span></div>
+                    <div class="col-md-1">
+                        <label for="ez">EZ Centers</label>
+                        <span id ="ez" class="badge">{{obj.ezCenters}}</span></div>
+                    <div class="col-md-1">
+                        <label for="charge">Charge</label>
+                        <span id ="charge" class="badge">{{obj.charge}}</span></div>
                 </div>
             </div>
         </div>

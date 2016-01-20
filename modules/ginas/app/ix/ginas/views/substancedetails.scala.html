@@ -13,8 +13,6 @@
                     <div class="col-md-8">
                         <ul class="nav nav-pills" id="breadcrumb-list">
                             @breadcrumb
-                            <li role="presentation" ><a href="#names" prevent-default="" ng-click="scrollTo('names')">
-                                Names <span class="badge">@sub.names.size()</span></a></li>
                             @defining(sub.getModificationCount()) { gcount =>
                                 @if(gcount > 0 ){
                                     <li role="presentation"><a href="#mods" prevent-default="" ng-click="scrollTo('mods')">Modifications
@@ -22,6 +20,8 @@
                                     </li>
                                 }
                             }
+                            <li role="presentation" ><a href="#names" prevent-default="" ng-click="scrollTo('names')">
+                                Names <span class="badge">@sub.names.size()</span></a></li>
                             @if(sub.codes.size() > 0) {
                                 <li role="presentation"><a href="#codes" prevent-default="" ng-click="scrollTo('codes')">
                                     Codes <span class="badge">@sub.codes.size()</span></a></li>
@@ -83,12 +83,13 @@
                 </div>
             </div>
         }
-    <div class="row info" id="names">
     @if(sub.getOfficialNames.size() > 0) {
-
+        <div class="row info" id="names">
         @officialnames(sub.getOfficialNames(), sub)
+            </div>
     }
-        @names(sub.getNonOfficialNames(), sub)
+    <div class="row info" id="names">
+    @names(sub.getNonOfficialNames(), sub)
         </div>
 
         @if(sub.codes.size() > 0) {

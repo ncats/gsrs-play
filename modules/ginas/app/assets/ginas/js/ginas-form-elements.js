@@ -3,8 +3,8 @@
 
     ginasFormElements.factory('CVFields', function ($http, $q) {
 
-        var lookup = {/*
-            "stereoChemistry": "STEREOCHEMISTRY_TYPE",
+        var lookup = {
+/*            "stereoChemistry": "STEREOCHEMISTRY_TYPE",
             "names.type": "NAME_TYPE",
             "names.nameOrgs": "NAME_ORG",
             "names.nameJurisdiction": "JURISDICTION",
@@ -15,57 +15,46 @@
             "relationships.type": "RELATIONSHIP_TYPE",
             "relationships.interactionType": "INTERACTION_TYPE",
             "relationships.qualification": "QUALIFICATION",
-            "references.docType": "DOCUMENT_TYPE"*/
+            "references.docType": "DOCUMENT_TYPE"*!/*/
+        };
+
+        var load = function(){
+            return $http.get( baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'",{cache:true},{
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (data) {
+             //   console.log(data);
+                // lookup= data.content[0].terms;
+                return data;
+            });
         };
 
 
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
         var CV = {
-/*
-            lookuptable: lookup,
-*/          //lookup: {},
-
-            init: function(){
-               var lookup = $http.get( baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'",{cache:true},{
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).success(function (data) {
-                    console.log(data);
-                    return data.content[0].terms;
-                });
-                console.log(lookup);
-            },
-
-            getDomain: function(path){
-                console.log(lookup);
+           getDomain: function(path){
+                var ret;
+             return load().then(function(data){
+              //      console.log(data.data.content[0].terms);
+                 console.log("getting cv for:" +path);
+                    var terms = data.data.content[0].terms;
                 var patharr = path.split('.');
                 if(patharr.length>2){
                     patharr=  _.takeRight(patharr, 2);
-             //       console.log(patharr);
                 }
                 var pathString = _.join(patharr, '.');
-             //   console.log(pathString);
-/*                return $http.get( baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'",{cache:true},{
-                    headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                }).success(function (data) {*/
-                //    console.log(pathString);
-                   // console.log(data);
-                   // lookup = data.content[0].terms;
-                 //   console.log(lookup);
-                    var domain = _.find(lookup, function(cv) {
-                        console.log(cv);
+                     var domain = _.find(terms, function(cv) {
+                 //        console.log(pathString);
+                 //       console.log(cv);
                         return cv.value == pathString;
                     });
                     if(!_.isUndefined(domain)){
-                        domain = domain.display;
-                //        console.log(domain);
+                        ret = domain.display;
                     }
-                  console.log(domain);
-                    return domain;
-             //   });
+                //  console.log(ret);
+                    return ret;
+                });
             },
 
             getCV: function(domain){
@@ -75,11 +64,14 @@
                     }
                 }).success(function (data) {
                     //CV[field] = data.content[0].terms;
-                      console.log(data);
+                   // console.log(domain);
+                  //    console.log(data);
+                   // var ret = data;
                     return data;
                 });
             },
 
+/*
             lookup: function (domain, value) {
                 return _.chain(getCV(domain))
                     .filter(function (x) {
@@ -88,6 +80,7 @@
                     .sortBy('value')
                     .value();
             },
+*/
 
             count: function(){
                  var counturl = baseurl + "api/v1/vocabularies";
@@ -148,6 +141,7 @@
                     .value();
             },
 
+/*
             lookup: function (field, query) {
                 return _.chain(CV[field])
                     .filter(function (x) {
@@ -156,6 +150,7 @@
                     .sortBy('value')
                     .value();
             },
+*/
 
             retrieve: function (field) {
                 if (field === 'NAME_TYPE') {
@@ -606,7 +601,7 @@ ginasFormElements.directive('substanceViewer', function(){
 
                 scope.loadSubstances = function ($query) {
                     var results = nameFinder.search($query);
-             //       console.log(results);
+                    console.log(results);
                     return results;
                 };
             }

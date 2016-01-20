@@ -1,5 +1,9 @@
 @import ix.core.models.Structure
+@import ix.ginas.models.v1.ProteinSubstance
+@import ix.ginas.models.v1.Protein
+@import ix.ginas.models.v1.Glycosylation
 @import ix.ginas.controllers.GinasApp
+
 @(sub: ix.ginas.models.v1.ProteinSubstance)
 
 @structureImage(s: Structure, size: Integer) = {
@@ -162,11 +166,11 @@
     }
 
 
-    @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
-        @if(count > 0) {
+@*    @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
+        @if(count > 0) {*@
             <div class="row info" id="glyco">
                 <button class="btn btn-primary label-offset det">
-                    Glycosylation&nbsp;<span class="badge head"> @count</span></button>
+                    Glycosylation&nbsp;<span class="badge head"> </span></button>
                 <div class="col-md-12">
                     @if(sub.protein.glycosylation.glycosylationType != null) {
                         Glycosylation Type: @sub.protein.glycosylation.glycosylationType
@@ -203,8 +207,8 @@
                     </table>
                 </div>
             </div>
-        }
-    }
+@*        }
+    }*@
    
 
 

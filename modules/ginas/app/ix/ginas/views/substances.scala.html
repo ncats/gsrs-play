@@ -5,6 +5,7 @@
 
 @import ix.ginas.models.v1.StructurallyDiverseSubstance
 
+@import ix.ginas.models.v1.NucleicAcidSubstance
 @(current: Int, rows: Int, total: Int, pages: Array[Int],
 facets: Array[FacetDecorator], substancesList: List[Substance],
 ctx: String = null, searchFacets : List[FieldFacet] = null)
@@ -19,7 +20,7 @@ current, rows, total, pages, facets, searchFacets) {
     
         
     <div class= "panel-body">
-        <div class = "row hidden-xs" ng-show="enabled" id ="grid">
+        <div class = "row hidden-xs" ng-if="enabled" id ="grid">
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {
@@ -27,6 +28,12 @@ current, rows, total, pages, facets, searchFacets) {
                 }
                 case prot: ProteinSubstance => {
                     @proteinthumb(prot, ctx)
+
+                }
+                case nucl: NucleicAcidSubstance => {
+@*
+                    @nucleicacidthumb(nucl)
+*@
 
                 }
                 case mix: MixtureSubstance => {
@@ -63,9 +70,12 @@ current, rows, total, pages, facets, searchFacets) {
                 case prot: ProteinSubstance => {
                     @proteinlist(prot, ctx)
                 }
+                case nucl: NucleicAcidSubstance => {
+                    @nucleicacidlist(nucl)
+
+                }
                 case mix: MixtureSubstance => {
                     @mixlist(mix)
-
                 }
                 case diverse: StructurallyDiverseSubstance => {
                     @diverselist(diverse)
