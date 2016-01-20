@@ -27,10 +27,23 @@ public class StructuralModification extends GinasCommonSubData {
     @JSONEntity(title = "Residue Modified")
     public String residueModified;
     
-    @JSONEntity(title = "Modified Sites", format = "table", itemsTitle = "Site")
-    @ManyToMany(cascade=CascadeType.ALL)
-    @JoinTable(name="ix_ginas_structuralmod_1")
-    public List<Site> sites = new ArrayList<Site>();
+    @JsonIgnore
+	@OneToOne(cascade=CascadeType.ALL)
+    SiteContainer siteContainer;
+    public List<Site> getSites(){
+    	System.out.println(siteContainer);
+    	if(siteContainer!=null){
+    		return siteContainer.getSites();
+    	}
+    	return new ArrayList<Site>();
+    }
+    
+    public void setSites(List<Site> sites){
+    	if(siteContainer==null){
+    		siteContainer=new SiteContainer();
+    	}
+    	siteContainer.setSites(sites);
+    }
     
     @JSONEntity(title = "Extent", values = "JSONConstants.ENUM_EXTENT", isRequired = true)
     public String extent;

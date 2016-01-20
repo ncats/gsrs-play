@@ -1072,16 +1072,16 @@ public class GinasApp extends App {
     public static List<Integer> getSites(Modifications mod, int index) {
         ArrayList<Integer> subunit = new ArrayList<Integer>();
         for (StructuralModification sm : mod.structuralModifications) {
-            subunit = siteIter(sm.sites, index);
+            subunit = siteIter(sm.getSites(), index);
         }
         return subunit;
     }
 
     public static List<Integer> getSites(Glycosylation mod, int index) {
         ArrayList<Integer> subunit = new ArrayList<Integer>();
-        subunit.addAll(siteIter(mod.CGlycosylationSites, index));
-        subunit.addAll(siteIter(mod.NGlycosylationSites, index));
-        subunit.addAll(siteIter(mod.OGlycosylationSites, index));
+        subunit.addAll(siteIter(mod.getCGlycosylationSites(), index));
+        subunit.addAll(siteIter(mod.getNGlycosylationSites(), index));
+        subunit.addAll(siteIter(mod.getOGlycosylationSites(), index));
         return subunit;
     }
 
@@ -1089,7 +1089,7 @@ public class GinasApp extends App {
                                          int index) {
         ArrayList<Integer> subunit = new ArrayList<Integer>();
         for (DisulfideLink sm : disulfides) {
-            subunit.addAll(siteIter(sm.sites, index));
+            subunit.addAll(siteIter(sm.getSites(), index));
         }
         return subunit;
     }

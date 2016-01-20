@@ -75,27 +75,27 @@ public class Protein extends GinasCommonSubData {
     	_modifiedCache =  new HashMap<String,String>();
     	//disulfides
     	for(DisulfideLink dsl: this.disulfideLinks){
-    		for(Site s:dsl.sites){
+    		for(Site s:dsl.getSites()){
     			_modifiedCache.put(s.toString(),"disulfide");
     		}
     	}
     	//glycosylation
     	if(this.glycosylation!=null){
-	    	for(Site s: this.glycosylation.NGlycosylationSites){
+	    	for(Site s: this.glycosylation.getNGlycosylationSites()){
 	    		_modifiedCache.put(s.toString(),"nglycosylation");
 	    	}
-	    	for(Site s: this.glycosylation.OGlycosylationSites){
+	    	for(Site s: this.glycosylation.getOGlycosylationSites()){
 				_modifiedCache.put(s.toString(),"oglycosylation");
 	    	}
-	    	for(Site s: this.glycosylation.CGlycosylationSites){
+	    	for(Site s: this.glycosylation.getCGlycosylationSites()){
 				_modifiedCache.put(s.toString(),"cglycosylation");
 	    	}    	
     	}
     	if(modifications!=null){
     		//modifications
 	    	for(StructuralModification sm : this.modifications.structuralModifications){
-	    		if(sm.sites!=null){
-	    			for(Site s: sm.sites){
+	    		if(sm.getSites()!=null){
+	    			for(Site s: sm.getSites()){
 	    				_modifiedCache.put(s.toString(),"structuralModification");
 	    	    	}
 	    		}
