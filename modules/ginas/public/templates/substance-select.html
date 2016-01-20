@@ -1,11 +1,14 @@
 <div>
     <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
-<a href = "#" ng-click="subref=null">
-    <div ng-show="subref">
-        <substance-view subref="subref" ng-show="subref" ></substance-view>
+<a ng-click="subref=null">
+    <div ng-if="subref">
+        <substance-view  subref= subref></substance-view>
     </div>
 </a>
     <div ng-show="!subref"  id="{{field}}">
-    <substance-typeahead subref = "subref"></substance-typeahead>
+        <div ng-if = "type==='search'">
+        <a ng-click ="toggleStage()" uib-tooltip="search for substance"><i class="fa fa-search fa-2x"></i></a>
+        </div>
+        <substance-typeahead subref = "subref"></substance-typeahead>
         </div>
 </div>

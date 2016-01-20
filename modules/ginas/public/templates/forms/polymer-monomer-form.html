@@ -6,7 +6,7 @@
         <form class="form-horizontal" name="monomerForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <substance-chooser-selector ng-model ="component.monomerSubstance" field ="monomerSubstance" name ="monomerSubstance" formname ="monomerForm" label ="Monomer Substance" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="component" field ="monomerSubstance" name ="monomerSubstance" formname ="monomerForm" label ="Monomer Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">
                     <dropdown-select ng-model="component.type" field="type" cv = "MONOMER_TYPE" ></dropdown-select>
@@ -26,7 +26,7 @@
                     <delete-button delete="obj" path="monomers"></delete-button>
                 </div>
                 <div class="col-md-3">
-                    <substance-chooser-view-edit obj = "obj" field ="monomerSubstance" label = "Monomer Substance"></substance-chooser-view-edit>
+                    <substance-chooser-selector referenceobj ="obj" field ="monomerSubstance" name ="monomerSubstance" formname ={{obj.$$hashKey}} label ="Monomer Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">
                     <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>

@@ -2,7 +2,7 @@
 
     <label ng-if ="label" for="{{field}}" class="text-capitalize">{{label}}</label>
     <a href = "#" ng-click="editing(obj[field]);">
-    <span ng-hide="obj[field]._editing" >
+    <span ng-hide="obj[field]._editing">
       <rendered id = {{obj[field].refuuid}}></rendered><br/><code>{{obj[field].refPname}}</code>
     </span>
     </a>

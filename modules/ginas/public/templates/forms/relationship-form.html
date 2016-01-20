@@ -6,13 +6,13 @@
         <form class="form-horizontal" name="relationshipForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    <substance-chooser-selector ng-model ="relationship.relatedSubstance" field ="relatedSubstance" name ="relatedSubstance" formname ="relationshipForm" label ="Related Substance" type = "lite"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="relationship" field ="relatedSubstance" name ="relatedSubstance" formname ="relationshipForm" label ="Related Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-select ng-model="relationship.type" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-select>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj= "relationship" divid="relationshipForm" type = "textbox"></form-selector>
+                    <form-selector referenceobj= "relationship" divid="relationshipForm" label="comments" type = "textbox"></form-selector>
                 </div>
                 <div class="col-md-1">
                     <dropdown-select ng-model="relationship.interactionType" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction"></dropdown-select>
@@ -24,7 +24,7 @@
                     <form-selector referenceobj= "relationship" parent = "parent" divid="relationshipForm" type = "amount"></form-selector>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-selector ng-model ="relationship.mediatorSubstance" field ="mediatorSubstance" name ="mediatorSubstance" formname ="relationshipForm" label ="Mediator Substance" type = "lite"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="relationship" field ="mediatorSubstance" name ="mediatorSubstance" formname ="relationshipForm" label ="Mediator Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="relationship" parent = "parent" divid="relationshipForm" type = "access"></form-selector>
@@ -44,13 +44,13 @@
                     <delete-button delete="obj" path="relationships"></delete-button>
                 </div>
                 <div class="col-md-1">
-                    <substance-chooser-view-edit obj = "obj" field ="relatedSubstance" label = "Related Substance"></substance-chooser-view-edit>
+                    <substance-chooser-selector referenceobj ="obj" field ="relatedSubstance" name ="relatedSubstance" formname = {{obj.$$hashKey}} label ="Related Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "RELATIONSHIP_TYPE" ></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" type = "textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="comments" type = "textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="interactionType" cv = "INTERACTION_TYPE" label = "Interaction Type"></dropdown-view-edit>
@@ -59,7 +59,7 @@
                     <dropdown-view-edit obj = "obj" field="qualification" cv = "QUALIFICATION" ></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1">
                     <substance-chooser-view-edit obj = "obj" field ="mediatorSubstance" label = "Mediator Substance"></substance-chooser-view-edit>

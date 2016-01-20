@@ -580,6 +580,76 @@ ginasFormElements.directive('substanceViewer', function(){
     }
 });
 
+    ginasFormElements.directive('substanceTypeahead', function (nameFinder) {
+        return {
+            restrict: 'E',
+            templateUrl: baseurl + "assets/templates/elements/substance-typeahead.html",
+            replace: true,
+            scope: {
+                subref: '=',
+                field: '@'
+            },
+            link: function (scope, element, attrs) {
+
+                scope.createSubref = function (selectedItem) {
+                    console.log(selectedItem);
+                    var temp = {};
+                    temp.refuuid = selectedItem.uuid;
+                    temp.refPname = selectedItem._name;
+                    temp.approvalID = selectedItem.approvalID;
+                    temp.substanceClass = "reference";
+                    console.log(temp);
+                    scope.subref = angular.copy(temp);
+                    console.log(scope);
+
+                };
+
+                scope.loadSubstances = function ($query) {
+                    var results = nameFinder.search($query);
+             //       console.log(results);
+                    return results;
+                };
+            }
+        };
+    });
+
+    ginasFormElements.directive('substanceChooserViewEdit', function (nameFinder) {
+        return {
+            templateUrl: baseurl + 'assets/templates/elements/substancechooser-view-edit.html',
+            replace: true,
+            restrict: 'E',
+            scope: {
+                obj: '=',
+                field: '@',
+                label: '@'
+            },
+            link: function (scope, element, attrs) {
+                scope.loadSubstances = function ($query) {
+                    return nameFinder.search($query);
+                };
+
+                scope.createSubref = function (selectedItem) {
+                    var subref = {};
+                    subref.refuuid = selectedItem.uuid;
+                    subref.refPname = selectedItem._name;
+                    subref.approvalID = selectedItem.approvalID;
+                    subref.substanceClass = "reference";
+                    scope.obj[scope.field] = angular.copy(subref);
+                    scope.diverse = [];
+                };
+
+                scope.editing = function (obj) {
+                    if (_.has(obj, '_editing')) {
+                        obj._editing = !obj._editing;
+                    } else {
+                        _.set(obj, '_editing', true);
+                    }
+                };
+
+            }
+        };
+    });
+
     ginasFormElements.directive('downloadButton', function ($compile, download) {
         return {
             restrict:'E',
