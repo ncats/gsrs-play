@@ -170,7 +170,7 @@
         @if(count > 0) {*@
             <div class="row info" id="glyco">
                 <button class="btn btn-primary label-offset det">
-                    Glycosylation&nbsp;<span class="badge head"> </span></button>
+                    Glycosylation&nbsp;<span class="badge head">@(GinasApp.getCount(sub.protein.glycosylation)) </span></button>
                 <div class="col-md-12">
                     @if(sub.protein.glycosylation.glycosylationType != null) {
                         Glycosylation Type: @sub.protein.glycosylation.glycosylationType

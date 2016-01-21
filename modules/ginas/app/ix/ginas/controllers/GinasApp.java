@@ -1182,23 +1182,14 @@ public class GinasApp extends App {
     }
 
     @SuppressWarnings("rawtypes")
-    public static int getCount(Object obj) {
+    public static int getCount(Glycosylation obj) {
         int count = 0;
         if (obj == null)
             return count;
         try {
-
-            for (Field l : obj.getClass().getFields()) {
-                // Logger.info(l.getName().toString());
-                Class type = l.getType();
-                if (type.isArray()) {
-                    count += Array.getLength(l.get(obj));
-                } else if (Collection.class.isAssignableFrom(type)) {
-                    count += ((Collection) l.get(obj)).size();
-                    Logger.info("collection" + count);
-
-                }
-            }
+        	count+=obj.getCGlycosylationSites().size();
+        	count+=obj.getOGlycosylationSites().size();
+        	count+=obj.getNGlycosylationSites().size();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
