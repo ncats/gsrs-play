@@ -18,7 +18,7 @@ public class MoldevPlateApp extends MoldevApp {
 
     public static Result getPlates() throws SQLException {
         makeConnection();
-        PreparedStatement pst = hcsConn.prepareStatement("select plate_id, plate_name, plate_description, time_created, global_id from plates order by plate_id");
+        PreparedStatement pst = hcsConn.prepareStatement("select plate_id, plate_name, plate_description, barcode, time_created, global_id from plates order by plate_id");
         ResultSet rs = pst.executeQuery();
         ArrayNode root = mapper.createArrayNode();
         while (rs.next()) {
@@ -26,6 +26,7 @@ public class MoldevPlateApp extends MoldevApp {
             node.put("plate_id", rs.getInt("plate_id"));
             node.put("plate_name", rs.getString("plate_name"));
             node.put("plate_description", rs.getString("plate_description"));
+            node.put("barcode", rs.getString("barcode"));
             node.put("time_created", rs.getDate("time_created").toString());
             node.put("global_id", rs.getString("global_id"));
             root.add(node);
