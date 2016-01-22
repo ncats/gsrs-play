@@ -434,14 +434,17 @@
                                                 }
                                                 sub[field][key] = newcv;
                                             });
+                                        }else{
+                                            console.log(newpath);
+                                            console.log(sub[field]);
                                         }
                                     });
                                 }
                             });
                         } else {
                             if (!_.isNull(sub[field])) {
-                                path += "." + field;
-                                $scope.expandCV(sub[field], newpath);
+                                    $scope.expandCV(sub[field], newpath);
+                                //});
                             }
                         }
                     } else {
@@ -463,6 +466,7 @@
                         }
                     }
                 });
+            console.log(sub);
             return sub;
         };
 
@@ -1607,6 +1611,7 @@
                 residues: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 scope.edit = false;
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
@@ -1669,10 +1674,8 @@
 
     ginasApp.directive('substanceChooserSelector', function ($templateRequest, $compile) {
         return {
-            // templateUrl: baseurl + 'assets/templates/substance-select.html',
             replace: true,
             restrict: 'E',
-            //require: 'ngModel',
             scope: {
                 subref: '=ngModel',
                 referenceobj: '=',
@@ -1682,7 +1685,6 @@
                 type: '@'
             },
             link: function (scope, element, attrs, ngModel) {
-                console.log(scope);
                 var formHolder;
                 var childScope;
                 var template;
@@ -1702,7 +1704,6 @@
                             $compile(template)(scope);
                         });
                         formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q></substance-search-form>';
-                     //   element.append(formHolder);
                         break;
                 }
 
