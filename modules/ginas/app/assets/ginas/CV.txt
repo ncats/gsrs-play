@@ -1237,14 +1237,14 @@ STRUCTURAL_MODIFICATION_TYPE	structuralModifications.structuralModificationType	
 STRUCTURAL_MODIFICATION_TYPE	structuralModifications.structuralModificationType	LIGAND_BINDING	LIGAND BINDING
 STRUCTURAL_MODIFICATION_TYPE	structuralModifications.structuralModificationType	NUCLEOSIDE_SUBSTITUTION	NUCLEOSIDE SUBSTITUTION
 STRUCTURAL_MODIFICATION_TYPE	structuralModifications.structuralModificationType	RADIOLABEL	RADIOLABEL
-SUBSTANCE_CLASS	substanceClass	CHEMICAL	Chemical
-SUBSTANCE_CLASS	substanceClass	PROTEIN	Protein
-SUBSTANCE_CLASS	substanceClass	NUCLEIC_ACID	Nucleic Acid
-SUBSTANCE_CLASS	substanceClass	POLYMER	Polymer
-SUBSTANCE_CLASS	substanceClass	STRUCTURALLY_DIVERSE	Structurally Diverse
-SUBSTANCE_CLASS	substanceClass	MIXTURE	Mixture
-SUBSTANCE_CLASS	substanceClass	SPECIFIED_SUBSTANCE_GROUP_1	Specified Substance Group 1
-SUBSTANCE_CLASS	substanceClass	CONCEPT	Concept
+SUBSTANCE_CLASS	substanceClass	chemical	Chemical
+SUBSTANCE_CLASS	substanceClass	protein 	Protein
+SUBSTANCE_CLASS	substanceClass	nucleicAcid 	nucleicAcid
+SUBSTANCE_CLASS	substanceClass	polymer 	Polymer
+SUBSTANCE_CLASS	substanceClass	structurallyDiverse 	Structurally Diverse
+SUBSTANCE_CLASS	substanceClass	mixture 	Mixture
+SUBSTANCE_CLASS	substanceClass	g1ss	Specified Substance Group 1
+SUBSTANCE_CLASS	substanceClass	concept	Concept
 LOCATORS		WHO-DD	WHO DRUG DICTIONARY
 LOCATORS		MI	MERCK INDEX
 LOCATORS		DERIVED	SYSTEM-GENERATED DERIVED NAME
