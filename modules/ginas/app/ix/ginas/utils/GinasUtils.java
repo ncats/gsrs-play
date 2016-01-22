@@ -34,6 +34,7 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
+import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.PolymerSubstance;
@@ -213,6 +214,9 @@ public class GinasUtils {
 					return sub;
 				case mixture:
 					sub = mapper.treeToValue(tree, MixtureSubstance.class);
+					return sub;
+				case nucleicAcid:
+					sub = mapper.treeToValue(tree, NucleicAcidSubstance.class);
 					return sub;
 				case polymer:
 					sub = mapper.treeToValue(tree, PolymerSubstance.class);

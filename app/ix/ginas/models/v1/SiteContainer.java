@@ -17,16 +17,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.ginas.models.GinasCommonSubData;
 
+@SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_site_lob")
 public class SiteContainer extends GinasCommonSubData{
 	@Lob
 	@JsonIgnore
-	String _shortHand;
-	
+	String sitesShortHand;
 	@Lob
 	@JsonIgnore
-	String _siteClob;
+	String sitesJSON;	
+	
+	long siteCount;
 	
 	String siteType;
 	
@@ -39,7 +41,7 @@ public class SiteContainer extends GinasCommonSubData{
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		List<Site> sites=new ArrayList<Site>();
 		try {
-			sites = om.readValue(_siteClob, new TypeReference<List<Site>>(){});
+			sites = om.readValue(sitesJSON, new TypeReference<List<Site>>(){});
 		} catch (Exception e) {
 			e.printStackTrace();
 		} 
@@ -47,18 +49,18 @@ public class SiteContainer extends GinasCommonSubData{
 	}
 	
 	public String getShorthand(){
-		return _shortHand;
+		return sitesShortHand;
 	}
 	public void setShorthand(String shorthand){
-		this._shortHand=shorthand;
+		this.sitesShortHand=shorthand;
 	}
 	public void setSites(List<Site> sites){
-		
 		if(sites!=null){
-			_shortHand=generateShorthand(sites);
-			List<Site> nlist=parseShorthandRanges(_shortHand);
+			sitesShortHand=generateShorthand(sites);
+			List<Site> nlist=parseShorthandRanges(sitesShortHand);
 			ObjectMapper om = new ObjectMapper();
-			_siteClob=om.valueToTree(nlist).toString();
+			sitesJSON=om.valueToTree(nlist).toString();
+			siteCount=nlist.size();
 		}
 	}
 

@@ -18,7 +18,6 @@ import ix.ginas.models.GinasCommonSubData;
 @JSONEntity(title = "Physical Modification", isFinal = true)
 public class PhysicalModification extends GinasCommonSubData {
     @JSONEntity(title = "Physical Modification Role", isRequired = true)
-    @Column(nullable=false)
     public String physicalModificationRole;
     
     @JSONEntity(title = "Physical Parameters", isRequired = true, minItems = 1)

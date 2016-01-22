@@ -18,7 +18,6 @@ import ix.ginas.models.GinasCommonSubData;
 @JSONEntity(title = "Structural Modification", isFinal = true)
 public class StructuralModification extends GinasCommonSubData {
     @JSONEntity(title = "Modification Type", isRequired = true)
-    @Column(nullable=false)
     public String structuralModificationType;
     
     @JSONEntity(title = "Modification Location Type")

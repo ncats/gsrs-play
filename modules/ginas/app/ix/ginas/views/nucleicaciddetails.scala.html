@@ -1,0 +1,92 @@
+@import ix.core.models.Structure
+@import ix.ginas.models.v1.NucleicAcidSubstance
+@import ix.ginas.models.v1.NucleicAcid
+@import ix.ginas.controllers.GinasApp
+
+@(sub: ix.ginas.models.v1.NucleicAcidSubstance)
+
+@substancedetails(sub) {
+    <li role="presentation" class="active"><a href="#subunits">Subunits
+        <span class= "badge">@sub.nucleicAcid.getSubunits().size()</span></a>
+    </li>
+} {
+<div class="row info" id="subunits">
+        <div class = "row">
+            <div class="col-md-4">
+                <button class="btn btn-primary label-offset det">
+                    Subunits&nbsp;<span class="badge head"> @sub.nucleicAcid.getSubunits().size()</span></button>
+            </div>
+            <div class = "col-md-2 pull-right">
+                <form class="form" name="numbers-select" id = "numbers-select">
+                    <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-list-ol fa-2x"></i>' off='<i class="fa fa-bars fa-2x"></i>'></switch>
+                </form>
+            </div>
+        </div>
+        <div class = "col-md-12">
+        @for(i <- 0 until sub.nucleicAcid.getSubunits().size()) {
+            @for(s <- sub.nucleicAcid.getSubunits()) {
+                @if(s.subunitIndex == i + 1) {
+                    <div class="panel panel-default subunit-panel">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Subunit @s.subunitIndex</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class = "row">
+                            @defining(s.sequence.toArray) { sequence =>
+                                @defining(s.sequence.length) { length =>
+                                    @for(j <- 0 until (length / 10)) {
+                                        <div class = "col-md-2 aaBlock">
+                                            <div class = "row">
+                                                <div class = "col-md-12 text-right">
+                                                    <span class = "count" ng-hide="numbers">@((j + 1) * 10)</span>
+                                                </div>
+                                            </div>
+                                            <div class = "row">
+                                                <div class = "col-md-12 string">
+                                                @defining(s.sequence.subSequence((j * 10), ((j + 1) * 10))) { subArr =>
+                                                    @for(k <- 0 until subArr.length) {
+                                                        @defining(k + (j * 10) + 1) { index =>
+                                                            <span class = "highlight @GinasApp.siteCheckNA(sub.nucleicAcid, s.subunitIndex, index)" tooltip="@s.subunitIndex-@index @subArr.charAt(k):@GinasApp.getNAName(subArr.charAt(k))">@subArr.charAt(k)</span>
+                                                        }
+                                                    }
+                                                }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                <div class = "col-md-2 aaBlock">
+                                    <div class = "row">
+                                        <div class = "col-md-12 text-right">
+                                            <span class = "count" ng-hide="numbers">@length</span>
+                                        </div>
+                                    </div>
+                                    <div class = "row">
+                                        <div class = "col-md-12 string">
+                                        @defining(s.sequence.subSequence((length - length % 10), (length))) { subArr =>
+                                            @for(k <- 0 until subArr.length) {
+                                                @defining(length - length % 10) { index =>
+                                                    <span class = "highlight @GinasApp.siteCheckNA(sub.nucleicAcid, s.subunitIndex, (index + k + 1))" tooltip="@s.subunitIndex-@(index + k + 1) @subArr.charAt(k):@GinasApp.getNAName(subArr.charAt(k))">@subArr.charAt(k)</span>
+
+                                                }
+                                            }
+                                        </div>
+                                        }
+
+                                </div>
+                                </div>
+                                </div>
+                        </div>
+                    </div>
+
+                }
+                }
+                }
+
+            }
+        }
+        </div>
+    </div>
+
+
+}

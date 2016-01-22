@@ -384,13 +384,15 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     }
                     
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_GOOD);
-
                     reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
                                         
                 }catch(Exception e){
+                	
                     getInstance().decrementExtractionQueue();
-                    Logger.error(e.getMessage());
+                    Logger.error(e.getMessage() + ":" + rec.message);
+                    
                     ObjectMapper om = new ObjectMapper();
+                    
                     Global.TransformFailLogger.info(rec.name + "\t" + rec.message + "\t" + om.valueToTree(pr.theRecord).toString().replace("\n", ""));
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_BAD);
                     try{

@@ -19,14 +19,17 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
+import ix.ginas.models.v1.ControlledVocabulary;
 import ix.ginas.models.v1.DisulfideLink;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Glycosylation;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Modifications;
 import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.NucleicAcid;
 import ix.ginas.models.v1.Polymer;
 import ix.ginas.models.v1.PolymerSubstance;
+import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Relationship;
@@ -36,6 +39,7 @@ import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.models.v1.VocabularyTerm;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.RebuildIndex;
@@ -584,6 +588,9 @@ public class GinasApp extends App {
             case concept:
                 return ok(ix.ginas.views.html.conceptdetails
                           .render((Substance) substance));
+            case nucleicAcid:
+                return ok(ix.ginas.views.html.nucleicaciddetails
+                          .render((NucleicAcidSubstance) substance));
             default:
                 return _badRequest("type not found");
             }
@@ -1068,6 +1075,13 @@ public class GinasApp extends App {
             return "";
         return desc;
     }
+    
+    public static String siteCheckNA(NucleicAcid na, int subunit, int index) {
+        String desc = na.getSiteModificationIfExists(subunit, index);
+        if (desc == null)
+            return "";
+        return desc;
+    }
 
     public static List<Integer> getSites(Modifications mod, int index) {
         ArrayList<Integer> subunit = new ArrayList<Integer>();
@@ -1105,79 +1119,24 @@ public class GinasApp extends App {
     }
 
     public static String getAAName(char aa) {
-
-        String amino;
-
-        switch (aa) {
-        case 'A':
-            amino = "Alanine";
-            break;
-            // case 'B' : amino ="Asparagine/Aspartic acid";
-            // break;
-        case 'C':
-            amino = "Cysteine";
-            break;
-        case 'D':
-            amino = "Aspartic acid";
-            break;
-        case 'E':
-            amino = "Glutamic acid";
-            break;
-        case 'F':
-            amino = "Phenylalanine";
-            break;
-        case 'G':
-            amino = "Glycine";
-            break;
-        case 'H':
-            amino = "Histidine";
-            break;
-        case 'I':
-            amino = "Isoleucine";
-            break;
-        case 'K':
-            amino = "Lysine";
-            break;
-        case 'L':
-            amino = "Leucine";
-            break;
-        case 'M':
-            amino = "Methionine";
-            break;
-        case 'N':
-            amino = "Asparagine";
-            break;
-        case 'P':
-            amino = "Proline";
-            break;
-        case 'Q':
-            amino = "Glutamine";
-            break;
-        case 'R':
-            amino = "Arginine";
-            break;
-        case 'S':
-            amino = "Serine";
-            break;
-        case 'T':
-            amino = "Threonine";
-            break;
-        case 'V':
-            amino = "Valine";
-            break;
-        case 'W':
-            amino = "Tryptophan";
-            break;
-        case 'Y':
-            amino = "Tyrosine";
-            break;
-            // case 'Z': amino = "Glutamine/Glutamic acid";
-            // break;
-        default:
-            amino = "Tim forgot one";
-            break;
+        ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("AMINO_ACID_RESIDUES");
+        for(VocabularyTerm t : cv.terms){
+        	if(t.value.equals(aa)){
+        		return t.display;
+        	}
         }
-        return amino;
+        return "UNKNOWN";
+
+    }
+    public static String getNAName(char aa) {
+
+        ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("NUCLEIC_ACID_BASE");
+        for(VocabularyTerm t : cv.terms){
+        	if(t.value.equals(aa)){
+        		return t.display;
+        	}
+        }
+        return "UNKNOWN";
 
     }
 
@@ -1198,7 +1157,7 @@ public class GinasApp extends App {
 
     }
 
-        // sigh ... this is the best of a bunch of bad options now
+    // sigh ... this is the best of a bunch of bad options now
 
     public static class GinasSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result> {

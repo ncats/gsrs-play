@@ -4,13 +4,17 @@ import ix.ginas.models.GinasCommonSubData;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Entity;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+@SuppressWarnings("serial")
+@Entity
+@Table(name="ix_ginas_sugar")
 public class Sugar extends GinasCommonSubData {
 	
 	String sugar;
