@@ -23,6 +23,7 @@ import ix.ginas.models.v1.ControlledVocabulary;
 import ix.ginas.models.v1.DisulfideLink;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Glycosylation;
+import ix.ginas.models.v1.Linkage;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Modifications;
 import ix.ginas.models.v1.Name;
@@ -34,6 +35,7 @@ import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Site;
+import ix.ginas.models.v1.Sugar;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
@@ -1550,6 +1552,24 @@ public class GinasApp extends App {
     		}
     	}
     	return resp;
+    }
+    public static int totalSites(NucleicAcidSubstance sub, boolean includeEnds){
+    	int tot=0;
+    	for(Subunit s: sub.nucleicAcid.getSubunits()){
+    		tot+=s.sequence.length();
+    		if(!includeEnds)tot--;
+    	}
+    	return tot;
+    }
+    public static int totalSites(NucleicAcidSubstance sub){
+    	return totalSites(sub, true);
+    }
+    public static String getSugarName(Sugar s){
+    	return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_SUGAR",s.getSugar());
+    	
+    }
+    public static String getLinkageName(Linkage s){
+    	return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_LINKAGE",s.getLinkage());
     }
 
 	public static String[] splitBuffer(String input, int maxLength) {

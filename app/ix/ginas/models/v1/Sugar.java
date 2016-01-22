@@ -42,6 +42,14 @@ public class Sugar extends GinasCommonSubData {
 	public void setSugar(String sugar) {
 		this.sugar = sugar;
 	}
+	
+	@JsonIgnore
+	public String getSitesShorthand(){
+		if(siteContainer!=null){
+    		return siteContainer.getShorthand();
+    	}
+    	return "";
+	}
 
 	/*public void setFromMap(Map m) {
 		super.setFromMap(m);

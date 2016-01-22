@@ -21,6 +21,18 @@ public class ControlledVocabularyFactory extends EntityFactory {
 	public static ControlledVocabulary getControlledVocabulary(String domain) {
 		return finder.where().eq("domain", domain).findUnique();
 	}
+	
+	public static String getDisplayFor(String domain, String value) {
+		ControlledVocabulary cv=getControlledVocabulary(domain);
+		if(cv!=null){
+			for(VocabularyTerm t : cv.terms){
+	        	if(t.value.equals(value)){
+	        		return t.display;
+	        	}
+	        }
+		}
+		return null;
+	}
 
 	public static List<ControlledVocabulary> getDomain() {
 		return finder.where().select("domain").findList();
