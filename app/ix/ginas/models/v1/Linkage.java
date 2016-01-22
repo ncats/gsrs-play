@@ -41,6 +41,13 @@ public class Linkage extends GinasCommonSubData {
 	public void setLinkage(String linkage) {
 		this.linkage = linkage;
 	}
+	@JsonIgnore
+	public String getSitesShorthand(){
+		if(siteContainer!=null){
+    		return siteContainer.getShorthand();
+    	}
+    	return "";
+	}
 
 /*
 	public void setFromMap(Map m) {
