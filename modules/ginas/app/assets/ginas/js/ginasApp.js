@@ -273,7 +273,6 @@
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
         };
-
         $scope.viewToggle = function () {
             $scope.submitSubstance = $scope.fromFormSubstance(angular.copy($scope.substance));
         };
@@ -335,24 +334,21 @@
             $scope.lookup = lookup;
 
         $scope.toFormSubstance = function (apiSub) {
-            /*
-             console.log(apiSub);
-             console.log(_.keysIn(apiSub));
-             */
-
             var officialNames = [];
             var unofficialNames = [];
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
-            apiSub = $scope.expandCV(apiSub, "");
-            if (_.has(apiSub, 'names')) {
-                _.forEach(apiSub.names, function (n) {
+          //  console.log($scope.expandCV(apiSub));
+           var formSub = $scope.expandCV(apiSub);
+        //    console.log(angular.copy(formSub));
+            if (_.has(formSub, 'names')) {
+                _.forEach(formSub.names, function (n) {
                     console.log(n);
                     var temp = [];
                     if (n.nameOrgs && n.nameOrgs.length > 0) {
                         _.forEach(n.nameOrgs, function (m) {
                             if (m.deprecated) {
-                                apiSub.destructive = true;
+                                formSub.destructive = true;
                             }
                             //temp.push(m);
                             temp.push(m.nameOrg);
@@ -365,21 +361,13 @@
                     } else {
                         unofficialNames.push(n);
                     }
-                    delete apiSub.names;
+                    delete formSub.names;
                 });
-                _.set(apiSub, 'officialNames', officialNames);
-                _.set(apiSub, 'unofficialNames', unofficialNames);
+                _.set(formSub, 'officialNames', officialNames);
+                _.set(formSub, 'unofficialNames', unofficialNames);
             }
 
-            /*            _.transform(apiSub, function(result, value, key) {
-             console.log(result);
-             console.log(key);
-             console.log(value);
-             // console.log( result[key]);
-
-             });*/
-
-            return apiSub;
+            return formSub;
         };
 
         $scope.fromFormSubstance = function (formSub) {
@@ -421,113 +409,64 @@
             return formSub;
         };
 
-      /*  $scope.expandCV = function (sub, path) {
-            for (var v in sub) {
-
-                var newpath = path;
-                if (newpath.length >= 1) {
-                    if (!angular.isArray(sub)) {
-                        newpath += ".";
+        $scope.expandCV = function (sub, path) {
+                _.forEach(_.keysIn(sub), function (field) {
+                    if (path) {
+                        var newpath = path + "." + field;
+                    } else {
+                        var newpath = field;
                     }
-                }
-                if (!angular.isArray(sub)) {
-                    newpath = newpath + v;
-                }
-                console.log(newpath);
-                var newcv = lookup.getFromName(newpath, sub[v]);
-                /!* var newcv;
-                 CVFields.getDomain(newpath).then(function (data) {
-                 console.log(data);
-                 if (!_.isUndefined(data)) {
-                 console.log("CV field for " + newpath + " exists: " + data);
-                 newcv = data;
-                 }
-
-                 //  var newcv = lookup.getFromName(newpath, sub[v]);
-                 console.log(newcv);
-                 if (angular.isArray(sub[v])) {
-                 newcv = null;
-                 }
-                 *!/
-                if (!_.isNull(newcv) && !_.isUndefined(newcv)) {
-                    var w = getDisplayFromCV(newcv.domain, newcv.value);
-                    /!*  var w;
-                     CVFields.getCV(newcv).then(function (data) {
-                     console.log(data);
-                     var cv = data.data.content[0].terms;
-                     console.log(newcv);
-                     console.log(cv);
-                     console.log(sub[v]);
-                     w = _.find(cv, ['value', sub[v]]);
-                     console.log(w);
-                     });*!/
-                    newcv.display = w;
-                    sub[v] = newcv;
-
-                } else {
-                    if (typeof sub[v] === "object") {
-                        $scope.expandCV(sub[v], newpath);
+                    if (_.isObject(sub[field])){
+                        if (_.isArray(sub[field])) {
+                            _.forEach((sub[field]), function (value, key){
+                                if(_.isObject(value)) {
+                                    $scope.expandCV(value, newpath);
+                                }else{
+                                    CVFields.getDomain(newpath).then(function (data) {
+                                        if (!_.isUndefined(data)) {
+                                            var domain = data;
+                                            CVFields.getCV(domain).then(function (data) {
+                                                var cv = data.data.content[0].terms;
+                                                var newcv = _.find(cv, ['value', value]);
+                                                if (_.isUndefined(newcv)) {
+                                                    newcv = {};
+                                                    _.set(newcv, 'display', value + ' (not in CV)');
+                                                }
+                                                sub[field][key] = newcv;
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            if (!_.isNull(sub[field])) {
+                                path += "." + field;
+                                $scope.expandCV(sub[field], newpath);
+                            }
+                        }
+                    } else {
+                        if (!_.isNull(sub[field])) {
+                            CVFields.getDomain(newpath).then(function (data) {
+                                if (!_.isUndefined(data)) {
+                                    var domain = data;
+                                    CVFields.getCV(domain).then(function (data) {
+                                        var cv = data.data.content[0].terms;
+                                        var newcv = _.find(cv, ['value', sub[field]]);
+                                        if (_.isUndefined(newcv)) {
+                                            newcv = {};
+                                            _.set(newcv, 'display', sub[field] + ' (not in CV)');
+                                        }
+                                        sub[field] = newcv;
+                                    });
+                                }
+                            });
+                        }
                     }
-                }
-                // });
-                //}
-            }
+                });
             return sub;
         };
 
-           /!* console.log(sub);
-                var domain;
-            var newcv = null;
-            var cv;
-            var newpath = path;
-
-            _.forEach(_.keysIn(sub), function(field, key){
-/!*                console.log(_.isObject(field));
-                console.log(field);
-                console.log(_.isObject(sub[field]));
-                console.log(sub[field]);*!/
-                console.log(sub[field]+ " is an array " + _.isArray(sub[field]));
-               if(!_.isObject(sub[field])){
-                   console.log("string");
-                   console.log(field);
-                   console.log(sub[field]);
-                 //  console.log(field);
-                 console.log("path for: " +field);
-                   console.log(newpath);
-                   CVFields.getDomain(newpath).then(function (data) {
-                       console.log(data);
-                       if (!_.isUndefined(data)) {
-                           console.log("CV field for " +newpath+" exists: "+ data);
-                           domain = data;
-                           CVFields.getCV(domain).then(function (data) {
-                               console.log(data);
-                               cv = data.data.content[0].terms;
-                               console.log(domain);
-                               console.log(cv);
-                               console.log(sub[field]);
-                               newcv = _.find(cv, ['value', sub[field]]);
-                               if (newcv !== null) {
-                                   console.log(newcv);
-                                   sub[field] = newcv;
-                                   console.log(sub[field])
-                               }
-                           });
-
-                           //   sub[v] = cv;
-                       }
-                   });
-
-               }else{
-                   console.log(field+ " is an object");
-                   console.log(sub[field]);
-                   newpath = newpath +"."+ field;
-                   console.log(newpath);
-                   $scope.expandCV(sub[field], newpath);
-
-               }
-            });*!/*/
-
-        $scope.expandCV = function (sub, path) {
+/*        $scope.expandCV = function (sub, path) {
 
             for (var v in sub) {
 
@@ -557,7 +496,7 @@
                 }
             }
             return sub;
-        };
+        };*/
 
         $scope.flattenCV = function (sub) {
             //  console.log(sub);
@@ -1432,6 +1371,7 @@
                 $scope.stage = true;
             }
         };
+        console.log($scope);
     });
 
     ginasApp.directive('loading', function ($http) {

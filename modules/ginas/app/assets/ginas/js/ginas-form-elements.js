@@ -3,21 +3,6 @@
 
     ginasFormElements.factory('CVFields', function ($http, $q) {
 
-        var lookup = {
-/*            "stereoChemistry": "STEREOCHEMISTRY_TYPE",
-            "names.type": "NAME_TYPE",
-            "names.nameOrgs": "NAME_ORG",
-            "names.nameJurisdiction": "JURISDICTION",
-            "names.domains": "NAME_DOMAIN",
-            "names.languages": "LANGUAGE",
-            "codes.codeSystem": "CODE_SYSTEM",
-            "codes.type": "CODE_TYPE",
-            "relationships.type": "RELATIONSHIP_TYPE",
-            "relationships.interactionType": "INTERACTION_TYPE",
-            "relationships.qualification": "QUALIFICATION",
-            "references.docType": "DOCUMENT_TYPE"*!/*/
-        };
-
         var load = function(){
             return $http.get( baseurl + "api/v1/vocabularies?filter=domain='CV_DOMAIN'",{cache:true},{
                 headers: {
@@ -36,23 +21,18 @@
            getDomain: function(path){
                 var ret;
              return load().then(function(data){
-              //      console.log(data.data.content[0].terms);
-                 console.log("getting cv for:" +path);
-                    var terms = data.data.content[0].terms;
+                 var terms = data.data.content[0].terms;
                 var patharr = path.split('.');
                 if(patharr.length>2){
                     patharr=  _.takeRight(patharr, 2);
                 }
                 var pathString = _.join(patharr, '.');
                      var domain = _.find(terms, function(cv) {
-                 //        console.log(pathString);
-                 //       console.log(cv);
                         return cv.value == pathString;
                     });
                     if(!_.isUndefined(domain)){
                         ret = domain.display;
                     }
-                //  console.log(ret);
                     return ret;
                 });
             },
@@ -63,24 +43,9 @@
                         'Content-Type': 'text/plain'
                     }
                 }).success(function (data) {
-                    //CV[field] = data.content[0].terms;
-                   // console.log(domain);
-                  //    console.log(data);
-                   // var ret = data;
                     return data;
                 });
             },
-
-/*
-            lookup: function (domain, value) {
-                return _.chain(getCV(domain))
-                    .filter(function (x) {
-                        return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
-                    })
-                    .sortBy('value')
-                    .value();
-            },
-*/
 
             count: function(){
                  var counturl = baseurl + "api/v1/vocabularies";
@@ -92,6 +57,7 @@
                     return data;
                 });
             },
+
             all: function(){
                  var allurl = baseurl + "api/v1/vocabularies?top=999";
                 return $http.get(allurl,{cache:true},{
@@ -102,6 +68,7 @@
                     return data;
                 });
             },
+
             load: function (field) {
                // console.log(lookup);
                 if (!_.has(CV, field)) {
@@ -312,7 +279,7 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                CVFields.fetch(attrs.cv).then(function (data) {
+                CVFields.getCV(attrs.cv).then(function (data) {
                     if (attrs.cv === 'NAME_TYPE') {
                         var temp = angular.copy(data.data.content[0].terms);
                         temp = _.remove(temp, function (n) {
@@ -339,7 +306,7 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                CVFields.fetch(attrs.cv).then(function (data) {
+                CVFields.getCV(attrs.cv).then(function (data) {
                     if (attrs.cv === 'NAME_TYPE') {
                         var temp = angular.copy(data.data.content[0].terms);
                         temp = _.remove(temp, function (n) {
@@ -375,7 +342,7 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                CVFields.load(attrs.cv);
+                CVFields.load(scope.cv);
 
                 scope.loadItems = function (cv, $query) {
                     return CVFields.search(cv, $query);
@@ -397,7 +364,13 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
+                //CVFields.getCV(scope.cv).then(function(data){
+                //   // console.log(scope.obj[scope.field]);
+                //});
+
                 CVFields.load(scope.cv);
+
+
 
                 scope.loadItems = function (cv, $query) {
                     return CVFields.search(cv, $query);
