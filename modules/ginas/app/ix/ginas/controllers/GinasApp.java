@@ -1121,7 +1121,7 @@ public class GinasApp extends App {
     public static String getAAName(char aa) {
         ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("AMINO_ACID_RESIDUES");
         for(VocabularyTerm t : cv.terms){
-        	if(t.value.equals(aa)){
+        	if(t.value.equals(aa+"")){
         		return t.display;
         	}
         }
@@ -1129,10 +1129,9 @@ public class GinasApp extends App {
 
     }
     public static String getNAName(char aa) {
-
         ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("NUCLEIC_ACID_BASE");
         for(VocabularyTerm t : cv.terms){
-        	if(t.value.equals(aa)){
+        	if(t.value.equals(aa+"")){
         		return t.display;
         	}
         }
@@ -1504,7 +1503,11 @@ public class GinasApp extends App {
                         }else if (format.equalsIgnoreCase("cdx")){
                                 return ok(c.export(Chemical.FORMAT_CDX));
                         }else if (format.equalsIgnoreCase("fas")){
+                        	if(s instanceof ProteinSubstance){	
                         		return ok(makeFastaFromProtein(((ProteinSubstance)s)));
+                        	}else{
+                        		return ok(makeFastaFromNA(((NucleicAcidSubstance)s)));
+                        	}
                         }else{
                                 return _badRequest("unknown format:" + format);
                         }
@@ -1517,6 +1520,23 @@ public class GinasApp extends App {
     public static String makeFastaFromProtein(ProteinSubstance p){
     	String resp = "";
     	List<Subunit> subs=p.protein.subunits;
+    	Collections.sort(subs, new Comparator<Subunit>(){
+			@Override
+			public int compare(Subunit o1, Subunit o2) {
+				return o1.subunitIndex-o2.subunitIndex;
+			}});
+    	
+    	for(Subunit s: subs){
+    		resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
+    		for(String seq : splitBuffer(s.sequence,80)){
+    			resp+=seq+"\n";
+    		}
+    	}
+    	return resp;
+    }
+    public static String makeFastaFromNA(NucleicAcidSubstance p){
+    	String resp = "";
+    	List<Subunit> subs=p.nucleicAcid.getSubunits();
     	Collections.sort(subs, new Comparator<Subunit>(){
 			@Override
 			public int compare(Subunit o1, Subunit o2) {

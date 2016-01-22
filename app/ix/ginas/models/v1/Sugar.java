@@ -23,7 +23,6 @@ public class Sugar extends GinasCommonSubData {
 	@OneToOne(cascade=CascadeType.ALL)
     SiteContainer siteContainer;
     public List<Site> getSites(){
-    	System.out.println(siteContainer);
     	if(siteContainer!=null){
     		return siteContainer.getSites();
     	}
