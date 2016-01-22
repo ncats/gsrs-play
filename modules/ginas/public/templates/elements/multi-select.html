@@ -3,7 +3,7 @@
     <tags-input custom-class="form-control" title="{{field}}" placeholder="{{field}}" id="{{field}}" name="{{label}}"
                 ng-model="obj" ng-blur="editing(obj[field]);" display-property="display" key-property="value"
                 addFromAutocompleteOnly="true">
-        <auto-complete source="loadItems(cv, $query)" min-length="2" debounce-delay="0"
+        <auto-complete source="loadTags($query)" min-length="2" debounce-delay="0"
                        max-results-to-show="1111" debounce-delay="0" load-on-empty="true" load-on-focus="true"
                        load-on-down-arrow="true"></auto-complete>
     </tags-input>

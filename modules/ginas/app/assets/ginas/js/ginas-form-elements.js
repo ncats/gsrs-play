@@ -43,6 +43,8 @@
                         'Content-Type': 'text/plain'
                     }
                 }).success(function (data) {
+                    console.log(domain);
+                    console.log(data);
                     return data;
                 });
             },
@@ -106,6 +108,16 @@
                     })
                     .sortBy('display')
                     .value();
+            },
+            searchTags: function (domain, query) {
+                CV.getCV(domain).then(function(data){
+                return _.chain(data)
+                    .filter(function (x) {
+                        return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
+                    })
+                    .sortBy('display')
+                    .value();
+                });
             },
 
 /*
@@ -348,6 +360,9 @@
                     return CVFields.search(cv, $query);
                 };
 
+                scope.loadTags = function(query) {
+                    return CVFields.searchTags(scope.cv);
+                };
             }
         };
     });

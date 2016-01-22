@@ -99,6 +99,7 @@
         return utils;
     });
 
+    /*
     ginasApp.service('lookup', function ($http) {
         var options = {};
         var url = baseurl + "api/v1/vocabularies?filter=domain='";
@@ -174,6 +175,7 @@
         };
         return lookup;
     });
+*/
 
     ginasApp.service('nameFinder', function ($http) {
         var url = baseurl + "api/v1/substances/search?q=";
@@ -262,7 +264,7 @@
     });
 
     ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
-                                                     localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, CVFields, lookup) {
+                                                     localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, CVFields) {
         var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
         $scope.type = 'Substructure';
@@ -308,30 +310,6 @@
         $scope.clearStructure = function () {
             localStorageService.remove('structureid');
         };
-        ///
-
-        /* $scope.openSelector = function (path) {
-         var modalInstance = $modal.open({
-         animation: true,
-         templateUrl: baseurl + 'assets/templates/substanceSelector.html',
-         controller: 'SubstanceSelectorInstanceController',
-         size: 'lg'
-
-         });
-
-         modalInstance.result.then(function (selectedItem) {
-         var subref = {};
-         subref.refuuid = selectedItem.uuid;
-         subref.refPname = selectedItem._name;
-         subref.approvalID = selectedItem.approvalID;
-         subref.substanceClass = "reference";
-         _.set($scope, path, subref);
-         console.log($scope);
-         });
-         };
-         */
-
-            $scope.lookup = lookup;
 
         $scope.toFormSubstance = function (apiSub) {
             var officialNames = [];
@@ -343,7 +321,6 @@
         //    console.log(angular.copy(formSub));
             if (_.has(formSub, 'names')) {
                 _.forEach(formSub.names, function (n) {
-                    console.log(n);
                     var temp = [];
                     if (n.nameOrgs && n.nameOrgs.length > 0) {
                         _.forEach(n.nameOrgs, function (m) {
@@ -356,7 +333,6 @@
                         n.nameOrgs = temp;
                     }
                     if (n.type === "of" || n.type.value === "of") {
-                        console.log(n);
                         officialNames.push(n);
                     } else {
                         unofficialNames.push(n);
@@ -366,7 +342,11 @@
                 _.set(formSub, 'officialNames', officialNames);
                 _.set(formSub, 'unofficialNames', unofficialNames);
             }
-
+            //if(_.isObject(formSub.substanceClass)){
+            //    console.log(formSub.substanceClass);
+            //     _.set(formSub, 'substanceClass', formSub.substanceClass.value);
+            //}
+            console.log(formSub);
             return formSub;
         };
 
@@ -405,7 +385,6 @@
                 //apparently needs to be reset as well
                 formSub.structure.id = UUID.newID();
             }
-            console.log(formSub);
             return formSub;
         };
 
@@ -423,7 +402,7 @@
                                     $scope.expandCV(value, newpath);
                                 }else{
                                     CVFields.getDomain(newpath).then(function (data) {
-                                        if (!_.isUndefined(data)) {
+                                        if (!_.isUndefined(data)&& data !== 'substanceClass' ) {
                                             var domain = data;
                                             CVFields.getCV(domain).then(function (data) {
                                                 var cv = data.data.content[0].terms;
@@ -434,9 +413,6 @@
                                                 }
                                                 sub[field][key] = newcv;
                                             });
-                                        }else{
-                                            console.log(newpath);
-                                            console.log(sub[field]);
                                         }
                                     });
                                 }
@@ -450,7 +426,8 @@
                     } else {
                         if (!_.isNull(sub[field])) {
                             CVFields.getDomain(newpath).then(function (data) {
-                                if (!_.isUndefined(data)) {
+                                if (!_.isUndefined(data) && data !== 'SUBSTANCE_CLASS' ) {
+                                    console.log(data);
                                     var domain = data;
                                     CVFields.getCV(domain).then(function (data) {
                                         var cv = data.data.content[0].terms;
@@ -466,7 +443,6 @@
                         }
                     }
                 });
-            console.log(sub);
             return sub;
         };
 
@@ -550,86 +526,6 @@
             }
             return false;
         };
-
-/*        $scope.setLinkProperty = function (site, bridge, property) {
-            _.set(site, property, true);
-            site.bridge = bridge;
-        };
-
-        $scope.findSite = function (array, index) {
-            var returnSite = {};
-            _.forEach(array, function (n) {
-                var temp = (_.find(n, 'residueIndex', index));
-                if (typeof temp !== "undefined") {
-                    returnSite = temp;
-                }
-            });
-            return returnSite;
-        };
-
-        $scope.makeSite = function (obj) {
-            var site = {};
-            site.subunitIndex = obj.subunitIndex - 1 + 1;
-            site.residueIndex = obj.residueIndex - 1 + 1;
-            return site;
-        };
-
-        $scope.parseLink = function (obj, path) {
-            var link = [];
-
-            //PERSIST--add sites to link list
-            var site = $scope.makeSite(obj);
-            link.push(site);
-
-            //DISPLAY--make array for bridge site
-            var bridge = [obj.subunitIndexEnd, obj.residueIndexEnd];
-
-            //DISPLAY-- find site, add link property and bridge
-            var subunit = (_.pick($scope.substance.protein.subunits, 'index', obj.subunitIndex - 1)[0]);
-            tempSite = $scope.findSite(subunit.display, obj.residueIndex - 1 + 1);
-            $scope.setLinkProperty(tempSite, bridge);
-
-            //DO IT AGAIN for ending index. can't really be done in a loop, can make and end site object and abstract these though
-            var endSite = $scope.makeSite({
-                'subunitIndex': obj.subunitIndexEnd - 1 + 1,
-                'residueIndex': obj.residueIndexEnd - 1 + 1
-            });
-
-            link.push(endSite);
-            var endBridge = [obj.subunitIndex, obj.residueIndex];
-            subunit = (_.pick($scope.substance.protein.subunits, 'index', obj.subunitIndexEnd - 1)[0]);
-            var tempEndSite = $scope.findSite(subunit.display, obj.residueIndexEnd - 1 + 1);
-
-            //switch property if other link
-            var prop = "disulfide";
-            if (_.has(obj, "linkageType")) {
-                prop = "otherLink";
-            }
-
-            //set display properties
-            $scope.setLinkProperty(tempSite, bridge, prop);
-            $scope.setLinkProperty(tempEndSite, endBridge, prop);
-
-            return link;
-        };
-
-        $scope.parseGlycosylation = function (obj, path) {
-            /!*            if (!$scope.substance.protein.glycosylation.count) {
-             $scope.substance.protein.glycosylation.count = 0;
-             }*!/
-            var link = obj.link;
-            var site = $scope.makeSite(obj);
-            site.link = link;
-            path = path + "." + link + "GlycosylationSites";
-            console.log(path);
-
-            //  $scope.substance.protein.glycosylation.count++;
-            //DISPLAY-- find site, add glycosylation property
-            var subunit = (_.pick($scope.substance.protein.subunits, 'index', obj.subunitIndex - 1)[0]);
-            tempSite = $scope.findSite(subunit.display, obj.residueIndex - 1 + 1);
-            tempSite.glycosylationSite = true;
-            return site;
-        };*/
 
         $scope.getResidueAtSite = function (site) {
             var msub = $scope.getSubunitWithIndex(site.subunitIndex);
@@ -760,43 +656,7 @@
             }
         };
 
-
-/*
-
-        $scope.siteDisplayListToSiteList = function (slist) {
-            var toks = slist.split(";");
-            var sites = [];
-            for (var i in toks) {
-                var l = toks[i];
-                if (l === "")continue;
-                var rng = l.split("-");
-                if (rng.length > 1) {
-                    var site1 = $scope.siteDisplayToSite(rng[0]);
-                    var site2 = $scope.siteDisplayToSite(rng[1]);
-                    if (site1.subunitIndex != site2.subunitIndex) {
-                        throw "\"" + rng + "\" is not a valid shorthand for a site range. Must be between the same subunits.";
-                    }
-                    if (site2.residueIndex <= site1.residueIndex) {
-                        throw "\"" + rng + "\" is not a valid shorthand for a site range. Second residue index must be greater than first.";
-                    }
-                    sites.push(site1);
-                    for (var j = site1.residueIndex + 1; j < site2.residueIndex; j++) {
-                        sites.push({
-                            subunitIndex: site1.subunitIndex,
-                            residueIndex: j
-                        });
-                    }
-                    sites.push(site2);
-                } else {
-                    sites.push($scope.siteDisplayToSite(rng[0]));
-                }
-            }
-            return sites;
-
-        };
-*/
-
-        $scope.reset = function (form) {
+      $scope.reset = function (form) {
             console.log(form);
            $scope.$broadcast('show-errors-reset');
             form.$setPristine();
@@ -810,8 +670,6 @@
             return substanceSearch.load($query);
             //return substanceSearch.search(field, $query);
         };
-
-
 
         $scope.approveSubstance = function () {
             var sub = angular.copy($scope.substance);
@@ -887,92 +745,6 @@
             return "";
         };
 
-/*        $scope.siteDisplayToSite = function (site) {
-            var subres = site.split("_");
-
-            if (site.match(/^[0-9][0-9]*_[0-9][0-9]*$/g) === null) {
-                throw "\"" + site + "\" is not a valid shorthand for a site. Must be of form \"{subunit}_{residue}\"";
-            }
-
-            return {
-                subunitIndex: subres[0] - 0,
-                residueIndex: subres[1] - 0
-            };
-        };
-        $scope.sitesToDislaySites = function (sitest) {
-            var sites = [];
-            angular.extend(sites, sitest);
-            sites.sort(function (site1, site2) {
-                var d = site1.subunitIndex - site2.subunitIndex;
-                if (d === 0) {
-                    d = site1.residueIndex - site2.residueIndex;
-                }
-                return d;
-
-            });
-            var csub = 0;
-            var cres = 0;
-            var rres = 0;
-            var finish = false;
-            var disp = "";
-            for (var i = 0; i < sites.length; i++) {
-
-                var site = sites[i];
-                if (site.subunitIndex == csub && site.residueIndex == cres)
-                    continue;
-                finish = false;
-                if (site.subunitIndex == csub) {
-                    if (site.residueIndex == cres + 1) {
-                        if (rres === 0) {
-                            rres = cres;
-                        }
-                    } else {
-                        finish = true;
-                    }
-                } else {
-                    finish = true;
-                }
-                if (finish && csub !== 0) {
-                    if (rres !== 0) {
-                        disp += csub + "_" + rres + "-" + csub + "_" + cres + ";";
-                    } else {
-                        disp += csub + "_" + cres + ";";
-                    }
-                    rres = 0;
-                }
-                csub = site.subunitIndex;
-                cres = site.residueIndex;
-            }
-            if (sites.length > 0) {
-                if (rres !== 0) {
-                    disp += csub + "_" + rres + "-" + csub + "_" + cres;
-                } else {
-                    disp += csub + "_" + cres;
-                }
-            }
-            return disp;
-        };
-        $scope.getAllSitesDisplay = function (link) {
-            var sites = "";
-            var subs = $scope.getSubunits();
-            for (var i in subs) {
-                var subunit = subs[i];
-                if (sites !== "") {
-                    sites += ";";
-                }
-                if (link) {
-                    sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + (subunit.sequence.length - 1);
-                } else {
-                    sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + subunit.sequence.length;
-                }
-            }
-            return sites;
-
-        };*/
-
-/*        $scope.getAllSites = function (link) {
-            return $scope.siteDisplayListToSiteList($scope.getAllSitesDisplay(link));
-        };*/
         $scope.getAllSitesMatching = function (regexFilter) {
             var subs = $scope.getSubunits();
             var list = [];
@@ -993,295 +765,11 @@
             return $scope.getAllSites();
         };
 
-/*        $scope.getAllLeftoverSitesDisplay = function (link) {
-            if (link) {
-                return $scope.sitesToDislaySites($scope.getAllSitesWithoutLinkage());
-            } else {
-                return $scope.sitesToDislaySites($scope.getAllSitesWithoutSugar());
-            }
-        };
-        $scope.getCysteineCount = function () {
-            var allsites = $scope.getAllSitesMatching('C');
-            return allsites.length;
-        };
-        $scope.getAllCysteinsWithoutLinkage = function () {
-            var retsites = [];
-
-            if ($scope.substance.protein) {
-
-                var allsites = $scope.getAllSitesMatching('C');
-                var asitesmap = {};
-                var asites = [];
-                if ($scope.substance.protein.disulfideLinks) {
-                    for (var i = 0; i < $scope.substance.protein.disulfideLinks.length; i++) {
-                        asites = asites.concat($scope.substance.protein.disulfideLinks[i].sites);
-                    }
-                }
-                var site;
-                for (var s = 0; s < asites.length; s++) {
-                    site = asites[s];
-                    asitesmap[site.subunitIndex + "_" + site.residueIndex] = true;
-                }
-                for (s = 0; s < allsites.length; s++) {
-                    site = allsites[s];
-                    if (!asitesmap[site.subunitIndex + "_" + site.residueIndex]) {
-                        retsites.push(site);
-                    }
-                }
-            } else {
-                console.log("NO UNITS");
-            }
-            return retsites;
-
-
-        };*/
-
-       /* $scope.getAllSitesWithoutSugar = function () {
-            var retsites = [];
-            console.log($scope.substance);
-
-            if ($scope.substance.nucleicAcid && $scope.substance.nucleicAcid.sugars) {
-
-                var asites = [];
-                for (var i = 0; i < $scope.substance.nucleicAcid.sugars.length; i++) {
-
-                    var sugsites = $scope.substance.nucleicAcid.sugars[i].sites;
-                    if (!sugsites) {
-                        sugsites = $scope.siteDisplayListToSiteList($scope.substance.nucleicAcid.sugars[i]._displaySites);
-                    }
-                    asites = asites.concat(sugsites);
-                }
-                var allsites = $scope.getAllSites();
-                var asitesmap = {};
-                var site;
-                console.log("getting asites");
-                console.log(asites);
-                for (var s in asites) {
-
-                    site = asites[s];
-                    asitesmap[site.subunitIndex + "_" + site.residueIndex] = true;
-                }
-                for (s in allsites) {
-                    site = allsites[s];
-                    if (!asitesmap[site.subunitIndex + "_" + site.residueIndex]) {
-                        retsites.push(site);
-                    }
-                }
-            } else {
-                retsites = $scope.getAllSites();
-            }
-            console.log(retsites);
-            return retsites;
-
-
-        };*/
-/*        $scope.getAllSitesWithoutLinkage = function () {
-            var retsites = [];
-
-            if ($scope.substance.nucleicAcid && $scope.substance.nucleicAcid.linkages) {
-
-                var asites = [];
-                for (var i = 0; i < $scope.substance.nucleicAcid.linkages.length; i++) {
-                    asites = asites.concat($scope.substance.nucleicAcid.linkages[i].sites);
-                }
-                var allsites = $scope.getAllSites(true);
-                var asitesmap = {};
-                var site;
-                for (var s in asites) {
-
-                    site = asites[s];
-                    asitesmap[site.subunitIndex + "_" + site.residueIndex] = true;
-                }
-                for (s in allsites) {
-                    site = allsites[s];
-                    if (!asitesmap[site.subunitIndex + "_" + site.residueIndex]) {
-                        retsites.push(site);
-                    }
-                }
-            } else {
-                retsites = $scope.getAllSites(true);
-            }
-            return retsites;
-
-
-        };
-
-        $scope.isSiteSugarSpecified = function (site) {
-
-
-        };
-
-        $scope.getSiteDuplicates = function (sites1, sites2) {
-            var retsites = [];
-            var asitesmap = {};
-            var site;
-            for (var s in sites1) {
-                site = sites1[s];
-                asitesmap[site.subunitIndex + "_" + site.residueIndex] = true;
-            }
-            for (s in sites2) {
-                site = sites2[s];
-                if (asitesmap[site.subunitIndex + "_" + site.residueIndex]) {
-                    retsites.push(site);
-                }
-            }
-            return retsites;
-        };
-
-        $scope.getAllSugarSitesExcept = function (sugar) {
-            var asites = [];
-            if ($scope.substance.nucleicAcid.sugars)
-                for (var i = 0; i < $scope.substance.nucleicAcid.sugars.length; i++) {
-                    if ($scope.substance.nucleicAcid.sugars[i] != sugar) {
-                        asites = asites.concat($scope.substance.nucleicAcid.sugars[i].sites);
-                    }
-                }
-            return asites;
-        };
-
-        $scope.getAllLinkageSitesExcept = function (linkage) {
-            var asites = [];
-            if ($scope.substance.nucleicAcid.linkages)
-                for (var i = 0; i < $scope.substance.nucleicAcid.linkages.length; i++) {
-                    if ($scope.substance.nucleicAcid.linkages[i] != linkage) {
-                        asites = asites.concat($scope.substance.nucleicAcid.linkages[i].sites);
-                    }
-                }
-            return asites;
-        };*/
-
         $scope.removeItem = function (list, item) {
             _.remove(list, function (someItem) {
                 return item === someItem;
             });
         };
-
-
-        //***************************BOILERPLATE SET EDIT*****************************************//
-        //*************************REUSABLE****************************************//
-
-        $scope.setEdit = function (obj, path) {
-            if (obj) {
-                $scope[path] = obj;
-                $scope[path]._editType = "edit";
-            } else {
-                $scope[path] = null;
-            }
-        };
-/*
-        $scope.setEditMonomer = function (mon) {
-            if (mon) {
-                $scope.component = mon;
-                $scope.component._editType = "edit";
-            } else {
-                $scope.component = null;
-            }
-
-        };*/
-        $scope.setEditSRU = function (sru) {
-            if (sru) {
-                $scope.srucomponent = sru;
-                $scope.srucomponent._editType = "edit";
-            } else {
-                $scope.srucomponent = null;
-            }
-
-        };
-
-/*        $scope.validateSites = function (dispSites, link) {
-            var subunits = $scope.getSubunits();
-
-            var t = $scope.checkSites(dispSites, subunits, link);
-            console.log(t);
-            return t;
-        };
-
-        $scope.checkSites = function (dispSites, subunits, link) {
-            try {
-
-                var sites = $scope.siteDisplayListToSiteList(dispSites);
-                var dsites = [];
-
-                if (link.linkage) {
-                    dsites = $scope.getSiteDuplicates($scope.getAllLinkageSitesExcept(link), sites);
-                } else if (link.sugar) {
-                    dsites = $scope.getSiteDuplicates($scope.getAllSugarSitesExcept(link), sites);
-                }
-                if (dsites.length > 0) {
-                    throw "Site(s) " + $scope.sitesToDislaySites(dsites) + " already specified!";
-                }
-
-
-                for (var s in sites) {
-                    var site = sites[s];
-                    if (link.linkage) {
-                        var sited = {
-                            subunitIndex: site.subunitIndex,
-                            residueIndex: site.residueIndex + 1
-                        };
-                        site = sited;
-                    }
-                    if ($scope.getSiteResidue(subunits, site) === "") {
-                        throw "Site " + sites[s].subunitIndex + "_" + sites[s].residueIndex + " does not exist in subunits";
-                    }
-                }
-            } catch (e) {
-                return e;
-            }
-        };
-
-        $scope.updateSiteList = function (obj, sitelist, fromlist) {
-            console.log("Updating site list");
-            if (!sitelist) {
-                if (!obj.sites) {
-                    obj.sites = [];
-                }
-                sitelist = obj.sites;
-            }
-            if (!fromlist) {
-                sitelist.length = 0;
-            }
-            if (obj._displaySites === $scope.sitesToDislaySites(sitelist)) {
-                return;
-            }
-
-            try {
-                if (!fromlist) {
-                    $scope.replaceArray(sitelist, $scope.siteDisplayListToSiteList(obj._displaySites));
-                }
-                obj._displaySites = $scope.sitesToDislaySites(sitelist);
-                if (!fromlist) {
-                    $scope.replaceArray(sitelist, $scope.siteDisplayListToSiteList(obj._displaySites));
-                }
-                obj._uniqueResidues = [];
-                obj._residueCounts = {};
-                for (var i in sitelist) {
-                    var r = $scope.getResidueAtSite(sitelist[i]);
-                    if (!obj._residueCounts[r])
-                        obj._residueCounts[r] = 0;
-                    obj._residueCounts[r]++;
-                }
-                for (var k in obj._residueCounts) {
-                    if (obj._residueCounts.hasOwnProperty(k)) {
-                        obj._uniqueResidues.push(k);
-                    }
-                }
-            } catch (e) {
-                return e;
-            }
-
-        };
-        $scope.pushArrayIntoArray = function (dest, src) {
-            for (var i in src) {
-                dest.push(src[i]);
-            }
-            return dest;
-        };
-        $scope.replaceArray = function (dest, src) {
-            dest.length = 0;
-            $scope.pushArrayIntoArray(dest, src);
-            return dest;
-        };*/
 
         $scope.submitpaster = function (input) {
             var sub = JSON.parse(input);
@@ -1302,6 +790,9 @@
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
             var sub = $scope.toFormSubstance($window.loadjson);
+            //console.log(angular.copy(sub));
+            //_.set(sub,'substanceClass', sub.substanceClass.value);
+            console.log(angular.copy(sub));
             $scope.substance = sub;
         } else {
             //var edit = localStorageService.get('editID');
@@ -1324,20 +815,6 @@
         $scope.loadSubstances = function ($query) {
             return nameFinder.search($query);
         };
-
-/*        $scope.createSubref = function (selectedItem, path) {
-            console.log(selectedItem);
-            console.log(path);
-            var subref = {};
-            subref.refuuid = selectedItem.uuid;
-            subref.refPname = selectedItem._name;
-            subref.approvalID = selectedItem.approvalID;
-            subref.substanceClass = "reference";
-            console.log(subref);
-            _.set($scope.substance, path, subref);
-            subref = {};
-            console.log($scope);
-        };*/
 
         $scope.addToArray = function (obj, array) {
             //array.push(obj);
@@ -1389,50 +866,6 @@
         };
     });
 
-//sugarSites
-/*    ginasApp.directive('naSites', function () {
-        return {
-            require: 'ngModel',
-            link: function (scope, ele, attrs, c) {
-                scope.$watch(attrs.ngModel, function () {
-                    if (attrs.naSites.length < 2)return;
-
-
-                    var repObj = JSON.parse(attrs.naSites);
-                    var subunits = [];
-                    if (scope.substance.nucleicAcid) {
-                        subunits = scope.substance.nucleicAcid.subunits;
-                    } else if (scope.substance.protein) {
-                        subunits = scope.substance.protein.subunits;
-                    } else {
-                        return;
-                    }
-                    if (!c.$modelValue)
-                        return;
-
-                    var ret = scope.checkSites(c.$modelValue, subunits, repObj);
-
-                    if (ret) {
-                        c.$setValidity('siteInvalid', false);
-                    } else {
-                        c.$setValidity('siteInvalid', true);
-                    }
-
-                    //hack to have dynamic messages
-                    if (!c.$errorMsg)c.$errorMsg = {};
-                    if (c.$modelValue.length < 1) {
-                        c.$errorMsg.naSites = "";
-                    } else {
-                        c.$errorMsg.naSites = ret;
-                    }
-
-                    return ret;
-
-                });
-            }
-        };
-    });*/
-
     ginasApp.directive('titleHeader', function ($compile) {
         return {
             restrict: 'E',
@@ -1454,7 +887,6 @@
             }
         };
     });
-
 
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {
@@ -1859,70 +1291,6 @@
         };
     });
 
-/*    ginasApp.directive('siteSelector', function () {
-        return {
-            restrict: 'E',
-            scope: {
-                siteContainer: '=ngModel',
-                siteList: '=',
-                displayType: '@',
-                residueRegex: '@'
-            },
-            templateUrl: baseurl + "assets/templates/site-form.html",
-            link: function (scope, element, attrs, parentCtrl) {
-                scope.validateSites = scope.$parent.validateSites;
-                scope.updateSiteList = scope.$parent.updateSiteList;
-                scope.subunits = scope.$parent.getSubunits();
-                scope.range = function (min) {
-                    var input = [];
-                    for (var i = 1; i <= min; i++) input.push(i);
-                    return input;
-                };
-                scope.edit = false;
-                scope.validResidues = function (su) {
-                    if (!su)return [];
-                    var list = [];
-                    if (scope.residueRegex) {
-                        var re = new RegExp(scope.residueRegex, 'ig');
-                        var match;
-                        while ((match = re.exec(scope.subunits[su - 1].sequence)) !== null) {
-                            list.push(match.index + 1);
-                        }
-                        return list;
-                    } else {
-                        return scope.range(scope.subunits[su - 1].sequence.length);
-                    }
-                };
-                scope.size = 12;
-                if (attrs.size) {
-                    scope.size = attrs.size;
-                }
-                scope.$watch(
-                    function watchSelected() {
-                        return scope.siteContainer;
-                    },
-                    function updateSelected(value) {
-                        if (value) {
-                            if (!scope.siteList) {
-                                scope.siteList = scope.siteContainer.sites;
-                            }
-                        }
-                    }
-                );
-                scope.$watch(
-                    function watchSelected() {
-                        return JSON.stringify(scope.siteList);
-                    },
-                    function updateSelected(value, ovalue) {
-                        if (value && ovalue) {
-                            scope.updateSiteList(scope.siteContainer, scope.siteList, true);
-                        }
-                    }
-                );
-            }
-        };
-    });*/
-
     //Ok, this needs to be re-evaluated a bit.
     //Right now, it always round trips, but that doesn't always make sense.
     ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance, lookup, polymerUtils) {
@@ -2213,14 +1581,6 @@
 
         };
     });
-
-
-
-/*    ginasApp.controller('ReferenceSelectorInstanceController', function ($scope, $modalInstance) {
-        $scope.closeReferences = function () {
-            $modalInstance.close();
-        };
-    });*/
 
     ginasApp.controller('SubstanceSelectorInstanceController', function ($scope, $modalInstance, $http) {
 

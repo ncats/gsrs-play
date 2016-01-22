@@ -1563,7 +1563,8 @@
                 scope.parent.$subunitDisplay = [];
                 var template;
                 if (scope.parent.substanceClass === 'protein') {
-                    CVFields.fetch("AMINO_ACID_RESIDUES").then(function (data) {
+                    CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
+                        console.log(data);
                         scope.residues = data.data.content[0].terms;
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
                             template = angular.element(html);
@@ -1572,7 +1573,7 @@
                         });
                     });
                 } else {
-                    CVFields.fetch("NUCLEIC_ACID_BASE").then(function (data) {
+                    CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
                         scope.residues = data.data.content[0].terms;
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
                             template = angular.element(html);
