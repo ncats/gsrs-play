@@ -122,7 +122,7 @@
                         </thead>
                         @for(disLink <- sub.protein.disulfideLinks) {
                             <tr>
-                            @for(s <- disLink.sites) {
+                            @for(s <- disLink.getSites()) {
 
                                 <td>@s.subunitIndex _ @s.residueIndex</td>
                                 <td></td>
@@ -151,7 +151,7 @@
                         @for(otherLink <- sub.protein.otherLinks) {
                             <tr>
                                 <td>@otherLink.linkageType</td>
-                            @for(s <- otherLink.sites) {
+                            @for(s <- otherLink.getSites()) {
 
                                 <td>@s.subunitIndex _ @s.residueIndex</td>
                                 <td></td>
@@ -170,7 +170,7 @@
         @if(count > 0) {*@
             <div class="row info" id="glyco">
                 <button class="btn btn-primary label-offset det">
-                    Glycosylation&nbsp;<span class="badge head"> </span></button>
+                    Glycosylation&nbsp;<span class="badge head">@(GinasApp.getCount(sub.protein.glycosylation)) </span></button>
                 <div class="col-md-12">
                     @if(sub.protein.glycosylation.glycosylationType != null) {
                         Glycosylation Type: @sub.protein.glycosylation.glycosylationType
@@ -183,21 +183,21 @@
                                 <th>Residue Index</th>
                             </tr>
                         </thead>
-                        @for(s <- sub.protein.glycosylation.CGlycosylationSites) {
+                        @for(s <- sub.protein.glycosylation.getCGlycosylationSites()) {
                             <tr>
                                 <td>C</td>
                                 <td>@s.subunitIndex</td>
                                 <td>@s.residueIndex</td>
                             </tr>
                         }
-                        @for(s <- sub.protein.glycosylation.NGlycosylationSites) {
+                        @for(s <- sub.protein.glycosylation.getNGlycosylationSites()) {
                             <tr>
                                 <td>N</td>
                                 <td>@s.subunitIndex</td>
                                 <td>@s.residueIndex</td>
                             </tr>
                         }
-                        @for(s <- sub.protein.glycosylation.OGlycosylationSites) {
+                        @for(s <- sub.protein.glycosylation.getOGlycosylationSites()) {
                             <tr>
                                 <td>O</td>
                                 <td>@s.subunitIndex</td>

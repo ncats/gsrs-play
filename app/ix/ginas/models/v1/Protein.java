@@ -16,6 +16,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -65,9 +66,11 @@ public class Protein extends GinasCommonSubData {
     public Protein () {}
 
     @JsonIgnore
+    @Transient
     private Map<String, String> _modifiedCache=null;
+  
+    @JsonIgnore
     public Map<String, String> getModifiedSites(){
-    	Map<String, String> _modifiedCache = null;
     	if(_modifiedCache!=null){
     		return _modifiedCache;
     	}
@@ -75,34 +78,42 @@ public class Protein extends GinasCommonSubData {
     	_modifiedCache =  new HashMap<String,String>();
     	//disulfides
     	for(DisulfideLink dsl: this.disulfideLinks){
-    		for(Site s:dsl.sites){
+    		for(Site s:dsl.getSites()){
     			_modifiedCache.put(s.toString(),"disulfide");
     		}
     	}
     	//glycosylation
     	if(this.glycosylation!=null){
-	    	for(Site s: this.glycosylation.NGlycosylationSites){
+	    	for(Site s: this.glycosylation.getNGlycosylationSites()){
 	    		_modifiedCache.put(s.toString(),"nglycosylation");
 	    	}
-	    	for(Site s: this.glycosylation.OGlycosylationSites){
+	    	for(Site s: this.glycosylation.getOGlycosylationSites()){
 				_modifiedCache.put(s.toString(),"oglycosylation");
 	    	}
-	    	for(Site s: this.glycosylation.CGlycosylationSites){
+	    	for(Site s: this.glycosylation.getCGlycosylationSites()){
 				_modifiedCache.put(s.toString(),"cglycosylation");
 	    	}    	
     	}
     	if(modifications!=null){
     		//modifications
 	    	for(StructuralModification sm : this.modifications.structuralModifications){
-	    		if(sm.sites!=null){
-	    			for(Site s: sm.sites){
+	    		if(sm.getSites()!=null){
+	    			for(Site s: sm.getSites()){
 	    				_modifiedCache.put(s.toString(),"structuralModification");
 	    	    	}
 	    		}
 	    	}
     	}
-    	
-    	//TODO: Need otherlinks as well
+    	if(this.otherLinks!=null){
+    		//modifications
+	    	for(OtherLinks sm : this.otherLinks){
+	    		if(sm.getSites()!=null){
+	    			for(Site s: sm.getSites()){
+	    				_modifiedCache.put(s.toString(),"otherLinkage");
+	    	    	}
+	    		}
+	    	}
+    	}
     	return _modifiedCache;
     }
     

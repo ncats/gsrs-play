@@ -4,20 +4,28 @@ package ix.ginas.models.v1;
 
 
 import javax.persistence.CascadeType;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
 
+@Entity
+@Inheritance
+@DiscriminatorValue("NA")
 //@JSONEntity(name = "nucleicAcidSubstance", title = "Nucleic Acid Substance")
 public class NucleicAcidSubstance extends Substance {
 	@OneToOne(cascade= CascadeType.ALL)
 	public NucleicAcid nucleicAcid;
 
-	public NucleicAcid getNucleicAcid() {
-		return nucleicAcid;
-	}
-
-	public void setNucleicAcid(NucleicAcid nucleicAcid) {
-		this.nucleicAcid = nucleicAcid;
-	}
+//	public NucleicAcid getNucleicAcid() {
+//		return nucleicAcid;
+//	}
+//
+//	public void setNucleicAcid(NucleicAcid nucleicAcid) {
+//		this.nucleicAcid = nucleicAcid;
+//	}
+	
+	
 /*
 	public void setFromMap(Map m) {
 		super.setFromMap(m);

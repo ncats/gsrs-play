@@ -23,7 +23,7 @@
       @for(m <- mods) {
         <tr>
           <td>@m.structuralModificationType</td>
-          <td>@for(s <- m.sites) {
+          <td>@for(s <- m.getSites()) {
             [@{
             s.subunitIndex
           }_@s.residueIndex]

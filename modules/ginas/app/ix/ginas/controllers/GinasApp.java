@@ -19,14 +19,17 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Component;
+import ix.ginas.models.v1.ControlledVocabulary;
 import ix.ginas.models.v1.DisulfideLink;
 import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Glycosylation;
 import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Modifications;
 import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.NucleicAcid;
 import ix.ginas.models.v1.Polymer;
 import ix.ginas.models.v1.PolymerSubstance;
+import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.Protein;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Relationship;
@@ -36,6 +39,7 @@ import ix.ginas.models.v1.StructuralModification;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.models.v1.VocabularyTerm;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasUtils;
 import ix.ginas.utils.RebuildIndex;
@@ -584,6 +588,9 @@ public class GinasApp extends App {
             case concept:
                 return ok(ix.ginas.views.html.conceptdetails
                           .render((Substance) substance));
+            case nucleicAcid:
+                return ok(ix.ginas.views.html.nucleicaciddetails
+                          .render((NucleicAcidSubstance) substance));
             default:
                 return _badRequest("type not found");
             }
@@ -1068,20 +1075,27 @@ public class GinasApp extends App {
             return "";
         return desc;
     }
+    
+    public static String siteCheckNA(NucleicAcid na, int subunit, int index) {
+        String desc = na.getSiteModificationIfExists(subunit, index);
+        if (desc == null)
+            return "";
+        return desc;
+    }
 
     public static List<Integer> getSites(Modifications mod, int index) {
         ArrayList<Integer> subunit = new ArrayList<Integer>();
         for (StructuralModification sm : mod.structuralModifications) {
-            subunit = siteIter(sm.sites, index);
+            subunit = siteIter(sm.getSites(), index);
         }
         return subunit;
     }
 
     public static List<Integer> getSites(Glycosylation mod, int index) {
         ArrayList<Integer> subunit = new ArrayList<Integer>();
-        subunit.addAll(siteIter(mod.CGlycosylationSites, index));
-        subunit.addAll(siteIter(mod.NGlycosylationSites, index));
-        subunit.addAll(siteIter(mod.OGlycosylationSites, index));
+        subunit.addAll(siteIter(mod.getCGlycosylationSites(), index));
+        subunit.addAll(siteIter(mod.getNGlycosylationSites(), index));
+        subunit.addAll(siteIter(mod.getOGlycosylationSites(), index));
         return subunit;
     }
 
@@ -1089,7 +1103,7 @@ public class GinasApp extends App {
                                          int index) {
         ArrayList<Integer> subunit = new ArrayList<Integer>();
         for (DisulfideLink sm : disulfides) {
-            subunit.addAll(siteIter(sm.sites, index));
+            subunit.addAll(siteIter(sm.getSites(), index));
         }
         return subunit;
     }
@@ -1105,100 +1119,35 @@ public class GinasApp extends App {
     }
 
     public static String getAAName(char aa) {
-
-        String amino;
-
-        switch (aa) {
-        case 'A':
-            amino = "Alanine";
-            break;
-            // case 'B' : amino ="Asparagine/Aspartic acid";
-            // break;
-        case 'C':
-            amino = "Cysteine";
-            break;
-        case 'D':
-            amino = "Aspartic acid";
-            break;
-        case 'E':
-            amino = "Glutamic acid";
-            break;
-        case 'F':
-            amino = "Phenylalanine";
-            break;
-        case 'G':
-            amino = "Glycine";
-            break;
-        case 'H':
-            amino = "Histidine";
-            break;
-        case 'I':
-            amino = "Isoleucine";
-            break;
-        case 'K':
-            amino = "Lysine";
-            break;
-        case 'L':
-            amino = "Leucine";
-            break;
-        case 'M':
-            amino = "Methionine";
-            break;
-        case 'N':
-            amino = "Asparagine";
-            break;
-        case 'P':
-            amino = "Proline";
-            break;
-        case 'Q':
-            amino = "Glutamine";
-            break;
-        case 'R':
-            amino = "Arginine";
-            break;
-        case 'S':
-            amino = "Serine";
-            break;
-        case 'T':
-            amino = "Threonine";
-            break;
-        case 'V':
-            amino = "Valine";
-            break;
-        case 'W':
-            amino = "Tryptophan";
-            break;
-        case 'Y':
-            amino = "Tyrosine";
-            break;
-            // case 'Z': amino = "Glutamine/Glutamic acid";
-            // break;
-        default:
-            amino = "Tim forgot one";
-            break;
+        ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("AMINO_ACID_RESIDUES");
+        for(VocabularyTerm t : cv.terms){
+        	if(t.value.equals(aa+"")){
+        		return t.display;
+        	}
         }
-        return amino;
+        return "UNKNOWN";
+
+    }
+    public static String getNAName(char aa) {
+        ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("NUCLEIC_ACID_BASE");
+        for(VocabularyTerm t : cv.terms){
+        	if(t.value.equals(aa+"")){
+        		return t.display;
+        	}
+        }
+        return "UNKNOWN";
 
     }
 
     @SuppressWarnings("rawtypes")
-    public static int getCount(Object obj) {
+    public static int getCount(Glycosylation obj) {
         int count = 0;
         if (obj == null)
             return count;
         try {
-
-            for (Field l : obj.getClass().getFields()) {
-                // Logger.info(l.getName().toString());
-                Class type = l.getType();
-                if (type.isArray()) {
-                    count += Array.getLength(l.get(obj));
-                } else if (Collection.class.isAssignableFrom(type)) {
-                    count += ((Collection) l.get(obj)).size();
-                    Logger.info("collection" + count);
-
-                }
-            }
+        	count+=obj.getCGlycosylationSites().size();
+        	count+=obj.getOGlycosylationSites().size();
+        	count+=obj.getNGlycosylationSites().size();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -1207,7 +1156,7 @@ public class GinasApp extends App {
 
     }
 
-        // sigh ... this is the best of a bunch of bad options now
+    // sigh ... this is the best of a bunch of bad options now
 
     public static class GinasSearchResultProcessor
         extends SearchResultProcessor<StructureIndexer.Result> {
@@ -1554,7 +1503,11 @@ public class GinasApp extends App {
                         }else if (format.equalsIgnoreCase("cdx")){
                                 return ok(c.export(Chemical.FORMAT_CDX));
                         }else if (format.equalsIgnoreCase("fas")){
+                        	if(s instanceof ProteinSubstance){	
                         		return ok(makeFastaFromProtein(((ProteinSubstance)s)));
+                        	}else{
+                        		return ok(makeFastaFromNA(((NucleicAcidSubstance)s)));
+                        	}
                         }else{
                                 return _badRequest("unknown format:" + format);
                         }
@@ -1567,6 +1520,23 @@ public class GinasApp extends App {
     public static String makeFastaFromProtein(ProteinSubstance p){
     	String resp = "";
     	List<Subunit> subs=p.protein.subunits;
+    	Collections.sort(subs, new Comparator<Subunit>(){
+			@Override
+			public int compare(Subunit o1, Subunit o2) {
+				return o1.subunitIndex-o2.subunitIndex;
+			}});
+    	
+    	for(Subunit s: subs){
+    		resp+=">" + p.getApprovalIDDisplay() + "|SUBUNIT_" +  s.subunitIndex + "\n";
+    		for(String seq : splitBuffer(s.sequence,80)){
+    			resp+=seq+"\n";
+    		}
+    	}
+    	return resp;
+    }
+    public static String makeFastaFromNA(NucleicAcidSubstance p){
+    	String resp = "";
+    	List<Subunit> subs=p.nucleicAcid.getSubunits();
     	Collections.sort(subs, new Comparator<Subunit>(){
 			@Override
 			public int compare(Subunit o1, Subunit o2) {

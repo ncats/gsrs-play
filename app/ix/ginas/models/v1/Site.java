@@ -1,19 +1,9 @@
 package ix.ginas.models.v1;
 
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import ix.core.models.Indexable;
 import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.GinasCommonSubData;
 
-@Entity
-@Table(name="ix_ginas_site")
 @JSONEntity(name = "site", title = "Site", isFinal = true)
-public class Site extends GinasCommonSubData {
+public class Site {
     @JSONEntity(title = "Subunit Index")
     public Integer subunitIndex;
     
@@ -21,8 +11,27 @@ public class Site extends GinasCommonSubData {
     public Integer residueIndex;
 
     public Site () {}
+    public Site (Integer si, Integer ri) {
+    	this.subunitIndex=si;
+    	this.residueIndex=ri;
+    }
     
     public String toString(){
     	return this.subunitIndex + "_" + this.residueIndex;
+    }
+    public boolean equals(Object o){
+    	if(o instanceof Site){
+	    	if(this.subunitIndex == ((Site)o).subunitIndex){
+	    		if(this.residueIndex == ((Site)o).residueIndex){
+	    			return true;
+	    		}
+	    	}
+    	}
+    	
+    	return false;
+    }
+    @Override
+    public int hashCode(){
+    	return toString().hashCode();
     }
 }

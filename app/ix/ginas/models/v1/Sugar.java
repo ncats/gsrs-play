@@ -2,20 +2,38 @@ package ix.ginas.models.v1;
 
 import ix.ginas.models.GinasCommonSubData;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@SuppressWarnings("serial")
+@Entity
+@Table(name="ix_ginas_sugar")
 public class Sugar extends GinasCommonSubData {
-	List<Site> sites;
+	
 	String sugar;
 
-	public List<Site> getSites() {
-		return sites;
-	}
-
-	public void setSites(List<Site> sites) {
-		this.sites = sites;
-	}
+	@JsonIgnore
+	@OneToOne(cascade=CascadeType.ALL)
+    SiteContainer siteContainer;
+    public List<Site> getSites(){
+    	if(siteContainer!=null){
+    		return siteContainer.getSites();
+    	}
+    	return new ArrayList<Site>();
+    }
+    public void setSites(List<Site> sites){
+    	if(siteContainer==null){
+    		siteContainer=new SiteContainer(this.getClass().getName());
+    	}
+    	siteContainer.setSites(sites);
+    }
 
 	public String getSugar() {
 		return sugar;

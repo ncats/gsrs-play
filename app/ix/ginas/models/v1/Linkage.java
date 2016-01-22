@@ -3,11 +3,36 @@ package ix.ginas.models.v1;
 
 import ix.ginas.models.GinasCommonSubData;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@SuppressWarnings("serial")
+@Entity
+@Table(name="ix_ginas_linkage")
 public class Linkage extends GinasCommonSubData {
 	String linkage;
-	List<Site> sites;
+	@JsonIgnore
+	@OneToOne(cascade=CascadeType.ALL)
+    SiteContainer siteContainer;
+    public List<Site> getSites(){
+    	if(siteContainer!=null){
+    		return siteContainer.getSites();
+    	}
+    	return new ArrayList<Site>();
+    }
+    public void setSites(List<Site> sites){
+    	if(siteContainer==null){
+    		siteContainer=new SiteContainer(this.getClass().getName());
+    	}
+    	siteContainer.setSites(sites);
+    }
 
 	public String getLinkage() {
 		return linkage;
@@ -17,13 +42,6 @@ public class Linkage extends GinasCommonSubData {
 		this.linkage = linkage;
 	}
 
-	public List<Site> getSites() {
-		return sites;
-	}
-
-	public void setSites(List<Site> sites) {
-		this.sites = sites;
-	}
 /*
 	public void setFromMap(Map m) {
 		super.setFromMap(m);
