@@ -1309,7 +1309,7 @@
                         uuid = scope.obj.uuid;
                         index = _.indexOf(scope.referenceobj.references, uuid);
                         scope.obj.apply = scope.isReferenced();
-
+                        scope.parent.references = _.orderBy(scope.parent.references, ['apply'],['desc']);
                         break;
                 }
 
