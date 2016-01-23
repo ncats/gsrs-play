@@ -218,6 +218,52 @@
         };
     });
 
+    ginasForms.directive('conceptUpgradeForm', function ($http, $location, toggler) {
+        return {
+            restrict: 'E',
+            replace: true,
+            templateUrl: baseurl + "assets/templates/forms/concept-upgrade-form.html",
+            scope:{
+                parent: '='
+            },
+            link: function(scope, element, attrs) {
+                scope.iscollapsed = false;
+                console.log($location);
+                scope.editid = scope.parent.uuid.split('-')[0];
+                scope.changeClass = function (newClass) {
+                    console.log(scope);
+                    scope.parent.substanceClass = newClass;
+                    _.set(scope.parent, 'update', true);
+                    console.log(newClass);
+                    if (_.has(scope.parent, 'update')) {
+                        $.ajax({
+                            url: baseurl + 'api/v1/substances(' + scope.parent.uuid + ')/_',
+                            type: 'PUT',
+                            beforeSend: function (request) {
+                                request.setRequestHeader("Content-Type", "application/json");
+                            },
+                            data: JSON.stringify(scope.parent),
+                            success: function (data) {
+                                alert('Load was performed.');
+                                $location.path('app/substance/{{editid}}/edit');
+                                $location.replace();
+                            }
+                        });
+                    } else {
+                        $http.post(baseurl + 'register/submit', scope.parent).success(function () {
+                            console.log("success");
+                            alert("submitted!");
+                            $location.path('app/substance/{{editid}}/edit');
+                            $location.replace();
+                        });
+                    }
+
+
+                };
+            }
+        };
+    });
+
     ginasForms.directive('commentForm', function () {
         return {
             restrict: 'E',

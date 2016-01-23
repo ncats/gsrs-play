@@ -1,0 +1,52 @@
+<div class="row info">
+    <div class="row">
+        <form-header type="Concept Upgrade" path="" parent="parent"></form-header>
+    </div>
+    <h2><i class = "fa fa-exclamation-circle"></i>Reloads Page</h2>
+    <div class="col-md-12">
+        <div class="row form-row">
+            <form>
+                <div class ="col-md-2">
+                    <a ng-click = "changeClass('chemical');" ng-href = "app/substance/{{editid}}/edit">
+                    <!--<input type="radio" ng-model="parent.substanceClass" value="chemical"  ng-click = "changeClass()" href =>-->
+                    <img ng-src = "app/assets/ginas/images/Chemicals.svg">Chemical
+                        </a>
+                </div>
+                <div class ="col-md-2">
+                    <input type="radio" ng-model="parent.substanceClass" value="protein" ng-class="part" ng-click = "changeClass('protein')">
+                    <img ng-src = "app/assets/ginas/images/Proteins.svg">Protein
+                </div>
+                <div class ="col-md-2">
+                    <input type="radio" ng-model="parent.substanceClass" value="structurallyDiverse" ng-class="part" ng-click = "changeClass('structurallyDiverse')">
+                    <img ng-src = "app/assets/ginas/images/Structurally_diverse.svg">Structurally Diverse
+                </div>
+                <div class ="col-md-2">
+                    <input type="radio" ng-model="parent.substanceClass" value="polymer" ng-class="part" ng-click = "changeClass('polymer')">
+                    <img ng-src = "app/assets/ginas/images/Chemicals.svg">Polymer
+                </div>
+                <div class ="col-md-2">
+                    <input type="radio" ng-model="parent.substanceClass" value="nucleicAcid" ng-class="part" ng-click = "changeClass('nucleidAcid')">
+                    <img ng-src = "app/assets/ginas/images/Proteins.svg">Nucelic Acid
+                </div>
+                <div class ="col-md-2">
+                    <input type="radio" ng-model="parent.substanceClass" value="mixture" ng-class="part" ng-click = "changeClass('mixture')">
+                    <img ng-src = "app/assets/ginas/images/Proteins.svg">Mixture
+                </div>
+                <div class ="col-md-2">
+                    <input type="radio" ng-model="parent.substanceClass" value="g1ss" ng-class="part" ng-click = "changeClass('g1ss')">
+                    <img ng-src = "app/assets/ginas/images/Proteins.svg">Group 1 Specified Substance
+                </div>
+
+
+
+
+                <!--<div class="col-md-2">-->
+                    <!--<dropdown-view-edit obj = "parent" field="substanceClass" cv = "SUBSTANCE_CLASS" label="Substance Class"></dropdown-view-edit>-->
+<!--</div>-->
+
+
+
+            </form>
+        </div>
+    </div>
+</div>

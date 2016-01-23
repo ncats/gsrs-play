@@ -52,64 +52,64 @@
                             <h3><em>Progress</em></h3>
                             
                             
-                            <progressbar class="{{mclass}}" max="max" value="dynamic">
+                            <uib-progressbar class="{{mclass}}" max="max" value="dynamic">
                             	<span class="progress-text">{{dynamic}} / {{max}}</span>
-                            </progressbar>
+                            </uib-progressbar>
                             <button ng-hide="details" type="button" class="btn btn-sm btn-primary" ng-click="details=true">Show Details</button>
                             <button ng-show="details" type="button" class="btn btn-sm btn-primary" ng-click="details=false">Hide Details</button>
                             <div ng-show="details">
                             <small><em>Extracted Records</em></small>
-                            <progress class="{{mclass}}" max="max" >
+                            <uib-progress class="{{mclass}}" max="max" >
                             
-	                            <bar value="stat.recordsExtractedSuccess" type="success">
+	                            <uib-bar value="stat.recordsExtractedSuccess" type="success">
 	                            <span class="progress-text">
 	                            {{stat.recordsExtractedSuccess}}
 	                            </span>
-	                            </bar>
+	                            </uib-bar>
 	                            
-	                            <bar value="stat.recordsExtractedFailed" type="danger">
+	                            <uib-bar value="stat.recordsExtractedFailed" type="danger">
 	                            <span ng-hide="stat.recordsExtractedFailed < 1" class="progress-text">
 	                            {{stat.recordsExtractedFailed}}
 	                            </span>
-	                            </bar>
+	                            </uib-bar>
                             
-                            </progress>
+                            </uib-progress>
                             
                             <small><em>Processed Records</em></small>
                             
-                            <progress class="{{mclass}}" max="max" >
+                            <uib-progress class="{{mclass}}" max="max" >
                             
-	                            <bar value="stat.recordsProcessedSuccess" type="success">
+	                            <uib-bar value="stat.recordsProcessedSuccess" type="success">
 	                            <span class="progress-text">
 	                            {{stat.recordsProcessedSuccess}}
 	                            </span>
-	                            </bar>
+	                            </uib-bar>
 	                            
-	                            <bar value="stat.recordsProcessedFailed" type="danger">
+	                            <uib-bar value="stat.recordsProcessedFailed" type="danger">
 	                            <span ng-hide="stat.recordsProcessedFailed < 1" class="progress-text">
 	                            {{stat.recordsProcessedFailed}}
 	                            </span>
-	                            </bar>
+	                            </uib-bar>
                             
-                            </progress>
+                            </uib-progress>
                             
                             <small><em>Persisted Records</em></small>
                             
-                            <progress class="{{mclass}}" max="max" >
+                            <uib-progress class="{{mclass}}" max="max" >
                             
-	                            <bar value="stat.recordsPersistedSuccess" type="success">
+	                            <uib-bar value="stat.recordsPersistedSuccess" type="success">
 	                            <span class="progress-text">
 	                            {{stat.recordsPersistedSuccess}}
 	                            </span>
-	                            </bar>
+	                            </uib-bar>
 	                            
-	                            <bar value="stat.recordsPersistedFailed" type="danger">
+	                            <uib-bar value="stat.recordsPersistedFailed" type="danger">
 	                            <span ng-hide="stat.recordsPersistedFailed < 1" class="progress-text">
 	                            {{stat.recordsPersistedFailed}}
 	                            </span>
-	                            </bar>
+	                            </uib-bar>
                             
-                            </progress>
+                            </uib-progress>
                             </div>
                             <div class = "col-md-10">
                             {{mess}}
