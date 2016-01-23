@@ -1631,6 +1631,9 @@
                 }
 
                 scope.validate = function () {
+                    if(scope.subunit.sequence.length>10000){
+                        alert('Ginas can currently only support sequences less than 10000 characters in length');
+                    }
                     scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
                     scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
                     scope.subunit = {};
