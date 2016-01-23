@@ -174,7 +174,9 @@ public class GinasLoad extends App {
 	public static Result uploadFile() {
 		DynamicForm requestData = Form.form().bindFromRequest();
 		String type = requestData.get("file-type");
+		String nam = requestData.get("file-name");
 		Logger.info("type =" + type);
+		Logger.info("name =" + nam);
 		try {
 			Payload payload = payloadPlugin.parseMultiPart("file-name",
 					request(), PayloadPersistType.PERM);

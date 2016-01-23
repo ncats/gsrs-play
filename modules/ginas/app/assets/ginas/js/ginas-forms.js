@@ -1331,7 +1331,7 @@
         };
     });
 
-    ginasForms.directive('referenceForm', function (UUID) {
+    ginasForms.directive('referenceForm', function ($http, UUID) {
         return {
             restrict: 'E',
             replace: 'true',
@@ -1341,9 +1341,26 @@
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
-
-
                 console.log(scope);
+
+                scope.submitFile = function() {
+                    //create form data object
+                    var fd = new FormData();
+                    //  fd.append('file', scope.uploadFile);
+                    fd.append('file-name', scope.uploadFile);
+                    fd.append('file-type', scope.uploadFile.type);
+                    //send the file / data to your server
+                    $http.post(baseurl + 'upload', fd, {
+                        transformRequest: angular.identity,
+                        headers: {'Content-Type': undefined}
+                    }).success(function (data) {
+                        console.log(data);
+                        _.set(scope.ref, 'uploadedFile', data.url);
+                    }).error(function (err) {
+                        console.log(err);
+                    });
+                };
+
                 scope.validate = function () {
                     if (!_.isUndefined(scope.ref.citation)) {
                         _.set(scope.ref, "uuid", UUID.newID());
@@ -1375,7 +1392,7 @@
         };
     });
 
-    ginasForms.directive('referenceFormOnly', function (UUID) {
+    ginasForms.directive('referenceFormOnly', function ($http) {
         return {
             restrict: 'E',
             replace: true,
@@ -1384,7 +1401,27 @@
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
             link: function (scope, element, attrs) {
-                scope.validate = function () {
+console.log(scope);
+                scope.submitFile = function() {
+                    //create form data object
+                    var fd = new FormData();
+                  //  fd.append('file', scope.uploadFile);
+                    fd.append('file-name', scope.uploadFile);
+                    fd.append('file-type', scope.uploadFile.type);
+                    //send the file / data to your server
+                    $http.post(baseurl + 'upload', fd, {
+                        transformRequest: angular.identity,
+                        headers: {'Content-Type': undefined}
+                    }).success(function (data) {
+                        console.log(data);
+                        _.set(scope.ref, 'uploadedFile', data.url);
+                    }).error(function (err) {
+                        console.log(err);
+                    });
+                };
+
+
+                    scope.validate = function () {
                     scope.saveReference(scope.ref, scope.parent);
                     scope.ref = {};
                     scope.ref.apply = true;
