@@ -342,11 +342,6 @@
                 _.set(formSub, 'officialNames', officialNames);
                 _.set(formSub, 'unofficialNames', unofficialNames);
             }
-            //if(_.isObject(formSub.substanceClass)){
-            //    console.log(formSub.substanceClass);
-            //     _.set(formSub, 'substanceClass', formSub.substanceClass.value);
-            //}
-            console.log(formSub);
             return formSub;
         };
 
@@ -427,7 +422,6 @@
                         if (!_.isNull(sub[field])) {
                             CVFields.getDomain(newpath).then(function (data) {
                                 if (!_.isUndefined(data) && data !== 'SUBSTANCE_CLASS' ) {
-                                    console.log(data);
                                     var domain = data;
                                     CVFields.getCV(domain).then(function (data) {
                                         var cv = data.data.content[0].terms;
@@ -775,7 +769,6 @@
             var sub = JSON.parse(input);
             //  $scope.substance = sub;
             $scope.substance = $scope.toFormSubstance(sub);
-            console.log($scope);
         };
 
         $scope.bugSubmit = function (bugForm) {
@@ -792,7 +785,6 @@
             var sub = $scope.toFormSubstance($window.loadjson);
             //console.log(angular.copy(sub));
             //_.set(sub,'substanceClass', sub.substanceClass.value);
-            console.log(angular.copy(sub));
             $scope.substance = sub;
         } else {
             //var edit = localStorageService.get('editID');
@@ -818,7 +810,6 @@
 
         $scope.addToArray = function (obj, array) {
             //array.push(obj);
-            console.log($scope);
             // console.log(obj);
             if (!_.has($scope, array)) {
                 $scope[array].push(obj);
@@ -827,7 +818,6 @@
                 _.set($scope, array, obj);
 
             }
-            console.log($scope);
         };
 
         //method for injecting a large structure image on the browse page//
@@ -852,7 +842,6 @@
                 $scope.stage = true;
             }
         };
-        console.log($scope);
     });
 
     ginasApp.directive('loading', function ($http) {
@@ -969,7 +958,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><span class="comment">{{value|limitTo:40}}...</span></div>'
+            template: '<div><span class="comment">{{value|limitTo:40}}...</span></div>',
         };
     });
 
@@ -981,7 +970,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><i class="fa fa-lock fa-2x warning"  tooltip="Edit user access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
+            template: '<div><i class="fa fa-lock fa-2x warning"  uib-tooltip="Edit user access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
         };
     });
 
@@ -1000,7 +989,7 @@
     ginasApp.directive('aminoAcid', function ($compile) {
         var div = '<div class = "col-md-1">';
         var validTool = '<a href="#" class= "aminoAcid" uib-tooltip="{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}} ({{acid.type}}{{acid.name}})">{{acid.value}}</a>';
-        var invalidTool = '<a href="#" class= "invalidAA" tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>';
+        var invalidTool = '<a href="#" class= "invalidAA" uib-tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>';
         var space = '&nbsp;';
         var close = '</div>';
         getTemplate = function (aa) {
@@ -1293,7 +1282,7 @@
 
     //Ok, this needs to be re-evaluated a bit.
     //Right now, it always round trips, but that doesn't always make sense.
-    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance, lookup, polymerUtils) {
+    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance, CVFields, polymerUtils) {
         return {
             restrict: 'E',
             require: "ngModel",
@@ -1334,7 +1323,12 @@
                         } else if (attrs.type === "polymer") {
                             scope.formsubstance.idealizedStructure = data.structure;
                             for (var i in data.structuralUnits) {
-                                data.structuralUnits[i].type = lookup.expandCVValueDisplay("POLYMER_SRU_TYPE", data.structuralUnits[i].type);
+                                CVFields.getCV("POLYMER_SRU_TYPE").then(function(response){
+                                    var cv = response.data.content[0].terms;
+                                    data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
+
+                                });
+                                //data.structuralUnits[i].type = lookup.expandCVValueDisplay("POLYMER_SRU_TYPE", data.structuralUnits[i].type);
                             }
                             polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
                             scope.formsubstance.structuralUnits = data.structuralUnits;
@@ -1381,7 +1375,7 @@
                     }
                 });
                 if (structureid) {
-                    console.log("There is an id, it's:" + structureid);
+                  //  console.log("There is an id, it's:" + structureid);
                     $http({
                         method: 'GET',
                         url: baseurl + 'api/v1/structures/' + structureid

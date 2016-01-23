@@ -510,11 +510,11 @@ NUCLEIC_ACID_TYPE	nucleicAcid.nucleicAcidType	GENE ELEMENT	GENE ELEMENT
 NUCLEIC_ACID_TYPE	nucleicAcid.nucleicAcidType	PLASMID	PLASMID
 NUCLEIC_ACID_TYPE	nucleicAcid.nucleicAcidType	VECTOR	VECTOR
 NUCLEIC_ACID_TYPE	nucleicAcid.nucleicAcidType	RNAI	RNAI
-OPTICAL_ACTIVITY		( + / - )	( + / - )
-OPTICAL_ACTIVITY		( + )	( + )
-OPTICAL_ACTIVITY		( - )	( - )
-OPTICAL_ACTIVITY		none	None
-OPTICAL_ACTIVITY		unspec	Unspecified
+OPTICAL_ACTIVITY	moieties.opticalActivity	( + / - )	( + / - )
+OPTICAL_ACTIVITY	moieties.opticalActivity	( + )	( + )
+OPTICAL_ACTIVITY	moieties.opticalActivity	( - )	( - )
+OPTICAL_ACTIVITY	moieties.opticalActivity	none	None
+OPTICAL_ACTIVITY	moieties.opticalActivity	unspec	Unspecified
 OTHER_LINKAGE_TYPE	otherLinks.linkageType	AMIDE BOND	Amide Bond
 OTHER_LINKAGE_TYPE	otherLinks.linkageType	COORDINATION COMPOUND	Coordination Compound
 OTHER_LINKAGE_TYPE	otherLinks.linkageType	CROSSLINK	Crosslink
@@ -1221,12 +1221,12 @@ SRU_AMOUNT_TYPE		MOL_PERCENT_PER_POLYMER	Mol Percent (per polymer)
 SRU_AMOUNT_TYPE		WEIGHT_RATIO_RELATIVE	Weight Ratio (relative)
 SRU_AMOUNT_TYPE		MOL_RATIO_RELATIVE	Mol Ratio (relative)
 SRU_AMOUNT_TYPE		BLOCK_SIZE	Mol Ratio (per block)
-STEREOCHEMISTRY_TYPE	stereochemistry	ACHIRAL	Achiral
-STEREOCHEMISTRY_TYPE	stereochemistry	ABSOLUTE	Absolute, Chiral
-STEREOCHEMISTRY_TYPE	stereochemistry	MIXED	Mixed
-STEREOCHEMISTRY_TYPE	stereochemistry	RACEMIC	Racemic
-STEREOCHEMISTRY_TYPE	stereochemistry	EPIMERIC	Epimeric
-STEREOCHEMISTRY_TYPE	stereochemistry	UNKNOWN	Unknown
+STEREOCHEMISTRY_TYPE	moieties.stereochemistry	ACHIRAL	Achiral
+STEREOCHEMISTRY_TYPE	moieties.stereochemistry	ABSOLUTE	Absolute, Chiral
+STEREOCHEMISTRY_TYPE	moieties.stereochemistry	MIXED	Mixed
+STEREOCHEMISTRY_TYPE	moieties.stereochemistry	RACEMIC	Racemic
+STEREOCHEMISTRY_TYPE	moieties.stereochemistry	EPIMERIC	Epimeric
+STEREOCHEMISTRY_TYPE	moieties.stereochemistry	UNKNOWN	Unknown
 STRUCTURAL_MODIFICATION_TYPE	structuralModifications.structuralModificationType	AMINO_ACID_SUBSTITUTION	Amino Acid Replacement
 STRUCTURAL_MODIFICATION_TYPE	structuralModifications.structuralModificationType	METAL_BINDING	Metal Binding
 STRUCTURAL_MODIFICATION_TYPE	structuralModifications.structuralModificationType	FRAGMENT	Fragment
@@ -1469,9 +1469,9 @@ PHYSICAL_FORM		AMORPHOUS	AMORPHOUS
 PHYSICAL_FORM		TINCTURE	TINCTURE
 PHYSICAL_FORM		DRY	DRY
 PHYSICAL_FORM		EXTRACT	EXTRACT
-ATROPISOMERISM		Yes	YES
-ATROPISOMERISM		No	NO
-ATROPISOMERISM		Unknown	UNKNOWN
+ATROPISOMERISM	moieties.atropisomerism	Yes	YES
+ATROPISOMERISM	moieties.atropisomerism	No	NO
+ATROPISOMERISM	moieties.atropisomerism	Unknown	UNKNOWN
 ACCESS_GROUP	ACCESS	PROTECTED	PROTECTED
 ACCESS_GROUP	ACCESS	CDER	CDER
 ACCESS_GROUP	ACCESS	CBER	CBER

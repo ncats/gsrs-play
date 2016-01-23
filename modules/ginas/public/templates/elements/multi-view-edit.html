@@ -9,7 +9,7 @@
                 name="{{field}}"
                 ng-model=obj[field] ng-blur="editing(obj[field]);" display-property="display" key-property="value"
                 addFromAutocompleteOnly="true">
-        <auto-complete source="loadItems(cv, $query)" min-length="2" debounce-delay="0"
+        <auto-complete source="loadItems(cv, $query)" min-length="1" debounce-delay="0"
                        load-on-empty="true" load-on-focus="true"
                        load-on-down-arrow="true"></auto-complete>
     </tags-input>

@@ -7,40 +7,56 @@
                 <div class ="row">
                     <hr>
                     <div class="col-md-2">
+                        <label for={{obj.id}}>Moiety Structure</label>
                         <rendered id= {{::obj.id}}></rendered>
                     </div>
+                    <div class = "col-md-10">
+                        <div class ="row">
                     <div class="col-md-1">
-                        <label for="count">Moiety Count</label>
+                        <label for="count">Count</label>
                         <span class="badge badge-primary" id = "count">{{obj.count}}</span>
                     </div>
-                    <div class="col-md-1">
+                            <div class="col-md-3 text-center">
+                                <label for="formula">Formula</label>
+                                <text-view-edit obj = "obj" field = "formula" id = "formula"></text-view-edit>
+                            </div>
+                    <div class="col-md-2">
 <!--
                         <span class="badge" ng-click ="show = true">{{obj.stereochemistry.display || obj.stereochemistry}}</span>
 -->
-                        <dropdown-view-edit obj= "obj" field = "stereochemistry" label="Stereo Chemistry" cv = "STEREOCHEMISTRY_TYPE"></dropdown-view-edit>
+                        <dropdown-view-edit obj= "obj" field = "stereochemistry" label="Stereochemistry" cv = "STEREOCHEMISTRY_TYPE"></dropdown-view-edit>
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-md-2">
 
                         <dropdown-view-edit obj= "obj" field = "opticalActivity" label ="Optical Activity" cv = "OPTICAL_ACTIVITY"></dropdown-view-edit>
                     </div>
-                    <div class="col-md-1">
+                    <div class="col-md-3">
                         <dropdown-view-edit obj= "obj" field = "atropisomerism" label="Additional Stereochemistry" cv = "ATROPISOMERISM"></dropdown-view-edit>
                     </div>
+                    </div>
+                        <br>
+                        <div class = "row">
                     <div class="col-md-2">
-                        <text-view-edit obj = "obj" field = "formula"></text-view-edit>
-                    <div class="col-md-1">
                         <label for="mwt">Molecular Weight</label>
                         <span id ="mwt">{{obj.mwt}}</span></div>
-                    <div class="col-md-1">
+                    <div class="col-md-2">
                         <label for="stereo">Defined Stereocenters</label>
                         <span id = "stereo" class="badge">{{obj.definedStereo}} / {{obj.stereoCenters}}</span></div>
-                    <div class="col-md-1">
-                        <label for="ez">EZ Centers</label>
+                    <div class="col-md-2">
+                        <label for="ez">EZ Centers</label><br>
                         <span id ="ez" class="badge">{{obj.ezCenters}}</span></div>
-                    <div class="col-md-1">
-                        <label for="charge">Charge</label>
-                        <span id ="charge" class="badge">{{obj.charge}}</span></div>
+                    <div class="col-md-2">
+                        <label for="charge">Moiety Charge</label><br>
+                        <span id ="charge" class="badge">{{obj.charge}}</span>
+                    </div>
+                            <div class="col-md-2">
+                                <label for="comments">Stereocomments</label><br>
+                                <form-selector referenceobj= "obj" formname="moietyForm" field ="stereocomments" parent = parent type = "textbox" divid={{obj.$$hashKey}} mode="edit" id = "comments"></form-selector>
+                            </div>
+                            </div>
+                        </div>
                 </div>
+                <div class = {{obj.$$hashKey}}></div>
             </div>
         </div>
 

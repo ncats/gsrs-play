@@ -1,10 +1,15 @@
 <div class="row info">
     <div class="row">
-        <form-header type="comment" parent="substance"></form-header>
+        <div class ="col-md-4 col-md-pull-left">
+            <button class="btn btn-primary label-offset det text-capitalize">
+                {{field || label}}</button>
+            <info-button path= {{path}} type = {{field}}></info-button>
+            <div class={{field}}></div>
+        </div>
         <close-button></close-button>
     </div>
     <div class="col-md-12">
-        <text-box ng-model= referenceobj.comments field= "comments"></text-box>
+        <text-box ng-model= referenceobj[field] field= {{field}}></text-box>
     </div>
     <hr>
 </div>

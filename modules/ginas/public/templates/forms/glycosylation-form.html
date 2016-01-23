@@ -2,6 +2,8 @@
     <div class="row">
         <form-header type="glycosylation" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
+
+
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="glycosylationForm" role="form" novalidate>
             <div class="row form-row">
@@ -28,7 +30,7 @@
                 <div ng-repeat="obj in arrays">
                     <div class="col-md-2">
                         <form-selector referenceobj="obj" parent=parent type="site" divid="glycosylationForm"
-                                       mode="edit"></form-selector>
+                                       mode="edit" formtype="pair"></form-selector>
                     </div>
                 </div>
             </div>

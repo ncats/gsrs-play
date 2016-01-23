@@ -43,8 +43,6 @@
                         'Content-Type': 'text/plain'
                     }
                 }).success(function (data) {
-                    console.log(domain);
-                    console.log(data);
                     return data;
                 });
             },
@@ -106,12 +104,12 @@
                     .filter(function (x) {
                         return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
                     })
-                    .sortBy('display')
-                    .value();
+                    .sortBy('display').value();
             },
             searchTags: function (domain, query) {
                 CV.getCV(domain).then(function(data){
-                return _.chain(data)
+                    console.log(data);
+                return _.chain(data.data.content[0].terms)
                     .filter(function (x) {
                         return !query || x.display.toLowerCase().indexOf(query.toLowerCase()) > -1;
                     })
@@ -345,7 +343,6 @@
         return {
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/elements/multi-select.html",
-            require: '^ngModel',
             replace: true,
             scope: {
                 obj: '=ngModel',
@@ -354,15 +351,18 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                CVFields.load(scope.cv);
-
-                scope.loadItems = function (cv, $query) {
-                    return CVFields.search(cv, $query);
-                };
-
-                scope.loadTags = function(query) {
-                    return CVFields.searchTags(scope.cv);
-                };
+                scope.tags = [];
+                scope.loadTags = function($query) {
+                         var ret = CVFields.getCV(scope.cv).then(function(response) {
+                            var tags = response.data.content[0].terms;
+                            var filtered =  _.filter(tags, function(cv){
+                                return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
+                            });
+                             console.log(filtered);
+                        });
+                    console.log(ret);
+                    return ret;
+                    };
             }
         };
     });
@@ -489,7 +489,8 @@
     ginasFormElements.directive('closeButton', function () {
         return {
             restrict: 'E',
-            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
+            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>',
+            link: function(scope){console.log(scope);}
         };
     });
 

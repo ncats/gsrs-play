@@ -16,7 +16,7 @@
 
 
 
-            <div>@forms.moietyform()</div>
+            @*<div>@forms.moietyform()</div>*@
 
 
         }
@@ -98,7 +98,7 @@
     @*
         Loading all CV
     *@
-    <script src="@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>
+    @*<script src="@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/api/v1/vocabularies/?top=100&callback=window.CV_REQUEST="></script>*@
     <div ng-cloak>
         <form class="form-horizontal" name ="substanceForm" role ="form" novalidate>
         @wizardfields(kind)
