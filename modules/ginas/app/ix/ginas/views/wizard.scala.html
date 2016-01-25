@@ -81,7 +81,6 @@
             <h2>Unknown substance class: @kind</h2>    
         }
     }
-   <official-name-form parent = substance></official-name-form>
     <name-form parent = substance></name-form>
     <code-form parent = substance></code-form>
     <relationship-form parent = substance></relationship-form>
@@ -154,7 +153,7 @@
 
         <script type="text/ng-template" id="tag-template-script">
         <div class="tag-template" >
-        <div tooltip="{{data.citation}}">
+        <div uib-tooltip="{{data.citation}}">
         <span>{{$getDisplayText()}}</span>
         <a class="remove-button" ng-click="$removeTag()">&#10006;</a>
         </div>

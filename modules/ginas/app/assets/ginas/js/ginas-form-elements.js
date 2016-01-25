@@ -290,18 +290,19 @@
             },
             link: function (scope, element, attrs) {
                 CVFields.getCV(attrs.cv).then(function (data) {
-                    if (attrs.cv === 'NAME_TYPE') {
-                        var temp = angular.copy(data.data.content[0].terms);
-                        temp = _.remove(temp, function (n) {
-                            return n.value !== 'of';
-                        });
-                        scope.values = temp;
-                    } else {
-                        scope.values = data.data.content[0].terms;
-                    }
+                    //if (attrs.cv === 'NAME_TYPE') {
+                    //    var temp = angular.copy(data.data.content[0].terms);
+                    //    temp = _.remove(temp, function (n) {
+                    //        return n.value !== 'of';
+                    //    });
+                    //    scope.values = temp;
+                    //} else {
+                    scope.values = data.data.content[0].terms;
+                    //  }
                 });
+                // }
             }
-        };
+        }
     });
 
     ginasFormElements.directive('dropdownViewEdit', function (CVFields) {
@@ -317,15 +318,15 @@
             },
             link: function (scope, element, attrs) {
                 CVFields.getCV(attrs.cv).then(function (data) {
-                    if (attrs.cv === 'NAME_TYPE') {
-                        var temp = angular.copy(data.data.content[0].terms);
-                        temp = _.remove(temp, function (n) {
-                            return n.value !== 'of';
-                        });
-                        scope.values = temp;
-                    } else {
+                    //if (attrs.cv === 'NAME_TYPE') {
+                    //    var temp = angular.copy(data.data.content[0].terms);
+                    //    temp = _.remove(temp, function (n) {
+                    //        return n.value !== 'of';
+                    //    });
+                    //    scope.values = temp;
+                    //} else {
                         scope.values = data.data.content[0].terms;
-                    }
+                  //  }
                 });
 
                 scope.editing = function (obj) {
@@ -352,8 +353,10 @@
             },
             link: function (scope, element, attrs) {
                 scope.tags = [];
+               /*
                 scope.loadTags = function($query) {
                          var ret = CVFields.getCV(scope.cv).then(function(response) {
+                             console.log(response);
                             var tags = response.data.content[0].terms;
                             var filtered =  _.filter(tags, function(cv){
                                 return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
@@ -363,6 +366,15 @@
                     console.log(ret);
                     return ret;
                     };
+                */
+
+                CVFields.load(scope.cv);
+
+
+
+                scope.loadItems = function ($query) {
+                    return CVFields.search(scope.cv, $query);
+                };
             }
         };
     });

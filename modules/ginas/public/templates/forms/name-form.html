@@ -1,6 +1,6 @@
 <div class = "row info">
     <div class="row">
-        <form-header type="otherNames" parent="parent" path = "unofficialNames" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="names" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <ng-form name="nameForm" id = "add-name" novalidate isolate-form>
@@ -33,18 +33,33 @@
                 </div>
             </div>
             <div class="row form-row">
+                <div class = "col-md-2">
                     <resolve-button name="name.name" parent = "parent" divid="nameForm"></resolve-button>
                 </div>
+                <div ng-if="obj.type.value=='of'">
+                <div class="col-md-2">
+                </div>
+                <div class="col-md-2 err-check">
+                    <multi-select ng-model="name.domains" field="domains" cv = "NAME_DOMAIN" ></multi-select>
+                </div>
+                <div class="col-md-2 err-check">
+                    <multi-select ng-model="name.nameOrgs" field="nameOrgs" cv = "NAME_ORG"></multi-select>
+                </div>
+                <div class="col-md-2 err-check">
+                    <multi-select ng-model="name.nameJurisdiction" field="nameJurisdiction" cv = "JURISDICTION" ></multi-select>
+                </div>
+                </div>
+            </div>
             <div class="nameForm"></div>
-            <submit-buttons submit="name" form="nameForm" path="unofficialNames"></submit-buttons>
+            <submit-buttons submit="name" form="nameForm" path="names"></submit-buttons>
         </ng-form>
 
 
-        <div ng-repeat="obj in parent.unofficialNames">
+        <div ng-repeat="obj in parent.names">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj" path="unofficialNames"></delete-button>
+                    <delete-button delete="obj" path="names"></delete-button>
                 </div>
                 <div class="col-md-3">
                     <text-view-edit obj = "obj" field = "name"></text-view-edit>
@@ -67,7 +82,22 @@
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj ="obj" parent = "parent" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
-            </div>
+                </div>
+                <div class="row form-row">
+                    <div ng-if="obj.type.value=='of'">
+                        <div class="col-md-2">
+                        </div>
+                        <div class="col-md-2 err-check">
+                            <multi-view-edit obj= "obj" field = "domains" cv = "LANGUAGE"></multi-view-edit>
+                        </div>
+                        <div class="col-md-2 err-check">
+                            <multi-view-edit obj= "obj" field = "nameOrgs" cv = "NAME_ORG"></multi-view-edit>
+                        </div>
+                        <div class="col-md-2 err-check">
+                            <multi-view-edit obj= "obj" field = "nameJurisdiction" cv = "JURISDICTION"></multi-view-edit>
+                        </div>
+                    </div>
+                </div>
             <div class = {{obj.$$hashKey}}></div>
         </div>
     </div>

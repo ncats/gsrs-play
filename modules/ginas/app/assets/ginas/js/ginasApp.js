@@ -312,8 +312,8 @@
         };
 
         $scope.toFormSubstance = function (apiSub) {
-            var officialNames = [];
-            var unofficialNames = [];
+        //    var officialNames = [];
+        //    var unofficialNames = [];
             //first, flatten nameorgs, this is technically destructive
             //needs to be fixed.
           //  console.log($scope.expandCV(apiSub));
@@ -332,22 +332,22 @@
                         });
                         n.nameOrgs = temp;
                     }
-                    if (n.type === "of" || n.type.value === "of") {
-                        officialNames.push(n);
-                    } else {
-                        unofficialNames.push(n);
-                    }
-                    delete formSub.names;
+                    //if (n.type === "of" || n.type.value === "of") {
+                    //    officialNames.push(n);
+                    //} else {
+                    //    unofficialNames.push(n);
+                    //}
+                    //delete formSub.names;
                 });
-                _.set(formSub, 'officialNames', officialNames);
-                _.set(formSub, 'unofficialNames', unofficialNames);
+                //_.set(formSub, 'officialNames', officialNames);
+                //_.set(formSub, 'unofficialNames', unofficialNames);
             }
             return formSub;
         };
 
         $scope.fromFormSubstance = function (formSub) {
             console.log(formSub);
-            if (formSub.officialNames || formSub.unofficialNames) {
+           /* if (formSub.officialNames || formSub.unofficialNames) {
                 _.forEach(formSub.officialNames, function (n) {
                     n.type = "of";
                 });
@@ -363,6 +363,7 @@
                 delete formSub.officialNames;
                 delete formSub.unofficialNames;
             }
+            */
             if (formSub.q) {
                 delete formSub.q;
             }

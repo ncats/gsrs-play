@@ -2,7 +2,7 @@
 @import ix.ginas.models.v1.Name
 @import ix.ginas.models.v1.Substance
 
-@(names: List[Name],substance: Substance = null)
+@(names: List[Name], substance: Substance = null)
 
 <button class="btn btn-primary label-offset det">Names&nbsp;<span class="badge"> @names.length</span></button>
 <div class="col-md-12">
@@ -11,6 +11,9 @@
             <tr>
                 <th>Name</th>
                 <th>Type</th>
+                <th>Domain</th>
+                <th>Jurisdiction</th>
+                <th>Naming Org</th>
                 <th>Language</th>
                 <th>Preferred</th>
                 <th>Display Name</th>
@@ -19,24 +22,37 @@
         </thead>
         @for(n <- names) {
             <tr>
-                <td><span tooltip ="@n.name">@n.name</span>
+                 <td><span tooltip ="@n.name">@n.name</span>
                 
                 @for(l <- n.getLocators(substance)) {
                     <span tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)" class="badge" >@l</span> &nbsp;
-                	}
+                    }
                 </td>
                 <td>@GinasApp.getCV.getDisplay("NAME_TYPE",{n.`type`})</td>
+                <td>
+                @for(d <- n.domains) {
+                    @GinasApp.getCV.getDisplay("NAME_DOMAIN", d.term) &nbsp;
+                }
+                </td>
+                <td>
+                @for(j <- n.nameJurisdiction) {
+                    @GinasApp.getCV.getDisplay("JURISDICTION",j.term) &nbsp;
+                }</td>
+                <td>@for(org <- n.nameOrgs) {
+                    @GinasApp.getCV.getDisplay("NAME_ORG", org.nameOrg) &nbsp;
+                }</td>
                 <td>@for(l <- n.languages) {
                     @GinasApp.getCV.getDisplay("LANGUAGE", l.term) &nbsp;
                 }
                 </td>
-                
-                
-                <td>@if(n.preferred == true) {<i class="fa fa-check fa-2x success"></i> } else {}</td>
-                <td>@if(n.isDisplayName() == true) {<i class="fa fa-check fa-2x success"></i> } else {}</td>
+                <td>@if(n.preferred == true) {
+                    <i class="fa fa-check fa-2x success"></i>
+                } else {}</td>
+                 <td>@if(n.isDisplayName() == true) {
+                    <i class="fa fa-check fa-2x success"></i>
+                } else {}</td>
                 @referencetable(n.getReferences(), n.uuid.toString(), 5)
             </tr>
         }
     </table>
 </div>
-

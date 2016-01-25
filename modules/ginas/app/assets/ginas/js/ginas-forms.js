@@ -598,22 +598,6 @@
                         }
                         formHolder = '<comment-form referenceobj = referenceobj parent = parent label =label field = field></comment-form>';
                         break;
-                    case "upload":
-                        if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><comment value = "referenceobj.comments"></comment></a>');
-                            element.append(template);
-                            $compile(template)(scope);
-                        } else {
-                            $templateRequest(baseurl + "assets/templates/selectors/upload-selector.html").then(function (html) {
-                                template = angular.element(html);
-                                element.append(template);
-                                $compile(template)(scope);
-                            });
-                        }
-                        formHolder = '<div ng-blur ="toggleStage()"><comment-form referenceobj = referenceobj parent = parent></comment-form></div>';
-                        break;
-
-
                 }
 
 
