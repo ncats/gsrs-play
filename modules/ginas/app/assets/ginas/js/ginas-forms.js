@@ -8,21 +8,21 @@
             return this.stage;
         };
 
-        this.show = function(scope, element, url){
-                var template ="";
-                var result = document.getElementsByClassName(scope.type);
-                var elementResult = angular.element(result);
-                if (scope.stage === true) {
-                    scope.stage = false;
-                    $templateRequest(url).then(function (html) {
-                        template = angular.element(html);
-                        elementResult.append(template);
-                        $compile(elementResult)(scope);
-                    });
-                } else {
-                    elementResult.empty();
-                    scope.stage = true;
-                }
+        this.show = function (scope, element, url) {
+            var template = "";
+            var result = document.getElementsByClassName(scope.type);
+            var elementResult = angular.element(result);
+            if (scope.stage === true) {
+                scope.stage = false;
+                $templateRequest(url).then(function (html) {
+                    template = angular.element(html);
+                    elementResult.append(template);
+                    $compile(elementResult)(scope);
+                });
+            } else {
+                elementResult.empty();
+                scope.stage = true;
+            }
         };
 
         this.toggle = function (scope, element, newForm) {
@@ -63,27 +63,27 @@
             },
             templateUrl: baseurl + "assets/templates/selectors/form-header.html",
             link: function (scope, element, attrs) {
-                scope.length =0;
+                scope.length = 0;
                 scope.heading = _.startCase(scope.type);
-                if(_.isUndefined(scope.path)){
+                if (_.isUndefined(scope.path)) {
                     scope.path = scope.type;
                 }
-                if(!_.isUndefined(scope.parent[scope.path])){
+                if (!_.isUndefined(scope.parent[scope.path])) {
                     scope.length = _.get(scope.parent, scope.path).length;
                 }
-                if(scope.length==0){
+                if (scope.length == 0) {
                     scope.iscollapsed = true;
                 }
-/*                console.log(scope.path);
-                console.log(_.get(scope.parent, scope.path));*/
-/*                if(_.isUndefined(scope.parent[scope.path]) || scope.parent[scope.path].length == 0){
-                    scope.iscollapsed=false;
-                }*/
-/*
-                scope.showInfo = function () {
-                    var url = baseurl + "assets/templates/info/code-info.html";
-                    toggler.show(scope, type, url);
-                };*/
+                /*                console.log(scope.path);
+                 console.log(_.get(scope.parent, scope.path));*/
+                /*                if(_.isUndefined(scope.parent[scope.path]) || scope.parent[scope.path].length == 0){
+                 scope.iscollapsed=false;
+                 }*/
+                /*
+                 scope.showInfo = function () {
+                 var url = baseurl + "assets/templates/info/code-info.html";
+                 toggler.show(scope, type, url);
+                 };*/
 
                 scope.toggle = function () {
                     scope.iscollapsed = !scope.iscollapsed;
@@ -92,29 +92,29 @@
         };
     });
 
-    ginasForms.directive('infoButton', function($compile, toggler){
-        return{
-         restrict: 'E',
-            replace:'true',
-            scope:{
+    ginasForms.directive('infoButton', function ($compile, toggler) {
+        return {
+            restrict: 'E',
+            replace: 'true',
+            scope: {
                 type: '@',
                 path: '@'
             },
-            link: function(scope, element, attrs){
-                scope.stage=true;
+            link: function (scope, element, attrs) {
+                scope.stage = true;
                 var template;
                 var url = baseurl + "assets/templates/info/";
-                if(attrs.mark =="exclaim") {
+                if (attrs.mark == "exclaim") {
                     template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-exclamation-circle fa-lg" uib-tooltip="click for description"></i></span>');
-                }else {
+                } else {
                     template = angular.element('<span ng-click ="showInfo()"><i class="fa fa-question-circle fa-lg"  uib-tooltip="click for description"></i></span>');
                 }
                 element.append(template);
                 $compile(template)(scope);
-                if(attrs.info){
-                    url = url+ attrs.info+'-info.html';
-                }else{
-                    url = url+ 'code-info.html';
+                if (attrs.info) {
+                    url = url + attrs.info + '-info.html';
+                } else {
+                    url = url + 'code-info.html';
                 }
 
 
@@ -195,10 +195,10 @@
             scope: {
                 amount: '=',
                 referenceobj: '=',
-                parent:'='
+                parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/amount-form.html",
-            link: function(scope){
+            link: function (scope) {
                 console.log(scope);
             }
         };
@@ -209,12 +209,12 @@
             restrict: 'E',
             replace: true,
             templateUrl: baseurl + "assets/templates/forms/code-form.html",
-            scope:{
+            scope: {
                 parent: '='
             },
-            link: function(scope, element, attrs){
+            link: function (scope, element, attrs) {
                 scope.iscollapsed = false;
-                }
+            }
         };
     });
 
@@ -223,34 +223,31 @@
             restrict: 'E',
             replace: true,
             templateUrl: baseurl + "assets/templates/forms/concept-upgrade-form.html",
-            scope:{
+            scope: {
                 parent: '='
             },
-            link: function(scope, element, attrs) {
+            link: function (scope, element, attrs) {
                 scope.iscollapsed = false;
                 console.log($location);
                 scope.editid = scope.parent.uuid.split('-')[0];
                 scope.changeClass = function (newClass) {
+                    var newSub = scope.$parent.fromFormSubstance(scope.parent);
                     console.log(scope);
-                    scope.parent.substanceClass = newClass;
-                    _.set(scope.parent, 'update', true);
-                    console.log(newClass);
-                    if (_.has(scope.parent, 'update')) {
-                        $.ajax({
-                            url: baseurl + 'api/v1/substances(' + scope.parent.uuid + ')/_',
-                            type: 'PUT',
-                            beforeSend: function (request) {
-                                request.setRequestHeader("Content-Type", "application/json");
-                            },
-                            data: JSON.stringify(scope.parent),
-                            success: function (data) {
+                    newSub.substanceClass = newClass;
+                    _.set(newSub, 'update', true);
+                    console.log(newSub);
+                    if (_.has(newSub, 'update')) {
+                        $http.put(baseurl + 'api/v1/substances(' + scope.parent.uuid + ')/_', newSub, {
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).success(function(data){
                                 alert('Load was performed.');
                                 $location.path('app/substance/{{editid}}/edit');
                                 $location.replace();
-                            }
-                        });
+                            });
                     } else {
-                        $http.post(baseurl + 'register/submit', scope.parent).success(function () {
+                        $http.post(baseurl + 'register/submit', newSub).success(function () {
                             console.log("success");
                             alert("submitted!");
                             $location.path('app/substance/{{editid}}/edit');
@@ -285,32 +282,32 @@
         return {
             restrict: 'E',
             replace: 'true',
-            scope:{},
+            scope: {},
             templateUrl: baseurl + "assets/templates/admin/cv-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
                 var formHolder;
-               // scope.stage= true;
+                // scope.stage= true;
                 CVFields.count().then(function (response) {
                     scope.count = response.data.total;
                 });
 
-                scope.edit = function(){
-                    formHolder ='<edit-cv-form></edit-cv-form>';
+                scope.edit = function () {
+                    formHolder = '<edit-cv-form></edit-cv-form>';
                     scope.toggleStage();
                 };
 
-                scope.create = function(){
-                    formHolder ='<new-cv-form></new-cv-form>';
-                    scope.toggleStage();
-                  };
-
-                scope.import = function(){
-                    formHolder ='<load-cv-form></load-cv-form>';
+                scope.create = function () {
+                    formHolder = '<new-cv-form></new-cv-form>';
                     scope.toggleStage();
                 };
 
-                scope.download = function(){
+                scope.import = function () {
+                    formHolder = '<load-cv-form></load-cv-form>';
+                    scope.toggleStage();
+                };
+
+                scope.download = function () {
                     CVFields.all().then(function (response) {
                         console.log(response);
                         scope.cv = response.data.content;
@@ -383,7 +380,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-details-form.html"
@@ -394,7 +391,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-organism-form.html"
@@ -405,12 +402,12 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html",
-            link: function(scope, element){
-    console.log(scope);
+            link: function (scope, element) {
+                console.log(scope);
             }
         };
     });
@@ -423,15 +420,15 @@
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
-            link: function(scope, element, attrs){
+            link: function (scope, element, attrs) {
                 console.log(scope);
                 scope.parent.diverseType = "";
 
-                scope.checkType = function() {
+                scope.checkType = function () {
                     if (scope.parent.diverseType === 'whole') {
                         console.log("whole)");
                         _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
-                    }else{
+                    } else {
                         _.set(scope.parent.structurallyDiverse, 'part', []);
                     }
                 };
@@ -447,15 +444,15 @@
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
-            link: function(scope){
+            link: function (scope) {
                 console.log(scope);
-                scope.getValues = function(){
+                scope.getValues = function () {
                     console.log(scope);
                     CVFields.fetch(scope.vocab.value).then(function (data) {
                         console.log(data);
                         scope.values = data.data.content[0].terms;
                     });
-                    scope.create=true;
+                    scope.create = true;
                 }
             }
         };
@@ -483,7 +480,7 @@
                     _.set(scope, 'referenceobj', x);
                 }
 
-                scope.toggle = function(){
+                scope.toggle = function () {
                     console.log(scope);
                     toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
                 };
@@ -491,7 +488,7 @@
 
                 switch (attrs.type) {
                     case "amount":
-                    //    console.log(scope);
+                        //    console.log(scope);
                         if (attrs.mode == "edit") {
                             template = angular.element('<a ng-click ="toggle()"><amount value ="referenceobj.amount" ></amount></a>');
                             element.append(template);
@@ -680,9 +677,8 @@
                 cv: '='
             },
             templateUrl: baseurl + "assets/templates/admin/save-cv-form.html",
-            link: function(scope, element, attrs){
+            link: function (scope, element, attrs) {
                 console.log(scope);
-
 
 
             }
@@ -693,7 +689,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/mixture-component-select-form.html"
@@ -715,7 +711,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/name-form.html"
@@ -726,11 +722,11 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/admin/new-cv-form.html",
-            link: function(scope){
+            link: function (scope) {
 
             }
         };
@@ -740,7 +736,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/note-form.html"
@@ -751,7 +747,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-details-form.html"
@@ -875,9 +871,9 @@
                 if (sites !== "") {
                     sites += ";";
                 }
-                if(linkage){
-                    sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + (subunit.sequence.length-1);
-                }else {
+                if (linkage) {
+                    sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + (subunit.sequence.length - 1);
+                } else {
                     sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + subunit.sequence.length;
                 }
             }
@@ -886,7 +882,7 @@
         };
     });
 
-    ginasForms.service('siteAdder', function (siteList){
+    ginasForms.service('siteAdder', function (siteList) {
 
         this.getAll = function (type, display) {
             var temp = [];
@@ -903,24 +899,24 @@
         this.getAllSitesWithout = function (type, display) {
             var temp = [];
             _.forEach(display, function (arr) {
-            _.forEach(arr, function (subunit) {
-                temp = _.reject(subunit, function (su) {
-                    return su[type];
+                _.forEach(arr, function (subunit) {
+                    temp = _.reject(subunit, function (su) {
+                        return su[type];
+                    });
                 });
             });
-            });
-            if(type =='linkage'){
+            if (type == 'linkage') {
                 temp = _.dropRight(temp);
             }
             return temp;
         };
 
         this.applyAll = function (type, parent, obj) {
-            var plural = type+"s";
+            var plural = type + "s";
             if (parent.nucleicAcid[plural].length == 0) {
-                if(type =='linkage'){
+                if (type == 'linkage') {
                     obj.$displayString = siteList.allSites(parent, 'nucleicAcid', type);
-                }else {
+                } else {
                     obj.$displayString = siteList.allSites(parent, 'nucleicAcid');
                 }
                 obj.sites = siteList.siteList(obj.$displayString);
@@ -935,9 +931,9 @@
             }
         };
 
-        this.clearSites = function(type, parent, obj) {
+        this.clearSites = function (type, parent, obj) {
             _.forEach(obj, function (site) {
-                parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1]= _.omit(parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], type);
+                parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1] = _.omit(parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], type);
             });
         };
     });
@@ -962,7 +958,7 @@
                     return siteAdder.getAll('sugar', scope.parent.$subunitDisplay).length + siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
                 };
 
-                scope.applyAll = function(){
+                scope.applyAll = function () {
                     siteAdder.applyAll('sugar', scope.parent, scope.sugar);
                     scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
                 };
@@ -972,7 +968,7 @@
                         _.set(scope.parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'sugar', true);
                     });
                     scope.parent.nucleicAcid.sugars.push(scope.sugar);
-                    scope.noSugars = siteAdder.getAllSitesWithout('sugar',scope.parent.$subunitDisplay).length;
+                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
                     scope.sugar = {};
                     scope.sugarForm.$setPristine();
                 };
@@ -1008,7 +1004,7 @@
                     return siteAdder.getAll('linkage', scope.parent.$subunitDisplay).length + siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
                 };
 
-                scope.applyAll = function(){
+                scope.applyAll = function () {
                     siteAdder.applyAll('linkage', scope.parent, scope.linkage, 'linkage');
                     scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
                 };
@@ -1018,7 +1014,7 @@
                         _.set(scope.parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
                     });
                     scope.parent.nucleicAcid.linkages.push(scope.linkage);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage',scope.parent.$subunitDisplay).length;
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
                     scope.linkage = {};
                     scope.linkageForm.$setPristine();
                 };
@@ -1031,17 +1027,6 @@
 
                 scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
             }
-        };
-    });
-
-    ginasForms.directive('officialNameForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope:{
-                parent: '='
-            },
-            templateUrl: baseurl + "assets/templates/forms/official-name-form.html"
         };
     });
 
@@ -1111,7 +1096,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/parent-form.html"
@@ -1122,7 +1107,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/part-form.html"
@@ -1195,7 +1180,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/polymer-classification-form.html"
@@ -1206,13 +1191,13 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/polymer-monomer-form.html",
-            link: function(scope){
-            console.log(scope);
-        }
+            link: function (scope) {
+                console.log(scope);
+            }
         };
     });
 
@@ -1220,13 +1205,13 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/polymer-sru-form.html",
-            link: function(scope){
-            console.log(scope);
-        }
+            link: function (scope) {
+                console.log(scope);
+            }
         };
     });
 
@@ -1234,8 +1219,8 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
-                parent:'='
+            scope: {
+                parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/property-form.html"
         };
@@ -1245,7 +1230,7 @@
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/protein-details-form.html"
@@ -1293,7 +1278,7 @@
                         uuid = scope.obj.uuid;
                         index = _.indexOf(scope.referenceobj.references, uuid);
                         scope.obj.apply = scope.isReferenced();
-                        scope.parent.references = _.orderBy(scope.parent.references, ['apply'],['desc']);
+                        scope.parent.references = _.orderBy(scope.parent.references, ['apply'], ['desc']);
                         break;
                 }
 
@@ -1327,7 +1312,7 @@
             link: function (scope, element, attrs) {
                 console.log(scope);
 
-                scope.submitFile = function() {
+                scope.submitFile = function () {
                     //create form data object
                     var fd = new FormData();
                     //  fd.append('file', scope.uploadFile);
@@ -1385,11 +1370,11 @@
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
             link: function (scope, element, attrs) {
-console.log(scope);
-                scope.submitFile = function() {
+                console.log(scope);
+                scope.submitFile = function () {
                     //create form data object
                     var fd = new FormData();
-                  //  fd.append('file', scope.uploadFile);
+                    //  fd.append('file', scope.uploadFile);
                     fd.append('file-name', scope.uploadFile);
                     fd.append('file-type', scope.uploadFile.type);
                     //send the file / data to your server
@@ -1405,7 +1390,7 @@ console.log(scope);
                 };
 
 
-                    scope.validate = function () {
+                scope.validate = function () {
                     scope.saveReference(scope.ref, scope.parent);
                     scope.ref = {};
                     scope.ref.apply = true;
@@ -1425,11 +1410,40 @@ console.log(scope);
                 };
 
 
-                //this probably (definitely) needs to cascade down to all objects that use this reference
+                scope.deleteObjectReferences = function (obj, id) {
+                    var index;
+                    var refs = _.get((obj), 'references');
+                    index = _.findIndex(refs, function (o) {
+                        return o == id;
+                    });
+                    if (index > -1) {
+                        refs.splice(index, 1);
+                        obj.references = refs;
+                    }
+                };
 
-                scope.deleteObj = function (ref) {
-                    console.log(scope);
+                scope.deleteReference = function (ref) {
                     scope.parent.references.splice(scope.parent.references.indexOf(ref), 1);
+                };
+
+                scope.deleteObj = function (obj, ref) {
+                    _.forEach(_.keysIn(obj), function (field) {
+                        if (_.isObject(obj[field])) {
+                            if (_.isArray(obj[field])) {
+                                _.forEach((obj[field]), function (value, key) {
+                                    if (_.isObject(value)) {
+                                        if (_.indexOf(_.keysIn(value), 'references') > -1) {
+                                            scope.deleteObjectReferences(value, ref.uuid);
+                                        } else {
+                                            scope.deleteObj(value, ref);
+                                        }
+                                    }
+                                });
+                            } else {
+                                scope.deleteObj(obj[field], ref);
+                            }
+                        }
+                    });
                 };
             }
         };
@@ -1439,7 +1453,7 @@ console.log(scope);
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/relationship-form.html"
@@ -1544,7 +1558,7 @@ console.log(scope);
         return {
             restrict: 'E',
             replace: true,
-            scope:{
+            scope: {
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/ss-constituent-form.html"
@@ -1652,7 +1666,7 @@ console.log(scope);
                 }
 
                 scope.validate = function () {
-                    if(scope.subunit.sequence.length>10000){
+                    if (scope.subunit.sequence.length > 10000) {
                         alert('Ginas can currently only support sequences less than 10000 characters in length');
                     }
                     scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
