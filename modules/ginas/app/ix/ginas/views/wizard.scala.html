@@ -6,7 +6,9 @@
 @wizardfields(kind: String) = {
 
     <title-header name = "substance._name" kind = "substance.substanceClass"></title-header>
-    @kind match {
+    <name-form parent = substance></name-form>
+
+@kind match {
         case "chemical" => {
 
             <div>@forms.structureform()</div>
@@ -81,7 +83,6 @@
             <h2>Unknown substance class: @kind</h2>    
         }
     }
-    <name-form parent = substance></name-form>
     <code-form parent = substance></code-form>
     <relationship-form parent = substance></relationship-form>
     <note-form parent = substance></note-form>
