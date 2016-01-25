@@ -231,26 +231,23 @@
                 console.log($location);
                 scope.editid = scope.parent.uuid.split('-')[0];
                 scope.changeClass = function (newClass) {
+                    var newSub = scope.$parent.fromFormSubstance(scope.parent);
                     console.log(scope);
-                    scope.parent.substanceClass = newClass;
-                    _.set(scope.parent, 'update', true);
-                    console.log(newClass);
-                    if (_.has(scope.parent, 'update')) {
-                        $.ajax({
-                            url: baseurl + 'api/v1/substances(' + scope.parent.uuid + ')/_',
-                            type: 'PUT',
-                            beforeSend: function (request) {
-                                request.setRequestHeader("Content-Type", "application/json");
-                            },
-                            data: JSON.stringify(scope.parent),
-                            success: function (data) {
+                    newSub.substanceClass = newClass;
+                    _.set(newSub, 'update', true);
+                    console.log(newSub);
+                    if (_.has(newSub, 'update')) {
+                        $http.put(baseurl + 'api/v1/substances(' + scope.parent.uuid + ')/_', newSub, {
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).success(function(data){
                                 alert('Load was performed.');
                                 $location.path('app/substance/{{editid}}/edit');
                                 $location.replace();
-                            }
-                        });
+                            });
                     } else {
-                        $http.post(baseurl + 'register/submit', scope.parent).success(function () {
+                        $http.post(baseurl + 'register/submit', newSub).success(function () {
                             console.log("success");
                             alert("submitted!");
                             $location.path('app/substance/{{editid}}/edit');

@@ -5,95 +5,11 @@
 @(sub: ix.ginas.models.v1.ChemicalSubstance)
 
 
-@structureImage(s: Structure, size: Integer, showstereo: Boolean = false) = {
+@structureImage(s: Structure, size: Integer) = {
     <img class="struc-thumb img-responsive" alt="Structure of @sub.getName" title="Structure of @sub.getName"
     src='@ix.ginas.controllers.routes.GinasApp.structure(s.getId(), "svg", size)'>
-    @if(showstereo){
-     <table class="table">
-        <thead>
-            <tr>
-                    <th>Stereochemistry</th>
-                    <th>Optical Activity</th>
-                    <th>Additional Stereochemistry</th>
-            </tr>
-        </thead>
-    <tr>
-    <td><span class="badge">@s.stereoChemistry</span></td>
-            <td><span class="badge">
-            @if(s.opticalActivity!=null){
-                @s.opticalActivity.toValue()
-            }else{
-                @s.opticalActivity
-            }
-            </span></td>
-            <td><span class="badge">@s.atropisomerism</span></td>
-            </tr>
-            </table>
-    }
-    
 }
 
-@makeTable(s: GinasChemicalStructure, stype: String) = {
-    <div class="table-responsive">
-    <table class="table @stype-Table">
-        <thead>
-            <tr>
-                @if(stype == "moiety") {
-                    <th>Moiety Structure</th>
-                    <th>Moiety Count</th>
-                    <th>Moiety Stereochemistry</th>
-                    <th>Moiety Optical Activity</th>
-                    <th>Moiety Additional Stereochemistry</th>
-                }
-                <th>Molecular Formula</th>
-                <th>Molecular Weight</th>
-                <th>Defined Stereocenters</th>
-                <th>EZ Centers</th>
-                <th>Charge</th>
-                @if(stype != "moiety") {
-                    <th>Reference</th>
-                }
-            </tr>
-        </thead>
-        @fillTable(s, stype)
-    </table>
-        </div>
-}
-
-@fillTable(s: GinasChemicalStructure, stype: String) = {
-@if(stype == "structure") {
-    <tr>
-        <td>@s.formula</td>
-        <td>@s.mwt</td>
-        <td><span class="badge">@s.definedStereo / @s.stereoCenters</span></td>
-        <td><span class="badge">@s.ezCenters</span></td>
-        <td><span class="badge">@s.charge</span></td>
-        @referencetable(GinasApp.getStructureReferences(s), "hi", 6)
-    </tr>
-}
-@if(stype == "moiety") {
-    @for(m <- sub.moieties) {
-        <tr>
-            <td>@structureImage(m.structure, 150)</td>
-            <td><span class="badge badge-primary">@m.count</span></td>
-            <td><span class="badge">@m.structure.stereoChemistry</span></td>
-            <td><span class="badge">
-            @if(m.structure.opticalActivity!=null){
-                @m.structure.opticalActivity.toValue()
-            }else{
-                @m.structure.opticalActivity
-            }
-            </span></td>
-            <td><span class="badge">@m.structure.atropisomerism</span></td>
-            <td>@m.structure.formula</td>
-            <td>@m.structure.mwt</td>
-            <td><span class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></td>
-            <td><span class="badge">@m.structure.ezCenters</span></td>
-            <td><span class="badge">@m.structure.charge</span></td>
-        </tr>
-    }
-}
-}
 @substancedetails(sub){
     <li role="presentation"  class="active"><a href="#structureDetails" prevent-default="" ng-click="scrollTo('structureDetails')">Structure</a></li>
     @if(sub.moieties.length>0){
@@ -105,7 +21,7 @@
         </h3>
         <div class="col-md-5">
             <div class = "row">
-            @structureImage(sub.structure, 400,true)
+            @structureImage(sub.structure, 400)
             </div>
             <div class = "row">
                 <div class = "col-md-6 col-md-offset-6">
@@ -119,13 +35,96 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6">@makeTable(sub.structure, "structure")</div>
+        <div class="col-md-7">
+            <div class="table-responsive">
+                <table class="table table-striped moiety-Table">
+                  <tr>
+                            <td><strong>Stereochemistry</strong></td>
+                <td><span class="badge">@sub.structure.stereoChemistry</span></td>
+                    </tr>
+                    <tr>
+                <td><strong>Optical Activity</strong></td>
+                <td><span class="badge">
+                @if(sub.structure.opticalActivity!=null){
+                    @sub.structure.opticalActivity.toValue()
+                }else{
+                    @sub.structure.opticalActivity
+                }
+                </span></td>
+                        <tr>
+                            <td><strong>Additional Stereochemistry</strong></td>
+                        <td><span class="badge">@sub.structure.atropisomerism</span></td>
+                    </tr>
+                    <tr>
+            <td><strong>Molecular Formula</strong></td>
+                <td>@sub.structure.formula</td>
+                    </tr>
+                    <tr>
+            <td><strong>Molecular Weight</strong></td>
+                <td>@sub.structure.mwt</td>
+                    </tr>
+                    <tr>
+                <td><strong>Defined Stereocenters</strong></td>
+                <td><span class="badge">@sub.structure.definedStereo / @sub.structure.stereoCenters</span></td>
+                    </tr>
+                <td><strong>EZ Centers</strong></td>
+                <td><span class="badge">@sub.structure.ezCenters</span></td>
+                    <tr>
+                <td><strong>Charge</strong></td>
+                <td><span class="badge">@sub.structure.charge</span></td>
+                        </tr>
+                    <tr>
+                <td><strong>References</strong></td>
+                @referencetable(GinasApp.getStructureReferences(sub.structure), "hi", 2)
+</tr>
+                    </table>
+                </div>
+    </div>
     </div>
     @if(sub.moieties.length > 0) {
         <div class="row info" id="moieties">
             <button class="btn btn-primary label-offset det">
                 Moieties&nbsp;<span class="badge"> @sub.moieties.length</span></button>
-            <div class="col-md-12">@makeTable(sub.structure, "moiety")</div>
+            <div class="col-md-12">
+            <div class="table-responsive">
+                <table class="table moiety-Table">
+                    <thead>
+                        <tr>
+                                <th>Moiety Structure</th>
+                                <th>Moiety Count</th>
+                                <th>Moiety Stereochemistry</th>
+                                <th>Moiety Optical Activity</th>
+                                <th>Moiety Additional Stereochemistry</th>
+                            <th>Molecular Formula</th>
+                            <th>Molecular Weight</th>
+                            <th>Defined Stereocenters</th>
+                            <th>EZ Centers</th>
+                            <th>Charge</th>
+                        </tr>
+                    </thead>
+                        @for(m <- sub.moieties) {
+                            <tr>
+                                <td>@structureImage(m.structure, 150)</td>
+                                <td><span class="badge badge-primary">@m.count</span></td>
+                                <td><span class="badge">@m.structure.stereoChemistry</span></td>
+                                <td><span class="badge">
+                                @if(m.structure.opticalActivity!=null){
+                                    @m.structure.opticalActivity.toValue()
+                                }else{
+                                    @m.structure.opticalActivity
+                                }
+                                </span></td>
+                                <td><span class="badge">@m.structure.atropisomerism</span></td>
+                                <td>@m.structure.formula</td>
+                                <td>@m.structure.mwt</td>
+                                <td><span class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></td>
+                                <td><span class="badge">@m.structure.ezCenters</span></td>
+                                <td><span class="badge">@m.structure.charge</span></td>
+                            </tr>
+                        }
+                </table>
+            </div>
+        </div>
         </div>
     }
 }
