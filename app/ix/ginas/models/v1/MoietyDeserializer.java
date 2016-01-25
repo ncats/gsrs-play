@@ -23,6 +23,7 @@ public class MoietyDeserializer extends JsonDeserializer<Moiety> {
         if (n != null) {
             moiety.count = n.asInt();
         }
+        moiety.enforce();
         return moiety;
     }
 }

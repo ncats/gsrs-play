@@ -59,12 +59,14 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 		if(this.recordReference==null){
 			this.recordReference= new GinasReferenceContainer(this);
 		}
-		this.recordReference.references.add(new Keyword("REFERENCE", 
+		this.recordReference.references.add(new Keyword(GinasCommonSubData.REFERENCE, 
 				refUUID
 		));
+		System.out.println("Added reference:" + this.getReferences().toString());
+		
 	}
 	public void addReference(Reference r){
-		addReference(r.uuid.toString());
+		addReference(r.getOrGenerateUUID().toString());
 	}
 	public void addReference(Reference r, Substance s){
 		s.references.add(r);
