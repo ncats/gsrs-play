@@ -84,12 +84,12 @@
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Date approved: <h6>{{@prot.approved.getTime() | date: 'mediumDate'}}</h6>
+                        Date approved: <h6>{{@GinasApp.getDateTime(prot.approved) | date: 'mediumDate'}}</h6>
                     </div>
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Last modified: <h6>{{moment(@prot.approved.getTime())}}</h6>
+                        Last modified: <h6>{{moment(@prot.lastEdited.getTime())}}</h6>
                     </div>
                 </div>
                 <div class = "row">
