@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1562,7 +1563,14 @@ public class GinasApp extends App {
     	return tot;
     }
     public static int totalSites(NucleicAcidSubstance sub){
+    	
+    			
     	return totalSites(sub, true);
+    }
+    
+    public static Long getDateTime(Date d){
+    	if(d==null)return null;
+    	return d.getTime();
     }
     public static String getSugarName(Sugar s){
     	return ControlledVocabularyFactory.getDisplayFor("NUCLEIC_ACID_SUGAR",s.getSugar());
