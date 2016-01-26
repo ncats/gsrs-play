@@ -11,9 +11,11 @@
 }
 
 @substancedetails(sub){
-    <li role="presentation"  class="active"><a href="#structureDetails" prevent-default="" ng-click="scrollTo('structureDetails')">Structure</a></li>
+    <li role="presentation"><a href="#structureDetails" prevent-default="" ng-click="scrollTo('structureDetails')">Structure</a></li>
     @if(sub.moieties.length>0){
         <li role="presentation"><a href="#moieties" prevent-default=""  ng-click="scrollTo('moieties')" >Moieties <span class="badge pull-right">@sub.moieties.length</span></a></li> }
+}{
+    <div></div>
 } {
     <div class="row info" id="structureDetails">
         <h3>

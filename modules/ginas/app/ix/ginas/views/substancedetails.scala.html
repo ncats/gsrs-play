@@ -1,7 +1,7 @@
 @import ix.ginas.controllers.GinasApp
 @import be.objectify.deadbolt.java.views.html._
 
-@(sub: ix.ginas.models.v1.Substance)(breadcrumb: Html)(content: Html)
+@(sub: ix.ginas.models.v1.Substance)(breadcrumb: Html)(details: Html)(content: Html)
 
 
 @ginas(sub.getName, "ix.ginas.models.v1.StructurallyDiverseSubstance") {
@@ -12,6 +12,8 @@
             <h2 class="display-name"><em>@sub.getName()</em></h2>
             <nav id="breadcrumb">
                 <ul class="nav nav-pills nav-stacked" id="breadcrumb-list">
+                    <li role="presentation" class ="text-capitalize active"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
+                        @sub.substanceClass Details</a></li>
                     @breadcrumb
                     @defining(sub.getModificationCount()) { gcount =>
                         @if(gcount > 0) {
@@ -45,22 +47,31 @@
             </nav>
         </div>
         <div class = "col-md-9 pull-right">
-            <div class="row">
-                <div class ="col-md-9">
-                    <h3 class="text-capitalize">@sub.substanceClass</h3>
+            <div class="row info" id="details">
+                <button class="btn btn-primary label-offset det text-capitalize">
+                    @sub.substanceClass Details</button>
+                <div class ="col-md-12">
+                <div class = "row">
+                    <br/>
+                    <div class="col-md-3">
                     <code class="text-uppercase">Record Status: @sub.getDisplayStatus()</code> <br>
                     <code class ="text-uppercase"> version: <select><option selected>@sub.version</option></select></code>
                 </div>
-                <div class = "col-md-3">
+                <div class = "col-md-3 pull-right">
+                    <h5>Substance ID:</h5>
                 @if(sub.isSubstanceVariant()) {
-                    <h3 class= "pull-right appid subconcept"> @sub.getApprovalIDDisplay()</h3>
+                    <h3 class= "appid subconcept"> @sub.getApprovalIDDisplay()</h3>
                 } else {
-                    <h3 class= "pull-right appid">@sub.getApprovalIDDisplay()</h3>
+                    <h3 class= "appid">@sub.getApprovalIDDisplay()</h3>
                 }
 
                 </div>
-            </div>
-
+                    </div>
+                    <div class = "row">
+                    @details
+                        </div>
+                    </div>
+                </div>
             @content
 
             @if(sub.hasModifications()) {

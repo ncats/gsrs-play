@@ -273,6 +273,8 @@
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
+        $scope.toggleGrid = false;
+
         $scope.scrollTo = function (prmElementToScrollTo) {
             //  console.log(prmElementToScrollTo);
             $location.hash(prmElementToScrollTo);
@@ -974,7 +976,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><i class="fa fa-lock fa-2x warning"  uib-tooltip="Edit user access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
+            template: '<div><i class="fa fa-lock fa-2x warning"  uib-tooltip="Edit user access" id="access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
         };
     });
 
@@ -1531,10 +1533,6 @@
                 });
             });
         };
-    });
-    ginasApp.service("molFetch", function ($http) {
-
-
     });
 
     ginasApp.directive('molExport', function ($http) {

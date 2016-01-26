@@ -26,8 +26,6 @@
         };
 
         this.toggle = function (scope, element, newForm) {
-            console.log("in the toggler)");
-            console.log(scope);
             var result = document.getElementsByClassName(element);
             var elementResult = angular.element(result);
             if (scope.stage === true) {
@@ -36,21 +34,15 @@
                 var compiledDirective = $compile(newForm);
                 var directiveElement = compiledDirective(childScope);
                 elementResult.append(directiveElement);
-                console.log(childScope);
             } else {
-                console.log("destroy");
-                console.log(childScope);
                 childScope.$destroy();
                 elementResult.empty();
                 scope.stage = true;
-                console.log(childScope);
-                console.log(scope);
-
             }
         };
     });
 
-    ginasForms.directive('formHeader', function ($compile, $templateRequest, toggler) {
+    ginasForms.directive('formHeader', function ($compile, $templateRequest) {
         return {
             restrict: 'E',
             replace: 'true',
@@ -61,33 +53,30 @@
                 path: '@',
                 iscollapsed: '='
             },
-            templateUrl: baseurl + "assets/templates/selectors/form-header.html",
             link: function (scope, element, attrs) {
+                console.log(scope);
                 scope.length = 0;
                 scope.heading = _.startCase(scope.type);
                 if (_.isUndefined(scope.path)) {
                     scope.path = scope.type;
                 }
-                if (!_.isUndefined(scope.parent[scope.path])) {
+                if (!_.isUndefined(_.get(scope.parent, scope.path))) {
                     scope.length = _.get(scope.parent, scope.path).length;
+                    console.log(scope.length);
+
                 }
                 if (scope.length == 0) {
                     scope.iscollapsed = true;
                 }
-                /*                console.log(scope.path);
-                 console.log(_.get(scope.parent, scope.path));*/
-                /*                if(_.isUndefined(scope.parent[scope.path]) || scope.parent[scope.path].length == 0){
-                 scope.iscollapsed=false;
-                 }*/
-                /*
-                 scope.showInfo = function () {
-                 var url = baseurl + "assets/templates/info/code-info.html";
-                 toggler.show(scope, type, url);
-                 };*/
 
                 scope.toggle = function () {
                     scope.iscollapsed = !scope.iscollapsed;
                 };
+                $templateRequest(baseurl + "assets/templates/selectors/form-header.html").then(function (html) {
+                    template = angular.element(html);
+                    element.append(template);
+                    $compile(template)(scope);
+                });
             }
         };
     });
@@ -135,9 +124,7 @@
             },
             templateUrl: baseurl + "assets/templates/forms/access-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.validate = function () {
-                    console.log(scope.referenceobj);
                     if (_.has(scope.referenceobj, 'access')) {
                         var temp = _.get(scope.referenceobj, 'access');
                         temp.push(scope.access);
@@ -197,10 +184,7 @@
                 referenceobj: '=',
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/amount-form.html",
-            link: function (scope) {
-                console.log(scope);
-            }
+            templateUrl: baseurl + "assets/templates/forms/amount-form.html"
         };
     });
 
@@ -271,10 +255,7 @@
                 label: '@',
                 field: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/comment-form.html",
-            link: function (scope, element, attrs) {
-                console.log(scope);
-            }
+            templateUrl: baseurl + "assets/templates/forms/comment-form.html"
         };
     });
 
@@ -285,7 +266,6 @@
             scope: {},
             templateUrl: baseurl + "assets/templates/admin/cv-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var formHolder;
                 // scope.stage= true;
                 CVFields.count().then(function (response) {
@@ -309,7 +289,6 @@
 
                 scope.download = function () {
                     CVFields.all().then(function (response) {
-                        console.log(response);
                         scope.cv = response.data.content;
                         formHolder = '<save-cv-form cv = cv></save-cv-form>';
                         scope.toggleStage();
@@ -342,7 +321,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
 
                 if (!scope.parent.protein.disulfideLinks) {
                     scope.parent.protein.disulfideLinks = [];
@@ -363,7 +341,6 @@
                 };
 
                 scope.validate = function () {
-                    console.log(scope);
                     scope.parent.protein.disulfideLinks.push(scope.disulfideLink);
                     scope.disulfideLink = {};
                     scope.disulfideLinksForm.$setPristine();
@@ -405,10 +382,7 @@
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html",
-            link: function (scope, element) {
-                console.log(scope);
-            }
+            templateUrl: baseurl + "assets/templates/forms/diverse-source-form.html"
         };
     });
 
@@ -421,12 +395,10 @@
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.parent.diverseType = "";
 
                 scope.checkType = function () {
                     if (scope.parent.diverseType === 'whole') {
-                        console.log("whole)");
                         _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
                     } else {
                         _.set(scope.parent.structurallyDiverse, 'part', []);
@@ -445,11 +417,8 @@
             },
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
-                console.log(scope);
                 scope.getValues = function () {
-                    console.log(scope);
                     CVFields.fetch(scope.vocab.value).then(function (data) {
-                        console.log(data);
                         scope.values = data.data.content[0].terms;
                     });
                     scope.create = true;
@@ -470,7 +439,6 @@
                 divid: '@'
             },
             link: function (scope, element, attrs) {
-//                console.log(scope);
                 var formHolder;
                 var childScope;
                 var template;
@@ -481,14 +449,12 @@
                 }
 
                 scope.toggle = function () {
-                    console.log(scope);
                     toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
                 };
                 scope.stage = true;
 
                 switch (attrs.type) {
                     case "amount":
-                        //    console.log(scope);
                         if (attrs.mode == "edit") {
                             template = angular.element('<a ng-click ="toggle()"><amount value ="referenceobj.amount" ></amount></a>');
                             element.append(template);
@@ -507,12 +473,6 @@
                         scope.formtype = attrs.formtype;
                         scope.residueregex = attrs.residueregex;
                         scope.mode = attrs.mode;
-                        /*                        if (attrs.mode == "edit") {
-                         console.log(attrs);
-                         template = angular.element('<a ng-click ="toggleStage()"><site-view referenceobj=referenceobj parent = parent></site-view></a>');
-                         element.append(template);
-                         $compile(template)(scope);
-                         } else {*/
                         $templateRequest(baseurl + "assets/templates/selectors/site-selector.html").then(function (html) {
                             template = angular.element(html);
                             element.append(template);
@@ -568,7 +528,7 @@
                         break;
                     case "access":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><access value = referenceobj.access></access></a>');
+                            template = angular.element('<div><label for="access" class="text-capitalize">Access</label><a ng-click ="toggleStage()"><access value = referenceobj.access></access></a></div>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -632,7 +592,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/glycosylation-form.html",
             link: function (scope, element, attrs) {
-                //    console.log(scope);
                 scope.count = 0;
                 if (!scope.parent.protein.glycosylation) {
                     scope.parent.protein.glycosylation = {};
@@ -678,7 +637,6 @@
             },
             templateUrl: baseurl + "assets/templates/admin/save-cv-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
 
 
             }
@@ -772,7 +730,6 @@
 
         //string to array
         this.siteList = function (slist) {
-            console.log(slist);
             var toks = slist.split(";");
             var sites = [];
             for (var i in toks) {
@@ -862,8 +819,6 @@
 
         //make string from all indexes
         this.allSites = function (parent, type, linkage) {
-            console.log(parent);
-            console.log(type);
             var sites = "";
             var subs = parent[type].subunits;
             for (var i in subs) {
@@ -877,7 +832,6 @@
                     sites += subunit.subunitIndex + "_1-" + subunit.subunitIndex + "_" + subunit.sequence.length;
                 }
             }
-            console.log(sites);
             return sites;
         };
     });
@@ -1068,10 +1022,8 @@
             },
             templateUrl: baseurl + "assets/templates/forms/parameter-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
 
                 scope.validate = function () {
-                    console.log(scope.referenceobj);
                     if (_.has(scope.referenceobj, 'parameters')) {
                         var temp = _.get(scope.referenceobj, 'parameters');
                         temp.push(scope.parameter);
@@ -1310,7 +1262,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
 
                 scope.submitFile = function () {
                     //create form data object
@@ -1323,10 +1274,8 @@
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        console.log(data);
                         _.set(scope.ref, 'uploadedFile', data.url);
                     }).error(function (err) {
-                        console.log(err);
                     });
                 };
 
@@ -1370,7 +1319,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.submitFile = function () {
                     //create form data object
                     var fd = new FormData();
@@ -1382,7 +1330,6 @@
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        console.log(data);
                         _.set(scope.ref, 'uploadedFile', data.url);
                     }).error(function (err) {
                         console.log(err);
@@ -1483,7 +1430,6 @@
                 residueregex: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 var template;
                 scope.subunits = scope.parent[scope.parent.substanceClass].subunits;
 
@@ -1505,7 +1451,6 @@
                 ///////////////////////////////////////////////////////////////////////////////////////////////////////
                 //this gets called when the siteform is open, and on hovering over subunits...
                 scope.validResidues = function (su) {
-                    //    console.log("hi");
                     if (!su)return [];
                     var list = [];
                     if (scope.residueregex) {
@@ -1523,13 +1468,6 @@
                             });
                         }
                         return ret;
-                        /* console.log(scope.subunits[su-1]);
-                         var re = new RegExp(scope.residueregex, 'ig');
-                         var match;
-                         while ((match = re.exec(scope.subunits[su - 1].sequence)) !== null) {
-                         list.push(match.index + 1);
-                         }
-                         return list;*/
                     } else {
                         return _.range(1, scope.subunits[su - 1].sequence.length + 1);
                     }
@@ -1575,7 +1513,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if (!scope.parent.protein.modifications) {
                     scope.parent.protein.modifications = {};
                 }
@@ -1643,10 +1580,10 @@
             },
             link: function (scope, element, attrs) {
                 scope.parent.$subunitDisplay = [];
+                scope.substanceClass = scope.parent.substanceClass;
                 var template;
                 if (scope.parent.substanceClass === 'protein') {
                     CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
-                        console.log(data);
                         scope.residues = data.data.content[0].terms;
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
                             template = angular.element(html);

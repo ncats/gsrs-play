@@ -71,7 +71,7 @@
                     <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="display" ></check-box-view-edit>
+                    <check-box-view-edit obj = "obj" field="display"></check-box-view-edit>
                 </div>
                 <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
@@ -85,16 +85,16 @@
                 </div>
                 <div class="row form-row">
                     <div ng-if="obj.type.value=='of'">
-                        <div class="col-md-2">
+                        <div class="col-md-4">
                         </div>
                         <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "domains" cv = "LANGUAGE"></multi-view-edit>
+                            <multi-view-edit obj= "obj" field = "domains" cv = "DOMAIN"></multi-view-edit>
                         </div>
                         <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "nameOrgs" cv = "NAME_ORG"></multi-view-edit>
+                            <multi-view-edit obj= "obj" field = "nameOrgs" cv = "NAME_ORG" label = "Name Org"></multi-view-edit>
                         </div>
                         <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "nameJurisdiction" cv = "JURISDICTION"></multi-view-edit>
+                            <multi-view-edit obj= "obj" field = "nameJurisdiction" cv = "JURISDICTION" label ="Jurisdiction"></multi-view-edit>
                         </div>
                     </div>
                 </div>

@@ -249,6 +249,11 @@
                     opened: false
                 };
 
+                scope.today = function() {
+                    scope.object = new Date();
+                };
+                scope.today();
+
                 scope.open = function ($event) {
                     scope.status.opened = true;
                 };
@@ -290,17 +295,8 @@
             },
             link: function (scope, element, attrs) {
                 CVFields.getCV(attrs.cv).then(function (data) {
-                    //if (attrs.cv === 'NAME_TYPE') {
-                    //    var temp = angular.copy(data.data.content[0].terms);
-                    //    temp = _.remove(temp, function (n) {
-                    //        return n.value !== 'of';
-                    //    });
-                    //    scope.values = temp;
-                    //} else {
                     scope.values = data.data.content[0].terms;
-                    //  }
                 });
-                // }
             }
         }
     });
@@ -318,15 +314,7 @@
             },
             link: function (scope, element, attrs) {
                 CVFields.getCV(attrs.cv).then(function (data) {
-                    //if (attrs.cv === 'NAME_TYPE') {
-                    //    var temp = angular.copy(data.data.content[0].terms);
-                    //    temp = _.remove(temp, function (n) {
-                    //        return n.value !== 'of';
-                    //    });
-                    //    scope.values = temp;
-                    //} else {
                         scope.values = data.data.content[0].terms;
-                  //  }
                 });
 
                 scope.editing = function (obj) {
@@ -646,40 +634,48 @@ ginasFormElements.directive('substanceViewer', function(){
         };
     });
 
-    ginasFormElements.directive('downloadButton', function ($compile, download) {
+    ginasFormElements.directive('downloadButton', function ($compile, $timeout, download) {
         return {
             restrict:'E',
             scope:{
                 data: '='
             },
-            link:function (scope, elm, attrs) {
-                    var json;
-                    var url;
-                    if(_.isUndefined(scope.data)){
+            link:function (scope, element, attrs) {
+                var json;
+                scope.url ='';
+                scope.make = function () {
+                    if (_.isUndefined(scope.data)) {
                         download.fetch().then(function (data) {
                             console.log(data);
-                           json =  JSON.stringify(data.data);
-                            var b= new Blob([json], {type: "application/json"});
-                            url = URL.createObjectURL(b);
-                            elm.append($compile(
+                            json = JSON.stringify(data.data);
+                            var b = new Blob([json], {type: "application/json"});
+                            scope.url = URL.createObjectURL(b);
+                            element.replaceWith($compile(
                                 '<a class="btn btn-primary" download="results.json"' +
-                                'href="' + url + '" target = "_sef">' +
+                                'href="' + scope.url + '" target = "_self" id ="download">' +
                                 '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
                                 '</a>'
                             )(scope));
+                                document.getElementById('download').click()
                         });
-                    }else {
+                    } else {
                         json = JSON.stringify(scope.data);
                         var b = new Blob([json], {type: "application/json"});
-                        url = URL.createObjectURL(b);
-                        elm.append($compile(
+                        scope.url = URL.createObjectURL(b);
+                        element.replaceWith($compile(
                             '<a class="btn btn-primary" download="results.json"' +
-                            'href="' + url + '" target = "_sef">' +
+                            'href="' + scope.url + '" target = "_self" id ="download">' +
                             '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
                             '</a>'
                         )(scope));
+                        $timeout(function() {
+                            console.log('clicking');
+                            element.click();
+                        }, 100);
                     }
-            }
+                }
+            },
+            template: '<a class="btn btn-primary" ng-click ="make()"><i class="fa fa-download" uib-tooltip="Download Results"></i></a>'
         };
     });
 
