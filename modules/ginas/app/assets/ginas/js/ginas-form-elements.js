@@ -249,6 +249,11 @@
                     opened: false
                 };
 
+                scope.today = function() {
+                    scope.object = new Date();
+                };
+                scope.today();
+
                 scope.open = function ($event) {
                     scope.status.opened = true;
                 };
@@ -290,17 +295,8 @@
             },
             link: function (scope, element, attrs) {
                 CVFields.getCV(attrs.cv).then(function (data) {
-                    //if (attrs.cv === 'NAME_TYPE') {
-                    //    var temp = angular.copy(data.data.content[0].terms);
-                    //    temp = _.remove(temp, function (n) {
-                    //        return n.value !== 'of';
-                    //    });
-                    //    scope.values = temp;
-                    //} else {
                     scope.values = data.data.content[0].terms;
-                    //  }
                 });
-                // }
             }
         }
     });
@@ -318,15 +314,7 @@
             },
             link: function (scope, element, attrs) {
                 CVFields.getCV(attrs.cv).then(function (data) {
-                    //if (attrs.cv === 'NAME_TYPE') {
-                    //    var temp = angular.copy(data.data.content[0].terms);
-                    //    temp = _.remove(temp, function (n) {
-                    //        return n.value !== 'of';
-                    //    });
-                    //    scope.values = temp;
-                    //} else {
                         scope.values = data.data.content[0].terms;
-                  //  }
                 });
 
                 scope.editing = function (obj) {
