@@ -62,7 +62,6 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 		this.recordReference.references.add(new Keyword(GinasCommonSubData.REFERENCE, 
 				refUUID
 		));
-		System.out.println("Added reference:" + this.getReferences().toString());
 		
 	}
 	public void addReference(Reference r){
