@@ -118,6 +118,7 @@ public class GinasApp extends App {
         "Code System",
         "Last Edited By",
         "Last Edited Date",
+            "Reference Type",
         "Approved By",
         "Approved Date"
     };

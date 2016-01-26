@@ -31,6 +31,7 @@ public class Reference extends GinasCommonSubData {
     public String citation;
     
     @JSONEntity(title = "Reference Type", format = JSONConstants.CV_DOCUMENT_TYPE, values = "JSONConstants.ENUM_DOCUMENTTYPE", isRequired = true)
+    @Indexable(facet=true,name="Reference Type")
     public String docType;
     
     @JSONEntity(title = "Date Accessed", format = "date")
