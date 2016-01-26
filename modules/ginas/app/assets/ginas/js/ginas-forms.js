@@ -237,7 +237,7 @@
                     _.set(newSub, 'update', true);
                     console.log(newSub);
                     if (_.has(newSub, 'update')) {
-                        $http.put(baseurl + 'api/v1/substances(' + scope.parent.uuid + ')/_', newSub, {
+                        $http.put(baseurl + 'api/v1/substances', newSub, {
                             headers: {
                                 'Content-Type': 'application/json'
                             }

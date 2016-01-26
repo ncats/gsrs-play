@@ -13,19 +13,26 @@
 
 @substancedetails(sub) {
     <li role="presentation" class="active"><a href="#subunits">Subunits
-        <span class= "badge">@sub.protein.subunits.length</span></a>
+        <span class= "badge pull-right">@sub.protein.subunits.length</span></a>
     </li>
     @defining(sub.protein.disulfideLinks.length) { count =>
         @if(count > 0 ){
             <li role="presentation"><a href="#disulfide">Disulfide Links
-                <span class= "badge">@count</span></a>
+                <span class= "badge pull-right">@count</span></a>
+            </li>
+        }
+    }
+    @defining(sub.protein.otherLinks.length) { count =>
+        @if(count > 0 ){
+            <li role="presentation"><a href="#otherLinks">Other Links
+                <span class= "badge pull-right">@count</span></a>
             </li>
         }
     }
     @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
         @if(count > 0 ){
             <li role="presentation"><a href="#glyco">Glycosylation
-                <span class= "badge">@count</span></a>
+                <span class= "badge pull-right">@count</span></a>
             </li>
         }
     }
@@ -166,8 +173,8 @@
     }
 
 
-@*    @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
-        @if(count > 0) {*@
+   @defining(GinasApp.getCount(sub.protein.glycosylation)) { count =>
+        @if(count > 0) {
             <div class="row info" id="glyco">
                 <button class="btn btn-primary label-offset det">
                     Glycosylation&nbsp;<span class="badge head">@(GinasApp.getCount(sub.protein.glycosylation)) </span></button>
@@ -207,8 +214,8 @@
                     </table>
                 </div>
             </div>
-@*        }
-    }*@
+        }
+    }
    
 
 

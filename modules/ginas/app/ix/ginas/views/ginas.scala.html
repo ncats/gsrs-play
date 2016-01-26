@@ -1,6 +1,6 @@
 @import play.api.Play.current
 
-@(title: String, kind: String)(menu: Html)(breadcrumb: Html)(content: Html)
+@(title: String, kind: String)(menu: Html)(content: Html)
 
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app ="ginas">
@@ -136,7 +136,6 @@
                     </div>
         </div>
         <div class="row-fluid" id="main-menu">@menu </div>
-        <div class="row-fluid" id="main-breadcrumb">@breadcrumb</div>
     </div>
     <div class="container" id="content" >
     @content
@@ -147,7 +146,7 @@
     window.strucUrl = '@ix.ncats.controllers.routes.App.molinstrument';
   $(document).ready(function(){
   $('body').scrollspy({
-    offset:200
+    offset:300
   });
   });
 </script>

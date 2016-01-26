@@ -3,7 +3,10 @@
 
     var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin'
-    ])
+    ]).
+        run(['$anchorScroll', function($anchorScroll) {
+        $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
+    }])
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');

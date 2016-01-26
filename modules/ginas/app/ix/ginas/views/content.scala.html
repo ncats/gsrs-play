@@ -4,13 +4,11 @@
 
 @(title: String, kind: String,
         resetAction: String, current: Int, rows: Int, total: Int,
-        pages: Array[Int], facets: Array[FacetDecorator],searchFacets : List[FieldFacet] = null)(header: Html)(breadcrumb: Html)(content: Html)
+        pages: Array[Int], facets: Array[FacetDecorator],searchFacets : List[FieldFacet] = null)(header: Html)(content: Html)
 
     @ginas(title, kind) {
         @header
-    } {
-        @breadcrumb
-    } {
+    }{
         <div class="row">
             @if(total > 0 && facets.length > 0) {
                 <div class="col-md-3" id="facet-col">

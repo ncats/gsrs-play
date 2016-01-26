@@ -4,35 +4,11 @@
 @(sub: ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance)
 
 
-@ginas(sub.getName, "ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance") {
-    @menu()
-} {
-    <nav class="navbar navbar-default" id="breadcrumb">
-        <div class="container-fluid">
-            <div class="row-fluid">
-                <div class="col-md-12">
-                    <ul class="nav nav-pills" id="breadcrumb-list">
+@substancedetails(sub){
                         @if(sub.specifiedSubstance.size() > 0) {
                             <li role="presentation"><a href="#components">
-                                Mixture Components <span class="badge">@sub.specifiedSubstance.size()</span></a></li>
+                                Mixture Components <span class="badge pull-right">@sub.specifiedSubstance.size()</span></a></li>
                         }
-                        <li role="presentation"><a href="#names">
-                            Names <span class="badge">@sub.names.size()</span></a></li>
-                        @if(sub.codes.size() > 0) {
-                            <li role="presentation"><a href="#codes">
-                                Codes <span class="badge">@sub.codes.size()</span></a></li>
-                        }
-                        @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
-                            <li role="presentation"><a href="#relationships" id = "relation">
-                                Relationships <span class="badge">@sub.relationships.size()</span></a></li>
-                        }
-                        <li role="presentation"><a href="#refs">
-                            References <span class="badge">@sub.references.size()</span></a></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </nav>
 } {
     <div class="row info" id="components">
     @specsubcomponents(sub.specifiedSubstance.constituents)
