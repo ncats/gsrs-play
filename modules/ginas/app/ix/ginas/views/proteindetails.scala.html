@@ -37,6 +37,33 @@
         }
     }
 } {
+            <div class ="col-md-4">
+        <dl>
+            @if(sub.protein.proteinType != null) {
+                <dt>Protein Type<dt>
+            <dd>
+                    @GinasApp.getCV.getDisplay("PROTEIN_TYPE", sub.protein.proteinType)
+            </dd>
+            }
+            @if(sub.protein.proteinSubType != null) {
+                <dt>Protein Type<dt>
+            <dd>
+                    @GinasApp.getCV.getDisplay("PROTEIN_SUBTYPE", sub.protein.proteinSubType)
+            </dd>
+            }
+            @if(sub.protein.sequenceOrigin != null) {
+                <dt>Sequence Origin</dt>
+                <dd>@GinasApp.getCV.getDisplay("SEQUENCE_ORIGIN", sub.protein.sequenceOrigin)
+                </dd>
+            }
+                @if(sub.protein.sequenceType != null) {
+                    <dt>Sequence Type</dt>
+                    <dd>@GinasApp.getCV.getDisplay("SEQUENCE_TYPE", sub.protein.sequenceType)
+                    </dd>
+                }
+        </dl>
+            </div>
+}{
     <div class="row info" id="subunits">
         <div class = "row">
             <div class="col-md-4">
@@ -50,6 +77,7 @@
             </div>
         </div>
         <div class = "col-md-12">
+            <br/>
         @for(i <- 0 until sub.protein.subunits.size()) {
             @for(s <- sub.protein.subunits) {
                 @if(s.subunitIndex == i + 1) {

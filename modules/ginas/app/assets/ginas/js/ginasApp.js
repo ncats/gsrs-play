@@ -974,7 +974,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><i class="fa fa-lock fa-2x warning"  uib-tooltip="Edit user access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
+            template: '<div><label for="access" class="text-capitalize">Access</label><i class="fa fa-lock fa-2x warning"  uib-tooltip="Edit user access" id="access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
         };
     });
 

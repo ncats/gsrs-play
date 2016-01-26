@@ -15,7 +15,46 @@
     <li role="presentation" ><a href="#linkages">Linkages
         <span class= "badge pull-right">@sub.nucleicAcid.getLinkages().size()</span></a>
     </li>
-} {
+}{
+    <div class ="col-md-4">
+        <dl>
+        @defining(sub.nucleicAcid.getNucleicAcidType()) { natype =>
+            @if(natype != null) {
+                <dt>Protein Type<dt>
+                <dd>
+                @GinasApp.getCV.getDisplay("NUCLEICACID_TYPE", natype)
+                </dd>
+            }
+        }
+            @defining(sub.nucleicAcid.getNucleicAcidSubType()) { nastype =>
+            @if(nastype != null) {
+                <dt>Protein Type<dt>
+                <dd>
+                    @for(st <- nastype) {
+                        @GinasApp.getCV.getDisplay("NUCLEIC_ACID_SUB_TYPE", st)
+                    }
+                </dd>
+            }
+            }
+                @defining(sub.nucleicAcid.getSequenceOrigin()) { seqo =>
+                    @if(seqo != null) {
+                        <dt>Sequence Origin</dt>
+                        <dd>
+                        @GinasApp.getCV.getDisplay("NUCLEIC_ACID_SEQUENCE_ORIGIN", seqo)
+                        </dd>
+                    }
+                }
+                    @defining(sub.nucleicAcid.getSequenceType()) { seqt =>
+                        @if(seqt != null) {
+                            <dt>Sequence Type</dt>
+                            <dd>
+                            @GinasApp.getCV.getDisplay("SEQUENCE_TYPE", seqt)
+                            </dd>
+                        }
+                    }
+        </dl>
+    </div>
+    } {
 <div class="row info" id="subunits">
         <div class = "row">
             <div class="col-md-4">
@@ -29,6 +68,7 @@
             </div>
         </div>
         <div class = "col-md-12">
+            <br/>
         @for(i <- 0 until sub.nucleicAcid.getSubunits().size()) {
             @for(s <- sub.nucleicAcid.getSubunits()) {
                 @if(s.subunitIndex == i + 1) {
