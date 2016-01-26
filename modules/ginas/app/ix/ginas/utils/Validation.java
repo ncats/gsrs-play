@@ -1,5 +1,13 @@
 package ix.ginas.utils;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -16,18 +24,10 @@ import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
+import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasProcessingMessage.Link;
-import ix.ginas.utils.PeptideInterpreter.Protein;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import play.Logger;
 import play.Play;
 import play.mvc.Call;
@@ -60,13 +60,27 @@ public class Validation {
 	        	UUID uuid=s.getOrGenerateUUID();
 	        	gpm.add(GinasProcessingMessage.INFO_MESSAGE("Substance had no UUID, generated one:" + uuid));
 	        }
-	        validateNames(s,gpm,strat);
-	        validateCodes(s,gpm,strat);
-	        validateRelationships(s,gpm,strat);
-	        validateNotes(s,gpm,strat);
-	        
-	       
-	        
+	        if(s.definitionType == SubstanceDefinitionType.PRIMARY){
+		        validateNames(s,gpm,strat);
+		        validateCodes(s,gpm,strat);
+		        validateRelationships(s,gpm,strat);
+		        validateNotes(s,gpm,strat);
+	        }else if(s.definitionType == SubstanceDefinitionType.ALTERNATIVE){
+	        	if(s.names!=null && s.names.size()>0){
+	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions cannot have names"));
+	        	}
+	        	if(s.codes!=null && s.codes.size()>0){
+	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions cannot have codes"));
+	        	}
+	        	if(s.relationships==null || s.relationships.size()==0){
+	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions must specify a primary substance"));
+	        	}else{
+	        		SubstanceReference sr=s.getPrimaryDefinitionReferences();
+	        		if(sr==null){
+	        			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions must specify a primary substance"));
+	        		}
+	        	}
+	        }
 	
 	        Logger.info("substance Class " + s.substanceClass);
 

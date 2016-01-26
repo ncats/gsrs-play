@@ -82,7 +82,9 @@ public abstract class GinasProcessingStrategy {
 		boolean allow=true;
 		for (GinasProcessingMessage gpm : list) {
 			Logger.debug("######### " + gpm.toString());
-			if (gpm.actionType == GinasProcessingMessage.ACTION_TYPE.FAIL) {
+			if (gpm.actionType == GinasProcessingMessage.ACTION_TYPE.FAIL
+					||
+					gpm.isError()) {
 				allow=false;
 				if (failType == HANDLING_TYPE.FAIL) {
 					throw new IllegalStateException(gpm.message);

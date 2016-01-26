@@ -10,6 +10,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -33,5 +35,20 @@ public class Moiety extends GinasCommonSubData {
     public Integer count;
 
     public Moiety () {}
+    
+    @Column(unique=true)
+    public String innerUuid;
+    
+    @PrePersist
+    @PreUpdate
+    public void enforce(){
+    	if(structure.id==null){
+    		structure.id=UUID.randomUUID();
+    	}
+    	this.innerUuid=structure.id.toString();
+    }
+    
+    
+    
     
 }

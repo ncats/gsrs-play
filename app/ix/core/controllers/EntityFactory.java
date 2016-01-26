@@ -1601,8 +1601,7 @@ public class EntityFactory extends Controller {
         debugBean (xval);
         
         if (xval == null) {
-            // new object..
-            ((Model)value).save();
+        	((Model)value).save();
             id = getId (value);
             Logger.debug("<<< " + id);
             
@@ -1610,8 +1609,9 @@ public class EntityFactory extends Controller {
             ObjectMapper mapper = new ObjectMapper ();
             e.newValue = mapper.writeValueAsString(value);
             eh.add(e);
-
             return value;
+        }else{
+        	
         }
 
         eh.attach(xval);

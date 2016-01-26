@@ -14,6 +14,7 @@ import ix.ginas.controllers.GinasApp;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.MixtureSubstance;
+import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.PolymerSubstance;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
@@ -211,6 +212,9 @@ public class SubstanceFactory extends EntityFactory {
             case polymer:
                 subClass = PolymerSubstance.class;
                 break;
+            case nucleicAcid:
+                subClass = NucleicAcidSubstance.class;
+                break;
             case structurallyDiverse:
                 subClass = StructurallyDiverseSubstance.class;
                 break;
@@ -238,9 +242,11 @@ public class SubstanceFactory extends EntityFactory {
         try {
             JsonNode value = request().body().asJson();
             Class subClass = Substance.class;
-            String typ = value.get("substanceClass").asText();
+            JsonNode tpval = value.get("substanceClass");
+            String typ=null;
             Substance.SubstanceClass type;
             try {
+            	typ=tpval.asText();
                 type = Substance.SubstanceClass.valueOf(typ);
             } catch (Exception e) {
                 throw new IllegalStateException("Unimplemented substance class:" + typ);
@@ -258,6 +264,9 @@ public class SubstanceFactory extends EntityFactory {
             case polymer:
                 subClass = PolymerSubstance.class;
                 break;
+            case nucleicAcid:
+                subClass = NucleicAcidSubstance.class;
+                break;
             case structurallyDiverse:
                 subClass = StructurallyDiverseSubstance.class;
                 break;
@@ -271,7 +280,7 @@ public class SubstanceFactory extends EntityFactory {
             return update(uuid, field, subClass, finder, new GinasV1ProblemHandler(), sv);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            throw e;
         }
     }
 

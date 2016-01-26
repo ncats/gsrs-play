@@ -1,5 +1,31 @@
 package ix.ginas.models.v1;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
@@ -13,35 +39,7 @@ import ix.ginas.models.PrincipalSerializer;
 import ix.ginas.models.TagListDeserializer;
 import ix.ginas.models.utils.JSONEntity;
 import ix.utils.Global;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.Inheritance;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.PostUpdate;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
 import play.Logger;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @JSONEntity(name = "substance", title = "Substance")
 @Entity
@@ -49,6 +47,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends GinasCommonData {
+	private static final String ALTERNATE_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
+	private static final String PRIMARY_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
+
 	private static final String DEFAULT_NO_NAME = "NO_NAME";
 
 	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH IMPORT";
@@ -73,7 +74,14 @@ public class Substance extends GinasCommonData {
 		concept, 
 		reference
 	}
-
+	public enum SubstanceDefinitionType{
+		PRIMARY,
+		ALTERNATIVE
+	}
+	
+	public SubstanceDefinitionType definitionType = SubstanceDefinitionType.PRIMARY;
+	
+	
 	@JSONEntity(title = "Substance Type", values = "JSONConstants.ENUM_SUBSTANCETYPES", isRequired = true)
 	@Indexable(suggest = true, facet = true, name = "Substance Class")
 	@Column(name = "class")
@@ -401,6 +409,27 @@ public class Substance extends GinasCommonData {
 			}
 		}
 		return subConcepts;
+	}
+	
+	@JsonIgnore
+	public List<SubstanceReference> getAlternativeDefinitionReferences() {
+		List<SubstanceReference> subConcepts = new ArrayList<SubstanceReference>();
+		for (Relationship r : relationships) {
+			if (r.type.equals(ALTERNATE_SUBSTANCE_REL)) {
+				subConcepts.add(r.relatedSubstance);
+			}
+		}
+		return subConcepts;
+	}
+	
+	@JsonIgnore
+	public SubstanceReference getPrimaryDefinitionReferences() {
+		for (Relationship r : relationships) {
+			if (r.type.equals(PRIMARY_SUBSTANCE_REL)) {
+				return r.relatedSubstance;
+			}
+		}
+		return null;
 	}
 
 	@JsonIgnore
