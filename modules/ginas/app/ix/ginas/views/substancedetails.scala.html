@@ -12,7 +12,7 @@
             <h2 class="display-name"><em>@sub.getName()</em></h2>
             <nav id="breadcrumb">
                 <ul class="nav nav-pills nav-stacked" id="breadcrumb-list">
-                    <li role="presentation" class ="text-capitalize"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
+                    <li role="presentation" class ="text-capitalize active"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
                         @sub.substanceClass Details</a></li>
                     @breadcrumb
                     @defining(sub.getModificationCount()) { gcount =>
