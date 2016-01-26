@@ -20,6 +20,7 @@ import ix.ginas.models.v1.GinasChemicalStructure;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Note;
+import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Relationship;
@@ -128,7 +129,7 @@ public class Validation {
 		        if(!hasCode){
 		        	try{
 			        	Code c=seqGen.addCode(s);
-			        	System.out.println("Generating new code:" + c.code);
+			        	//System.out.println("Generating new code:" + c.code);
 		        	}catch(Exception e){
 		        		e.printStackTrace();
 		        	}
@@ -143,6 +144,7 @@ public class Validation {
         }
         return gpm;
     }
+	
 	
 	
 
@@ -437,7 +439,43 @@ public class Validation {
 		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
         if(cs.protein==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Protein substance must have a protein element"));
+        }else{
+        	double tot=ProteinUtils.generateProteinWeight(cs);
+        	List<Property> molprops=ProteinUtils.getMolWeightProperties(cs);
+        	if(molprops.size()<=0){
+        		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has no molecular weight, defaulting to calculated value").appliableChange(true);
+        		gpm.add(mes);
+        		strat.processMessage(mes);
+        		switch(mes.actionType){
+					case APPLY_CHANGE:
+						cs.properties.add(ProteinUtils.makeMolWeightProperty(tot));
+						break;
+					case DO_NOTHING:
+						break;
+					case FAIL:
+						break;
+					case IGNORE:
+						break;
+					default:
+						break;
+        		}
+        	}else{
+        		Property p=molprops.get(0);
+        		double delta=tot-p.value.average;
+        		double pdiff=delta/(p.value.average);
+        		int len=0;
+        		for(Subunit su:cs.protein.subunits){
+        			len += su.sequence.length();
+        		}
+        		double avgoff=delta/len;
+        		//System.out.println("Diff:" + pdiff + "\t" + avgoff);
+        		if(Math.abs(pdiff)>.05){
+        			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Calculated weight [" + tot + "] is greater than 5% off of given weight [" + p.value.average + "]").appliableChange(true));
+        		}
+        	}
+        	System.out.println("calc:" + tot);
         }
+        
         strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
         return gpm;
 	}

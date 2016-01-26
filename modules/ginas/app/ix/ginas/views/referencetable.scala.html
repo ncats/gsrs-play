@@ -4,7 +4,7 @@
 @import helper._ 
 
 @(refs: Collection[Keyword], id : String, colspan : Integer)
-@if(refs.size() >= 1){
+@if(refs!=null && refs.size() >= 1){
 <td>
    <button class="btn btn-primary" type="button" data-toggle="collapse"
       data-target="#@id-reference" aria-expanded="false"
@@ -45,6 +45,6 @@
 </tr>
 }else{
 <td>
-   <button class="btn btn-primary" type="button"  disabled="disabled">@refs.size()</button>
+   <button class="btn btn-primary" type="button"  disabled="disabled">0</button>
 </td>
 }
