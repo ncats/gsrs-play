@@ -15,12 +15,6 @@
 
 
             <moiety-form parent = substance></moiety-form>
-
-
-
-            @*<div>@forms.moietyform()</div>*@
-
-
         }
         case "mixture" => {
            <mixture-component-select-form parent = substance></mixture-component-select-form>
@@ -57,15 +51,7 @@
             <polymer-classification-form parent=substance></polymer-classification-form>
             <polymer-monomer-form parent=substance></polymer-monomer-form>
             <div>@forms.polymerstructureform()</div>
-
             <polymer-sru-form parent=substance></polymer-sru-form>
-@*
-           <div>@forms.polymerclassificationform()</div>
-           <div>@forms.polymermonomerselectform()</div>
-*@
-@*
-           <div>@forms.polymersruform()</div>
-*@
         }
         case "nucleicAcid" => {
            <div>Nucleic Acid not implemented yet, still in development</div>

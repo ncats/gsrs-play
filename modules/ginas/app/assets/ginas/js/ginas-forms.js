@@ -54,7 +54,6 @@
                 iscollapsed: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.length = 0;
                 scope.heading = _.startCase(scope.type);
                 if (_.isUndefined(scope.path)) {
@@ -62,7 +61,6 @@
                 }
                 if (!_.isUndefined(_.get(scope.parent, scope.path))) {
                     scope.length = _.get(scope.parent, scope.path).length;
-                    console.log(scope.length);
 
                 }
                 if (scope.length == 0) {

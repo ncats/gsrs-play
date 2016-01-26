@@ -715,6 +715,7 @@ tagsInput.directive('autoComplete', ["$document", "$timeout", "$sce", "$q", "tag
                 })
                 .on('input-change', function(value) {
                     if (shouldLoadSuggestions(value)) {
+                        suggestionList.reset();
                         suggestionList.load(value, tagsInput.getTags());
                     }
                     else {

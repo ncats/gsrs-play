@@ -9,8 +9,6 @@
                     'Content-Type': 'text/plain'
                 }
             }).success(function (data) {
-             //   console.log(data);
-                // lookup= data.content[0].terms;
                 return data;
             });
         };
@@ -117,29 +115,6 @@
                     .value();
                 });
             },
-
-/*
-            lookup: function (field, query) {
-                return _.chain(CV[field])
-                    .filter(function (x) {
-                        return !query || x.value.toLowerCase().indexOf(query.toLowerCase()) > -1;
-                    })
-                    .sortBy('value')
-                    .value();
-            },
-*/
-
-            retrieve: function (field) {
-                if (field === 'NAME_TYPE') {
-                    var temp = angular.copy(CV[field]);
-                    temp = _.remove(temp, function (n) {
-                        return n.value !== 'of';
-                    });
-                    return temp;
-                } else {
-                    return CV[field];
-                }
-            }
         };
         return CV;
     });
@@ -178,23 +153,20 @@
 
     ginasFormElements.service('download', function($location, $http){
         createURL = function(){
-            console.log('creating url');
             var current = ($location.$$url).split('app')[1];
             var ret = baseurl + "api/v1" +current +'?view=full';
-            console.log(ret);
             return ret;
         };
+
         var download = {};
 
         download.fetch = function(){
-            console.log('fetching');
             var url = createURL();
             return $http.get(url,{cache:true}, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }
             }).success(function (data) {
-                console.log(data);
                 return data.content;
             });
 
@@ -341,27 +313,27 @@
             },
             link: function (scope, element, attrs) {
                 scope.tags = [];
-               /*
-                scope.loadTags = function($query) {
-                         var ret = CVFields.getCV(scope.cv).then(function(response) {
-                             console.log(response);
-                            var tags = response.data.content[0].terms;
-                            var filtered =  _.filter(tags, function(cv){
-                                return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
-                            });
-                             console.log(filtered);
-                        });
-                    console.log(ret);
-                    return ret;
-                    };
-                */
 
-                CVFields.load(scope.cv);
+                CVFields.load(scope.cv).then(function(data){
+                    if(scope.cv =='LANGUAGE') {
+                        var values = _.orderBy(data.data.content[0].terms, function (cv) {
+                            return cv.display == 'English';
+                        }, ['desc']);
+                        scope.tags = values;
+                    }else{
+                        scope.tags = data.data.content[0].terms;
+                    }
 
-
+            });
 
                 scope.loadItems = function ($query) {
-                    return CVFields.search(scope.cv, $query);
+                    var filtered =  _.filter(scope.tags, function(cv){
+                        return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
+                    });
+                   var sorted =  _.orderBy(filtered, function(cv){
+                        return _.startsWith(cv.display.toLowerCase(), $query.toLowerCase());
+                    },['desc']);
+                    return sorted;
                 };
             }
         };
@@ -379,16 +351,24 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
-                //CVFields.getCV(scope.cv).then(function(data){
-                //   // console.log(scope.obj[scope.field]);
-                //});
+                scope.tags = [];
 
-                CVFields.load(scope.cv);
+                CVFields.load(scope.cv).then(function(data){
+                    var values = _.orderBy(data.data.content[0].terms, function(cv){
+                        return cv.display =='English';
+                    },['desc']);
+                    scope.tags = values;
 
+                });
 
-
-                scope.loadItems = function (cv, $query) {
-                    return CVFields.search(cv, $query);
+                scope.loadItems = function ($query) {
+                    var filtered =  _.filter(scope.tags, function(cv){
+                        return cv.display.toLowerCase().indexOf($query.toLowerCase()) != -1;
+                    });
+                    var sorted =  _.orderBy(filtered, function(cv){
+                        return _.startsWith(cv.display.toLowerCase(), $query.toLowerCase());
+                    },['desc']);
+                    return sorted;
                 };
 
                 scope.editing = function (obj) {

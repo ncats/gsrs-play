@@ -1038,7 +1038,6 @@
                 residues: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 scope.edit = false;
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
@@ -1288,7 +1287,7 @@
 
     //Ok, this needs to be re-evaluated a bit.
     //Right now, it always round trips, but that doesn't always make sense.
-    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance, CVFields, polymerUtils) {
+    ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance, CVFields, polymerUtils, UUID) {
         return {
             restrict: 'E',
             require: "ngModel",
@@ -1343,23 +1342,12 @@
                             scope.formsubstance.structure = data.structure;
                             scope.formsubstance.moieties = data.moieties;
                             for (var j = 0; j < data.moieties.length; j++) {
-                                data.moieties[j]._id = scope.uuid();
+                                data.moieties[j]._id = UUID.newID();
                             }
                             scope.formsubstance.q = data.structure.smiles;
                         }
                         console.log(scope);
                     });
-                };
-
-                scope.uuid = function uuid() {
-                    function s4() {
-                        return Math.floor((1 + Math.random()) * 0x10000)
-                            .toString(16)
-                            .substring(1);
-                    }
-
-                    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                        s4() + '-' + s4() + s4() + s4();
                 };
 
                 scope.$watch(function (scope) {
