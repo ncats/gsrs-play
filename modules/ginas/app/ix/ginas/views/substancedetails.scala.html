@@ -9,7 +9,7 @@
 } {
     <div class = "row">
         <div class = "col-md-3 hidden-xs hidden-sm sidebar">
-            <h2 class="display-name"><em>@sub.getName()</em></h2>
+            <h3 class="display-name"><em>@sub.getName()</em></h3>
             <nav id="breadcrumb">
                 <ul class="nav nav-pills nav-stacked" id="breadcrumb-list">
                     <li role="presentation" class ="text-capitalize active"><a href="#details" prevent-default="" ng-click="scrollTo('details')">
@@ -23,8 +23,10 @@
                             </li>
                         }
                     }
-                    <li role="presentation" ><a href="#names" prevent-default="" ng-click="scrollTo('names')">
-                        Names <span class="badge pull-right">@sub.names.size()</span></a></li>
+                    @if(sub.getAllNames().size() > 0) {
+                        <li role="presentation" ><a href="#names" prevent-default="" ng-click="scrollTo('names')">
+                            Names <span class="badge pull-right">@sub.names.size()</span></a></li>
+                    }
                     @if(sub.codes.size() > 0) {
                         <li role="presentation"><a href="#codes" prevent-default="" ng-click="scrollTo('codes')">
                             Codes <span class="badge pull-right">@sub.codes.size()</span></a></li>
@@ -46,7 +48,7 @@
                 </ul>
             </nav>
         </div>
-        <div class = "col-md-9 pull-right">
+        <div class = "col-md-9 col-sm-12 pull-right">
             <div class="row info" id="details">
                 <button class="btn btn-primary label-offset det text-capitalize">
                     @sub.substanceClass Details</button>

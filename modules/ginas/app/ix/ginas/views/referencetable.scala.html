@@ -8,7 +8,7 @@
 <td>
    <button class="btn btn-primary" type="button" data-toggle="collapse"
       data-target="#@id-reference" aria-expanded="false"
-      aria-controls="collapseExample">@refs.size()</button>
+      aria-controls="collapseExample" uib-tooltip="show references">@refs.size()</button>
 </td>
 </tr>
 <tr class="collapse" id="@id-reference">
@@ -45,6 +45,6 @@
 </tr>
 }else{
 <td>
-   <button class="btn btn-primary" type="button"  disabled="disabled">0</button>
+   <button class="btn btn-primary" type="button"  disabled="disabled" uib-tooltip="no references">0</button>
 </td>
 }

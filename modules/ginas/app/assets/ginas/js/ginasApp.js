@@ -1038,6 +1038,7 @@
                 residues: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 scope.edit = false;
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
@@ -1055,7 +1056,7 @@
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
                         obj.value = aa;
-                        var temp = (_.find(scope.residues, 'value', aa.toUpperCase()));
+                        var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
                             obj.name = temp.display;
                             obj.valid = true;
@@ -1426,7 +1427,7 @@
                 format: '='
             },
             template: function () {
-                return '<button type="button" class="btn btn-primary" aria-label ="export molfile" structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
+                return '<button type="button" class="btn btn-primary" aria-label ="export molfile" uib-tooltip="View " structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
             }
         };
     });
@@ -1533,7 +1534,7 @@
     ginasApp.directive('deleteButton', function () {
         return {
             restrict: 'E',
-            template: '<a ng-click="deleteObj()"><i class="fa fa-times fa-2x danger"></i></a>',
+            template: '<a ng-click="deleteObj()" uib-tooltip="Delete Item"><i class="fa fa-times fa-2x danger"></i></a>',
             link: function (scope, element, attrs) {
                 scope.deleteObj = function () {
                     console.log(scope);

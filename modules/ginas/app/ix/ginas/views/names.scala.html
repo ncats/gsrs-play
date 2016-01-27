@@ -5,7 +5,7 @@
 @(names: List[Name], substance: Substance = null)
 
 <button class="btn btn-primary label-offset det">Names&nbsp;<span class="badge"> @names.length</span></button>
-<div class="col-md-12">
+<div class="col-md-12 table-responsive">
     <table class="table table-striped" id="namesTable">
         <thead>
             <tr>
@@ -22,10 +22,10 @@
         </thead>
         @for(n <- names) {
             <tr>
-                 <td><span tooltip ="@n.name">@n.name</span>
+                 <td><span>@n.name</span>
                 
                 @for(l <- n.getLocators(substance)) {
-                    <span tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)" class="badge" >@l</span> &nbsp;
+                    <span uib-tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)" class="badge" >@l</span> &nbsp;
                     }
                 </td>
                 <td>@GinasApp.getCV.getDisplay("NAME_TYPE",{n.`type`})</td>

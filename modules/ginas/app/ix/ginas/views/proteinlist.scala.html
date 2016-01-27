@@ -37,10 +37,10 @@
                                 @*
                                 This should be a sequence search
                                 *@
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self" class="btn btn-primary" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search chem-button"></i></a>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" class="btn btn-primary" aria-label="Edit Protein Substance"> <span class="fa fa-pencil chem-button"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" class="btn btn-primary" uib-tooltip="Edit @prot.getName()" aria-label="Edit Protein Substance"> <i class="fa fa-pencil chem-button" ></i></a>
                             </li>
                         </ul>
                     </div>
@@ -62,16 +62,6 @@
                     </div>
                     <div class = "col-md-10">
                         <h5>@ix.ginas.controllers.GinasApp.codesList(prot.codes)</h5>
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-md-2">
-                        <h5>Glycosylation:</h5>
-                    </div>
-                    <div class = "col-md-10">
-                        <h5>@prot.protein.glycosylation.getCGlycosylationSites().length</h5>
-                        <h5>@prot.protein.glycosylation.getNGlycosylationSites().length</h5>
-                        <h5>@prot.protein.glycosylation.getOGlycosylationSites().length</h5>
                     </div>
                 </div>
             </div>

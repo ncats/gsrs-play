@@ -211,7 +211,9 @@
             link: function (scope, element, attrs) {
                 scope.iscollapsed = false;
                 console.log($location);
-                scope.editid = scope.parent.uuid.split('-')[0];
+                if(scope.parent.uuid){
+                    scope.editid = scope.parent.uuid.split('-')[0];
+                }
                 scope.changeClass = function (newClass) {
                     var newSub = scope.$parent.fromFormSubstance(scope.parent);
                     console.log(scope);

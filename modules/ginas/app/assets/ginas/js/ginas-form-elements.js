@@ -314,7 +314,7 @@
             link: function (scope, element, attrs) {
                 scope.tags = [];
 
-                CVFields.load(scope.cv).then(function(data){
+                CVFields.getCV(scope.cv).then(function(data){
                     if(scope.cv =='LANGUAGE') {
                         var values = _.orderBy(data.data.content[0].terms, function (cv) {
                             return cv.display == 'English';
@@ -353,7 +353,7 @@
             link: function (scope, element, attrs) {
                 scope.tags = [];
 
-                CVFields.load(scope.cv).then(function(data){
+                CVFields.getCV(scope.cv).then(function(data){
                     var values = _.orderBy(data.data.content[0].terms, function(cv){
                         return cv.display =='English';
                     },['desc']);

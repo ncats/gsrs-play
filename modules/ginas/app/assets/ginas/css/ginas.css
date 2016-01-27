@@ -40,9 +40,20 @@ body, html {
 
 .col-md-3.sidebar {
     position: fixed;
-    width: 20%;
     padding-right: 15px;
     padding-left: 15px;
+}
+
+@media (min-width: 992px) {
+    .col-md-3.sidebar {
+        width: 20%;
+    }
+}
+
+@media (min-width: 1200px) {
+    .col-md-3.sidebar {
+        width: 15%;
+    }
 }
 
 #pub-history {
@@ -152,10 +163,6 @@ div.box .on {
 #admin-button {
     padding: 0px;
     padding-right: 15px;
-}
-
-.chem-button {
-    font-size: 14px;
 }
 
 #grid {
