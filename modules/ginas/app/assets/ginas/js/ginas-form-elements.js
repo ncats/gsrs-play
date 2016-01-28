@@ -183,7 +183,8 @@
             replace: true,
             scope: {
                 obj: '=ngModel',
-                field: '@'
+                field: '@',
+                label:'@'
             }
         };
     });
@@ -195,7 +196,8 @@
             replace: true,
             scope: {
                 obj: '=',
-                field: '@'
+                field: '@',
+                label:'@'
             },
             link: function (scope, element, attrs) {
                 scope.editing = function (obj, field) {

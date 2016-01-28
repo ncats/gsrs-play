@@ -763,6 +763,12 @@
             });
         };
 
+        $scope.getRange = function(start, end){
+            console.log(end);
+            console.log(_.range(start, end));
+            return _.reverse(_.range(start, (end-1+2)));
+        };
+
         $scope.submitpaster = function (input) {
             var sub = JSON.parse(input);
             //  $scope.substance = sub;
