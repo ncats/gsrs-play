@@ -23,6 +23,7 @@
             case "chemical":
                 Substance.substanceClass = substanceClass;
                 Substance.structure = {};
+                _.set(Substance.structure, 'opticalActivity',{value:"UNSPECIFIED"});
                 Substance.moieties = [];
                 break;
             case "protein":
@@ -291,6 +292,7 @@
             if ($scope.substance.status === "approved") {
                 return false;
             }
+            console.log(session.username);
             if (lastEdit === session.username) {
                 return false;
             }
@@ -337,15 +339,9 @@
                         });
                         n.nameOrgs = temp;
                     }
-                    //if (n.type === "of" || n.type.value === "of") {
-                    //    officialNames.push(n);
-                    //} else {
-                    //    unofficialNames.push(n);
-                    //}
-                    //delete formSub.names;
                 });
-                //_.set(formSub, 'officialNames', officialNames);
-                //_.set(formSub, 'unofficialNames', unofficialNames);
+                _.set(formSub, 'update', true);
+
             }
             return formSub;
         };
@@ -519,11 +515,11 @@
         $scope.isCV = function (ob) {
             if (typeof ob !== "object") return false;
             if (ob === null) return false;
-            if (typeof ob.value !== "undefined") {
+            //if (typeof ob.value !== "undefined") {
                 if (typeof ob.display !== "undefined") {
                     return true;
                 }
-            }
+         //   }
             return false;
         };
 
@@ -637,16 +633,12 @@
             sub = $scope.fromFormSubstance(sub);
             console.log(JSON.stringify(sub));
             if (_.has(sub, 'update')) {
-                $.ajax({
-                    url: baseurl + 'api/v1/substances(' + sub.uuid + ')/_',
-                    type: 'PUT',
-                    beforeSend: function (request) {
-                        request.setRequestHeader("Content-Type", "application/json");
-                    },
-                    data: JSON.stringify(sub),
-                    success: function (data) {
-                        alert('Load was performed.');
+                $http.put(baseurl + 'api/v1/substances', sub, {
+                    headers: {
+                        'Content-Type': 'application/json'
                     }
+                }).success(function(data){
+                    alert('update was performed.');
                 });
             } else {
                 $http.post(baseurl + 'register/submit', sub).success(function () {
@@ -964,7 +956,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><span class="comment">{{value|limitTo:40}}...</span></div>',
+            template: '<div><span id="comment">{{value|limitTo:40}}...</span></div>',
         };
     });
 

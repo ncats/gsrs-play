@@ -20,7 +20,7 @@
                     <multi-select ng-model="name.languages" field="languages" cv = "LANGUAGE"></multi-select>
                 </div>
                 <div class="col-md-1">
-                    <check-box ng-model="name.display" field="display" ></check-box>
+                    <check-box ng-model="name.display" field="displayName" label="Display"></check-box>
                 </div>
                 <div class="col-md-1">
                     <check-box ng-model="name.preferred" field="preferred" ></check-box>
@@ -71,7 +71,7 @@
                     <multi-view-edit obj= "obj" field = "languages" cv = "LANGUAGE"></multi-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="display"></check-box-view-edit>
+                    <check-box-view-edit obj = "obj" field="displayName" label="Display"></check-box-view-edit>
                 </div>
                 <div class="col-md-1">
                     <check-box-view-edit obj = "obj" field="preferred" ></check-box-view-edit>
@@ -84,11 +84,11 @@
                 </div>
                 </div>
                 <div class="row form-row">
-                    <div ng-if="obj.type.value=='of'">
+                    <div ng-show="obj.type.value=='of'">
                         <div class="col-md-4">
                         </div>
                         <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "domains" cv = "DOMAIN"></multi-view-edit>
+                            <multi-view-edit obj= "obj" field = "domains" cv = "NAME_DOMAIN"></multi-view-edit>
                         </div>
                         <div class="col-md-2 err-check">
                             <multi-view-edit obj= "obj" field = "nameOrgs" cv = "NAME_ORG" label = "Name Org"></multi-view-edit>

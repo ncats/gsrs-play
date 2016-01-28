@@ -18,7 +18,11 @@
         </thead>
         @for(c <- codes) {
             <tr>
-                <td><a href="@c.url">@c.code</a></td>
+                @if(c.url){
+                <td><a href="@c.url" target="_self">@c.code</a></td>
+                    }else{
+                    <td>@c.code</td>
+                    }
                 <td>@c.codeSystem</td>
                 <td>@GinasApp.getCV.getDisplay("CODE_TYPE",{c.`type`})</td>
                 <td>@c.comments</td>

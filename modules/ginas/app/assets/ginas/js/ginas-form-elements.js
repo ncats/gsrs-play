@@ -240,7 +240,8 @@
             replace: true,
             scope: {
                 obj: '=obj',
-                field: '@'
+                field: '@',
+                label:'@'
             },
             link: function (scope, element, attrs, ngModel) {
                 //date picker

@@ -12,12 +12,11 @@
                 <div class="col-md-2">
                     <dropdown-select ng-model="code.type" field="type" cv="CODE_TYPE"></dropdown-select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <text-input ng-model="code.code" field="code"></text-input>
                 </div>
-                <div class="col-md-3">
-                    <form-selector referenceobj="code" divid="codeForm" field="comments" label="Code Text"
-                                   type="textbox"></form-selector>
+                <div class="col-md-2">
+                    <text-input ng-model="code.url" field="url"></text-input>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="code" parent="parent" divid="codeForm"
@@ -26,6 +25,12 @@
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="code" parent="parent" divid="codeForm"
                                    type="reference"></form-selector>
+                </div>
+                </div>
+            <div class="row form-row">
+                <div class="col-md-2">
+                    <form-selector referenceobj="code" divid="codeForm" field="comments" label="Code Text"
+                                   type="textbox"></form-selector>
                 </div>
             </div>
             <div class="codeForm"></div>
@@ -47,9 +52,8 @@
                 <div class="col-md-2 err-check">
                     <text-view-edit obj="obj" field="code"></text-view-edit>
                 </div>
-                <div class="col-md-3">
-                    <form-selector referenceobj="obj" formname="codeForm" field="comments" label="Code Text"
-                                   type="textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                <div class="col-md-2">
+                    <text-view-edit obj="obj" field="url"></text-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}
@@ -58,6 +62,12 @@
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}
                                    mode="edit"></form-selector>
+                </div>
+                </div>
+            <div class = "row">
+                <div class="col-md-6 col-md-offset-1">
+                    <form-selector referenceobj="obj" formname="codeForm" field="comments" label="Code Text"
+                                   type="textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
             </div>
             <div class={{obj.$$hashKey}}></div>

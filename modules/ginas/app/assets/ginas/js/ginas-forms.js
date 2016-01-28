@@ -252,7 +252,7 @@
             scope: {
                 referenceobj: '=',
                 parent: '=',
-                label: '@',
+                label: '=',
                 field: '='
             },
             templateUrl: baseurl + "assets/templates/forms/comment-form.html"
@@ -543,7 +543,7 @@
                     case "textbox":
                         if (attrs.mode == "edit") {
                             //this only works if the attribute is named "comments" will probably need to be addressed later
-                            template = angular.element('<a ng-click ="toggle()"><comment value = "referenceobj[field]"></comment></a>');
+                            template = angular.element('<div><label for="comments" class="text-capitalize">{{label || field}}</label><a ng-click ="toggle()"><comment value = "referenceobj[field]" id="comments"></comment></a></div>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -553,7 +553,7 @@
                                 $compile(template)(scope);
                             });
                         }
-                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label =label field = field></comment-form>';
+                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field></comment-form>';
                         break;
                 }
 
