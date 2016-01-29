@@ -941,3 +941,7 @@ sketcher svg > text {
 .mol-data-import {
     padding: 40px;
 }
+
+.url{
+word-wrap: break-word;
+}

@@ -1081,15 +1081,12 @@
 
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
                 scope.cleanSequence = function () {
-                    console.log('click');
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
-                        console.log(temp);
                         if (!_.isUndefined(temp)) {
                             return temp;
                         }
                     }).toString().replace(/,/g, '');
-                    console.log(scope);
                     scope.parseSubunit();
                 };
                 scope.parseSubunit();
