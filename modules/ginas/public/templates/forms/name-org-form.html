@@ -1,0 +1,44 @@
+<div class="row info" id="nameOrgs">
+    <div class="row">
+        <form-header type="nameOrgs" parent="parent" label="Naming Organizations"></form-header>
+        <close-button></close-button>
+    </div>
+    <div class="col-md-12">
+        <form class="form-horizontal" name="orgForm" id="add-nameorg" role="form" novalidate>
+            <div class="row form-row">
+                <div class="col-md-2">
+                    <dropdown-select ng-model="org.nameOrg" field="nameOrg" label="Naming Organization"
+                                     cv="NAME_ORG"></dropdown-select>
+                </div>
+                <div class="col-md-1">
+                    <check-box ng-model="org.deprecated" field="deprecated"></check-box>
+                </div>
+                <div class="col-md-2" ng-if="org.deprecated">
+                    <date-picker ng-model="org.deprecatedDate" field="deprecatedDate"></date-picker>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-1 pull-right">
+                    <a ng-click="reset()" aria-label="Clear" uib-tooltip="Clear"><i
+                            class="fa fa-eraser fa-2x danger"></i></a>
+                    <a ng-click="validate()" uib-tooltip="Add"><i class="fa fa-floppy-o fa-2x success"></i></a>
+                </div>
+            </div>
+        </form>
+        </div>
+        <div ng-repeat="obj in referenceobj.nameOrgs">
+            <div class="row">
+                <hr>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj="obj" field="nameOrg" cv="NAME_ORG" label="Naming Organization"></dropdown-view-edit>
+                </div>
+                <div class="col-md-1">
+                    <check-box-view-edit obj = "obj" field="deprecated"></check-box-view-edit>
+                </div>
+                <div class="col-md-1"  ng-if="obj.deprecated">
+                    <date-picker-view-edit obj="obj" field="deprecatedDate" label ="Date Accessed"></date-picker-view-edit>
+                </div>
+            </div>
+        </div>
+    </div>

@@ -526,6 +526,20 @@
                         }
                         formHolder = '<physical-parameter-form referenceobj = referenceobj field = field parent = parent></physical-parameter-form>';
                         break;
+                    case "nameOrgs":
+/*                        if (attrs.mode == "edit") {
+                            template = angular.element('<a ng-click ="toggleStage()"><parameters parameters ="referenceobj.parameters"></parameters></a>');
+                            element.append(template);
+                            $compile(template)(scope);
+                        } else {*/
+                            $templateRequest(baseurl + "assets/templates/selectors/name-org-selector.html").then(function (html) {
+                                template = angular.element(html);
+                                element.append(template);
+                                $compile(template)(scope);
+                            });
+                     //   }
+                        formHolder = '<name-org-form referenceobj = referenceobj field = field parent = parent></name-org-form>';
+                        break;
                     case "access":
                         if (attrs.mode == "edit") {
                             template = angular.element('<div><label for="access" class="text-capitalize">Access</label><a ng-click ="toggleStage()"><access value = referenceobj.access></access></a></div>');
@@ -676,6 +690,34 @@
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/name-form.html"
+        };
+    });
+
+    ginasForms.directive('nameOrgForm', function () {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '=',
+                referenceobj: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/name-org-form.html",
+            link:function (scope){
+console.log(scope);
+                scope.validate = function(){
+                    if (_.has(scope.referenceobj, 'nameOrgs')) {
+                        var temp = _.get(scope.referenceobj, 'nameOrgs');
+                        temp.push(scope.org);
+                        _.set(scope.referenceobj, 'nameOrgs', temp);
+                    } else {
+                        var x = [];
+                        x.push(angular.copy(scope.org));
+                        _.set(scope.referenceobj, 'nameOrgs', x);
+                    }
+                    scope.org = {};
+                    scope.orgForm.$setPristine();
+                }
+            }
         };
     });
 

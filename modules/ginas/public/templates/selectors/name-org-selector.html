@@ -1,0 +1,15 @@
+<div>
+    <label for={{type}} class="text-capitalize">Name Orgs</label>
+    <a ng-show="referenceobj.nameOrgs" ng-click="toggle()">
+    <div ng-repeat="tag in referenceobj.nameOrgs">
+        <span class="badge" uib-tooltip ="{{tag.display}}">
+                {{tag.display || tag.nameOrg.display}}</span>
+            <i class="fa fa-times danger" ng-show="tag.deprecated===true" uib-tooltip="deprecated"></i>
+        </div>
+    </a>
+    <div class="text-center">
+        <a ng-hide="referenceobj.nameOrgs" ng-click="toggle()" role="button" aria-label="Add a Name Org" uib-tooltip="Add a Name Org" id="{{type}}"><i
+                class="fa fa-plus fa-2x success" ng-show="stage"></i>
+            <i class="fa fa-times fa-2x danger" ng-show="!stage"></i></a>
+    </div>
+</div>

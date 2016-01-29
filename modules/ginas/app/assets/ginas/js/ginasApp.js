@@ -247,31 +247,8 @@
         };
 
         $scope.toFormSubstance = function (apiSub) {
-        //    var officialNames = [];
-        //    var unofficialNames = [];
-            //first, flatten nameorgs, this is technically destructive
-            //needs to be fixed.
-          //  console.log($scope.expandCV(apiSub));
            var formSub = $scope.expandCV(apiSub);
-        //    console.log(angular.copy(formSub));
-        //    if (_.has(formSub, 'names')) {
-        //        _.forEach(formSub.names, function (n) {
-        //            var temp = [];
-        //            if (n.nameOrgs && n.nameOrgs.length > 0) {
-        //                _.forEach(n.nameOrgs, function (m) {
-        //                    if (m.deprecated) {
-        //                        formSub.destructive = true;
-        //                    }
-        //                    //temp.push(m);
-        //                    temp.push(m.nameOrg);
-        //                });
-        //                n.nameOrgs = temp;
-        //            }
-        //        });
-        //
-        //    }
             _.set(formSub, 'update', true);
-
             return formSub;
         };
 
@@ -280,6 +257,8 @@
             if (formSub.q) {
                 delete formSub.q;
             }
+
+   ///////////this may be removable, the subref creator should make the subref within the form scope/////////////////////////////
             if (formSub.subref) {
                 delete formSub.subref;
             }
@@ -353,38 +332,6 @@
                 });
             return sub;
         };
-
-/*        $scope.expandCV = function (sub, path) {
-
-            for (var v in sub) {
-
-                var newpath = path;
-                if (newpath.length >= 1) {
-                    if (!angular.isArray(sub)) {
-                        newpath += ".";
-                    }
-                }
-                if (!angular.isArray(sub)) {
-                    newpath = newpath + v;
-                }
-                var newcv = lookup.getFromName(newpath, sub[v]);
-                if (angular.isArray(sub[v])) {
-                    newcv = null;
-                }
-
-                if (newcv !== null) {
-                    var w = getDisplayFromCV(newcv.domain, newcv.value);
-                    newcv.display = w;
-                    sub[v] = newcv;
-
-                } else {
-                    if (typeof sub[v] === "object") {
-                        $scope.expandCV(sub[v], newpath);
-                    }
-                }
-            }
-            return sub;
-        };*/
 
         $scope.flattenCV = function (sub) {
             //  console.log(sub);
@@ -476,19 +423,6 @@
         $scope.validate = function (obj, form, path) {
             console.log($scope);
             $scope.$broadcast('show-errors-check-validity');
-/*           // var obj = $scope[objName];
-            if(!_.isUndefined(path)) {
-                var v = path.split(".");
-                var type = _.last(v);
-                switch (type) {
-                    case "sugars":
-                    case "linkages":
-                        //  $scope.updateSiteList(obj);
-                        break;
-                    default:
-                        break;
-                }
-            }*/
             console.log(obj);
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {

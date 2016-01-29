@@ -489,11 +489,11 @@ MONOMER_AMOUNT_TYPE		MOL_RATIO_RELATIVE	Mol Ratio (relative)
 NAME_DOMAIN	names.domains	drug	Drug
 NAME_DOMAIN	names.domains	cosmetic	Cosmetic
 NAME_DOMAIN	names.domains	food	Food
-NAME_ORG	names.nameOrgs	INN	INN	International Non-proprietary Name
-NAME_ORG	names.nameOrgs	USAN	USAN	United States Adopted Name
-NAME_ORG	names.nameOrgs	INCI	INCI	International Nomenclature of Cosmetic Ingredient
-NAME_ORG	names.nameOrgs	BAN	BAN	British Adopted Name
-NAME_ORG	names.nameOrgs	JAN	JAN	Japanese Adopted Name
+NAME_ORG	nameOrgs.nameOrg	INN	INN	International Non-proprietary Name
+NAME_ORG	nameOrgs.nameOrg	USAN	USAN	United States Adopted Name
+NAME_ORG	nameOrgs.nameOrg	INCI	INCI	International Nomenclature of Cosmetic Ingredient
+NAME_ORG	nameOrgs.nameOrg	BAN	BAN	British Adopted Name
+NAME_ORG	nameOrgs.nameOrg	JAN	JAN	Japanese Adopted Name
 NAME_TYPE	names.type	of	Official Name
 NAME_TYPE	names.type	sys	Systematic Name
 NAME_TYPE	names.type	bn	Brand Name

@@ -42,9 +42,9 @@
                 <div class="col-md-2 err-check">
                     <multi-select ng-model="name.domains" field="domains" cv = "NAME_DOMAIN" ></multi-select>
                 </div>
-                <div class="col-md-2 err-check">
-                    <multi-select ng-model="name.nameOrgs" field="nameOrgs" cv = "NAME_ORG"></multi-select>
-                </div>
+                    <div class="col-md-1">
+                        <form-selector referenceobj= "name" parent = "parent" divid="nameForm" type = "nameOrgs"></form-selector>
+                    </div>
                 <div class="col-md-2 err-check">
                     <multi-select ng-model="name.nameJurisdiction" field="nameJurisdiction" cv = "JURISDICTION" ></multi-select>
                 </div>
@@ -90,8 +90,8 @@
                         <div class="col-md-2 err-check">
                             <multi-view-edit obj= "obj" field = "domains" cv = "NAME_DOMAIN"></multi-view-edit>
                         </div>
-                        <div class="col-md-2 err-check">
-                            <multi-view-edit obj= "obj" field = "nameOrgs" cv = "NAME_ORG" label = "Name Org"></multi-view-edit>
+                        <div class="col-md-2">
+                            <form-selector referenceobj ="obj" parent = "parent" type = "nameOrgs" divid={{obj.$$hashKey}}></form-selector>
                         </div>
                         <div class="col-md-2 err-check">
                             <multi-view-edit obj= "obj" field = "nameJurisdiction" cv = "JURISDICTION" label ="Jurisdiction"></multi-view-edit>
