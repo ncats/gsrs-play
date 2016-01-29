@@ -38,6 +38,11 @@ public class Code extends GinasCommonSubData {
     @Lob
     @Basic(fetch=FetchType.EAGER)
     public String comments;
+
+    @JSONEntity(title = "Code Text")
+    @Lob
+    @Basic(fetch=FetchType.EAGER)
+    public String codeText;
     
     @JSONEntity(title = "Code Type", format = JSONConstants.CV_CODE_TYPE)
     public String type;

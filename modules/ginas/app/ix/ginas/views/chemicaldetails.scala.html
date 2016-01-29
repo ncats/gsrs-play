@@ -75,6 +75,12 @@
                 <td><strong>Charge</strong></td>
                 <td><span class="badge">@sub.structure.charge</span></td>
                         </tr>
+                    @if(sub.structure.stereoComments !=null){
+                        <tr>
+                            <td>StereoComments</td>
+                            <td>@sub.structure.stereoComments</td>
+                        </tr>
+                    }
                     <tr>
                 <td><strong>References</strong></td>
                 @referencetable(GinasApp.getStructureReferences(sub.structure), "hi", 2)
@@ -88,22 +94,131 @@
             <button class="btn btn-primary label-offset det">
                 Moieties&nbsp;<span class="badge"> @sub.moieties.length</span></button>
             <div class="col-md-12">
+            @for(m <- sub.moieties) {
+                    <div class ="row">
+                        <hr>
+                        <div class="col-md-4">
+                            <rendered id= '@m.structure.id' size ="300"></rendered>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="table-responsive">
+                                <table class="table table-striped moiety-Table">
+                                    <tr>
+                                        <td><strong>Stereochemistry</strong></td>
+                                        <td><span class="badge">@m.structure.stereoChemistry</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Optical Activity</strong></td>
+                                        <td><span class="badge">
+                                        @if(sub.structure.opticalActivity!=null){
+                                            @m.structure.opticalActivity.toValue()
+                                        }else{
+                                            Unspecified
+                                        }
+                                        </span></td>
+                                    <tr>
+                                        <td><strong>Additional Stereochemistry</strong></td>
+                                        <td><span class="badge">@m.structure.atropisomerism</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Molecular Formula</strong></td>
+                                        <td>@m.structure.formula</td>
+                                    </tr>
+                                </table>
+                                </div>
+                            </div>
+                                <div class="col-md-4">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped moiety-Table">
+                                <tr>
+                                    <td><strong>Molecular Weight</strong></td>
+                                    <td>@m.structure.mwt</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Defined Stereocenters</strong></td>
+                                    <td><span class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></td>
+                                </tr>
+                                <td><strong>EZ Centers</strong></td>
+                                <td><span class="badge">@m.structure.ezCenters</span></td>
+                                <tr>
+                                    <td><strong>Charge</strong></td>
+                                    <td><span class="badge">@m.structure.charge</span></td>
+                                </tr>
+                                @if(sub.structure.stereoComments !=null){
+                                    <tr>
+                                        <td>StereoComments</td>
+                                        <td>@m.structure.stereoComments</td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <td><strong>References</strong></td>
+                                    @referencetable(GinasApp.getStructureReferences(sub.structure), "hi", 2)
+                                </tr>
+                                </table>
+                                        </div>
+                                    </div>
+                            </div>
+            }
+                </div>
+                        @*<div class = "col-md-10">
+                            <div class ="row">
+                                <div class="col-md-1">
+                                    <label for="count">Count</label>
+                                    <span class="badge badge-primary" id = "count">@m.count</span>
+                                </div>
+                                <div class="col-md-3 text-center">
+                                    <label for="count">Formula</label><br>
+                                    <span id ="formula">@m.structure.formula</span>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="stereochemistry">Stereochemistry</label>
+                                    <span id ="stereochemistry" class="badge">@m.structure.stereoChemistry</span>
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="opticalActivity">Optical Activity</label>
+                                    <span id ="opticalActivity" class="badge">@m.structure.opticalActivity</span>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="stereochemistry">Additional Stereochemistry</label>
+                                    <span id ="atropisomerism" class="badge">@m.structure.atropisomerism</span>
+                                </div>
+                            </div>
+                            <br>
+                            <div class = "row">
+                                <div class="col-md-2">
+                                    <label for="mwt">Molecular Weight</label>
+                                    <span id ="mwt">@m.structure.mwt</span></div>
+                                <div class="col-md-2">
+                                    <label for="stereo">Defined Stereocenters</label>
+                                    <span id = "stereo" class="badge">@m.structure.definedStereo / @m.structure.stereoCenters</span></div>
+                                <div class="col-md-2">
+                                    <label for="ez">EZ Centers</label><br>
+                                    <span id ="ez" class="badge">@m.structure.ezCenters</span></div>
+                                <div class="col-md-2">
+                                    <label for="charge">Moiety Charge</label><br>
+                                    <span id ="charge" class="badge">@m.structure.charge</span>
+                                </div>
+                                <div class="col-md-2">
+                                        <label for="stereoComments">Stereo Comments</label><br>
+                                        <span id ="stereoComments">@m.structure.stereoComments</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            }
+                </div>
+
             <div class="table-responsive">
                 <table class="table moiety-Table">
-                    <thead>
                         <tr>
                                 <th>Moiety Structure</th>
                                 <th>Moiety Count</th>
+                                <th>Molecular Formula</th>
                                 <th>Moiety Stereochemistry</th>
                                 <th>Moiety Optical Activity</th>
                                 <th>Moiety Additional Stereochemistry</th>
-                            <th>Molecular Formula</th>
-                            <th>Molecular Weight</th>
-                            <th>Defined Stereocenters</th>
-                            <th>EZ Centers</th>
-                            <th>Charge</th>
-                        </tr>
-                    </thead>
+                            </tr>
+
                         @for(m <- sub.moieties) {
                             <tr>
                                 <td>@structureImage(m.structure, 150)</td>
@@ -126,8 +241,12 @@
                         }
                 </table>
             </div>
-        </div>
-        </div>
-    }
-}
 
+        </div>
+*@
+
+@*    }*@
+
+</div>
+}
+}
