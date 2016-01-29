@@ -2,7 +2,7 @@
     <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
     <tags-input custom-class="form-control" title="{{field}}" placeholder="{{field}}" id="{{field}}" name="{{label}}"
                 ng-model="obj" ng-blur="editing(obj[field]);" display-property="display" key-property="value"
-                addFromAutocompleteOnly="true">
+                addFromAutocompleteOnly="true" max-tags={{max}}>
         <auto-complete source="loadItems($query)" min-length="1" max-results-to-show="1111" load-on-empty="true" load-on-focus="true"
                        load-on-down-arrow="true"></auto-complete>
     </tags-input>

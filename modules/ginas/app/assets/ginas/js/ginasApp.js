@@ -248,7 +248,7 @@
 
         $scope.toFormSubstance = function (apiSub) {
            var formSub = $scope.expandCV(apiSub);
-            _.set(formSub, 'update', true);
+            _.set(formSub, '$$update', true);
             return formSub;
         };
 
@@ -480,9 +480,9 @@
                 return;
             }
             var sub = angular.copy($scope.substance);
-            sub = angular.toJson($scope.fromFormSubstance(sub));
             console.log(sub);
-            if (_.has(sub, 'update')) {
+            if (_.has(sub, '$$update')) {
+                sub = angular.toJson($scope.fromFormSubstance(sub));
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -834,7 +834,10 @@
             scope: {
                 parameters: '='
             },
-            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.amount"></amount></div>'
+            template: '<div ng-repeat="p in parameters">{{p.name||p.parameterName}} <amount value="p.amount"></amount></div>',
+            link: function(scope){
+                console.log(scope);
+            }
         };
     });
 

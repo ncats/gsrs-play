@@ -456,7 +456,7 @@
                 switch (attrs.type) {
                     case "amount":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggle()"><amount value ="referenceobj.amount" ></amount></a>');
+                            template = angular.element('<div><label for={{type}} class="text-capitalize">Amount</label><a ng-click ="toggle()"><amount value ="referenceobj.amount" ></amount></a></div>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -499,17 +499,11 @@
                         formHolder = '<reference-form referenceobj = referenceobj parent = parent></reference-form>';
                         break;
                     case "parameter":
-                        if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><parameters parameters ="referenceobj"></parameters></a>');
-                            element.append(template);
-                            $compile(template)(scope);
-                        } else {
                             $templateRequest(baseurl + "assets/templates/selectors/parameter-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
                             });
-                        }
                         formHolder = '<parameter-form referenceobj = referenceobj field="field" parent = parent></parameter-form>';
                         break;
                     case "physicalParameter":
