@@ -597,12 +597,15 @@
                     scope.parent.protein.glycosylation = {};
 
                 }
-                var arrays = _.pick(scope.parent.protein.glycosylation, _.isArray);
+                var arrays = _.pickBy(scope.parent.protein.glycosylation, _.isArray);
+                console.log(arrays);
                 scope.arrays = _.forOwn(arrays, function (value, key) {
                     scope.count += value.length;
-                    var ret = _.set(arrays[key], 'field', _.startCase(key));
-                    var ret = _.set(arrays[key], 'name', key);
+                     _.set(arrays[key], 'field', _.startCase(key));
+                     _.set(arrays[key], 'name', key);
+                    return arrays;
                 });
+                console.log(scope);
 
                 scope.validate = function () {
                     if (!scope.parent.protein.glycosylation[scope.glyc.glycosylationSite.value]) {
