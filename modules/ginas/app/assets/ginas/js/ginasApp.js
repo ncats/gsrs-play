@@ -1083,7 +1083,7 @@
                 scope.cleanSequence = function () {
                     console.log('click');
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
-                        var temp = (_.find(scope.residues, 'value', aa.toUpperCase()));
+                        var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         console.log(temp);
                         if (!_.isUndefined(temp)) {
                             return temp;
