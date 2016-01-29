@@ -330,8 +330,8 @@
                 scope.getAllCysteinesWithoutLinkage = function () {
                     var count = 0;
                     _.forEach(scope.parent.protein.subunits, function (subunit) {
-                        if (!_.isUndefined(subunit.cysteineIndices)) {
-                            count += subunit.cysteineIndices.length;
+                        if (!_.isUndefined(subunit.$$cysteineIndices)) {
+                            count += subunit.$$cysteineIndices.length;
                         }
                     });
                     if (scope.parent.protein.disulfideLinks.length > 0) {
@@ -872,25 +872,25 @@
             var plural = type + "s";
             if (parent.nucleicAcid[plural].length == 0) {
                 if (type == 'linkage') {
-                    obj.$displayString = siteList.allSites(parent, 'nucleicAcid', type);
+                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid', type);
                 } else {
-                    obj.$displayString = siteList.allSites(parent, 'nucleicAcid');
+                    obj.$$displayString = siteList.allSites(parent, 'nucleicAcid');
                 }
-                obj.sites = siteList.siteList(obj.$displayString);
+                obj.sites = siteList.siteList(obj.$$displayString);
 
                 //this applies the sugar property to the display object
                 _.forEach(obj.sites, function (site) {
-                    _.set(parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], type, true);
+                    _.set(parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], type, true);
                 });
             } else {
-                obj.$displayString = siteList.siteString(this.getAllSitesWithout(type, parent.$subunitDisplay));
-                obj.sites = siteList.siteList(obj.$displayString);
+                obj.$$displayString = siteList.siteString(this.getAllSitesWithout(type, parent.$$subunitDisplay));
+                obj.sites = siteList.siteList(obj.$$displayString);
             }
         };
 
         this.clearSites = function (type, parent, obj) {
             _.forEach(obj, function (site) {
-                parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1] = _.omit(parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], type);
+                parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1] = _.omit(parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], type);
             });
         };
     });
@@ -912,20 +912,20 @@
                 }
 
                 scope.getAllSites = function () {
-                    return siteAdder.getAll('sugar', scope.parent.$subunitDisplay).length + siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
+                    return siteAdder.getAll('sugar', scope.parent.$$subunitDisplay).length + siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
                 };
 
                 scope.applyAll = function () {
                     siteAdder.applyAll('sugar', scope.parent, scope.sugar);
-                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
+                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
                 };
 
                 scope.validate = function () {
                     _.forEach(scope.sugar.sites, function (site) {
-                        _.set(scope.parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'sugar', true);
+                        _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'sugar', true);
                     });
                     scope.parent.nucleicAcid.sugars.push(scope.sugar);
-                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
+                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
                     scope.sugar = {};
                     scope.sugarForm.$setPristine();
                 };
@@ -933,10 +933,10 @@
                 scope.deleteObj = function (obj) {
                     scope.parent.nucleicAcid.sugars.splice(scope.parent.nucleicAcid.sugars.indexOf(obj), 1);
                     siteAdder.clearSites('sugar', scope.parent, obj.sites);
-                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
+                    scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
                 };
 
-                scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$subunitDisplay).length;
+                scope.noSugars = siteAdder.getAllSitesWithout('sugar', scope.parent.$$subunitDisplay).length;
             }
         };
     });
@@ -958,20 +958,20 @@
                 }
 
                 scope.getAllSites = function () {
-                    return siteAdder.getAll('linkage', scope.parent.$subunitDisplay).length + siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
+                    return siteAdder.getAll('linkage', scope.parent.$$subunitDisplay).length + siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
                 };
 
                 scope.applyAll = function () {
                     siteAdder.applyAll('linkage', scope.parent, scope.linkage, 'linkage');
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
                 };
 
                 scope.validate = function () {
                     _.forEach(scope.linkage.sites, function (site) {
-                        _.set(scope.parent.$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
+                        _.set(scope.parent.$$subunitDisplay[site.subunitIndex - 1][site.residueIndex - 1], 'linkage', true);
                     });
                     scope.parent.nucleicAcid.linkages.push(scope.linkage);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
                     scope.linkage = {};
                     scope.linkageForm.$setPristine();
                 };
@@ -979,10 +979,10 @@
                 scope.deleteObj = function (obj) {
                     scope.parent.nucleicAcid.linkages.splice(scope.parent.nucleicAcid.linkages.indexOf(obj), 1);
                     siteAdder.clearSites('linkage', scope.parent, obj.sites);
-                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
+                    scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
                 };
 
-                scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$subunitDisplay).length;
+                scope.noLinkages = siteAdder.getAllSitesWithout('linkage', scope.parent.$$subunitDisplay).length;
             }
         };
     });
@@ -1457,7 +1457,7 @@
                     if (!su)return [];
                     var list = [];
                     if (scope.residueregex) {
-                        var ret = scope.parent[scope.parent.substanceClass].subunits[su - 1].cysteineIndices;
+                        var ret = scope.parent[scope.parent.substanceClass].subunits[su - 1].$$cysteineIndices;
                         if (scope.parent.protein.disulfideLinks.length > 0) {
                             _.forEach(scope.parent.protein.disulfideLinks, function (siteList) {
                                 _.forEach(siteList.sites, function (site) {
@@ -1481,11 +1481,11 @@
                 };
 
                 scope.makeSiteList = function () {
-                    scope.referenceobj.sites = siteList.siteList(scope.referenceobj.$displayString);
+                    scope.referenceobj.sites = siteList.siteList(scope.referenceobj.$$displayString);
                 };
 
                 scope.redraw = function () {
-                    scope.referenceobj.$displayString = siteList.siteString(scope.referenceobj.sites);
+                    scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
                 };
 
                 scope.deleteObj = function (obj) {
@@ -1582,7 +1582,7 @@
                 residues: '='
             },
             link: function (scope, element, attrs) {
-                scope.parent.$subunitDisplay = [];
+                scope.parent.$$subunitDisplay = [];
                 scope.substanceClass = scope.parent.substanceClass;
                 var template;
                 if (scope.parent.substanceClass === 'protein') {

@@ -2,7 +2,7 @@
     var tagsInput = angular.module('ngTagsInput', []);
 
     var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
-        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin'
+        'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch'
     ]).
         run(['$anchorScroll', function($anchorScroll) {
         $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
@@ -103,84 +103,6 @@
         return utils;
     });
 
-    /*
-    ginasApp.service('lookup', function ($http) {
-        var options = {};
-        var url = baseurl + "api/v1/vocabularies?filter=domain='";
-
-        var lookup = {
-            "moieties.stereochemistry": "STEREOCHEMISTRY_TYPE",
-            "names.type": "NAME_TYPE",
-            "officialNames.type": "NAME_TYPE",
-            "unofficialNames.type": "NAME_TYPE",
-            "names.nameOrgs": "NAME_ORG",
-            "officialNames.nameOrgs": "NAME_ORG",
-            "unofficialNames.nameOrgs": "NAME_ORG",
-            "names.nameJurisdiction": "JURISDICTION",
-            "officialNames.nameJurisdiction": "JURISDICTION",
-            "names.domains": "NAME_DOMAIN",
-            "officialNames.domains": "NAME_DOMAIN",
-            "names.languages": "LANGUAGE",
-            "officialNames.languages": "LANGUAGE",
-            "unofficialNames.languages": "LANGUAGE",
-            "codes.codeSystem": "CODE_SYSTEM",
-            "codes.type": "CODE_TYPE",
-            "relationships.type": "RELATIONSHIP_TYPE",
-            "relationships.interactionType": "INTERACTION_TYPE",
-            "relationships.qualification": "QUALIFICATION",
-            "references.docType": "DOCUMENT_TYPE",
-            "protein.proteinType": "PROTEIN_TYPE",
-            "protein.proteinSubtype": "PROTEIN_SUBTYPE",
-            "protein.sequenceOrigin": "SEQUENCE_ORIGIN",
-            "protein.sequenceType": "SEQUENCE_TYPE",
-            "property.type": "PROPERTY_TYPE",
-            "protein.glycosylation.glycosylationType": "GLYCOSYLATION_TYPE",
-            "protein.modifications.structuralModifications.structuralModificationType": "STRUCTURAL_MODIFICATION_TYPE",
-            "protein.modifications.structuralModifications.locationType": "LOCATION_TYPE",
-            "protein.modifications.structuralModifications.extent": "EXTENT_TYPE",
-            "structurallyDiverse.sourceMaterialClass" : "SOURCE_MATERIAL_CLASS",
-            "structurallyDiverse.sourceMaterialType" : "SOURCE_MATERIAL_TYPE",
-            "structurallyDiverse.sourceMaterialState" : "SOURCE_MATERIAL_STATE",
-            "component.type":"MIXTURE_TYPE"
-        };
-
-
-        lookup.load = function (field) {
-            $http.get(url + field.toUpperCase() + "'", {
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            }).success(function (data) {
-                console.log(data);
-                return data.content[0].terms;
-            });
-            // console.log(options);
-        };
-
-
-        lookup.getFromName = function (field, val) {
-          //  console.log(field);
-            var domain = lookup[field];
-            if (typeof domain !== "undefined") {
-                return {
-                    "display": getDisplayFromCV(domain, val),
-                    "value": val,
-                    "domain": domain
-                };
-            }
-            return null;
-        };
-        lookup.expandCVValueDisplay = function (domain, value) {
-            var disp = getDisplayFromCV(domain, value);
-            return {value: value, display: disp, domain: domain};
-        };
-        lookup.getList = function (domain) {
-            return getCVListForDomain(domain);
-        };
-        return lookup;
-    });
-*/
-
     ginasApp.service('nameFinder', function ($http) {
         var url = baseurl + "api/v1/substances/search?q=";
 
@@ -267,7 +189,7 @@
         };
     });
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
+      ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
                                                      localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, CVFields) {
         var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
@@ -275,7 +197,7 @@
         $scope.cutoff = 0.8;
         $scope.stage = true;
         $scope.toggleGrid = false;
-
+          $scope.diff = false;
         $scope.scrollTo = function (prmElementToScrollTo) {
             //  console.log(prmElementToScrollTo);
             $location.hash(prmElementToScrollTo);
@@ -283,6 +205,12 @@
         };
         $scope.viewToggle = function () {
             $scope.submitSubstance = $scope.fromFormSubstance(angular.copy($scope.substance));
+        };
+
+        $scope.compare= function(){
+            $scope.left = angular.toJson($scope.fromFormSubstance(angular.copy($scope.substance)));
+            $scope.right = angular.toJson(angular.copy($window.loadjson));
+            $scope.substancesEqual = angular.equals($scope.right, $scope.left);
         };
 
         $scope.canApprove = function () {
@@ -326,45 +254,29 @@
           //  console.log($scope.expandCV(apiSub));
            var formSub = $scope.expandCV(apiSub);
         //    console.log(angular.copy(formSub));
-            if (_.has(formSub, 'names')) {
-                _.forEach(formSub.names, function (n) {
-                    var temp = [];
-                    if (n.nameOrgs && n.nameOrgs.length > 0) {
-                        _.forEach(n.nameOrgs, function (m) {
-                            if (m.deprecated) {
-                                formSub.destructive = true;
-                            }
-                            //temp.push(m);
-                            temp.push(m.nameOrg);
-                        });
-                        n.nameOrgs = temp;
-                    }
-                });
-                _.set(formSub, 'update', true);
+        //    if (_.has(formSub, 'names')) {
+        //        _.forEach(formSub.names, function (n) {
+        //            var temp = [];
+        //            if (n.nameOrgs && n.nameOrgs.length > 0) {
+        //                _.forEach(n.nameOrgs, function (m) {
+        //                    if (m.deprecated) {
+        //                        formSub.destructive = true;
+        //                    }
+        //                    //temp.push(m);
+        //                    temp.push(m.nameOrg);
+        //                });
+        //                n.nameOrgs = temp;
+        //            }
+        //        });
+        //
+        //    }
+            _.set(formSub, 'update', true);
 
-            }
             return formSub;
         };
 
         $scope.fromFormSubstance = function (formSub) {
             console.log(formSub);
-           /* if (formSub.officialNames || formSub.unofficialNames) {
-                _.forEach(formSub.officialNames, function (n) {
-                    n.type = "of";
-                });
-            }
-            if (!formSub.names) {
-                if (_.isUndefined(formSub.officialNames)) {
-                    formSub.names = formSub.unofficialNames;
-                } else if (_.isUndefined(formSub.unofficialNames)) {
-                    formSub.names = formSub.officialNames;
-                } else {
-                    formSub.names = formSub.officialNames.concat(formSub.unofficialNames);
-                }
-                delete formSub.officialNames;
-                delete formSub.unofficialNames;
-            }
-            */
             if (formSub.q) {
                 delete formSub.q;
             }
@@ -478,7 +390,11 @@
             //  console.log(sub);
             for (var v in sub) {
                 if ($scope.isCV(sub[v])) {
-                    sub[v] = sub[v].value;
+                    if(sub[v].value) {
+                        sub[v] = sub[v].value;
+                    }else{
+                        sub[v] = sub[v].display;
+                    }
                 } else {
                     if (typeof sub[v] === "object") {
                         $scope.flattenCV(sub[v]);
@@ -486,30 +402,6 @@
                 }
             }
             return sub;
-        };
-
-        $scope.resolveMol = function (structure){
-                console.log("resolve");
-
-                var url = window.strucUrl;
-                
-                
-                $http({
-                        method: 'POST',
-                        url: url,
-                        data: structure.molfile,
-                        headers: {
-                            'Content-Type': 'text/plain'
-                        }
-                    }).success(function (data) {
-                        $scope.substance.structure=data.structure;
-                        $scope.substance.moieties=data.moieties;
-                        
-                        //this is rather hacky, should be extracted and abstracted
-                        $('#structureimport').modal('hide');
-                    });
-                
-                
         };
 
         $scope.isCV = function (ob) {
@@ -522,6 +414,30 @@
          //   }
             return false;
         };
+
+          $scope.resolveMol = function (structure){
+              console.log("resolve");
+
+              var url = window.strucUrl;
+
+
+              $http({
+                  method: 'POST',
+                  url: url,
+                  data: structure.molfile,
+                  headers: {
+                      'Content-Type': 'text/plain'
+                  }
+              }).success(function (data) {
+                  $scope.substance.structure=data.structure;
+                  $scope.substance.moieties=data.moieties;
+
+                  //this is rather hacky, should be extracted and abstracted
+                  $('#structureimport').modal('hide');
+              });
+
+
+          };
 
         $scope.getResidueAtSite = function (site) {
             var msub = $scope.getSubunitWithIndex(site.subunitIndex);
@@ -630,8 +546,8 @@
                 return;
             }
             var sub = angular.copy($scope.substance);
-            sub = $scope.fromFormSubstance(sub);
-            console.log(JSON.stringify(sub));
+            sub = angular.toJson($scope.fromFormSubstance(sub));
+            console.log(sub);
             if (_.has(sub, 'update')) {
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
@@ -676,7 +592,7 @@
         $scope.validateSubstance = function () {
             var sub = angular.copy($scope.substance);
             console.log(angular.copy(sub));
-            sub = $scope.fromFormSubstance(sub);
+            sub = angular.toJson($scope.fromFormSubstance(sub));
             $scope.errorsArray = [];
             //   console.log(sub);
             $http.post(baseurl + 'register/validate', sub).success(function (response) {
@@ -784,7 +700,7 @@
 
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
-            var sub = $scope.toFormSubstance($window.loadjson);
+            var sub = $scope.toFormSubstance(angular.copy($window.loadjson));
             //console.log(angular.copy(sub));
             //_.set(sub,'substanceClass', sub.substanceClass.value);
             $scope.substance = sub;
@@ -939,16 +855,16 @@
             link: function (scope, element, attrs) {
                 if(!_.isUndefined(scope.referenceobj)) {
                     if(_.has(scope.referenceobj, 'sites')){
-                    scope.referenceobj.$displayString = siteList.siteString(scope.referenceobj.sites);
+                    scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
 
                     }else{
-                        scope.referenceobj.$displayString = siteList.siteString(scope.referenceobj);
+                        scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj);
                     }
                 }
               //  console.log(scope);
 
             },
-           template: '<div><div><span>{{referenceobj.$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
+           template: '<div><div><span>{{referenceobj.$$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
         };
     });
 
@@ -1047,7 +963,7 @@
 
                 scope.parseSubunit = function () {
                     // scope.obj.cysteineCount= 0;
-                    scope.obj.cysteineIndices = [];
+                    scope.obj.$$cysteineIndices = [];
                     var display = [];
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
@@ -1067,7 +983,7 @@
                             }
                             if (aa.toUpperCase() == 'C') {
                                 obj.cysteine = true;
-                                scope.obj.cysteineIndices.push(index + 1);
+                                scope.obj.$$cysteineIndices.push(index + 1);
                             }
                         } else {
                             obj.valid = false;
@@ -1076,7 +992,7 @@
                     });
                     display = _.chunk(display, 10);
                     scope.subunitDisplay = display;
-                    scope.parent.$subunitDisplay.push(display);
+                    scope.parent.$$subunitDisplay.push(display);
                 };
 
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
@@ -1561,7 +1477,8 @@
             template: '<span><h1>{{message}}</h1></span>'
 
         };
-    });
+
+            });
 
     ginasApp.controller('SubstanceSelectorInstanceController', function ($scope, $modalInstance, $http) {
 
@@ -1618,5 +1535,10 @@
 
 
     });
+
+
+
+
+
 })();
 
