@@ -46,6 +46,7 @@ public class MoldevImageApp extends MoldevApp {
             throws SQLException, IOException {
 
         MolDevUtils mdu = new MolDevUtils(getRepositoryPath());
+        mdu.makeConnection();
 
         BufferedImage image;
         boolean makeThumb = thumb != null && thumb.toLowerCase().equals("true");
@@ -65,6 +66,7 @@ public class MoldevImageApp extends MoldevApp {
                 image = mdu.getMolDevImage(plateName, row, col, waveId, siteid).getThumbnail();
             else image = mdu.getMolDevImage(plateName, row, col, waveId, siteid).getImage();
         }
+        mdu.closeConnection();
         if (image == null) return notFound("Couldn't find an image!");
 
         String returnType = "image/png";

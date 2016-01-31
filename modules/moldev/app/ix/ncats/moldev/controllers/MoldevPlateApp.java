@@ -43,6 +43,7 @@ public class MoldevPlateApp extends MoldevApp {
 
         makeConnection();
         MolDevUtils mdu = new MolDevUtils(getRepositoryPath());
+        mdu.makeConnection();
         boolean makeMontage = montage != null && montage.toLowerCase().equals("true");
 
         Long plateId;
@@ -97,6 +98,7 @@ public class MoldevPlateApp extends MoldevApp {
         JsonNode wells = mapper.valueToTree(whash.values());
         wellNodes.put("wells", wells);
         closeConnection();
+        mdu.closeConnection();
         return ok(wellNodes);
     }
 
@@ -106,6 +108,7 @@ public class MoldevPlateApp extends MoldevApp {
 
         makeConnection();
         MolDevUtils mdu = new MolDevUtils(getRepositoryPath());
+        mdu.makeConnection();
 
         Long plateId;
         if (isNumber(id)) plateId = Long.parseLong(id);
@@ -140,6 +143,7 @@ public class MoldevPlateApp extends MoldevApp {
         node.put("wavelengths", wlsNode);
 
         closeConnection();
+        mdu.closeConnection();
         return ok(node);
     }
 
