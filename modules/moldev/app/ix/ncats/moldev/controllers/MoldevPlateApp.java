@@ -113,7 +113,10 @@ public class MoldevPlateApp extends MoldevApp {
         Long plateId;
         if (isNumber(id)) plateId = Long.parseLong(id);
         else plateId = mdu.getMXPlateId(id);
-        if (plateId == null || plateId == -1) return notFound("No such plate: " + id);
+        if (plateId == null || plateId == -1) {
+            mdu.closeConnection();
+            return notFound("No such plate: " + id);
+        }
 
         PreparedStatement pst = hcsConn.prepareStatement("select plate_id, plate_name, plate_description, time_created, global_id, x_wells, y_wells from plates where plate_id = ?");
         pst.setLong(1, plateId);
