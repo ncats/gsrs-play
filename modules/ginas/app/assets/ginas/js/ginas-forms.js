@@ -407,10 +407,30 @@
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
                 scope.getValues = function () {
-                    CVFields.fetch(scope.vocab.value).then(function (data) {
+                    console.log(scope);
+                    CVFields.getCV(scope.vocab.display).then(function (data) {
                         scope.values = data.data.content[0].terms;
+                        scope.domain = data.data.content[0];
                     });
                     scope.create = true;
+                };
+
+                scope.deleteCV = function(obj){
+                    var r = confirm("Are you sure you want to delete this CV?");
+                    if (r == true) {
+                        console.log(obj);
+                        console.log(scope.values);
+                        console.log(scope.values.indexOf(obj));
+                        var terms = scope.values.splice(scope.values.indexOf(obj), 1);
+                        CVFields.updateCV(scope.domain);
+                    }
+                };
+
+                scope.updateCV = function(){
+                    var r = confirm("Are you sure you want to update this CV?");
+                    if (r == true) {
+                        CVFields.updateCV(scope.domain);
+                    }
                 }
             }
         };

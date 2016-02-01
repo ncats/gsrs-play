@@ -3,6 +3,9 @@ package ix.ginas.controllers.v1;
 import java.util.*;
 import java.io.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import ix.ginas.utils.GinasProcessingStrategy;
+import ix.ginas.utils.SubstanceValidator;
 import play.*;
 import play.db.ebean.*;
 import play.mvc.*;
@@ -153,7 +156,20 @@ public class ControlledVocabularyFactory extends EntityFactory {
         return delete (uuid, finder);
     }
 
-    public static Result update (Long uuid, String field) {
+	public static Result updateEntity () {
+		if (!request().method().equalsIgnoreCase("PUT")) {
+			return badRequest ("Only PUT is accepted!");
+		}
+		String content = request().getHeader("Content-Type");
+		if (content == null || (content.indexOf("application/json") < 0
+				&& content.indexOf("text/json") < 0)) {
+			return badRequest ("Mime type \""+content+"\" not supported!");
+		}
+		return updateEntity (ControlledVocabulary.class);
+	}
+
+
+	public static Result update (Long uuid, String field) {
         return update (uuid, field, ControlledVocabulary.class, finder);
     }
 }

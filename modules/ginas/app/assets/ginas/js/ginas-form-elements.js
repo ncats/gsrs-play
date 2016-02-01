@@ -104,6 +104,7 @@
                     })
                     .sortBy('display').value();
             },
+
             searchTags: function (domain, query) {
                 CV.getCV(domain).then(function(data){
                     console.log(data);
@@ -115,6 +116,32 @@
                     .value();
                 });
             },
+
+            updateCV: function(domainobj){
+                console.log(domainobj);
+                $http.put(baseurl + 'api/v1/vocabularies', domainobj, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).success(function(data){
+                    alert('update was performed.');
+                });
+            },
+
+            addCV: function(field, newcv){
+                CV.getCV(field).then(function(response) {
+                    console.log(response);
+                    response.data.content[0].terms.push(newcv);
+                    console.log(response);
+                    $http.put(baseurl + 'api/v1/vocabularies', response.data.content[0], {
+                     headers: {
+                     'Content-Type': 'application/json'
+                     }
+                     }).success(function(data){
+                     alert('update was performed.');
+                     });
+                });
+            }
         };
         return CV;
     });
@@ -269,9 +296,31 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
+                scope.values =[];
                 CVFields.getCV(attrs.cv).then(function (data) {
-                    scope.values = data.data.content[0].terms;
+                    scope.values = _.concat(data.data.content[0].terms,[{display:"Other", value:'Other'}]);
+               //     console.log(scope.values);
                 });
+
+                scope.makeNewCV = function(){
+                    console.log(scope);
+                    console.log(scope.obj.new);
+                    var exists = _.find(scope.values, function(cv){
+                       return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
+                    });
+                    if(!exists &&  scope.obj.new!== '') {
+                        var cv = {};
+                        cv.display = scope.obj.new;
+                        cv.value = scope.obj.new;
+                        scope.values.push(cv);
+                        CVFields.updateCV(attrs.cv, cv);
+                        console.log(cv);
+                        scope.obj = cv;
+                    }else{
+                        alert(scope.obj.new +' exists in the cv');
+                        scope.obj={};
+                    }
+                }
             }
         }
     });
