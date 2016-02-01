@@ -80,7 +80,7 @@ public class MoldevImageApp extends MoldevApp {
         } else if (format.toLowerCase().equals("png")) {
             bytes = getImageBytes(image, "png");
         }
-        response().setHeader(CACHE_CONTROL, "max-age=31536000");
+        response().setHeader(CACHE_CONTROL, "public, max-age=31536000");
         return ok(bytes).as(returnType);
     }
 

@@ -99,6 +99,8 @@ public class MoldevPlateApp extends MoldevApp {
         wellNodes.put("wells", wells);
         closeConnection();
         mdu.closeConnection();
+
+        response().setHeader(CACHE_CONTROL, "public, max-age=2592000");
         return ok(wellNodes);
     }
 
@@ -147,6 +149,9 @@ public class MoldevPlateApp extends MoldevApp {
 
         closeConnection();
         mdu.closeConnection();
+
+        response().setHeader(CACHE_CONTROL, "public, max-age=2592000");
+
         return ok(node);
     }
 
