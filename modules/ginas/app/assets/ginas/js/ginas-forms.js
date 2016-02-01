@@ -150,26 +150,7 @@
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/agent-modification-form.html",
-            link: function (scope, element, attrs) {
-                if (!scope.parent.modifications) {
-                    scope.parent.modifications = {};
-
-                }
-                if (!scope.parent.modifications.agentModifications) {
-                    scope.parent.modifications.agentModifications = [];
-                }
-                scope.validate = function () {
-
-                    scope.parent.modifications.agentModifications.push(scope.agentMod);
-                    scope.agentMod = {};
-                    scope.agentModForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.protein.modifications.agentModifications.splice(scope.parent.modifications.agentModifications.indexOf(obj), 1);
-                };
-            }
+            templateUrl: baseurl + "assets/templates/forms/agent-modification-form.html"
         };
     });
 
@@ -1120,24 +1101,7 @@ console.log(scope);
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html",
-            link: function (scope, element, attrs) {
-                if (!scope.parent.modifications) {
-                    scope.parent.modifications = {};
-                }
-                if (!scope.parent.modifications.physicalModifications) {
-                    scope.parent.modifications.physicalModifications = [];
-                }
-                scope.validate = function () {
-                    scope.parent.modifications.physicalModifications.push(scope.physicalModification);
-                    scope.physicalModification = {};
-                    scope.physicalModForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.modifications.physicalModifications.splice(scope.parent.modifications.physicalModifications.indexOf(obj), 1);
-                };
-            }
+            templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html"
         };
     });
 
