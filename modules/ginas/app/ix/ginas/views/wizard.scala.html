@@ -34,12 +34,12 @@
         }
         case "structurallyDiverse" => {
            <diverse-type-form parent = substance></diverse-type-form>
-            <div ng-if="substance.diverseType=='part' || substance.diverseType=='whole'">
+            <div ng-if="substance.$$diverseType=='part' || substance.$$diverseType=='whole'">
            <diverse-source-form parent = substance></diverse-source-form>
            <diverse-organism-form ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-organism-form>
             <diverse-details-form  ng-if="substance.structurallyDiverse.sourceMaterialClass.value =='ORGANISM'" parent = substance></diverse-details-form>
             <parent-form parent = substance></parent-form>
-            <part-form ng-if="substance.diverseType=='part'" parent = substance></part-form>
+            <part-form ng-if="substance.$$diverseType=='part'" parent = substance></part-form>
             </div>
 
         }

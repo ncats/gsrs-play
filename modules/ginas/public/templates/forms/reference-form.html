@@ -11,13 +11,13 @@
                                      type="view"></reference-apply>
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-md-2 url">
                     <text-input ng-model="ref.citation" field="citation"></text-input>
                 </div>
-                <div class="col-md-2">
+<!--                <div class="col-md-2">
                     <dropdown-select ng-model="ref.docType" field="docType" label="Document Type"
                                      cv="DOCUMENT_TYPE"></dropdown-select>
-                </div>
+                </div>-->
                 <div class="col-md-2">
                     <date-picker ng-model="ref.documentDate" field="documentDate"></date-picker>
                 </div>
@@ -60,15 +60,15 @@
                     <reference-apply obj=reference referenceobj=referenceobj parent=parent
                                      type="edit"></reference-apply>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2 url">
                     <text-view-edit obj="reference" field="citation"></text-view-edit>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="reference" field="docType" cv="DOCUMENT_TYPE" label="Document Type"></dropdown-view-edit>
                 </div>
-                <div class="col-md-1">
+<!--                <div class="col-md-1">
                     <date-picker-view-edit obj="reference" field="documentDate" label ="Date Accessed"></date-picker-view-edit>
-                </div>
+                </div>-->
                 <div class="col-md-2">
                     <multi-view-edit obj="reference" field="tags" cv="DOCUMENT_COLLECTION"></multi-view-edit>
                 </div>

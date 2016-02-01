@@ -340,7 +340,7 @@
                     if(sub[v].value) {
                         sub[v] = sub[v].value;
                     }else{
-                        sub[v] = sub[v].display;
+                        sub[v] = _.replace(sub[v].display, ' (not in CV)', '');
                     }
                 } else {
                     if (typeof sub[v] === "object") {

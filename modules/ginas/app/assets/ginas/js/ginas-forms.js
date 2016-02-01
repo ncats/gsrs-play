@@ -395,10 +395,18 @@
             },
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
-                scope.parent.diverseType = "";
+                console.log(scope);
+                scope.parent.$$diverseType = "";
+
+                if(scope.parent.structurallyDiverse.displayParts ==='WHOLE'){
+                    _.set(scope.parent, '$$diverseType', 'whole');
+                }else{
+                    _.set(scope.parent, '$$diverseType', 'part');
+                }
 
                 scope.checkType = function () {
-                    if (scope.parent.diverseType === 'whole') {
+                    if (scope.parent.$$diverseType === 'whole') {
+                        scope.parent.$$diverseType = 'whole';
                         _.set(scope.parent.structurallyDiverse, 'part', ['WHOLE']);
                     } else {
                         _.set(scope.parent.structurallyDiverse, 'part', []);
