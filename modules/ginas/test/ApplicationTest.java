@@ -2,14 +2,21 @@ import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
+import ix.ginas.controllers.GinasFactory;
 import org.junit.Test;
+import play.api.mvc.Content;
+import play.mvc.Result;
+import play.test.Helpers;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.fest.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
+
+import static org.fest.assertions.Assertions.assertThat;
+import static play.mvc.Http.Status.OK;
+import static play.test.Helpers.*;
 
 
 
@@ -40,14 +47,6 @@ public class ApplicationTest {
         when(mockedList.get(0)).thenReturn("first");
         assertEquals("first", mockedList.get(0));
     }
-   /* @Test
-    public void renderTemplate() {
-
-        Content html = ix.ginas.views.html.login.render();
-        //Content html = views.html.index.render("Your new application is ready.");
-        assertEquals("text/html", contentType(html));
-        assertTrue(contentAsString(html).contains("Your new application is ready."));
-    }*/
 
     @Test
     public void createPrincipal() {
@@ -59,7 +58,7 @@ public class ApplicationTest {
 
     @Test
     public void isAdmin(){
-        Principal user = new Principal("John Test", "");
+        Principal user = new Principal("TestUser", "");
         assertFalse(user.isAdmin());
     }
 
@@ -70,11 +69,7 @@ public class ApplicationTest {
         List<Role> roles = new ArrayList<Role>();
         roles.add(new Role(Role.Kind.Admin));
         when(mockProfile.getRoles()).thenReturn(roles);
-
-        Principal user = new Principal("John Test", "");
-        mockProfile.user = user;
-        assertTrue(!mockProfile.getRoles().isEmpty() && mockProfile.user.username.equals("John Test"));
-
+        assertTrue(!mockProfile.getRoles().isEmpty());
         verify(mockProfile).getRoles();
     }
 
@@ -86,19 +81,4 @@ public class ApplicationTest {
         when(mockProfile.getGroups()).thenReturn(groups);
         assertTrue(mockProfile.getGroups().size() == 1);
     }
-
-/*
-
-    @Test
-    public void testRestEndpoint() throws Exception {
-        FakeRequest request = new FakeRequest("GET", "/ginas/app/substances ");
-        Result result = route(request);
-        assertThat(status(result)).isEqualTo(OK);
-        assertThat(contentType(result)).isEqualTo("application/html");
-        assertThat(contentAsString(result)).contains("substances");
-    }
-
-
-*/
-
 }
