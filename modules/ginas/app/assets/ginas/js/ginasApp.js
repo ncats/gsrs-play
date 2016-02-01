@@ -334,13 +334,13 @@
         };
 
         $scope.flattenCV = function (sub) {
-            //  console.log(sub);
             for (var v in sub) {
                 if ($scope.isCV(sub[v])) {
                     if(sub[v].value) {
                         sub[v] = sub[v].value;
                     }else{
                         sub[v] = _.replace(sub[v].display, ' (not in CV)', '');
+                      //  sub[v] = sub[v].display;
                     }
                 } else {
                     if (typeof sub[v] === "object") {
@@ -354,11 +354,11 @@
         $scope.isCV = function (ob) {
             if (typeof ob !== "object") return false;
             if (ob === null) return false;
-            //if (typeof ob.value !== "undefined") {
+         //   if (typeof ob.value !== "undefined") {
                 if (typeof ob.display !== "undefined") {
                     return true;
                 }
-         //   }
+           // }
             return false;
         };
 
@@ -424,6 +424,7 @@
             console.log($scope);
             $scope.$broadcast('show-errors-check-validity');
             console.log(obj);
+            console.log(path);
             if (form.$valid) {
                 if (_.has($scope.substance, path)) {
                     var temp = _.get($scope.substance, path);
@@ -481,8 +482,8 @@
             }
             var sub = angular.copy($scope.substance);
             console.log(sub);
+            sub = angular.toJson($scope.fromFormSubstance(sub));
             if (_.has(sub, '$$update')) {
-                sub = angular.toJson($scope.fromFormSubstance(sub));
                 $http.put(baseurl + 'api/v1/substances', sub, {
                     headers: {
                         'Content-Type': 'application/json'
@@ -491,7 +492,11 @@
                     alert('update was performed.');
                 });
             } else {
-                $http.post(baseurl + 'register/submit', sub).success(function () {
+                $http.post(baseurl + 'register/submit', sub, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).success(function () {
                     console.log("success");
                     alert("submitted!");
                 });
@@ -961,6 +966,7 @@
                 type: '@'
             },
             link: function (scope, element, attrs, ngModel) {
+                console.log(scope);
                 var formHolder;
                 var childScope;
                 var template;

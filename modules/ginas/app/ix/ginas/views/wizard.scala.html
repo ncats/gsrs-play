@@ -27,9 +27,6 @@
             <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
             <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
             <glycosylation-form referenceobj ="referenceobj" parent = substance></glycosylation-form>
-            <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
-            <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
-            <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
             </div>
         }
         case "structurallyDiverse" => {
@@ -60,7 +57,7 @@
            <div>Nucleic Acid not implemented yet, still in development</div>
            <nucleic-acid-details-form parent = substance></nucleic-acid-details-form>
             <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
-            <div ng-if = "substance.$subunitDisplay.length>0">
+            <div ng-if = "substance.nucleicAcid.subunits.length>0">
                 <nucleic-acid-sugar-form referenceobj ="referenceobj" parent = substance></nucleic-acid-sugar-form>
                 <nucleic-acid-linkage-form referenceobj ="referenceobj" parent = substance></nucleic-acid-linkage-form>
             </div>
@@ -72,6 +69,11 @@
             <h2>Unknown substance class: @kind</h2>    
         }
     }
+    <div ng-if="substance.substanceClass !== 'chemical'">
+        <agent-modification-form referenceobj ="referenceobj" parent = substance></agent-modification-form>
+        <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
+        <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
+    </div>
     <code-form parent = substance></code-form>
     <relationship-form parent = substance></relationship-form>
     <note-form parent = substance></note-form>

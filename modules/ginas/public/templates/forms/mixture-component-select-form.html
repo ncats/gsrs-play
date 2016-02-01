@@ -6,7 +6,7 @@
         <form class="form-horizontal" name="componentForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <substance-chooser-selector ng-model ="component.substance" field ="substance" name ="substance" formname ="componentForm" label ="Component Substance" type = "search"></substance-chooser-selector>
+                    <substance-chooser-selector referenceobj ="component" field ="substance" name ="substance" formname ="componentForm" label ="Component Substance" type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-3">
                     <dropdown-select ng-model="component.type" field="type" cv = "MIXTURE_TYPE" ></dropdown-select>
@@ -29,7 +29,7 @@
                     <delete-button delete="obj" path="relationships"></delete-button>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-view-edit obj = "obj" field ="substance"></substance-chooser-view-edit>
+                    <substance-chooser-selector referenceobj = "obj" field ="substance" name ="substance" formname = {{obj.$$hashKey}}  type = "search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj = "obj" field="type" cv = "MIXTURE_TYPE" ></dropdown-view-edit>

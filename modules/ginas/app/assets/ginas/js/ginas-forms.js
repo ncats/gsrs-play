@@ -152,22 +152,22 @@
             },
             templateUrl: baseurl + "assets/templates/forms/agent-modification-form.html",
             link: function (scope, element, attrs) {
-                if (!scope.parent.protein.modifications) {
-                    scope.parent.protein.modifications = {};
+                if (!scope.parent.modifications) {
+                    scope.parent.modifications = {};
 
                 }
-                if (!scope.parent.protein.modifications.agentModifications) {
-                    scope.parent.protein.modifications.agentModifications = [];
+                if (!scope.parent.modifications.agentModifications) {
+                    scope.parent.modifications.agentModifications = [];
                 }
                 scope.validate = function () {
 
-                    scope.parent.protein.modifications.agentModifications.push(scope.agentMod);
+                    scope.parent.modifications.agentModifications.push(scope.agentMod);
                     scope.agentMod = {};
                     scope.agentModForm.$setPristine();
                 };
 
                 scope.deleteObj = function (obj) {
-                    scope.parent.protein.modifications.agentModifications.splice(scope.parent.protein.modifications.agentModifications.indexOf(obj), 1);
+                    scope.protein.modifications.agentModifications.splice(scope.parent.modifications.agentModifications.indexOf(obj), 1);
                 };
             }
         };
@@ -1122,20 +1122,20 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html",
             link: function (scope, element, attrs) {
-                if (!scope.parent.protein.modifications) {
-                    scope.parent.protein.modifications = {};
+                if (!scope.parent.modifications) {
+                    scope.parent.modifications = {};
                 }
-                if (!scope.parent.protein.modifications.physicalModifications) {
-                    scope.parent.protein.modifications.physicalModifications = [];
+                if (!scope.parent.modifications.physicalModifications) {
+                    scope.parent.modifications.physicalModifications = [];
                 }
                 scope.validate = function () {
-                    scope.parent.protein.modifications.physicalModifications.push(scope.physicalModification);
+                    scope.parent.modifications.physicalModifications.push(scope.physicalModification);
                     scope.physicalModification = {};
                     scope.physicalModForm.$setPristine();
                 };
 
                 scope.deleteObj = function (obj) {
-                    scope.parent.protein.modifications.physicalModifications.splice(scope.parent.protein.modifications.physicalModifications.indexOf(obj), 1);
+                    scope.parent.modifications.physicalModifications.splice(scope.parent.modifications.physicalModifications.indexOf(obj), 1);
                 };
             }
         };
@@ -1558,25 +1558,7 @@ console.log(scope);
                 referenceobj: '=',
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
-            link: function (scope, element, attrs) {
-                if (!scope.parent.protein.modifications) {
-                    scope.parent.protein.modifications = {};
-                }
-                if (!scope.parent.protein.modifications.structuralModifications) {
-                    scope.parent.protein.modifications.structuralModifications = [];
-                }
-
-                scope.validate = function () {
-                    scope.parent.protein.modifications.structuralModifications.push(scope.mod);
-                    scope.mod = {};
-                    scope.strucModForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.protein.modifications.structuralModifications.splice(scope.parent.protein.modifications.structuralModifications.indexOf(obj), 1);
-                };
-            }
+            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html"
         };
     });
 

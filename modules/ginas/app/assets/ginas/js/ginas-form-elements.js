@@ -601,6 +601,7 @@ ginasFormElements.directive('substanceViewer', function(){
                 label: '@'
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 scope.loadSubstances = function ($query) {
                     return nameFinder.search($query);
                 };

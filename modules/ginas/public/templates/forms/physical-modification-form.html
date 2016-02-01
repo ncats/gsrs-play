@@ -1,6 +1,6 @@
 <div class = "row info">
     <div class="row">
-        <form-header type="physicalModifications" path ="protein.modifications.physicalModification" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="physicalModifications" path ="modifications.physicalModification" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
         <form class="form-horizontal" name="physicalModForm" role="form" novalidate>
@@ -22,7 +22,7 @@
             <submit-buttons submit="physicalModification" form="physicalModForm" path="physicalModifications"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.protein.modifications.physicalModifications">
+        <div ng-repeat="obj in parent.modifications.physicalModifications">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
