@@ -62,7 +62,7 @@ public class FunctionalTest extends WithApplication {
                 assertThat(status(result)).isEqualTo(OK);
                 assertThat(contentType(result)).isEqualTo("text/html");
                 assertThat(content).contains("Structure");
-                assertThat(content).contains("Moieties");
+                assertThat(content).contains("moiety-form");
                 testCommonWizardElements(content);
             }
         });
@@ -159,7 +159,6 @@ public class FunctionalTest extends WithApplication {
     }
 
     public void testCommonWizardElements(String content){
-        assertThat(content).contains("official-name-form");
         assertThat(content).contains("name-form");
         assertThat(content).contains("code-form");
         assertThat(content).contains("relationship-form");
