@@ -298,7 +298,7 @@
             link: function (scope, element, attrs) {
                 scope.values =[];
                 CVFields.getCV(attrs.cv).then(function (data) {
-                    scope.values = _.concat(data.data.content[0].terms,[{display:"Other", value:'Other'}]);
+                    scope.values = _.concat(_.orderBy(data.data.content[0].terms, ['display'],['asc']),[{display:"Other", value:'Other'}]);
                //     console.log(scope.values);
                 });
 
@@ -321,6 +321,10 @@
                         scope.obj={};
                     }
                 }
+
+                scope.filterCV =function(field){
+                    console.log('filter by '+ field);
+                };
             }
         }
     });

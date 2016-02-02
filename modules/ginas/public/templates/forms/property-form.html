@@ -6,14 +6,14 @@
         <form class="form-horizontal" name="propertyForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
-                    <multi-select ng-model="property.name" field="name" cv = "PROPERTY_NAME" max="1"></multi-select>
+                    <dropdown-select ng-model="property.name" field="name" cv = "PROPERTY_NAME" ng-change="filterCV(property.name)"></dropdown-select>
                 </div>
                 <div class="col-md-2">
                     <dropdown-select ng-model="property.type" field="type" cv = "PROPERTY_TYPE" ></dropdown-select>
                 </div>
-                <div class="col-md-2">
+<!--                <div class="col-md-2">
                     <text-input ng-model="property.propertyType" field="propertyType" ></text-input>
-                </div>
+                </div>-->
                 <div class="col-md-1">
                     <form-selector referenceobj= "property" divid="propertyForm" type = "amount"></form-selector>
                 </div>
@@ -35,7 +35,6 @@
         </form>
 
         <div ng-repeat="obj in parent.properties">
-            {{obj}}
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -47,9 +46,9 @@
                 <div class="col-md-1">
                     <dropdown-view-edit obj = "obj" field="type" cv = "PROPERTY_TYPE" ></dropdown-view-edit>
                 </div>
-                <div class="col-md-2">
+<!--                <div class="col-md-2">
                     <text-view-edit obj = "obj" field="propertyType" ></text-view-edit>
-                </div>
+                </div>-->
                 <div class="col-md-1">
                     <form-selector referenceobj= "obj" formname="propertyForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
