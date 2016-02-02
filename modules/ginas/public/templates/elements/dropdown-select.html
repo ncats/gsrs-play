@@ -1,9 +1,10 @@
 <div ng-cloak>
     <div>
         <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
-        <select class="form-control" title="{{field}}" name="{{field}}" id="{{field}}" ng-model= obj
+        <select ng-hide = "obj.display =='Other'" class="form-control" title="{{field}}" name="{{field}}" id="{{field}}" ng-model= obj
                 ng-blur="editing(obj[field]);" ng-options="r.display for r in values track by r.display">
             <option class= "text-capitalize" value='' disabled selected>{{label || field}}...</option>
         </select>
+        <input type="text" class="form-control" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();" ng-if="obj.display=='Other'"/>
     </div>
 </div>

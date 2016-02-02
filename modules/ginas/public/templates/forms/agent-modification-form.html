@@ -1,6 +1,6 @@
 <div class="row info">
     <div class="row">
-        <form-header type="agentModifications" path ="protein.modifications.agentModifications" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="agentModifications" path ="modifications.agentModifications" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse ="iscollapsed">
         <form class="form-horizontal" name="agentModForm" role="form" novalidate>
@@ -34,15 +34,15 @@
                 </div>
             </div>
             <div class="agentModForm"></div>
-            <submit-buttons submit="agentMod" form="agentModForm" path="agentModifications"></submit-buttons>
+            <submit-buttons submit="agentMod" form="agentModForm" path="modifications.agentModifications"></submit-buttons>
         </form>
 
 
-        <div ng-repeat="obj in parent.protein.modifications.agentModifications">
+        <div ng-repeat="obj in parent.modifications.agentModifications">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj" path="agentModifications"></delete-button>
+                    <delete-button delete="obj" path="modifications.agentModifications"></delete-button>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="agentModificationType"
