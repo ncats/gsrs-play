@@ -49,6 +49,13 @@ import ix.ncats.controllers.App;
 import ix.utils.Global;
 import ix.utils.Util;
 
+
+import play.Play;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -227,29 +234,15 @@ public class GinasApp extends App {
     }
 
     public static CV getCV() {
-        try {
-            return IxCache.getOrElse("ginasCV", new Callable<CV>() {
-                    public CV call() throws Exception {
-                        if (!ControlledVocabularyFactory.isloaded()) {
-                            Call call = controllers.routes.Assets
-                                .at("ginas/CV.txt");
-                            F.Promise<WSResponse> ws =
-                                WS.url(call.absoluteURL(request())).get();
-                            ControlledVocabularyFactory.loadSeedCV
-                                (ws.get(1000).getBodyAsStream());
-                        }
-
-                        CV cv = new CV();
-                        Logger.debug("CV loaded: size=" + cv.size());
-                        return cv;
-                    }
-                }, 0);
-        } catch (Exception ex) {
-            Logger.error("Can't load CV", ex);
-        }
-        return null;
+    	if (!ControlledVocabularyFactory.isloaded()) {
+    		ControlledVocabularyFactory.loadSeedCV(Play.application().resourceAsStream("CV.txt"));
+    	}
+    	CV cv = new CV();
+        Logger.debug("CV loaded: size=" + cv.size());
+        return cv;
     }
 
+    
     static FacetDecorator[] decorate(Facet... facets) {
         List<FacetDecorator> decors = new ArrayList<FacetDecorator>();
         // override decorator as needed here

@@ -150,26 +150,7 @@
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/agent-modification-form.html",
-            link: function (scope, element, attrs) {
-                if (!scope.parent.protein.modifications) {
-                    scope.parent.protein.modifications = {};
-
-                }
-                if (!scope.parent.protein.modifications.agentModifications) {
-                    scope.parent.protein.modifications.agentModifications = [];
-                }
-                scope.validate = function () {
-
-                    scope.parent.protein.modifications.agentModifications.push(scope.agentMod);
-                    scope.agentMod = {};
-                    scope.agentModForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.protein.modifications.agentModifications.splice(scope.parent.protein.modifications.agentModifications.indexOf(obj), 1);
-                };
-            }
+            templateUrl: baseurl + "assets/templates/forms/agent-modification-form.html"
         };
     });
 
@@ -426,10 +407,30 @@
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
                 scope.getValues = function () {
-                    CVFields.fetch(scope.vocab.value).then(function (data) {
+                    console.log(scope);
+                    CVFields.getCV(scope.vocab.display).then(function (data) {
                         scope.values = data.data.content[0].terms;
+                        scope.domain = data.data.content[0];
                     });
                     scope.create = true;
+                };
+
+                scope.deleteCV = function(obj){
+                    var r = confirm("Are you sure you want to delete this CV?");
+                    if (r == true) {
+                        console.log(obj);
+                        console.log(scope.values);
+                        console.log(scope.values.indexOf(obj));
+                        var terms = scope.values.splice(scope.values.indexOf(obj), 1);
+                        CVFields.updateCV(scope.domain);
+                    }
+                };
+
+                scope.updateCV = function(){
+                    var r = confirm("Are you sure you want to update this CV?");
+                    if (r == true) {
+                        CVFields.updateCV(scope.domain);
+                    }
                 }
             }
         };
@@ -1120,24 +1121,7 @@ console.log(scope);
             scope: {
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html",
-            link: function (scope, element, attrs) {
-                if (!scope.parent.protein.modifications) {
-                    scope.parent.protein.modifications = {};
-                }
-                if (!scope.parent.protein.modifications.physicalModifications) {
-                    scope.parent.protein.modifications.physicalModifications = [];
-                }
-                scope.validate = function () {
-                    scope.parent.protein.modifications.physicalModifications.push(scope.physicalModification);
-                    scope.physicalModification = {};
-                    scope.physicalModForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.protein.modifications.physicalModifications.splice(scope.parent.protein.modifications.physicalModifications.indexOf(obj), 1);
-                };
-            }
+            templateUrl: baseurl + "assets/templates/forms/physical-modification-form.html"
         };
     });
 
@@ -1558,25 +1542,7 @@ console.log(scope);
                 referenceobj: '=',
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
-            link: function (scope, element, attrs) {
-                if (!scope.parent.protein.modifications) {
-                    scope.parent.protein.modifications = {};
-                }
-                if (!scope.parent.protein.modifications.structuralModifications) {
-                    scope.parent.protein.modifications.structuralModifications = [];
-                }
-
-                scope.validate = function () {
-                    scope.parent.protein.modifications.structuralModifications.push(scope.mod);
-                    scope.mod = {};
-                    scope.strucModForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.protein.modifications.structuralModifications.splice(scope.parent.protein.modifications.structuralModifications.indexOf(obj), 1);
-                };
-            }
+            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html"
         };
     });
 

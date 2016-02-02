@@ -18,12 +18,13 @@ import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Transaction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+
+
 public class GinasFactory extends EntityFactory {
 	public static final Model.Finder<Long, Principal> finder = new Model.Finder(
 			Long.class, Principal.class);
 
-	public static Result index() {
-		GinasApp.getCV();
+	public static Result index() {		
 		return ok(ix.ginas.views.html.index.render());
 	}
 

@@ -1,4 +1,4 @@
-package ix.ginas.utils;
+package ix.ginas.utils.validation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,11 +6,13 @@ import java.util.List;
 import ix.core.ValidationMessage;
 import ix.core.Validator;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.utils.GinasProcessingMessage;
+import ix.ginas.utils.GinasProcessingStrategy;
 
-public class SubstanceValidator implements Validator<Substance>{
+public class DefaultSubstanceValidator implements Validator<Substance>{
 	GinasProcessingStrategy _strategy;
 	
-	public SubstanceValidator(GinasProcessingStrategy strategy){
+	public DefaultSubstanceValidator(GinasProcessingStrategy strategy){
 		_strategy=strategy;
 	}
 	
@@ -28,9 +30,10 @@ public class SubstanceValidator implements Validator<Substance>{
 		return allow;
 	}
 
+	
 	@Override
 	public List<? extends ValidationMessage> getValidationMessageContainer() {
 		return new ArrayList<GinasProcessingMessage>();
 	}
-
+	
 }

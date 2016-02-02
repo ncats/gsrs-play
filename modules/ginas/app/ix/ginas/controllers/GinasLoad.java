@@ -23,9 +23,10 @@ import ix.ginas.utils.GinasSDFUtils;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor;
 import ix.ginas.utils.GinasSDFUtils.GinasSDFExtractor.FieldStatistics;
 import ix.ginas.utils.GinasUtils;
-import ix.ginas.utils.Validation;
+import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
+import ix.core.ValidationMessage;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import ix.ginas.utils.validation.Validation;
 
 import play.Logger;
 import play.Play;
@@ -335,7 +337,7 @@ public class GinasLoad extends App {
 	public static Result validateSubstance() {
 		String mappingsjson = extractSubstanceJSON();
 		Substance sub = null;
-		List<GinasProcessingMessage> messages = new ArrayList<GinasProcessingMessage>();
+		List<ValidationMessage> messages = new ArrayList<ValidationMessage>();
 
 		try {
 			System.out.println(mappingsjson);
@@ -343,8 +345,10 @@ public class GinasLoad extends App {
 					mappingsjson);
 			JsonNode jn = ex.getNextRecord();
 			sub = GinasUtils.makeSubstance(jn);
-			messages.addAll(Validation.validateAndPrepare(sub,
-					GinasProcessingStrategy.ACCEPT_APPLY_ALL()));
+			DefaultSubstanceValidator dsv = new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL());
+			dsv.validate(sub,messages);
+//			messages.addAll(Validation.validateAndPrepare(sub,
+//					GinasProcessingStrategy.ACCEPT_APPLY_ALL()));
 		} catch (IllegalStateException e) {
 			messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
 		} catch (UnsupportedEncodingException e) {
@@ -367,9 +371,11 @@ public class GinasLoad extends App {
 			JsonNode jn = ex.getNextRecord();
 			sub = GinasUtils.makeSubstance(jn);
 			if (sub instanceof ChemicalSubstance) {
-				messages.addAll(Validation
-						.validateAndPrepareChemical((ChemicalSubstance) sub,
-						GinasProcessingStrategy.ACCEPT_APPLY_ALL()));
+				messages.addAll(
+						Validation.validateAndPrepareChemical(
+								(ChemicalSubstance) sub,
+								GinasProcessingStrategy.ACCEPT_APPLY_ALL()								
+								));
 			} else {
 				messages.add(GinasProcessingMessage
 						.ERROR_MESSAGE("Subsance is not a chemical substance"));
@@ -381,8 +387,10 @@ public class GinasLoad extends App {
 					.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
 		}
 		if(GinasProcessingMessage.ALL_VALID(messages)){
-			messages.add(GinasProcessingMessage
-					.SUCCESS_MESSAGE("Structure is valid and unique"));
+			messages.add(
+					GinasProcessingMessage
+					.SUCCESS_MESSAGE("Structure is valid and unique")
+					);
 		}
 		ObjectMapper om = new ObjectMapper();
 		return ok(om.valueToTree(messages));
@@ -404,9 +412,13 @@ public class GinasLoad extends App {
 			Substance osub = (sub.uuid == null) ? null : SubstanceFactory
 					.getSubstance(sub.uuid);
 
-			List<GinasProcessingMessage> messages = Validation
-					.validateAndPrepare(sub,
-							GinasProcessingStrategy.ACCEPT_APPLY_ALL());
+			DefaultSubstanceValidator dsv = new DefaultSubstanceValidator(
+					GinasProcessingStrategy.ACCEPT_APPLY_ALL_MARK_FAILED()
+					);
+						
+			List<ValidationMessage> messages = new ArrayList<ValidationMessage>();
+			dsv.validate(sub,messages);
+			
 			// how, exactly, should this be updated?
 			if (osub != null) {
 				if (osub instanceof ChemicalSubstance) {
@@ -560,26 +572,4 @@ public class GinasLoad extends App {
 		return mappingsjson;
 	}
 
-	public static Result updateSubstance() {
-		DynamicForm requestData = Form.form().bindFromRequest();
-		String mappingsjson = requestData.get("substance");
-		Substance sub = null;
-		try {
-			System.out.println(mappingsjson);
-			GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(
-					mappingsjson);
-			JsonNode jn = ex.getNextRecord();
-			GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer) ex
-					.getTransformer();
-			sub = trans.transformSubstance(jn);
-			GinasUtils.GinasAbstractSubstanceTransformer.prepareSubstance(sub);
-			List<String> errors = new ArrayList<String>();
-			if (!GinasUtils.persistSubstance(sub, _strucIndexer, errors)) {
-				throw new IllegalStateException(errors.toString());
-			}
-		} catch (Throwable e) {
-			return _internalServerError(e);
-		}
-		return ok("worked:" + sub.uuid);
-	}
 }

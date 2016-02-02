@@ -10,6 +10,10 @@ import java.util.List;
 import play.Logger;
 
 public abstract class GinasProcessingStrategy {
+	private static final String FAILED = "FAILED";
+	private static final String GROUP_ADMIN = "admin";
+	private static final String WARNING = "WARNING";
+	private static final String FAIL_REASON = "FAIL_REASON";
 	//TODO: add messages directly here
 	public List<GinasProcessingMessage> _localMessages = new ArrayList<GinasProcessingMessage>();
 	
@@ -33,10 +37,15 @@ public abstract class GinasProcessingStrategy {
 		return new GinasProcessingStrategy() {
 			@Override
 			public void processMessage(GinasProcessingMessage gpm) {
-				if (gpm.suggestedChange)
+				if (gpm.suggestedChange){
 					gpm.actionType = GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE;
-				else
-					gpm.actionType = GinasProcessingMessage.ACTION_TYPE.IGNORE;
+				}else{
+					if(gpm.isError()){
+						gpm.actionType=GinasProcessingMessage.ACTION_TYPE.FAIL;
+					}else{
+						gpm.actionType = GinasProcessingMessage.ACTION_TYPE.IGNORE;
+					}
+				}
 			}
 		};
 	}
@@ -48,10 +57,11 @@ public abstract class GinasProcessingStrategy {
 				if (gpm.messageType == GinasProcessingMessage.MESSAGE_TYPE.ERROR) {
 					gpm.actionType = GinasProcessingMessage.ACTION_TYPE.FAIL;
 				} else {
-					if (gpm.suggestedChange)
+					if (gpm.suggestedChange){
 						gpm.actionType = GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE;
-					else
+					}else{
 						gpm.actionType = GinasProcessingMessage.ACTION_TYPE.IGNORE;
+					}
 				}
 			}
 		};
@@ -61,7 +71,11 @@ public abstract class GinasProcessingStrategy {
 	public static GinasProcessingStrategy ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED() {
 		return ACCEPT_APPLY_ALL_WARNINGS().markFailed();
 	}
-
+	
+	public static GinasProcessingStrategy ACCEPT_APPLY_ALL_MARK_FAILED() {
+		return ACCEPT_APPLY_ALL().markFailed();
+	}
+	
 	public GinasProcessingStrategy markFailed() {
 		this.failType = HANDLING_TYPE.MARK;
 		return this;
@@ -81,17 +95,19 @@ public abstract class GinasProcessingStrategy {
 	public boolean handleMessages(Substance cs, List<GinasProcessingMessage> list) {
 		boolean allow=true;
 		for (GinasProcessingMessage gpm : list) {
-			Logger.debug("######### " + gpm.toString());
-			if (gpm.actionType == GinasProcessingMessage.ACTION_TYPE.FAIL
-					||
-					gpm.isError()) {
+			
+			if(gpm.isError() && gpm.appliedChange){
+				gpm.messageType=GinasProcessingMessage.MESSAGE_TYPE.WARNING;
+			}
+			
+			if (gpm.actionType == GinasProcessingMessage.ACTION_TYPE.FAIL || gpm.isError()) {
 				allow=false;
 				if (failType == HANDLING_TYPE.FAIL) {
 					throw new IllegalStateException(gpm.message);
 				} else if (failType == HANDLING_TYPE.MARK) {
-					cs.status = "FAILED";
-					cs.addPropertyNote(gpm.message, "FAIL_REASON");
-					cs.addRestrictGroup("admin");
+					cs.status = GinasProcessingStrategy.FAILED;
+					cs.addPropertyNote(gpm.message, GinasProcessingStrategy.FAIL_REASON);
+					cs.addRestrictGroup(GinasProcessingStrategy.GROUP_ADMIN);
 				} else {
 
 				}
@@ -105,9 +121,9 @@ public abstract class GinasProcessingStrategy {
 			for (GinasProcessingMessage gpm : list) {
 				if (gpm.messageType == GinasProcessingMessage.MESSAGE_TYPE.WARNING) {
 					
-					cs.tags.add(new Keyword(GinasCommonSubData.TAG, "WARNING"));
-					cs.addPropertyNote(gpm.message, "WARNING");
-					cs.addRestrictGroup("admin");
+					cs.tags.add(new Keyword(GinasCommonSubData.TAG, GinasProcessingStrategy.WARNING));
+					cs.addPropertyNote(gpm.message, GinasProcessingStrategy.WARNING);
+					cs.addRestrictGroup(GinasProcessingStrategy.GROUP_ADMIN);
 				}
 			}
 		}

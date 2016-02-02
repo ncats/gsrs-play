@@ -1,16 +1,12 @@
 package ix.ginas.models.v1;
 
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import ix.core.models.Indexable;
-import ix.ginas.models.utils.JSONEntity;
 import ix.ginas.models.GinasCommonSubData;
-import ix.core.models.Principal;
-import java.util.List;
+import ix.ginas.models.utils.JSONEntity;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 @JSONEntity(title = "Agent Modification", isFinal = true)
 @Entity

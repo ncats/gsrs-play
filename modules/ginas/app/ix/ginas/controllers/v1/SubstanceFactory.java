@@ -24,7 +24,7 @@ import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.GinasV1ProblemHandler;
-import ix.ginas.utils.SubstanceValidator;
+import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.ncats.controllers.security.IxDynamicResourceHandler;
 import ix.seqaln.SequenceIndexer;
@@ -170,7 +170,7 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result validate () {
-    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
+    	DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
     	return validate (Substance.class, finder, sv);
     }
 
@@ -179,7 +179,7 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result updateEntity () {
-    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+    	DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
     	
         if (!request().method().equalsIgnoreCase("PUT")) {
             return badRequest ("Only PUT is accepted!");
@@ -236,7 +236,7 @@ public class SubstanceFactory extends EntityFactory {
     }
     
     public static Result update (UUID uuid, String field) {
-    	SubstanceValidator sv= new SubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+    	DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
     	
         //if(true)return ok("###");
         try {
@@ -285,13 +285,9 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static List<Substance> getCollsionChemicalSubstances(int i, int j, ChemicalSubstance cs) {
-        String hash=null;
-        for (Value val : cs.structure.properties) {
-            if (Structure.H_LyChI_L4.equals(val.label)) {
-                hash=val.getValue()+"";
-            }
-        }
-        return finder.where().eq("structure.properties.term", hash).findList();
+        String hash=cs.structure.getLychiv4Hash();
+        List<Substance> dupeList= finder.where().like("structure.properties.term",hash).findList();
+        return dupeList;
     }
 
 

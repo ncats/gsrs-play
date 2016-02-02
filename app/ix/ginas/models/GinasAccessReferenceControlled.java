@@ -11,4 +11,5 @@ public interface GinasAccessReferenceControlled extends GinasAccessControlled{
 	public void addReference(Reference r);
 	public Set<Keyword> getReferences();
 	public void setReferences(Collection<String> references);	
+	
 }

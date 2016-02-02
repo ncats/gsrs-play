@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.nih.ncgc.chemical.Chemical;
 import gov.nih.ncgc.chemical.ChemicalFactory;
 import gov.nih.ncgc.jchemical.JchemicalReader;
+import ix.core.ValidationMessage;
 import ix.core.chem.Chem;
 import ix.core.models.ProcessingRecord;
 import ix.core.models.Structure;
@@ -44,11 +45,11 @@ import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Subunit;
+import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.seqaln.SequenceIndexer;
 import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
-
 import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 
 public class GinasUtils {
@@ -442,7 +443,7 @@ public class GinasUtils {
 
 	public abstract static class GinasAbstractSubstanceTransformer<K> extends RecordTransformer<K, Substance> {
 		public static GinasProcessingStrategy DEFAULT_STRAT = GinasProcessingStrategy
-				.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED();
+				.ACCEPT_APPLY_ALL_MARK_FAILED();
 
 		@Override
 		public Substance transform(PayloadExtractedRecord<K> pr, ProcessingRecord rec) {
@@ -472,16 +473,14 @@ public class GinasUtils {
 			return sub;
 		}
 
-		public static List<GinasProcessingMessage> prepareSubstance(GinasProcessingStrategy prc, Substance sub)
+		public static List<ValidationMessage> prepareSubstance(GinasProcessingStrategy prc, Substance sub)
 				throws Exception {
-			List<GinasProcessingMessage> valid = Validation.validateAndPrepare(sub, prc);
-			prc.handleMessages(sub, valid);
-			prc.addWarnings(sub, valid);
+			
+			DefaultSubstanceValidator dsv = new DefaultSubstanceValidator(prc);
+			List<ValidationMessage> valid = new ArrayList<ValidationMessage>(); 
+		    
+			dsv.validate(sub,valid);
 			return valid;
-		}
-
-		public static void prepareSubstance(Substance sub) throws Exception {
-			prepareSubstance(DEFAULT_STRAT, sub);
 		}
 
 		public abstract String getName(K theRecord);
@@ -500,17 +499,6 @@ public class GinasUtils {
 		if (s.lastEditedBy == null) {
 			throw new IllegalStateException(
 					"There is no last editor associated with this record. One must be present to allow approval. Please contact your system administrator.");
-		}
-		if (s.lastEditedBy.username.equals(user.username)) {
-			throw new IllegalStateException("Last editor of a substance cannot approve the substance");
-		}
-		if (!s.isApproved()) {
-			String approvalID = APPROVAL_ID_GEN.generateID();
-			s.approvalID = approvalID;
-			s.status = "approved";
-			s.approvedBy = user;
-		} else {
-			throw new IllegalStateException("Substance is already approved");
 		}
 	}
 }

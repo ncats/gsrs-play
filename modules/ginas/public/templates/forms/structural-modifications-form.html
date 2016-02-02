@@ -10,9 +10,9 @@
                                      cv="STRUCTURAL_MODIFICATION_TYPE" label="Modification Type"></dropdown-select>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-selector ng-model="mod.molecularFragment" field="molecularFragment"
+                    <substance-chooser-selector referenceobj="mod" field="molecularFragment"
                                                 name="molecularFragment" formname="strucModForm"
-                                                label="Molecular Fragment" type="lite"></substance-chooser-selector>
+                                                label="Molecular Fragment" type="search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-select ng-model="mod.locationType" field="locationType" cv="LOCATION_TYPE"
@@ -46,15 +46,15 @@
                 </div>
             </div>
             <div class="strucModForm"></div>
-            <submit-buttons submit="mod" form="strucModForm" path="structuralModifications"></submit-buttons>
+            <submit-buttons submit="mod" form="strucModForm" path="modifications.structuralModifications"></submit-buttons>
         </form>
 
 
-        <div ng-repeat="obj in parent.protein.modifications.structuralModifications">
+        <div ng-repeat="obj in parent.modifications.structuralModifications">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
-                    <delete-button delete="obj" path="protein.modifications.structuralModifications"></delete-button>
+                    <delete-button delete="obj" path="modifications.structuralModifications"></delete-button>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="structuralModificationType"
@@ -62,8 +62,7 @@
                                         label="Modification Type"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <substance-chooser-view-edit obj="obj" field="molecularFragment"
-                                                 label="Molecular Fragment"></substance-chooser-view-edit>
+                    <substance-chooser-selector referenceobj="obj" field="molecularFragment" name ="molecularFragment" formname ={{obj.$$hashKey}} label="Molecular Fragment" type ="search"></substance-chooser-selector>
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="locationType" cv="LOCATION_TYPE"
