@@ -23,15 +23,16 @@
       @for(m <- mods) {
         <tr>
           <td>@m.structuralModificationType</td>
-          <td>@for(s <- m.getSites()) {
-            [@{
-            s.subunitIndex
-          }_@s.residueIndex]
+          <td>
+          @for(s <- m.getSites()) {
+                [@{
+                s.subunitIndex
+              }_@s.residueIndex]
           }
           </td>
           <td>@m.locationType</td>
           <td>@m.residueModified</td>
-          <td>@m.extent</td>
+          <td>@m.extent<br><amount value=@m.extentAmount.toJson()></amount></td>
           <td>@m.molecularFragment.refPname</td>
           <td>@m.molecularFragment.substanceClass</td>
           <td><a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())"  target="_self">@m.molecularFragment.getLinkingID()</a></td>
