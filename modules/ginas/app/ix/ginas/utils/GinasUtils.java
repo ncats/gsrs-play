@@ -442,7 +442,7 @@ public class GinasUtils {
 
 	public abstract static class GinasAbstractSubstanceTransformer<K> extends RecordTransformer<K, Substance> {
 		public static GinasProcessingStrategy DEFAULT_STRAT = GinasProcessingStrategy
-				.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED();
+				.ACCEPT_APPLY_ALL_MARK_FAILED();
 
 		@Override
 		public Substance transform(PayloadExtractedRecord<K> pr, ProcessingRecord rec) {
@@ -500,17 +500,6 @@ public class GinasUtils {
 		if (s.lastEditedBy == null) {
 			throw new IllegalStateException(
 					"There is no last editor associated with this record. One must be present to allow approval. Please contact your system administrator.");
-		}
-		if (s.lastEditedBy.username.equals(user.username)) {
-			throw new IllegalStateException("Last editor of a substance cannot approve the substance");
-		}
-		if (!s.isApproved()) {
-			String approvalID = APPROVAL_ID_GEN.generateID();
-			s.approvalID = approvalID;
-			s.status = "approved";
-			s.approvedBy = user;
-		} else {
-			throw new IllegalStateException("Substance is already approved");
 		}
 	}
 }

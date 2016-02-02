@@ -1,17 +1,17 @@
 package ix.ginas.models.v1;
 
-import java.util.List;
-import java.util.ArrayList;
+import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.utils.JSONEntity;
 
-import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import ix.core.models.Indexable;
-import ix.ginas.models.utils.JSONEntity;
-import ix.ginas.models.GinasCommonSubData;
 
 @Entity
 @Table(name="ix_ginas_structuralmod")

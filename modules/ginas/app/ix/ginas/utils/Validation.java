@@ -155,8 +155,20 @@ public class Validation {
 		
 		Set<Keyword> references = data.getReferences();
 		if(required && (references == null || references.size()<=0)){
-			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference"));
-			worked=false;
+			GinasProcessingMessage gpmerr=GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
+			strat.processMessage(gpmerr);
+			if(gpmerr.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
+				gpmerr.appliedChange=true;
+				Reference r = new Reference();
+				r.citation="Assumed or asserted";
+				r.docType="SYSTEM";
+				s.references.add(r);
+				data.addReference(r.getOrGenerateUUID().toString());
+				
+            }else{
+            	worked=false;	
+            }
+			
 		}else{
 			for(Keyword ref:references){
 				Reference r = s.getReferenceByUUID(ref.getValue());
@@ -365,7 +377,7 @@ public class Validation {
             	return false;
             }
         }
-        s.relationships.removeAll(remnames);
+        s.notes.removeAll(remnames);
         return true;
 	}
     public static List<GinasProcessingMessage> validateStructureDuplicates(ChemicalSubstance cs){
