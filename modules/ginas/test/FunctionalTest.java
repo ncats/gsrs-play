@@ -12,7 +12,7 @@ import static org.mockito.Mockito.*;
 
 public class FunctionalTest extends WithApplication {
 
-    @Test
+     @Test
     public void testRouteGinasHome() {
 
         running(fakeApplication(), new Runnable() {
@@ -26,7 +26,7 @@ public class FunctionalTest extends WithApplication {
         });
     }
 
-    @Test
+   @Test
     public void testRouteSubstance(){
         running(fakeApplication(), new Runnable() {
             public void run() {
@@ -166,7 +166,6 @@ public class FunctionalTest extends WithApplication {
         assertThat(content).contains("property-form");
         assertThat(content).contains("reference-form-only");
     }
-/*
       @Test
       public void testControllerIndex() {
           running(fakeApplication(), new Runnable() {
@@ -180,5 +179,5 @@ public class FunctionalTest extends WithApplication {
                   assertThat(contentAsString(result)).contains("Welcome");
               }
           });
-      }*/
+      }
 }
