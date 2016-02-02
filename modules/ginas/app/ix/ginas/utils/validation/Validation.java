@@ -268,7 +268,7 @@ public class Validation {
 	            }
 	        }
 	        if(display==0){
-	            GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have at least one (1) preferred name, Default to using:" + s.getName()).appliableChange(true);
+	            GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Substances should have at least one (1) display name, Default to using:" + s.getName()).appliableChange(true);
 	            gpm.add(mes);
 	            strat.processMessage(mes);
 	            if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
