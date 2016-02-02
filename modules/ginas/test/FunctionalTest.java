@@ -159,7 +159,7 @@ public class FunctionalTest extends WithApplication {
     }
 
     public void testCommonWizardElements(String content){
-        assertThat(content).contains("name-form");
+        assertThat(content).contains("officialname-form");
         assertThat(content).contains("code-form");
         assertThat(content).contains("relationship-form");
         assertThat(content).contains("note-form");
