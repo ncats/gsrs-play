@@ -233,7 +233,11 @@ public class Structure extends Model{
     	 String newhash=null;
     	 for (Value val : this.properties) {
              if (Structure.H_LyChI_L4.equals(val.label)) {
-                 newhash=val.getValue()+"";
+            	 try{
+            		 newhash=val.getValue()+"";
+            	 }catch(Exception e){
+            		 
+            	 }
              }
          }
     	 return newhash;

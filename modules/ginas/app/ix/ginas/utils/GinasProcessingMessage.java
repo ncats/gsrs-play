@@ -53,6 +53,7 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public static boolean ALL_VALID(Collection<GinasProcessingMessage> messages){
 		boolean valid=true;
 		for(GinasProcessingMessage gpm:messages){
+			System.out.println("Message:" + gpm.message);
 			if(gpm.isProblem()){
 				valid=false;
 				return valid;
