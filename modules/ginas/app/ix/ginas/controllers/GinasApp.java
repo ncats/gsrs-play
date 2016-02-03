@@ -86,7 +86,6 @@ import play.twirl.api.Html;
 import tripod.chem.indexer.StructureIndexer;
 import chemaxon.struc.MolAtom;
 import ix.seqaln.SequenceIndexer;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class GinasApp extends App {
@@ -565,28 +564,28 @@ public class GinasApp extends App {
             Substance.SubstanceClass type = substance.substanceClass;
             switch (type) {
             case chemical:
-                return ok(ix.ginas.views.html.chemicaldetails
+                return ok(ix.ginas.views.html.details.chemicaldetails
                           .render((ChemicalSubstance) substance));
             case protein:
-                return ok(ix.ginas.views.html.proteindetails
+                return ok(ix.ginas.views.html.details.proteindetails
                           .render((ProteinSubstance) substance));
             case mixture:
-                return ok(ix.ginas.views.html.mixturedetails
+                return ok(ix.ginas.views.html.details.mixturedetails
                           .render((MixtureSubstance) substance));
             case polymer:
-                return ok(ix.ginas.views.html.polymerdetails
+                return ok(ix.ginas.views.html.details.polymerdetails
                           .render((PolymerSubstance) substance));
             case structurallyDiverse:
-                return ok(ix.ginas.views.html.diversedetails
+                return ok(ix.ginas.views.html.details.diversedetails
                           .render((StructurallyDiverseSubstance) substance));
             case specifiedSubstanceG1:
-                return ok(ix.ginas.views.html.group1details
+                return ok(ix.ginas.views.html.details.group1details
                           .render((SpecifiedSubstanceGroup1Substance) substance));
             case concept:
-                return ok(ix.ginas.views.html.conceptdetails
+                return ok(ix.ginas.views.html.details.conceptdetails
                           .render((Substance) substance));
             case nucleicAcid:
-                return ok(ix.ginas.views.html.nucleicaciddetails
+                return ok(ix.ginas.views.html.details.nucleicaciddetails
                           .render((NucleicAcidSubstance) substance));
             default:
                 return _badRequest("type not found");
@@ -774,7 +773,7 @@ public class GinasApp extends App {
         // name isn't unique
         if (true || chemicals.size() == 1) {
             Substance chemical = chemicals.iterator().next();
-            return ok(ix.ginas.views.html.chemicaldetails
+            return ok(ix.ginas.views.html.details.chemicaldetails
                       .render((ChemicalSubstance) chemical));
         } else {
             TextIndexer indexer = _textIndexer.createEmptyInstance();
@@ -1031,7 +1030,7 @@ public class GinasApp extends App {
         // name isn't unique
         if (true || proteins.size() == 1) {
             Substance protein = proteins.iterator().next();
-            return ok(ix.ginas.views.html.proteindetails
+            return ok(ix.ginas.views.html.details.proteindetails
                       .render((ProteinSubstance) protein));
         } else {
             TextIndexer indexer = _textIndexer.createEmptyInstance();
@@ -1213,6 +1212,9 @@ public class GinasApp extends App {
         return (SequenceIndexer.Result)IxCache.get("Alignment/"+context+"/"+id);
     }
 
+///THESE ARE DEPRECATED SEARCH METHODS 2-3-2016 tim ///////////
+
+/*
     public static Result search(String kind) {
         try {
             String q = request().getQueryString("q");
@@ -1339,11 +1341,12 @@ public class GinasApp extends App {
         List<ProteinSubstance> proteinSubstances = filter(
                                                           ProteinSubstance.class, result.getMatches(), max);
 
+/////search.scala.html has been removed as of 2-3-2106 tim
         return ok(ix.ginas.views.html.search.render(query, total,
                                                     GinasApp.decorate(facets), chemicalSubstances,
                                                     totalChemicalSubstances, proteinSubstances,
                                                     totalProteinSubstances, null, totalProteinSubstances));
-    }
+    }*/
 
     static public Substance resolve(Relationship rel) {
         Substance relsub = null;

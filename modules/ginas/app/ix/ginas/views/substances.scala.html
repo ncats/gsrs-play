@@ -22,28 +22,28 @@ current, rows, total, pages, facets, searchFacets) {
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {
-                    @chemlist(chem, ctx)
+                    @list.chemlist(chem, ctx)
                 }
                 case prot: ProteinSubstance => {
-                    @proteinlist(prot, ctx)
+                    @list.proteinlist(prot, ctx)
                 }
                 case nucl: NucleicAcidSubstance => {
-                    @nucleicacidlist(nucl)
+                    @list.nucleicacidlist(nucl)
 
                 }
                 case mix: MixtureSubstance => {
-                    @mixlist(mix)
+                    @list.mixlist(mix)
                 }
                 case diverse: StructurallyDiverseSubstance => {
-                    @diverselist(diverse)
+                    @list.diverselist(diverse)
 
                 }
                 case polymer: PolymerSubstance => {
-                    @polymerlist(polymer)
+                    @list.polymerlist(polymer)
 
                 }
                 case concept: Substance => {
-                    @conceptlist(concept)
+                    @list.conceptlist(concept)
 
                 }
                 case _ => {
@@ -58,32 +58,32 @@ current, rows, total, pages, facets, searchFacets) {
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {
-                    @chemthumb(chem, ctx)
+                    @thumbs.chemthumb(chem, ctx)
                 }
                 case prot: ProteinSubstance => {
-                    @proteinthumb(prot, ctx)
+                    @thumbs.proteinthumb(prot, ctx)
 
                 }
                 case nucl: NucleicAcidSubstance => {
                     @*
-                    @nucleicacidthumb(nucl)
+                    @thumbs.nucleicacidthumb(nucl)
                     *@
 
                 }
                 case mix: MixtureSubstance => {
-                    @mixturethumb(mix)
+                    @thumbs.mixturethumb(mix)
 
                 }
                 case diverse: StructurallyDiverseSubstance => {
-                    @diversethumb(diverse)
+                    @thumbs.diversethumb(diverse)
 
                 }
                 case polymer: PolymerSubstance => {
-                    @polymerthumb(polymer)
+                    @thumbs.polymerthumb(polymer)
 
                 }
                 case concept: Substance => {
-                    @conceptthumb(concept)
+                    @thumbs.conceptthumb(concept)
 
                 }
                 case _ => {
