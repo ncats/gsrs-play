@@ -62,4 +62,18 @@ public class Reference extends GinasCommonSubData {
     	this.uuid= UUID.randomUUID();
     	
     }
+    
+    public static Reference SYSTEM_ASSUMED(){
+    	Reference r = new Reference();
+		r.citation="Assumed or asserted";
+		r.docType="SYSTEM";
+		return r;
+    }
+    
+    public static Reference SYSTEM_GENERATED(){
+    	Reference r = new Reference();
+		r.citation="System generated";
+		r.docType="SYSTEM";
+		return r;
+    }
 }

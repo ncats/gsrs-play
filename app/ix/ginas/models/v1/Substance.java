@@ -353,6 +353,15 @@ public class Substance extends GinasCommonData {
 		}
 		return false;
 	}
+	
+	@JsonIgnore
+	public boolean isPrimaryDefinition() {
+		return this.definitionType==SubstanceDefinitionType.PRIMARY;
+	}
+	@JsonIgnore
+	public boolean isAlternativeDefinition() {
+		return this.definitionType==SubstanceDefinitionType.ALTERNATIVE;
+	}
 
 	/**
 	 * Returns parent substance concept record for substance variant concepts.
@@ -421,15 +430,47 @@ public class Substance extends GinasCommonData {
 		}
 		return subConcepts;
 	}
+	@JsonIgnore
+	public List<Relationship> getAlternativeDefinitionRelationships() {
+		List<Relationship> subConcepts = new ArrayList<Relationship>();
+		for (Relationship r : relationships) {
+			if (r.type.equals(ALTERNATE_SUBSTANCE_REL)) {
+				subConcepts.add(r);
+			}
+		}
+		return subConcepts;
+	}
 	
 	@JsonIgnore
-	public SubstanceReference getPrimaryDefinitionReferences() {
+	public SubstanceReference getPrimaryDefinitionReference() {
 		for (Relationship r : relationships) {
 			if (r.type.equals(PRIMARY_SUBSTANCE_REL)) {
 				return r.relatedSubstance;
 			}
 		}
 		return null;
+	}
+	
+	public SubstanceReference asSubstanceReference(){
+		SubstanceReference subref=new SubstanceReference();
+		subref.refPname=this.getName();
+		subref.refuuid=this.getOrGenerateUUID().toString();
+		subref.approvalID=this.approvalID;
+		return subref;
+	}
+	@JsonIgnore
+	public Relationship addOrFetchAlternativeDefinitionRelationship(Substance sub) {
+		for(Relationship sref:getAlternativeDefinitionRelationships()){
+			if(sref.relatedSubstance.refuuid.equals(sub.uuid.toString())){
+				return sref;
+			}
+		}
+		
+		Relationship r = new Relationship();
+		r.relatedSubstance=asSubstanceReference();
+		r.type=ALTERNATE_SUBSTANCE_REL;
+		r.addReference(Reference.SYSTEM_GENERATED(),this);
+		return r;
 	}
 
 	@JsonIgnore

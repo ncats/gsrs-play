@@ -5,6 +5,7 @@ import ix.core.models.Keyword;
 import ix.core.models.Payload;
 import ix.core.models.Structure;
 import ix.core.plugins.PayloadPlugin;
+import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
@@ -71,6 +72,17 @@ public class Validation {
 		        validateCodes(s,gpm,strat);
 		        validateRelationships(s,gpm,strat);
 		        validateNotes(s,gpm,strat);
+		        SubstanceReference sr=s.getPrimaryDefinitionReference();
+		        if(sr!=null){
+		        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Primary definitions cannot be alternative definitions for other Primary definitions"));
+		        }
+		        for(SubstanceReference relsub : s.getAlternativeDefinitionReferences()){
+		        	Substance subAlternative = SubstanceFactory.getFullSubstance(relsub);
+		        	if(subAlternative.isPrimaryDefinition()){
+		        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Primary definitions cannot be alternative definitions for other Primary definitions"));
+		        	}
+		        }
+		        
 	        }else if(s.definitionType == SubstanceDefinitionType.ALTERNATIVE){
 	        	if(s.names!=null && s.names.size()>0){
 	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions cannot have names"));
@@ -81,9 +93,24 @@ public class Validation {
 	        	if(s.relationships==null || s.relationships.size()==0){
 	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions must specify a primary substance"));
 	        	}else{
-	        		SubstanceReference sr=s.getPrimaryDefinitionReferences();
-	        		if(sr==null){
-	        			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions must specify a primary substance"));
+	        		if(s.relationships.size()>1){
+	        			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions may only have 1 relationship (to the parent definition)"));
+	        		}else{
+		        		SubstanceReference sr=s.getPrimaryDefinitionReference();
+		        		if(sr==null){
+		        			gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions must specify a primary substance"));
+		        		}else{
+		        			Substance subPrimary = SubstanceFactory.getFullSubstance(sr);
+		        			if(subPrimary==null){
+		        				gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Primary definition for '" + sr.refPname + "' (" + sr.refuuid+ ") not found"));
+		        			}else{
+		        				if(subPrimary.definitionType!= SubstanceDefinitionType.PRIMARY){
+		        					gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot add alternative definition for '" + sr.refPname + "' (" + sr.refuuid+ "). That definition is not primary."));
+		        				}else{
+		        					subPrimary.addOrFetchAlternativeDefinitionRelationship(s);
+		        				}
+		        			}
+		        		}
 	        		}
 	        	}
 	        }
@@ -124,7 +151,7 @@ public class Validation {
 		        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance class \"" +s.substanceClass + "\" is not valid" ));
 		            break;
 	        }
-	        if(seqGen!=null){
+	        if(seqGen!=null && s.definitionType == SubstanceDefinitionType.PRIMARY){
 		        boolean hasCode = false;
 		        for(Code c:s.codes){
 		        	if(c.codeSystem.equals(seqGen.getCodeSystem())){
@@ -164,9 +191,7 @@ public class Validation {
 			strat.processMessage(gpmerr);
 			if(gpmerr.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
 				gpmerr.appliedChange=true;
-				Reference r = new Reference();
-				r.citation="Assumed or asserted";
-				r.docType="SYSTEM";
+				Reference r = Reference.SYSTEM_ASSUMED();
 				s.references.add(r);
 				data.addReference(r.getOrGenerateUUID().toString());
 				
