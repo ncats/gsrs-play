@@ -67,7 +67,7 @@ public class GinasGlobal extends Global {
 			}
 			System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
 		}else{
-			System.out.println("CV already loaded:" + ControlledVocabularyFactory.size());
+			//System.out.println("CV already loaded:" + ControlledVocabularyFactory.size());
 		}
 		
 		
