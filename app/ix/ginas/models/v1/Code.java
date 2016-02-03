@@ -1,26 +1,18 @@
 package ix.ginas.models.v1;
 
 import ix.core.models.Indexable;
-import ix.core.models.Keyword;
 import ix.ginas.models.GinasCommonSubData;
-import ix.ginas.models.KeywordListSerializer;
 import ix.ginas.models.utils.JSONConstants;
 import ix.ginas.models.utils.JSONEntity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.JoinTable;
 import javax.persistence.Lob;
-import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @JSONEntity(title = "Code", isFinal = true)
 @Entity
@@ -61,4 +53,10 @@ public class Code extends GinasCommonSubData {
     public Code (String code) {
         this.code = code;
     }
+    
+    
+    @JsonIgnore
+    //DELETE THIS, ONLY USED FOR A TEST
+    public String _test;
+    
 }
