@@ -770,15 +770,95 @@
     });
 
 
-    ginasApp.directive('amount', function () {
+    ginasApp.directive('amount', function ($compile) {
 
         return {
             restrict: 'E',
             replace: true,
             scope: {
-                value: '='
+                value: '='                
             },
-            template: '<div><span class="amt">{{value.nonNumericValue}} {{value.average}} ({{value.low}} to {{value.high}}) {{value.units.display || value.units}}</span></div>'
+            link: function(scope, element, attrs){
+                        scope.display=function(){
+                                var ret="";
+                                var addedunits=false;
+                                var unittext="";
+                                if(scope.value.units){
+                                                if(scope.value.units.display){
+                                                        unittext=scope.value.units.display;
+                                                }else{
+                                                        unittext=scope.value.units;
+                                                }
+                                }
+                                
+                                
+                                if(scope.value){
+                                        if(scope.value.type){
+                                                if(scope.value.type.display){
+                                                        ret+=scope.value.type.display + "\n";
+                                                }else{
+                                                        ret+=scope.value.type + "\n";
+                                                }
+                                        }
+                                        if(scope.value.average || scope.value.high || scope.value.low){
+                                            if(scope.value.average){
+                                                    ret += scope.value.average;
+                                                    if(scope.value.units){
+                                                        ret += " " + unittext;
+                                                        addedunits=true;
+                                                    }
+                                            }
+                                            if(scope.value.high || scope.value.low){
+                                                    ret += " [";
+                                            
+                                                    if(scope.value.high && !scope.value.low){
+                                                             ret+="<" + scope.value.high;
+                                                    }else if(!scope.value.high && scope.value.low){
+                                                            ret+=">" + scope.value.low;                                        
+                                                    }else if(scope.value.high && scope.value.low){
+                                                            ret+= scope.value.low + " to " +  scope.value.high;
+                                                    }                                    
+                                                    ret += "] ";
+                                                    if(!addedunits){
+                                                       if(scope.value.units){
+                                                           ret += " " + unittext;
+                                                           addedunits=true;
+                                                       }      
+                                                    }
+                                            }                            
+                                            ret += " (average) "; 
+                                        }
+                                        
+                                        if(scope.value.highLimit || scope.value.lowLimit){
+                                                ret += "\n[";
+                                        }
+                                        if(scope.value.highLimit && !scope.value.lowLimit){
+                                                ret+="<" + scope.value.highLimit;
+                                        }else if(!scope.value.highLimit && scope.value.lowLimit){
+                                                ret+=">" + scope.value.lowLimit;                                        
+                                        }else if(scope.value.highLimit && scope.value.lowLimit){
+                                                ret+= scope.value.lowLimit + " to " +  scope.value.highLimit;
+                                        }
+                                        if(scope.value.highLimit || scope.value.lowLimit){
+                                                ret += "] ";
+                                                 if(!addedunits){
+                                                    if(scope.value.units){
+                                                        ret += " " + unittext;
+                                                        addedunits=true;
+                                                    }      
+                                                 }
+                                                ret += " (limits)";
+                                        }       
+                                        
+                                }
+                                return ret;
+                        };
+                                
+                        var template = angular.element('<div><span class="amt">{{display()}}<br><i>{{value.nonNumericValue}}</i></span></div>');
+                        
+                        element.append(template);
+                        $compile(template)(scope);
+            }
         };
     });
 

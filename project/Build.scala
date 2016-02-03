@@ -158,8 +158,8 @@ public class BuildInfo {
     .enablePlugins(PlayJava).settings(commonSettings:_*).settings(
       libraryDependencies ++= commonDependencies,
       libraryDependencies += "org.webjars" % "dojo" % "1.10.0",
-      libraryDependencies += "org.webjars" % "momentjs" % "2.10.3",
-      libraryDependencies += "org.webjars" % "lodash" % "3.9.0",
+      libraryDependencies += "org.webjars" % "momentjs" % "2.11.0",
+      libraryDependencies += "org.webjars" % "lodash" % "4.0.0",
       libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.2" % Test,
       libraryDependencies  += "junit" % "junit" % "4.11" % Test,
       libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,

@@ -60,6 +60,7 @@ public class GinasGlobal extends Global {
 				VocabularyTerm vt = new VocabularyTerm();
 				vt.display=codeSystem;
 				vt.value=codeSystem;
+				vt.hidden=true;
 				vt.save();
 				cvv.terms.add(vt);
 				cvv.save();

@@ -71,4 +71,9 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
 		s.references.add(r);
 		this.addReference(r);
 	}
+	
+	public String toJson(){
+		ObjectMapper om = new ObjectMapper();
+		return om.valueToTree(this).toString();
+	}
 }

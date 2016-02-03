@@ -13,28 +13,28 @@
     <div></div>
     }{
     <div class="row info" id="components">
-    @specsubcomponents(sub.specifiedSubstance.constituents)
+    @properties.specsubcomponents(sub.specifiedSubstance.constituents)
     </div>
 
     <div class="row info" id="names">
-    @names(sub.names)
+    @properties.names(sub.names)
     </div>
 
     @if(sub.codes.size() > 0) {
         <div class="row info" id="codes">
-        @codes(sub.codes)
+        @properties.codes(sub.codes)
         </div>
     }
     @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
         <div class="row info" id="relationships">
-        @relationships(sub.relationships)
+        @properties.relationships(sub.relationships)
         </div>
     }
 
 
 
     <div class="row info" id="refs">
-    @references(sub.references)
+    @properties.references(sub.references)
     </div>
 
 
