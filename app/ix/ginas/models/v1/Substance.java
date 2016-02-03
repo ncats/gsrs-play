@@ -89,8 +89,8 @@ public class Substance extends GinasCommonData {
 
 	@Indexable(suggest = true, facet = true, name = "Record Status")
 	public String status = "PENDING";
-
 	public String version = "1";
+	
 
 	@OneToOne(cascade = CascadeType.ALL)
 	@JsonSerialize(using = PrincipalSerializer.class)
@@ -458,19 +458,22 @@ public class Substance extends GinasCommonData {
 		subref.approvalID=this.approvalID;
 		return subref;
 	}
+	
 	@JsonIgnore
-	public Relationship addOrFetchAlternativeDefinitionRelationship(Substance sub) {
+	public boolean addAlternativeSubstanceDefinitionRelationship(Substance sub) {
+		
 		for(Relationship sref:getAlternativeDefinitionRelationships()){
 			if(sref.relatedSubstance.refuuid.equals(sub.uuid.toString())){
-				return sref;
+				return true;
 			}
 		}
 		
 		Relationship r = new Relationship();
-		r.relatedSubstance=asSubstanceReference();
+		r.relatedSubstance=sub.asSubstanceReference();
 		r.type=ALTERNATE_SUBSTANCE_REL;
 		r.addReference(Reference.SYSTEM_GENERATED(),this);
-		return r;
+		
+		return false;
 	}
 
 	@JsonIgnore
@@ -579,6 +582,8 @@ public class Substance extends GinasCommonData {
 		i++;
 		this.version=i+"";
 	}
+	
+	
 	
 	public static Class<?>[] getAllClasses() {
 		return new Class<?>[]{

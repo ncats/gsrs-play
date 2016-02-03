@@ -107,7 +107,8 @@ public class Validation {
 		        				if(subPrimary.definitionType!= SubstanceDefinitionType.PRIMARY){
 		        					gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot add alternative definition for '" + sr.refPname + "' (" + sr.refuuid+ "). That definition is not primary."));
 		        				}else{
-		        					subPrimary.addOrFetchAlternativeDefinitionRelationship(s);
+		        					subPrimary.addAlternativeSubstanceDefinitionRelationship(s);
+		        					
 		        				}
 		        			}
 		        		}
@@ -269,6 +270,7 @@ public class Validation {
     	                }
                 	}
 	            }
+	            System.out.println("Validating names");
 	            if(!validateReferenced(s,n,gpm,strat,true)){
 	            	return false;
 	            }
