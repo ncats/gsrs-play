@@ -107,7 +107,8 @@ public class Validation {
 		        				if(subPrimary.definitionType!= SubstanceDefinitionType.PRIMARY){
 		        					gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot add alternative definition for '" + sr.refPname + "' (" + sr.refuuid+ "). That definition is not primary."));
 		        				}else{
-		        					subPrimary.addOrFetchAlternativeDefinitionRelationship(s);
+		        					subPrimary.addAlternativeSubstanceDefinitionRelationship(s);
+		        					
 		        				}
 		        			}
 		        		}
@@ -187,6 +188,7 @@ public class Validation {
 		
 		Set<Keyword> references = data.getReferences();
 		if(required && (references == null || references.size()<=0)){
+			System.out.println("Where are the references?");
 			GinasProcessingMessage gpmerr=GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
 			strat.processMessage(gpmerr);
 			if(gpmerr.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
@@ -194,11 +196,10 @@ public class Validation {
 				Reference r = Reference.SYSTEM_ASSUMED();
 				s.references.add(r);
 				data.addReference(r.getOrGenerateUUID().toString());
-				
             }else{
             	worked=false;	
             }
-			
+			gpm.add(gpmerr);
 		}else{
 			for(Keyword ref:references){
 				Reference r = s.getReferenceByUUID(ref.getValue());

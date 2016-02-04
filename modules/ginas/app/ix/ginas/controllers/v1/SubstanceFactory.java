@@ -166,7 +166,8 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result create () {
-        return create (Substance.class, finder);
+    	DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+        return create (Substance.class, finder,sv);
     }
 
     public static Result validate () {

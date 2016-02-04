@@ -930,7 +930,7 @@ public class EntityFactory extends Controller {
     	Map wrapper = new HashMap();
         wrapper.put("valid", valid);
         wrapper.put("messages", validationMessages);
-        return created(mapper.valueToTree(wrapper));
+        return ok(mapper.valueToTree(wrapper));
     }
 
     protected static <K,T extends Model> 
