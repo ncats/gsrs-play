@@ -12,6 +12,15 @@
                                         cv="GLYCOSYLATION_TYPE"
                                         label="Glycosylation Type"></dropdown-view-edit>
                 </div>
+                <div class="col-md-2">
+                    <dropdown-view-edit obj="parent.protein.glycosylationSite" field="glycosylationSite"
+                                        cv="GLYCOSYLATION_SITE"
+                                        label="Glycosylation Site"></dropdown-view-edit>
+                </div>
+                <div class="col-md-2">
+                    <form-selector referenceobj="obj" parent=parent type="site" divid="glycosylationForm"
+                                   mode="edit" formtype="pair"></form-selector>
+                </div>
 
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="parent.protein.glycosylation" parent="parent" type="access"

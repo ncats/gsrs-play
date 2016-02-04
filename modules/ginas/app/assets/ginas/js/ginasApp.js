@@ -122,6 +122,7 @@
         return nameFinder;
     });
 
+
     ginasApp.factory('substanceIDRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances(";
         var editSubstance = {
@@ -776,90 +777,248 @@
             restrict: 'E',
             replace: true,
             scope: {
-                value: '='                
+                value: '='
             },
             link: function(scope, element, attrs){
+                console.log(scope);
+                console.log(element);
                         scope.display=function(){
-                                var ret="";
-                                var addedunits=false;
-                                var unittext="";
-                                if(scope.value.units){
-                                                if(scope.value.units.display){
-                                                        unittext=scope.value.units.display;
-                                                }else{
-                                                        unittext=scope.value.units;
-                                                }
+                            if(!_.isUndefined(scope.value)) {
+                                var ret = "";
+                                var addedunits = false;
+                                var unittext = "";
+                                if (scope.value.units) {
+                                    if (scope.value.units.display) {
+                                        unittext = scope.value.units.display;
+                                    } else {
+                                        unittext = scope.value.units;
+                                    }
                                 }
-                                
-                                
-                                if(scope.value){
-                                        if(scope.value.type){
-                                                if(scope.value.type.display){
-                                                        ret+=scope.value.type.display + "\n";
-                                                }else{
-                                                        ret+=scope.value.type + "\n";
-                                                }
+
+
+                                if (scope.value) {
+                                    if (scope.value.type) {
+                                        if (scope.value.type.display) {
+                                            ret += scope.value.type.display + "\n";
+                                        } else {
+                                            ret += scope.value.type + "\n";
                                         }
-                                        if(scope.value.average || scope.value.high || scope.value.low){
-                                            if(scope.value.average){
-                                                    ret += scope.value.average;
-                                                    if(scope.value.units){
-                                                        ret += " " + unittext;
-                                                        addedunits=true;
-                                                    }
+                                    }
+                                    if (scope.value.average || scope.value.high || scope.value.low) {
+                                        if (scope.value.average) {
+                                            ret += scope.value.average;
+                                            if (scope.value.units) {
+                                                ret += " " + unittext;
+                                                addedunits = true;
                                             }
-                                            if(scope.value.high || scope.value.low){
-                                                    ret += " [";
-                                            
-                                                    if(scope.value.high && !scope.value.low){
-                                                             ret+="<" + scope.value.high;
-                                                    }else if(!scope.value.high && scope.value.low){
-                                                            ret+=">" + scope.value.low;                                        
-                                                    }else if(scope.value.high && scope.value.low){
-                                                            ret+= scope.value.low + " to " +  scope.value.high;
-                                                    }                                    
-                                                    ret += "] ";
-                                                    if(!addedunits){
-                                                       if(scope.value.units){
-                                                           ret += " " + unittext;
-                                                           addedunits=true;
-                                                       }      
-                                                    }
-                                            }                            
-                                            ret += " (average) "; 
                                         }
-                                        
-                                        if(scope.value.highLimit || scope.value.lowLimit){
-                                                ret += "\n[";
+                                        if (scope.value.high || scope.value.low) {
+                                            ret += " [";
+
+                                            if (scope.value.high && !scope.value.low) {
+                                                ret += "<" + scope.value.high;
+                                            } else if (!scope.value.high && scope.value.low) {
+                                                ret += ">" + scope.value.low;
+                                            } else if (scope.value.high && scope.value.low) {
+                                                ret += scope.value.low + " to " + scope.value.high;
+                                            }
+                                            ret += "] ";
+                                            if (!addedunits) {
+                                                if (scope.value.units) {
+                                                    ret += " " + unittext;
+                                                    addedunits = true;
+                                                }
+                                            }
                                         }
-                                        if(scope.value.highLimit && !scope.value.lowLimit){
-                                                ret+="<" + scope.value.highLimit;
-                                        }else if(!scope.value.highLimit && scope.value.lowLimit){
-                                                ret+=">" + scope.value.lowLimit;                                        
-                                        }else if(scope.value.highLimit && scope.value.lowLimit){
-                                                ret+= scope.value.lowLimit + " to " +  scope.value.highLimit;
+                                        ret += " (average) ";
+                                    }
+
+                                    if (scope.value.highLimit || scope.value.lowLimit) {
+                                        ret += "\n[";
+                                    }
+                                    if (scope.value.highLimit && !scope.value.lowLimit) {
+                                        ret += "<" + scope.value.highLimit;
+                                    } else if (!scope.value.highLimit && scope.value.lowLimit) {
+                                        ret += ">" + scope.value.lowLimit;
+                                    } else if (scope.value.highLimit && scope.value.lowLimit) {
+                                        ret += scope.value.lowLimit + " to " + scope.value.highLimit;
+                                    }
+                                    if (scope.value.highLimit || scope.value.lowLimit) {
+                                        ret += "] ";
+                                        if (!addedunits) {
+                                            if (scope.value.units) {
+                                                ret += " " + unittext;
+                                                addedunits = true;
+                                            }
                                         }
-                                        if(scope.value.highLimit || scope.value.lowLimit){
-                                                ret += "] ";
-                                                 if(!addedunits){
-                                                    if(scope.value.units){
-                                                        ret += " " + unittext;
-                                                        addedunits=true;
-                                                    }      
-                                                 }
-                                                ret += " (limits)";
-                                        }       
-                                        
+                                        ret += " (limits)";
+                                    }
+
                                 }
                                 return ret;
+                            }
                         };
-                                
+
                         var template = angular.element('<div><span class="amt">{{display()}}<br><i>{{value.nonNumericValue}}</i></span></div>');
-                        
+
                         element.append(template);
                         $compile(template)(scope);
             }
         };
+    });
+
+    ginasApp.factory('referenceRetriever', function ($http) {
+        var url = baseurl + "api/v1/substances(";
+        var references ={};
+        var refFinder = {
+            getAll: function (uuid) {
+                return $http.get(url + uuid + ")/references", {
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).then(function (response) {
+                    _.forEach(response.data, function (ref, index) {
+                        _.set(ref, '$$index', index + 1);
+                    });
+                    return response.data;
+                });
+            },
+            getIndex: function(uuid, refuuid){
+                return $http.get(url + uuid + ")/references", {
+                 headers: {
+                 'Content-Type': 'text/plain'
+                 }
+                 }).then(function (response) {
+                 return _.indexOf(response.data, refuuid);
+                 });
+            }
+        };
+        return refFinder;
+    });
+
+    ginasApp.directive('referencesmanager', function($compile, $templateRequest, referenceRetriever, toggler) {
+        return {
+            controller: function($scope) {
+                this.scope = $scope;
+                this.referenceRetriever = referenceRetriever;
+                $scope.addClass= [];
+                this.setClass = function (index) {
+                    $scope.addClass[index]= "success";
+                };
+                this.getClass = function (index) {
+                    return $scope.addClass[index];
+                };
+
+                this.removeClass = function(){
+                    $scope.addClass = [];
+                };
+
+                this.scrollTo = function() {
+                    $scope.scrollTo('refs');
+                };
+
+                this.toggle = function (scope, divid) {
+                    $scope.addClass = [];
+                    var url = baseurl + "assets/templates/reference-table.html";
+                        scope.references = _.sortBy(scope.objreferences, '$$index', function(ref){
+                            if(!scope.stage==false || _.isUndefined(scope.stage)){
+                                $scope.addClass[ref.$$index]= "success";
+                            }
+                        });
+                        toggler.show(scope, divid, url);
+
+                };
+            }
+        };
+    });
+
+    ginasApp.directive('reftable', function() {
+        return {
+            scope: {
+                substance:'=',
+                objreferences:'=',
+                references: '=',
+                divid:'='
+            },
+            require: '^referencesmanager',
+                link: function (scope, element, attrs, referencesCtrl) {
+                    console.log(scope);
+                    referencesCtrl.referenceRetriever.getAll(scope.substance).then(function (response) {
+                        scope.references = response;
+                    });
+
+                    scope.getClass = function(index){
+                        return referencesCtrl.getClass(index);
+                    }
+                },
+                templateUrl: baseurl + "assets/templates/reference-table.html"
+        };
+    });
+
+    ginasApp.directive('indices', function($compile){
+        return {
+            scope: {
+                substance:'=',
+                references: '='
+            },
+            require: '^referencesmanager',
+            link: function (scope, element, attrs, referencesCtrl) {
+                console.log(scope);
+                var indices = [];
+                var links = [];
+                var objreferences = [];
+
+                referencesCtrl.referenceRetriever.getAll(scope.substance).then(function (response) {
+                    _.forEach(scope.references, function (ref) {
+                        objreferences.push(_.find(response,['uuid', ref.term]));
+                        indices.push(_.indexOf(response, _.find(response, ['uuid', ref.term])) + 1);
+                        // });
+                    });
+                    indices = _.sortBy(indices);
+                scope.objreferences= objreferences;
+
+                    _.forEach(indices, function (i) {
+                        var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
+                        links.push(link);
+                    });
+                    var templateString = angular.element('<div class ="row"><div class ="col-md-8">' + _.join(links, ', ') +' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    element.append(angular.element(templateString));
+                    $compile(templateString)(scope);
+                });
+
+                scope.toggle = function () {
+                    referencesCtrl.toggle(scope, attrs.divid);
+                };
+
+                scope.showActive = function (index) {
+                    referencesCtrl.removeClass();
+                    referencesCtrl.setClass(index);
+                    referencesCtrl.scrollTo();
+                };
+            }
+        };
+    });
+
+    ginasApp.directive('citation', function($compile){
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                citation: '='
+            },
+            link: function (scope, element, attrs) {
+              //  console.log(scope);
+                var template;
+                if (!_.isNull(scope.citation.url)) {
+                    template = angular.element('<a href = {{citation.url}} target = "_self"><span>{{citation.citation}}</span></a>');
+                } else {
+                    template = angular.element('<span>{{citation.citation}}</span>');
+                }
+                    element.append(template);
+                    $compile(template)(scope);
+                }
+        };
+
     });
 
     ginasApp.directive('siteView', function (siteList) {

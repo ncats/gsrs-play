@@ -105,7 +105,7 @@
 
             @if(sub.codes.size() > 0) {
                 <div class="row info" id="codes">
-                @properties.codes(sub.codes)
+                @properties.codes(sub.codes, sub.uuid.toString)
                 </div>
             }
             @if(sub.hasChildConceptReferences()) {
@@ -115,23 +115,23 @@
             }
             @if(sub.relationships.size() > 0) {
                 <div class="row info" id="relationships">
-                @properties.relationships(sub.relationships)
+                @properties.relationships(sub.relationships, sub.uuid.toString)
                 </div>
             }
             @if(sub.properties != null && sub.properties.size() > 0) {
                 <div class="row info" id="properties">
-                @properties.properties(sub.properties)
+                @properties.properties(sub.properties, sub.uuid.toString)
                 </div>
             }
             @if(sub.notes != null && sub.notes.size() > 0) {
                 <div class="row info" id="notes">
-                @properties.notes(sub.notes)
+                @properties.notes(sub.notes, sub.uuid.toString)
                 </div>
             }
 
             @dynamic(name = "isAdmin", handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                 <div class="row info" id="refs">
-                @properties.references(sub.references)
+                    <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
                 </div>
             }
 

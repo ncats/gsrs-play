@@ -3,7 +3,7 @@
 @import ix.ginas.models.v1.Code
 
 
-@(codes: List[Code])
+@(codes: List[Code], id: String)
 <button class="btn btn-primary label-offset det">Codes&nbsp;<span class="badge"> @codes.length</span></button>
 <div class="col-md-12">
     <table class="table table-striped" id="codesTable">
@@ -26,8 +26,15 @@
                 <td>@c.codeSystem</td>
                 <td>@GinasApp.getCV.getDisplay("CODE_TYPE",{c.`type`})</td>
                 <td>@c.comments</td>
-                @referencetable(c.getReferences(), c.code, 4)
+                @if(c.getReferences.size > 0){
+                    <td>
+                <referencesmanager indices substance ="'@id'" divid ="'@c.uuid'" references = "@GinasApp.getAsJson(c.getReferences())"></referencesmanager>
+            </td>
             </tr>
+            <tr><td class = "'@c.uuid'" colspan = "5"></td></tr>
+        }else{
+                <td>no refs</td>
+            }
         }
     </table>
 </div>

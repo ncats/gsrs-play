@@ -9,12 +9,19 @@
         };
 
         this.show = function (scope, element, url) {
+            if(_.isUndefined(scope.type)){
+                scope.type = element;
+            }
+            if(_.isUndefined(scope.stage)){
+                scope.stage = true;
+            }
             var template = "";
             var result = document.getElementsByClassName(scope.type);
             var elementResult = angular.element(result);
             if (scope.stage === true) {
                 scope.stage = false;
                 $templateRequest(url).then(function (html) {
+                    console.log(scope);
                     template = angular.element(html);
                     elementResult.append(template);
                     $compile(elementResult)(scope);
@@ -31,6 +38,8 @@
             if (scope.stage === true) {
                 scope.stage = false;
                 childScope = scope.$new();
+                console.log(childScope);
+                console.log(scope);
                 var compiledDirective = $compile(newForm);
                 var directiveElement = compiledDirective(childScope);
                 elementResult.append(directiveElement);
@@ -244,7 +253,26 @@
         return {
             restrict: 'E',
             replace: 'true',
-            scope: {},
+            scope: {},/*scope.toggleStage = function () {
+                    if (_.isUndefined(scope.referenceobj)) {
+                        var x = {};
+                        _.set(scope, 'referenceobj', x);
+                    }
+                    var result = document.getElementsByClassName(attrs.divid);
+                    var elementResult = angular.element(result);
+                    if (scope.stage === true) {
+                        scope.stage = false;
+                        childScope = scope.$new();
+                        var compiledDirective = $compile(formHolder);
+                        var directiveElement = compiledDirective(childScope);
+                        elementResult.append(directiveElement);
+                    } else {
+                        childScope.$destroy();
+                        elementResult.empty();
+                        scope.stage = true;
+
+                    }
+                };*/
             templateUrl: baseurl + "assets/templates/admin/cv-form.html",
             link: function (scope, element, attrs) {
                 var formHolder;
@@ -575,7 +603,7 @@
                 }
 
 
-                scope.toggleStage = function () {
+                /*scope.toggleStage = function () {
                     if (_.isUndefined(scope.referenceobj)) {
                         var x = {};
                         _.set(scope, 'referenceobj', x);
@@ -594,7 +622,7 @@
                         scope.stage = true;
 
                     }
-                };
+                };*/
             }
         };
     });

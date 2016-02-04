@@ -6,7 +6,7 @@
 @wizardfields(kind: String) = {
 
     <title-header name = "substance._name" kind = "substance.substanceClass"></title-header>
-    <name-form parent = substance></name-form>
+    <name-form parent = substance ng-cloak></name-form>
 
 
 @kind match {
@@ -15,7 +15,7 @@
             <div>@forms.structureform()</div>
 
 
-            <moiety-form parent = substance></moiety-form>
+            <moiety-form parent = substance ng-cloak></moiety-form>
         }
         case "mixture" => {
            <mixture-component-select-form parent = substance></mixture-component-select-form>
@@ -74,11 +74,11 @@
         <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
         <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
     </div>
-    <code-form parent = substance></code-form>
-    <relationship-form parent = substance></relationship-form>
-    <note-form parent = substance></note-form>
-    <property-form parent = substance></property-form>
-   <reference-form-only referenceobj ="referenceobj" parent = "substance"></reference-form-only>
+    <code-form parent = substance ng-cloak></code-form>
+    <relationship-form parent = substance ng-cloak></relationship-form>
+    <note-form parent = substance ng-cloak></note-form>
+    <property-form parent = substance ng-cloak></property-form>
+   <reference-form-only referenceobj ="referenceobj" parent = "substance" ng-cloak></reference-form-only>
 }
 
 @ginas("Register", kind) {

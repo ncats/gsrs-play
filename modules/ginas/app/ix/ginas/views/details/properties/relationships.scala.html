@@ -5,7 +5,7 @@
 
 
 
-@(relationships: List[Relationship])
+@(relationships: List[Relationship], id:String)
 
 <button class="btn btn-primary label-offset det">
     Relationships&nbsp;<span class="badge"> @relationships.length</span></button>
@@ -94,10 +94,15 @@
                 @GinasApp.getType(r.amount) @r.amount.average @r.amount.units
                 *@
             }</td>
-                @if(r.getReferences() != null && r.getReferences().size() > 0) {
-                    @referencetable(r.getReferences(), "refs", 8)
-                }
+                @if(r.getReferences.size > 0){
+                    <td>
+                <referencesmanager indices substance ="'@id'" divid ="'@r.uuid'" references = "@GinasApp.getAsJson(r.getReferences())"></referencesmanager>
+            </td>
             </tr>
+            <tr><td class = "'@r.uuid'" colspan = "8"></td></tr>
+        }else{
+                <td>none</td>
+            }
         }
     </table>
 </div>

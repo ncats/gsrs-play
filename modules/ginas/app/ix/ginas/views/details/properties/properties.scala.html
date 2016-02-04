@@ -1,7 +1,7 @@
 @import ix.ginas.controllers.GinasApp
 @import ix.ginas.models.v1.Property
 
-@(properties: List[Property])
+@(properties: List[Property], id:String)
 
 <button class="btn btn-primary label-offset det">Properties&nbsp;<span class="badge"> @properties.length</span></button>
 <div class="col-md-12">
@@ -34,5 +34,18 @@
                 @referencetable(n.getReferences(), n.uuid.toString(), 7)
             </tr>
         }
+
+
+
+@*
+        @if(n.getReferences.size > 0){
+            <td>
+                <referencesmanager indices substance ="'@id'" divid ="'@n.uuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
+            </td>
+            </tr>
+            <tr><td class = "'@n.uuid'" colspan = "7"></td></tr>
+        }else{
+            <td>none</td></tr>
+        }*@
     </table>
 </div>

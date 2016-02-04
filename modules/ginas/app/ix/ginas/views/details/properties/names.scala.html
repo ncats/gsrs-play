@@ -51,8 +51,15 @@
                  <td>@if(n.isDisplayName() == true) {
                     <i class="fa fa-check fa-2x success"></i>
                 } else {}</td>
-                @referencetable(n.getReferences(), n.uuid.toString(), 5)
+                @if(n.getReferences.size > 0){
+                <td>
+                <referencesmanager indices substance ="'@substance.uuid'" divid ="'@n.uuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
+                </td>
             </tr>
+            <tr><td class = "'@n.uuid'" colspan = "9"></td></tr>
+        }else{
+                <td>none</td>
+            }
         }
     </table>
 </div>
