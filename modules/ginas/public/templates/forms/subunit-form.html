@@ -6,7 +6,7 @@
     <div uib-collapse="iscollapsed">
         <div ng-repeat="obj in parent[substanceClass].subunits">
             <div class="col-md-12">
-                <subunit obj=obj parent=parent residues=residues kind=kind></subunit>
+                <subunit obj=obj parent=parent residues=residues></subunit>
             </div>
             <div class={{obj.$$hashKey}}></div>
         </div>

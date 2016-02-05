@@ -20,6 +20,7 @@
                             <select class="form-control" id="search-selection" name="type" ng-model = "type" >
                                 <option value="Substructure" selected>Substructure</option>
                                 <option value="Similarity">Similarity</option>
+                                <option value="Exact">Exact</option>
                             </select>
                             <label class="sr-only" for="tanimoto-cutoff">Tanimoto threshold</label>
 
@@ -30,6 +31,16 @@
                             id="tanimoto-cutoff"
                             data-toggle="tooltip"
                             title="Tanimoto threshold"
+                            ng-model="cutoff"
+                            >
+                            <input class="form-control col-md-2"
+                            ng-if="type=='Exact'" type="number"
+                            name="cutoff"
+                            id="tanimoto-cutoff"
+                            data-toggle="tooltip"
+                            title="Tanimoto threshold"
+                                ng-hide = "true"
+                                ng-init ="cutoff = 1"
                             ng-model="cutoff"
                             >
                             <input type="text" class="form-control"

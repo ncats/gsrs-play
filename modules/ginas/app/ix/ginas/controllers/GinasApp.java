@@ -376,7 +376,7 @@ public class GinasApp extends App {
                 return sequences (q, rows, page);
             }
             else if (type.equalsIgnoreCase("substructure")
-                     || type.equalsIgnoreCase("similarity")) {
+                     || type.equalsIgnoreCase("similarity") ||type.equalsIgnoreCase("exact")) {
                 // structure search
                 String cutoff = request().getQueryString("cutoff");
                 Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
@@ -393,9 +393,9 @@ public class GinasApp extends App {
                 }
 
                 return notFound(ix.ginas.views.html.error.render
-                                (400,"Invalid search parameters: type=\""
-                                 + type+ "\"; q=\"" + q + "\" cutoff=\""
-                                 + cutoff + "\"!"));
+                        (400, "Invalid search parameters: type=\""
+                                + type + "\"; q=\"" + q + "\" cutoff=\""
+                                + cutoff + "\"!"));
             }
 
             return _substances (q, rows, page);
