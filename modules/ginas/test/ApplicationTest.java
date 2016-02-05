@@ -3,17 +3,26 @@ import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import ix.ginas.controllers.GinasFactory;
+
 import org.junit.Test;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import play.api.mvc.Content;
+import play.libs.ws.WS;
+import play.libs.ws.WSResponse;
 import play.mvc.Result;
 import play.test.Helpers;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-
 import static org.fest.assertions.Assertions.assertThat;
 import static play.mvc.Http.Status.OK;
 import static play.test.Helpers.*;
@@ -26,13 +35,17 @@ import static play.test.Helpers.*;
 * If you are interested in mocking a whole application, see the wiki for more details.
 *
 */
-public class ApplicationTest {
+public class ApplicationTest  {
 
+    private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
+	private static long timeout= 10000L;;
+	
     @Test
     public void simpleCheck() {
         int a = 1 + 1;
         assertEquals(2, a);
     }
+    
 
     @Test
     public void testString() {
@@ -81,4 +94,6 @@ public class ApplicationTest {
         when(mockProfile.getGroups()).thenReturn(groups);
         assertTrue(mockProfile.getGroups().size() == 1);
     }
+    
+   
 }

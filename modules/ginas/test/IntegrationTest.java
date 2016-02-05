@@ -43,6 +43,7 @@ public class IntegrationTest {
         public static void setUp() {
             timeout = 10000L;
             // Dummy Objects
+            /*
             Substance sub = new Substance();
             sub.uuid = UUID.fromString("8798e4b8-223c-4d24-aeeb-1f3ca2914328");
             sub.approvalID = "7X1DH96Q9D";
@@ -54,6 +55,7 @@ public class IntegrationTest {
             sub.names.add(test);
 
             subNode = Json.toJson(sub);
+            */
           //  start(testServer);
         }
 
@@ -72,7 +74,7 @@ public class IntegrationTest {
         stop(testServer(9001));
     }
 
-       @Test
+    @Test
     public void testRestAPIVocabularies() {
         running(testServer(9001), new Runnable() {
             public void run() {

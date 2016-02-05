@@ -70,11 +70,14 @@ public class Authentication extends Controller {
 					.getBoolean("ix.authentication.trustheader")) {
 				String usernameheader = Play.application().configuration()
 						.getString("ix.authentication.usernameheader");
+				String usernameEmailheader = Play.application().configuration()
+						.getString("ix.authentication.useremailheader");
 				String username = r.getHeader(usernameheader);
+				String userEmail = r.getHeader(usernameEmailheader);
 				
 				if (username != null) {
 					if (validateUserHeader(username,r)) {
-						setSessionUser(username);
+						setSessionUser(username,userEmail);
 						return true;
 					}
 				}
@@ -103,14 +106,17 @@ public class Authentication extends Controller {
     	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true);
     }
     
-    
     private static UserProfile setSessionUser(String username){
+    	return setSessionUser(username,null);
+    }
+    
+    private static UserProfile setSessionUser(String username, String email){
         boolean systemAuth = false;
         UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
         Principal cred;
         if(profile==null || !profile.active || profile.user == null){
         	if(Play.application().configuration().getBoolean("ix.authentication.autoregister",false)){
-        		cred= PrincipalFactory.registerIfAbsent(new Principal(username, null));
+        		cred= PrincipalFactory.registerIfAbsent(new Principal(username, email));
         	}else{
         		throw new IllegalStateException("User:" + username + " is not an active user");
         	}
