@@ -188,7 +188,7 @@ public class Validation {
 		
 		Set<Keyword> references = data.getReferences();
 		if(required && (references == null || references.size()<=0)){
-			System.out.println("Where are the references?");
+			Logger.info("Where are the references?");
 			GinasProcessingMessage gpmerr=GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
 			strat.processMessage(gpmerr);
 			if(gpmerr.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){

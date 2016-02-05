@@ -24,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import play.Logger;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
 import play.test.WithApplication;
@@ -74,7 +75,7 @@ public class SubstanceValidateFailTest extends WithApplication {
 				try (InputStream is=new FileInputStream(resource);){
 					JsonNode js=null;
 					js = (new ObjectMapper()).readTree(is);
-	            	System.out.println("Running: " + resource);
+	            	Logger.info("Running: " + resource);
 	                WSResponse wsResponse1 = WS.url(SubstanceValidateFailTest.VALIDATE_URL).post(js).get(timeout);
 	                JsonNode jsonNode1 = wsResponse1.asJson();
 	                assertThat(wsResponse1.getStatus()).isEqualTo(OK);

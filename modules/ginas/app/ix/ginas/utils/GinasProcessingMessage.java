@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import play.Logger;
+
 public class GinasProcessingMessage implements ValidationMessage{
 	public enum MESSAGE_TYPE{WARNING, ERROR, INFO, SUCCESS};
 	public enum ACTION_TYPE{IGNORE, APPLY_CHANGE, FAIL, DO_NOTHING};
@@ -53,7 +55,7 @@ public class GinasProcessingMessage implements ValidationMessage{
 	public static boolean ALL_VALID(Collection<GinasProcessingMessage> messages){
 		boolean valid=true;
 		for(GinasProcessingMessage gpm:messages){
-			System.out.println("Message:" + gpm.message);
+			Logger.info("Message:" + gpm.message);
 			if(gpm.isProblem()){
 				valid=false;
 				return valid;
