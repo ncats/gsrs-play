@@ -458,29 +458,6 @@ span.count {
     letter-spacing: 0px;
 }
 
-.site {
-    background: blue;
-    color: white;
-}
-
-.blue {
-    color: #337ab7;
-}
-
-.disulfide {
-    background: purple;
-    color: white;
-}
-
-.nglycosylation, .oglycosylation, .cglycosylation {
-    background: green;
-}
-
-.structuralModification {
-    background: black;
-    color: white;
-}
-
 .prot-list {
     margin-bottom: 0px;
 }
@@ -800,9 +777,88 @@ sketcher svg > text {
 }
 
 .aminoAcid {
-    color: black;
     font-family: "Lucida Console", Monaco, monospace;
+    padding-left: 2px;
+    padding-right: 2px;
+    margin-left: -3px;
 }
+.undefined {
+   color: black;
+}
+
+.modification{
+    background: #a6c435;
+    color: black;
+}
+
+.modification:hover{
+    background: #b6d937;
+    color: black;
+}
+
+.glycosylation{
+    background: #912780;
+    color: white
+}
+
+.glycosylation:hover{
+    background: #a0298d;
+    color: white
+}
+
+.otherLinks{
+    background: #CD9937;
+    color: black
+}
+
+.otherLinks:hover{
+    background: #e3a83a;
+    color: black
+}
+
+.disulfide{
+    background: #2f4d89;
+    color: white
+}
+
+.disulfide:hover{
+    background: #325497;
+    color: white
+}
+
+.site {
+    background: #00A89C;
+    color: white;
+}
+
+.site:hover {
+    background: #04bbad;
+    color: white;
+}
+
+/*
+.blue {
+    color: #337ab7;
+}
+
+.disulfide {
+    background: purple;
+    color: white;
+}
+
+.nglycosylation, .oglycosylation, .cglycosylation {
+    background: green;
+}
+
+.structuralModification {
+    background: black;
+    color: white;
+}
+*/
+
+
+
+
 
 .invalidAA {
     color: red;
