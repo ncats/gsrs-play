@@ -1,10 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title></title>
-</head>
-<body>
-
-</body>
-</html>
+    <table class="table table-striped" id="referenceTable">
+        <thead>
+        <tr>
+            <th>Index</th>
+            <th>Citation</th>
+            <th>Doc Type</th>
+            <th>Tags</th>
+            <th>Document</th>
+            <th>Date Accessed</th>
+        </tr>
+        </thead>
+        <tr ng-repeat="r in references" ng-class="getClass(r.$$index)">
+            <td>{{r.$$index}}</td>
+            <td>
+                <citation citation=r></citation>
+            </td>
+            <td><a ng-href="app/substances?facet=Reference+Type/{{r.docType}}" target="_self"
+                   uib-tooltip="Filter all substances by {{r.docType}}">{{r.docType}}</a></td>
+            <td><span ng-repeat="tag in r.tags" class="badge">{{tag}}</span></td>
+            <td>
+                <div ng-if="reference.uploadedFile">
+                    <a ng-href={{reference.uploadedFile}}><i class="fa fa-file-text fa-2x success"></i></a>
+                </div>
+            </td>
+            <td>{{r.documentDate | date: 'mediumDate'}}</td>
+        </tr>
+    </table>

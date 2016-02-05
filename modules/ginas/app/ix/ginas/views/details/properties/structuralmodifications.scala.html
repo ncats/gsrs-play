@@ -32,7 +32,11 @@
           </td>
           <td>@m.locationType</td>
           <td>@m.residueModified</td>
-          <td>@m.extent<br><amount value=@m.extentAmount.toJson()></amount></td>
+          <td>@m.extent<br>
+          @if(m.extentAmount != null){
+            <amount value=@m.extentAmount.toJson()></amount>
+          }
+          </td>
           <td>@m.molecularFragment.refPname</td>
           <td>@m.molecularFragment.substanceClass</td>
           <td><a href="@ix.ginas.controllers.routes.GinasApp.substance(m.molecularFragment.getLinkingID())"  target="_self">@m.molecularFragment.getLinkingID()</a></td>

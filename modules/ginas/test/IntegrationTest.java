@@ -74,7 +74,21 @@ public class IntegrationTest {
         stop(testServer(9001));
     }
 
+    @Test
+    public void testRestAPIVocabularies() {
+        running(testServer(9001), new Runnable() {
+            public void run() {
+                WSResponse wsResponse = WS.url("http://localhost:9001/ginas/app/api/v1/vocabularies").get().get(timeout);
+                JsonNode jsonNode = wsResponse.asJson();
+                assertThat(wsResponse.getStatus()).isEqualTo(OK);
+                assertThat(wsResponse.getStatus()).isEqualTo(200);
+                assertThat(!jsonNode.isNull()).isEqualTo(true);
+                assertThat(jsonNode.path("total").asInt()).isGreaterThan(1);
+            }
+        });
 
+        stop(testServer(9001));
+    }
 
      /*
     @Test
