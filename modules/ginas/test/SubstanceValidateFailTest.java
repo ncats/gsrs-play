@@ -37,7 +37,13 @@ public class SubstanceValidateFailTest extends WithApplication {
     static public Collection<Object[]> findstuff(){
     	List<Object[]> mylist  =  new ArrayList<Object[]>();
     	
-    	File folder = new File(SubstanceValidateFailTest.class.getResource("testJSON/fail").getFile());
+    	File folder=null;
+    	try{
+    		folder = new File(SubstanceValidateFailTest.class.getResource("testJSON/fail").getFile());
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		throw new IllegalStateException(e);
+    	}
     	assertTrue(folder.exists());
     	for(File s:folder.listFiles()){
     		if(s.getName().endsWith(".json")){
