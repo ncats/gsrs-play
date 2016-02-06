@@ -242,7 +242,7 @@ public class SubstanceFactory extends EntityFactory {
         catch (Exception ex) {
             Logger.warn("Unknown substance class: "+cls
                         +"; treating as generic substance!");
-            throw ex;
+            //throw ex;
         }
         return subClass;
     }
