@@ -51,10 +51,14 @@ public class SubstanceFactory extends EntityFactory {
     private static final double SEQUENCE_IDENTITY_CUTOFF = 0.5;
 	static public final Model.Finder<UUID, Substance> finder =
         new Model.Finder(UUID.class, Substance.class);
+
+	//Do we still need these?
     static public final Model.Finder<UUID, ChemicalSubstance> chemfinder =
             new Model.Finder(UUID.class, ChemicalSubstance.class);
     static public final Model.Finder<UUID, ProteinSubstance> protfinder =
             new Model.Finder(UUID.class, ProteinSubstance.class);
+    
+    
     public static SequenceIndexer _seqIndexer =
             Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
 
@@ -74,6 +78,21 @@ public class SubstanceFactory extends EntityFactory {
     public static Substance getFullSubstance(SubstanceReference subRef){
         return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
     }
+    public static List<Substance> getSubstanceWithAlternativeDefinition(Substance altSub){
+    	List<Substance> sublist=finder.where().and(com.avaje.ebean.Expr.eq("relationships.relatedSubstance.refUUID",altSub.uuid.toString()), 
+    			           com.avaje.ebean.Expr.eq("relationships.relatedSubstance.type",Substance.ALTERNATE_SUBSTANCE_REL)).findList();
+    	List<Substance> realList = new ArrayList<Substance>();
+    	for(Substance sub:sublist){
+    		for(SubstanceReference sref:sub.getAlternativeDefinitionReferences()){
+    			if(sref.refuuid.equals(altSub.uuid.toString())){
+    				realList.add(sub);
+    				break;
+    			}
+    		}
+    	}
+    	return realList;
+    }
+    
     
     private static Substance getSubstanceByApprovalIDOrUUID (String approvalID, String uuid) {
         Substance s=getSubstance(uuid);
@@ -166,34 +185,26 @@ public class SubstanceFactory extends EntityFactory {
     }
 
     public static Result create () {
-    	DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
-        return create (Substance.class, finder,sv);
+    	JsonNode value = request().body().asJson();
+        Class subClass = getClassFromJson(value);
+        DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+        return create (subClass, finder,sv);
     }
 
     public static Result validate () {
+    	JsonNode value = request().body().asJson();
+        Class subClass = getClassFromJson(value);
     	DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS_MARK_FAILED());
-    	return validate (Substance.class, finder, sv);
+    	return validate (subClass, finder, sv);
     }
 
     public static Result delete (UUID uuid) {
         return delete (uuid, finder);
     }
-
-    public static Result updateEntity () {
-    	DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
-    	
-        if (!request().method().equalsIgnoreCase("PUT")) {
-            return badRequest ("Only PUT is accepted!");
-        }
-
-        String content = request().getHeader("Content-Type");
-        if (content == null || (content.indexOf("application/json") < 0
-                                && content.indexOf("text/json") < 0)) {
-            return badRequest ("Mime type \""+content+"\" not supported!");
-        }
-        JsonNode json = request().body().asJson();
+    
+    public static Class<? extends Substance> getClassFromJson(JsonNode json){
+    	Class<? extends Substance> subClass = Substance.class;
         
-        Class<? extends Substance> subClass = Substance.class;
         String cls = null;
               
         try {
@@ -231,8 +242,26 @@ public class SubstanceFactory extends EntityFactory {
         catch (Exception ex) {
             Logger.warn("Unknown substance class: "+cls
                         +"; treating as generic substance!");
+            throw ex;
         }
-        System.out.println("going to update");
+        return subClass;
+    }
+
+    public static Result updateEntity () {
+    	DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+    	
+        if (!request().method().equalsIgnoreCase("PUT")) {
+            return badRequest ("Only PUT is accepted!");
+        }
+
+        String content = request().getHeader("Content-Type");
+        if (content == null || (content.indexOf("application/json") < 0
+                                && content.indexOf("text/json") < 0)) {
+            return badRequest ("Mime type \""+content+"\" not supported!");
+        }
+        JsonNode json = request().body().asJson();
+        
+        Class<? extends Substance> subClass = getClassFromJson(json);
         return updateEntity (json, subClass, sv);
     }
     
@@ -242,42 +271,7 @@ public class SubstanceFactory extends EntityFactory {
         //if(true)return ok("###");
         try {
             JsonNode value = request().body().asJson();
-            Class subClass = Substance.class;
-            JsonNode tpval = value.get("substanceClass");
-            String typ=null;
-            Substance.SubstanceClass type;
-            try {
-            	typ=tpval.asText();
-                type = Substance.SubstanceClass.valueOf(typ);
-            } catch (Exception e) {
-                throw new IllegalStateException("Unimplemented substance class:" + typ);
-            }
-            switch (type) {
-            case chemical:
-                subClass = ChemicalSubstance.class;
-                break;
-            case protein:
-                subClass = ProteinSubstance.class;
-                break;
-            case mixture:
-                subClass = MixtureSubstance.class;
-                break;
-            case polymer:
-                subClass = PolymerSubstance.class;
-                break;
-            case nucleicAcid:
-                subClass = NucleicAcidSubstance.class;
-                break;
-            case structurallyDiverse:
-                subClass = StructurallyDiverseSubstance.class;
-                break;
-            case specifiedSubstanceG1:
-                subClass = SpecifiedSubstanceGroup1Substance.class;
-                break;
-            case concept:
-                subClass = Substance.class;
-                break;
-            }
+            Class subClass = getClassFromJson(value);
             return update(uuid, field, subClass, finder, new GinasV1ProblemHandler(), sv);
         } catch (Exception e) {
             e.printStackTrace();

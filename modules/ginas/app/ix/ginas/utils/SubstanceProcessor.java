@@ -1,17 +1,18 @@
 package ix.ginas.utils;
 
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import play.Logger;
 import ix.core.EntityProcessor;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
-import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
+import ix.ginas.models.v1.SubstanceReference;
+import play.Logger;
 
 public class SubstanceProcessor implements EntityProcessor<Substance>{
 
@@ -71,14 +72,31 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	public void prePersist(Substance s) {
 		System.out.println("Persisting substance:" + s);
 		if (s.definitionType == SubstanceDefinitionType.ALTERNATIVE) {
+			List<Substance> realPrimarysubs=SubstanceFactory.getSubstanceWithAlternativeDefinition(s);
+			Set<String> oldprimary = new HashSet<String>();
+			for(Substance pri:realPrimarysubs){
+				
+				oldprimary.add(pri.uuid.toString());
+				
+			}
+			
+			
 			SubstanceReference sr = s.getPrimaryDefinitionReference();
 			if (sr != null) {
-				Substance subPrimary = SubstanceFactory.getFullSubstance(sr);
-				if (subPrimary != null) {
-					if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
-						if(!subPrimary.addAlternativeSubstanceDefinitionRelationship(s)){
-							Logger.info("Saving alt definition, now has:" + subPrimary.getAlternativeDefinitionReferences().size());
-							subPrimary.save();
+				if(!oldprimary.contains(sr.refuuid)){
+					//remove old references
+					for(Substance oldPri: realPrimarysubs){
+						oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
+					}
+				
+					Substance subPrimary = SubstanceFactory.getFullSubstance(sr);
+					if (subPrimary != null) {
+						if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
+							if(!subPrimary.addAlternativeSubstanceDefinitionRelationship(s)){
+								
+								Logger.info("Saving alt definition, now has:" + subPrimary.getAlternativeDefinitionReferences().size());
+								subPrimary.save();
+							}
 						}
 					}
 				}

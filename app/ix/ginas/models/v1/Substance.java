@@ -47,8 +47,8 @@ import play.Logger;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends GinasCommonData {
-	private static final String ALTERNATE_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
-	private static final String PRIMARY_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
+	public static final String ALTERNATE_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
+	public static final String PRIMARY_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
 
 	private static final String DEFAULT_NO_NAME = "NO_NAME";
 
@@ -474,6 +474,17 @@ public class Substance extends GinasCommonData {
 		r.addReference(Reference.SYSTEM_GENERATED(),this);
 		this.relationships.add(r);
 		return false;
+	}
+	@JsonIgnore
+	public List<Relationship> removeAlternativeSubstanceDefinitionRelationship(Substance sub) {
+		List<Relationship> toRemove= new ArrayList<Relationship>();
+		for(Relationship sref:getAlternativeDefinitionRelationships()){
+			if(sref.relatedSubstance.refuuid.equals(sub.uuid.toString())){
+				toRemove.add(sref);
+			}
+		}
+		this.relationships.removeAll(toRemove);
+		return toRemove;
 	}
 
 	@JsonIgnore
