@@ -4,9 +4,9 @@
     var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch'
     ]).
-        run(['$anchorScroll', function($anchorScroll) {
-        $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
-    }])
+        run(['$anchorScroll', function ($anchorScroll) {
+            $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
+        }])
         .config(function (localStorageServiceProvider, $locationProvider) {
             localStorageServiceProvider
                 .setPrefix('ginas');
@@ -23,7 +23,7 @@
             case "chemical":
                 Substance.substanceClass = substanceClass;
                 Substance.structure = {};
-                _.set(Substance.structure, 'opticalActivity',{value:"UNSPECIFIED"});
+                _.set(Substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
                 Substance.moieties = [];
                 break;
             case "protein":
@@ -189,7 +189,7 @@
         };
     });
 
-      ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
+    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
                                                      localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, CVFields) {
         var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
@@ -197,7 +197,7 @@
         $scope.cutoff = 0.8;
         $scope.stage = true;
         $scope.toggleGrid = false;
-          $scope.diff = false;
+        $scope.diff = false;
         $scope.scrollTo = function (prmElementToScrollTo) {
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
@@ -206,7 +206,7 @@
             $scope.submitSubstance = $scope.fromFormSubstance(angular.copy($scope.substance));
         };
 
-        $scope.compare= function(){
+        $scope.compare = function () {
             $scope.left = angular.toJson($scope.fromFormSubstance(angular.copy($scope.substance)));
             $scope.right = angular.toJson(angular.copy($window.loadjson));
             $scope.substancesEqual = angular.equals($scope.right, $scope.left);
@@ -246,7 +246,7 @@
         };
 
         $scope.toFormSubstance = function (apiSub) {
-           var formSub = $scope.expandCV(apiSub);
+            var formSub = $scope.expandCV(apiSub);
             _.set(formSub, '$$update', true);
             return formSub;
         };
@@ -256,7 +256,7 @@
                 delete formSub.q;
             }
 
-   ///////////this may be removable, the subref creator should make the subref within the form scope/////////////////////////////
+            ///////////this may be removable, the subref creator should make the subref within the form scope/////////////////////////////
             if (formSub.subref) {
                 delete formSub.subref;
             }
@@ -275,70 +275,70 @@
         };
 
         $scope.expandCV = function (sub, path) {
-                _.forEach(_.keysIn(sub), function (field) {
-                    if (path) {
-                        var newpath = path + "." + field;
-                    } else {
-                        var newpath = field;
-                    }
-                    if (_.isObject(sub[field])){
-                        if (_.isArray(sub[field])) {
-                            _.forEach((sub[field]), function (value, key){
-                                if(_.isObject(value)) {
-                                    $scope.expandCV(value, newpath);
-                                }else{
-                                    CVFields.getDomain(newpath).then(function (data) {
-                                        if (!_.isUndefined(data)&& data !== 'substanceClass' ) {
-                                            var domain = data;
-                                            CVFields.getCV(domain).then(function (data) {
-                                                var cv = data.data.content[0].terms;
-                                                var newcv = _.find(cv, ['value', value]);
-                                                if (_.isUndefined(newcv)) {
-                                                    newcv = {};
-                                                    _.set(newcv, 'display', value + ' (not in CV)');
-                                                }
-                                                sub[field][key] = newcv;
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        } else {
-                            if (!_.isNull(sub[field])) {
-                                    $scope.expandCV(sub[field], newpath);
-                                //});
+            _.forEach(_.keysIn(sub), function (field) {
+                if (path) {
+                    var newpath = path + "." + field;
+                } else {
+                    var newpath = field;
+                }
+                if (_.isObject(sub[field])) {
+                    if (_.isArray(sub[field])) {
+                        _.forEach((sub[field]), function (value, key) {
+                            if (_.isObject(value)) {
+                                $scope.expandCV(value, newpath);
+                            } else {
+                                CVFields.getDomain(newpath).then(function (data) {
+                                    if (!_.isUndefined(data) && data !== 'substanceClass') {
+                                        var domain = data;
+                                        CVFields.getCV(domain).then(function (data) {
+                                            var cv = data.data.content[0].terms;
+                                            var newcv = _.find(cv, ['value', value]);
+                                            if (_.isUndefined(newcv)) {
+                                                newcv = {};
+                                                _.set(newcv, 'display', value + ' (not in CV)');
+                                            }
+                                            sub[field][key] = newcv;
+                                        });
+                                    }
+                                });
                             }
-                        }
+                        });
                     } else {
                         if (!_.isNull(sub[field])) {
-                            CVFields.getDomain(newpath).then(function (data) {
-                                if (!_.isUndefined(data) && data !== 'SUBSTANCE_CLASS' ) {
-                                    var domain = data;
-                                    CVFields.getCV(domain).then(function (data) {
-                                        var cv = data.data.content[0].terms;
-                                        var newcv = _.find(cv, ['value', sub[field]]);
-                                        if (_.isUndefined(newcv)) {
-                                            newcv = {};
-                                            _.set(newcv, 'display', sub[field] + ' (not in CV)');
-                                        }
-                                        sub[field] = newcv;
-                                    });
-                                }
-                            });
+                            $scope.expandCV(sub[field], newpath);
+                            //});
                         }
                     }
-                });
+                } else {
+                    if (!_.isNull(sub[field])) {
+                        CVFields.getDomain(newpath).then(function (data) {
+                            if (!_.isUndefined(data) && data !== 'SUBSTANCE_CLASS') {
+                                var domain = data;
+                                CVFields.getCV(domain).then(function (data) {
+                                    var cv = data.data.content[0].terms;
+                                    var newcv = _.find(cv, ['value', sub[field]]);
+                                    if (_.isUndefined(newcv)) {
+                                        newcv = {};
+                                        _.set(newcv, 'display', sub[field] + ' (not in CV)');
+                                    }
+                                    sub[field] = newcv;
+                                });
+                            }
+                        });
+                    }
+                }
+            });
             return sub;
         };
 
         $scope.flattenCV = function (sub) {
             for (var v in sub) {
                 if ($scope.isCV(sub[v])) {
-                    if(sub[v].value) {
+                    if (sub[v].value) {
                         sub[v] = sub[v].value;
-                    }else{
+                    } else {
                         sub[v] = _.replace(sub[v].display, ' (not in CV)', '');
-                      //  sub[v] = sub[v].display;
+                        //  sub[v] = sub[v].display;
                     }
                 } else {
                     if (typeof sub[v] === "object") {
@@ -352,35 +352,35 @@
         $scope.isCV = function (ob) {
             if (typeof ob !== "object") return false;
             if (ob === null) return false;
-         //   if (typeof ob.value !== "undefined") {
-                if (typeof ob.display !== "undefined") {
-                    return true;
-                }
-           // }
+            //   if (typeof ob.value !== "undefined") {
+            if (typeof ob.display !== "undefined") {
+                return true;
+            }
+            // }
             return false;
         };
 
-          $scope.resolveMol = function (structure){
-              var url = window.strucUrl;
+        $scope.resolveMol = function (structure) {
+            var url = window.strucUrl;
 
 
-              $http({
-                  method: 'POST',
-                  url: url,
-                  data: structure.molfile,
-                  headers: {
-                      'Content-Type': 'text/plain'
-                  }
-              }).success(function (data) {
-                  $scope.substance.structure=data.structure;
-                  $scope.substance.moieties=data.moieties;
+            $http({
+                method: 'POST',
+                url: url,
+                data: structure.molfile,
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            }).success(function (data) {
+                $scope.substance.structure = data.structure;
+                $scope.substance.moieties = data.moieties;
 
-                  //this is rather hacky, should be extracted and abstracted
-                  $('#structureimport').modal('hide');
-              });
+                //this is rather hacky, should be extracted and abstracted
+                $('#structureimport').modal('hide');
+            });
 
 
-          };
+        };
 
         $scope.getResidueAtSite = function (site) {
             var msub = $scope.getSubunitWithIndex(site.subunitIndex);
@@ -429,15 +429,15 @@
                     _.set($scope.substance, path, x);
                 }
 
-               // console.log($scope);
-               /// form.$setSubmitted(true);
+                // console.log($scope);
+                /// form.$setSubmitted(true);
                 obj = {};
 
                 form.$setPristine();
                 form.$setUntouched();
                 $scope.$broadcast('show-errors-reset');
                 // form.$setValidity();
-               // form.$error= {};
+                // form.$error= {};
                 return true;
             } else {
                 console.log("Invalid");
@@ -447,26 +447,26 @@
 
         };
 
-        $scope.checkErrors = function(){
-            if(_.has($scope.substanceForm, '$error')){
+        $scope.checkErrors = function () {
+            if (_.has($scope.substanceForm, '$error')) {
                 console.log($scope.substanceForm.$error);
-                _.forEach($scope.substanceForm.$error, function(error){
+                _.forEach($scope.substanceForm.$error, function (error) {
                     console.log(error);
                 });
             }
         };
 
         $scope.submitSubstance = function () {
-           //  $scope.$broadcast('show-errors-check-validity');
-          //      $scope.checkErrors();
+            //  $scope.$broadcast('show-errors-check-validity');
+            //      $scope.checkErrors();
             /*console.log($scope.nameForm);
              if($scope.nameForm.$dirty){
              alert('Name Form not saved');
              }*/
-/*            console.log($scope);
-            if(!$scope.substanceForm.$valid) {
-                alert("not valid");
-            }*/
+            /*            console.log($scope);
+             if(!$scope.substanceForm.$valid) {
+             alert("not valid");
+             }*/
             var r = confirm("Are you sure you'd like to submit this substance?");
             if (r != true) {
                 return;
@@ -478,7 +478,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     }
-                }).success(function(data){
+                }).success(function (data) {
                     alert('update was performed.');
                 });
             } else {
@@ -493,8 +493,8 @@
             }
         };
 
-      $scope.reset = function (form) {
-           $scope.$broadcast('show-errors-reset');
+        $scope.reset = function (form) {
+            $scope.$broadcast('show-errors-reset');
             form.$setPristine();
         };
 
@@ -602,8 +602,8 @@
             });
         };
 
-        $scope.getRange = function(start, end){
-            return _.reverse(_.range(start, (end-1+2)));
+        $scope.getRange = function (start, end) {
+            return _.reverse(_.range(start, (end - 1 + 2)));
         };
 
         $scope.submitpaster = function (input) {
@@ -664,10 +664,10 @@
                 $scope.stage = false;
                 childScope = $scope.$new();
                 var rend;
-                if(!_.isUndefined(ctx)){
-                 rend ='<rendered size="500" id='+id+' ctx='+ctx+'></rendered>';
-                }else{
-                    rend = '<rendered size="500" id='+id+'></rendered>';
+                if (!_.isUndefined(ctx)) {
+                    rend = '<rendered size="500" id=' + id + ' ctx=' + ctx + '></rendered>';
+                } else {
+                    rend = '<rendered size="500" id=' + id + '></rendered>';
                 }
                 var compiledDirective = $compile(rend);
                 var directiveElement = compiledDirective(childScope);
@@ -732,19 +732,19 @@
                 size: '@',
                 ctx: '@'
             },
-            link: function(scope, element, attrs){
-                var url = baseurl+ 'img/'+scope.id+'.svg?size={{size||150}}';
-                if(!_.isUndefined(scope.ctx)) {
+            link: function (scope, element, attrs) {
+                var url = baseurl + 'img/' + scope.id + '.svg?size={{size||150}}';
+                if (!_.isUndefined(scope.ctx)) {
                     url += '&context={{ctx}}';
                 }
-                if(attrs.smiles){
-                    url =baseurl+ "render/"+attrs.smiles;
+                if (attrs.smiles) {
+                    url = baseurl + "render/" + attrs.smiles;
                 }
-                var template = angular.element('<img ng-src='+url+'>');
+                var template = angular.element('<img ng-src=' + url + '>');
                 element.append(template);
                 $compile(template)(scope);
             }
-         //   template: '<img ng-src=\"' + baseurl + 'img/'+id+'.svg?size={{size||150}}&context={{ctx}}\">'
+            //   template: '<img ng-src=\"' + baseurl + 'img/'+id+'.svg?size={{size||150}}&context={{ctx}}\">'
         };
     });
 
@@ -757,95 +757,95 @@
             scope: {
                 value: '='
             },
-            link: function(scope, element, attrs){
-                        scope.display=function(){
-                            if(!_.isUndefined(scope.value)) {
-                                var ret = "";
-                                var addedunits = false;
-                                var unittext = "";
-                                if (scope.value.units) {
-                                    if (scope.value.units.display) {
-                                        unittext = scope.value.units.display;
-                                    } else {
-                                        unittext = scope.value.units;
-                                    }
-                                }
-
-
-                                if (scope.value) {
-                                    if (scope.value.type) {
-                                        if (scope.value.type.display) {
-                                            ret += scope.value.type.display + "\n";
-                                        } else {
-                                            ret += scope.value.type + "\n";
-                                        }
-                                    }
-                                    if (scope.value.average || scope.value.high || scope.value.low) {
-                                        if (scope.value.average) {
-                                            ret += scope.value.average;
-                                            if (scope.value.units) {
-                                                ret += " " + unittext;
-                                                addedunits = true;
-                                            }
-                                        }
-                                        if (scope.value.high || scope.value.low) {
-                                            ret += " [";
-
-                                            if (scope.value.high && !scope.value.low) {
-                                                ret += "<" + scope.value.high;
-                                            } else if (!scope.value.high && scope.value.low) {
-                                                ret += ">" + scope.value.low;
-                                            } else if (scope.value.high && scope.value.low) {
-                                                ret += scope.value.low + " to " + scope.value.high;
-                                            }
-                                            ret += "] ";
-                                            if (!addedunits) {
-                                                if (scope.value.units) {
-                                                    ret += " " + unittext;
-                                                    addedunits = true;
-                                                }
-                                            }
-                                        }
-                                        ret += " (average) ";
-                                    }
-
-                                    if (scope.value.highLimit || scope.value.lowLimit) {
-                                        ret += "\n[";
-                                    }
-                                    if (scope.value.highLimit && !scope.value.lowLimit) {
-                                        ret += "<" + scope.value.highLimit;
-                                    } else if (!scope.value.highLimit && scope.value.lowLimit) {
-                                        ret += ">" + scope.value.lowLimit;
-                                    } else if (scope.value.highLimit && scope.value.lowLimit) {
-                                        ret += scope.value.lowLimit + " to " + scope.value.highLimit;
-                                    }
-                                    if (scope.value.highLimit || scope.value.lowLimit) {
-                                        ret += "] ";
-                                        if (!addedunits) {
-                                            if (scope.value.units) {
-                                                ret += " " + unittext;
-                                                addedunits = true;
-                                            }
-                                        }
-                                        ret += " (limits)";
-                                    }
-
-                                }
-                                return ret;
+            link: function (scope, element, attrs) {
+                scope.display = function () {
+                    if (!_.isUndefined(scope.value)) {
+                        var ret = "";
+                        var addedunits = false;
+                        var unittext = "";
+                        if (scope.value.units) {
+                            if (scope.value.units.display) {
+                                unittext = scope.value.units.display;
+                            } else {
+                                unittext = scope.value.units;
                             }
-                        };
+                        }
 
-                        var template = angular.element('<div><span class="amt">{{display()}}<br><i>{{value.nonNumericValue}}</i></span></div>');
 
-                        element.append(template);
-                        $compile(template)(scope);
+                        if (scope.value) {
+                            if (scope.value.type) {
+                                if (scope.value.type.display) {
+                                    ret += scope.value.type.display + "\n";
+                                } else {
+                                    ret += scope.value.type + "\n";
+                                }
+                            }
+                            if (scope.value.average || scope.value.high || scope.value.low) {
+                                if (scope.value.average) {
+                                    ret += scope.value.average;
+                                    if (scope.value.units) {
+                                        ret += " " + unittext;
+                                        addedunits = true;
+                                    }
+                                }
+                                if (scope.value.high || scope.value.low) {
+                                    ret += " [";
+
+                                    if (scope.value.high && !scope.value.low) {
+                                        ret += "<" + scope.value.high;
+                                    } else if (!scope.value.high && scope.value.low) {
+                                        ret += ">" + scope.value.low;
+                                    } else if (scope.value.high && scope.value.low) {
+                                        ret += scope.value.low + " to " + scope.value.high;
+                                    }
+                                    ret += "] ";
+                                    if (!addedunits) {
+                                        if (scope.value.units) {
+                                            ret += " " + unittext;
+                                            addedunits = true;
+                                        }
+                                    }
+                                }
+                                ret += " (average) ";
+                            }
+
+                            if (scope.value.highLimit || scope.value.lowLimit) {
+                                ret += "\n[";
+                            }
+                            if (scope.value.highLimit && !scope.value.lowLimit) {
+                                ret += "<" + scope.value.highLimit;
+                            } else if (!scope.value.highLimit && scope.value.lowLimit) {
+                                ret += ">" + scope.value.lowLimit;
+                            } else if (scope.value.highLimit && scope.value.lowLimit) {
+                                ret += scope.value.lowLimit + " to " + scope.value.highLimit;
+                            }
+                            if (scope.value.highLimit || scope.value.lowLimit) {
+                                ret += "] ";
+                                if (!addedunits) {
+                                    if (scope.value.units) {
+                                        ret += " " + unittext;
+                                        addedunits = true;
+                                    }
+                                }
+                                ret += " (limits)";
+                            }
+
+                        }
+                        return ret;
+                    }
+                };
+
+                var template = angular.element('<div><span class="amt">{{display()}}<br><i>{{value.nonNumericValue}}</i></span></div>');
+
+                element.append(template);
+                $compile(template)(scope);
             }
         };
     });
 
     ginasApp.factory('referenceRetriever', function ($http) {
         var url = baseurl + "api/v1/substances(";
-        var references ={};
+        var references = {};
         var refFinder = {
             getAll: function (uuid) {
                 return $http.get(url + uuid + ")/references", {
@@ -859,81 +859,81 @@
                     return response.data;
                 });
             },
-            getIndex: function(uuid, refuuid){
+            getIndex: function (uuid, refuuid) {
                 return $http.get(url + uuid + ")/references", {
-                 headers: {
-                 'Content-Type': 'text/plain'
-                 }
-                 }).then(function (response) {
-                 return _.indexOf(response.data, refuuid);
-                 });
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).then(function (response) {
+                    return _.indexOf(response.data, refuuid);
+                });
             }
         };
         return refFinder;
     });
 
-    ginasApp.directive('referencesmanager', function($compile, $templateRequest, referenceRetriever, toggler) {
+    ginasApp.directive('referencesmanager', function ($compile, $templateRequest, referenceRetriever, toggler) {
         return {
-            controller: function($scope) {
+            controller: function ($scope) {
                 this.scope = $scope;
                 this.referenceRetriever = referenceRetriever;
-                $scope.addClass= [];
+                $scope.addClass = [];
                 this.setClass = function (index) {
-                    $scope.addClass[index]= "success";
+                    $scope.addClass[index] = "success";
                 };
                 this.getClass = function (index) {
                     return $scope.addClass[index];
                 };
 
-                this.removeClass = function(){
+                this.removeClass = function () {
                     $scope.addClass = [];
                 };
 
-                this.scrollTo = function() {
+                this.scrollTo = function () {
                     $scope.scrollTo('refs');
                 };
 
                 this.toggle = function (scope, divid) {
                     $scope.addClass = [];
                     var url = baseurl + "assets/templates/reference-table.html";
-                        scope.references = _.sortBy(scope.objreferences, '$$index', function(ref){
-                            if(!scope.stage==false || _.isUndefined(scope.stage)){
-                                $scope.addClass[ref.$$index]= "success";
-                            }
-                        });
-                        toggler.show(scope, divid, url);
+                    scope.references = _.sortBy(scope.objreferences, '$$index', function (ref) {
+                        if (!scope.stage == false || _.isUndefined(scope.stage)) {
+                            $scope.addClass[ref.$$index] = "success";
+                        }
+                    });
+                    toggler.show(scope, divid, url);
 
                 };
             }
         };
     });
 
-    ginasApp.directive('reftable', function() {
+    ginasApp.directive('reftable', function () {
         return {
             scope: {
-                substance:'=',
-                objreferences:'=',
+                substance: '=',
+                objreferences: '=',
                 references: '=',
-                divid:'='
+                divid: '='
             },
             require: '^referencesmanager',
-                link: function (scope, element, attrs, referencesCtrl) {
-                    referencesCtrl.referenceRetriever.getAll(scope.substance).then(function (response) {
-                        scope.references = response;
-                    });
+            link: function (scope, element, attrs, referencesCtrl) {
+                referencesCtrl.referenceRetriever.getAll(scope.substance).then(function (response) {
+                    scope.references = response;
+                });
 
-                    scope.getClass = function(index){
-                        return referencesCtrl.getClass(index);
-                    }
-                },
-                templateUrl: baseurl + "assets/templates/reference-table.html"
+                scope.getClass = function (index) {
+                    return referencesCtrl.getClass(index);
+                }
+            },
+            templateUrl: baseurl + "assets/templates/reference-table.html"
         };
     });
 
-    ginasApp.directive('indices', function($compile){
+    ginasApp.directive('indices', function ($compile) {
         return {
             scope: {
-                substance:'=',
+                substance: '=',
                 references: '='
             },
             require: '^referencesmanager',
@@ -944,18 +944,18 @@
 
                 referencesCtrl.referenceRetriever.getAll(scope.substance).then(function (response) {
                     _.forEach(scope.references, function (ref) {
-                        objreferences.push(_.find(response,['uuid', ref.term]));
+                        objreferences.push(_.find(response, ['uuid', ref.term]));
                         indices.push(_.indexOf(response, _.find(response, ['uuid', ref.term])) + 1);
                         // });
                     });
                     indices = _.sortBy(indices);
-                scope.objreferences= objreferences;
+                    scope.objreferences = objreferences;
 
                     _.forEach(indices, function (i) {
                         var link = '<a ng-click="showActive(' + i + ')" uib-tooltip="view reference">' + i + '</a>';
                         links.push(link);
                     });
-                    var templateString = angular.element('<div class ="row"><div class ="col-md-8">' + _.join(links, ', ') +' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
+                    var templateString = angular.element('<div class ="row"><div class ="col-md-8">' + _.join(links, ', ') + ' </div><div class="col-md-4"><span class="btn btn-primary pull-right" type="button" uib-tooltip="Show all references" ng-click="toggle()"><i class="fa fa-long-arrow-down"></i></span><div></div>');
                     element.append(angular.element(templateString));
                     $compile(templateString)(scope);
                 });
@@ -973,7 +973,7 @@
         };
     });
 
-    ginasApp.directive('citation', function($compile){
+    ginasApp.directive('citation', function ($compile) {
         return {
             restrict: 'E',
             replace: true,
@@ -987,9 +987,9 @@
                 } else {
                     template = angular.element('<span>{{citation.citation}}</span>');
                 }
-                    element.append(template);
-                    $compile(template)(scope);
-                }
+                element.append(template);
+                $compile(template)(scope);
+            }
         };
 
     });
@@ -1001,19 +1001,19 @@
             replace: true,
             scope: {
                 referenceobj: '=',
-                parent:'='
+                parent: '='
             },
             link: function (scope, element, attrs) {
-                if(!_.isUndefined(scope.referenceobj)) {
-                    if(_.has(scope.referenceobj, 'sites')){
-                    scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
+                if (!_.isUndefined(scope.referenceobj)) {
+                    if (_.has(scope.referenceobj, 'sites')) {
+                        scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
 
-                    }else{
+                    } else {
                         scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj);
                     }
                 }
             },
-           template: '<div><div><span>{{referenceobj.$$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
+            template: '<div><div><span>{{referenceobj.$$displayString}}</span><br></div><div ng-if="referenceobj.sites.length"><span>({{referenceobj.sites.length}} sites)</span></div></div>'
         };
     });
 
@@ -1061,101 +1061,39 @@
                 acid: '='
             },
             link: function (scope, element, attrs) {
-                //  var div = '<div class = "col-md-1">';
-                var validTool = 'uib-tooltip="{{acid.subunitIndex}}-{{acid.residueIndex}} : {{acid.value}} ({{acid.type}}{{acid.name}})';
-                var invalidTool = '<a href="#" class= "invalidAA" uib-tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>';
-                var space = '&nbsp;';
-                //  var close = '</div>';
+                var aa = scope.acid;
+                var template;
+                if (_.has(aa, 'structuralModifications')) {
+                    scope.acidClass = "modification";
+                } else if (_.has(aa, 'disulfide')) {
+                    scope.acidClass = "disulfide";
+                } else if (_.has(aa, 'other')) {
+                    scope.acidClass = "other";
+                } else if (_.has(aa, 'glycosylation')) {
+                    scope.acidClass = "glycosylation";
+                } else {
+                    scope.acidClass = 'plain';
+                }
+                if (aa.valid === 'false') {
+                    template = angular.element('<a href="#" class= "invalid" uib-tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>');
+                    element.html(template).show();
+                    $compile(element.contents())(scope);
+                } else if (aa.valid === 'true' && aa.index % 10 === 0) {
+                    template = angular.element('&nbsp;');
+                    element.html(template).show();
+                    $compile(element.contents())(scope);
 
-                scope.getTemplate = function () {
-                    var aa = scope.acid;
-                    if(_.has(aa, 'structuralModifications')) {
-                        $templateRequest(baseurl+ "assets/templates/elements/amino-acid-template.html").then(function(html){
-                            var template = angular.element(html);
-                            element.html(template).show();
-                            $compile(element.contents())(scope);
-                        });
-                    }else {
-                        var template = '<a href="#" class ="aminoAcid ';
-                        var index = aa.index;
-                        if (index % 10 === 0) {
-                            template = space;
-                        } else {
-                            var valid = aa.valid;
-                            if (valid) {
-                                template += scope.getClass(aa) + '"';
-
-                                if (!_.isUndefined(scope.getTooltip(aa))) {
-                                    template = scope.getTooltip(aa, template);
-                                    console.log(template);
-                                    //   $compile(template.contents());
-                                } else {
-                                    template += validTool;
-                                }
-                                template += '">';
-                                template += aa.value;
-                                template += '</a>';
-                            } else {
-                                template = invalidTool;
-                            }
-                        }
-                        element.html(angular.element(template)).show();
+                } else {
+                    $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template.html").then(function (html) {
+                        template = angular.element(html);
+                        element.html(template).show();
                         $compile(element.contents())(scope);
 
-                    }
-                };
+                    });
+                }
 
-                scope.getClass = function(aa){
-                    if(_.has(aa, 'structuralModifications')){
-                        return 'modification';
-                    }
-                    if(_.has(aa, 'glycosylation')){
-                        return 'glycosylation';
-                    }
-                    if(_.has(aa, 'otherLinks')){
-                        return 'otherLinks';
-                    }
-                    if(_.has(aa, 'disulfideLinks')){
-                        return 'disulfide';
-                    }
-                    if(aa.valid != true){
-                        return 'invalidAA';
-                    }
-                };
-
-
-                scope.getTooltip = function(aa, template){
-/*                    if(_.has(aa, 'structuralModifications')){
-/!*                       var template = angular.element('<div><rendered id = {{acid.structuralModifications.refuuid}}></rendered><br/><code>{{acid.structuralModifications.refPname}}</code></div>');
-                        element.html(template);
-                        console.log(element);
-                        $compile(template)(scope);*!/
-                       // template+=
-                        template+= validTool;
-                        return template;
-                    }*/
-                    if(_.has(aa, 'glycosylation')){
-                        template+= validTool;
-                        return template;
-                    }
-                    if(_.has(aa, 'otherLinks')){
-                        template+= validTool;
-                        return template;
-                    }
-                    if(_.has(aa, 'disulfideLinks')){
-                        template+= validTool;
-                        return template;
-                    }
-                    if(aa.valid != true){
-                        template+= validTool;
-                        return template;
-                    }
-                };
-
-                scope.getTemplate(scope.acid);
             }
         };
-
     });
 
     ginasApp.directive('subunit', function () {
@@ -1179,26 +1117,33 @@
                     }
                 };
 
-                scope.objectParser = function(subObj, siteObj, name){
-                    _.forEach(subObj, function(value, key){
-                        if(_.isArray(value) && value.length >0) {
-                            _.forEach(value, function(mod) {
-                                if(name ==='glycosylation'){
-                                        if (mod.subunitIndex == siteObj.subunitIndex && mod.residueIndex == siteObj.residueIndex) {
-                                            _.set(siteObj, name, true);
-                                        }
-                                }else{
+                scope.objectParser = function (subObj, siteObj, name) {
+                    _.forEach(subObj, function (value, key) {
+                        if (_.isArray(value) && value.length > 0) {
+                            _.forEach(value, function (mod) {
+                                if (name === 'glycosylation') {
+                                    if (mod.subunitIndex == siteObj.subunitIndex && mod.residueIndex == siteObj.residueIndex) {
+                                        _.set(siteObj, name, true);
+                                    }
+                                } else {
+                                    if (name === 'structuralModifications') {
                                         _.forEach(mod.sites, function (site) {
                                             if (site.subunitIndex == siteObj.subunitIndex && site.residueIndex == siteObj.residueIndex) {
-                                                if(name ==='structuralModifications') {
-                                                    _.set(siteObj, name, mod.molecularFragment);
-                                                }else{
-                                                    var bridge = {};
-                                                    _.set(siteObj, name, bridge);
-                                                }
+                                                _.set(siteObj, name, mod.molecularFragment);
                                             }
                                         });
+                                    } else {
+                                        if (mod.sites[0].subunitIndex == siteObj.subunitIndex && mod.sites[0].residueIndex == siteObj.residueIndex) {
+                                            var bridge = mod.sites[1];
+                                            console.log(bridge);
+                                            console.log(name);
+                                            _.set(siteObj, name, bridge);
+                                        } else if (mod.sites[1].subunitIndex == siteObj.subunitIndex && mod.sites[1].residueIndex == siteObj.residueIndex) {
+                                                var bridge = mod.sites[0];
+                                                _.set(siteObj, name, bridge);
+                                        }
                                     }
+                                }
                             });
                         }
                     });
@@ -1221,32 +1166,32 @@
                             }
                             obj.residueIndex = index - 0 + 1;
 
-                            if(_.has(scope.parent, 'modifications.structuralModifications')) {
+                            if (_.has(scope.parent, 'modifications.structuralModifications')) {
                                 scope.objectParser(scope.parent.modifications, obj, 'structuralModifications');
                             }
 
                             if (scope.parent.substanceClass === 'protein') {
                                 obj.type = scope.getType(aa);
-                                if(_.has(scope.parent.protein, 'glycosylation')){
+                                if (_.has(scope.parent.protein, 'glycosylation')) {
                                     scope.objectParser(scope.parent.protein.glycosylation, obj, 'glycosylation');
                                 }
-                                if(_.has(scope.parent.protein, 'disulfideLinks')){
+                                if (_.has(scope.parent.protein, 'disulfideLinks')) {
                                     var linksObj = {};
-                                    _.set(linksObj,'links', scope.parent.protein.disulfideLinks);
-                                    scope.objectParser(linksObj, obj, 'disulfideLinks');
+                                    _.set(linksObj, 'links', scope.parent.protein.disulfideLinks);
+                                    scope.objectParser(linksObj, obj, 'disulfide');
                                 }
-                                if(_.has(scope.parent.protein, 'otherLinks')){
+                                if (_.has(scope.parent.protein, 'otherLinks')) {
                                     var linksObj = {};
-                                    _.set(linksObj,'links', scope.parent.protein.otherLinks);
-                                    scope.objectParser(linksObj, obj, 'otherLinks');
+                                    _.set(linksObj, 'links', scope.parent.protein.otherLinks);
+                                    scope.objectParser(linksObj, obj, 'other');
                                 }
 
-                            }else{
+                            } else {
                                 console.log("parsing nucleic acid sequence");
-                                if(_.has(scope.parent.nucleicAcid, 'sugars')){
+                                if (_.has(scope.parent.nucleicAcid, 'sugars')) {
                                     console.log('parse sugars');
                                 }
-                                if(_.has(scope.parent.nucleicAcid, 'linkages')){
+                                if (_.has(scope.parent.nucleicAcid, 'linkages')) {
                                     console.log('parse otherlinks');
                                 }
                             }
@@ -1258,8 +1203,6 @@
                         } else {
                             obj.valid = false;
                         }
-
-
 
 
                         display.push(obj);
@@ -1335,7 +1278,7 @@
                         var directiveElement = compiledDirective(childScope);
                         elementResult.append(directiveElement);
                     } else {
-                        scope.q =null;
+                        scope.q = null;
                         childScope.$destroy();
                         elementResult.empty();
                         scope.stage = true;
@@ -1351,30 +1294,29 @@
             replace: true,
             scope: {
                 referenceobj: '=',
-                field:'=',
+                field: '=',
                 q: '='
             },
             templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
             link: function (scope, element, attrs) {
                 scope.results = {};
-               // scope.searching = false;
+                // scope.searching = false;
 
                 scope.top = 8;
                 scope.testb = 0;
                 scope.searching = true;
 
 
-
                 scope.createSubref = function (selectedItem) {
-                 //  var temp = _.pick(selectedItem,['uuid','_name','approvalID']);
-                   var temp ={};
+                    //  var temp = _.pick(selectedItem,['uuid','_name','approvalID']);
+                    var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
-                   temp.approvalID = selectedItem.approvalID;
+                    temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
-                  //  scope.subref = angular.copy(temp);
+                    //  scope.subref = angular.copy(temp);
                     _.set(scope.referenceobj, scope.field, angular.copy(temp));
-                    scope.q =null;
+                    scope.q = null;
                     scope.$parent.$parent.toggleStage();
                 };
 
@@ -1393,10 +1335,10 @@
                     });
                 };
 
-/*                scope.search = function () {
-                    scope.searching = true;
-                    scope.fetch(scope.term, 0);
-                };*/
+                /*                scope.search = function () {
+                 scope.searching = true;
+                 scope.fetch(scope.term, 0);
+                 };*/
 
                 scope.fetch(scope.q, 0);
 
@@ -1418,7 +1360,7 @@
             scope: {
                 subref: '='
             },
-            link: function(scope, element) {
+            link: function (scope, element) {
                 console.log(scope);
                 var template = angular.element('<div><rendered id = {{subref.refuuid}}></rendered><br/><code>{{subref.refPname}}</code></div>');
                 element.append(template);
@@ -1505,7 +1447,7 @@
                         } else if (attrs.type === "polymer") {
                             scope.formsubstance.idealizedStructure = data.structure;
                             for (var i in data.structuralUnits) {
-                                CVFields.getCV("POLYMER_SRU_TYPE").then(function(response){
+                                CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
                                     var cv = response.data.content[0].terms;
                                     data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
 
@@ -1718,22 +1660,21 @@
     });
 
 
-
-    ginasApp.directive('errorMessage', function(){
+    ginasApp.directive('errorMessage', function () {
         return {
             restrict: 'E',
             replace: true,
             scope: {
-                message:'='
+                message: '='
             },
-            link: function(scope, element, attrs){
+            link: function (scope, element, attrs) {
 
             },
             template: '<span><h1>{{message}}</h1></span>'
 
         };
 
-            });
+    });
 
     ginasApp.controller('SubstanceSelectorInstanceController', function ($scope, $modalInstance, $http) {
 
@@ -1788,9 +1729,6 @@
 
 
     });
-
-
-
 
 
 })();
