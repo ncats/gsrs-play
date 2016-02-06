@@ -461,7 +461,6 @@ public class Substance extends GinasCommonData {
 	
 	@JsonIgnore
 	public boolean addAlternativeSubstanceDefinitionRelationship(Substance sub) {
-		
 		for(Relationship sref:getAlternativeDefinitionRelationships()){
 			if(sref.relatedSubstance.refuuid.equals(sub.uuid.toString())){
 				return true;

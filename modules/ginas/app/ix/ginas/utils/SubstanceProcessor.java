@@ -21,35 +21,34 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	@Override
 	public void postPersist(Substance obj) {
 		//System.out.println("Post Persist Hook on:" + obj);
-		//All of the logic for processing goes here
-		
-		//Grab BDNUM
-		String internalCode=null;
-		for(Code c: obj.codes){
-			if(c.codeSystem.equals(INTERNAL_CODE_SYSTEM)){
-				if(internalCode!=null){
-					throw new IllegalStateException("Duplicate internal code");
-				}
-				internalCode=c.code;
-			}
-		}
-		if(internalCode==null){
-			for(Reference r: obj.references){
-				if(r.docType.equals(INTERNAL_CODE_SYSTEM)){
-					if(internalCode!=null){
-						throw new IllegalStateException("Duplicate internal code");
-					}
-					internalCode=r.citation;
-				}
-			}
-		}
-		
-		
-		//Here is an example, which simply prints out the names
-		for(Name n:obj.names){
-			//System.out.println(obj.getApprovalIDDisplay() + "\t" + internalCode +"\t" + n.getName() + "\t" + n.type);
-		}
-		
+               //All of the logic for processing goes here
+               
+               //Grab BDNUM
+               String internalCode=null;
+               for(Code c: obj.codes){
+                       if(c.codeSystem.equals(INTERNAL_CODE_SYSTEM)){
+                               if(internalCode!=null){
+                                       throw new IllegalStateException("Duplicate internal code");
+                               }
+                               internalCode=c.code;
+                       }
+               }
+               if(internalCode==null){
+                       for(Reference r: obj.references){
+                               if(r.docType.equals(INTERNAL_CODE_SYSTEM)){
+                                       if(internalCode!=null){
+                                               throw new IllegalStateException("Duplicate internal code");
+                                       }
+                                       internalCode=r.citation;
+                               }
+                       }
+               }
+               
+               
+               //Here is an example, which simply prints out the names
+               for(Name n:obj.names){
+                       //System.out.println(obj.getApprovalIDDisplay() + "\t" + internalCode +"\t" + n.getName() + "\t" + n.type);
+               }
 	}
 	
 	@Override
@@ -70,9 +69,13 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	
 	@Override
 	public void prePersist(Substance s) {
-		System.out.println("Persisting substance:" + s);
+
+		
+		Logger.debug("Persisting substance:" + s);
 		if (s.definitionType == SubstanceDefinitionType.ALTERNATIVE) {
+			Logger.debug("It's alternative");
 			List<Substance> realPrimarysubs=SubstanceFactory.getSubstanceWithAlternativeDefinition(s);
+			Logger.debug("Got some relationships:" + realPrimarysubs.size());
 			Set<String> oldprimary = new HashSet<String>();
 			for(Substance pri:realPrimarysubs){
 				
@@ -83,23 +86,34 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 			
 			SubstanceReference sr = s.getPrimaryDefinitionReference();
 			if (sr != null) {
-				if(!oldprimary.contains(sr.refuuid)){
+				
+					Logger.debug("Enforcing bidirectional relationship");
 					//remove old references
 					for(Substance oldPri: realPrimarysubs){
+						Logger.debug("Removing stale bidirectional relationships");
 						oldPri.removeAlternativeSubstanceDefinitionRelationship(s);
+						oldPri.save();
 					}
-				
-					Substance subPrimary = SubstanceFactory.getFullSubstance(sr);
+					Logger.debug("Expanding reference");
+					Substance subPrimary=null;	
+					try{
+						subPrimary = SubstanceFactory.getFullSubstance(sr);
+					}catch(Exception e){
+						e.printStackTrace();
+					}
+					Logger.debug("Got parent sub, which is:" + subPrimary.getName());
 					if (subPrimary != null) {
 						if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
+							Logger.debug("Going to save");
 							if(!subPrimary.addAlternativeSubstanceDefinitionRelationship(s)){
-								
 								Logger.info("Saving alt definition, now has:" + subPrimary.getAlternativeDefinitionReferences().size());
-								subPrimary.save();
 							}
+							subPrimary.save();
 						}
 					}
-				}
+				
+			}else{
+				Logger.error("Persist error. Alternative definition has no primary relationship");
 			}
 		}
 		

@@ -114,6 +114,7 @@ public class Validation {
 		        						gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot add alternative definition for '" + sr.refPname + "' (" + sr.refuuid+ "). That definition is not definitional substance record."));
 		        					}else{
 		        						subPrimary.addAlternativeSubstanceDefinitionRelationship(s);
+		        						
 		        					}
 		        					
 		        				}

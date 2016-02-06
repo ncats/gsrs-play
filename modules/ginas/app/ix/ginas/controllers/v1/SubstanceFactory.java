@@ -79,8 +79,10 @@ public class SubstanceFactory extends EntityFactory {
         return getSubstanceByApprovalIDOrUUID(subRef.approvalID, subRef.refuuid);
     }
     public static List<Substance> getSubstanceWithAlternativeDefinition(Substance altSub){
-    	List<Substance> sublist=finder.where().and(com.avaje.ebean.Expr.eq("relationships.relatedSubstance.refUUID",altSub.uuid.toString()), 
-    			           com.avaje.ebean.Expr.eq("relationships.relatedSubstance.type",Substance.ALTERNATE_SUBSTANCE_REL)).findList();
+    	List<Substance> sublist= new ArrayList<Substance>();
+    	sublist=finder.where().and(com.avaje.ebean.Expr.eq("relationships.relatedSubstance.refuuid",altSub.getOrGenerateUUID().toString()), 
+    			           com.avaje.ebean.Expr.eq("relationships.type",Substance.ALTERNATE_SUBSTANCE_REL)).findList();
+    	
     	List<Substance> realList = new ArrayList<Substance>();
     	for(Substance sub:sublist){
     		for(SubstanceReference sref:sub.getAlternativeDefinitionReferences()){
