@@ -70,10 +70,10 @@ public class CodeFactory extends EntityFactory {
     public static String getMostRecentCode(String codeSystem, String like){
     	List<Code> subs=finder.where().and(com.avaje.ebean.Expr.like("code",like), com.avaje.ebean.Expr.eq("codeSystem",codeSystem)).order().desc("code").setMaxRows(1).findList();
     	if(subs!=null && !subs.isEmpty()){
-    		System.out.println("#####################FOUND CODE:" + subs.get(0).code);
+    		Logger.info("#####################FOUND CODE:" + subs.get(0).code);
     		return subs.get(0).code;
     	}
-    	System.out.println("################# NO CODE!");
+    	Logger.info("################# NO CODE!");
     	return null;
     }
 }

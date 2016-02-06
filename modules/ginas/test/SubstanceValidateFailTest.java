@@ -39,15 +39,13 @@ public class SubstanceValidateFailTest extends WithApplication {
     private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
 	private static long timeout= 10000L;;
     
-    @Parameters(name="{index}: {0}")
+    @Parameters(name="{1}")
     static public Collection<Object[]> findstuff(){
     	List<Object[]> mylist  =  new ArrayList<Object[]>();
     	
     	File folder=null;
     	try{
     		folder = new File("test/testJSON/fail");
-    		System.out.println("found:" + folder.getAbsolutePath());
-    		
     	}catch(Exception e){
     		
     		e.printStackTrace();
@@ -56,7 +54,7 @@ public class SubstanceValidateFailTest extends WithApplication {
     	assertTrue(folder.exists());
     	for(File s:folder.listFiles()){
     		if(s.getName().endsWith(".json")){
-    			mylist.add(new Object[]{s, s.getName()});
+    			mylist.add(new Object[]{s, s.getName().replace(".", "")});
     		}
     	}
     	return mylist;
