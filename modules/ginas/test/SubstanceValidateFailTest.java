@@ -39,7 +39,7 @@ public class SubstanceValidateFailTest extends WithApplication {
     private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
 	private static long timeout= 10000L;;
     
-    @Parameters(name="{1}")
+    @Parameters(name="{index}: {0}")
     static public Collection<Object[]> findstuff(){
     	List<Object[]> mylist  =  new ArrayList<Object[]>();
     	
