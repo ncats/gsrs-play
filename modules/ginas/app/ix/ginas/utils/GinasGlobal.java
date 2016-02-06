@@ -50,10 +50,7 @@ public class GinasGlobal extends Global {
 
 	public void onStart(Application app) {
 		if (!ControlledVocabularyFactory.isloaded()) {
-			
-			
 			ControlledVocabularyFactory.loadSeedCV(Play.application().resourceAsStream("CV.txt"));
-			
 			String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
 			if(codeSystem!=null){
 				ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");

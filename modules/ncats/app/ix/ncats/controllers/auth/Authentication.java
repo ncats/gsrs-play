@@ -83,7 +83,8 @@ public class Authentication extends Controller {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+
+			
 		}
 		return false;
     }
@@ -103,7 +104,8 @@ public class Authentication extends Controller {
     }
     
     public static boolean allowNonAuthenticated(){
-    	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true);
+    	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true) ||
+    			Play.application().configuration().getBoolean("ix.admin",false);
     }
     
     private static UserProfile setSessionUser(String username){
@@ -112,13 +114,19 @@ public class Authentication extends Controller {
     
     private static UserProfile setSessionUser(String username, String email){
         boolean systemAuth = false;
+        boolean newregistered=false;
+        
         UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
         Principal cred;
-        if(profile==null || !profile.active || profile.user == null){
+        if(profile==null || profile.user == null){
         	if(Play.application().configuration().getBoolean("ix.authentication.autoregister",false)){
-        		cred= PrincipalFactory.registerIfAbsent(new Principal(username, email));
+        		Logger.info("Autoregistering user:" + username);
+        		Principal p = new Principal(username, email);
+        		cred= PrincipalFactory.registerIfAbsent(p);
+        		newregistered=true;
         	}else{
-        		throw new IllegalStateException("User:" + username + " is not an active user");
+        		Logger.info("Autoregistering not allowed");
+        		throw new IllegalStateException("User:" + username + " is not a current user in the system");
         	}
         }else{
         	systemAuth=true;
@@ -133,17 +141,27 @@ public class Authentication extends Controller {
 
             if (users == null || users.isEmpty()) {
                 profile = new UserProfile(cred);
-                profile.active = true;
+                if(newregistered){
+                	if(Play.application().configuration().getBoolean("ix.authentication.autoregisteractive",false)){
+                    	profile.active = true;	
+            		}else{
+            			profile.active = false;
+            		}
+                }else{
+                	profile.active = true;
+                }
                 profile.systemAuth = systemAuth;
                 profile.save();
+                tx.commit();
             } else {
                 profile = users.iterator().next();
                 profile.user.username = username;
 
-                if (!profile.active) {
-                    flash("message", "User is no longer active!");
-                    throw new IllegalStateException("User:" + username + " is not an active user");
-                }
+                
+            }
+            if (!profile.active) {
+            	flash("message", "User is no longer active!");
+                throw new IllegalStateException("User:" + username + " is not an active user");
             }
             Session session = new Session(profile);
             session.save();
@@ -157,9 +175,9 @@ public class Authentication extends Controller {
             session(SESSION, session.id.toString());
             tx.commit();
         } catch (Exception ex) {
-            ex.printStackTrace();
             Logger.trace
                     ("Can't update UserProfile for user " + username, ex);
+            throw new IllegalStateException(ex);
         } finally {
             Ebean.endTransaction();
         }
