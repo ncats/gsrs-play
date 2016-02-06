@@ -1,12 +1,12 @@
 package ix.ginas.models;
 
 import ix.core.models.Keyword;
-import ix.core.models.Value;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,7 +33,7 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
     	if(recordReference!=null){
     		return recordReference.references;
     	}
-    	return null;
+    	return new HashSet<Keyword>();
     }
     
     @JsonProperty("references")    

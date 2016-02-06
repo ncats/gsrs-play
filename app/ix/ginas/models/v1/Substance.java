@@ -472,7 +472,7 @@ public class Substance extends GinasCommonData {
 		r.relatedSubstance=sub.asSubstanceReference();
 		r.type=ALTERNATE_SUBSTANCE_REL;
 		r.addReference(Reference.SYSTEM_GENERATED(),this);
-		
+		this.relationships.add(r);
 		return false;
 	}
 

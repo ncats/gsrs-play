@@ -84,6 +84,9 @@ public class Validation {
 		        }
 		        
 	        }else if(s.definitionType == SubstanceDefinitionType.ALTERNATIVE){
+	        	if(s.substanceClass==Substance.SubstanceClass.concept){
+	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions cannot be \"concepts\""));
+	        	}
 	        	if(s.names!=null && s.names.size()>0){
 	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Alternative definitions cannot have names"));
 	        	}
@@ -107,7 +110,11 @@ public class Validation {
 		        				if(subPrimary.definitionType!= SubstanceDefinitionType.PRIMARY){
 		        					gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot add alternative definition for '" + sr.refPname + "' (" + sr.refuuid+ "). That definition is not primary."));
 		        				}else{
-		        					subPrimary.addAlternativeSubstanceDefinitionRelationship(s);
+		        					if(subPrimary.substanceClass==Substance.SubstanceClass.concept){
+		        						gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Cannot add alternative definition for '" + sr.refPname + "' (" + sr.refuuid+ "). That definition is not definitional substance record."));
+		        					}else{
+		        						subPrimary.addAlternativeSubstanceDefinitionRelationship(s);
+		        					}
 		        					
 		        				}
 		        			}

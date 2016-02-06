@@ -38,4 +38,14 @@ public class SubstanceReference extends GinasCommonSubData {
         }
         return refPname;
     }
+    
+    public String getName(){
+    	if(refPname!=null)
+    		return refPname;
+    	String rep= getLinkingID();
+    	if(rep==null){
+    		return "NO_NAME";
+    	}
+    	return rep;
+    }
 }

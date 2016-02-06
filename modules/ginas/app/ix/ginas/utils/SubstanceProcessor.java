@@ -3,6 +3,7 @@ package ix.ginas.utils;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
+import play.Logger;
 import ix.core.EntityProcessor;
 import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.v1.Code;
@@ -68,6 +69,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	
 	@Override
 	public void prePersist(Substance s) {
+		System.out.println("Persisting substance:" + s);
 		if (s.definitionType == SubstanceDefinitionType.ALTERNATIVE) {
 			SubstanceReference sr = s.getPrimaryDefinitionReference();
 			if (sr != null) {
@@ -75,7 +77,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 				if (subPrimary != null) {
 					if (subPrimary.definitionType == SubstanceDefinitionType.PRIMARY) {
 						if(!subPrimary.addAlternativeSubstanceDefinitionRelationship(s)){
-							System.out.println("Saving alt definition");
+							Logger.info("Saving alt definition, now has:" + subPrimary.getAlternativeDefinitionReferences().size());
 							subPrimary.save();
 						}
 					}
@@ -85,9 +87,13 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 		
 	}
 	@Override
-	public void preRemove(Substance obj) {}
+	public void preUpdate(Substance obj) {
+		prePersist(obj);
+	}
+	
 	@Override
-	public void preUpdate(Substance obj) {}
+	public void preRemove(Substance obj) {}
+	
 
 	
 
