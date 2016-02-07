@@ -247,15 +247,12 @@ public class Name extends GinasCommonSubData {
     	return nameList;
     }
     
-    @JsonIgnore
+    
     public boolean isDisplayName() {
     	return displayName;
 	}
     
-    @JsonIgnore
-    public void setIsDisplayName(boolean dn){
-    	displayName=dn;
-    }
+
     
     
     @JsonIgnore

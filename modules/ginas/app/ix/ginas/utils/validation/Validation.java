@@ -308,7 +308,7 @@ public class Validation {
 	            if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
 	                if(s.names.size()>0){
 	                    Name.sortNames(s.names);
-	                    s.names.get(0).setIsDisplayName(true);
+	                    s.names.get(0).displayName=true;
 	                    mes.appliedChange=true;
 	                }
 	            }

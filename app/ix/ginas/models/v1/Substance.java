@@ -47,6 +47,7 @@ import play.Logger;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends GinasCommonData {
+	private static final String DOC_TYPE_PROPERTY_IMPORT = "PROPERTY_IMPORT";
 	public static final String ALTERNATE_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
 	public static final String PRIMARY_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
 
@@ -547,7 +548,7 @@ public class Substance extends GinasCommonData {
 		Note n = new Note();
 		n.note=note;
 		Reference r = new Reference();
-		r.docType = "PROPERTY_IMPORT";
+		r.docType = DOC_TYPE_PROPERTY_IMPORT;
 		r.citation = property;
 		r.documentDate = new Date();
 		n.addReference(r);
