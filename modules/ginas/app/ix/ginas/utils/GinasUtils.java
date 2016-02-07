@@ -51,6 +51,7 @@ import play.Logger;
 import play.Play;
 import tripod.chem.indexer.StructureIndexer;
 import static ix.ncats.controllers.auth.Authentication.getUserProfile;
+import java.util.Date;
 
 public class GinasUtils {
 	public static IDGenerator<String> APPROVAL_ID_GEN = new UNIIGenerator();

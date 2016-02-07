@@ -19,6 +19,17 @@ public class NamespaceFactory extends EntityFactory {
 
     public static List<Namespace> all () { return all (finder); }
     public static Result count () { return count (finder); }
+    
+    public static Integer getCount () {
+        try {
+            return getCount (finder);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+    
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);
     }

@@ -96,9 +96,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     			
     		}
     	}
-    	
-    	
-    	
     }
     
     public static interface Hook{

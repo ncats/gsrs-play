@@ -38,6 +38,15 @@ public class EditFactory extends EntityFactory {
         return internalServerError
             ("Unable to fullfil request: "+request().uri());
     }
+    public static Integer getCount () {
+        try {
+            return getCount (finder);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
 
     public static Result field (String uuid, String field) {
         try {

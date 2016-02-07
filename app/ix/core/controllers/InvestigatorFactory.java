@@ -41,6 +41,16 @@ public class InvestigatorFactory extends EntityFactory {
         return field (id, path, finder);
     }
 
+    public static Integer getCount () {
+        try {
+            return getCount (finder);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+    
     public static Result create () {
         return create (Investigator.class, finder);
     }

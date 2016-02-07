@@ -30,7 +30,16 @@ public class NameFactory extends EntityFactory {
         (int top, int skip, String filter) {
         return filter (new FetchOptions (top, skip, filter), finder);
     }
-
+    public static Integer getCount () {
+        try {
+            return getCount (finder);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+    
     public static Result count () {
         return count (finder);
     }

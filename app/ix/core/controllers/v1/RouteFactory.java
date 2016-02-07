@@ -1,6 +1,8 @@
 package ix.core.controllers.v1;
 
+import ix.core.EntityProcessor;
 import ix.core.NamedResource;
+import ix.core.NamedResourceFilter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Acl;
@@ -12,6 +14,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -21,6 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 import javax.persistence.Id;
 
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -41,6 +45,24 @@ public class RouteFactory extends Controller {
     static final ConcurrentMap<String, Class> _registry = 
         new ConcurrentHashMap<String, Class>();
     static final Set<String> _uuid = new TreeSet<String>();
+    
+    private static NamedResourceFilter resourceFilter=null;
+    
+    static{
+    	
+    	String resproc= Play.application().configuration().getString("ix.core.resourcefilter",null);
+    	
+    	if(resproc!=null){
+    		Class processorCls;
+			try {
+				processorCls = Class.forName(resproc);
+				resourceFilter=(NamedResourceFilter) processorCls.newInstance();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+    	}
+    	
+    }
 
     public static <T  extends EntityFactory> void register 
         (String context, Class<T> factory) {
@@ -80,16 +102,23 @@ public class RouteFactory extends Controller {
             }
         }
     }
+    
+   
 
     public static Result listResources () {
         Set<String> resources = new TreeSet<String>(_registry.keySet());
         List<String> urls = new ArrayList<String>();
-        ObjectMapper mapper = new ObjectMapper ();      
+        ObjectMapper mapper = new ObjectMapper();      
         ArrayNode nodes = mapper.createArrayNode();
         for (String res : resources) {
             ObjectNode n = mapper.createObjectNode();
-            NamedResource named  = (NamedResource)_registry
-                .get(res).getAnnotation(NamedResource.class);
+            Class<?> cls=_registry.get(res);
+            NamedResource named  = (NamedResource)cls.getAnnotation(NamedResource.class);
+            if(resourceFilter!=null){
+            	if(!resourceFilter.isVisible(cls)){
+            		continue;
+            	}
+            }
             n.put("name", res);
             n.put("kind", named.type().getName());
             n.put("href", Global.getHost()+request().uri()+"/"+res);

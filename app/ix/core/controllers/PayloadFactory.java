@@ -33,6 +33,17 @@ public class PayloadFactory extends EntityFactory {
     }
     
     public static Result count () { return count (finder); }
+    
+    public static Integer getCount () {
+        try {
+            return getCount (finder);
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+    
     public static Result page (int top, int skip, String filter) {
         return page (top, skip, filter, finder);
     }
