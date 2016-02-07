@@ -28,6 +28,16 @@ public class ControlledVocabulary extends IxModel{
 	public List<VocabularyTerm> terms;
 
 
+	public VocabularyTerm getTermWithValue(String val){
+		for(VocabularyTerm vt:this.terms){
+			System.out.println("Looking at value:" + vt.display);
+			if(vt.value.equals(val)){
+				
+				return vt;
+			}
+		}
+		return null;
+	}
 
 
 }

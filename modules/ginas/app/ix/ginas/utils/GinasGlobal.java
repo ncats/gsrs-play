@@ -71,6 +71,8 @@ public class GinasGlobal extends Global {
 				vt.save();
 				cvv.terms.add(vt);
 				cvv.save();
+				
+				
 			}
 			System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
 		}else{
