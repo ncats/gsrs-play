@@ -756,7 +756,7 @@ public class GinasApp extends App {
              (500, "Unable to perform similarity search: " + query));
     }
     
-	public static Result lychimatch(final String query, int rows, int page, boolean full) {
+	public static Result lychimatch(final String query, int rows, int page) {
 		try{
 			Structure struc2 = StructureProcessor.instrument(query, null, false); // don't standardize
 			return _substances(struc2.getLychiv4Hash(),rows,page);

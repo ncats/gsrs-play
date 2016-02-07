@@ -9,7 +9,8 @@
     @ginas(title, kind) {
         @header
     }{
-        <div class="row">
+    
+    	<div class="row">
             @if(total > 0 && facets.length > 0) {
                 <div class="col-md-3" id="facet-col">
             <div class="btn btn-primary hidden-md hidden-lg" ng-show="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
@@ -18,7 +19,7 @@
                     <div class="btn btn-primary hidden-md hidden-lg" ng-hide="isCollapsed" ng-click ='isCollapsed = !isCollapsed'>
                         <i class="fa fa-filter"></i> Hide Filters
                     </div>
-            <div uib-collapse="isCollapsed" class="panel-group">
+            		<div uib-collapse="isCollapsed" class="panel-group">
                         @ix.ncats.views.html.filters(facets)                        
                     </div>
                 </div>
@@ -132,39 +133,35 @@
                           }
             }
 
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <div class="row">
-                        <div class = "col-md-9">
-                        @ix.ginas.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
-                            <download-button method = "downloadData()"></download-button>
-                        </div>
-                        <div class= "col-md-3 text-right hidden-xs">
-                            <form class="form" name="grid-select" id = "grid-select">
-                            <switch id="enabled" name="enabled" ng-model="toggleGrid" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                @content
-
-                <div class="panel-footer">
-                @if(pages.length > 1) {
-                    @ix.ginas.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
-                }
-                </div>
-            </div>
+			@if(total>=1){
+	            <div class="panel panel-default">
+	                <div class="panel-heading">
+	                    <div class="row">
+	                        <div class = "col-md-9">
+	                        @ix.ginas.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
+	                            <download-button method = "downloadData()"></download-button>
+	                        </div>
+	                        <div class= "col-md-3 text-right hidden-xs">
+	                            <form class="form" name="grid-select" id = "grid-select">
+	                            <switch id="enabled" name="enabled" ng-model="toggleGrid" on='<i class="fa fa-th-list fa-2x"></i>' off='<i class="fa fa-th fa-2x"></i>'></switch>
+	                            </form>
+	                        </div>
+	                    </div>
+	                </div>
+	                @content
+	
+	                <div class="panel-footer">
+	                @if(pages.length > 1) {
+	                    @ix.ginas.views.html.pagination(current, rows, total, pages)(HtmlFormat.empty)
+	                }
+	                </div>
+	            </div>
+            }else{
+            	There are no results to show.
+            }
         </div>
         </div>
-@*            <div class="modal export" id="loading">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-body">
-                            <div id="loading-progress"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>*@
+        
             <script>
 function dismissQuery () {
     location.assign('@resetAction');
