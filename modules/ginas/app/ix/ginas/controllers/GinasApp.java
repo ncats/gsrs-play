@@ -3,6 +3,7 @@ package ix.ginas.controllers;
 import be.objectify.deadbolt.java.actions.Dynamic;
 import gov.nih.ncgc.chemical.Chemical;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.chem.StructureProcessor;
 import ix.core.controllers.StructureFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Keyword;
@@ -376,7 +377,7 @@ public class GinasApp extends App {
                 return sequences (q, rows, page);
             }
             else if (type.equalsIgnoreCase("substructure")
-                     || type.equalsIgnoreCase("similarity") ||type.equalsIgnoreCase("exact")) {
+                     || type.equalsIgnoreCase("similarity")) {
                 // structure search
                 String cutoff = request().getQueryString("cutoff");
                 Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
@@ -396,7 +397,22 @@ public class GinasApp extends App {
                         (400, "Invalid search parameters: type=\""
                                 + type + "\"; q=\"" + q + "\" cutoff=\""
                                 + cutoff + "\"!"));
-            }
+            }else if (type.equalsIgnoreCase("flex") || type.equalsIgnoreCase("exact")) {
+               // structure search
+               String cutoff = request().getQueryString("cutoff");
+               Logger.debug("Search: q=" + q + " type=" + type + " cutoff="
+                            + cutoff);
+               try {
+                   return lychimatch(q, rows, page);
+               } catch (Exception ex) {
+                   ex.printStackTrace();
+               }
+
+               return notFound(ix.ginas.views.html.error.render
+                       (400, "Invalid search parameters: type=\""
+                               + type + "\"; q=\"" + q + "\" cutoff=\""
+                               + cutoff + "\"!"));
+           }
 
             return _substances (q, rows, page);
         }
@@ -739,6 +755,18 @@ public class GinasApp extends App {
             (ix.ginas.views.html.error.render
              (500, "Unable to perform similarity search: " + query));
     }
+    
+	public static Result lychimatch(final String query, int rows, int page, boolean full) {
+		try{
+			Structure struc2 = StructureProcessor.instrument(query, null, false); // don't standardize
+			return _substances(struc2.getLychiv4Hash(),rows,page);
+		}catch(Exception e){
+			
+		}
+		return internalServerError
+	            (ix.ginas.views.html.error.render
+	             (500, "Unable to perform flex search: " + query));
+	}
 
     public static Result substructure(final String query, final int rows,
                                       final int page) {
