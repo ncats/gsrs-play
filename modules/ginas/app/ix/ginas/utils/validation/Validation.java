@@ -9,7 +9,9 @@ import ix.ginas.controllers.v1.SubstanceFactory;
 import ix.ginas.models.GinasAccessReferenceControlled;
 import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
+import ix.ginas.models.v1.Component;
 import ix.ginas.models.v1.GinasChemicalStructure;
+import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Note;
@@ -134,6 +136,7 @@ public class Validation {
 		        case concept:
 		            break;
 		        case mixture:
+		        	gpm.addAll(validateAndPrepareMixture((MixtureSubstance) s,strat));
 		            break;
 		        case nucleicAcid:
 		            break;
@@ -490,6 +493,28 @@ public class Validation {
     	return gpm;
     }
 
+    private static List<? extends GinasProcessingMessage> validateAndPrepareMixture(
+			MixtureSubstance cs, GinasProcessingStrategy strat) {
+		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+        if(cs.mixture==null){
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mixture substance must have a mixture element"));
+        }else{
+        	if(cs.mixture.components==null || cs.mixture.components.size()<2){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Mixture substance must have at least 2 mixture components"));
+        	}else{
+        		for(Component c:cs.mixture.components){
+        			Substance comp=SubstanceFactory.getFullSubstance(c.substance);
+        			if(comp==null){
+        				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Mixture substance references \"" + c.substance.getName() + "\" which is not yet registered"));
+        			}
+        		}
+        	}
+        }
+        
+        //strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
+        return gpm;
+	}
+    
 	private static List<? extends GinasProcessingMessage> validateAndPrepareProtein(
 			ProteinSubstance cs, GinasProcessingStrategy strat) {
 		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
