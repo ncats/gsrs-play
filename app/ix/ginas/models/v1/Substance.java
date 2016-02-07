@@ -52,7 +52,7 @@ public class Substance extends GinasCommonData {
 
 	private static final String DEFAULT_NO_NAME = "NO_NAME";
 
-	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH IMPORT";
+	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH_IMPORT";
 
 	public static final boolean REMOVE_INVALID_RELATIONSHIPS = false;
 
