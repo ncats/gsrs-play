@@ -5,17 +5,18 @@ import ix.core.models.Group;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.models.v1.ControlledVocabulary;
 import ix.ginas.models.v1.VocabularyTerm;
+import play.Logger;
 
 public class GroupProcessor implements EntityProcessor<Group>{
 
 	@Override
 	public void prePersist(Group obj) {
-		System.out.println("Adding a group to CV");
+		Logger.debug("Adding a group to CV");
 		ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("ACCESS_GROUP");
 		VocabularyTerm vt=cvv.getTermWithValue(obj.name);
-		System.out.println("The domain is:" + cvv.domain + " with " + cvv.terms.size() + " terms");
+		Logger.debug("The domain is:" + cvv.domain + " with " + cvv.terms.size() + " terms");
 		if(vt==null){
-			System.out.println("Group didn't exist before");
+			Logger.debug("Group didn't exist before");
 			vt = new VocabularyTerm();
 			vt.display=obj.name;
 			vt.value=obj.name;
