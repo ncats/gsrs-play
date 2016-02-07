@@ -20,7 +20,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	private static final String INTERNAL_CODE_SYSTEM = "BDNUM";
 	@Override
 	public void postPersist(Substance obj) {
-		//System.out.println("Post Persist Hook on:" + obj);
+			   //System.out.println("Post Persist Hook on:" + obj);
                //All of the logic for processing goes here
                
                //Grab BDNUM

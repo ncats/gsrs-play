@@ -332,4 +332,31 @@ public class Authentication extends Controller {
             Ebean.endTransaction();
         }
     }
+	public static UserProfile getAdministratorContact() {
+		Object o=Play.application().configuration().getObject("ix.sysadmin");
+		try{
+			if(o!=null){
+				ObjectMapper om = new ObjectMapper();
+				Principal p1=om.treeToValue(om.valueToTree(o), Principal.class);
+				UserProfile profile = _profiles.where().eq("user.username", p1.username).findUnique();
+				if(profile==null){
+					profile= new UserProfile(p1);
+				}
+				return profile;
+			}
+		}catch(Exception e){
+			
+		}
+		
+		for(UserProfile profile:  _profiles.findList()){
+			for(Role r:profile.getRoles()){
+				if(r.role == Role.Kind.Admin){
+					return profile;
+				}
+			}
+		}
+		
+		
+		return null;
+	}
 }

@@ -1,5 +1,6 @@
 package ix.ginas.utils;
 
+import ix.core.models.UserProfile;
 import ix.ginas.controllers.GinasApp;
 import ix.ginas.controllers.v1.ControlledVocabularyFactory;
 import ix.ginas.models.v1.ControlledVocabulary;
@@ -22,10 +23,19 @@ public class GinasGlobal extends Global {
 	
 	    @Override
 	    public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
+	    	
+	    	
 	    	if(Authentication.getUser()==null){
 	    		if(!Authentication.loginUserFromHeader(null)){
 	    			if(!Authentication.allowNonAuthenticated()){
-	    				return wrapResult(GinasApp.error(401, "You are not authorized to see this resource"));
+	    				UserProfile u=Authentication.getAdministratorContact();
+	    				if(u!=null){
+	    					return wrapResult(GinasApp.error(401, "You are not authorized to see this resource. Please contact " +
+	    						u.user.email
+	    						+ " to be granted access."));
+	    				}else{
+	    					return wrapResult(GinasApp.error(401, "You are not authorized to see this resource. Please contact an administrator to be granted access."));
+	    				}
 	    			}
 	    		}
 	    	}
