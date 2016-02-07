@@ -823,7 +823,7 @@ PART_LOCATION	structurallyDiverse.partLocation	STEM	STEM
 PART_LOCATION	structurallyDiverse.partLocation	TENDERLOIN	TENDERLOIN
 PART_LOCATION	structurallyDiverse.partLocation	ROOT	ROOT
 PHYSICAL_MODIFICATION_ROLE		Need some	Need one
-PHYSICAL_PARAMETERS		Temperature
+PHYSICAL_PARAMETERS		Temperature	Temperature
 POLYMER_CLASS	polymerClassification.polymerClass	COPOLYMER	Copolymer
 POLYMER_CLASS	polymerClassification.polymerClass	HOMOPOLYMER	Homopolymer
 POLYMER_GEOMETRY	polymerClassification.polymerGeometry	LINEAR	Linear

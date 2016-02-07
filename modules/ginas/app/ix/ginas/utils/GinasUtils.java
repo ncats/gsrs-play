@@ -500,5 +500,17 @@ public class GinasUtils {
 			throw new IllegalStateException(
 					"There is no last editor associated with this record. One must be present to allow approval. Please contact your system administrator.");
 		}
+		if (!s.isPrimaryDefinition()) {
+			throw new IllegalStateException(
+					"Cannot approve non-primary definitions.");
+		}
+		if (!s.isNonSubstanceConcept()) {
+			throw new IllegalStateException(
+					"Cannot approve non-substance concepts.");
+		}
+		s.approvalID=APPROVAL_ID_GEN.generateID();
+		s.approved=new Date();
+		s.approvedBy=user;
+		
 	}
 }
