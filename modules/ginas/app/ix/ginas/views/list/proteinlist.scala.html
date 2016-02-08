@@ -90,8 +90,7 @@
             </div>
         </div>
 	@if(ctx != null) {
-        <div ng-show="bigview" class = "revealable row">
-            <div ng-show="initialized">
+        <div class = "row">
               <div class = "col-md-12">
 		  @for(subunit <- prot.protein.subunits) {
 		      @defining(GinasApp.getSeqAlignment(ctx,subunit.uuid.toString)){ r =>
@@ -107,7 +106,6 @@
 		  }
               </div>
             </div>
-        </div>
 	}
     </div>
 </div>

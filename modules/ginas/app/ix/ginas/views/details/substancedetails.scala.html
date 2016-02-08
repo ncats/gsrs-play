@@ -18,7 +18,7 @@
                     @breadcrumb
                     @defining(sub.getModificationCount()) { gcount =>
                         @if(gcount > 0) {
-                            <li role="presentation"><a href="#mods" prevent-default="" ng-click="scrollTo('mods')">
+                            <li role="presentation"><a href="#modification" prevent-default="" ng-click="scrollTo('modification')">
                                 Modifications
                                 <span class= "badge pull-right">@gcount</span></a>
                             </li>
@@ -81,7 +81,7 @@
 
             @if(sub.hasModifications()) {
 
-                <div class="row info" id="mods">
+                <div class="row info" id="modification">
                     <button class="btn btn-primary label-offset det ">
                         Modifications&nbsp;<span class="badge head"> @sub.getModificationCount()</span></button>
                     <div class="col-md-12">
