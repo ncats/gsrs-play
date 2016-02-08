@@ -77,6 +77,14 @@
             </div>
         </div>
         <div class = "col-md-12">
+@*
+        @for(i <- 0 until sub.protein.subunits.size()) {
+            <subunit uuid="'@sub.uuid'" index ='@i' view="subunits"></subunit>
+        }
+*@
+
+
+
             <br/>
         @for(i <- 0 until sub.protein.subunits.size()) {
             @for(s <- sub.protein.subunits) {

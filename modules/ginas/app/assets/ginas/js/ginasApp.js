@@ -1053,7 +1053,7 @@
         };
     });
 
-    ginasApp.directive('aminoAcid', function ($compile, $templateRequest) {
+    ginasApp.directive('aminoAcid', function ($compile, $templateRequest, $anchorScroll) {
 
         return {
             restrict: 'E',
@@ -1061,14 +1061,15 @@
                 acid: '='
             },
             link: function (scope, element, attrs) {
+                scope.bridged= false;
                 var aa = scope.acid;
                 var template;
                 if (_.has(aa, 'structuralModifications')) {
                     scope.acidClass = "modification";
                 } else if (_.has(aa, 'disulfide')) {
                     scope.acidClass = "disulfide";
-                } else if (_.has(aa, 'other')) {
-                    scope.acidClass = "other";
+                } else if (_.has(aa, 'otherLinks')) {
+                    scope.acidClass = "otherLinks";
                 } else if (_.has(aa, 'glycosylation')) {
                     scope.acidClass = "glycosylation";
                 } else {
@@ -1084,6 +1085,13 @@
                     $compile(element.contents())(scope);
 
                 } else {
+                    if(scope.acidClass ==='disulfide' || scope.acidClass ==='otherLinks'){
+                        $templateRequest(baseurl + "assets/templates/tooltips/bridge-tooltip-template.html").then(function (html) {
+                            template = angular.element(html);
+                            element.html(template).show();
+                            $compile(element.contents())(scope);
+                        });
+                    }else{
                     $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template.html").then(function (html) {
                         template = angular.element(html);
                         element.html(template).show();
@@ -1091,22 +1099,70 @@
 
                     });
                 }
+                }
 
+
+                scope.showBridge = function(){
+                    scope.bridged= !scope.bridged;
+                };
+
+                scope.scrollTo= function(div, acid){
+                    console.log(div);
+                    console.log(acid);
+                    $anchorScroll(div);
+                };
             }
         };
     });
 
-    ginasApp.directive('subunit', function () {
+    ginasApp.service('APIFetcher', function($http){
+        var url = baseurl + "api/v1/substances(";
+        var fetcher = {
+            fetch: function (uuid, field) {
+                return $http.get(url + uuid + ")", {
+                    headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                }).then(function (response) {
+                    return response.data;
+                });
+       }
+        };
+        return fetcher;
+
+    });
+
+    ginasApp.directive('subunit', function (CVFields, APIFetcher) {
 
         return {
             restrict: 'E',
             scope: {
                 parent: '=',
                 obj: '=',
-                residues: '='
+                uuid: '=',
+                index:'='
             },
             link: function (scope, element, attrs) {
                 console.log(scope);
+                if(_.isUndefined(scope.parent)){
+                    APIFetcher.fetch(scope.uuid, 'protein.subunits', scope.index).then(function(data){
+                        console.log(data);
+                       scope.parent = data;
+                       scope.obj = data.protein.subunits[scope.index];
+
+                    });
+                }
+                if (scope.parent.substanceClass === 'protein') {
+                    CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
+                        scope.residues = data.data.content[0].terms;
+                        scope.parseSubunit();
+                    });
+                }else {
+                    CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
+                        scope.residues = data.data.content[0].terms;
+                        scope.parseSubunit();
+                    });
+                }
                 scope.edit = false;
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
@@ -1135,8 +1191,6 @@
                                     } else {
                                         if (mod.sites[0].subunitIndex == siteObj.subunitIndex && mod.sites[0].residueIndex == siteObj.residueIndex) {
                                             var bridge = mod.sites[1];
-                                            console.log(bridge);
-                                            console.log(name);
                                             _.set(siteObj, name, bridge);
                                         } else if (mod.sites[1].subunitIndex == siteObj.subunitIndex && mod.sites[1].residueIndex == siteObj.residueIndex) {
                                                 var bridge = mod.sites[0];
@@ -1182,8 +1236,8 @@
                                 }
                                 if (_.has(scope.parent.protein, 'otherLinks')) {
                                     var linksObj = {};
-                                    _.set(linksObj, 'links', scope.parent.protein.otherLinks);
-                                    scope.objectParser(linksObj, obj, 'other');
+                                    _.set(linksObj, 'otherLinks', scope.parent.protein.otherLinks);
+                                    scope.objectParser(linksObj, obj, 'otherLinks');
                                 }
 
                             } else {
@@ -1213,6 +1267,19 @@
 
                 };
 
+                scope.highlight = function(acid){
+                    var bridge ={};
+                    if(_.has(acid, 'disulfide')){
+                        bridge = acid.disulfide;
+                    }else{
+                        bridge = acid.otherLinks;
+                    }
+                    var allAA= element[0].querySelectorAll('amino-acid');
+                    var targetElement = angular.element(allAA[bridge.residueIndex-1]);
+                    targetElement.isolateScope().showBridge();
+                };
+
+
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
                 scope.cleanSequence = function () {
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
@@ -1223,7 +1290,6 @@
                     }).toString().replace(/,/g, '');
                     scope.parseSubunit();
                 };
-                scope.parseSubunit();
             },
             templateUrl: baseurl + "assets/templates/subunit.html"
         };
@@ -1361,7 +1427,6 @@
                 subref: '='
             },
             link: function (scope, element) {
-                console.log(scope);
                 var template = angular.element('<div><rendered id = {{subref.refuuid}}></rendered><br/><code>{{subref.refPname}}</code></div>');
                 element.append(template);
                 $compile(template)(scope);

@@ -1,4 +1,4 @@
-<div class="row info">
+<div class="row info" id ="modification">
     <div class="row">
         <form-header type="structuralModifications" path="modifications.structuralModifications" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
@@ -50,7 +50,8 @@
         </form>
 
 
-        <div ng-repeat="obj in parent.modifications.structuralModifications">
+        <div ng-repeat="obj in parent.modifications.structuralModifications" ng-class="getClass(obj)">
+            {{obj.$$hashKey}}
             <div class="row">
                 <hr>
                 <div class="col-md-1">

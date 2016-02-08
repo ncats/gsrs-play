@@ -88,6 +88,42 @@
         };
     });
 
+    ginasForms.directive('formmanager', function ($compile, $templateRequest, toggler) {
+        return {
+            controller: function ($scope) {
+                this.scope = $scope;
+               // this.referenceRetriever = referenceRetriever;
+                $scope.addClass = [];
+                this.setClass = function (index) {
+                    $scope.addClass[index] = "success";
+                };
+                this.getClass = function (index) {
+                    return $scope.addClass[index];
+                };
+
+                this.removeClass = function () {
+                    $scope.addClass = [];
+                };
+
+                this.scrollTo = function () {
+                    $scope.scrollTo('refs');
+                };
+
+                this.toggle = function (scope, divid) {
+                    $scope.addClass = [];
+                    var url = baseurl + "assets/templates/reference-table.html";
+                    scope.references = _.sortBy(scope.objreferences, '$$index', function (ref) {
+                        if (!scope.stage == false || _.isUndefined(scope.stage)) {
+                            $scope.addClass[ref.$$index] = "success";
+                        }
+                    });
+                    toggler.show(scope, divid, url);
+
+                };
+            }
+        };
+    });
+
     ginasForms.directive('infoButton', function ($compile, toggler) {
         return {
             restrict: 'E',
@@ -1570,7 +1606,12 @@ console.log(scope);
                 referenceobj: '=',
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html"
+            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
+            link: function(scope, element){
+                scope.getClass = function(obj){
+
+                }
+            }
         };
     });
 
@@ -1623,7 +1664,7 @@ console.log(scope);
                 scope.parent.$$subunitDisplay = [];
                 scope.substanceClass = scope.parent.substanceClass;
                 var template;
-                if (scope.parent.substanceClass === 'protein') {
+/*                if (scope.parent.substanceClass === 'protein') {
                     CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
                         scope.residues = data.data.content[0].terms;
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
@@ -1634,14 +1675,14 @@ console.log(scope);
                     });
                 } else {
                     CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
-                        scope.residues = data.data.content[0].terms;
+                        scope.residues = data.data.content[0].terms;*/
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
                             template = angular.element(html);
                             element.append(template);
                             $compile(template)(scope);
                         });
-                    });
-                }
+               //     });
+             //   }
 
                 scope.validate = function () {
                     if (scope.subunit.sequence.length > 10000) {
