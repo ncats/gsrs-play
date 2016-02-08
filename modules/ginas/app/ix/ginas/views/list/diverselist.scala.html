@@ -40,7 +40,7 @@
                     <div class = "col-md-3">
                         <h5>Codes:</h5>
                     </div>
-                    <div class = "col-md-9">
+                    <div class = "col-md-9">git st
                         <h5>@ix.ginas.controllers.GinasApp.codesList(sub.codes)</h5>
                     </div>
                 </div>
@@ -60,7 +60,7 @@
 
                 <div class = "row">
                     <div class = "col-md-12">
-                        Date approved: <h6>{{@GinasApp.getDateTime(sub.approved) | date: 'mediumDate'}}</h6>
+                        Date approved: <h6>{{@GinasApp.getDateTime(sub.approved) | date: 'mediumDate' || 'Not Approved'}}</h6>
                     </div>
                 </div>
                 <div class = "row">
