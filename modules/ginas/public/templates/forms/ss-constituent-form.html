@@ -28,7 +28,7 @@
             <submit-buttons submit="component" form="constituentForm" path="specifiedSubstanceG1.constituents"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.specifiedSubstance.constituents" >
+        <div ng-repeat="obj in parent.specifiedSubstance.constituents track by $index" >
             <div class ="row">
                 <hr>
                 <div class="col-md-1">

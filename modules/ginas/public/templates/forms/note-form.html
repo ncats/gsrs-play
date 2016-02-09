@@ -19,7 +19,7 @@
             <submit-buttons submit="note" form="noteForm" path="notes"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.notes">
+        <div ng-repeat="obj in parent.notes track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">

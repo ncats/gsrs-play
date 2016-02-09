@@ -24,7 +24,7 @@
             </div>
             <div class="parameterForm"></div>
         </form>
-        <div class="row" ng-repeat="param in referenceobj.parameters">
+        <div class="row" ng-repeat="param in referenceobj.parameters track by $index">
             <hr>
             <div class="col-md-1">
                 <a ng-click="deleteObj(param, referenceobj.parameters)"><i class="fa fa-times fa-2x danger"></i></a>

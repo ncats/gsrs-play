@@ -26,8 +26,9 @@
                 </dd>
             }
         }
+
             @defining(sub.nucleicAcid.getNucleicAcidSubType()) { nastype =>
-            @if(nastype != null) {
+                @if(nastype != null) {
                 <dt>Protein Type<dt>
                 <dd>
                     @for(st <- nastype) {
@@ -36,6 +37,7 @@
                 </dd>
             }
             }
+
                 @defining(sub.nucleicAcid.getSequenceOrigin()) { seqo =>
                     @if(seqo != null) {
                         <dt>Sequence Origin</dt>
@@ -44,6 +46,7 @@
                         </dd>
                     }
                 }
+
                     @defining(sub.nucleicAcid.getSequenceType()) { seqt =>
                         @if(seqt != null) {
                             <dt>Sequence Type</dt>
@@ -52,7 +55,9 @@
                             </dd>
                         }
                     }
+
         </dl>
+
     </div>
     } {
 <div class="row info" id="subunits">
@@ -68,7 +73,10 @@
             </div>
         </div>
         <div class = "col-md-12">
-            <br/>
+            @for(i <- 0 until sub.nucleicAcid.getSubunits.size()) {
+                <subunit uuid="'@sub.uuid'" index ='@i' view='subunits' numbers="numbers"></subunit>
+            }
+         @*   <br/>
         @for(i <- 0 until sub.nucleicAcid.getSubunits().size()) {
             @for(s <- sub.nucleicAcid.getSubunits()) {
                 @if(s.subunitIndex == i + 1) {
@@ -130,7 +138,7 @@
                 }
 
             }
-        }
+        }*@
         </div>
     </div>
 	@defining(sub.nucleicAcid.getSugars().length) { count =>

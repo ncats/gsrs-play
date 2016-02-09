@@ -70,22 +70,18 @@
                 <button class="btn btn-primary label-offset det">
                     Subunits&nbsp;<span class="badge head"> @sub.protein.subunits.size()</span></button>
             </div>
-            <div class = "col-md-2 pull-right">
-                <form class="form" name="numbers-select" id = "numbers-select">
+            <div class = "col-md-3 col-md-offset-5 text-right" id ="viewSwitch">
                     <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-list-ol fa-2x"></i>' off='<i class="fa fa-bars fa-2x"></i>'></switch>
-                </form>
             </div>
         </div>
         <div class = "col-md-12">
-@*
         @for(i <- 0 until sub.protein.subunits.size()) {
-            <subunit uuid="'@sub.uuid'" index ='@i' view="subunits"></subunit>
+            <subunit uuid="'@sub.uuid'" index ='@i' view='subunits' numbers="numbers"></subunit>
         }
-*@
 
 
 
-            <br/>
+      @*      <br/>
         @for(i <- 0 until sub.protein.subunits.size()) {
             @for(s <- sub.protein.subunits) {
                 @if(s.subunitIndex == i + 1) {
@@ -148,7 +144,7 @@
 
             }
         }
-
+*@
         </div>
 
     </div>

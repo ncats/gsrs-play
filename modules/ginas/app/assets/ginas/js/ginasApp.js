@@ -1064,6 +1064,7 @@
                 scope.bridged= false;
                 var aa = scope.acid;
                 var template;
+                console.log(aa);
                 if (_.has(aa, 'structuralModifications')) {
                     scope.acidClass = "modification";
                 } else if (_.has(aa, 'disulfide')) {
@@ -1072,6 +1073,12 @@
                     scope.acidClass = "otherLinks";
                 } else if (_.has(aa, 'glycosylation')) {
                     scope.acidClass = "glycosylation";
+                } else if (_.has(aa, 'sugar')) {
+                    console.log(aa);
+                    scope.acidClass = "sugar";
+                } else if (_.has(aa, 'linkage')) {
+                    console.log(aa);
+                    scope.acidClass = "sugar";
                 } else {
                     scope.acidClass = 'plain';
                 }
@@ -1101,14 +1108,11 @@
                 }
                 }
 
-
                 scope.showBridge = function(){
                     scope.bridged= !scope.bridged;
                 };
 
                 scope.scrollTo= function(div, acid){
-                    console.log(div);
-                    console.log(acid);
                     $anchorScroll(div);
                 };
             }
@@ -1118,7 +1122,7 @@
     ginasApp.service('APIFetcher', function($http){
         var url = baseurl + "api/v1/substances(";
         var fetcher = {
-            fetch: function (uuid, field) {
+            fetch: function (uuid) {
                 return $http.get(url + uuid + ")", {
                     headers: {
                         'Content-Type': 'text/plain'
@@ -1140,29 +1144,28 @@
                 parent: '=',
                 obj: '=',
                 uuid: '=',
-                index:'='
+                index:'=',
+                view: '@',
+                numbers:'='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
-                if(_.isUndefined(scope.parent)){
-                    APIFetcher.fetch(scope.uuid, 'protein.subunits', scope.index).then(function(data){
-                        console.log(data);
-                       scope.parent = data;
-                       scope.obj = data.protein.subunits[scope.index];
+                scope.numbers = true;
 
-                    });
-                }
-                if (scope.parent.substanceClass === 'protein') {
-                    CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
-                        scope.residues = data.data.content[0].terms;
-                        scope.parseSubunit();
-                    });
-                }else {
-                    CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
-                        scope.residues = data.data.content[0].terms;
-                        scope.parseSubunit();
-                    });
-                }
+                scope.getResidues = function(){
+                    if (scope.parent.substanceClass === 'protein') {
+                        CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
+                            scope.residues = data.data.content[0].terms;
+                            scope.parseSubunit();
+                        });
+                    }else {
+                        CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
+                            scope.residues = data.data.content[0].terms;
+                            scope.parseSubunit();
+                        });
+                    }
+                };
+
+
                 scope.edit = false;
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
@@ -1174,6 +1177,8 @@
                 };
 
                 scope.objectParser = function (subObj, siteObj, name) {
+                    var cv;
+                    var newobj;
                     _.forEach(subObj, function (value, key) {
                         if (_.isArray(value) && value.length > 0) {
                             _.forEach(value, function (mod) {
@@ -1181,11 +1186,26 @@
                                     if (mod.subunitIndex == siteObj.subunitIndex && mod.residueIndex == siteObj.residueIndex) {
                                         _.set(siteObj, name, true);
                                     }
-                                } else {
-                                    if (name === 'structuralModifications') {
+                                } else if (name === 'structuralModifications') {
                                         _.forEach(mod.sites, function (site) {
                                             if (site.subunitIndex == siteObj.subunitIndex && site.residueIndex == siteObj.residueIndex) {
                                                 _.set(siteObj, name, mod.molecularFragment);
+                                            }
+                                        });
+                                    }else if (name === 'sugar' || name ==='linkage') {
+                                        _.forEach(mod.sites, function (site) {
+                                            if (site.subunitIndex == siteObj.subunitIndex && site.residueIndex == siteObj.residueIndex) {
+                                                var obj = mod[name];
+                                                _.set(siteObj, name, obj);
+                                                if(!_.has(obj, 'display')){
+                                                    var type = _.toUpper(name);
+                                                    type = 'NUCLEIC_ACID_'+type;
+                                                    CVFields.getCV(type).then(function (data) {
+                                                         cv = data.data.content[0].terms;
+                                                         newobj = _.find(cv, ['value', obj]);
+                                                            _.set(siteObj, name, newobj);
+                                                    });
+                                                    }
                                             }
                                         });
                                     } else {
@@ -1197,7 +1217,6 @@
                                                 _.set(siteObj, name, bridge);
                                         }
                                     }
-                                }
                             });
                         }
                     });
@@ -1205,7 +1224,7 @@
 
                 scope.parseSubunit = function () {
                     scope.obj.$$cysteineIndices = [];
-                    var display = [];
+                    scope.parent.$$subunitDisplay =[];
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
                         obj.value = aa;
@@ -1241,12 +1260,15 @@
                                 }
 
                             } else {
-                                console.log("parsing nucleic acid sequence");
                                 if (_.has(scope.parent.nucleicAcid, 'sugars')) {
-                                    console.log('parse sugars');
+                                    var linksObj = {};
+                                    _.set(linksObj, 'sugar', scope.parent.nucleicAcid.sugars);
+                                    scope.objectParser(linksObj, obj, 'sugar');
                                 }
                                 if (_.has(scope.parent.nucleicAcid, 'linkages')) {
-                                    console.log('parse otherlinks');
+                                    var linksObj = {};
+                                    _.set(linksObj, 'linkage', scope.parent.nucleicAcid.linkages);
+                                    scope.objectParser(linksObj, obj, 'linkage');
                                 }
                             }
                             if (aa.toUpperCase() == 'C') {
@@ -1290,6 +1312,23 @@
                     }).toString().replace(/,/g, '');
                     scope.parseSubunit();
                 };
+
+                console.log(scope);
+                var display = [];
+                if(_.isUndefined(scope.parent)){
+                    APIFetcher.fetch(scope.uuid).then(function(data){
+                        scope.parent = data;
+                        if(_.has(data, 'protein')) {
+                            scope.obj = data.protein.subunits[scope.index];
+                        }else{
+                            scope.obj = data.nucleicAcid.subunits[scope.index];
+                        }
+                        scope.getResidues();
+                    });
+                }else{
+                    scope.getResidues();
+                }
+
             },
             templateUrl: baseurl + "assets/templates/subunit.html"
         };

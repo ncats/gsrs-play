@@ -21,7 +21,7 @@
             </div>
             <div class="physicalParameterForm"></div>
         </form>
-        <div class="row" ng-repeat="param in referenceobj.physicalParameters">
+        <div class="row" ng-repeat="param in referenceobj.physicalParameters track by $index">
             <hr>
             <div class="col-md-1">
                 <a ng-click="deleteObj(param, referenceobj.physicalParameters)"><i class="fa fa-times fa-2x danger"></i></a>

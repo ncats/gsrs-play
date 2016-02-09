@@ -19,7 +19,7 @@
             <submit-buttons submit="component" form="monomerForm" path="polymer.monomers"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.polymer.monomers" >
+        <div ng-repeat="obj in parent.polymer.monomers track by $index" >
             <div class ="row">
                 <hr>
                 <div class="col-md-1">

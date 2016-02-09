@@ -22,7 +22,7 @@
             <submit-buttons submit="physicalModification" form="physicalModForm" path="modifications.physicalModifications"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.modifications.physicalModifications">
+        <div ng-repeat="obj in parent.modifications.physicalModifications track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">

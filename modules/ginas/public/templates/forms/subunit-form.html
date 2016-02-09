@@ -2,11 +2,15 @@
     <div class="row">
         <form-header type="subunits" path={{substanceClass}}.subunits parent= parent
                      iscollapsed="iscollapsed"></form-header>
+
+        <div class ="col-md-3 col-md-offset-5 text-right" id ="formSwitch">
+        <switch id="numbers" name="numbers" ng-model="numbers" on='<i class="fa fa-list-ol fa-2x"></i>' off='<i class="fa fa-bars fa-2x"></i>'></switch>
+            </div>
     </div>
     <div uib-collapse="iscollapsed">
-        <div ng-repeat="obj in parent[substanceClass].subunits">
+        <div ng-repeat="obj in parent[substanceClass].subunits track by $index">
             <div class="col-md-12">
-                <subunit obj=obj parent=parent></subunit>
+                <subunit obj=obj parent=parent numbers = numbers></subunit>
             </div>
             <div class={{obj.$$hashKey}}></div>
         </div>

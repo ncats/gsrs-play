@@ -3,7 +3,7 @@
         <form-header type="moieties" parent="parent"></form-header>
     </div>
         <div class="col-md-12" id="structureSearcher">
-            <div ng-repeat="obj in parent.moieties">
+            <div ng-repeat="obj in parent.moieties track by $index">
                 <div class ="row">
                     <hr>
                     <div class="col-md-2">

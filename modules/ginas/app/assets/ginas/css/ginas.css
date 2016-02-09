@@ -445,9 +445,14 @@ samp {
 
 }
 
+div.col-md-9> #subunits > div.col-md-12 > subunit> div > div > div > span.pull-right.count.ng-binding{
+    font-size: 10px;
+    margin-right: 7%;
+}
+
 span.count {
     font-size: 10px;
-    margin-right: 20%;
+    margin-right: 22%;
 }
 
 .label-rounded {
@@ -477,6 +482,10 @@ i#numbers-off {
 }
 
 /*TOGGLE SWITCH*/
+div#viewSwitch, div#formSwitch {
+    left: -6%;
+}
+
 .toggleSwitch {
     background-color: #337ab7;
     border: 1px solid #337ab7;
@@ -494,7 +503,6 @@ i#numbers-off {
     transition: 0.3s ease-out all;
     -webkit-transition: 0.3s ease-out all;
     top: 25px;
-    left: -25px;
 }
 
 .toggleSwitch small {
@@ -776,12 +784,24 @@ sketcher svg > text {
 
 }
 
+div.col-md-9> div#subunits > div> subunit > div > div> div> span> amino-acid>a.aminoAcid{
+        font-family: "Lucida Console", Monaco, monospace;
+        padding-left: 1px;
+        padding-right: 1px;
+        margin-left: -3px;
+    }
+
+
+
 .aminoAcid {
     font-family: "Lucida Console", Monaco, monospace;
     padding-left: 2px;
     padding-right: 2px;
     margin-left: -3px;
 }
+
+
+
 .plain {
    color: black;
 }

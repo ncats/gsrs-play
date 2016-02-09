@@ -49,7 +49,7 @@
 
         </form>
 
-        <div class="row" ng-repeat="reference in parent.references">
+        <div class="row" ng-repeat="reference in parent.references track by $index">
             <hr>
             <div class="col-md-1">
                 <a ng-click="deleteObj(parent, reference); deleteReference(reference);"><i class="fa fa-times fa-2x danger"></i></a>

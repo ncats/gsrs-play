@@ -20,6 +20,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import play.Logger;
 
 @JSONEntity(title = "Nucleic Acid", isFinal = true)
 @SuppressWarnings("serial")
@@ -45,10 +46,10 @@ public class NucleicAcid extends GinasCommonSubData {
 	
 	
     @Indexable(facet=true,name="Sequence Origin")
-    public String sequenceOrigin;
+    String sequenceOrigin;
     
     @Indexable(facet=true,name="Sequence Type")
-    public String sequenceType;
+    String sequenceType;
 	
 	@JSONEntity(name = "subunits", title = "Subunits")
 	@ManyToMany(cascade=CascadeType.ALL)
@@ -85,8 +86,12 @@ public class NucleicAcid extends GinasCommonSubData {
 	}
 
 	public List<String> getNucleicAcidSubType() {
-		String[] type = this.nucleicAcidSubType.split(";");
-		return Arrays.asList(type);
+		if( this.nucleicAcidSubType != null){
+			String[] type = this.nucleicAcidSubType.split(";");
+			return Arrays.asList(type);
+		}else {
+			return null;
+		}
 	}
 
 	@Indexable(facet=true,name="Nucleic Acid Subtype")

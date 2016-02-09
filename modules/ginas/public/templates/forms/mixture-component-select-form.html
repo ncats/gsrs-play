@@ -22,7 +22,7 @@
             <submit-buttons submit="component" form="componentForm" path="mixture.components"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.mixture.components" >
+        <div ng-repeat="obj in parent.mixture.components track by $index" >
             <div class ="row">
                 <hr>
                 <div class="col-md-1">

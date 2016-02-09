@@ -34,7 +34,7 @@
             <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.properties">
+        <div ng-repeat="obj in parent.properties track by $index">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">

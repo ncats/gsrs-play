@@ -1657,32 +1657,17 @@ console.log(scope);
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '=',
-                residues: '='
+                parent: '='
             },
             link: function (scope, element, attrs) {
+                scope.numbers = true;
                 scope.parent.$$subunitDisplay = [];
                 scope.substanceClass = scope.parent.substanceClass;
-                var template;
-/*                if (scope.parent.substanceClass === 'protein') {
-                    CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
-                        scope.residues = data.data.content[0].terms;
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
-                            template = angular.element(html);
+                           var template = angular.element(html);
                             element.append(template);
                             $compile(template)(scope);
                         });
-                    });
-                } else {
-                    CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
-                        scope.residues = data.data.content[0].terms;*/
-                        $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-               //     });
-             //   }
 
                 scope.validate = function () {
                     if (scope.subunit.sequence.length > 10000) {
@@ -1698,8 +1683,7 @@ console.log(scope);
                 scope.deleteObj = function (obj) {
                     scope.parent[scope.parent.substanceClass].subunits.splice(scope.parent[scope.parent.substanceClass].subunits.indexOf(obj), 1);
                 };
-            },
-            //  templateUrl: baseurl + "assets/templates/subunit-form.html"
+            }
         };
     });
 

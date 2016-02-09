@@ -50,8 +50,7 @@
         </form>
 
 
-        <div ng-repeat="obj in parent.modifications.structuralModifications" ng-class="getClass(obj)">
-            {{obj.$$hashKey}}
+        <div ng-repeat="obj in parent.modifications.structuralModifications track by $index" ng-class="getClass(obj)">
             <div class="row">
                 <hr>
                 <div class="col-md-1">

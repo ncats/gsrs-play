@@ -36,7 +36,7 @@
             </form>
 
             <div class="row form-row">
-                <div ng-repeat="obj in arrays">
+                <div ng-repeat="obj in arrays track by $index">
                     <div class="col-md-2">
                         <form-selector referenceobj="obj" parent=parent type="site" divid="glycosylationForm"
                                        mode="edit" formtype="pair"></form-selector>

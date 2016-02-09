@@ -34,7 +34,7 @@
         </ng-form>
 
 
-        <div ng-repeat="obj in parent.nucleicAcid.linkages">
+        <div ng-repeat="obj in parent.nucleicAcid.linkages track by $index">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
