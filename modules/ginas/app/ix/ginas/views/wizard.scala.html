@@ -12,8 +12,10 @@
 @kind match {
         case "chemical" => {
 
+@*
             <div>@forms.structureform()</div>
-
+*@
+            <structure-form parent = substance></structure-form>
 
             <moiety-form parent = substance ng-cloak></moiety-form>
         }

@@ -680,10 +680,13 @@
                 }
                 var arrays = _.pickBy(scope.parent.protein.glycosylation, _.isArray);
                 console.log(arrays);
-                scope.arrays = _.forOwn(arrays, function (value, key) {
-                    scope.count += value.length;
-                     _.set(arrays[key], 'field', _.startCase(key));
-                     _.set(arrays[key], 'name', key);
+                scope.arrayss = _.forEach(arrays, function (value, key) {
+                    console.log(key);
+                    if(key !='references') {
+                        scope.count += value.length;
+                        _.set(arrays[key], 'field', _.startCase(key));
+                        _.set(arrays[key], 'name', key);
+                    }
                     return arrays;
                 });
                 console.log(scope);
@@ -746,6 +749,54 @@
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/moiety-form.html"
+        };
+    });
+
+    ginasForms.directive('structureForm', function ($http) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            templateUrl: baseurl + "assets/templates/forms/structure-form.html",
+            link: function(scope){
+                console.log(scope);
+
+                if(scope.parent.substanceClass ==='polymer'){
+                scope.structure = scope.parent.idealizedStructure;
+                }else{
+                    scope.structure = scope.parent.structure;
+                }
+
+
+
+
+                scope.checkDuplicateChemicalSubstance = function () {
+                    var sub = scope.$parent.fromFormSubstance(scope.parent);
+                    scope.structureErrorsArray = [];
+                    $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
+                        var arr = [];
+
+                        for (var i in response) {
+                            if (response[i].messageType != "INFO")
+                                arr.push(response[i]);
+                            if (response[i].messageType == "WARNING")
+                                response[i].class = "alert-warning";
+                            if (response[i].messageType == "ERROR")
+                                response[i].class = "alert-danger";
+                            if (response[i].messageType == "INFO")
+                                response[i].class = "alert-info";
+                            if (response[i].messageType == "SUCCESS")
+                                response[i].class = "alert-success";
+
+
+                        }
+                        scope.structureErrorsArray = arr;
+                    });
+                };
+
+            }
         };
     });
 

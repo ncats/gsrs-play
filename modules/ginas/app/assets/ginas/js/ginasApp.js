@@ -539,30 +539,6 @@
             });
         };
 
-        $scope.checkDuplicateChemicalSubstance = function () {
-            var sub = angular.copy($scope.substance);
-            sub = $scope.fromFormSubstance(sub);
-            $scope.structureErrorsArray = [];
-            $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
-                var arr = [];
-
-                for (var i in response) {
-                    if (response[i].messageType != "INFO")
-                        arr.push(response[i]);
-                    if (response[i].messageType == "WARNING")
-                        response[i].class = "alert-warning";
-                    if (response[i].messageType == "ERROR")
-                        response[i].class = "alert-danger";
-                    if (response[i].messageType == "INFO")
-                        response[i].class = "alert-info";
-                    if (response[i].messageType == "SUCCESS")
-                        response[i].class = "alert-success";
-
-
-                }
-                $scope.structureErrorsArray = arr;
-            });
-        };
 
         $scope.getSiteResidue = function (subunits, site) {
             var si = site.subunitIndex;
@@ -1065,6 +1041,18 @@
                 var aa = scope.acid;
                 var template;
                 console.log(aa);
+
+                if (aa.valid == false) {
+                    console.log("invalid");
+                    template = angular.element('<a href="#" class= "invalidAA" tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>');
+                    element.html(template).show();
+                    $compile(element.contents())(scope);
+                } else if (aa.valid === 'true' && aa.index % 10 === 0) {
+                    template = angular.element('&nbsp;');
+                    element.html(template).show();
+                    $compile(element.contents())(scope);
+
+                } else {
                 if (_.has(aa, 'structuralModifications')) {
                     scope.acidClass = "modification";
                 } else if (_.has(aa, 'disulfide')) {
@@ -1074,24 +1062,13 @@
                 } else if (_.has(aa, 'glycosylation')) {
                     scope.acidClass = "glycosylation";
                 } else if (_.has(aa, 'sugar')) {
-                    console.log(aa);
                     scope.acidClass = "sugar";
                 } else if (_.has(aa, 'linkage')) {
-                    console.log(aa);
                     scope.acidClass = "sugar";
                 } else {
                     scope.acidClass = 'plain';
                 }
-                if (aa.valid === 'false') {
-                    template = angular.element('<a href="#" class= "invalid" uib-tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>');
-                    element.html(template).show();
-                    $compile(element.contents())(scope);
-                } else if (aa.valid === 'true' && aa.index % 10 === 0) {
-                    template = angular.element('&nbsp;');
-                    element.html(template).show();
-                    $compile(element.contents())(scope);
 
-                } else {
                     if(scope.acidClass ==='disulfide' || scope.acidClass ==='otherLinks'){
                         $templateRequest(baseurl + "assets/templates/tooltips/bridge-tooltip-template.html").then(function (html) {
                             template = angular.element(html);
@@ -1150,6 +1127,11 @@
             },
             link: function (scope, element, attrs) {
                 scope.numbers = true;
+                scope.edit = false;
+
+                scope.toggleEdit= function(){
+                    scope.edit = !scope.edit;
+                };
 
                 scope.getResidues = function(){
                     if (scope.parent.substanceClass === 'protein') {
@@ -1166,7 +1148,6 @@
                 };
 
 
-                scope.edit = false;
                 scope.getType = function (aa) {
                     if (aa == aa.toLowerCase()) {
                         return 'D-';
@@ -1278,6 +1259,7 @@
 
                         } else {
                             obj.valid = false;
+                            console.log(obj);
                         }
 
 
@@ -1523,7 +1505,7 @@
             link: function (scope, element, attrs, ngModelCtrl) {
 
                 sketcher = new JSDraw("sketcherForm");
-                var url = window.strucUrl;
+                var url = baseurl+'structure';
                 var structureid = (localStorageService.get('structureid') || false);
                 if (localStorageService.get('editID'))
                     structureid = false;
@@ -1546,9 +1528,13 @@
                         if (scope.formsubstance === null || typeof scope.formsubstance === "undefined") {
                             scope.formsubstance = {};
                         }
-                        if (attrs.type === "structure") {
-                            scope.formsubstance = data.structure;
-                        } else if (attrs.type === "polymer") {
+                 /*       if (scope.formsubstance.substanceClass === "chemical") {
+                            console.log('chemical');
+                            scope.formsubstance.structure = data.structure;
+                        } else*/
+                        if (scope.formsubstance.substanceClass === "polymer") {
+                            console.log('polymer');
+
                             scope.formsubstance.idealizedStructure = data.structure;
                             for (var i in data.structuralUnits) {
                                 CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {

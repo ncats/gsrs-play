@@ -13,15 +13,17 @@
                                         label="Glycosylation Type"></dropdown-view-edit>
                 </div>
                 <div class="col-md-2">
-                    <dropdown-view-edit obj="parent.protein.glycosylationSite" field="glycosylationSite"
-                                        cv="GLYCOSYLATION_SITE"
-                                        label="Glycosylation Site"></dropdown-view-edit>
+                    <form-selector referenceobj="parent.protein.glycosylation.CGlycosylationSites" parent=parent type="site" divid="glycosylationForm"
+                                   mode="edit" formtype="string"></form-selector>
                 </div>
                 <div class="col-md-2">
-                    <form-selector referenceobj="obj" parent=parent type="site" divid="glycosylationForm"
-                                   mode="edit" formtype="pair"></form-selector>
+                    <form-selector referenceobj="parent.protein.glycosylation.NGlycosylationSites" parent=parent type="site" divid="glycosylationForm"
+                                   mode="edit" formtype="string"></form-selector>
                 </div>
-
+                <div class="col-md-2">
+                    <form-selector referenceobj="parent.protein.glycosylation.OGlycosylationSites" parent=parent type="site" divid="glycosylationForm"
+                                   mode="edit" formtype="string"></form-selector>
+                </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="parent.protein.glycosylation" parent="parent" type="access"
                                    divid="glycosylationForm"
@@ -34,16 +36,7 @@
                 </div>
             </div>
             </form>
-
-            <div class="row form-row">
-                <div ng-repeat="obj in arrays track by $index">
-                    <div class="col-md-2">
-                        <form-selector referenceobj="obj" parent=parent type="site" divid="glycosylationForm"
-                                       mode="edit" formtype="pair"></form-selector>
-                    </div>
-                </div>
-            </div>
-            <br>
+        <br>
 
             <div class="glycosylationForm"></div>
     </div>

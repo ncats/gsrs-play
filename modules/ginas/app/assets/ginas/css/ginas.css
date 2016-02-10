@@ -486,6 +486,10 @@ div#viewSwitch, div#formSwitch {
     left: -6%;
 }
 
+span#enabled {
+    left: -20%;
+}
+
 .toggleSwitch {
     background-color: #337ab7;
     border: 1px solid #337ab7;
