@@ -43,4 +43,10 @@ public class ProteinSubstance extends Substance {
     public Modifications getModifications(){
     	return this.protein.modifications;
     }
+    
+    public void setModifications(Modifications m){
+    	 this.protein.modifications=modifications;
+    }
+    
+    
 }

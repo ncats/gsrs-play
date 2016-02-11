@@ -2,6 +2,8 @@ package ix.ginas.models.v1;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -13,4 +15,16 @@ public class MixtureSubstance extends Substance {
     public Mixture mixture;
 	
     public MixtureSubstance () {}
+    
+    
+    @JsonIgnore
+	public List<SubstanceReference> getDependsOnSubstanceReferences(){
+    	
+    	List<SubstanceReference> sref = new ArrayList<SubstanceReference>();
+    	sref.addAll(super.getDependsOnSubstanceReferences());
+    	for(Component c:mixture.getMixture()){
+			sref.add(c.substance);
+		}
+		return sref;
+	}
 }

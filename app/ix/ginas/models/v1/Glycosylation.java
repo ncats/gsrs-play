@@ -5,10 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -28,6 +26,7 @@ public class Glycosylation extends GinasCommonSubData {
     
     @JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
+    @Column(name="C_GLYCOSYLATION_SITES")
     SiteContainer _CGlycosylationSiteContainer;
     public List<Site> getCGlycosylationSites(){
     	if(_CGlycosylationSiteContainer!=null){
@@ -45,6 +44,7 @@ public class Glycosylation extends GinasCommonSubData {
     
     @JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
+    @Column(name="N_GLYCOSYLATION_SITES")
     SiteContainer _NGlycosylationSiteContainer;
     public List<Site> getNGlycosylationSites(){
     	if(_NGlycosylationSiteContainer!=null){
@@ -64,6 +64,7 @@ public class Glycosylation extends GinasCommonSubData {
     
     @JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
+    @Column(name="O_GLYCOSYLATION_SITES")
     SiteContainer _OGlycosylationSiteContainer;
     public List<Site> getOGlycosylationSites(){
     	if(_OGlycosylationSiteContainer!=null){

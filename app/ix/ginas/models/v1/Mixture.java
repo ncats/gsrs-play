@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.utils.JSONEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name="ix_ginas_mixture")
@@ -43,6 +46,9 @@ public class Mixture extends GinasCommonSubData {
 	public int size(){
 		return components.size();
 	}
+	
+	
+	
 /*
 	public void setFromMap(Map m) {
 		super.setFromMap(m);
