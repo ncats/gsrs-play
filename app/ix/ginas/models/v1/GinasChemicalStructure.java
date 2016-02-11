@@ -79,6 +79,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		this.smiles=s.smiles;
 		this.stereoCenters=s.stereoCenters;
 		this.stereoComments=s.stereoComments;
+		this.stereoChemistry=s.stereoChemistry;
 		this.version=s.version;
 	}
 	
