@@ -63,27 +63,69 @@
                 iscollapsed: '='
             },
             link: function (scope, element, attrs) {
-                scope.length = 0;
+                scope.getLength = function(){
+                    if (!_.isUndefined(_.get(scope.parent, scope.path))) {
+                        scope.length = _.get(scope.parent, scope.path).length;
+                    }else{
+                        scope.length =0;
+                    }
+                    return scope.length;
+                };
+                scope.toggle = function () {
+                    scope.iscollapsed = !scope.iscollapsed;
+                };
+
                 scope.heading = _.startCase(scope.type);
                 if (_.isUndefined(scope.path)) {
                     scope.path = scope.type;
                 }
-                if (!_.isUndefined(_.get(scope.parent, scope.path))) {
-                    scope.length = _.get(scope.parent, scope.path).length;
+                scope.length = scope.getLength();
 
-                }
                 if (scope.length == 0) {
                     scope.iscollapsed = true;
                 }
 
-                scope.toggle = function () {
-                    scope.iscollapsed = !scope.iscollapsed;
-                };
                 $templateRequest(baseurl + "assets/templates/selectors/form-header.html").then(function (html) {
                     template = angular.element(html);
                     element.append(template);
                     $compile(template)(scope);
                 });
+            }
+        };
+    });
+
+    ginasForms.directive('formmanager', function ($compile, $templateRequest, toggler) {
+        return {
+            controller: function ($scope) {
+                this.scope = $scope;
+               // this.referenceRetriever = referenceRetriever;
+                $scope.addClass = [];
+                this.setClass = function (index) {
+                    $scope.addClass[index] = "success";
+                };
+                this.getClass = function (index) {
+                    return $scope.addClass[index];
+                };
+
+                this.removeClass = function () {
+                    $scope.addClass = [];
+                };
+
+                this.scrollTo = function () {
+                    $scope.scrollTo('refs');
+                };
+
+                this.toggle = function (scope, divid) {
+                    $scope.addClass = [];
+                    var url = baseurl + "assets/templates/reference-table.html";
+                    scope.references = _.sortBy(scope.objreferences, '$$index', function (ref) {
+                        if (!scope.stage == false || _.isUndefined(scope.stage)) {
+                            $scope.addClass[ref.$$index] = "success";
+                        }
+                    });
+                    toggler.show(scope, divid, url);
+
+                };
             }
         };
     });
@@ -486,24 +528,19 @@
                 }
 
                 scope.toggle = function () {
+                    console.log('toggle  '+ scope.divid );
                     toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
                 };
                 scope.stage = true;
 
                 switch (attrs.type) {
                     case "amount":
-                        if (attrs.mode == "edit") {
-                            template = angular.element('<div><label for={{type}} class="text-capitalize">Amount</label><a ng-click ="toggle()"><amount value ="referenceobj.amount" ></amount></a></div>');
-                            element.append(template);
-                            $compile(template)(scope);
-                        } else {
                             $templateRequest(baseurl + "assets/templates/selectors/amount-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
 
                             });
-                        }
                         formHolder = '<amount-form referenceobj = referenceobj parent = parent amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
@@ -516,23 +553,14 @@
                             $compile(template)(scope);
 
                         });
-                        //                         }
                         formHolder = '<site-string-form referenceobj = referenceobj parent = parent mode=mode residueregex=residueregex formtype = formtype></site-string-form>';
                         break;
                     case "reference":
-                        if (attrs.mode == "edit") {
-                            $templateRequest(baseurl + "assets/templates/selectors/reference-selector-view.html").then(function (html) {
-                                template = angular.element(html);
-                                element.append(template);
-                                $compile(template)(scope);
-                            });
-                        } else {
                             $templateRequest(baseurl + "assets/templates/selectors/reference-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
                             });
-                        }
                         formHolder = '<reference-form referenceobj = referenceobj parent = parent></reference-form>';
                         break;
                     case "parameter":
@@ -558,11 +586,6 @@
                         formHolder = '<physical-parameter-form referenceobj = referenceobj field = field parent = parent></physical-parameter-form>';
                         break;
                     case "nameOrgs":
-/*                        if (attrs.mode == "edit") {
-                            template = angular.element('<a ng-click ="toggleStage()"><parameters parameters ="referenceobj.parameters"></parameters></a>');
-                            element.append(template);
-                            $compile(template)(scope);
-                        } else {*/
                             $templateRequest(baseurl + "assets/templates/selectors/name-org-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
@@ -572,22 +595,15 @@
                         formHolder = '<name-org-form referenceobj = referenceobj field = field parent = parent></name-org-form>';
                         break;
                     case "access":
-                        if (attrs.mode == "edit") {
-                            template = angular.element('<div><label for="access" class="text-capitalize">Access</label><a ng-click ="toggleStage()"><access value = referenceobj.access></access></a></div>');
-                            element.append(template);
-                            $compile(template)(scope);
-                        } else {
                             $templateRequest(baseurl + "assets/templates/selectors/access-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
                             });
-                        }
                         formHolder = '<access-form referenceobj = referenceobj parent = parent></access-form>';
                         break;
                     case "textbox":
                         if (attrs.mode == "edit") {
-                            //this only works if the attribute is named "comments" will probably need to be addressed later
                             template = angular.element('<div><label for="comments" class="text-capitalize">{{label || field}}</label><a ng-click ="toggle()"><comment value = "referenceobj[field]" id="comments"></comment></a></div>');
                             element.append(template);
                             $compile(template)(scope);
@@ -637,33 +653,10 @@
             },
             templateUrl: baseurl + "assets/templates/forms/glycosylation-form.html",
             link: function (scope, element, attrs) {
-                scope.count = 0;
                 if (!scope.parent.protein.glycosylation) {
                     scope.parent.protein.glycosylation = {};
 
                 }
-                var arrays = _.pickBy(scope.parent.protein.glycosylation, _.isArray);
-                console.log(arrays);
-                scope.arrays = _.forOwn(arrays, function (value, key) {
-                    scope.count += value.length;
-                     _.set(arrays[key], 'field', _.startCase(key));
-                     _.set(arrays[key], 'name', key);
-                    return arrays;
-                });
-                console.log(scope);
-
-                scope.validate = function () {
-                    if (!scope.parent.protein.glycosylation[scope.glyc.glycosylationSite.value]) {
-                        scope.parent.protein.glycosylation[scope.glyc.glycosylationSite.value] = [];
-                    }
-                    scope.parent.protein.glycosylation[scope.glyc.glycosylationSite.value].push(scope.glyc);
-                    scope.glyc = {};
-                    scope.glycosylationForm.$setPristine();
-                };
-
-                scope.deleteObj = function (obj) {
-                    scope.parent.protein.glycosylation[field].splice(scope.parent.protein.glycosylation[field].indexOf(obj), 1);
-                };
             }
         };
     });
@@ -710,6 +703,62 @@
                 parent: '='
             },
             templateUrl: baseurl + "assets/templates/forms/moiety-form.html"
+        };
+    });
+
+    ginasForms.directive('structureForm', function ($http, $templateRequest, $compile) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '='
+            },
+            link: function(scope, element){
+                console.log(scope);
+                if(scope.parent.substanceClass ==='polymer'){
+                    if(_.has(scope.parent.polymer.idealizedStructure)){
+                        _.set(scope.parent, 'structure',scope.parent.polymer.idealizedStructure );
+                    }else{
+                        _.set(scope.parent, 'structure',scope.parent.polymer.displayStructure );
+                    }
+                    console.log(scope);
+                }else{
+                    scope.structure = scope.parent.structure;
+                }
+
+
+
+
+                scope.checkDuplicateChemicalSubstance = function () {
+                    var sub = scope.$parent.fromFormSubstance(scope.parent);
+                    scope.structureErrorsArray = [];
+                    $http.post(baseurl + 'register/duplicateCheck', sub).success(function (response) {
+                        var arr = [];
+
+                        for (var i in response) {
+                            if (response[i].messageType != "INFO")
+                                arr.push(response[i]);
+                            if (response[i].messageType == "WARNING")
+                                response[i].class = "alert-warning";
+                            if (response[i].messageType == "ERROR")
+                                response[i].class = "alert-danger";
+                            if (response[i].messageType == "INFO")
+                                response[i].class = "alert-info";
+                            if (response[i].messageType == "SUCCESS")
+                                response[i].class = "alert-success";
+
+
+                        }
+                        scope.structureErrorsArray = arr;
+                    });
+                };
+                $templateRequest(baseurl + "assets/templates/forms/structure-form.html").then(function (html) {
+                    template = angular.element(html);
+                    element.append(template);
+                    $compile(template)(scope);
+                });
+
+            }
         };
     });
 
@@ -1570,7 +1619,12 @@ console.log(scope);
                 referenceobj: '=',
                 parent: '='
             },
-            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html"
+            templateUrl: baseurl + "assets/templates/forms/structural-modifications-form.html",
+            link: function(scope, element){
+                scope.getClass = function(obj){
+
+                }
+            }
         };
     });
 
@@ -1616,32 +1670,17 @@ console.log(scope);
             restrict: 'E',
             replace: true,
             scope: {
-                parent: '=',
-                residues: '='
+                parent: '='
             },
             link: function (scope, element, attrs) {
+                scope.numbers = true;
                 scope.parent.$$subunitDisplay = [];
                 scope.substanceClass = scope.parent.substanceClass;
-                var template;
-                if (scope.parent.substanceClass === 'protein') {
-                    CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
-                        scope.residues = data.data.content[0].terms;
                         $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
-                            template = angular.element(html);
+                           var template = angular.element(html);
                             element.append(template);
                             $compile(template)(scope);
                         });
-                    });
-                } else {
-                    CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
-                        scope.residues = data.data.content[0].terms;
-                        $templateRequest(baseurl + "assets/templates/forms/subunit-form.html").then(function (html) {
-                            template = angular.element(html);
-                            element.append(template);
-                            $compile(template)(scope);
-                        });
-                    });
-                }
 
                 scope.validate = function () {
                     if (scope.subunit.sequence.length > 10000) {
@@ -1657,8 +1696,7 @@ console.log(scope);
                 scope.deleteObj = function (obj) {
                     scope.parent[scope.parent.substanceClass].subunits.splice(scope.parent[scope.parent.substanceClass].subunits.indexOf(obj), 1);
                 };
-            },
-            //  templateUrl: baseurl + "assets/templates/subunit-form.html"
+            }
         };
     });
 

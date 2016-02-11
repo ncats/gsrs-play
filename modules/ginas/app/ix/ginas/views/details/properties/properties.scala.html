@@ -31,13 +31,8 @@
                     <i class="fa fa-check fa-2x success"></i>
                 } else {}</td>
                 <td>PARAMETERS</td>
-                @referencetable(n.getReferences(), n.uuid.toString(), 7)
-            </tr>
-        }
-
-
-
-@*
+@*                @referencetable(n.getReferences(), n.uuid.toString(), 7)
+            </tr>*@
         @if(n.getReferences.size > 0){
             <td>
                 <referencesmanager indices substance ="'@id'" divid ="'@n.uuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
@@ -46,6 +41,7 @@
             <tr><td class = "'@n.uuid'" colspan = "7"></td></tr>
         }else{
             <td>none</td></tr>
-        }*@
+        }
+        }
     </table>
 </div>

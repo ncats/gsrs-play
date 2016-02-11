@@ -75,8 +75,9 @@ public class ChemicalSubstance extends Substance  {
         return node;
     }
 
-    @Indexable(name="SubstanceStereoChemistry", facet=true)
-    public Structure.Stereo getStereoChemistry () {
+    @Indexable(name="SubstanceStereochemistry", facet=true)
+    @JsonIgnore
+    public Structure.Stereo getStereochemistry () {
         return structure != null ? structure.stereoChemistry : null;
     }
     

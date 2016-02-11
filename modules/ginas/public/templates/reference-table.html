@@ -22,6 +22,6 @@
                     <a ng-href={{reference.uploadedFile}}><i class="fa fa-file-text fa-2x success"></i></a>
                 </div>
             </td>
-            <td>{{r.documentDate | date: 'mediumDate'}}</td>
+            <td>{{r.documentDate | date: 'mediumDate' || r.dateCreated | date: 'mediumDate'}}</td>
         </tr>
     </table>

@@ -2,13 +2,13 @@
     <div class="row">
         <form-header type="moieties" parent="parent"></form-header>
     </div>
-        <div class="col-md-12" id="structureSearcher">
+        <div class="col-md-12">
             <div ng-repeat="obj in parent.moieties">
                 <div class ="row">
                     <hr>
                     <div class="col-md-2">
                         <label for={{obj.id}}>Moiety Structure</label>
-                        <rendered id= {{::obj.id}}></rendered>
+                        <rendered id= {{obj.id}}></rendered>
                     </div>
                     <div class = "col-md-10">
                         <div class ="row">

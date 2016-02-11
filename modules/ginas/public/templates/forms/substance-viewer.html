@@ -1,6 +1,6 @@
 <div>
     <div class="row grid">
-        <div class="col-md-3 text-center" ng-repeat="item in data">
+        <div class="col-md-3 text-center" ng-repeat="item in data track by $index">
             <a ng-click="select(item)">
                 <rendered id={{item.value.id}}></rendered>
                 <br><code>{{item.source}}</code>

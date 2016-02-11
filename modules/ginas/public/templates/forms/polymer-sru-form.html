@@ -1,31 +1,9 @@
 <div class = "row info" >
     <div class="row">
-        <form-header type="structuralUnits" parent="parent" iscollapsed = "iscollapsed"></form-header>
+        <form-header type="structuralUnits" parent="parent" path = "polymer.monomers" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-<!--        <form class="form-horizontal" name="unitForm" role="form" novalidate>
-            <div class="row form-row">
-                <div class="col-md-2">
-&lt;!&ndash;
-                    <rendered id = {{srucomponent._structure.id}}></rendered>
-&ndash;&gt;
-                </div>
-                <div class="col-md-2">
-                    <text-input ng-model="unit.name" field="label" name ="Unit Label" id ="name" form="nameForm"></text-input>
-                </div>
-                <div class="col-md-2">
-                    <dropdown-select ng-model="unit.type" field="type" cv = "POLYMER_SRU_TYPE" label = "SRU Type"></dropdown-select>
-                </div>
-                <div class="col-md-1">
-                    <form-selector referenceobj= "unit" parent = "parent" divid="unitForm" type = "amount"></form-selector>
-                </div>
-                <div class="col-md-2">
-                    <text-input ng-model="unit._displayConnectivity" field=" Unit Connectivity" name ="Unit Label" id ="name" form="nameForm"></text-input>
-                </div>
-            </div>
-            <div class="unitForm"></div>
-            <submit-buttons submit="unit" form="unitForm" path="polymer.structuralUnits"></submit-buttons>
-        </form>-->
+
 <div>
         <div ng-repeat="obj in parent.polymer.structuralUnits">
             <div class ="row">
@@ -44,7 +22,7 @@
                 </div>
 
                 <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="unitForm" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj= "obj" formname="unitForm" type = "amount" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-2">
                     <text-view-edit obj="obj" field="_displayConnectivity"></text-view-edit>

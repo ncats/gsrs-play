@@ -320,7 +320,7 @@
                         alert(scope.obj.new +' exists in the cv');
                         scope.obj={};
                     }
-                }
+                };
 
                 scope.filterCV =function(field){
                     console.log('filter by '+ field);
@@ -341,9 +341,31 @@
                 label: '@'
             },
             link: function (scope, element, attrs) {
+                scope.values =[];
                 CVFields.getCV(attrs.cv).then(function (data) {
-                        scope.values = data.data.content[0].terms;
+                    scope.values = _.concat(_.orderBy(data.data.content[0].terms, ['display'],['asc']),[{display:"Other", value:'Other'}]);
+                    //     console.log(scope.values);
                 });
+
+                scope.makeNewCV = function(){
+                    console.log(scope);
+                    console.log(scope.obj.new);
+                    var exists = _.find(scope.values, function(cv){
+                        return _.isEqual(_.lowerCase(cv.display), _.lowerCase(scope.obj.new)) || _.isEqual(_.lowerCase(cv.value), _.lowerCase(scope.obj.new));
+                    });
+                    if(!exists &&  scope.obj.new!== '') {
+                        var cv = {};
+                        cv.display = scope.obj.new;
+                        cv.value = scope.obj.new;
+                        scope.values.push(cv);
+                        CVFields.updateCV(attrs.cv, cv);
+                        console.log(cv);
+                        scope.obj = cv;
+                    }else{
+                        alert(scope.obj.new +' exists in the cv');
+                        scope.obj={};
+                    }
+                };
 
                 scope.editing = function (obj) {
                     if (_.has(obj, '_editing')) {
@@ -535,8 +557,7 @@
     ginasFormElements.directive('closeButton', function () {
         return {
             restrict: 'E',
-            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>',
-            link: function(scope){console.log(scope);}
+            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
         };
     });
 
@@ -559,7 +580,7 @@
                         if(data.data.length>0) {
                             var template = angular.element('<substance-viewer data= data parent = parent></substance-viewer>');
                         }else{
-                            template = angular.element('<div><h3>Name does not resolve to existing structure</h3></div>');
+                            template = angular.element('<div><h3>Name: '+ name +' does not resolve to existing structure</h3></div>');
                         }
                         toggler.toggle(scope, attrs.divid, template);
 /*                        elementResult.append(template);

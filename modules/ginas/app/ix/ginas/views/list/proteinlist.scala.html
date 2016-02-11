@@ -22,25 +22,30 @@
     </div>
     <div class= "panel-body list-item">
         <div class = "row">
-            <div class = "col-md-3">
-                <img ng-click="toggle()" src="@routes.Assets.at("ginas/images/proteinHolder.png")" class="struc-thumb img-responsive" id="" />
+            <div class = "col-md-3 text-center">
+                <img ng-click="toggle()" src="@routes.Assets.at("ginas/images/protein.svg")" alt ="Protein" aria-label="Protein" class="struc-thumb img-responsive" id="" />
                 <div class = "row">
                     <div class = "col-md-12">
-                        <ul class= "list-inline pull-right list-unstyled">
+                        <ul class= "list-inline list-unstyled tools">
                             <li>
                                 @*
                                     This should be another export
                                 *@
+
+                                <modal-button type= "export" structureid ="'@prot.uuid'" format="fas" ></modal-button>
+
+@*
                                 <export-button structureid ="'@prot.uuid'" format="'fas'" ></export-button>
+*@
                             </li>
                             <li>
                                 @*
                                 This should be a sequence search
                                 *@
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self" class="btn btn-primary" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search chem-button"></i></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" class="btn btn-primary" uib-tooltip="Edit" aria-label="Edit Protein Substance"> <i class="fa fa-pencil chem-button"></i></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" uib-tooltip="Edit" aria-label="Edit Protein Substance"> <i class="fa fa-pencil fa-2x success"></i></a>
                             </li>
                         </ul>
                     </div>
@@ -74,7 +79,7 @@
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Date approved: <h6>{{@GinasApp.getDateTime(prot.approved) | date: 'mediumDate'}}</h6>
+                        Date approved: <h6>{{@GinasApp.getDateTime(prot.approved) | date: 'mediumDate' || 'Not Approved'}}</h6>
                     </div>
                 </div>
                 <div class = "row">
@@ -90,8 +95,7 @@
             </div>
         </div>
 	@if(ctx != null) {
-        <div ng-show="bigview" class = "revealable row">
-            <div ng-show="initialized">
+        <div class = "row">
               <div class = "col-md-12">
 		  @for(subunit <- prot.protein.subunits) {
 		      @defining(GinasApp.getSeqAlignment(ctx,subunit.uuid.toString)){ r =>
@@ -107,7 +111,6 @@
 		  }
               </div>
             </div>
-        </div>
 	}
     </div>
 </div>

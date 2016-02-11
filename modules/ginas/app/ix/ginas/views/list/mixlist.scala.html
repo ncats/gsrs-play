@@ -17,17 +17,7 @@
     <div class= "panel-body list-item">
         <div class = "row">
             <div class = "col-md-3">
-                <div class = "row">
-                    <div class = "col-md-1 pour">
-                        <i class="fa fa-flask fa-4x fa-rotate-90"></i>
-                    </div>
-                </div>
-                <div class ="row">
-                    <div class = "col-md-1 col-md-offset-1">
-                        <i class="fa fa-flask fa-4x"></i>
-                    </div>
-                </div>
-
+                <img ng-click="toggle()" src="@routes.Assets.at("ginas/images/mixture.svg")" class="struc-thumb img-responsive" id="" />
             </div>
             <div class = "col-md-7">
             @if(sub.names.size()>0) {
@@ -64,7 +54,8 @@
 
                 <div class = "row">
                     <div class = "col-md-12">
-                        Date approved: <h6>{{@GinasApp.getDateTime(sub.approved) | date: 'mediumDate'}}</h6>
+                        Date approved: <h6>{{@GinasApp.getDateTime(sub.approved) | date: 'mediumDate' || 'Not Approved' }}</h6>
+
                     </div>
                 </div>
                 <div class = "row">

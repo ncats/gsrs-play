@@ -46,20 +46,17 @@
                                         label="linkage"></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid={{obj.$$hashKey}}
-                                   mode="edit"></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" field = "sites" type="site" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-2">
                     <label for= "num">Number of Sites</label>
                     <div id = "num">{{obj.sites.length}} of {{getAllSites()}}</div>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}
-                                   mode="edit"></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}
-                                   mode="edit"></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}></form-selector>
                 </div>
             </div>
             <div class={{obj.$$hashKey}}></div>
