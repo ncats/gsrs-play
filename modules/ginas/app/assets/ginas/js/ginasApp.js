@@ -1718,19 +1718,21 @@
     });*/
 
     //selector for which button to show, and the associalted modal window
-    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http) {
+    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http,  $uibModal) {
         return {
             restrict: 'E',
             scope: {
                 type: '=',
                 structureid: '=',
-                format: '@'
+                format: '@',
+                molfile :'=ngModel'
             },
 
             link: function (scope, element, attrs) {
-                var modalWindow;
+                var modalInstance;
                 var childScope;
                 var template;
+                var templateUrl;
                 scope.stage = true;
                 switch (attrs.type) {
                     case "upload":
@@ -1739,47 +1741,76 @@
                         $compile(template)(scope);
                         break;
                     case "import":
-                        template = angular.element(' <a href = "#" aria-label="Import" uib-tooltip ="Import" structureid=structureid format=format export><i class="fa fa-clipboard fa-2x success"></i></a>');
+                        template = angular.element(' <a href = "#" aria-label="Import" uib-tooltip ="Import" structureid=structureid format=format ng-click="getImport()"><i class="fa fa-clipboard fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
+                        templateUrl= baseurl + "assets/templates/mol-import.html";
                         break;
                     case "export":
                         template = angular.element(' <a href = "#" aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "getExport()"><i class="fa fa-external-link fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
-
+                        templateUrl= baseurl + "assets/templates/mol-export.html";
                         break;
                 }
-                scope.openModal = function () {
-                    console.log("opeingin modal");
-                    $templateRequest(baseurl + "assets/templates/mol-export.html").then(function (html) {
-                        modalWindow = angular.element(html);
-                        //  modalWindow = '<substance-search-form subref = "subref"></substance-search-form>';
-                        element.append(modalWindow);
-                        $compile(modalWindow)(scope);
-                        modalWindow.modal('show');
+
+
+                scope.resolveMol = function () {
+                    console.log(scope);
+                    var url = baseurl+'structure';
+
+                    $http.post(url, scope.molfile, {
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).success(function (data) {
+                        console.log(data);
+                        scope.$parent.parent.structure = data.structure;
+                        console.log(scope);
+                      //  scope.substance.moieties = data.moieties;*/
+                        scope.close();
                     });
                 };
 
-                scope.getExport = function(){
-                    console.log("export)");
-                    var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
 
-                    $http.get(url, {headers: {
-                        'Content-Type': 'text/plain'
-                    }
-                    }).then(function (response) {
-                        console.log(response);
-                        scope.export = response.data;
-                        var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
-                        scope.warnings = JSON.parse(warnHead);
-                        scope.openModal();
-                    });
-/*                        var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
-                        var warnings = JSON.parse(warnHead);*/
+
+
+
+                scope.getExport = function () {
+                        var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
+
+                        $http.get(url, {
+                            headers: {
+                                'Content-Type': 'text/plain'
+                            }
+                        }).success(function (response) {
+                            scope.exportData = response;
+/*                            var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
+                            scope.warnings = JSON.parse(warnHead);*/
+                            //return response.data;
+                              scope.open();
+                        });
+                        /*                        var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
+                         var warnings = JSON.parse(warnHead);*/
+                    };
+
+                scope.close = function () {
+                    modalInstance.close();
                 };
 
+                scope.getImport = function(){
+                    console.log(scope);
+                    scope.open();
 
+                };
+
+                scope.open = function () {
+                     modalInstance = $uibModal.open({
+                        templateUrl: templateUrl,
+                        size: 'lg',
+                        scope: scope
+                    });
+                }
             }
         }
     });

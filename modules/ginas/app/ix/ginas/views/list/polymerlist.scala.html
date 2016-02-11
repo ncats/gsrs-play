@@ -26,13 +26,18 @@
             <div class = "col-md-3 text-center">
                 <span class="label label-primary label-offset list-view-badge">POLYMER</span>
                 <div class = "magnify" ng-click = "showLarge('@chem.polymer.displayStructure.id', '@chem.approvalID');"><rendered id = '@chem.polymer.displayStructure.id'></rendered></div>
-
                 <div class = "row">
-                    <div class = "col-md-12">
-                        <ul class= "list-inline list-unstyled">
+                    <div class = "col-md-12 text-center">
+                        <ul class= "list-inline list-unstyled tools">
                             <li>
-                                <export-button structureid ="'@chem.uuid'" ></export-button></li>
+                                <modal-button type= "export" structureid ="'@chem.polymer.displayStructure.id'" format="sdf" ></modal-button>
+                            </li>
                             <li>
+                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click= "passStructure('@chem.polymer.displayStructure.id')" uib-tooltip="Structure Search" aria-label="Structure Search"> <span class="fa fa-search fa-2x success"></span></a>
+                            </li>
+                            <li>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Polymer"> <span class="fa fa-pencil fa-2x success"></span></a>
+                            </li>
                         </ul>
                     </div>
                 </div>

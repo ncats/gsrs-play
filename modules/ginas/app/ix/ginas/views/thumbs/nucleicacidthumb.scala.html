@@ -21,6 +21,21 @@
             <a href="@ix.ginas.controllers.routes.GinasApp.substance(GinasApp.getId(nuc))"  target="_self">
             @GinasApp.truncate(nuc.getName())
             </a>
+            <div class = "row">
+                <div class = "col-md-12 text-center">
+                    <ul class= "list-inline list-unstyled tools">
+                        <li>
+                            <modal-button type= "export" structureid ="'@nuc.uuid'" format="fas" ></modal-button>
+                        </li>
+                        <li>
+                            <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(nuc.nucleicAcid.getSubunits().get(0).sequence)" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
+                        </li>
+                        <li>
+                            <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(nuc))" uib-tooltip="Edit" target="_self" aria-label="Edit Nucleic Acid"> <span class="fa fa-pencil fa-2x success"></span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

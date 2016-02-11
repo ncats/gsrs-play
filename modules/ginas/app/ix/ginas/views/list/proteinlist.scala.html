@@ -28,20 +28,9 @@
                     <div class = "col-md-12">
                         <ul class= "list-inline list-unstyled tools">
                             <li>
-                                @*
-                                    This should be another export
-                                *@
-
                                 <modal-button type= "export" structureid ="'@prot.uuid'" format="fas" ></modal-button>
-
-@*
-                                <export-button structureid ="'@prot.uuid'" format="'fas'" ></export-button>
-*@
                             </li>
                             <li>
-                                @*
-                                This should be a sequence search
-                                *@
                                 <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
                             </li>
                             <li>

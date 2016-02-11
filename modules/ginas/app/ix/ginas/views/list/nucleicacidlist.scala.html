@@ -21,24 +21,16 @@
             <div class = "col-md-3 text-center">
                 <img ng-click="toggle()" src="@routes.Assets.at("ginas/images/nucleic-acid.svg")" class="struc-thumb img-responsive" id="" />
                 <div class = "row">
-                    <div class = "col-md-12">
-                        <ul class= "list-inline pull-right list-unstyled">
+                    <div class = "col-md-12 text-center">
+                        <ul class= "list-inline list-unstyled tools">
                             <li>
-                                @*
-                                    This should be another export
-                                *@
-                                <export-button structureid ="'@nuc.uuid'" format="'fas'" ></export-button>
+                                <modal-button type= "export" structureid ="'@nuc.uuid'" format="fas" ></modal-button>
                             </li>
                             <li>
-                                @*
-                                This should be a sequence search
-                                *@
-@*
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(nuc.nucleicAcid.subunits(0).uuid.toString())" target="_self" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
-*@
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(nuc.nucleicAcid.getSubunits().get(0).sequence)" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(nuc))"  target="_self" class="btn btn-primary" aria-label="Edit nucleicAcid Substance"> <span class="fa fa-pencil chem-button"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(nuc))" uib-tooltip="Edit" target="_self" aria-label="Edit Nucleic Acid"> <span class="fa fa-pencil fa-2x success"></span></a>
                             </li>
                         </ul>
                     </div>
