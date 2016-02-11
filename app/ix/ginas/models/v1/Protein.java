@@ -1,10 +1,6 @@
 package ix.ginas.models.v1;
 
 
-import ix.core.models.Indexable;
-import ix.core.models.Value;
-import ix.ginas.models.GinasCommonSubData;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,8 +15,9 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import ix.core.models.Indexable;
+import ix.ginas.models.GinasCommonSubData;
 
 @SuppressWarnings("serial")
 @Entity

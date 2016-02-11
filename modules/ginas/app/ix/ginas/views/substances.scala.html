@@ -18,6 +18,7 @@ current, rows, total, pages, facets, searchFacets) {
     
         
     <div class= "panel-body">
+    	
         <div class = "row in" ng-show="!toggleGrid" id ="list">
         @for(sub <- substancesList) {
             @sub match {
@@ -55,6 +56,8 @@ current, rows, total, pages, facets, searchFacets) {
         </div>
 
         <div class = "row hidden-xs" ng-if="toggleGrid" id ="grid">
+        
+        
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {

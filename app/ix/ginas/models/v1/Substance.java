@@ -594,6 +594,21 @@ public class Substance extends GinasCommonData {
 		this.version=i+"";
 	}
 	
+	@JsonIgnore
+	public List<SubstanceReference> getDependsOnSubstanceReferences(){
+		
+		List<SubstanceReference> srefs=new ArrayList<SubstanceReference>();
+		
+		for(AgentModification am:this.getModifications().agentModifications){
+			if(am.agentSubstance!=null)
+				srefs.add(am.agentSubstance);
+		}
+		for(StructuralModification sm:this.getModifications().structuralModifications){
+			if(sm.molecularFragment!=null)
+				srefs.add(sm.molecularFragment);
+		}
+		return srefs;
+	}
 	
 	
 	public static Class<?>[] getAllClasses() {

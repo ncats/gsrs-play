@@ -510,8 +510,6 @@ public class Validation {
         		}
         	}
         }
-        
-        //strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
         return gpm;
 	}
     

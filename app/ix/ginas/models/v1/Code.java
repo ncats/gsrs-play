@@ -54,9 +54,4 @@ public class Code extends GinasCommonSubData {
         this.code = code;
     }
     
-    
-    @JsonIgnore
-    //DELETE THIS, ONLY USED FOR A TEST
-    public String _test;
-    
 }

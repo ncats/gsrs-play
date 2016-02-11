@@ -17,6 +17,15 @@ public class NucleicAcidSubstance extends Substance {
 	@OneToOne(cascade= CascadeType.ALL)
 	public NucleicAcid nucleicAcid;
 
+	@Override
+    public Modifications getModifications(){
+    	return this.nucleicAcid.getModifications();
+    }
+    
+    public void setModifications(Modifications m){
+    	 this.nucleicAcid.setModifications(modifications);
+    }
+	
 //	public NucleicAcid getNucleicAcid() {
 //		return nucleicAcid;
 //	}

@@ -44,6 +44,7 @@ import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.SpecifiedSubstanceGroup1Substance;
 import ix.ginas.models.v1.StructurallyDiverseSubstance;
 import ix.ginas.models.v1.Substance;
+import ix.ginas.models.v1.SubstanceReference;
 import ix.ginas.models.v1.Subunit;
 import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.seqaln.SequenceIndexer;
@@ -509,6 +510,19 @@ public class GinasUtils {
 			throw new IllegalStateException(
 					"Cannot approve non-substance concepts.");
 		}
+		for(SubstanceReference sr:s.getDependsOnSubstanceReferences()){
+			Substance s2=SubstanceFactory.getFullSubstance(sr);
+			if(s2==null){
+				throw new IllegalStateException(
+						"Cannot approve substance that depends on " + sr.toString()  + " which is not found in database.");
+			}
+			if(!s2.isApproved()){
+				throw new IllegalStateException(
+						"Cannot approve substance that depends on " + sr.toString()  + " which is not approved.");
+			}
+		}
+		
+		
 		s.approvalID=APPROVAL_ID_GEN.generateID();
 		s.approved=new Date();
 		s.approvedBy=user;
