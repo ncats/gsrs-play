@@ -34,14 +34,11 @@
         </ng-form>
 
 
-        <div ng-repeat="obj in parent.nucleicAcid.sugars track by $index">
+        <div ng-repeat="obj in parent.nucleicAcid.sugars">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
                     <a ng-click="deleteObj(obj)"><i class="fa fa-times fa-2x danger"></i></a>
-<!--
-                    <delete-button delete="obj" path="nucleicAcid.sugars" ng-click="deleteObj(obj);"></delete-button>
--->
                 </div>
                 <div class="col-md-2">
                     <dropdown-view-edit obj="obj" field="sugar"
@@ -57,12 +54,10 @@
                     <div id = "num">{{obj.sites.length}} of {{getAllSites()}}</div>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}
-                                   mode="edit"></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}
-                                   mode="edit"></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" type="reference" divid={{obj.$$hashKey}}></form-selector>
                 </div>
             </div>
             <div class={{obj.$$hashKey}}></div>

@@ -287,6 +287,17 @@ nav#main-pagination {
     top: 17%;
 }
 
+.tools{
+    margin-top: 10%;
+    margin-bottom: 2%;
+}
+
+.tools>li{
+    padding-left:5%;
+    padding-right:5%;
+}
+
+
 .row.stereo {
     position: relative;
     top: -180px;

@@ -22,7 +22,7 @@
             <submit-buttons submit="component" form="componentForm" path="mixture.components"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.mixture.components track by $index" >
+        <div ng-repeat="obj in parent.mixture.components" >
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -35,10 +35,10 @@
                     <dropdown-view-edit obj = "obj" field="type" cv = "MIXTURE_TYPE" ></dropdown-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="componentForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="componentForm" type = "access" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="componentForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="componentForm" type = "reference" divid={{obj.$$hashKey}}></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

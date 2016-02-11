@@ -18,7 +18,7 @@ current, rows, total, pages, facets, searchFacets) {
     
         
     <div class= "panel-body">
-        <div class = "row in" ng-show="!toggleGrid" id ="list">
+        <div class = "row in" ng-show="!gridView" id ="list">
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {
@@ -54,7 +54,7 @@ current, rows, total, pages, facets, searchFacets) {
 
         </div>
 
-        <div class = "row hidden-xs" ng-if="toggleGrid" id ="grid">
+        <div class = "row hidden-xs" ng-if="gridView" id ="grid">
         @for(sub <- substancesList) {
             @sub match {
                 case chem: ChemicalSubstance => {

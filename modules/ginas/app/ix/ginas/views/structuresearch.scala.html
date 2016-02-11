@@ -7,7 +7,7 @@
             <div class= "panel-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <sketcher ng-model="structure" structure="substance"></sketcher>
+                        <sketcher parent = substance></sketcher>
                     </div>
                 </div>
             </div>
@@ -52,7 +52,7 @@
                             ng-model="substance.q"
                             id="structure">
                         </div>
-                        <button type="submit" onclick="submitForm()"
+                        <button type="submit"
                         class="btn btn-primary" id="search-btn">Search</button>
                     </div>
                 </div>

@@ -196,14 +196,20 @@
         $scope.type = 'Substructure';
         $scope.cutoff = 0.8;
         $scope.stage = true;
-        $scope.toggleGrid = false;
+        $scope.gridView = localStorageService.get('gridView') || false;
         $scope.diff = false;
         $scope.scrollTo = function (prmElementToScrollTo) {
             $location.hash(prmElementToScrollTo);
             $anchorScroll();
         };
         $scope.viewToggle = function () {
-            $scope.submitSubstance = $scope.fromFormSubstance(angular.copy($scope.substance));
+            $scope.submitSubstanceView = $scope.fromFormSubstance(angular.copy($scope.substance));
+        };
+
+        $scope.toggleGrid = function(){
+        console.log("grid");
+        //  $scope.gridView = !$scope.gridView;
+            localStorageService.set('gridView',  $scope.gridView);
         };
 
         $scope.compare = function () {
@@ -241,6 +247,7 @@
         $scope.passStructure = function (id) {
             localStorageService.set('structureid', id);
         };
+
         $scope.clearStructure = function () {
             localStorageService.remove('structureid');
         };
@@ -261,16 +268,24 @@
                 delete formSub.subref;
             }
 
+
             formSub = $scope.flattenCV(formSub);
-            if (formSub.moieties) {
+            if (_.has(formSub, 'moieties')){
                 _.forEach(formSub.moieties, function (m) {
                     m.id = UUID.newID();
                 });
             }
-            if (formSub.structure) {
-                //apparently needs to be reset as well
+            if (_.has(formSub, 'structure')){
+                          //apparently needs to be reset as well
                 formSub.structure.id = UUID.newID();
-            }
+                if(formSub.substanceClass ==='polymer'){
+                    _.set(formSub, 'polymer.idealizedStructure', formSub.structure);
+                    console.log(formSub);
+                    formSub = _.omit(formSub, 'structure');
+                    console.log(formSub);
+                }
+
+                    }
             return formSub;
         };
 
@@ -378,8 +393,6 @@
                 //this is rather hacky, should be extracted and abstracted
                 $('#structureimport').modal('hide');
             });
-
-
         };
 
         $scope.getResidueAtSite = function (site) {
@@ -1013,7 +1026,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><i class="fa fa-lock fa-2x warning"  uib-tooltip="Edit user access" id="access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
+            template: '<div><i class="fa fa-lock fa-2x warning" id="access"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
         };
     });
 
@@ -1040,10 +1053,7 @@
                 scope.bridged= false;
                 var aa = scope.acid;
                 var template;
-                console.log(aa);
-
                 if (aa.valid == false) {
-                    console.log("invalid");
                     template = angular.element('<a href="#" class= "invalidAA" tooltip-class="invalidTool" uib-tooltip="INVALID">{{acid.value}}</a>');
                     element.html(template).show();
                     $compile(element.contents())(scope);
@@ -1492,7 +1502,83 @@
         };
     });
 
-    //Ok, this needs to be re-evaluated a bit.
+
+    ginasApp.directive('sketcher', function($compile, $http, UUID, polymerUtils, CVFields, localStorageService){
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                parent: '=',
+                structure: '='
+            },
+            link: function (scope, element, attrs) {
+                var url = baseurl+'structure';
+                scope.updateMol = function(){
+                    var mol = scope.sketcher.getMolfile();
+                    $http.post(url, mol, {
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).success(function (data) {
+                        if (scope.parent.substanceClass === "polymer") {
+                            scope.parent.idealizedStructure = data.structure;
+                            scope.structure = data.structure;
+                            for (var i in data.structuralUnits) {
+                                CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
+                                    var cv = response.data.content[0].terms;
+                                    data.structuralUnits[i].type = _.find(cv, ['value', data.structuralUnits[i].type]);
+                                });
+                            }
+                            polymerUtils.setSRUConnectivityDisplay(data.structuralUnits);
+                            scope.parent.polymer.structuralUnits = data.structuralUnits;
+                        }
+                        scope.parent.structure = data.structure;
+                        scope.parent.moieties = [];
+                        _.forEach(data.moieties, function(m){
+                            m._id = UUID.newID();
+                            scope.parent.moieties.push(m);
+                        });
+                        _.set(scope.parent, 'q', data.structure.smiles);
+                    });
+                    console.log(scope);
+                };
+
+                if(!_.isUndefined(scope.parent.structure)){
+                    scope.mol =scope.parent.structure.molfile;
+                }
+                var template= angular.element('<div id="sketcherForm" dataformat="molfile"></div>');
+                element.append(template);
+                $compile(template)(scope);
+                scope.sketcher = new JSDraw("sketcherForm");
+                scope.sketcher.options.data= scope.mol;
+                scope.sketcher.setMolfile(scope.mol);
+                scope.sketcher.options.ondatachange = function(){
+                    scope.updateMol();
+                    };
+                var structureid = (localStorageService.get('structureid') || false);
+                if (localStorageService.get('editID')) {
+                    structureid = false;
+                }
+                if(scope.parent.substanceClass ==='polymer') {
+                    scope.mol = scope.parent.polymer.displayStructure.molfile;
+                    scope.updateMol();
+                }
+                if (structureid) {
+                    $http({
+                        method: 'GET',
+                        url: baseurl + 'api/v1/structures/' + structureid
+                    }).success(function (data) {
+                        scope.sketcher.setMolfile(data.molfile);
+                        _.set(scope.parent, 'q', data.smiles);
+                        localStorageService.remove('structureid');
+                    });
+                }
+
+            }
+        };
+    });
+
+   /* //Ok, this needs to be re-evaluated a bit.
     //Right now, it always round trips, but that doesn't always make sense.
     ginasApp.directive('sketcher', function ($http, $timeout, localStorageService, Substance, CVFields, polymerUtils, UUID) {
         return {
@@ -1528,13 +1614,9 @@
                         if (scope.formsubstance === null || typeof scope.formsubstance === "undefined") {
                             scope.formsubstance = {};
                         }
-                 /*       if (scope.formsubstance.substanceClass === "chemical") {
-                            console.log('chemical');
-                            scope.formsubstance.structure = data.structure;
-                        } else*/
-                        if (scope.formsubstance.substanceClass === "polymer") {
-                            console.log('polymer');
-
+                        if (attrs.type === "structure") {
+                            scope.formsubstance = data.structure;
+                        } else if (attrs.type === "polymer") {
                             scope.formsubstance.idealizedStructure = data.structure;
                             for (var i in data.structuralUnits) {
                                 CVFields.getCV("POLYMER_SRU_TYPE").then(function (response) {
@@ -1591,7 +1673,7 @@
             }
         };
     });
-
+*/
     ginasApp.directive('switch', function () {
         return {
             restrict: 'AE',
@@ -1622,7 +1704,7 @@
         };
     });
 
-    ginasApp.directive('exportButton', function () {
+/*    ginasApp.directive('exportButton', function () {
         return {
             restrict: 'E',
             scope: {
@@ -1633,47 +1715,71 @@
                 return '<button type="button" class="btn btn-primary" aria-label ="export molfile" uib-tooltip="View " structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
             }
         };
-    });
+    });*/
 
     //selector for which button to show, and the associalted modal window
-    ginasApp.directive('modalButton', function ($compile, $templateRequest) {
+    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http) {
         return {
             restrict: 'E',
             scope: {
-                type: '='
+                type: '=',
+                structureid: '=',
+                format: '@'
             },
 
-            link: function (scope, element, attrs, ngModel) {
+            link: function (scope, element, attrs) {
                 var modalWindow;
                 var childScope;
                 var template;
                 scope.stage = true;
                 switch (attrs.type) {
                     case "upload":
-                        template = angular.element(' <a href = "#" aria-label="Export" structureid=structureid format=format export><i class="fa fa-upload fa-2x"></i></a>');
+                        template = angular.element(' <a href = "#" aria-label="Export" uib-tooltip ="Upload" structureid=structureid format=format export><i class="fa fa-upload fa-2x"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         break;
                     case "import":
-                        template = angular.element(' <a href = "#" aria-label="Import" structureid=structureid format=format export><i class="fa fa-clipboard fa-2x success"></i></a>');
+                        template = angular.element(' <a href = "#" aria-label="Import" uib-tooltip ="Import" structureid=structureid format=format export><i class="fa fa-clipboard fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         break;
                     case "export":
-                        template = angular.element(' <a href = "#" aria-label="Export" structureid=structureid format=format export><i class="fa fa-external-link fa-2x success"></i></a>');
+                        template = angular.element(' <a href = "#" aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "getExport()"><i class="fa fa-external-link fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
-                        $templateRequest(baseurl + "assets/templates/molexport.html").then(function (html) {
-                            modalWindow = angular.element(html);
-                            //  modalWindow = '<substance-search-form subref = "subref"></substance-search-form>';
-                            element.append(modalWindow);
 
-                        });
                         break;
                 }
                 scope.openModal = function () {
-                    modalWindow.modal('show');
-                }
+                    console.log("opeingin modal");
+                    $templateRequest(baseurl + "assets/templates/mol-export.html").then(function (html) {
+                        modalWindow = angular.element(html);
+                        //  modalWindow = '<substance-search-form subref = "subref"></substance-search-form>';
+                        element.append(modalWindow);
+                        $compile(modalWindow)(scope);
+                        modalWindow.modal('show');
+                    });
+                };
+
+                scope.getExport = function(){
+                    console.log("export)");
+                    var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
+
+                    $http.get(url, {headers: {
+                        'Content-Type': 'text/plain'
+                    }
+                    }).then(function (response) {
+                        console.log(response);
+                        scope.export = response.data;
+                        var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
+                        scope.warnings = JSON.parse(warnHead);
+                        scope.openModal();
+                    });
+/*                        var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
+                        var warnings = JSON.parse(warnHead);*/
+                };
+
+
             }
         }
     });
@@ -1688,7 +1794,7 @@
         };
     });
 
-    ginasApp.directive('export', function ($http) {
+/*    ginasApp.directive('export', function ($http) {
         return function (scope, element, attrs) {
             element.bind("click", function () {
                 var modal = angular.element(document.getElementById('export-mol'));
@@ -1730,7 +1836,7 @@
             restrict: 'E',
             templateUrl: baseurl + "assets/templates/molexport.html"
         };
-    });
+    });*/
 
     ginasApp.directive('deleteButton', function () {
         return {

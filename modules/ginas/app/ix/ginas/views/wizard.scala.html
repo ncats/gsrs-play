@@ -52,7 +52,11 @@
            <div>Polymer not implemented yet, still in development</div>
             <polymer-classification-form parent=substance></polymer-classification-form>
             <polymer-monomer-form parent=substance></polymer-monomer-form>
+            <structure-form parent = substance></structure-form>
+
+@*
             <div>@forms.polymerstructureform()</div>
+*@
             <polymer-sru-form parent=substance></polymer-sru-form>
         }
         case "nucleicAcid" => {
@@ -131,7 +135,7 @@
 	</div>	
 	<button class="btn btn-primary" ng-show="!raw" ng-click="angular.toJson(submitSubstance); raw=true" >Show Raw</button>
         <button class="btn btn-primary" ng-show="raw" ng-click="raw=false" >Show Object</button>
-        <json-formatter ng-show="!raw" json=submitSubstance open="666"></json-formatter>
+        <json-formatter ng-show="!raw" json=submitSubstanceView open="666"></json-formatter>
 	<pre ng-show="raw">{{rawSubstance}}</pre>
 	<pre ng-show="raw">{{subTest}}</pre>
     </div>

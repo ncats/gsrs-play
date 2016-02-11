@@ -53,7 +53,7 @@
                 </div>
             </div>
         </form>
-        <div ng-repeat="reference in parent.references track by $index">
+        <div ng-repeat="reference in parent.references">
             <div class="row">
                 <hr>
                 <div class="col-md-1">
@@ -80,7 +80,7 @@
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="reference" parent="substance" formname="refForm" type="access"
-                                   divid={{reference.$$hashKey}} mode="edit"></form-selector>
+                                   divid={{reference.$$hashKey}}></form-selector>
                 </div>
             </div>
             <div class={{reference.$$hashKey}}></div>

@@ -50,18 +50,13 @@
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled">
                             <li>
-
-@*
-                                <modal-button structureid ="'@chem.structure.id'" format="'sdf'" type ="export"></modal-button>
-*@
-
-                                <export-button structureid ="'@chem.structure.id'" format="'sdf'" ></export-button>
+                                <modal-button type= "export" structureid ="'@chem.structure.id'" format="sdf" ></modal-button>
                             </li>
                             <li>
-                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click= "passStructure('@chem.structure.id')" class="btn btn-primary" aria-label="Structure Search"> <span class="fa fa-search chem-button"></span></a>
+                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click= "passStructure('@chem.structure.id')" uib-tooltip="Structure Search" aria-label="Structure Search"> <span class="fa fa-search fa-2x success"></span></a>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" target="_self" class="btn btn-primary" aria-label="Edit Chemical Substance"> <span class="fa fa-pencil chem-button"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"> <span class="fa fa-pencil fa-2x success"></span></a>
                             </li>
                         </ul>
                     </div>

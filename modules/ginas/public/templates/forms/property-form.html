@@ -34,7 +34,7 @@
             <submit-buttons submit="property" form="propertyForm" path="properties"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.properties track by $index">
+        <div ng-repeat="obj in parent.properties">
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -59,10 +59,10 @@
                     <check-box-view-edit obj = "obj" field="defining" ></check-box-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "access" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="propertyForm" type = "reference" divid={{obj.$$hashKey}}></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

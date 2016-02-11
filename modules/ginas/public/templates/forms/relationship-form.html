@@ -39,7 +39,7 @@
             <submit-buttons submit="relationship" form="relationshipForm" path="relationships"></submit-buttons>
         </form>
 
-        <div ng-repeat="obj in parent.relationships track by $index" >
+        <div ng-repeat="obj in parent.relationships" >
             <div class ="row">
                 <hr>
                 <div class="col-md-1">
@@ -58,10 +58,10 @@
                     <substance-chooser-view-edit obj = "obj" field ="mediatorSubstance" label = "Mediator Substance"></substance-chooser-view-edit>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "access" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "access" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
-                    <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "reference" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj ="obj" parent = "parent" formname="relationshipForm" type = "reference" divid={{obj.$$hashKey}}></form-selector>
                 </div>
             </div>
             <div class ="row">
@@ -73,7 +73,7 @@
                     <form-selector referenceobj= "obj" formname="relationshipForm" label ="comments" type = "textbox" divid={{obj.$$hashKey}} mode="edit"></form-selector>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid={{obj.$$hashKey}} mode="edit"></form-selector>
+                    <form-selector referenceobj= "obj" formname="relationshipForm" label ="amount" type = "amount" divid={{obj.$$hashKey}}></form-selector>
                 </div>
             </div>
             <div class = {{obj.$$hashKey}}></div>

@@ -557,8 +557,7 @@
     ginasFormElements.directive('closeButton', function () {
         return {
             restrict: 'E',
-            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>',
-            link: function(scope){console.log(scope);}
+            template: '<div class ="col-md-1 pull-right"><a ng-click="$parent.toggle();" class="pull-right"><i class="fa fa-times fa-2x danger" uib-tooltip="Close"></i></a></div>'
         };
     });
 
