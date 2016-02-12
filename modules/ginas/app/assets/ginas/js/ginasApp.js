@@ -1772,26 +1772,41 @@
                     });
                 };
 
-
-
+                scope.getSmiles = function() {
+                    var url = baseurl + 'export/' + scope.structureid + '.smiles';
+                    $http.get(url, {
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).success(function (response) {
+                        console.log(response);
+                        return response;
+                    });
+                };
 
 
                 scope.getExport = function () {
                         var url = baseurl + 'export/' + scope.structureid + '.' + scope.format;
-
                         $http.get(url, {
                             headers: {
                                 'Content-Type': 'text/plain'
                             }
                         }).success(function (response) {
+                            console.log(response);
                             scope.exportData = response;
-/*                            var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
-                            scope.warnings = JSON.parse(warnHead);*/
-                            //return response.data;
+                            url = baseurl + 'export/' + scope.structureid + '.smiles';
+                            $http.get(url, {
+                                headers: {
+                                    'Content-Type': 'text/plain'
+                                }
+                            }).success(function (response) {
+                                console.log(response);
+                                scope.exportSmiles = response;
+                            });
+//                           var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
+  //                          scope.warnings = JSON.parse(warnHead);
                               scope.open();
                         });
-                        /*                        var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
-                         var warnings = JSON.parse(warnHead);*/
                     };
 
                 scope.close = function () {

@@ -352,13 +352,16 @@ nav#main-pagination {
     display: flex;
 }
 
-#inputExport {
+.exportArea {
     font-family: "Lucida Console", Monaco, monospace;
-    height: 500px;
     word-wrap: initial;
     background-color: #f8f8f8;
     white-space: pre;
     font-size: 9pt;
+}
+
+#exportMol {
+    height: 500px;
 }
 
 .monodata {

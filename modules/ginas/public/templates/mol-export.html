@@ -11,8 +11,15 @@
                         </button>
                         <span><h4 class="warntype">{{warn.type}}</h4><span class="message">{{warn.message}}</span></span>
                     </div>
-                </div>       
-                    <textarea class="col-md-12" id = "inputExport">{{exportData}}</textarea>
+                </div>
+                    <uib-tabset>
+                        <uib-tab heading="Molfile">
+                            <textarea class="col-md-12 exportArea" id="exportMol">{{exportData}}</textarea>
+                        </uib-tab>
+                        <uib-tab heading="Smiles">
+                            <textarea class="col-md-12 exportArea">{{exportSmiles}}</textarea>
+                        </uib-tab>
+                    </uib-tabset>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary"  ng-click="close()">Close</button>
