@@ -189,7 +189,7 @@ public class SubstanceFactory extends EntityFactory {
     public static Result create () {
     	JsonNode value = request().body().asJson();
         Class subClass = getClassFromJson(value);
-        DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS());
+        DefaultSubstanceValidator sv= new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL_WARNINGS().failFailed());
         return create (subClass, finder,sv);
     }
 
