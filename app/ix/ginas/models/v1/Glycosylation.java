@@ -7,6 +7,8 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -26,7 +28,10 @@ public class Glycosylation extends GinasCommonSubData {
     
     @JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
-    @Column(name="C_GLYCOSYLATION_SITES")
+    @JoinTable(
+            joinColumns=
+                @JoinColumn(name="c_glycosylation_sites_uuid")
+        )
     SiteContainer _CGlycosylationSiteContainer;
     public List<Site> getCGlycosylationSites(){
     	if(_CGlycosylationSiteContainer!=null){
@@ -43,8 +48,11 @@ public class Glycosylation extends GinasCommonSubData {
     }
     
     @JsonIgnore
-	@OneToOne(cascade=CascadeType.ALL)
-    @Column(name="N_GLYCOSYLATION_SITES")
+    @OneToOne(cascade=CascadeType.ALL)
+    @JoinTable(
+            joinColumns=
+                @JoinColumn(name="n_glycosylation_sites_uuid")
+        )
     SiteContainer _NGlycosylationSiteContainer;
     public List<Site> getNGlycosylationSites(){
     	if(_NGlycosylationSiteContainer!=null){
@@ -64,7 +72,10 @@ public class Glycosylation extends GinasCommonSubData {
     
     @JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
-    @Column(name="O_GLYCOSYLATION_SITES")
+    @JoinTable(
+            joinColumns=
+                @JoinColumn(name="o_glycosylation_sites_uuid")
+        )
     SiteContainer _OGlycosylationSiteContainer;
     public List<Site> getOGlycosylationSites(){
     	if(_OGlycosylationSiteContainer!=null){
