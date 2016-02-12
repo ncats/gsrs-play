@@ -1,4 +1,4 @@
-package ix.ginas.models.utils;
+package ix.core;
 
 import java.lang.reflect.Method;
 

@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
@@ -35,7 +36,6 @@ import ix.ginas.models.GroupListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
 import ix.ginas.models.PrincipalSerializer;
 import ix.ginas.models.ReferenceListSerializer;
-import ix.ginas.models.utils.UserFetcher;
 
 @Entity
 @DiscriminatorValue("GSRS")

@@ -48,7 +48,6 @@ public class Amount extends GinasCommonSubData {
 
     public Amount () {}
     
-    
     public String toString(){
     	String val="";
     	if(highLimit!=null && lowLimit==null && average==null){
