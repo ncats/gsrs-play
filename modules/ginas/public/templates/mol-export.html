@@ -1,8 +1,6 @@
-<div class="modal fade export" id="export-mol" tabindex="-1" role="dialog" aria-labelledby="myModalLabelExport" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+<div>
             <div class="modal-header">
-                <a type="button" class="close" data-dismiss="modal" uib-tooltip ="Close" aria-label="Close"><i class ="fa fa-times danger"></i></a>
+                <a type="button" class="close"  ng-click="close()" uib-tooltip ="Close" aria-label="Close"><i class ="fa fa-times danger"></i></a>
                 <h4 class="modal-title" id="myModalLabelExport">Export</h4>
             </div>
             <div class="modal-body">
@@ -13,13 +11,19 @@
                         </button>
                         <span><h4 class="warntype">{{warn.type}}</h4><span class="message">{{warn.message}}</span></span>
                     </div>
-                </div>       
-                    <textarea class="col-md-12" id = "inputExport">{{export}}</textarea>
+                </div>
+                    <uib-tabset>
+                        <uib-tab heading="Molfile">
+                            <textarea class="col-md-12 exportArea" id="exportMol">{{exportData}}</textarea>
+                        </uib-tab>
+                        <uib-tab heading="Smiles">
+                            <textarea class="col-md-12 exportArea">{{exportSmiles}}</textarea>
+                        </uib-tab>
+                    </uib-tabset>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary"  ng-click="close()">Close</button>
                 </div>
             </div>
         </div>
-    </div>
-</div>
+
