@@ -23,11 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
-import ix.ginas.models.utils.UserFetcher;
 import ix.utils.Global;
 import play.Logger;
 import play.db.ebean.Model;

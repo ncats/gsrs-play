@@ -1,5 +1,13 @@
 package ix.ginas.utils.validation;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import ix.core.chem.StructureProcessor;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -15,6 +23,7 @@ import ix.ginas.models.v1.MixtureSubstance;
 import ix.ginas.models.v1.Moiety;
 import ix.ginas.models.v1.Name;
 import ix.ginas.models.v1.Note;
+import ix.ginas.models.v1.NucleicAcidSubstance;
 import ix.ginas.models.v1.Property;
 import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
@@ -28,15 +37,6 @@ import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingMessage.Link;
 import ix.ginas.utils.GinasProcessingStrategy;
 import ix.ginas.utils.ProteinUtils;
-
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import play.Logger;
 import play.Play;
 import play.mvc.Call;
@@ -424,9 +424,7 @@ public class Validation {
 	}
     private static List<GinasProcessingMessage> validateStructureDuplicates(ChemicalSubstance cs){
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
-    	System.out.println("========================================");
-    	System.out.println("Running this duplication");
-    	System.out.println("========================================");
+    	
     	
     	try {
     		
@@ -508,6 +506,31 @@ public class Validation {
         				gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Mixture substance references \"" + c.substance.getName() + "\" which is not yet registered"));
         			}
         		}
+        	}
+        }
+        return gpm;
+	}
+    
+    private static List<? extends GinasProcessingMessage> validateAndPrepareNa(
+			NucleicAcidSubstance cs, GinasProcessingStrategy strat) {
+		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
+        if(cs.nucleicAcid==null){
+        	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have a nucleicAcid element"));
+        }else{
+        	if(cs.nucleicAcid.getSubunits()==null || cs.nucleicAcid.getSubunits().size()<1){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 subunit"));
+        	}else{
+        		
+        	}
+        	if(cs.nucleicAcid.getSugars()==null || cs.nucleicAcid.getSugars().size()<1){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified sugar"));
+        	}else{
+        		
+        	}
+        	if(cs.nucleicAcid.getLinkages()==null || cs.nucleicAcid.getLinkages().size()<1){
+        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified linkage"));
+        	}else{
+        		
         	}
         }
         return gpm;
