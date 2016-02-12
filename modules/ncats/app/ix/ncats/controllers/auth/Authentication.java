@@ -307,8 +307,8 @@ public class Authentication extends Controller {
                 flush(session);
             } else {
                 session.accessed = current;
-                Logger.debug("Session " + session.id + " expires at "
-                        + new java.util.Date(current + TIMEOUT));
+                //commented out for now
+                //Logger.debug("Session " + session.id + " expires at " + new java.util.Date(current + TIMEOUT));
             }
         } else {
             session().clear();
