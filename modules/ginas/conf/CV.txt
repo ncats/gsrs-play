@@ -516,7 +516,7 @@ OPTICAL_ACTIVITY	moieties.opticalActivity	( + / - )	( + / - )
 OPTICAL_ACTIVITY	moieties.opticalActivity	( + )	( + )
 OPTICAL_ACTIVITY	moieties.opticalActivity	( - )	( - )
 OPTICAL_ACTIVITY	moieties.opticalActivity	none	None
-OPTICAL_ACTIVITY	moieties.opticalActivity	unspec	Unspecified
+OPTICAL_ACTIVITY	moieties.opticalActivity	UNSPECIFIED	Unspecified
 OTHER_LINKAGE_TYPE	otherLinks.linkageType	AMIDE BOND	Amide Bond
 OTHER_LINKAGE_TYPE	otherLinks.linkageType	COORDINATION COMPOUND	Coordination Compound
 OTHER_LINKAGE_TYPE	otherLinks.linkageType	CROSSLINK	Crosslink

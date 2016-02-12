@@ -77,8 +77,8 @@ public class Structure extends Model{
         PLUS("( + )"),
         MINUS("( - )"),
         PLUS_MINUS("( + / - )"),
-        UNSPECIFIED("unspecified"),
-        UNKNOWN("none");
+        UNSPECIFIED("UNSPECIFIED"),
+        UNKNOWN("NONE");
         
         final String value;
 
