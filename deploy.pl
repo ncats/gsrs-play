@@ -3,7 +3,7 @@
 use strict;
 use File::Copy qw(copy);
 use File::Basename;
-use IO::Uncompress::Unzip qw(unzip $UnzipError) ;
+use Cwd 'abs_path';
 
 my $devCount=1;
 
@@ -18,11 +18,15 @@ my $outputPath = "ginastmp/$zipName";
 
 copy($zipFile, $outputPath)  or die "Copy failed: $!";
 
-unzip $outputPath => $outputPath . "DEV-". $devCount
-					or die "unzip failed: $UnzipError\n";
-					
-chdir ($outputPath) or die  "cannot change: $!\n";
+my $dir = $outputPath . "DEV-". $devCount;
 
-my $command = "./bin/ginas -Djava.awt.headless=true -Dhttp.port=9004 -Dconfig.resource=conf/ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app";
+`unzip $outputPath -d $dir`;
+my ($subDir, undef, undef) = fileparse($zipFile, ".zip");
+my $abs_path = abs_path($dir. "/$subDir");
+					
+chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
+print("working dir is $abs_path\n");
+
+my $command = "bin/ginas -Djava.awt.headless=true -Dhttp.port=9004 -Dconfig.resource=conf/ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app";
 
 system($command. " &");
