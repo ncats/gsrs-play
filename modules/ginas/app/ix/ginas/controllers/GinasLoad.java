@@ -343,6 +343,7 @@ public class GinasLoad extends App {
 			System.out.println(mappingsjson);
 			GinasUtils.GinasJSONExtractor ex = new GinasUtils.GinasJSONExtractor(
 					mappingsjson);
+			
 			JsonNode jn = ex.getNextRecord();
 			sub = GinasUtils.makeSubstance(jn);
 			DefaultSubstanceValidator dsv = new DefaultSubstanceValidator(GinasProcessingStrategy.ACCEPT_APPLY_ALL());
@@ -351,7 +352,7 @@ public class GinasLoad extends App {
 //					GinasProcessingStrategy.ACCEPT_APPLY_ALL()));
 		} catch (IllegalStateException e) {
 			messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
-		} catch (UnsupportedEncodingException e) {
+		} catch(Exception e){
 			messages.add(GinasProcessingMessage
 					.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
 		}
@@ -383,6 +384,9 @@ public class GinasLoad extends App {
 		} catch (IllegalStateException e) {
 			messages.add(GinasProcessingMessage.ERROR_MESSAGE(e.getMessage()));
 		} catch (UnsupportedEncodingException e) {
+			messages.add(GinasProcessingMessage
+					.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
+		} catch(Exception e){
 			messages.add(GinasProcessingMessage
 					.ERROR_MESSAGE("Problem decoding JSON:" + e.getMessage()));
 		}
