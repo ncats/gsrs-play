@@ -589,15 +589,30 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 RecordExtractor extract = rec.makeNewExtractor(pp.payload);
                                 
                 Logger.debug("Made extractor:" + extract.getClass().getName());
-                for (Object m; (m = extract.getNextRecord()) != null;) {
-                    //Logger.debug("Extracting");
-                    Statistics stat = getStatisticsForJob(pp.key);
-                    stat.applyChange(Statistics.CHANGE.ADD_EX_GOOD);
-                    storeStatisticsForJob(pp.key, stat);
-                    getInstance().waitForProcessingRecordsCount(MAX_EXTRACTION_QUEUE);
-                    PayloadExtractedRecord prg=new PayloadExtractedRecord(job, m);
-                    getInstance().incrementExtractionQueue();
-                    proc.tell(prg, sender);
+                for (Object m; ;) {
+                	m=null;
+                	try{
+                		m=extract.getNextRecord();
+                		if(m==null)break;
+                		Statistics stat = getStatisticsForJob(pp.key);
+                        stat.applyChange(Statistics.CHANGE.ADD_EX_GOOD);
+                        storeStatisticsForJob(pp.key, stat);
+                        getInstance().waitForProcessingRecordsCount(MAX_EXTRACTION_QUEUE);
+                        PayloadExtractedRecord prg=new PayloadExtractedRecord(job, m);
+                        getInstance().incrementExtractionQueue();
+                        proc.tell(prg, sender);
+                	}catch(Exception e){
+                		Statistics stat = getStatisticsForJob(pp.key);
+                        stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
+                        storeStatisticsForJob(pp.key, stat);
+                        //getInstance().waitForProcessingRecordsCount(MAX_EXTRACTION_QUEUE);
+                        //PayloadExtractedRecord prg=new PayloadExtractedRecord(job, m);
+                        //getInstance().incrementExtractionQueue();
+                        //proc.tell(prg, sender);
+                        Global.ExtractFailLogger.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
+                	}
+                	
+                    
                 }
                 extract.close();
                 Statistics stat = getStatisticsForJob(pp.key);

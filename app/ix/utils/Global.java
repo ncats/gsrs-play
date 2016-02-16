@@ -35,6 +35,7 @@ public class Global extends GlobalSettings {
     static final Logger.ALogger AccessLogger = Logger.of("access");
     public static final Logger.ALogger PersistFailLogger = Logger.of("persistFail");
     public static final Logger.ALogger TransformFailLogger = Logger.of("transformFail");
+    public static final Logger.ALogger ExtractFailLogger = Logger.of("extractFail");
     
     
     
