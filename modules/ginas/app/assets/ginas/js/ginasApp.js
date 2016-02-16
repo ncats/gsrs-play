@@ -189,7 +189,7 @@
         };
     });
 
-    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $modal, $http, $window, $anchorScroll, $q,
+    ginasApp.controller("GinasController", function ($scope, $resource, $parse, $location, $compile, $uibModal, $http, $window, $anchorScroll, $q,
                                                      localStorageService, Substance, UUID, nameFinder, substanceSearch, substanceIDRetriever, CVFields) {
         var ginasCtrl = this;
 //        $scope.select = ['Substructure', 'Similarity'];
@@ -469,63 +469,25 @@
             }
         };
 
-        $scope.submitSubstance = function () {
-            //  $scope.$broadcast('show-errors-check-validity');
-            //      $scope.checkErrors();
-            /*console.log($scope.nameForm);
-             if($scope.nameForm.$dirty){
-             alert('Name Form not saved');
-             }*/
-            /*            console.log($scope);
-             if(!$scope.substanceForm.$valid) {
-             alert("not valid");
-             }*/
-            var r = confirm("Are you sure you'd like to submit this substance?");
-            if (r != true) {
-                return;
-            }
-            var sub = angular.copy($scope.substance);
-            if (_.has(sub, '$$update')) {
-                sub = angular.toJson($scope.fromFormSubstance(sub));
-                $http.put(baseurl + 'api/v1/substances', sub, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).success(function (data) {
-                    alert('update was performed.');
-                });
-            } else {
-                sub = angular.toJson($scope.fromFormSubstance(sub));
-                $http.post(baseurl + 'register/submit', sub, {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).success(function () {
-                    alert("submitted!");
-                });
-            }
+        $scope.close = function () {
+            modalInstance.close();
         };
 
-        $scope.reset = function (form) {
-            $scope.$broadcast('show-errors-reset');
-            form.$setPristine();
+        $scope.open = function(url){
+            modalInstance = $uibModal.open({
+                templateUrl: url,
+                scope: $scope
+            });
         };
 
-        $scope.selected = false;
+        $scope.viewSubstance = function(){
 
-        $scope.fetch = function ($query) {
-            return substanceSearch.load($query);
-            //return substanceSearch.search(field, $query);
         };
 
-        $scope.approveSubstance = function () {
-            var sub = angular.copy($scope.substance);
-            sub = $scope.fromFormSubstance(sub);
-            var keyid = sub.uuid.substr(0, 8);
-            var r = confirm("Are you sure you want to approve this substance?");
-            if (r == true) {
-                location.href = baseurl + "substance/" + keyid + "/approve";
-            }
+        $scope.submitSubstanceConfirm = function () {
+            $scope.validateSubstance();
+            var url = baseurl + "assets/templates/modals/substance-submission.html";
+            $scope.open(url);
         };
 
         $scope.validateSubstance = function () {
@@ -552,6 +514,74 @@
             });
         };
 
+
+
+
+            $scope.submitSubstance = function () {
+                var url;
+                $scope.close();
+            //  $scope.$broadcast('show-errors-check-validity');
+            //      $scope.checkErrors();
+            /*console.log($scope.nameForm);
+             if($scope.nameForm.$dirty){
+             alert('Name Form not saved');
+             }*/
+            /*            console.log($scope);
+             if(!$scope.substanceForm.$valid) {
+             alert("not valid");
+             }*/
+/*            var r = confirm("Are you sure you'd like to submit this substance?");
+            if (r != true) {
+                return;
+            }*/
+            var sub = angular.copy($scope.substance);
+            if (_.has(sub, '$$update')) {
+                sub = angular.toJson($scope.fromFormSubstance(sub));
+                $http.put(baseurl + 'api/v1/substances', sub, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).success(function (data) {
+                    url = baseurl + "assets/templates/modals/update-success.html";
+                    $scope.open(url);
+                });
+            } else {
+                sub = angular.toJson($scope.fromFormSubstance(sub));
+                $http.post(baseurl + 'register/submit', sub, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).success(function (response) {
+                    console.log(response);
+                    var url = baseurl + "assets/templates/modals/submission-success.html";
+                    $scope.open(url);
+                });
+            }
+        };
+
+        $scope.reset = function (form) {
+            $scope.$broadcast('show-errors-reset');
+            form.$setPristine();
+        };
+
+        $scope.selected = false;
+
+        $scope.fetch = function ($query) {
+            return substanceSearch.load($query);
+            //return substanceSearch.search(field, $query);
+        };
+
+        $scope.approveSubstanceConfirm = function () {
+            $scope.validateSubstance();
+            var url = baseurl + "assets/templates/modals/substance-approval.html";
+            $scope.open(url);
+        };
+        $scope.approveSubstance = function () {
+            var sub = angular.copy($scope.substance);
+            sub = $scope.fromFormSubstance(sub);
+            var keyid = sub.uuid.substr(0, 8);
+                location.href = baseurl + "substance/" + keyid + "/approve";
+        };
 
         $scope.getSiteResidue = function (subunits, site) {
             var si = site.subunitIndex;
@@ -1744,13 +1774,13 @@
                         template = angular.element(' <a href = "#" aria-label="Import" uib-tooltip ="Import" structureid=structureid format=format ng-click="getImport()"><i class="fa fa-clipboard fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
-                        templateUrl= baseurl + "assets/templates/mol-import.html";
+                        templateUrl= baseurl + "assets/templates/modals/mol-import.html";
                         break;
                     case "export":
                         template = angular.element(' <a href = "#" aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "getExport()"><i class="fa fa-external-link fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
-                        templateUrl= baseurl + "assets/templates/mol-export.html";
+                        templateUrl= baseurl + "assets/templates/modals/mol-export.html";
                         break;
                 }
 

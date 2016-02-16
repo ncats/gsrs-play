@@ -81,10 +81,19 @@
                             <td>@sub.structure.stereoComments</td>
                         </tr>
                     }
-                    <tr>
+                    @if(sub.structure.getReferences().size > 0){
+                        <tr>
+                        <td><strong>References</strong></td>
+                        <td>
+                            <referencesmanager indices substance ="'@sub.uuid'" divid ="'@sub.uuid'" references = "@GinasApp.getAsJson(sub.structure.getReferences())"></referencesmanager>
+                        </td>
+                    </tr>
+                    <tr><td class = "'@sub.uuid'" colspan = "2"></td></tr>
+                    }
+@*
                 <td><strong>References</strong></td>
                 @properties.referencetable(GinasApp.getStructureReferences(sub.structure), "hi", 2)
-</tr>
+</tr>*@
                     </table>
                 </div>
     </div>
@@ -92,7 +101,7 @@
     @if(sub.moieties.length > 0) {
         <div class="row info" id="moieties">
             <button class="btn btn-primary label-offset det">
-                Moieties&nbsp;<span class="badge"> @sub.moieties.length</span></button>
+                Moieties&nbsp;<span class="badge"> @sub.moieties.size</span></button>
             <div class="col-md-12">
             @for(m <- sub.moieties) {
                     <div class ="row">
@@ -150,10 +159,7 @@
                                         <td>@m.structure.stereoComments</td>
                                     </tr>
                                 }
-                                <tr>
-                                    <td><strong>References</strong></td>
-                                    @properties.referencetable(GinasApp.getStructureReferences(sub.structure), "hi", 2)
-                                </tr>
+
                                 </table>
                                         </div>
                                     </div>

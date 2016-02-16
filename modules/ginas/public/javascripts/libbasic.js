@@ -1,4 +1,4 @@
-
+/*
 
 function getDisplayFromCV(domain, value) {
     for (var i in window.CV_REQUEST.content) {
@@ -27,7 +27,7 @@ function getCVListForDomain(domain) {
 function vocabsetup(cv) {
     window.CV_REQUEST = cv;
     console.log("finished");
-}
+}*/
 
 
 function submitq(qinput) {
