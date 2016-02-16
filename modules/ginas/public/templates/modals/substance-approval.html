@@ -1,0 +1,32 @@
+<div>
+            <div class="modal-header">
+                <a type="button" class="close"  ng-click="close()" uib-tooltip ="Close" aria-label="Close"><i class ="fa fa-times danger"></i></a>
+                <h4 class="modal-title" id="myModalLabelExport">Approve Substance</h4>
+            </div>
+            <div class="modal-body">
+                <div class = "row" ng-repeat="err in errorsArray">
+                    <div class="col-md-12">
+                        <div class="alert {{err.class}} alert-dismissible" role="alert">
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close"> <span aria-hidden="true">&times;</span>
+                            </button>
+                    <span><h4>{{err.messageType}}</h4>
+                        <span>{{err.message}}</span>
+                        <div ng-repeat="link in err.links">
+                            <a target = "_blank" href="{{link.href}}">{{link.text}}</a>
+                        </div>
+                    </span>
+                        </div>
+                    </div>
+                </div>
+                <div class = "row">
+                    <div class = "col-md-12">
+                        <p>Are you sure you'd like to approve this substance?</p>
+                    </div>
+                </div>
+            </div>
+    <div class="modal-footer">
+                    <button type="button" class="btn btn-danger"  ng-click="close()">Go Back</button>
+                    <button type="button" class="btn btn-success"  ng-click="approveSubstance()">Approve</button>
+                </div>
+        </div>
+

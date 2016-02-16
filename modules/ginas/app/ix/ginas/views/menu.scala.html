@@ -18,7 +18,7 @@
 
         <div class="collapse navbar-collapse navbar-default" id="menubar">
             <ul class="nav navbar-nav pull-left">
-              <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self" alt ="Home" aria-label="Return Home"><i class ="fa fa-home fa-2x"></i></a></li>
+              <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self" alt ="Home" aria-label="Return Home"><span class ="fa fa-home fa-2x"></span></a></li>
               <li><a href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
               @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                   <li><a href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>Register Substance</span></a></li>
@@ -59,10 +59,10 @@
                 onsubmit="return validateForm(this.fname.value)">
                     <div class="input-group">
                             <input type="text" class="form-control typeahead" id="searchboxmobile"
-                            title="Search" placeholder="Search ..." name="q"
+                            title="Search" placeholder="Search ..." name="q" aria-label="Search ginas"
                             onsubmit="return submitq(this.q)">
                             <span class="input-group-btn">
-                                <button class="btn btn-default" id="search" type="search"
+                                <button class="btn btn-default" id="search" type="search" aria-label="Search ginas"
                                 value="submit">
                                     <span class="fa fa-search"></span>
                                 </button>

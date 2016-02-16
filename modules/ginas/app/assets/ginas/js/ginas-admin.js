@@ -123,7 +123,7 @@
 
 
     });
-
+/*
 // Please note that $modalInstance represents a modal window (instance) dependency.
 // It is not the same as the $uibModal service used above.
 
@@ -141,7 +141,7 @@
         $scope.cancel = function () {
             $uibModalInstance.dismiss('cancel');
         };
-    });
+    });*/
 
 
 })();

@@ -1,5 +1,5 @@
 <div class ="text-center">
-    <label for={{type}} class="text-capitalize">{{referenceobj.field || 'Sites'}}</label>
+    <label for={{type}} class="text-capitalize">{{referenceobj.field || label || 'Sites'}}</label>
 <br>
     <a ng-show="referenceobj.$$displayString || referenceobj.$$displayString ==''" ng-click="toggle();" role="button"><site-view referenceobj=referenceobj parent = parent></site-view></a>
     <div class="text-center">

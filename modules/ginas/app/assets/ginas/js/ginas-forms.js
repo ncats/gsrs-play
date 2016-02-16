@@ -1665,7 +1665,7 @@ console.log(scope);
         };
     });
 
-    ginasForms.directive('subunitForm', function ($compile, $templateRequest, CVFields) {
+    ginasForms.directive('subunitForm', function ($compile, $templateRequest, $uibModal) {
         return {
             restrict: 'E',
             replace: true,
@@ -1682,9 +1682,10 @@ console.log(scope);
                             $compile(template)(scope);
                         });
 
-                scope.validate = function () {
+               scope.validate = function () {
                     if (scope.subunit.sequence.length > 10000) {
-                        alert('Ginas can currently only support sequences less than 10000 characters in length');
+                        scope.open();
+                       // alert('Ginas can currently only support sequences less than 10000 characters in length');
                     }
                     scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
                     scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);
@@ -1695,6 +1696,19 @@ console.log(scope);
                 //******************************************************************this needs to reassign subunit indexes
                 scope.deleteObj = function (obj) {
                     scope.parent[scope.parent.substanceClass].subunits.splice(scope.parent[scope.parent.substanceClass].subunits.indexOf(obj), 1);
+                };
+
+                scope.close = function () {
+                    var obj = _.last(scope.parent[scope.parent.substanceClass].subunits);
+                    scope.deleteObj(obj);
+                    modalInstance.close();
+                };
+
+                scope.open = function () {
+                    modalInstance = $uibModal.open({
+                        templateUrl: baseurl + "assets/templates/modals/subunit-warning.html",
+                        scope: scope
+                    });
                 };
             }
         };
