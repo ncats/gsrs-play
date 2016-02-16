@@ -1,6 +1,7 @@
 package ix.ginas.utils.validation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -538,19 +539,36 @@ public class Validation {
     
 	private static List<? extends GinasProcessingMessage> validateAndPrepareProtein(
 			ProteinSubstance cs, GinasProcessingStrategy strat) {
+		
 		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
         if(cs.protein==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Protein substance must have a protein element"));
         }else{
-        	double tot=ProteinUtils.generateProteinWeight(cs);
+
+            System.out.println("Got here3");
+            Set<String> unknownRes= new HashSet<String>();
+        	double tot=ProteinUtils.generateProteinWeight(cs,unknownRes);
+        	if(unknownRes.size()>0){
+        		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has unknown amino acid residues: " +unknownRes.toString());
+        		gpm.add(mes);
+        	}
+        	
+
+            System.out.println("Got here4");
         	List<Property> molprops=ProteinUtils.getMolWeightProperties(cs);
         	if(molprops.size()<=0){
+        		
         		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has no molecular weight, defaulting to calculated value").appliableChange(true);
         		gpm.add(mes);
         		strat.processMessage(mes);
+        		
         		switch(mes.actionType){
 					case APPLY_CHANGE:
 						cs.properties.add(ProteinUtils.makeMolWeightProperty(tot));
+						if(unknownRes.size()>0){
+			        		GinasProcessingMessage mes2=GinasProcessingMessage.WARNING_MESSAGE("Calculated protein weight questionable, due to unknown amino acid residues: " +unknownRes.toString());
+			        		gpm.add(mes2);
+			        	}
 						break;
 					case DO_NOTHING:
 						break;
@@ -577,7 +595,7 @@ public class Validation {
         	}
         	System.out.println("calc:" + tot);
         }
-        
+        System.out.println("Got here2");
         strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
         return gpm;
 	}

@@ -2,8 +2,10 @@ package ix.ginas.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,23 +49,30 @@ public class ProteinUtils {
 	}
 	
 	public static double getSingleAAWeight(String c){
-		return weights.get(c);
+		Double d=weights.get(c.toUpperCase());
+		if(d==null)return 0;
+		return d;
 	}
-	public static double getSubunitWeight(Subunit sub){
+	public static double getSubunitWeight(Subunit sub, Set<String> unknownRes){
 		//start with extra water for end groups
+		if(unknownRes==null)unknownRes=new LinkedHashSet<String>();
 		double total=18.015;
 		for(char c: sub.sequence.toCharArray()){
-			
-			total+=getSingleAAWeight(c+"");
+			double w=getSingleAAWeight(c+"");
+			if(w<=0){
+				unknownRes.add(c+"");
+			}
+			total+=w;
 			
 		}
 		return total;
 	}
-	public static double generateProteinWeight(ProteinSubstance ps){
+	public static double generateProteinWeight(ProteinSubstance ps, Set<String> unknownRes){
 		double total=0;
+		if(unknownRes==null)unknownRes=new LinkedHashSet<String>();
 		for(Subunit su:ps.protein.subunits){
-			//System.out.println(su.sequence);
-			total+=getSubunitWeight(su);
+			System.out.println(su.sequence);
+			total+=getSubunitWeight(su,unknownRes);
 		}
 		return total;
 	}
