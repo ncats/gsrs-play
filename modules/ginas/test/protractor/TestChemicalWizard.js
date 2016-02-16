@@ -63,7 +63,7 @@ describe('Wizard Chemical', function() {
         });
     }, 100000);
 
-  /*  it('Check the Code Systems', function() {
+    it('Check the Code Systems', function() {
         var chemicalWizardPage = new ChemicalWizardPage();
         chemicalWizardPage.getPage();
         chemicalWizardPage.clickById('codes');
@@ -78,7 +78,7 @@ describe('Wizard Chemical', function() {
                 console.log( codes[5]);
                 expect(codes.length).toBe(40);
                 expect(codes[0]).toBe('Code System...');
-                expect(codes[1]).toBe('AIDS');
+                expect(codes[1]).toBe('"Food Contact Substance Notif, (FCN No.)"');
                 expect(codes[38]).toBe('WIKIPEDIA');
                 expect(codes[39]).toBe('Other');
             });
@@ -198,7 +198,6 @@ describe('Wizard Chemical', function() {
             });
         });
     });
-    */
 
 
 });
