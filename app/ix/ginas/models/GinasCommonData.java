@@ -118,6 +118,11 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
      * the future, ideally by having a submission "context" which can be
      * referenced either here, or before reaching this point.
      * 
+     * Update: The UserFetcher class now falls back to the user set
+     * explicitly on the localThread. This will be set by the 
+     * job code prior to getting to this point, so things should be
+     * ok.
+     * 
      */
     @PrePersist
     @PreUpdate
@@ -130,7 +135,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     			createdBy=p1;
         	}
         }
-    	
+        
     }
     
     @JsonProperty("_self")
