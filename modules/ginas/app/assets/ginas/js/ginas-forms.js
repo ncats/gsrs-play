@@ -291,7 +291,7 @@
         };
     });
 
-    ginasForms.directive('cvForm', function ($compile, CVFields) {
+    ginasForms.directive('cvForm', function ($compile, $uibModal, CVFields) {
         return {
             restrict: 'E',
             replace: 'true',
@@ -346,6 +346,18 @@
                     });
                 };
 
+
+                scope.close = function () {
+                    modalInstance.close();
+                };
+
+                scope.open = function(url){
+                    modalInstance = $uibModal.open({
+                        templateUrl: url,
+                        scope: scope
+                    });
+                };
+
                 scope.toggleStage = function () {
                     var result = document.getElementsByClassName('cvForm');
                     var elementResult = angular.element(result);
@@ -373,11 +385,6 @@
             templateUrl: baseurl + "assets/templates/forms/disulfide-link-form.html",
             link: function (scope, element, attrs) {
 
-                if (!scope.parent.protein.disulfideLinks) {
-                    scope.parent.protein.disulfideLinks = [];
-
-                }
-
                 scope.getAllCysteinesWithoutLinkage = function () {
                     var count = 0;
                     _.forEach(scope.parent.protein.subunits, function (subunit) {
@@ -385,13 +392,30 @@
                             count += subunit.$$cysteineIndices.length;
                         }
                     });
-                    if (scope.parent.protein.disulfideLinks.length > 0) {
+                    if (_.has(scope.parent, 'disulfideLinks')) {
                         count -= scope.parent.protein.disulfideLinks.length * 2;
                     }
                     return count;
                 };
 
                 scope.validate = function () {
+                    if (!scope.parent.protein.otherLinks) {
+                        scope.parent.protein.otherLinks = [];
+                    }
+                    scope.parent.protein.otherLinks.push(scope.otherLink);
+                    scope.otherLink = {};
+                    scope.otherLinksForm.$setPristine();
+                };
+
+
+
+                scope.validate = function () {
+                    console.log(scope);
+                    console.log("validationg");
+                    if (!scope.parent.protein.disulfideLinks) {
+                        scope.parent.protein.disulfideLinks = [];
+
+                    }
                     scope.parent.protein.disulfideLinks.push(scope.disulfideLink);
                     scope.disulfideLink = {};
                     scope.disulfideLinksForm.$setPristine();
@@ -519,7 +543,6 @@
             },
             link: function (scope, element, attrs) {
                 var formHolder;
-                var childScope;
                 var template;
 
                 if (_.isUndefined(scope.referenceobj)) {
@@ -528,7 +551,6 @@
                 }
 
                 scope.toggle = function () {
-                    console.log('toggle  '+ scope.divid );
                     toggler.toggle(scope, scope.divid, formHolder, scope.referenceobj);
                 };
                 scope.stage = true;
@@ -544,6 +566,7 @@
                         formHolder = '<amount-form referenceobj = referenceobj parent = parent amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
+                        console.log(scope);
                         scope.formtype = attrs.formtype;
                         scope.residueregex = attrs.residueregex;
                         scope.mode = attrs.mode;
@@ -553,7 +576,7 @@
                             $compile(template)(scope);
 
                         });
-                        formHolder = '<site-string-form referenceobj = referenceobj parent = parent mode=mode residueregex=residueregex formtype = formtype></site-string-form>';
+                        formHolder = '<site-string-form referenceobj = referenceobj field=field parent = parent residueregex=residueregex formtype = formtype></site-string-form>';
                         break;
                     case "reference":
                             $templateRequest(baseurl + "assets/templates/selectors/reference-selector.html").then(function (html) {
@@ -653,10 +676,6 @@
             },
             templateUrl: baseurl + "assets/templates/forms/glycosylation-form.html",
             link: function (scope, element, attrs) {
-                if (!scope.parent.protein.glycosylation) {
-                    scope.parent.protein.glycosylation = {};
-
-                }
             }
         };
     });
@@ -1120,11 +1139,11 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/other-links-form.html",
             link: function (scope, element, attrs) {
-                if (!scope.parent.protein.otherLinks) {
-                    scope.parent.protein.otherLinks = [];
-                }
 
                 scope.validate = function () {
+                    if (!scope.parent.protein.otherLinks) {
+                        scope.parent.protein.otherLinks = [];
+                    }
                     scope.parent.protein.otherLinks.push(scope.otherLink);
                     scope.otherLink = {};
                     scope.otherLinksForm.$setPristine();
@@ -1515,17 +1534,6 @@ console.log(scope);
         };
     });
 
-    ginasForms.directive('siteForm', function () {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                sites: '=sites'
-            },
-            templateUrl: baseurl + "assets/templates/forms/site-form.html"
-        };
-    });
-
     ginasForms.directive('siteStringForm', function ($compile, $templateRequest, siteList) {
         return {
             restrict: 'E',
@@ -1563,8 +1571,9 @@ console.log(scope);
                     var list = [];
                     if (scope.residueregex) {
                         var ret = scope.parent[scope.parent.substanceClass].subunits[su - 1].$$cysteineIndices;
-                        if (scope.parent.protein.disulfideLinks.length > 0) {
+                        if (_.has(scope.parent.protein, 'disulfideLinks')) {
                             _.forEach(scope.parent.protein.disulfideLinks, function (siteList) {
+                                console.log(siteList);
                                 _.forEach(siteList.sites, function (site) {
                                     var v;
                                     if (site.subunitIndex == (su)) {
@@ -1586,10 +1595,20 @@ console.log(scope);
                 };
 
                 scope.makeSiteList = function () {
-                    scope.referenceobj.sites = siteList.siteList(scope.referenceobj.$$displayString);
+                    if(scope.field){
+                        _.set(scope.referenceobj[field], 'sites', siteList.siteList(scope.referenceobj.$$displayString));
+                       // scope.referenceobj[field].sites = siteList.siteList(scope.referenceobj.$$displayString);
+
+                    }else {
+                        scope.referenceobj.sites = siteList.siteList(scope.referenceobj.$$displayString);
+                    }
+/*
+                    _.set(scope.referenceobj, 'sites', siteList.siteList(scope.referenceobj.$$displayString));
+*/
                 };
 
                 scope.redraw = function () {
+                    console.log(scope);
                     scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
                 };
 
@@ -1685,7 +1704,6 @@ console.log(scope);
                scope.validate = function () {
                     if (scope.subunit.sequence.length > 10000) {
                         scope.open();
-                       // alert('Ginas can currently only support sequences less than 10000 characters in length');
                     }
                     scope.subunit.subunitIndex = scope.parent[scope.parent.substanceClass].subunits.length + 1;
                     scope.parent[scope.parent.substanceClass].subunits.push(scope.subunit);

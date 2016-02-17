@@ -254,7 +254,6 @@
 
         $scope.toFormSubstance = function (apiSub) {
             var formSub = $scope.expandCV(apiSub);
-            _.set(formSub, '$$update', true);
             return formSub;
         };
 
@@ -268,6 +267,31 @@
                 delete formSub.subref;
             }
 
+            if(formSub.substanceClass ==='protein'){
+                if(_.has(formSub.protein, 'disulfideLinks')){
+                    _.forEach(formSub.protein.disulfideLinks, function(value, key){
+                        console.log( _.toArray(value.sites));
+                        //object   protein
+                        //array    disulfideLinks
+                        //object   disulfideLink
+                        //array    sites
+                        //object   site
+                        var disulfideLink = {};
+                        var sites =  _.toArray(value.sites);
+                        console.log(sites);
+                        disulfideLink.sites = sites;
+                        //_.set(formSub.protein.disulfideLinks[key], 'disulfideLink', _.toArray(value.sites));
+                        formSub.protein.disulfideLinks[key]= disulfideLink;
+                    });
+                }
+                if(_.has(formSub.protein, 'otherLinks')){
+                    _.forEach(formSub.protein.otherLinks, function(value, key){
+                        formSub.protein.otherLinks[key]=value.sites;
+                        console.log(key);
+                        console.log(value);
+                    });
+                }
+            }
 
             formSub = $scope.flattenCV(formSub);
             if (_.has(formSub, 'moieties')){
@@ -485,13 +509,18 @@
         };
 
         $scope.submitSubstanceConfirm = function () {
-            $scope.validateSubstance();
-            var url = baseurl + "assets/templates/modals/substance-submission.html";
-            $scope.open(url);
+            var f=function () {
+                var url = baseurl + "assets/templates/modals/substance-submission.html";
+                $scope.open(url);
+            };
+            $scope.validateSubstance(f);
         };
 
-        $scope.validateSubstance = function () {
+        $scope.validateSubstance = function (callback) {
             var sub = angular.copy($scope.substance);
+
+            console.log(sub);
+
             sub = angular.toJson($scope.fromFormSubstance(sub));
             $scope.errorsArray = [];
             $http.post(baseurl + 'register/validate', sub).success(function (response) {
@@ -510,7 +539,9 @@
 
 
                 }
+
                 $scope.errorsArray = arr;
+                callback();
             });
         };
 
@@ -642,6 +673,7 @@
         if (typeof $window.loadjson !== "undefined" &&
             JSON.stringify($window.loadjson) !== "{}") {
             var sub = $scope.toFormSubstance(angular.copy($window.loadjson));
+            _.set(sub, '$$update', true);
             $scope.substance = sub;
         } else {
             //var edit = localStorageService.get('editID');
@@ -759,7 +791,7 @@
                 if (attrs.smiles) {
                     url = baseurl + "render/" + attrs.smiles;
                 }
-                var template = angular.element('<img ng-src=' + url + '>');
+                var template = angular.element('<img ng-src=' + url + ' alt = "rendered image">');
                 element.append(template);
                 $compile(template)(scope);
             }
@@ -1023,6 +1055,7 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 if (!_.isUndefined(scope.referenceobj)) {
                     if (_.has(scope.referenceobj, 'sites')) {
                         scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
@@ -1244,6 +1277,8 @@
                 };
 
                 scope.parseSubunit = function () {
+                    console.log(scope.obj.sequence);
+
                     scope.obj.$$cysteineIndices = [];
                     scope.parent.$$subunitDisplay =[];
                     _.forEach(scope.obj.sequence, function (aa, index) {
@@ -1299,7 +1334,6 @@
 
                         } else {
                             obj.valid = false;
-                            console.log(obj);
                         }
 
 
@@ -1308,7 +1342,7 @@
                     display = _.chunk(display, 10);
                     scope.subunitDisplay = display;
                     scope.parent.$$subunitDisplay.push(display);
-
+console.log(scope);
                 };
 
                 scope.highlight = function(acid){
@@ -1326,7 +1360,10 @@
 
 //******************************************************************this needs a check to delete the subunit if cleaning the subunit results in an empty string
                 scope.cleanSequence = function () {
+                   /* scope.obj.sequence = _.filter(scope.obj.sequence, ['valid', true]);
+                    console.log(temp);*/
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
+                        console.log(aa);
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
                             return temp;
@@ -1335,7 +1372,6 @@
                     scope.parseSubunit();
                 };
 
-                console.log(scope);
                 var display = [];
                 if(_.isUndefined(scope.parent)){
                     APIFetcher.fetch(scope.uuid).then(function(data){
