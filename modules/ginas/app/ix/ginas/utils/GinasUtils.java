@@ -356,11 +356,12 @@ public class GinasUtils {
 		}
 
 		@Override
-		public JsonNode getNextRecord() {
+		public JsonNode getNextRecord() throws Exception{
 			if (buff == null)
 				return null;
+			String line=null;
 			try {
-				String line = buff.readLine();
+				line = buff.readLine();
 				if (line == null)
 					return null;
 				String[] toks = line.split("\t");
@@ -369,10 +370,10 @@ public class GinasUtils {
 				ObjectMapper mapper = new ObjectMapper();
 				JsonNode tree = mapper.readTree(bis);
 				return tree;
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
+				throw e;
 			}
-			return null;
 		}
 
 		@Override
@@ -411,7 +412,7 @@ public class GinasUtils {
 		}
 
 		@Override
-		public JsonNode getNextRecord() {
+		public JsonNode getNextRecord() throws Exception{
 			if (is == null)
 				return null;
 
@@ -423,8 +424,8 @@ public class GinasUtils {
 				return tree;
 			} catch (IOException e) {
 				e.printStackTrace();
+				throw e;
 			}
-			return null;
 		}
 
 		@Override

@@ -9,35 +9,65 @@ import java.lang.reflect.Constructor;
 import java.util.Iterator;
 
 public abstract class RecordExtractor<K>{
+		
 		public InputStream is;
 		public RecordExtractor(InputStream is){
 			this.is=is;
 		}
-		
-		abstract public K getNextRecord();
+		/**
+		 * Gets the next record. Should return null if finished, and throw an exception if
+		 * there's an error
+		 * 
+		 * @return
+		 */
+		abstract public K getNextRecord() throws Exception;
 		abstract public void close(); 
 		
 		public Iterator<K> getRecordIterator(){
 			return new Iterator<K>(){
-				private K cached;
+				private K cached=null;
+				private Exception e=null;
+				private boolean isCached=false;
+				private boolean lastError=false;
 				private boolean done=false;
 				@Override
 				public boolean hasNext() {
 					if(done)return false;
-					if(cached!=null)
-						return true;
-					cached = getNextRecord();
-					return (cached!=null);
+					if(!isCached){
+						cacheNext();
+					}
+					if(cached==null && !lastError){
+						return false;
+					}
+					return true;
+					
+				}
+				private void cacheNext(){
+					this.e=null;
+					lastError=false;
+					
+					try{
+						cached = getNextRecord();
+					}catch(Exception e){
+						this.e=e;
+						cached=null;
+						lastError=true;
+					}
+					isCached=true;
 				}
 
 				@Override
 				public K next() {
-					if(cached!=null){
-						K ret=cached;
-						cached=null;
-						return ret;
+					if(!isCached)cacheNext();
+					
+					K ret=cached;
+					Exception ex=this.e;
+					if(ex!=null){
+						throw new IllegalStateException(ex);
 					}
-					return getNextRecord();
+					cacheNext();
+					return ret;
+					
 				}
 
 				@Override
@@ -65,7 +95,17 @@ public abstract class RecordExtractor<K>{
 		public Estimate estimateRecordCount(Payload p){
 			long count=0;
 			RecordExtractor extract = makeNewExtractor(p);
-			for (Object m; (m = extract.getNextRecord()) != null;count++) {}
+			for (Object m; ;) {
+				try{
+					m=extract.getNextRecord();
+					if(m==null){
+						break;
+					}
+				}catch(Exception e){
+					
+				}
+				count++;
+            }
 			extract.close();
 			return new Estimate(count, Estimate.TYPE.EXACT);
 		}

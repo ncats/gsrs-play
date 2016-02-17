@@ -57,6 +57,21 @@
     </encoder>
   </appender>
   
+  <appender name="FAIL_EXTRACT_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${user.dir}/logs/fail-extract.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <!-- daily rollover with compression -->
+      <fileNamePattern>fail-extract-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <!-- keep 1 week worth of history -->
+      <maxHistory>7</maxHistory>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>
+      <!-- this quadruples logging throughput -->
+      <immediateFlush>true</immediateFlush>
+    </encoder>
+  </appender>
+  
   <!-- additivity=false ensures access log data only goes to the access log -->
   <logger name="access" level="INFO" additivity="false">
     <appender-ref ref="ACCESS_FILE" />
@@ -66,6 +81,9 @@
   </logger>
   <logger name="transformFail" level="INFO" additivity="false">
     <appender-ref ref="FAIL_TRANSFORM_LOG" />
+  </logger>
+  <logger name="extractFail" level="INFO" additivity="false">
+    <appender-ref ref="FAIL_EXTRACT_LOG" />
   </logger>
   
   <root level="INFO,DEBUG,WARN,ERROR">
