@@ -1175,7 +1175,7 @@
 
                 scope.getResidues = function(){
                     if (scope.parent.substanceClass === 'protein') {
-                        CVFields.getCV("AMINO_ACID_RESIDUES").then(function (data) {
+                        CVFields.getCV("AMINO_ACID_RESIDUE").then(function (data) {
                             scope.residues = data.data.content[0].terms;
                             scope.parseSubunit();
                         });
