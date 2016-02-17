@@ -1,5 +1,6 @@
 package ix.core.plugins;
 
+import ix.core.UserFetcher;
 import ix.core.controllers.ProcessingJobFactory;
 import ix.core.models.Keyword;
 import ix.core.models.Payload;
@@ -62,16 +63,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
     private static final String GINAS_RECORD_PROCESSOR = "GinasRecordProcessor";
     private static int MAX_EXTRACTION_QUEUE = 100;
         
-        
-    //Replace with the methods you want.
-    //  private static RecordPersister _recordPersister = new ix.ginas.models.utils.GinasUtils.GinasSubstancePersister();
-    //  private static RecordExtractor _recordExtractor = 
-    //                  new ix.ginas.models.utils.GinasUtils.GinasDumpExtractor(null);
-    //  private static RecordTransformer _recordTransformer = 
-    //                  new ix.ginas.models.utils.GinasUtils.GinasSubstanceTransformer();
-
-        
-        
+          
 
         
         
@@ -137,8 +129,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
         public PersistModel(Op oper, Model... models) {
             this.oper = oper;
             this.models = models;
-                        
-                
         }
 
         @Transactional
@@ -199,6 +189,10 @@ public class GinasRecordProcessorPlugin extends Plugin {
         public void persists() {
             getInstance().decrementExtractionQueue();
             String k=rec.job.getKeyMatching(GinasRecordProcessorPlugin.class.getName());
+            
+            //Set the user for use in later persist information
+            UserFetcher.setLocalThreadUser(rec.job.owner);
+            
             try{
                 rec.job.getPersister().persist(this);
                 Statistics stat=applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PE_GOOD);
@@ -211,6 +205,9 @@ public class GinasRecordProcessorPlugin extends Plugin {
             }
             
             updateJobIfNecessary(rec.job);
+            
+            //unset local user, just in case
+            UserFetcher.setLocalThreadUser(null);
         }
     }
 
@@ -386,7 +383,7 @@ public class GinasRecordProcessorPlugin extends Plugin {
                     applyStatisticsChangeForJob(k,Statistics.CHANGE.ADD_PR_GOOD);
                     reporter.tell(new TransformedRecord(trans, pr.theRecord, rec, indexer),self());
                                         
-                }catch(Exception e){
+                }catch(Throwable e){
                 	
                     getInstance().decrementExtractionQueue();
                     Logger.error(e.getMessage() + ":" + rec.message);
@@ -507,6 +504,8 @@ public class GinasRecordProcessorPlugin extends Plugin {
     //  }
     public String submit(Payload payload, Class extractor, Class persister) {
         // first see if this payload has already processed..
+    	
+    	
         PayloadProcessor pp = new PayloadProcessor(payload);
                 
                 
@@ -519,12 +518,14 @@ public class GinasRecordProcessorPlugin extends Plugin {
         job.status = ProcessingJob.Status.PENDING;
         job.payload = pp.payload;
         job.message="Preparing payload for processing";
+        job.owner=UserFetcher.getActingUser();
         job.save();
         storeStatisticsForJob(pp.key, new Statistics());
         pp.jobId=job.id;
         inbox.send(processor, pp);
                 
-        //jobCacheStatistics.put(pp.key, value);
+        
+        
         return pp.key;
     }
 
@@ -566,7 +567,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
         Logger.debug(job.status.toString());
         //If the job hasn't started yet, then start it
         if (job.status==ProcessingJob.Status.PENDING || job.status==ProcessingJob.Status.COMPLETE) {
-            //Logger.debug("Lemme try to process one...");
             try {
                 Logger.debug("Counting records");
                 RecordExtractor rec = job.getExtractor();
@@ -605,10 +605,6 @@ public class GinasRecordProcessorPlugin extends Plugin {
                 		Statistics stat = getStatisticsForJob(pp.key);
                         stat.applyChange(Statistics.CHANGE.ADD_EX_BAD);
                         storeStatisticsForJob(pp.key, stat);
-                        //getInstance().waitForProcessingRecordsCount(MAX_EXTRACTION_QUEUE);
-                        //PayloadExtractedRecord prg=new PayloadExtractedRecord(job, m);
-                        //getInstance().incrementExtractionQueue();
-                        //proc.tell(prg, sender);
                         Global.ExtractFailLogger.info("failed to extract" + "\t" + e.getMessage() + "\t" + "UNKNOWN JSON");
                 	}
                 	
