@@ -124,7 +124,7 @@
                         'Content-Type': 'application/json'
                     }
                 }).success(function(data){
-                    alert('update was performed.');
+                   // alert('update was performed.');
                 });
             },
 
@@ -138,7 +138,7 @@
                      'Content-Type': 'application/json'
                      }
                      }).success(function(data){
-                     alert('update was performed.');
+                   //  alert('update was performed.');
                      });
                 });
             }

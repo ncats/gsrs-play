@@ -24,7 +24,7 @@
         }
         case "protein" => {
             <protein-details-form></protein-details-form>
-            <subunit-form referenceobj ="referenceobj" parent = substance></subunit-form>
+            <subunit-form referenceobj ="referenceobj" parent = substance  ng-cloak></subunit-form>
             <div ng-if = "substance.protein.subunits.length>0">
             <other-links-form referenceobj ="referenceobj" parent = substance></other-links-form>
             <disulfide-link-form referenceobj ="referenceobj" parent = substance></disulfide-link-form>
@@ -106,7 +106,7 @@
                 <button class="btn btn-primary" ng-click="compare(); diff = true">Compare</button></div>
             <div class="col-md-2 pull-right">
                 <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance(substance)">Approve</button>
-                <button class="btn btn-primary" ng-click="submitSubstanceConfirm()">Submit</button>
+                <button class="btn btn-primary" ng-click="submitSubstanceConfirm(substance)">Submit</button>
             </div>
         </div>
             <h1>{{substancesEqual}}</h1>

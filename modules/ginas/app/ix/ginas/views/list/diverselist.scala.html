@@ -68,7 +68,11 @@
 
                 <div class = "row">
                     <div class = "col-md-12">
-                        Date approved: <h6>{{@GinasApp.getDateTime(sub.approved) | date: 'mediumDate' || 'Not Approved'}}</h6>
+                        @if(sub.approved==null){
+                            <h6>Not Approved</h6>
+                        }else{
+                            Date approved: <h6>{{@GinasApp.getDateTime(sub.approved) | date: 'mediumDate'}}</h6>
+                        }
                     </div>
                 </div>
                 <div class = "row">
