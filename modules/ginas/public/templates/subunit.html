@@ -19,11 +19,13 @@
                       ng-blur="parseSubunit(); edit=!edit"></textarea>
         </div>
 
-        <div ng-hide="edit" class="col-xs-2" ng-repeat="chunk in subunitDisplay track by $index">
+        <div ng-hide="edit" class="col-xs-2" ng-repeat="chunk in subunitDisplay">
 
+<!--
             <span class = "pull-right count" ng-hide=numbers>{{($index+1)*10}}</span><br>
+-->
             <span ng-repeat="aa in chunk">
-                <amino-acid acid=aa ></amino-acid>
+                <amino-acid acid= aa></amino-acid>
             </span>
         </div>
     </div>
