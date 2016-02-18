@@ -344,6 +344,8 @@ public class SequenceIndexer {
         return _indexReader;
     }
 
+    
+    
     protected IndexSearcher getIndexSearcher () throws IOException {
         return new IndexSearcher (getIndexReader ());
     }
@@ -353,6 +355,10 @@ public class SequenceIndexer {
     }
 
     public File getBasePath () { return baseDir; }
+    
+    public long getSize(){
+    	return indexWriter.numDocs();
+    }
     
     public void shutdown () {
         try {

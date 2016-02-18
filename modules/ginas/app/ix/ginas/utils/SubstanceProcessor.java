@@ -1,21 +1,36 @@
 package ix.ginas.utils;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import ix.core.EntityProcessor;
+import ix.core.chem.Chem;
+import ix.core.plugins.SequenceIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Protein;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
+import ix.seqaln.SequenceIndexer;
 import ix.ginas.models.v1.SubstanceReference;
+import ix.ginas.models.v1.Subunit;
 import play.Logger;
+import play.Play;
+import tripod.chem.indexer.StructureIndexer;
 
 public class SubstanceProcessor implements EntityProcessor<Substance>{
-
+	public static SequenceIndexer _seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class)
+			.getIndexer();
+	public static StructureIndexer _strucIndexer =
+            Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+    
 	
 	private static final String INTERNAL_CODE_SYSTEM = "BDNUM";
 	@Override
@@ -49,6 +64,28 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                for(Name n:obj.names){
                        //System.out.println(obj.getApprovalIDDisplay() + "\t" + internalCode +"\t" + n.getName() + "\t" + n.type);
                }
+               
+               
+            if (obj instanceof ChemicalSubstance) {
+            	try {
+					indexChem((ChemicalSubstance) obj);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+   			} else if (obj instanceof ProteinSubstance) {
+   				Protein protein = ((ProteinSubstance) obj).protein;
+   				for (Subunit su : protein.subunits) {
+   					if (su.sequence != null && su.sequence.length() > 0) {
+   						su.save();
+   						try {
+   							SequenceIndexer seqind = SubstanceFactory.getSeqIndexer();
+   							seqind.add(su.uuid.toString(), su.sequence);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+   					}
+   				}
+   			}
 	}
 	
 	@Override
@@ -128,7 +165,17 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	
 
 	
-
+	static Substance indexChem(ChemicalSubstance chem) throws Exception {
+		try {
+			//Chem.setFormula(chem.structure);
+			//chem.structure.save();
+			_strucIndexer.add(String.valueOf(chem.structure.id), chem.structure.molfile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw e;
+		}
+		return chem;
+	}
 	
 
 }

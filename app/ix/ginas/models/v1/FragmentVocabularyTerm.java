@@ -5,7 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 
 /**
- * Created by peryeata on 6/29/15.
+ * Created by peryeata on 02/17/2016.
  */
 
 @Entity
@@ -23,7 +23,6 @@ public class FragmentVocabularyTerm extends VocabularyTerm{
 	public void setFragmentStructure(String fragmentStructure) {
 		this.fragmentStructure = fragmentStructure;
 	}
-
 	
 	public String getSimplifiedStructure() {
 		return simplifiedStructure;
@@ -33,15 +32,7 @@ public class FragmentVocabularyTerm extends VocabularyTerm{
 		this.simplifiedStructure = simplifiedStructure;
 	}
 	
-	
 	public FragmentVocabularyTerm(){};
     
-    
-    /*
-    NUCLEIC_ACID_SUGAR
-    NUCLEIC_ACID_LINKAGE
-    NUCLEIC_ACID_BASE
-    AMINO_ACID_RESIDUE
-    */
     
 }

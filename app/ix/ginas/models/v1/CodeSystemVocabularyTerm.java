@@ -5,7 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 
 /**
- * Created by peryeata on 6/29/15.
+ * Created by peryeata on 2/17/16.
  */
 
 @Entity

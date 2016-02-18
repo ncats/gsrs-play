@@ -253,11 +253,13 @@ public class GinasUtils {
 				persist((ChemicalSubstance) theRecordToPersist, index);
 
 			} else if (theRecordToPersist instanceof ProteinSubstance) {
+				//System.out.println("Persisting protein");
 				Protein protein = ((ProteinSubstance) theRecordToPersist).protein;
 				for (Subunit su : protein.subunits) {
 					if (su.sequence != null && su.sequence.length() > 0) {
 						su.save();
-						_seqIndexer.add(su.uuid.toString(), su.sequence);
+						//System.out.println("About to add sequence to indexer");
+						//_seqIndexer.add(su.uuid.toString(), su.sequence);
 					}
 				}
 			}
@@ -283,8 +285,8 @@ public class GinasUtils {
 		try {
 			Chem.setFormula(chem.structure);
 			chem.structure.save();
-			index.add(String.valueOf(chem.structure.id), chem.structure.molfile);
-		} catch (IOException e) {
+			//index.add(String.valueOf(chem.structure.id), chem.structure.molfile);
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
 		}
