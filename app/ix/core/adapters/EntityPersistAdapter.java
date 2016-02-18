@@ -8,6 +8,8 @@ import ix.core.plugins.IxContext;
 import ix.core.plugins.SequenceIndexerPlugin;
 import ix.core.plugins.StructureIndexerPlugin;
 import ix.core.plugins.TextIndexerPlugin;
+import ix.ginas.models.v1.ChemicalSubstance;
+import ix.ginas.models.v1.Substance;
 import ix.seqaln.SequenceIndexer;
 
 import java.io.IOException;
@@ -279,14 +281,60 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
 
-            if (plugin != null)
-                plugin.getIndexer().add(bean);
+            indexBean(bean);
+            
         }
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
         }
     }
+    
+	private void indexBean(Object bean) throws java.io.IOException {
+		if (plugin != null)
+			plugin.getIndexer().add(bean);
 
+		List<Field> sequenceFields = getSequenceIndexableField(bean);
+		if (sequenceFields != null && sequenceFields.size()>0) {
+			String _id = getIdForBeanAsString(bean);
+			for(Field seq:sequenceFields){
+				String indexSequence;
+				try {
+					indexSequence = (String) seq.get(bean);
+					if (indexSequence != null && indexSequence.length() > 0) {
+						if (_seqIndexer == null) {
+							_seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+						}
+						_seqIndexer.add(_id, indexSequence);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		List<Field> structureFields = getStructureIndexableField(bean);
+		if (structureFields != null && structureFields.size()>0) {
+			String _id = getIdForBeanAsString(bean);
+			for(Field seq:structureFields){
+				String structure;
+				try {
+					structure = (String) seq.get(bean);
+					_strucIndexer.add(_id, structure);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	private void deleteIndexOnBean(Object bean) throws Exception {
+		if (plugin != null)
+            plugin.getIndexer().remove(bean);
+		
+		//TODO: removal logic for sequences and structures
+		
+	}
+	
     @Override
     public boolean preUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
@@ -362,11 +410,10 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                     }
                 }
             }
-
-            if (plugin != null)
-                plugin.getIndexer().update(bean);
+            deleteIndexOnBean(bean);
+            indexBean(bean);
         }
-        catch (java.io.IOException ex) {
+        catch (Exception ex) {
             Logger.warn("Can't update bean index "+bean, ex);
         }
     }
@@ -413,8 +460,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
 
         try {
-            if (plugin != null)
-                plugin.getIndexer().remove(bean);
+        	deleteIndexOnBean(bean);
         }
         catch (Exception ex) {
             Logger.trace("Can't remove bean "+bean+" from index!", ex);
@@ -447,33 +493,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             return;
         }
         
-        
         try {      
-            plugin.getIndexer().update(bean);
-            if(bean instanceof Structure){
-                if(_strucIndexer==null){
-                    _strucIndexer=Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
-                }
-                _strucIndexer.add(_id, ((Structure)bean).molfile);
-            }
-                
-            Field seq=getSequenceIndexableField(bean);
-            if(seq!=null){
-                String indexSequence;
-                try {
-                    indexSequence = (String) seq.get(bean);
-                    if(indexSequence!=null && indexSequence.length()>0){
-                        if(_seqIndexer==null){
-                            _seqIndexer=Play.application()
-                                .plugin(SequenceIndexerPlugin.class).getIndexer();
-                        }
-                                        
-                        _seqIndexer.add(_id, indexSequence);
-                    }
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
+        	indexBean(bean);
             if(_id!=null)
             	alreadyLoaded.put(bean.getClass()+_id,_id);
         } catch (IOException e) {
@@ -531,7 +552,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         if(id!=null)return id.toString();
         return null;
     }
-    public static Field getSequenceIndexableField(Object entity){
+    public static List<Field> getSequenceIndexableField(Object entity){
+    	List<Field> flist = new ArrayList<Field>();
         if (!entity.getClass().isAnnotationPresent(Entity.class)) {
             return null;
         }
@@ -539,19 +561,38 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 
             for (Field f : entity.getClass().getFields()) {
                 Indexable ind= f.getAnnotation(Indexable.class);
-                
                 if (ind != null) {
                     if(ind.sequence()){
-                        return f;
+                    	flist.add(f);
                     }
                 }
                
             }
+        }catch (Exception ex) {
+            Logger.trace("Unable to search for sequence indexes for "+entity, ex);
         }
-        catch (Exception ex) {
-            Logger.trace("Unable to update index for "+entity, ex);
+        return flist;
+    }
+    public static List<Field> getStructureIndexableField(Object entity){
+    	List<Field> flist = new ArrayList<Field>();
+        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+            return null;
         }
-        return null;
+        try {
+                
+            for (Field f : entity.getClass().getFields()) {
+                Indexable ind= f.getAnnotation(Indexable.class);
+                if (ind != null) {
+                    if(ind.structure()){
+                    	flist.add(f);
+                    }
+                }
+               
+            }
+        }catch (Exception ex) {
+            Logger.trace("Unable to search for structure indexes for "+entity, ex);
+        }
+        return flist;
     }
     
 

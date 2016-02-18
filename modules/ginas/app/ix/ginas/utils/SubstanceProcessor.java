@@ -26,8 +26,6 @@ import play.Play;
 import tripod.chem.indexer.StructureIndexer;
 
 public class SubstanceProcessor implements EntityProcessor<Substance>{
-	public static SequenceIndexer _seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class)
-			.getIndexer();
 	public static StructureIndexer _strucIndexer =
             Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
     
@@ -67,24 +65,9 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                
                
             if (obj instanceof ChemicalSubstance) {
-            	try {
-					indexChem((ChemicalSubstance) obj);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+            	
    			} else if (obj instanceof ProteinSubstance) {
-   				Protein protein = ((ProteinSubstance) obj).protein;
-   				for (Subunit su : protein.subunits) {
-   					if (su.sequence != null && su.sequence.length() > 0) {
-   						su.save();
-   						try {
-   							SequenceIndexer seqind = SubstanceFactory.getSeqIndexer();
-   							seqind.add(su.uuid.toString(), su.sequence);
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-   					}
-   				}
+   				
    			}
 	}
 	
@@ -165,17 +148,6 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	
 
 	
-	static Substance indexChem(ChemicalSubstance chem) throws Exception {
-		try {
-			//Chem.setFormula(chem.structure);
-			//chem.structure.save();
-			_strucIndexer.add(String.valueOf(chem.structure.id), chem.structure.molfile);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw e;
-		}
-		return chem;
-	}
 	
 
 }
