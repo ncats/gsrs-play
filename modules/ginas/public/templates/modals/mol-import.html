@@ -5,17 +5,17 @@
     </div>
     <div class="modal-body">
         <div class = "row">
-            <form class="form" role="import" method="GET"
-                  action="">
                 <div class="form-group">
                     <div class = "row">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label for="exampleInputFile">Load File</label>
-                                <input type="button" value="Choose File" onclick="window.FileContentsGrabber.set('mol-sequence');">
-                                <p class="help-block">or</p>
+                        <ng-form class="form" enctype="multipart/form-data">
+                            <div class="col-md-3">
+                                <label for="upload">Load a molfile</label><br>
+                                <file-field ng-model="uploadFile" ng-change="setPreview(uploadFile)" id = "upload" preview ="setPreview();"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                                <br>
+                                {{uploadFile.name}}
+                                <br>
                             </div>
-                        </div>
+                        </ng-form>
                     </div>
                     <div class = "row">
                         <div class="col-md-12">
@@ -31,7 +31,6 @@
                     <button type="button" class="btn btn-default" ng-click="molfile=null; close();">Close</button>
                     <button  type="button" class="btn btn-primary" ng-click="resolveMol(molfile);" >Import</button>
                 </div>
-            </form>
         </div>
     </div>
 </div>
