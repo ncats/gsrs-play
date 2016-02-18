@@ -1143,7 +1143,7 @@ public class GinasApp extends App {
     }
 
     public static String getAAName(char aa) {
-        ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("AMINO_ACID_RESIDUES");
+        ControlledVocabulary cv = ControlledVocabularyFactory.getControlledVocabulary("AMINO_ACID_RESIDUE");
         for(VocabularyTerm t : cv.terms){
         	if(t.value.equals(aa+"")){
         		return t.display;

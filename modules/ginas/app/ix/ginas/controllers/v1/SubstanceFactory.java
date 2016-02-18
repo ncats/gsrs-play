@@ -327,17 +327,21 @@ public class SubstanceFactory extends EntityFactory {
 		}
 	}
 
-
-	public static List<Substance> getNearCollsionProteinSubstances(int top,
-			int skip, ProteinSubstance cs) {
-		Set<Substance> dupes = new LinkedHashSet<Substance>();
+	public static SequenceIndexer getSeqIndexer(){
 		if(_seqIndexer==null){
 			_seqIndexer =
 		            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
 		}
+		return _seqIndexer;
+	}
+
+	public static List<Substance> getNearCollsionProteinSubstances(int top,
+			int skip, ProteinSubstance cs) {
+		Set<Substance> dupes = new LinkedHashSet<Substance>();
+		
 		for(Subunit subunit : cs.protein.subunits){
 			try{
-				ResultEnumeration re = _seqIndexer.search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
+				ResultEnumeration re = getSeqIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
 				int i=0;
 				while(re.hasMoreElements()){
 					SequenceIndexer.Result r = re.nextElement();
@@ -360,28 +364,30 @@ public class SubstanceFactory extends EntityFactory {
 	public static List<Substance> getNearCollsionProteinSubstancesToSubunit(int top,
 			int skip, Subunit subunit) {
 		Set<Substance> dupes = new LinkedHashSet<Substance>();
-		if(_seqIndexer==null){
-			_seqIndexer =
-		            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
-		}
 			try{
-				ResultEnumeration re = _seqIndexer.search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
+				ResultEnumeration re = getSeqIndexer().search(subunit.sequence, SubstanceFactory.SEQUENCE_IDENTITY_CUTOFF);
 				int i=0;
 				while(re.hasMoreElements()){
 					SequenceIndexer.Result r = re.nextElement();
-					List<ProteinSubstance> proteins = SubstanceFactory.protfinder
+					List<Substance> proteins = SubstanceFactory.finder
 			                .where().eq("protein.subunits.uuid", r.id).findList();
 					if(proteins!=null && proteins.size()>=0){
+						
 						for(Substance s: proteins){
-							if(i>=skip)dupes.add(s);
+							if(i>=skip){
+								dupes.add(s);
+							}
 							i++;
-							if(dupes.size()>=top)break;
+							if(dupes.size()>=top){
+								break;
+							}
 						}
 					}
 				}
 			}catch(Exception e){
 				e.printStackTrace();
 			}
-		return new ArrayList<Substance>(dupes);
+		List<Substance> slist=new ArrayList<Substance>(dupes);
+		return slist;
 	}
 }

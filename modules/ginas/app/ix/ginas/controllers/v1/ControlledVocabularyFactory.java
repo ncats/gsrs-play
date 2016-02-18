@@ -41,11 +41,23 @@ public class ControlledVocabularyFactory extends EntityFactory {
 	}
 
 	public static void loadSeedCV(InputStream is) {
+		
+		Set<String> fragmentDomains = new HashSet<String>();
+		fragmentDomains.add("NUCLEIC_ACID_SUGAR");
+		fragmentDomains.add("NUCLEIC_ACID_LINKAGE");
+		fragmentDomains.add("NUCLEIC_ACID_BASE");
+		fragmentDomains.add("AMINO_ACID_RESIDUE");
+		Set<String> codeSystemDomains = new HashSet<String>();
+		codeSystemDomains.add("CODE_SYSTEM");
+		
+		
 		Map<String, List<VocabularyTerm>> map = new TreeMap<>();
 		String line = "";
 		String cvsSplitBy = "\t";
 		ControlledVocabulary domains = new ControlledVocabulary();
 		domains.domain="CV_DOMAIN";
+		
+		
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF8"));
 			while ((line = br.readLine()) != null) {
@@ -56,13 +68,35 @@ public class ControlledVocabularyFactory extends EntityFactory {
 				domainTerm.value = field;
 				domainTerm.display = category;
 				Logger.info("field " +field);
-				VocabularyTerm cv = new VocabularyTerm();
+				
+				VocabularyTerm cv;
+				if(fragmentDomains.contains(category)){
+					cv= new FragmentVocabularyTerm();
+					if (cvTerm.length >= 7) {
+						((FragmentVocabularyTerm)cv).setSimplifiedStructure(cvTerm[6]);
+					}
+					if (cvTerm.length >= 8) {
+						((FragmentVocabularyTerm)cv).setFragmentStructure(cvTerm[7]);
+					}
+				}else if(codeSystemDomains.contains(category)){
+					cv= new CodeSystemVocabularyTerm();
+					if (cvTerm.length >= 7) {
+						((CodeSystemVocabularyTerm)cv).setSystemCategory(cvTerm[6]);
+					}
+					if (cvTerm.length >= 8) {
+						((CodeSystemVocabularyTerm)cv).setRegex(cvTerm[7]);
+					}
+				}else{
+					cv= new VocabularyTerm();
+				}
+				
 				int l = cvTerm.length;
 				if (l >= 3) {
 					cv.value = cvTerm[2];
 				} else {
 					cv.value = null;
 				}
+				
 				if (l >= 4) {
 					cv.display = cvTerm[3];
 				} else {
@@ -78,6 +112,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 				} else {
 					cv.origin = null;
 				}
+				
 				List<VocabularyTerm> temp = map.get(category);
 				if (temp == null) {
 					temp = new ArrayList<VocabularyTerm>();

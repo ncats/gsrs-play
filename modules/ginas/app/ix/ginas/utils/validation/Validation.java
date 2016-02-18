@@ -545,7 +545,7 @@ public class Validation {
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Protein substance must have a protein element"));
         }else{
 
-            System.out.println("Got here3");
+            
             Set<String> unknownRes= new HashSet<String>();
         	double tot=ProteinUtils.generateProteinWeight(cs,unknownRes);
         	if(unknownRes.size()>0){
@@ -554,7 +554,6 @@ public class Validation {
         	}
         	
 
-            System.out.println("Got here4");
         	List<Property> molprops=ProteinUtils.getMolWeightProperties(cs);
         	if(molprops.size()<=0){
         		
@@ -595,7 +594,6 @@ public class Validation {
         	}
         	System.out.println("calc:" + tot);
         }
-        System.out.println("Got here2");
         strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
         return gpm;
 	}

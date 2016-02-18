@@ -117,7 +117,7 @@ public class Structure extends Model{
     
     @Lob
     @Basic(fetch = FetchType.EAGER)
-    @Indexable(indexed = false)
+    @Indexable(indexed = false, structure=true)
     public String molfile;
 
     @Lob
