@@ -281,15 +281,21 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
 
-            indexBean(bean);
+            makeIndexOnBean(bean);
             
         }
         catch (java.io.IOException ex) {
             Logger.trace("Can't index bean "+bean, ex);
         }
     }
+    private SequenceIndexer getSequenceIndexer(){
+		if (_seqIndexer == null) {
+			_seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+		}
+		return _seqIndexer;
+	}
     
-	private void indexBean(Object bean) throws java.io.IOException {
+	private void makeIndexOnBean(Object bean) throws java.io.IOException {
 		if (plugin != null)
 			plugin.getIndexer().add(bean);
 
@@ -323,12 +329,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 			}
 		}
 	}
-	private SequenceIndexer getSequenceIndexer(){
-		if (_seqIndexer == null) {
-			_seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
-		}
-		return _seqIndexer;
-	}
+	
 	private void deleteIndexOnBean(Object bean) throws Exception {
 		if (plugin != null)
             plugin.getIndexer().remove(bean);
@@ -419,7 +420,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 }
             }
             deleteIndexOnBean(bean);
-            indexBean(bean);
+            makeIndexOnBean(bean);
         }
         catch (Exception ex) {
             Logger.warn("Can't update bean index "+bean, ex);
@@ -502,7 +503,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         }
         
         try {      
-        	indexBean(bean);
+        	makeIndexOnBean(bean);
             if(_id!=null)
             	alreadyLoaded.put(bean.getClass()+_id,_id);
         } catch (IOException e) {
