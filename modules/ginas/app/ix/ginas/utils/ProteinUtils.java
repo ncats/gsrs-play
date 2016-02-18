@@ -71,7 +71,6 @@ public class ProteinUtils {
 		double total=0;
 		if(unknownRes==null)unknownRes=new LinkedHashSet<String>();
 		for(Subunit su:ps.protein.subunits){
-			System.out.println(su.sequence);
 			total+=getSubunitWeight(su,unknownRes);
 		}
 		return total;

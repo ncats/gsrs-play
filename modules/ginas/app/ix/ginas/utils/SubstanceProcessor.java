@@ -1,21 +1,34 @@
 package ix.ginas.utils;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import ix.core.EntityProcessor;
+import ix.core.chem.Chem;
+import ix.core.plugins.SequenceIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin;
 import ix.ginas.controllers.v1.SubstanceFactory;
+import ix.ginas.models.v1.ChemicalSubstance;
 import ix.ginas.models.v1.Code;
 import ix.ginas.models.v1.Name;
+import ix.ginas.models.v1.Protein;
+import ix.ginas.models.v1.ProteinSubstance;
 import ix.ginas.models.v1.Reference;
 import ix.ginas.models.v1.Substance;
 import ix.ginas.models.v1.Substance.SubstanceDefinitionType;
+import ix.seqaln.SequenceIndexer;
 import ix.ginas.models.v1.SubstanceReference;
+import ix.ginas.models.v1.Subunit;
 import play.Logger;
+import play.Play;
+import tripod.chem.indexer.StructureIndexer;
 
 public class SubstanceProcessor implements EntityProcessor<Substance>{
-
+	public static StructureIndexer _strucIndexer =
+            Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+    
 	
 	private static final String INTERNAL_CODE_SYSTEM = "BDNUM";
 	@Override
@@ -49,6 +62,13 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                for(Name n:obj.names){
                        //System.out.println(obj.getApprovalIDDisplay() + "\t" + internalCode +"\t" + n.getName() + "\t" + n.type);
                }
+               
+               
+            if (obj instanceof ChemicalSubstance) {
+            	
+   			} else if (obj instanceof ProteinSubstance) {
+   				
+   			}
 	}
 	
 	@Override
@@ -128,7 +148,6 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	
 
 	
-
 	
 
 }

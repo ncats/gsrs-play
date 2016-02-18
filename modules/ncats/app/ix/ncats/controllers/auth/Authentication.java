@@ -277,6 +277,7 @@ public class Authentication extends Controller {
     	}catch(Exception e){
     		//System.out.println("No user accessible");
     	}
+    	
     	return null;
     }
     
