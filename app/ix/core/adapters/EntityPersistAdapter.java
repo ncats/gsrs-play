@@ -301,10 +301,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 				try {
 					indexSequence = (String) seq.get(bean);
 					if (indexSequence != null && indexSequence.length() > 0) {
-						if (_seqIndexer == null) {
-							_seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
-						}
-						_seqIndexer.add(_id, indexSequence);
+						getSequenceIndexer().add(_id, indexSequence);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -326,13 +323,24 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 			}
 		}
 	}
-	
+	private SequenceIndexer getSequenceIndexer(){
+		if (_seqIndexer == null) {
+			_seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+		}
+		return _seqIndexer;
+	}
 	private void deleteIndexOnBean(Object bean) throws Exception {
 		if (plugin != null)
             plugin.getIndexer().remove(bean);
-		
-		//TODO: removal logic for sequences and structures
-		
+		String _id = getIdForBeanAsString(bean);
+		List<Field> sequenceFields = getSequenceIndexableField(bean);
+		if (sequenceFields != null && sequenceFields.size()>0) {
+			getSequenceIndexer().remove(_id);
+		}
+		List<Field> structureFields = getStructureIndexableField(bean);
+		if (structureFields != null && structureFields.size()>0) {
+			_strucIndexer.remove(null, _id);
+		}
 	}
 	
     @Override
