@@ -929,9 +929,11 @@ public class EntityFactory extends Controller {
                     }
                 });
 
+            
             JsonNode node = request().body().asJson();
-            System.out.println("About to deserialize");
+            
             T inst = mapper.treeToValue(node, type);
+            
             System.out.println("Done");
             List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
             boolean valid=false;

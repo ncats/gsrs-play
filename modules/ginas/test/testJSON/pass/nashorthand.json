@@ -1,0 +1,64 @@
+{
+	"nucleicAcid": {
+		"subunits": [{
+			"sequence": "CAAGAGGCAUACUCCUCAUAGGGAAAGAUCUUGACUGCCACUGUCUCAAACUGCUCUGAAGUGUUCUGCUUCAGCUUGGCCUUAUAGACCUCAGCAAAGCGACCUUUCCCCACCAGGGUGUCCAGCUCAAUGGGCAGCAGCUCUGUGUUGUGGUUGAUGUUGUUGGCACACGUGGAGCUGAUGUCAGAGCGGUCAUCUUCCAGGAUGAUGGCACAGUGCUCGCUGAACUCCAUGAGCUUCCGCGUCUUGCCGGUUUCCCAGGUUGAACUCAGCUUCUGCUGCCGGUUAACGCGGUAGCAGUAGAAGAUGAUGAUGACAGAUAUGGCAACUCCCAGUGGUGGCAGGAGGCUGAUGCCUGUCACUUGAAAUAUGACUAGCAACAAGUCAGGAUUGCUGGUGUUAUAUUCUUCUGAGAAGAUGAUGUUGUCAUUGCACUCAUCAGAGCUACAGGAACACAUGAAGAAAGUCUCACCAGGCUUUUUUUUUUCCUUCAUAAUGCACUUUGGAGAAGCAGCAUCUUCCAGAAUAAAGUCAUGGUAGGGGAGCUUGGGGUCAUGGCAAACUGUCUCUAGUGUUAUGUUCUCGUCAUUCUUUCUCCAUACAGCCACACAGACUUCCUGUGGCUUCUCACAGAUGGAGGUGAUGCUGCAGUUGCUCAUGCAGGAUUUCUGGUUGUCACAGGUGGAAAAUCUCACAUCACAAAAUUUACACAGUUGUGGAAACUUGACUGCACCGUUGUUGUCAGUGACUAUCAUGUCGUUAUUAAUAUGUCUCAGUGGAUGGGCAGUCCUAUUACAGCUGGGGCAGAUGAUUUCAUCUUUCUGGGCCUCCAUUUCCACAUCCGACUUCUGAACGUGCGGUGGGAUCGUGCUGGCGAUACGCGUCCACAGGACGAUGUGCAGCGGCCACAGGCCCCUGAGCAGCCCCCGA",
+			"subunitIndex": 1
+		}],
+		"sequenceType": "ANTI-SENSE RNA",
+		"linkages": [{
+			"linkage": "P",
+			"sitesShorthand":"1_2-1_930" 
+		}],
+		"sugars": [{
+			"sitesShorthand": "1_1-1_930",
+			"sugar": "R"
+		}],
+		"modifications": {
+			"structuralModifications": [],
+			"physicalModifications": [],
+			"agentModifications": []
+		},
+		"nucleicAcidSubType": [""],
+		"references": [],
+		"access": []
+	},
+	"approvalID": "FUA17JE46Y",
+	"status": "approved",
+	"approvedBy": "FDA_SRS",
+	"approved": 1449802860146,
+	"substanceClass": "nucleicAcid",
+	"names": [{
+		"name": "TGFβ-2 ANTI-SENSE RNA (6-935)",
+		"type": "of",
+		"domains": [],
+		"languages": ["en"],
+		"references": ["6dc80b4b-ee4f-4aac-92dc-5a74387528a8"],
+		"preferred": true,
+		"access": []
+	}],
+	"codes": [],
+	"relationships": [],
+	"references": [{
+		"uuid": "6dc80b4b-ee4f-4aac-92dc-5a74387528a8",
+		"citation": "J Clin Oncol 2006; 24: 4721?4730",
+		"docType": "SRS",
+		"publicDomain": true,
+		"tags": ["NOMEN"],
+		"access": []
+	}, {
+		"uuid": "3316964d-c2ce-45ce-9f08-813e1f23b457",
+		"citation": "SRS import [FUA17JE46Y]",
+		"docType": "SRS",
+		"publicDomain": true,
+		"documentDate": "2015-12-10T22:01:00.000-0500",
+		"tags": ["NOMEN"],
+		"url": "http://fdasis.nlm.nih.gov/srs/srsdirect.jsp?regno\u003dFUA17JE46Y",
+		"access": []
+	}],
+	"properties": [],
+	"notes": [],
+	"tags": [],
+	"uuid": "95f72217-0244-4123-8c02-d6e313eb48b4",
+	"access": [],
+	"lastEditedBy": "FDA_SRS"
+}

@@ -8,6 +8,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 @Entity
 @Inheritance
@@ -22,10 +23,28 @@ public class NucleicAcidSubstance extends Substance {
     	return this.nucleicAcid.getModifications();
     }
     
+    
+    @Transient
+    private boolean _dirtyModifications=false;
+    
+    
     public void setModifications(Modifications m){
-    	 this.nucleicAcid.setModifications(modifications);
+    	if(this.nucleicAcid==null){
+    		this.nucleicAcid = new NucleicAcid();
+    		_dirtyModifications=true;
+    	}
+    	this.nucleicAcid.setModifications(m);
+    	this.modifications=m;
     }
-	
+    
+    public void setNucleicAcid(NucleicAcid p){
+    	this.nucleicAcid=p;
+    	if(_dirtyModifications){
+    		this.nucleicAcid.setModifications(this.modifications);
+    		_dirtyModifications=false;
+    	}
+    }
+    
 //	public NucleicAcid getNucleicAcid() {
 //		return nucleicAcid;
 //	}
