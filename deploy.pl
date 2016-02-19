@@ -58,13 +58,14 @@ my $daemon = Proc::Daemon->new(
        pid_file => $abs_path. "/daemon.pid.txt",
         child_STDOUT => $abs_path . "/daemon.out",
         child_STDERR => $abs_path . "/daemon.err",
+        file_umask => 022
     );
     
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
 
 print "status ", $daemon->Status($Kid_1_PID), "\n";
-exit;
+#exit;
 #system($command. " &");
 
 sub getOldPid($){
