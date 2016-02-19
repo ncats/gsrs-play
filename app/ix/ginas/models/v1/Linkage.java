@@ -1,6 +1,7 @@
 package ix.ginas.models.v1;
 
 
+import ix.core.models.BeanViews;
 import ix.ginas.models.GinasCommonSubData;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 
 @SuppressWarnings("serial")
 @Entity
@@ -33,6 +35,13 @@ public class Linkage extends GinasCommonSubData {
     	}
     	siteContainer.setSites(sites);
     }
+    
+    public void setSitesShorthand(String sites){
+    	if(siteContainer==null){
+    		siteContainer=new SiteContainer(this.getClass().getName());
+    	}
+    	siteContainer.setShorthand(sites);
+    }
 
 	public String getLinkage() {
 		return linkage;
@@ -41,7 +50,8 @@ public class Linkage extends GinasCommonSubData {
 	public void setLinkage(String linkage) {
 		this.linkage = linkage;
 	}
-	@JsonIgnore
+	
+    //@JsonView(BeanViews.Internal.class)
 	public String getSitesShorthand(){
 		if(siteContainer!=null){
     		return siteContainer.getShorthand();

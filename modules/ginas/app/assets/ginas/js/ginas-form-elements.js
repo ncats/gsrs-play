@@ -724,21 +724,27 @@ ginasFormElements.directive('substanceViewer', function(){
                                 '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
                                 '</a>'
                             )(scope));
-                                document.getElementById('download').click()
+                                document.getElementById('download').click();
                         });
                     } else {
-                        json = JSON.stringify(scope.data);
-                        var b = new Blob([json], {type: "application/json"});
+                        var b;
+                        var fileType = json;
+                        if(attrs.format ==='mol'){
+                             b = new Blob([scope.data]);
+                            fileType = "mol";
+                        }else {
+                            json = JSON.stringify(scope.data);
+                             b = new Blob([json], {type: "application/json"});
+                        }
                         scope.url = URL.createObjectURL(b);
                         element.replaceWith($compile(
-                            '<a class="btn btn-primary" download="results.json"' +
-                            'href="' + scope.url + '" target = "_self" id ="download">' +
+                            '<a class="btn btn-primary" download="results.' + fileType +
+                            '" href="' + scope.url + '" target = "_self" id ="download">' +
                             '<i class="fa fa-download" uib-tooltip="Download Results"></i>' +
                             '</a>'
                         )(scope));
                         $timeout(function() {
-                            console.log('clicking');
-                            element.click();
+                            document.getElementById('download').click();
                         }, 100);
                     }
                 }
@@ -747,6 +753,27 @@ ginasFormElements.directive('substanceViewer', function(){
         };
     });
 
+    ginasFormElements.directive('titleHeader', function ($compile) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                name: '=',
+                kind: '='
+            },
+            link: function (scope, element, attrs) {
+                if (scope.name) {
+                    template = angular.element('<h1> Editing <code>' + scope.name + '</code></h1>');
+                    element.append(template);
+                    $compile(template)(scope);
+                } else {
+                    template = angular.element('<h1> Registering new <code> ' + scope.kind + '</code></h1>');
+                    element.append(template);
+                    $compile(template)(scope);
+                }
+            }
+        };
+    });
 
 
 

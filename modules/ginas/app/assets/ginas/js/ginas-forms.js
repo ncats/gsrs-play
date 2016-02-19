@@ -566,7 +566,6 @@
                         formHolder = '<amount-form referenceobj = referenceobj parent = parent amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
-                        console.log(scope);
                         scope.formtype = attrs.formtype;
                         scope.residueregex = attrs.residueregex;
                         scope.mode = attrs.mode;

@@ -38,5 +38,6 @@ public class DisulfideLink extends GinasCommonSubData {
     	siteContainer.setSites(sites);
     }
     
+    
     public DisulfideLink () {}
 }
