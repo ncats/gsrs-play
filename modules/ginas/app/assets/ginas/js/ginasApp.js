@@ -745,28 +745,6 @@
         };
     });
 
-    ginasApp.directive('titleHeader', function ($compile) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                name: '=',
-                kind: '='
-            },
-            link: function (scope, element, attrs) {
-                if (scope.name) {
-                    template = angular.element('<h1> Editing <code>' + scope.name + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);
-                } else {
-                    template = angular.element('<h1> Registering new <code> ' + scope.kind + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);
-                }
-            }
-        };
-    });
-
     ginasApp.directive('scrollSpy', function ($timeout) {
         return function (scope, elem, attr) {
             scope.$watch(attr.scrollSpy, function (value) {
@@ -1058,7 +1036,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if (!_.isUndefined(scope.referenceobj)) {
                     if (_.has(scope.referenceobj, 'sites')) {
                         scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
@@ -1281,9 +1258,8 @@
 
                 scope.parseSubunit = function () {
                     console.log(scope.obj.sequence);
-
                     scope.obj.$$cysteineIndices = [];
-                    scope.parent.$$subunitDisplay =[];
+                    var display = [];
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
                         obj.value = aa;
@@ -1343,8 +1319,7 @@
                         display.push(obj);
                     });
                     display = _.chunk(display, 10);
-                    scope.subunitDisplay = display;
-                    scope.parent.$$subunitDisplay.push(display);
+                    _.set(scope.obj, '$$subunitDisplay', display);
                     console.log(scope);
                 };
 
@@ -1534,44 +1509,6 @@
         };
     });
 
-
-    /*//modal
-     ginasApp.directive('substanceChooser', function ($modal) {
-     return {
-     restrict: 'E',
-     require: "ngModel",
-     scope: {
-     mymodel: '=ngModel',
-     lite: '=lite'
-     },
-     templateUrl: baseurl + "assets/templates/selectors/substanceSelectorElement.html",
-     link: function (scope) {
-     scope.openSelector = function (parentRef, instanceName, test) {
-     var modalInstance = $modal.open({
-     animation: true,
-     templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
-     controller: 'SubstanceSelectorInstanceController',
-     size: 'lg'
-
-     });
-
-     modalInstance.result.then(function (selectedItem) {
-
-     //if(!parentRef[instanceName])parentRef[instanceName]={};
-     var oref = {};
-     oref.refuuid = selectedItem.uuid;
-     oref.refPname = selectedItem._name;
-     oref.approvalID = selectedItem.approvalID;
-     oref.substanceClass = "reference";
-     scope.mymodel = oref;
-     //_.set($scope, path, subref);
-     });
-     };
-     }
-     };
-     });*/
-
-
     //this is solely to set the molfile in the sketcher externally
     ginasApp.service('molChanger', function($http, CVFields, UUID) {
         var sketcher;
@@ -1679,6 +1616,7 @@
                 var childScope;
                 var template;
                 var templateUrl;
+                scope.warnings = [];
                 scope.stage = true;
                 switch (attrs.type) {
                     case "upload":
@@ -1727,8 +1665,13 @@
                      }
                      }).success(function (data) {
                      console.log(data);
-                         molChanger.setMol(data.structure.molfile);
-                     scope.close();
+                         if(!_.isEmpty(data)) {
+                             molChanger.setMol(data.structure.molfile);
+                             scope.close();
+                         }else{
+                             var warning= {type:'warning', message:'not a vaild molfile'};
+                             scope.warnings.push(warning);
+                         }
                      });
                 };
 
@@ -1916,75 +1859,6 @@
             }
         };
     });
-
-    /*    ginasApp.directive('exportButton', function () {
-     return {
-     restrict: 'E',
-     scope: {
-     structureid: '=',
-     format: '='
-     },
-     template: function () {
-     return '<button type="button" class="btn btn-primary" aria-label ="export molfile" uib-tooltip="View " structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
-     }
-     };
-     });*/
-
-    //selector for which button to show, and the associalted modal window
-
-    ginasApp.directive('errorWindow', function () {
-        return {
-            restrict: 'E',
-            scope: {
-                error: '='
-            },
-            templateUrl: baseurl + "assets/templates/errorwindow.html"
-        };
-    });
-
-    /*    ginasApp.directive('export', function ($http) {
-     return function (scope, element, attrs) {
-     element.bind("click", function () {
-     var modal = angular.element(document.getElementById('export-mol'));
-     var format = scope.format;
-     if (!format) {
-     format = "sdf";
-     }
-     $http({
-     method: 'GET',
-     url: baseurl + 'export/' + scope.structureid + '.' + format,
-     headers: {
-     'Content-Type': 'text/plain'
-     }
-     }).then(function (response) {
-     var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
-     var warnings = JSON.parse(warnHead);
-
-     modal.find('#inputExport').text(response.data);
-     if (warnings.length > 0) {
-     var html = "<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">\n" +
-     "                        <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"> <span aria-hidden=\"true\">&times;</span>\n" +
-     "                        </button>\n" +
-     "                        <span><h4 class=\"warntype\"></h4><span class=\"message\">" + warnings[0].message + "</span></span>";
-     modal.find('.warn').html(html);
-     } else {
-     modal.find('.warn').html("");
-     }
-
-     modal.modal('show');
-     }, function (response) {
-     alert("ERROR exporting data");
-     });
-     });
-     };
-     });
-
-     ginasApp.directive('molExport', function ($http) {
-     return {
-     restrict: 'E',
-     templateUrl: baseurl + "assets/templates/molexport.html"
-     };
-     });*/
 
     ginasApp.directive('deleteButton', function () {
         return {
