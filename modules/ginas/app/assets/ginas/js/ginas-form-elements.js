@@ -753,28 +753,4 @@ ginasFormElements.directive('substanceViewer', function(){
         };
     });
 
-    ginasFormElements.directive('titleHeader', function ($compile) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                name: '=',
-                kind: '='
-            },
-            link: function (scope, element, attrs) {
-                if (scope.name) {
-                    template = angular.element('<h1> Editing <code>' + scope.name + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);
-                } else {
-                    template = angular.element('<h1> Registering new <code> ' + scope.kind + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);
-                }
-            }
-        };
-    });
-
-
-
 })();
