@@ -37,6 +37,7 @@ import ix.ginas.utils.CodeSequentialGenerator;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingMessage.Link;
 import ix.ginas.utils.GinasProcessingStrategy;
+import ix.ginas.utils.NucleicAcidUtils;
 import ix.ginas.utils.ProteinUtils;
 import play.Logger;
 import play.Play;
@@ -140,6 +141,7 @@ public class Validation {
 		        	gpm.addAll(validateAndPrepareMixture((MixtureSubstance) s,strat));
 		            break;
 		        case nucleicAcid:
+		        	gpm.addAll(validateAndPrepareNa((NucleicAcidSubstance) s,strat));
 		            break;
 		        case polymer:
 		            break;
@@ -532,6 +534,19 @@ public class Validation {
         		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have at least 1 specified linkage"));
         	}else{
         		
+        	}
+        	
+        	{
+	        	int unspSugars=NucleicAcidUtils.getNumberOfUnspecifiedSugarSites(cs);
+	        	if(unspSugars!=0){
+	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have every base specify a sugar fragment. Missing " + unspSugars + " sites."));
+	        	}
+        	}
+        	{
+	        	int unspLinkages=NucleicAcidUtils.getNumberOfUnspecifiedLinkageSites(cs);
+	        	if(unspLinkages!=0){
+	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have every linkage specify a linkage fragment. Missing " + unspLinkages + " sites."));
+	        	}
         	}
         }
         return gpm;
