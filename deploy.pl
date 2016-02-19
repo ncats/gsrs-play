@@ -63,7 +63,8 @@ my $daemon = Proc::Daemon->new(
     
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
-
+print "sleeping 10 sec...\n";
+sleep(10000);
 print "status ", $daemon->Status($Kid_1_PID), "\n";
 #exit;
 #system($command. " &");
