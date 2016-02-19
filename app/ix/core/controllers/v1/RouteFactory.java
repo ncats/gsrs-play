@@ -1,20 +1,9 @@
 package ix.core.controllers.v1;
 
-import ix.core.EntityProcessor;
-import ix.core.NamedResource;
-import ix.core.NamedResourceFilter;
-import ix.core.controllers.EntityFactory;
-import ix.core.controllers.search.SearchFactory;
-import ix.core.models.Acl;
-import ix.core.models.Namespace;
-import ix.core.models.Principal;
-import ix.utils.Global;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -23,19 +12,29 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.persistence.Id;
 
-import play.Logger;
-import play.Play;
-import play.db.ebean.Model;
-import play.mvc.Controller;
-import play.mvc.Result;
-
 import com.avaje.ebean.Expr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.NamedResource;
+import ix.core.NamedResourceFilter;
+import ix.core.controllers.EntityFactory;
+import ix.core.controllers.search.SearchFactory;
+import ix.core.models.Acl;
+import ix.core.models.Namespace;
+import ix.core.models.Principal;
+import ix.utils.Global;
+import play.Logger;
+import play.Play;
+import play.db.ebean.Model;
+import play.mvc.BodyParser;
+import play.mvc.Controller;
+import play.mvc.Result;
+
 public class RouteFactory extends Controller {
-    static final public Model.Finder<Long, Namespace> resFinder = 
+    private static final int MAX_POST_PAYLOAD = 1024*1024*10;
+	static final public Model.Finder<Long, Namespace> resFinder = 
         new Model.Finder(Long.class, Namespace.class);
     static final public Model.Finder<Long, Acl> aclFinder = 
         new Model.Finder(Long.class, Acl.class);
@@ -312,6 +311,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result create (String context) {
         try {
             Method m = getMethod (context, "create"); 
@@ -326,6 +326,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
+    @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result validate (String context) {
         try {
             Method m = getMethod (context, "validate"); 
@@ -340,6 +341,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result update (String context, Long id, String field) {
         try {
             Method m = getMethod (context, "update", Long.class, String.class);
@@ -354,6 +356,7 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateEntity (String context) {
         try {
             Method m = getMethod (context, "updateEntity");
