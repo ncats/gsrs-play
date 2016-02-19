@@ -1731,6 +1731,36 @@ console.log(scope);
         };
     });
 
+    ginasForms.directive('headerForm', function ($compile) {
+        return {
+            restrict: 'E',
+            replace: true,
+            scope: {
+                name: '=',
+               // kind: '=',
+                parent: '='
+            },
+            link: function (scope, element, attrs) {
+                console.log(scope);
+                if (scope.name) {
+                    scope.formType ='Editing';
+/*                    template = angular.element('<h1> Editing <code>' + scope.name + '</code></h1>');
+                    element.append(template);
+                    $compile(template)(scope);*/
+                } else {
+                    scope.formType ='Registering new';
+                    scope.name = scope.parent.substanceClass;
+/*
+                    template = angular.element('<h1> Registering new <code> ' + scope.kind + '</code></h1>');
+                    element.append(template);
+                    $compile(template)(scope);*/
+                }
+            },
+            templateUrl: baseurl + "assets/templates/forms/header-form.html"
+        };
+    });
+
+
     ginasForms.directive('isolateForm', [function () {
         return {
             restrict: 'A',
