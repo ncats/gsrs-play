@@ -1737,24 +1737,20 @@ console.log(scope);
             replace: true,
             scope: {
                 name: '=',
-               // kind: '=',
                 parent: '='
             },
             link: function (scope, element, attrs) {
                 console.log(scope);
-                if (scope.name) {
+                if (scope.parent._name) {
                     scope.formType ='Editing';
-/*                    template = angular.element('<h1> Editing <code>' + scope.name + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);*/
+                    scope.name = scope.parent._name;
                 } else {
                     scope.formType ='Registering new';
                     scope.name = scope.parent.substanceClass;
-/*
-                    template = angular.element('<h1> Registering new <code> ' + scope.kind + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);*/
                 }
+                scope.clear= function(){
+                  console.log("CCCCCC");
+                };
             },
             templateUrl: baseurl + "assets/templates/forms/header-form.html"
         };

@@ -3,19 +3,38 @@
         <form class="form-horizontal" name="headerForm" role="form" novalidate>
             <div class="row form-row">
                 <h1> {{formType}} <code> {{name}}</code></h1>
-</div>
+            </div>
             <div class="row form-row">
+                <div class="col-md-3">
+                    <dropdown-view-edit obj="parent" field="definitionType" label="Definition Type"
+                                        cv="DEFINITION_TYPE" ng-blur = "$parent.clear();"></dropdown-view-edit>
+                </div>
+                <div class="col-md-4" ng-if="parent.definitionType.display=='Alternative'">
+                    <substance-chooser-selector referenceobj="parent" field="$$relatedSubstance" name="relatedSubstance"
+                                                formname="headerForm" label="Primary Substance" type="search"
+                                                definition="true"></substance-chooser-selector>
+                </div>
+
+                <!--
+
+                                    <label for="definitionType">Definition Type</label>
+                                    <select class="form-control" title="Definition Type" name="Definition Type" id="definitionType" ng-model= parent.definitionType>
+                                        <option class= "text-capitalize" value='PRIMARY' selected>Primary</option>
+                                        <option class= "text-capitalize" value='ALTERNATIVE'>Alternative</option>
+                                    </select>
+                                <select></select>-->
+
 
             <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="parent" parent="parent" divid="headerForm"
-                                   type="access"></form-selector>
-                </div>
-<!--                <div class="col-md-1 pull-right">
-                    <form-selector referenceobj="parent" parent="parent" divid="headerForm"
-                                   type="reference"></form-selector>
-                </div>-->
-                </div>
-            <div class="headerForm"></div>
-        </form>
+                <form-selector referenceobj="parent" parent="parent" divid="headerForm"
+                               type="access"></form-selector>
+            </div>
+            <!--                <div class="col-md-1 pull-right">
+                                <form-selector referenceobj="parent" parent="parent" divid="headerForm"
+                                               type="reference"></form-selector>
+                            </div>-->
     </div>
+    <div class="headerForm"></div>
+    </form>
+</div>
 </div>

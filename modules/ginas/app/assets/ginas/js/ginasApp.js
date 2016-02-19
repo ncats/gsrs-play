@@ -1401,7 +1401,10 @@
                             element.append(template);
                             $compile(template)(scope);
                         });
-                        formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q></substance-search-form>';
+                        if(attrs.definition){
+                            scope.definition = attrs.definition;
+                        }
+                        formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q  definition={{definition}}></substance-search-form>';
                         break;
                 }
 
@@ -1441,22 +1444,23 @@
             templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
             link: function (scope, element, attrs) {
                 scope.results = {};
-                // scope.searching = false;
-
                 scope.top = 8;
                 scope.testb = 0;
                 scope.searching = true;
-
-
                 scope.createSubref = function (selectedItem) {
-                    //  var temp = _.pick(selectedItem,['uuid','_name','approvalID']);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
                     temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
-                    //  scope.subref = angular.copy(temp);
-                    _.set(scope.referenceobj, scope.field, angular.copy(temp));
+                    if(attrs.definition){
+                        var r = {type:{value:'SUB_ALTERNATE->SUBSTANCE', display:'SUB_ALTERNATE->SUBSTANCE'}, relatedSubstance: temp};
+                        if(!_.has(scope.referenceobj, 'relationships')){
+                            _.set(scope.referenceobj, 'relationships', []);
+                        }
+                        scope.referenceobj.relationships.push(r);
+                    }
+                        _.set(scope.referenceobj, scope.field, angular.copy(temp));
                     scope.q = null;
                     scope.$parent.$parent.toggleStage();
                 };
