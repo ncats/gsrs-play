@@ -69,7 +69,9 @@ import ix.utils.Util;
 import ix.utils.Global;
 
 public class EntityFactory extends Controller {
-    static final SecureRandom rand = new SecureRandom ();
+    private static final String RESPONSE_TYPE_PARAMETER = "type";
+
+	static final SecureRandom rand = new SecureRandom ();
 
     static final ExecutorService _threadPool = 
         Executors.newCachedThreadPool();
@@ -869,6 +871,7 @@ public class EntityFactory extends Controller {
 	            	return validationResponse(false, validationMessages);
 	            }
             }
+            
             inst.save();
 	        
 
@@ -878,13 +881,26 @@ public class EntityFactory extends Controller {
             return internalServerError (ex.getMessage());
         }
     }
+    
+    public static enum RESPONSE_TYPE{
+    	FULL,
+    	MESSAGES
+    }
 
     protected static <K, T extends Model> Result validate(Class<T> type,
                                                           Model.Finder<K, T> finder, Validator<T> validator) {
         if (!request().method().equalsIgnoreCase("POST")) {
             return badRequest("Only POST is accepted!");
         }
-
+        String returnType=request().getQueryString(RESPONSE_TYPE_PARAMETER);
+        System.out.println(returnType);
+        RESPONSE_TYPE rept= RESPONSE_TYPE.MESSAGES;
+        
+        try{
+        	rept=RESPONSE_TYPE.valueOf(returnType.toUpperCase());
+        }catch(Exception e){
+        	
+        }
         String content = request().getHeader("Content-Type");
         if (content == null
             || (content.indexOf("application/json") < 0 && content
@@ -894,6 +910,7 @@ public class EntityFactory extends Controller {
 
         try {
             ObjectMapper mapper = new ObjectMapper();
+            
             mapper.addHandler(new DeserializationProblemHandler() {
                     public boolean handleUnknownProperty(
                                                          DeserializationContext ctx, JsonParser parser,
@@ -912,8 +929,12 @@ public class EntityFactory extends Controller {
                     }
                 });
 
+            
             JsonNode node = request().body().asJson();
+            
             T inst = mapper.treeToValue(node, type);
+            
+            System.out.println("Done");
             List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
             boolean valid=false;
             if(validator.validate(inst,validationMessages)){
@@ -921,15 +942,26 @@ public class EntityFactory extends Controller {
             }else{
             	valid=false;
             }
-            return validationResponse(valid, validationMessages);
+            if(rept==RESPONSE_TYPE.FULL){
+            	return validationResponse(valid, validationMessages,mapper.valueToTree(inst));
+            }else{
+            	return validationResponse(valid, validationMessages);
+            }
         } catch (Exception ex) {
             return internalServerError(ex.getMessage());
         }
     }
+    
     protected static Result validationResponse(boolean valid, List<ValidationMessage> validationMessages){
+    	return validationResponse(valid, validationMessages,null);
+    }
+    protected static Result validationResponse(boolean valid, List<ValidationMessage> validationMessages, JsonNode jsnode){
     	ObjectMapper mapper = new ObjectMapper();
     	Map wrapper = new HashMap();
         wrapper.put("valid", valid);
+        if(jsnode!=null){
+        	wrapper.put("object", jsnode);
+        }
         wrapper.put("messages", validationMessages);
         return ok(mapper.valueToTree(wrapper));
     }

@@ -1,5 +1,6 @@
 package ix.ginas.models.v1;
 
+import ix.core.models.BeanViews;
 import ix.ginas.models.GinasCommonSubData;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 
 @SuppressWarnings("serial")
 @Entity
@@ -34,6 +36,14 @@ public class Sugar extends GinasCommonSubData {
     	}
     	siteContainer.setSites(sites);
     }
+    
+   
+    public void setSitesShorthand(String sites){
+    	if(siteContainer==null){
+    		siteContainer=new SiteContainer(this.getClass().getName());
+    	}
+    	siteContainer.setShorthand(sites);
+    }
 
 	public String getSugar() {
 		return sugar;
@@ -43,7 +53,7 @@ public class Sugar extends GinasCommonSubData {
 		this.sugar = sugar;
 	}
 	
-	@JsonIgnore
+	// @JsonView(BeanViews.Internal.class)
 	public String getSitesShorthand(){
 		if(siteContainer!=null){
     		return siteContainer.getShorthand();

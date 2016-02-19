@@ -1,5 +1,6 @@
 @import ix.ginas.controllers.GinasLoad
 @import be.objectify.deadbolt.java.views.html._
+@import play.api.Play.current
 
 <!-- BANNER AND MENU -->
 <nav class="navbar navbar-default">
@@ -11,14 +12,14 @@
                 <span class="sr-only">Toggle Navigation</span> <i class="fa fa-bars"
             id="menuicon"></i>
             </button>
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#searchbarmobile" aria-expanded="false"> <span class="sr-only">Toggle Search</span>  <i class="fa fa-search"></i>
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#searchbarmobile" aria-expanded="false"> <span class="sr-only">Toggle Search</span><i class="fa fa-search"></i>
             </button>
             
         </div>
 
         <div class="collapse navbar-collapse navbar-default" id="menubar">
             <ul class="nav navbar-nav pull-left">
-              <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self" alt ="Home" aria-label="Return Home"><span class ="fa fa-home fa-2x"></span></a></li>
+              <li><a href="@ix.ginas.controllers.routes.GinasFactory.index()" target="_self" alt ="Home" aria-label="Return Home"><span class="sr-only">Return Home</span><span class ="fa fa-home fa-2x" alt ="Home" aria-label="Return Home"></span></a></li>
               <li><a href="@ix.ginas.controllers.routes.GinasApp.substances()" target="_self"><span>Browse Substances</span></a></li>
               @subjectPresent(new ix.ncats.controllers.security.IxDeadboltHandler()) {
                   <li><a href="@ix.ginas.controllers.routes.GinasFactory.register()" target="_self"><span>Register Substance</span></a></li>
@@ -39,15 +40,15 @@
                         <li><a href= "@ix.ginas.controllers.routes.GinasLoad.load()" id ="load-button" target="_self"><button class="btn btn-default">
                             Load Data</button></a></li>
                     }*@
-                    <li><a href= "/ginas/app/admin" id ="admin-button" target="_self">Admin</a></li>
+                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/admin" id ="admin-button" target="_self">Admin</a></li>
                 }
                
                 
                 @subjectNotPresentOr(new ix.ncats.controllers.security.IxDeadboltHandler()) {
-                    <li><a href= "/ginas/app/login" id ="login-button" target="_self"><button class="btn btn-default">
+                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/login" id ="login-button" target="_self"><button class="btn btn-default">
                         Login</button></a></li>
                 }{
-                    <li><a href= "/ginas/app/logout" id ="login-button" target="_self"><button class="btn btn-default">
+                    <li><a href= "@play.api.Play.configuration.getString("application.context").getOrElse("/ginas/app")/logout" id ="login-button" target="_self"><button class="btn btn-default">
                         Logout</button></a></li>
                 }
                 </ul>
@@ -64,6 +65,7 @@
                             <span class="input-group-btn">
                                 <button class="btn btn-default" id="search" type="search" aria-label="Search ginas"
                                 value="submit">
+                                    <span class="sr-only">Search ginas</span>
                                     <span class="fa fa-search"></span>
                                 </button>
                             </span>

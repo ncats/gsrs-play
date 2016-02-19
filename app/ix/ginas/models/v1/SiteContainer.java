@@ -52,7 +52,7 @@ public class SiteContainer extends GinasCommonSubData{
 		return sitesShortHand;
 	}
 	public void setShorthand(String shorthand){
-		this.sitesShortHand=shorthand;
+		setSites(parseShorthandRanges(shorthand));
 	}
 	public void setSites(List<Site> sites){
 		if(sites!=null){

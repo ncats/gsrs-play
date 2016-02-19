@@ -1,6 +1,7 @@
 package ix.ginas.utils.validation;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,6 +37,7 @@ import ix.ginas.utils.CodeSequentialGenerator;
 import ix.ginas.utils.GinasProcessingMessage;
 import ix.ginas.utils.GinasProcessingMessage.Link;
 import ix.ginas.utils.GinasProcessingStrategy;
+import ix.ginas.utils.NucleicAcidUtils;
 import ix.ginas.utils.ProteinUtils;
 import play.Logger;
 import play.Play;
@@ -139,6 +141,7 @@ public class Validation {
 		        	gpm.addAll(validateAndPrepareMixture((MixtureSubstance) s,strat));
 		            break;
 		        case nucleicAcid:
+		        	gpm.addAll(validateAndPrepareNa((NucleicAcidSubstance) s,strat));
 		            break;
 		        case polymer:
 		            break;
@@ -532,25 +535,54 @@ public class Validation {
         	}else{
         		
         	}
+        	
+        	{
+	        	int unspSugars=NucleicAcidUtils.getNumberOfUnspecifiedSugarSites(cs);
+	        	if(unspSugars!=0){
+	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have every base specify a sugar fragment. Missing " + unspSugars + " sites."));
+	        	}
+        	}
+        	{
+	        	int unspLinkages=NucleicAcidUtils.getNumberOfUnspecifiedLinkageSites(cs);
+	        	if(unspLinkages!=0){
+	        		gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Nucleic Acid substance must have every linkage specify a linkage fragment. Missing " + unspLinkages + " sites."));
+	        	}
+        	}
         }
         return gpm;
 	}
     
 	private static List<? extends GinasProcessingMessage> validateAndPrepareProtein(
 			ProteinSubstance cs, GinasProcessingStrategy strat) {
+		
 		List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
         if(cs.protein==null){
         	gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Protein substance must have a protein element"));
         }else{
-        	double tot=ProteinUtils.generateProteinWeight(cs);
+
+            
+            Set<String> unknownRes= new HashSet<String>();
+        	double tot=ProteinUtils.generateProteinWeight(cs,unknownRes);
+        	if(unknownRes.size()>0){
+        		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has unknown amino acid residues: " +unknownRes.toString());
+        		gpm.add(mes);
+        	}
+        	
+
         	List<Property> molprops=ProteinUtils.getMolWeightProperties(cs);
         	if(molprops.size()<=0){
+        		
         		GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Protein has no molecular weight, defaulting to calculated value").appliableChange(true);
         		gpm.add(mes);
         		strat.processMessage(mes);
+        		
         		switch(mes.actionType){
 					case APPLY_CHANGE:
 						cs.properties.add(ProteinUtils.makeMolWeightProperty(tot));
+						if(unknownRes.size()>0){
+			        		GinasProcessingMessage mes2=GinasProcessingMessage.WARNING_MESSAGE("Calculated protein weight questionable, due to unknown amino acid residues: " +unknownRes.toString());
+			        		gpm.add(mes2);
+			        	}
 						break;
 					case DO_NOTHING:
 						break;
@@ -577,7 +609,6 @@ public class Validation {
         	}
         	System.out.println("calc:" + tot);
         }
-        
         strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
         return gpm;
 	}

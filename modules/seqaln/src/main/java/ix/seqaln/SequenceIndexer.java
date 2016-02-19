@@ -67,6 +67,7 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
+import play.Logger;
 import net.sf.ehcache.Statistics;
 
 public class SequenceIndexer {
@@ -217,7 +218,11 @@ public class SequenceIndexer {
         
         ResultEnumeration (BlockingQueue<Result> queue) {
             this.queue = queue;
-            next ();
+            if(queue==null){
+            	next=POISON_RESULT;
+            }else{
+            	next ();
+            }
         }
 
         void next () {
@@ -344,6 +349,8 @@ public class SequenceIndexer {
         return _indexReader;
     }
 
+    
+    
     protected IndexSearcher getIndexSearcher () throws IOException {
         return new IndexSearcher (getIndexReader ());
     }
@@ -353,6 +360,10 @@ public class SequenceIndexer {
     }
 
     public File getBasePath () { return baseDir; }
+    
+    public long getSize(){
+    	return indexWriter.numDocs();
+    }
     
     public void shutdown () {
         try {
@@ -375,6 +386,11 @@ public class SequenceIndexer {
         }
     }
 
+    public void remove(String id) throws IOException{
+    	indexWriter.deleteDocuments(new Term (FIELD_ID, id.toString()));
+    	kmerWriter.deleteDocuments(new Term (FIELD_ID, id.toString()));
+    }
+    
     public void add (String id, CharSequence seq)
         throws IOException {
         if (indexWriter == null)
@@ -388,6 +404,7 @@ public class SequenceIndexer {
             doc.add(new IntField (FIELD_LENGTH, seq.length(), NO));
             doc.add(new StoredField (FIELD_SEQ, seq.toString()));
             indexWriter.addDocument(doc);
+            
             
             Kmers kmers = Kmers.create(seq);
             for (String kmer : kmers.kmers()) {
@@ -421,12 +438,15 @@ public class SequenceIndexer {
     
     public ResultEnumeration search (final CharSequence query,
                                      final double identity, final int gap) {
+    	if(getSize()<=0){
+    		return new ResultEnumeration(null);
+    	}
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
         threadPool.submit(new Runnable () {
                 public void run () {
                     try {
+                    	
                         search (out, query, identity, gap);
-                        
                     }
                     catch (Exception ex) {
                     	ex.printStackTrace();
@@ -435,9 +455,7 @@ public class SequenceIndexer {
                     	try {
 							out.put(POISON_RESULT);// finish
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-							
+							Logger.error(e.getMessage(), e);
 						} 
                     }
                     

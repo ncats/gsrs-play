@@ -18,12 +18,12 @@
             <textarea ng-show="edit" type="text" class="form-control" rows='5' ng-model=obj.sequence
                       ng-blur="parseSubunit(); edit=!edit"></textarea>
         </div>
-
-        <div ng-hide="edit" class="col-xs-2" ng-repeat="chunk in subunitDisplay track by $index">
-
+     <!--   <div ng-hide="edit" class="col-lg-12" ng-repeat="chunk in obj.$$subunitDisplay">
+            {{chunk}}-->
+        <div ng-hide="edit" class="col-lg-2 col-md-3 col-sm-3" ng-repeat="chunk in obj.$$subunitDisplay">
             <span class = "pull-right count" ng-hide=numbers>{{($index+1)*10}}</span><br>
             <span ng-repeat="aa in chunk">
-                <amino-acid acid=aa ></amino-acid>
+                <amino-acid acid= aa></amino-acid>
             </span>
         </div>
     </div>

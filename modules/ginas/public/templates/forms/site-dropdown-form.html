@@ -7,7 +7,7 @@
         <form class="form-horizontal" name="siteForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-2">
-                    <label for="subunitIndex" class="text-capitalize">Residue Index</label>
+                    <label for="subunitIndex" class="text-capitalize">Subunit Index</label>
                     <select ng-model="referenceobj.sites[0].subunitIndex" ng-change="redraw()" class="form-control"
                             id="subunitIndex" ng-options="r for r in getSubunitRange()">
                         <option class="text-capitalize" value='' disabled selected>Subunit Index</option>
@@ -25,7 +25,7 @@
                     <i class="fa fa-link fa-rotate-270 fa-2x"></i>
                 </div>
                 <div class="col-md-2">
-                    <label for="endSubunitIndex" class="text-capitalize">Residue Index</label>
+                    <label for="endSubunitIndex" class="text-capitalize">Subunit Index</label>
                     <select ng-model="referenceobj.sites[1].subunitIndex" ng-change="redraw()" class="form-control"
                             id="endSubunitIndex" ng-options="r for r in getSubunitRange()">
                         <option class="text-capitalize" value='' disabled selected>Subunit Index</option>

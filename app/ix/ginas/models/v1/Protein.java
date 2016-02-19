@@ -15,7 +15,9 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 
+import ix.core.models.BeanViews;
 import ix.core.models.Indexable;
 import ix.ginas.models.GinasCommonSubData;
 
@@ -42,6 +44,7 @@ public class Protein extends GinasCommonSubData {
     @OneToOne(cascade=CascadeType.ALL)
     public Glycosylation glycosylation;
 
+    @JsonView(BeanViews.Internal.class)
     @OneToOne(cascade=CascadeType.ALL)
     public Modifications modifications;
     
@@ -62,6 +65,15 @@ public class Protein extends GinasCommonSubData {
 
     public Protein () {}
 
+    
+    public void setModifications(Modifications mod){
+    	if(mod==null){
+    		return;
+    	}
+    	this.modifications=mod;
+    	
+    }
+    
     @JsonIgnore
     @Transient
     private Map<String, String> _modifiedCache=null;

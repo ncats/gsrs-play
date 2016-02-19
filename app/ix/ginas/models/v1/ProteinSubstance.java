@@ -5,6 +5,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
 import javax.persistence.OneToOne;
+import javax.persistence.Transient;
 
 @SuppressWarnings("serial")
 @Entity
@@ -27,7 +28,6 @@ public class ProteinSubstance extends Substance {
     		}
     	}
 		return false;
-    	
     }
     @Override
     public int getModificationCount(){
@@ -39,13 +39,33 @@ public class ProteinSubstance extends Substance {
     	}
     	return ret;
     }
+    
+    
     @Override
     public Modifications getModifications(){
     	return this.protein.modifications;
     }
     
+    
+    @Transient
+    private boolean _dirtyModifications=false;
+    
+    
     public void setModifications(Modifications m){
-    	 this.protein.modifications=modifications;
+    	if(this.protein==null){
+    		this.protein = new Protein();
+    		_dirtyModifications=true;
+    	}
+    	this.protein.setModifications(m);
+    	this.modifications=m;
+    }
+    
+    public void setProtein(Protein p){
+    	this.protein=p;
+    	if(_dirtyModifications){
+    		this.protein.setModifications(this.modifications);
+    		_dirtyModifications=false;
+    	}
     }
     
     

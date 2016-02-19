@@ -253,11 +253,13 @@ public class GinasUtils {
 				persist((ChemicalSubstance) theRecordToPersist, index);
 
 			} else if (theRecordToPersist instanceof ProteinSubstance) {
+				//System.out.println("Persisting protein");
 				Protein protein = ((ProteinSubstance) theRecordToPersist).protein;
 				for (Subunit su : protein.subunits) {
 					if (su.sequence != null && su.sequence.length() > 0) {
 						su.save();
-						_seqIndexer.add(su.uuid.toString(), su.sequence);
+						//System.out.println("About to add sequence to indexer");
+						//_seqIndexer.add(su.uuid.toString(), su.sequence);
 					}
 				}
 			}
@@ -283,8 +285,8 @@ public class GinasUtils {
 		try {
 			Chem.setFormula(chem.structure);
 			chem.structure.save();
-			index.add(String.valueOf(chem.structure.id), chem.structure.molfile);
-		} catch (IOException e) {
+			//index.add(String.valueOf(chem.structure.id), chem.structure.molfile);
+		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;
 		}
@@ -356,11 +358,12 @@ public class GinasUtils {
 		}
 
 		@Override
-		public JsonNode getNextRecord() {
+		public JsonNode getNextRecord() throws Exception{
 			if (buff == null)
 				return null;
+			String line=null;
 			try {
-				String line = buff.readLine();
+				line = buff.readLine();
 				if (line == null)
 					return null;
 				String[] toks = line.split("\t");
@@ -369,10 +372,10 @@ public class GinasUtils {
 				ObjectMapper mapper = new ObjectMapper();
 				JsonNode tree = mapper.readTree(bis);
 				return tree;
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
+				throw e;
 			}
-			return null;
 		}
 
 		@Override
@@ -411,7 +414,7 @@ public class GinasUtils {
 		}
 
 		@Override
-		public JsonNode getNextRecord() {
+		public JsonNode getNextRecord() throws Exception{
 			if (is == null)
 				return null;
 
@@ -423,8 +426,8 @@ public class GinasUtils {
 				return tree;
 			} catch (IOException e) {
 				e.printStackTrace();
+				throw e;
 			}
-			return null;
 		}
 
 		@Override

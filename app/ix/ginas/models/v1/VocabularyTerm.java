@@ -2,7 +2,9 @@ package ix.ginas.models.v1;
 
 import ix.core.models.IxModel;
 
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Inheritance;
 import javax.persistence.Table;
 
 /**
@@ -11,6 +13,8 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name="ix_ginas_vocabulary_term")
+@Inheritance
+@DiscriminatorValue("VOCAB")
 public class VocabularyTerm extends IxModel{
     /**
 	 * 

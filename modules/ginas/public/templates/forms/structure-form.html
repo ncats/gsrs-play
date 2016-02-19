@@ -9,7 +9,7 @@
 <!--
                     <sketcher ng-model ="struc" structure="parent"></sketcher>
 -->
-                    <sketcher parent="parent"></sketcher>
+                    <sketcher parent =parent ng-model=parent.structure.molfile></sketcher>
                 </div>
             </div>
 
@@ -19,7 +19,7 @@
                     <button class="btn btn-primary" aria-label="Check for duplicate chemical structures" ng-click="checkDuplicateChemicalSubstance(substance)">Check for duplicates</button>
 -->
                         <modal-button class= "pull-right padded" type= "export" structureid = parent.structure.id format="sdf" ></modal-button>
-                        <modal-button class= "pull-right padded" type= "import" ng-model ="parent.structure.molfile"></modal-button>
+                        <modal-button class= "pull-right padded" type= "import"></modal-button>
 <!--
                         <a class= "pull-right padded" data-toggle="modal" data-target="#molexport" aria-label="Export" uib-tooltip="Export Molfile"><i class="fa fa-external-link fa-2x success"></i></a> &nbsp;
 -->
@@ -61,11 +61,11 @@
                             <dropdown-view-edit obj= "parent.structure" field = "atropisomerism" label="Additional Stereochemistry" cv = "ATROPISOMERISM"></dropdown-view-edit>
                         </div>
                         <div class="col-md-1 pull-right">
-                            <form-selector referenceobj="code" parent="parent" divid="codeForm"
+                            <form-selector referenceobj="code" parent="parent" divid="structureForm"
                                            type="access"></form-selector>
                         </div>
                         <div class="col-md-1 pull-right">
-                            <form-selector referenceobj="code" parent="parent" divid="codeForm"
+                            <form-selector referenceobj="code" parent="parent" divid="structureForm"
                                            type="reference"></form-selector>
                         </div>
                     </div>
