@@ -218,7 +218,11 @@ public class SequenceIndexer {
         
         ResultEnumeration (BlockingQueue<Result> queue) {
             this.queue = queue;
-            next ();
+            if(queue==null){
+            	next=POISON_RESULT;
+            }else{
+            	next ();
+            }
         }
 
         void next () {
@@ -435,7 +439,7 @@ public class SequenceIndexer {
     public ResultEnumeration search (final CharSequence query,
                                      final double identity, final int gap) {
     	if(getSize()<=0){
-    		return (ResultEnumeration) Collections.enumeration(new ArrayList<Result>());
+    		return new ResultEnumeration(null);
     	}
         final BlockingQueue<Result> out = new LinkedBlockingQueue<Result>();
         threadPool.submit(new Runnable () {
