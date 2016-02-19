@@ -20,7 +20,7 @@ my $zipFile = $files[0];
 print "Running as: ", getpwuid($<), "\n";
 
 my $zipName = basename($zipFile);
-my $outputPath = "/ncats/users/ncatsweb/www/files/ginastmp/currentDevApp";
+my $outputPath = "/ncats/users/ncatsweb/www/files/ginastmp/currentDevApp2";
 #my $outputPath = "ginastmp/currentDevApp";
 
 if( -e $outputPath){
@@ -30,6 +30,7 @@ if( -e $outputPath){
 
 	foreach my $pid (@pids){
 		#kill it
+		print "\t$pid";
 		system("kill -9 $pid");
 	}
 	
@@ -49,7 +50,7 @@ my $abs_path = abs_path($outputPath. "/$subDir");
 chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
 print("working dir is $abs_path\n");
 
-my $command = "/usr/bin/perl $abs_path/bin/ginas -Djava.awt.headless=true -Dhttp.port=9003 -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app";
+my $command = "/usr/bin/perl $abs_path/bin/ginas -Djava.awt.headless=true -Dhttp.port=9004 -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app";
 
 my $daemon = Proc::Daemon->new(
         work_dir => $abs_path,
