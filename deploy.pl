@@ -23,7 +23,7 @@ my $zipName = basename($zipFile);
 
 my $outputPathRoot = $ENV{JENKINS_GINAS_DEPLOY_ROOT};
 my $port = $ENV{JENKINS_GINAS_DEPLOY_PORT};
-
+print "output root = ". $outputPathRoot ."\n";
 die "no deploy root specified" unless(defined $outputPathRoot);
 die "no deploy port specified" unless(defined $port);
 
