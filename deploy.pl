@@ -20,9 +20,18 @@ my $zipFile = $files[0];
 print "Running as: ", getpwuid($<), "\n";
 
 my $zipName = basename($zipFile);
-my $outputPath = "/ncats/users/ncatsweb/www/files/ginastmp/currentDevApp2";
+
+my $outputPathRoot = $ENV{JENKINS_GINAS_DEPLOY_ROOT};
+my $port = $ENV{JENKINS_GINAS_DEPLOY_PORT};
+
+die "no deploy root specified" unless(defined $outputPathRoot);
+die "no deploy port specified" unless(defined $port);
+
+
+#my $outputPath = "/ncats/users/ncatsweb/www/files/ginastmp/currentDevApp2";
 #my $outputPath = "ginastmp/currentDevApp";
 
+my $outputPath = $outputPathRoot . "_" . $port;
 if( -e $outputPath){
 	#check if RUNNING_PID exists and kill job if it is
 	my @pids = @{getOldPid($outputPath)};
@@ -50,7 +59,7 @@ my $abs_path = abs_path($outputPath. "/$subDir");
 chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
 print("working dir is $abs_path\n");
 
-my $command = "nohup /usr/bin/perl $abs_path/bin/ginas -Djava.awt.headless=true -Dhttp.port=9004 -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app";
+my $command = "/usr/bin/perl $abs_path/bin/ginas -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app";
 
 my $daemon = Proc::Daemon->new(
         work_dir => $abs_path,
@@ -63,9 +72,6 @@ my $daemon = Proc::Daemon->new(
     
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
-print "sleeping 10 sec...\n";
-sleep(10); #seconds not millis !
-print "status ", $daemon->Status($Kid_1_PID), "\n";
 #exit;
 #system($command. " &");
 
