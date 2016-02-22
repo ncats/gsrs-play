@@ -294,6 +294,13 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 		}
 		return _seqIndexer;
 	}
+    private StructureIndexer getStructureIndexer(){
+    	if (_strucIndexer == null) {
+    		_strucIndexer =
+    	            Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+		}
+		return _strucIndexer;
+    }
     
 	private void makeIndexOnBean(Object bean) throws java.io.IOException {
 		if (plugin != null)
@@ -322,7 +329,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 				String structure;
 				try {
 					structure = (String) seq.get(bean);
-					_strucIndexer.add(_id, structure);
+					getStructureIndexer().add(_id, structure);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -340,7 +347,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 		}
 		List<Field> structureFields = getStructureIndexableField(bean);
 		if (structureFields != null && structureFields.size()>0) {
-			_strucIndexer.remove(null, _id);
+			getStructureIndexer().remove(null, _id);
 		}
 	}
 	
