@@ -298,7 +298,8 @@ public class SequenceIndexer {
         this.threadPool = threadPool;   
     }
 
-    static Analyzer createIndexAnalyzer () {
+    @SuppressWarnings("deprecation")
+	static Analyzer createIndexAnalyzer () {
         Map<String, Analyzer> fields = new HashMap<String, Analyzer>();
         fields.put(FIELD_ID, new KeywordAnalyzer ());
         fields.put(FIELD_KMER, new KeywordAnalyzer ());
@@ -667,14 +668,15 @@ public class SequenceIndexer {
                                                             s.length()));
     }
 
-    static <T> T getOrElse (String key, Callable<T> generator)
+    @SuppressWarnings("unchecked")
+	static <T> T getOrElse (String key, Callable<T> generator)
         throws Exception {
         Object value = CACHE.get(key);
         if (value == null) {
             value = generator.call();
             CACHE.put(new Element (key, value));
-        }
-        else {
+            
+        }else {
             value = ((Element)value).getObjectValue();
         }
         

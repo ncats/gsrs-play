@@ -64,7 +64,7 @@ public class SubstancePostUpdateTest {
                         JsonNode js=null;
                         js = (new ObjectMapper()).readTree(is);
                         
-                        String uuid=js.get("uuid");
+                        String uuid=js.get("uuid").asText();
                         Logger.info("Running: " + resource);
 
                         WSResponse wsResponse1 = WS.url(SubstancePostUpdateTest.VALIDATE_URL).post(js).get(timeout);
