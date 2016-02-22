@@ -29,23 +29,39 @@ var ProteinWizardPage = function () {
                     model: 'name.languages',
                     type: 'multi-select'
                 }, {
-                    model: 'name.display',
+                    model: 'name.displayName',
                     type: 'check-box'
-                }]
-            },{
-                formName: 'codeForm',
-                fields: [{
-                    model: 'name.name',
-                    type: 'text-input'
                 }, {
-                    model: 'name.type',
-                    type: 'dropdown-select'
+                    model: 'name.preferred',
+                    type: 'check-box'
                 }, {
-                    model: 'name.languages',
+                    model: 'name.access',
+                    type: 'form-selector'
+                }, {
+                    model: 'name.reference',
+                    type: 'form-selector'
+                }, {
+                    model: 'name.domains',
                     type: 'multi-select'
                 }, {
-                    model: 'name.display',
+                    model: 'name.nameOrgs',
+                    type: 'form-selector'
+                }, {
+                    model: 'name.nameJurisdiction',
+                    type: 'multi-select'
+                }
+                ]
+            },{
+                formName: 'orgForm',
+                fields: [{
+                    model: 'org.nameOrg',
+                    type: 'text-input'
+                }, {
+                    model: 'name.deprecated',
                     type: 'check-box'
+                }, {
+                    model: 'name.deprecatedDate',
+                    type: 'date-picker'
                 }]
             }]
 

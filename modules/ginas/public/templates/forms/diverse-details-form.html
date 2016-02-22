@@ -1,19 +1,21 @@
-<div class = "row info">
+< class = "row info">
     <div class="row">
         <form-header type="Details" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="diverseDetailsForm" role="form" novalidate>
         <div class="row form-row">
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <dropdown-view-edit obj = "parent.structurallyDiverse" field="infraSpecificType" cv = "INFRA_SPECIFIC_TYPE" label="Infra Specific Type"></dropdown-view-edit>
             </div>
             <div class="col-md-3">
                 <text-view-edit obj = "parent.structurallyDiverse" field="infraSpecificName" label="Infra Specific Name"></text-view-edit>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <dropdown-view-edit obj = "parent.structurallyDiverse" field="developmentalStage" cv = "DEVELOPMENTAL_STAGE" label="Developmental Stage"></dropdown-view-edit>
             </div>
         </div>
         <p></p>
+    </form>
     </div>
 </div>

@@ -479,7 +479,7 @@
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
-                scope.parent.$$diverseType = "";
+                scope.parent.$$diverseType = "whole";
 
                 if(scope.parent.structurallyDiverse.displayParts ==='WHOLE'){
                     _.set(scope.parent, '$$diverseType', 'whole');
