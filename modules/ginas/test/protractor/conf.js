@@ -1,37 +1,48 @@
 exports.config = {
     framework: 'jasmine',
     seleniumAddress: 'http://localhost:4444/wd/hub',
-    //seleniumServerJar: './node_modules/protractor/selenium/latest.jar',
-    specs: ['TestChemicalWizard.js'],
+    specs: ['TestChemicalWizard.js',
+            'TestProteinWizard.js'
+            ],
 
     baseUrl: 'http://localhost:9000',
 
     "scripts": {
         "start": "http-server ./app -a localhost -p 9000"
-    }
+    },
 
-
-
-   /*
     capabilities: {
-    browserName: 'firefox' //default 'chrome'
-    }
-   , jasmineNodeOpts: {
+        'browserName': 'chrome'
+       // 'platform': 'ANY',
+       // 'version': '11'
+    },
+
+  /*  multiCapabilities: [
+     {'browserName': 'chrome'},
+    {'browserName': 'firefox'} ,
+     {'browserName': 'internet explorer'}
+     ],*/
+
+   jasmineNodeOpts: {
         showColors: true,
         isVerbose: true
-    }
-   , onPrepare: function() {
-        var jasmineReporters = require('jasmine-node-reporter-fix');
-        //to make the browser wait
-        var capsPromise = browser.getCapabilities();
+    },
+   onPrepare: function() {
+       var jasmineReporters = require('jasmine-reporters');
+       var Jasmine2HtmlReporter = require('protractor-jasmine2-html-reporter');
+
+        var capsPromise = browser.getCapabilities(); //to make the browser wait
         capsPromise.then(function (caps) {
             jasmine.getEnv().addReporter(
-                new jasmine.JUnitXmlReporter('protractor_output', true, true, 'testresults.e2e.'))
+            new jasmineReporters.JUnitXmlReporter('protractor_output', true, true));
         });
 
-    var HtmlReporter = require('protractor-html-screenshot-reporter');
-    jasmine.getEnv().addReporter(new HtmlReporter({
-    baseDirectory: 'e2e-reports/html-report'
-    }));
-    }*/
+       jasmine.getEnv().addReporter(
+           new Jasmine2HtmlReporter({
+               savePath: 'reports'
+               , takeScreenshots: true
+               , screenshotsFolder: '-images'
+               , fixedScreenshotName: true
+           }));
+    }
 }

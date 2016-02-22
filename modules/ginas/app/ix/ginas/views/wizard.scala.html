@@ -5,8 +5,8 @@
 
 @wizardfields(kind: String) = {
 
-    <title-header name = "substance._name" kind = "substance.substanceClass"></title-header>
-    <name-form parent = substance ng-cloak></name-form>
+    <header-form kind = "substance.substanceClass" parent = substance></header-form>
+    <name-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></name-form>
 
 
 @kind match {
@@ -80,7 +80,7 @@
         <structural-modification-form referenceobj ="referenceobj" parent = substance></structural-modification-form>
         <physical-modification-form referenceobj ="referenceobj" parent = substance></physical-modification-form>
     </div>
-    <code-form parent = substance ng-cloak></code-form>
+    <code-form ng-if = "substance.definitionType.value !='ALTERNATIVE'" parent = substance ng-cloak></code-form>
     <relationship-form parent = substance ng-cloak></relationship-form>
     <note-form parent = substance ng-cloak></note-form>
     <property-form parent = substance ng-cloak></property-form>

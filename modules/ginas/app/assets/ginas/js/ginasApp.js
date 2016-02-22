@@ -17,49 +17,63 @@
         });
 
     ginasApp.factory('Substance', function () {
-        var Substance = {};
-        var substanceClass = window.location.search.split('=')[1];
+        var substance = {};
+        substance.$$setClass = function(subClass){
+            var substanceClass= subClass;
         switch (substanceClass) {
             case "chemical":
-                Substance.substanceClass = substanceClass;
-                Substance.structure = {};
-                _.set(Substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
-                Substance.moieties = [];
+                substance.substanceClass = substanceClass;
+                substance.structure = {};
+                _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
+                substance.moieties = [];
                 break;
             case "protein":
-                Substance.substanceClass = substanceClass;
-                Substance.protein = {};
-                Substance.protein.subunits = [];
+                substance.substanceClass = substanceClass;
+                substance.protein = {};
+                substance.protein.subunits = [];
                 break;
             case "structurallyDiverse":
-                Substance.substanceClass = substanceClass;
-                Substance.structurallyDiverse = {};
+                substance.substanceClass = substanceClass;
+                substance.structurallyDiverse = {};
                 break;
             case "nucleicAcid":
-                Substance.substanceClass = substanceClass;
-                Substance.nucleicAcid = {};
-                Substance.nucleicAcid.subunits = [];
+                substance.substanceClass = substanceClass;
+                substance.nucleicAcid = {};
+                substance.nucleicAcid.subunits = [];
                 break;
             case "mixture":
-                Substance.substanceClass = substanceClass;
-                Substance.mixture = {};
+                substance.substanceClass = substanceClass;
+                substance.mixture = {};
                 break;
             case "polymer":
-                Substance.substanceClass = substanceClass;
-                Substance.polymer = {};
+                substance.substanceClass = substanceClass;
+                substance.polymer = {};
                 break;
             case "specifiedSubstanceG1":
-                Substance.substanceClass = substanceClass;
-                Substance.specifiedSubstance = {};
+                substance.substanceClass = substanceClass;
+                substance.specifiedSubstance = {};
                 break;
             default:
-                Substance.substanceClass = substanceClass;
-//                Substance.polymer = {};
+                substance.substanceClass = substanceClass;
+//                substance.polymer = {};
                 console.log('invalid substance class');
                 break;
         }
-        Substance.references = [];
-        return Substance;
+        substance.references = [];
+            console.log(substance);
+            return substance;
+        };
+
+        substance.$$changeClass = function(newClass){
+            substance.substanceClass = newClass;
+            return substance;
+        };
+
+        substance.$$setSubstance = function(sub){
+        substance = sub;
+            return substance;
+        };
+        return substance;
     });
 
     ginasApp.factory('polymerUtils', function () {
@@ -661,8 +675,12 @@
             var sub = JSON.parse(input);
             //  $scope.substance = sub;
             $scope.substance = $scope.toFormSubstance(sub);
-            console.log($scope);
-            molChanger.setMol($scope.substance.structure.molfile);
+            if($scope.substance.substanceClass==='chemical') {
+                molChanger.setMol($scope.substance.structure.molfile);
+            }
+            if($scope.substance.substanceClass==='polymer') {
+                molChanger.setMol($scope.substance.idealizedStructure.molfile);
+            }
         };
 
         $scope.bugSubmit = function (bugForm) {
@@ -692,7 +710,10 @@
             //    });
             //
             //} else {
-            $scope.substance = Substance;
+            console.log($location);
+            var substanceClass = $location.$$search.kind;
+            $scope.substance = Substance.$$setClass(substanceClass);
+            console.log($scope);
         }
 
 
@@ -742,28 +763,6 @@
             "  <div class=\"sk-cube4 sk-cube\"></div>\n" +
             "  <div class=\"sk-cube3 sk-cube\"></div>\n" +
             "</div>"
-        };
-    });
-
-    ginasApp.directive('titleHeader', function ($compile) {
-        return {
-            restrict: 'E',
-            replace: true,
-            scope: {
-                name: '=',
-                kind: '='
-            },
-            link: function (scope, element, attrs) {
-                if (scope.name) {
-                    template = angular.element('<h1> Editing <code>' + scope.name + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);
-                } else {
-                    template = angular.element('<h1> Registering new <code> ' + scope.kind + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);
-                }
-            }
         };
     });
 
@@ -1058,7 +1057,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
                 if (!_.isUndefined(scope.referenceobj)) {
                     if (_.has(scope.referenceobj, 'sites')) {
                         scope.referenceobj.$$displayString = siteList.siteString(scope.referenceobj.sites);
@@ -1281,9 +1279,8 @@
 
                 scope.parseSubunit = function () {
                     console.log(scope.obj.sequence);
-
                     scope.obj.$$cysteineIndices = [];
-                    scope.parent.$$subunitDisplay =[];
+                    var display = [];
                     _.forEach(scope.obj.sequence, function (aa, index) {
                         var obj = {};
                         obj.value = aa;
@@ -1343,8 +1340,7 @@
                         display.push(obj);
                     });
                     display = _.chunk(display, 10);
-                    scope.subunitDisplay = display;
-                    scope.parent.$$subunitDisplay.push(display);
+                    _.set(scope.obj, '$$subunitDisplay', display);
                     console.log(scope);
                 };
 
@@ -1426,7 +1422,10 @@
                             element.append(template);
                             $compile(template)(scope);
                         });
-                        formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q></substance-search-form>';
+                        if(attrs.definition){
+                            scope.definition = attrs.definition;
+                        }
+                        formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q  definition={{definition}}></substance-search-form>';
                         break;
                 }
 
@@ -1466,22 +1465,23 @@
             templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
             link: function (scope, element, attrs) {
                 scope.results = {};
-                // scope.searching = false;
-
                 scope.top = 8;
                 scope.testb = 0;
                 scope.searching = true;
-
-
                 scope.createSubref = function (selectedItem) {
-                    //  var temp = _.pick(selectedItem,['uuid','_name','approvalID']);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
                     temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
-                    //  scope.subref = angular.copy(temp);
-                    _.set(scope.referenceobj, scope.field, angular.copy(temp));
+                    if(attrs.definition){
+                        var r = {type:{value:'SUB_ALTERNATE->SUBSTANCE', display:'SUB_ALTERNATE->SUBSTANCE'}, relatedSubstance: temp};
+                        if(!_.has(scope.referenceobj, 'relationships')){
+                            _.set(scope.referenceobj, 'relationships', []);
+                        }
+                        scope.referenceobj.relationships.push(r);
+                    }
+                        _.set(scope.referenceobj, scope.field, angular.copy(temp));
                     scope.q = null;
                     scope.$parent.$parent.toggleStage();
                 };
@@ -1533,44 +1533,6 @@
             }
         };
     });
-
-
-    /*//modal
-     ginasApp.directive('substanceChooser', function ($modal) {
-     return {
-     restrict: 'E',
-     require: "ngModel",
-     scope: {
-     mymodel: '=ngModel',
-     lite: '=lite'
-     },
-     templateUrl: baseurl + "assets/templates/selectors/substanceSelectorElement.html",
-     link: function (scope) {
-     scope.openSelector = function (parentRef, instanceName, test) {
-     var modalInstance = $modal.open({
-     animation: true,
-     templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
-     controller: 'SubstanceSelectorInstanceController',
-     size: 'lg'
-
-     });
-
-     modalInstance.result.then(function (selectedItem) {
-
-     //if(!parentRef[instanceName])parentRef[instanceName]={};
-     var oref = {};
-     oref.refuuid = selectedItem.uuid;
-     oref.refPname = selectedItem._name;
-     oref.approvalID = selectedItem.approvalID;
-     oref.substanceClass = "reference";
-     scope.mymodel = oref;
-     //_.set($scope, path, subref);
-     });
-     };
-     }
-     };
-     });*/
-
 
     //this is solely to set the molfile in the sketcher externally
     ginasApp.service('molChanger', function($http, CVFields, UUID) {
@@ -1679,6 +1641,7 @@
                 var childScope;
                 var template;
                 var templateUrl;
+                scope.warnings = [];
                 scope.stage = true;
                 switch (attrs.type) {
                     case "upload":
@@ -1727,8 +1690,13 @@
                      }
                      }).success(function (data) {
                      console.log(data);
-                         molChanger.setMol(data.structure.molfile);
-                     scope.close();
+                         if(!_.isEmpty(data)) {
+                             molChanger.setMol(data.structure.molfile);
+                             scope.close();
+                         }else{
+                             var warning= {type:'warning', message:'not a vaild molfile'};
+                             scope.warnings.push(warning);
+                         }
                      });
                 };
 
@@ -1916,75 +1884,6 @@
             }
         };
     });
-
-    /*    ginasApp.directive('exportButton', function () {
-     return {
-     restrict: 'E',
-     scope: {
-     structureid: '=',
-     format: '='
-     },
-     template: function () {
-     return '<button type="button" class="btn btn-primary" aria-label ="export molfile" uib-tooltip="View " structureid=structureid format=format export><i class="fa fa-external-link chem-button"></i></button>';
-     }
-     };
-     });*/
-
-    //selector for which button to show, and the associalted modal window
-
-    ginasApp.directive('errorWindow', function () {
-        return {
-            restrict: 'E',
-            scope: {
-                error: '='
-            },
-            templateUrl: baseurl + "assets/templates/errorwindow.html"
-        };
-    });
-
-    /*    ginasApp.directive('export', function ($http) {
-     return function (scope, element, attrs) {
-     element.bind("click", function () {
-     var modal = angular.element(document.getElementById('export-mol'));
-     var format = scope.format;
-     if (!format) {
-     format = "sdf";
-     }
-     $http({
-     method: 'GET',
-     url: baseurl + 'export/' + scope.structureid + '.' + format,
-     headers: {
-     'Content-Type': 'text/plain'
-     }
-     }).then(function (response) {
-     var warnHead = response.headers("EXPORT-WARNINGS").split("___")[0];
-     var warnings = JSON.parse(warnHead);
-
-     modal.find('#inputExport').text(response.data);
-     if (warnings.length > 0) {
-     var html = "<div class=\"alert alert-danger alert-dismissible\" role=\"alert\">\n" +
-     "                        <button type=\"button\" class=\"close\" data-dismiss=\"alert\" aria-label=\"Close\"> <span aria-hidden=\"true\">&times;</span>\n" +
-     "                        </button>\n" +
-     "                        <span><h4 class=\"warntype\"></h4><span class=\"message\">" + warnings[0].message + "</span></span>";
-     modal.find('.warn').html(html);
-     } else {
-     modal.find('.warn').html("");
-     }
-
-     modal.modal('show');
-     }, function (response) {
-     alert("ERROR exporting data");
-     });
-     });
-     };
-     });
-
-     ginasApp.directive('molExport', function ($http) {
-     return {
-     restrict: 'E',
-     templateUrl: baseurl + "assets/templates/molexport.html"
-     };
-     });*/
 
     ginasApp.directive('deleteButton', function () {
         return {
