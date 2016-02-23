@@ -9,7 +9,8 @@ use Cwd 'abs_path';
 
 use File::Find;
 use Proc::Daemon;
-
+use LWP::UserAgent;
+  
 
 sub getOldPid($);
 
@@ -39,7 +40,7 @@ if( -e $outputPath){
 
 	foreach my $pid (@pids){
 		#kill it
-		print "\t$pid";
+		print "\t$pid\n";
 		system("kill -9 $pid");
 	}
 	
@@ -56,7 +57,7 @@ copy($zipFile, $outputPath)  or die "Copy failed: $!";
 my ($subDir, undef, undef) = fileparse($zipFile, ".zip");
 my $abs_path = abs_path($outputPath. "/$subDir");
 					
-chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
+#chdir ($abs_path) or die  "cannot change to $abs_path: $!\n";
 print("working dir is $abs_path\n");
 
 my $command = "$abs_path/bin/ginas -Djava.awt.headless=true -Dhttp.port=$port -Dconfig.resource=ginas.conf -DapplyEvolutions.default=true -Dapplication.context=/dev/ginas/app";
@@ -72,6 +73,70 @@ my $daemon = Proc::Daemon->new(
     
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
+
+#wait 10 seconds for ginas to start up...
+sleep(10);
+
+my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
+
+if(-e $ginasFileDump){
+	print "file exists\n";
+}else{
+	print "FILE DOES NOT EXIST!!!!";
+}
+
+system "curl -v -F file-type=JSON -F file-name=@" ."$ginasFileDump http://localhost:$port/dev/ginas/app/load";
+my $ua = LWP::UserAgent->new;
+#we have to pretend to be a filled in form
+#content_type multi-part/form-data
+
+#my $loadResp = $ua->post("http://localhost:$port/dev/ginas/app/load", 
+#					,
+#					#leading colon to force spelling perl will auto uppercase first letters of words
+#					Content_Type => 'form-data',
+#				  Content=>[
+#				      #to upload the file, the path has to be the
+#								#first element in an array...
+#								':file-name' =>[$ginasFileDump, "rep90.ginas",
+#												     Header => [':file-type' => "JSON"],
+#													]
+#								#':file-type' => "JSON",
+#								]
+#					
+#					);
+#
+#
+#if($loadResp->is_error()){
+#	print "error loading JSON file ", $loadResp->status_line, "\n";
+#	exit;
+#}
+print "=======================\n";
+print "querying status JSON\n";
+print "=======================\n";
+my $statusURL = "http://localhost:$port/dev/ginas/app/api/v1/jobs/1";
+
+my $done=undef;
+while (!$done){
+	sleep(5);
+	
+	# Create a request
+	my $req = HTTP::Request->new(GET => $statusURL);
+	# Pass request to the user agent and get a response back
+	my $res = $ua->request($req);
+	
+	#res is a JSON response we want to look for value of "status":"PENDING" or RUNNING or COMPLETE
+	print $res->content , "\n";
+	if($res->content =~/\"status\"\:\"([A-Z]+)?\"/){
+	
+		print "STATUS = ",  $1, "\n";
+		$done = $1 eq "COMPLETE";
+	}
+
+}
+
+
+
+
 #exit;
 #system($command. " &");
 
