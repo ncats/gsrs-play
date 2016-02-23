@@ -75,7 +75,7 @@ my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
 
 #wait 10 seconds for ginas to start up...
-sleep(10);
+sleep(30);
 
 my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
 
