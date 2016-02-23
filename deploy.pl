@@ -74,8 +74,23 @@ my $daemon = Proc::Daemon->new(
 my $Kid_1_PID = $daemon->Init;
 print "daemon process is $Kid_1_PID\n";
 
-#wait 10 seconds for ginas to start up...
-sleep(30);
+
+my $ua = LWP::UserAgent->new;
+my $startUpURL = "http://localhost:$port/dev/ginas/app/api/v1";
+my $startReq = HTTP::Request->new(GET => $startUpURL);
+my $startResponse;
+my $tries=0;
+do{
+	#wait 10 seconds for ginas to start up...
+  sleep(10);
+  $startResponse = $ua->request($startReq);
+  $tries++;
+  print "$tries\n";
+}while($tries < 10 && $startResponse->is_error());
+
+if($startResponse->is_error()){
+	die "could not connect to ginas ", $startReq->status_line, "\n";
+}
 
 my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
 
@@ -86,7 +101,7 @@ if(-e $ginasFileDump){
 }
 
 system "curl -v -F file-type=JSON -F file-name=@" ."$ginasFileDump http://localhost:$port/dev/ginas/app/load";
-my $ua = LWP::UserAgent->new;
+
 #we have to pretend to be a filled in form
 #content_type multi-part/form-data
 
