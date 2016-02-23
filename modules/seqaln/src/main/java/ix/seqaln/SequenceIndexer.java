@@ -36,6 +36,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.AlreadyClosedException;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NIOFSDirectory;
 import org.apache.lucene.store.NoLockFactory;
@@ -339,8 +340,13 @@ public class SequenceIndexer {
     public File getBasePath () { return baseDir; }
     
     public long getSize(){
-    	
-    	return indexWriter.numDocs();
+    	if(indexWriter==null) return 0;
+    	try{
+    		return indexWriter.numDocs();
+    	}catch(AlreadyClosedException e){
+    		Logger.trace("Index already closed",e);
+    		return 0;
+    	}
     }
     
     public void shutdown () {
