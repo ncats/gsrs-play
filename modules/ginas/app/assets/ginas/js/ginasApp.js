@@ -17,49 +17,63 @@
         });
 
     ginasApp.factory('Substance', function () {
-        var Substance = {};
-        var substanceClass = window.location.search.split('=')[1];
+        var substance = {};
+        substance.$$setClass = function(subClass){
+            var substanceClass= subClass;
         switch (substanceClass) {
             case "chemical":
-                Substance.substanceClass = substanceClass;
-                Substance.structure = {};
-                _.set(Substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
-                Substance.moieties = [];
+                substance.substanceClass = substanceClass;
+                substance.structure = {};
+                _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
+                substance.moieties = [];
                 break;
             case "protein":
-                Substance.substanceClass = substanceClass;
-                Substance.protein = {};
-                Substance.protein.subunits = [];
+                substance.substanceClass = substanceClass;
+                substance.protein = {};
+                substance.protein.subunits = [];
                 break;
             case "structurallyDiverse":
-                Substance.substanceClass = substanceClass;
-                Substance.structurallyDiverse = {};
+                substance.substanceClass = substanceClass;
+                substance.structurallyDiverse = {};
                 break;
             case "nucleicAcid":
-                Substance.substanceClass = substanceClass;
-                Substance.nucleicAcid = {};
-                Substance.nucleicAcid.subunits = [];
+                substance.substanceClass = substanceClass;
+                substance.nucleicAcid = {};
+                substance.nucleicAcid.subunits = [];
                 break;
             case "mixture":
-                Substance.substanceClass = substanceClass;
-                Substance.mixture = {};
+                substance.substanceClass = substanceClass;
+                substance.mixture = {};
                 break;
             case "polymer":
-                Substance.substanceClass = substanceClass;
-                Substance.polymer = {};
+                substance.substanceClass = substanceClass;
+                substance.polymer = {};
                 break;
             case "specifiedSubstanceG1":
-                Substance.substanceClass = substanceClass;
-                Substance.specifiedSubstance = {};
+                substance.substanceClass = substanceClass;
+                substance.specifiedSubstance = {};
                 break;
             default:
-                Substance.substanceClass = substanceClass;
-//                Substance.polymer = {};
+                substance.substanceClass = substanceClass;
+//                substance.polymer = {};
                 console.log('invalid substance class');
                 break;
         }
-        Substance.references = [];
-        return Substance;
+        substance.references = [];
+            console.log(substance);
+            return substance;
+        };
+
+        substance.$$changeClass = function(newClass){
+            substance.substanceClass = newClass;
+            return substance;
+        };
+
+        substance.$$setSubstance = function(sub){
+        substance = sub;
+            return substance;
+        };
+        return substance;
     });
 
     ginasApp.factory('polymerUtils', function () {
@@ -661,8 +675,12 @@
             var sub = JSON.parse(input);
             //  $scope.substance = sub;
             $scope.substance = $scope.toFormSubstance(sub);
-            console.log($scope);
-            molChanger.setMol($scope.substance.structure.molfile);
+            if($scope.substance.substanceClass==='chemical') {
+                molChanger.setMol($scope.substance.structure.molfile);
+            }
+            if($scope.substance.substanceClass==='polymer') {
+                molChanger.setMol($scope.substance.idealizedStructure.molfile);
+            }
         };
 
         $scope.bugSubmit = function (bugForm) {
@@ -692,7 +710,10 @@
             //    });
             //
             //} else {
-            $scope.substance = Substance;
+            console.log($location);
+            var substanceClass = $location.$$search.kind;
+            $scope.substance = Substance.$$setClass(substanceClass);
+            console.log($scope);
         }
 
 
@@ -1401,7 +1422,10 @@
                             element.append(template);
                             $compile(template)(scope);
                         });
-                        formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q></substance-search-form>';
+                        if(attrs.definition){
+                            scope.definition = attrs.definition;
+                        }
+                        formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q  definition={{definition}}></substance-search-form>';
                         break;
                 }
 
@@ -1441,22 +1465,23 @@
             templateUrl: baseurl + 'assets/templates/selectors/substanceSelector.html',
             link: function (scope, element, attrs) {
                 scope.results = {};
-                // scope.searching = false;
-
                 scope.top = 8;
                 scope.testb = 0;
                 scope.searching = true;
-
-
                 scope.createSubref = function (selectedItem) {
-                    //  var temp = _.pick(selectedItem,['uuid','_name','approvalID']);
                     var temp = {};
                     temp.refuuid = selectedItem.uuid;
                     temp.refPname = selectedItem._name;
                     temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
-                    //  scope.subref = angular.copy(temp);
-                    _.set(scope.referenceobj, scope.field, angular.copy(temp));
+                    if(attrs.definition){
+                        var r = {type:{value:'SUB_ALTERNATE->SUBSTANCE', display:'SUB_ALTERNATE->SUBSTANCE'}, relatedSubstance: temp};
+                        if(!_.has(scope.referenceobj, 'relationships')){
+                            _.set(scope.referenceobj, 'relationships', []);
+                        }
+                        scope.referenceobj.relationships.push(r);
+                    }
+                        _.set(scope.referenceobj, scope.field, angular.copy(temp));
                     scope.q = null;
                     scope.$parent.$parent.toggleStage();
                 };

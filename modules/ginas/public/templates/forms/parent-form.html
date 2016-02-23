@@ -3,7 +3,8 @@
         <form-header type="parents" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-            <div class="row form-row">
+        <form class="form-horizontal" name="parentForm" role="form" novalidate>
+        <div class="row form-row">
                 <div class="col-md-3">
                     <substance-chooser-selector referenceobj ="parent.structurallyDiverse" field ="parentSubstance" name ="parentSubstance" label ="Parent Substance" formname ="parentForm" type = "search"></substance-chooser-selector>
                 </div>
@@ -15,5 +16,6 @@
                 </div>
             </div>
         <div class = "parentForm"></div>
+            </form>
     </div>
 </div>

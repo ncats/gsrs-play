@@ -5609,21 +5609,21 @@
 		"type": "of",
 		"domains": [],
 		"languages": ["en"],
-		"references": ["6dc80b4b-ee4f-4aac-92dc-5a74387528a8"],
+		"references": ["6dc80b4b-ee4f-4aac-92dc-5a74387527a8"],
 		"preferred": true,
 		"access": []
 	}],
 	"codes": [],
 	"relationships": [],
 	"references": [{
-		"uuid": "6dc80b4b-ee4f-4aac-92dc-5a74387528a8",
+		"uuid": "6dc80b4b-ee4f-4aac-92dc-5a74387527a8",
 		"citation": "J Clin Oncol 2006; 24: 4721?4730",
 		"docType": "SRS",
 		"publicDomain": true,
 		"tags": ["NOMEN"],
 		"access": []
 	}, {
-		"uuid": "3316964d-c2ce-45ce-9f08-813e1f23b457",
+		"uuid": "3316964d-c2ce-45ce-9f08-813e1f23b451",
 		"citation": "SRS import [FUA17JE46Y]",
 		"docType": "SRS",
 		"publicDomain": true,
@@ -5635,7 +5635,7 @@
 	"properties": [],
 	"notes": [],
 	"tags": [],
-	"uuid": "95f72217-0244-4123-8c02-d6e313eb48b4",
+	"uuid": "95f72217-0244-4123-8c02-d6e313eb48ba",
 	"access": [],
 	"lastEditedBy": "FDA_SRS"
 }

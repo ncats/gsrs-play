@@ -232,7 +232,7 @@
         };
     });
 
-    ginasForms.directive('conceptUpgradeForm', function ($http, $location, toggler) {
+    ginasForms.directive('conceptUpgradeForm', function ($http, $location, toggler, Substance) {
         return {
             restrict: 'E',
             replace: true,
@@ -246,24 +246,32 @@
                 if(scope.parent.uuid){
                     scope.editid = scope.parent.uuid.split('-')[0];
                 }
+
                 scope.changeClass = function (newClass) {
                     var newSub = scope.$parent.fromFormSubstance(scope.parent);
                     console.log(scope);
-                    newSub.substanceClass = newClass;
-                    _.set(newSub, 'update', true);
-                    console.log(newSub);
-                    if (_.has(newSub, 'update')) {
-                        $http.put(baseurl + 'api/v1/substances', newSub, {
+                   // newSub.substanceClass = newClass;
+                    var upgradeSub = Substance.$$setSubstance(newSub);
+                    upgradeSub= Substance.$$changeClass(newClass);
+                   console.log(upgradeSub);
+                    _.set(upgradeSub, 'update', true);
+                    console.log(upgradeSub);
+                    if (_.has(upgradeSub, 'update')) {
+                        var postSub = angular.toJson(upgradeSub);
+                        $http.put(baseurl + 'api/v1/substances', postSub, {
                             headers: {
                                 'Content-Type': 'application/json'
                             }
                         }).success(function(data){
                                 alert('Load was performed.');
-                                $location.path('app/substance/{{editid}}/edit');
-                                $location.replace();
+                            console.log(data);
+                            /*url = baseurl + "assets/templates/modals/update-success.html";
+                            scope.$parent.open(url);*/
+/*                                $location.path('app/substance/{{editid}}/edit');
+                                $location.replace();*/
                             });
                     } else {
-                        $http.post(baseurl + 'register/submit', newSub).success(function () {
+                        $http.post(baseurl + 'register/submit', postSub).success(function () {
                             console.log("success");
                             alert("submitted!");
                             $location.path('app/substance/{{editid}}/edit');
@@ -471,7 +479,7 @@
             templateUrl: baseurl + "assets/templates/forms/diverse-type-form.html",
             link: function (scope, element, attrs) {
                 console.log(scope);
-                scope.parent.$$diverseType = "";
+                scope.parent.$$diverseType = "whole";
 
                 if(scope.parent.structurallyDiverse.displayParts ==='WHOLE'){
                     _.set(scope.parent, '$$diverseType', 'whole');
@@ -1737,23 +1745,15 @@ console.log(scope);
             replace: true,
             scope: {
                 name: '=',
-               // kind: '=',
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                console.log(scope);
-                if (scope.name) {
+                if (scope.parent._name) {
                     scope.formType ='Editing';
-/*                    template = angular.element('<h1> Editing <code>' + scope.name + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);*/
+                    scope.name = scope.parent._name;
                 } else {
                     scope.formType ='Registering new';
                     scope.name = scope.parent.substanceClass;
-/*
-                    template = angular.element('<h1> Registering new <code> ' + scope.kind + '</code></h1>');
-                    element.append(template);
-                    $compile(template)(scope);*/
                 }
             },
             templateUrl: baseurl + "assets/templates/forms/header-form.html"

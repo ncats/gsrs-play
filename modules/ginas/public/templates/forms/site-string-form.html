@@ -1,13 +1,15 @@
 <div class="row info">
     <div class="row">
-        <form-header type="sites" parent="substance"></form-header>
+        <form-header type="sites" parent="parent"></form-header>
         <close-button></close-button>
     </div>
 
     <div class="col-md-12">
+        <form class="form-horizontal" name="siteStringForm" role="form" novalidate>
         <label for="{{field}}" class="text-capitalize">{{referenceobj.field || 'Sites'}}</label>
         <textarea type="text" class="form-control" ng-blur="makeSiteList()" ng-change="makeSiteList()"
                   ng-model="referenceobj.$$displayString" name="{{field}}" title="{{field}}"
                   id="{{field}}" placeholder="{{field}}"></textarea>
+            </form>
     </div>
 </div>
