@@ -63,32 +63,37 @@ public class SubstancePostUpdateTest {
                     try (InputStream is=new FileInputStream(resource);){
                         JsonNode js=null;
                         js = (new ObjectMapper()).readTree(is);
+                        
+                        String uuid=js.get("uuid").asText();
                         Logger.info("Running: " + resource);
 
                         WSResponse wsResponse1 = WS.url(SubstancePostUpdateTest.VALIDATE_URL).post(js).get(timeout);
                         assertThat(wsResponse1.getStatus()).isEqualTo(OK);
                         JsonNode jsonNode1 = wsResponse1.asJson();
-                        assertThat(jsonNode1.get("valid").asBoolean()).isEqualTo(true);
+                        System.out.println("VALID:" + jsonNode1.get("valid"));
+                        System.out.println(jsonNode1);
+                        
+                        assertThat("initalialValid:" +jsonNode1.get("valid").asBoolean()).isEqualTo("initalialValid:true");
 
                         //create
                         WSResponse wsResponse2 = WS.url(SubstancePostUpdateTest.API_URL).post(js).get(timeout);
                         assertThat(wsResponse2.getStatus()).isIn(200, 201);
                         JsonNode jsonNode2 = wsResponse2.asJson();
-                      //  assertThat(!jsonNode2.isNull()).isEqualTo(true);
+                        //assertThat(!jsonNode2.isNull()).isEqualTo(true);
 
-                       //search
-                        WSResponse wsResponse3 = WS.url("http://localhost:9001/ginas/app/api/v1/substances(8798e4b8-223c-4d24-aeeb-1f3ca2914328)?view=full").get().get(timeout);
+                        //search
+                        WSResponse wsResponse3 = WS.url("http://localhost:9001/ginas/app/api/v1/substances(" + uuid + ")?view=full").get().get(timeout);
                         JsonNode jsonNode3 = wsResponse3.asJson();
                         //System.out.println("jsonNode:" + jsonNode3);
                         assertThat(wsResponse3.getStatus()).isEqualTo(OK);
                         assertThat(!jsonNode3.isNull()).isEqualTo(true);
-
+                        
                         //validate
                         WSResponse wsResponse4 = WS.url(SubstancePostUpdateTest.VALIDATE_URL).post(jsonNode3).get(timeout);
                         assertThat(wsResponse4.getStatus()).isEqualTo(OK);
                         JsonNode jsonNode4 = wsResponse4.asJson();
                         System.out.println("jsonNode:" + jsonNode4);
-                        assertThat(jsonNode4.get("valid").asBoolean()).isEqualTo(true);
+                        assertThat("roundTripValid:" + jsonNode4.get("valid").asBoolean()).isEqualTo("roundTripValid:true");
 
                     } catch (Exception e1) {
                         throw new IllegalStateException(e1);
