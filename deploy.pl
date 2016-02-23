@@ -13,6 +13,7 @@ use LWP::UserAgent;
   
 
 sub getOldPid($);
+sub getValue($$);
 
 my @files = glob('modules/ginas/target/universal/*.zip');
 #should only be one file
@@ -102,34 +103,12 @@ if(-e $ginasFileDump){
 
 system "curl -v -F file-type=JSON -F file-name=@" ."$ginasFileDump http://localhost:$port/dev/ginas/app/load";
 
-#we have to pretend to be a filled in form
-#content_type multi-part/form-data
 
-#my $loadResp = $ua->post("http://localhost:$port/dev/ginas/app/load", 
-#					,
-#					#leading colon to force spelling perl will auto uppercase first letters of words
-#					Content_Type => 'form-data',
-#				  Content=>[
-#				      #to upload the file, the path has to be the
-#								#first element in an array...
-#								':file-name' =>[$ginasFileDump, "rep90.ginas",
-#												     Header => [':file-type' => "JSON"],
-#													]
-#								#':file-type' => "JSON",
-#								]
-#					
-#					);
-#
-#
-#if($loadResp->is_error()){
-#	print "error loading JSON file ", $loadResp->status_line, "\n";
-#	exit;
-#}
 print "=======================\n";
 print "querying status JSON\n";
 print "=======================\n";
 my $statusURL = "http://localhost:$port/dev/ginas/app/api/v1/jobs/1";
-
+my $res;
 my $done=undef;
 while (!$done){
 	sleep(5);
@@ -137,23 +116,57 @@ while (!$done){
 	# Create a request
 	my $req = HTTP::Request->new(GET => $statusURL);
 	# Pass request to the user agent and get a response back
-	my $res = $ua->request($req);
+	$res = $ua->request($req);
 	
 	#res is a JSON response we want to look for value of "status":"PENDING" or RUNNING or COMPLETE
 	print $res->content , "\n";
-	if($res->content =~/\"status\"\:\"([A-Z]+)?\"/){
 	
-		print "STATUS = ",  $1, "\n";
-		$done = $1 eq "COMPLETE";
-	}
+	my $status = getValue($res->content, "status");
+	print "STATUS = ",  $status, "\n";
+	$done =  $status eq "COMPLETE";
+	
 
 }
 
+#if we are here, we are done
+#pull stats for jenkins plots (step 8)
+
+my $jsonResponse = $res->content;
+
+my $start = getValue($jsonResponse, "start");
+my $stop = getValue($jsonResponse, "stop");
+
+my $time = ($stop - $start)/1000;
+my $records = getValue($jsonResponse, "recordsPersistedSuccess");
+
+my $workspace = $ENV{'WORKSPACE'};
+my $jobName = $ENV{'JOB_NAME'};
+
+my $baseDir = "$workspace/deploy_metrics";
+make_path($baseDir);
+open(RECORD_OUT, ">$baseDir/records.properties")|| die "can not open output file: $!";
+open(RECORD_TIME, ">$baseDir/time.properties")|| die "can not open output file: $!";
+
+print RECORD_TIME "YVALUE=$time\n";
+print RECORD_OUT "YVALUE=$records\n";
 
 
+close RECORD_OUT;
+close RECORD_TIME;
 
-#exit;
-#system($command. " &");
+sub getValue($$){
+	my ($json, $key) = @_;
+	if($json =~/\"$key\"\:\"(\S+?)\"/){
+		return $1;	
+	}
+	if($json =~/\"$key\"\:(\d+)/){
+		return $1;
+	}
+	return undef;
+	
+}
+
+
 
 sub getOldPid($){
 	my $dir = shift;
