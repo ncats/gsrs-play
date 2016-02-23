@@ -13,7 +13,8 @@ var ProteinWizardPage = function () {
     };
 ///reference apply needs its own functionality check
     //upload file needs separate testing
-    
+    //this form is not clooapsible, it is tolggled by the form selector directive
+
     this.formElements = {
         formName: 'refForm',
         fields: [{

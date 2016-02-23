@@ -16,6 +16,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'sugarForm',
+        buttonID: 'sugars',
         fields: [{
             binding: 'getAllSites()',
             type: 'binding'

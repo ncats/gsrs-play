@@ -17,6 +17,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'linkageForm',
+        buttonID: 'linkages',
         fields: [{
             binding: 'noLinkages',
             type: 'binding'

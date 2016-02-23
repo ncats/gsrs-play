@@ -12,8 +12,10 @@ var ProteinWizardPage = function () {
         element(by.model(name)).click();
     };
 
+    //button name is custom binding
     this.formElements = {
         formName: 'accessForm',
+        buttonId:'{{name}}{{type}}',
         fields: [{
             model: 'referenceobj.access',
             type: 'dropdown-select'

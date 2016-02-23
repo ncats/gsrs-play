@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'relationshipForm',
+        buttonID: 'relationships',
         fields: [{
             model: 'relationship.relatedSubstance',
             type: 'substance-chooser'

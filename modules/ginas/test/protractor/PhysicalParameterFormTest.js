@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'physicalParameterForm',
+        buttonID: 'physicalParameter',
         fields: [{
             model: 'physicalParameter.parameterName',
             type: 'text-input'

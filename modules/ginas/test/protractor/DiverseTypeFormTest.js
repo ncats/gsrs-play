@@ -15,6 +15,7 @@ var ProteinWizardPage = function () {
     //this form is used to show or hide other form elements
     this.formElements = {
         formName: 'diverseTypeForm',
+        buttonID: 'diverseType',
         fields: [{
             model: 'parent.$$diverseType',
             type: 'radio'

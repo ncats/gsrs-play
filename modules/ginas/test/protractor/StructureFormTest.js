@@ -13,9 +13,11 @@ var ProteinWizardPage = function () {
     };
 
     //sketcher will probably need its own set of tests
+//not toggleable
 
     this.formElements = {
         formName: 'structureForm',
+        buttonID: 'structure',
         fields: [{
             model: '"parent.structure.formula',
             type: 'text-input'

@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'detailsForm',
+        buttonID: 'proteinDetails',
         fields: [{
             model: 'parent.protein.proteinType',
             type: 'dropdown-view-edit'

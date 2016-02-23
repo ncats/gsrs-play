@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'physicalModForm',
+        buttonID: 'physicalModifications',
         fields: [{
             model: 'physicalModification.physicalModificationRole',
             type: 'dropdown-select'

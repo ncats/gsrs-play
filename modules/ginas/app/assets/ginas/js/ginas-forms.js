@@ -544,10 +544,12 @@
             replace: true,
             scope: {
                 referenceobj: '=',
+                type:'@',
                 parent: '=',
                 field: '@',
                 label: '@',
-                divid: '@'
+                divid: '@',
+                name: '@referenceobj'
             },
             link: function (scope, element, attrs) {
                 var formHolder;
@@ -563,7 +565,7 @@
                 };
                 scope.stage = true;
 
-                switch (attrs.type) {
+                switch (scope.type) {
                     case "amount":
                             $templateRequest(baseurl + "assets/templates/selectors/amount-selector.html").then(function (html) {
                                 template = angular.element(html);

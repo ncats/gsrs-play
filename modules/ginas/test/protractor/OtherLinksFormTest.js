@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'otherLinksForm',
+        buttonID: 'otherLinks',
         fields: [{
             model: 'otherLink.linkageType',
             type: 'dropdown-select'

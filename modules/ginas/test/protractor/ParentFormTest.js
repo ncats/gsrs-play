@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'parentForm',
+        buttonID: 'parents',
         fields: [{
             model: 'parent.structurallyDiverse.parentSubstance',
             type: 'substance-chooser'
