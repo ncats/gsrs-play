@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'subunitForm',
+        buttonID: 'subunits',
         fields: [{
 
             model: 'subunit.sequence',

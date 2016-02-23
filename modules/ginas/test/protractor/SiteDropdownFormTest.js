@@ -11,9 +11,10 @@ var ProteinWizardPage = function () {
     this.clickByModel = function (name) {
         element(by.model(name)).click();
     };
-
+//not toggleable
     this.formElements = {
         formName: 'siteForm',
+        buttonID: 'Sites',
         fields: [{
             model: 'referenceobj.sites[0].subunitIndex',
             type: 'dropdown-select'

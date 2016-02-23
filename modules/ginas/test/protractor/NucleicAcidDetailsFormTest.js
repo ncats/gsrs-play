@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'naDetailsForm',
+        buttonID: 'nucleicAcidClassification',
         fields: [{
             model: 'parent.nucleicAcid.nucleicAcidType',
             type: 'dropdown-view-edit'

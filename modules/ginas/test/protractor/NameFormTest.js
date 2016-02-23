@@ -19,6 +19,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'nameForm',
+        buttonID: 'names',
         fields: [{
             model: 'name.name',
             type: 'text-input'

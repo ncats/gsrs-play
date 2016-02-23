@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'codeForm',
+        buttonId:'codes',
         fields: [{
             model: 'code.codeSystem',
             type: 'dropdown-select'

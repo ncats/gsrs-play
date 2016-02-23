@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'strucModForm',
+        buttonID: 'structuralModifications',
         fields: [{
             model: 'mod.structuralModificationType',
             type: 'dropdown-select'

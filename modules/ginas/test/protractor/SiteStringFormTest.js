@@ -14,9 +14,10 @@ var ProteinWizardPage = function () {
 
     //this form has a lot of parsing involved
 
-
+//not toggleable
     this.formElements = {
         formName: 'siteStringForm',
+        buttonID: 'sites',
         fields: [{
             model: 'referenceobj.$$displayString',
             type: 'text-input'

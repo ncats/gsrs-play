@@ -15,6 +15,7 @@ var ProteinWizardPage = function () {
     //same as the reference form but without the apply functionality. this is the one that appears on the bottom of the page
     this.formElements = {
         formName: 'refOnlyForm',
+        buttonID: 'references',
         fields: [{
             model: 'ref.citation',
             type: 'text-input'

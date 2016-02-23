@@ -13,8 +13,11 @@ var ProteinWizardPage = function () {
     };
 
     //this form may need to be examined--- might not be fully enterable
+    //does not have toggle directive -- needs to be upgraded
     this.formElements = {
         formName: 'partForm',
+        buttonID: 'organismDetails',
+
         fields: [{
             model: 'parent.structurallyDiverse.partLocation',
             type: 'dropdown-view-edit'

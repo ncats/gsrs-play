@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'diverseSourceForm',
+        buttonID: 'sourceMaterials',
         fields: [{
             model: 'structurallyDiverse.sourceMaterialClass',
             type: 'dropdown-view-edit'

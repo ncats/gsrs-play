@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'propertyForm',
+        buttonID: 'properties',
         fields: [{
             model: 'property.name',
             type: 'dropdown-select'

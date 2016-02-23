@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'sruForm',
+        buttonID: 'structuralUnits',
         fields: [{
             binding: 'obj.id',
             type: 'binding'

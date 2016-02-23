@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'diverseDetailsForm',
+        buttonID: 'organismDetails',
         fields: [{
             model: 'structurallyDiverse.organismFamily',
             type: 'dropdown-view-edit'

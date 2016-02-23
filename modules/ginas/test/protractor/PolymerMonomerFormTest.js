@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'monomerForm',
+        buttonID: 'monomers',
         fields: [{
                 model: 'component.monomerSubstance',
                 type: 'substance-chooser'

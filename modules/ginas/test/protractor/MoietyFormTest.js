@@ -15,6 +15,7 @@ var ProteinWizardPage = function () {
 //count is currently text(integer), but will need to be changed to be an amount
     this.formElements = {
         formName: 'moietyForm',
+        buttonID: 'moieties',
         fields: [{
             binding: 'obj.id',
             type: 'binding'

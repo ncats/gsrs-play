@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'classificationForm',
+        buttonID: 'polymerClassification',
         fields: [{
             model: 'parent.polymer.classification.polymerClass',
             type: 'dropdown-view-edit'

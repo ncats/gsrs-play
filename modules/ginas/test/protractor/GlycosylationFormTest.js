@@ -18,6 +18,7 @@ var ProteinWizardPage = function () {
     //restrict to specific types of sites
     this.formElements = {
         formName: 'glycosylationForm',
+        buttonID: 'glycosylation',
         fields: [{
             model: 'parent.protein.glycosylation.glycosylationType',
             type: 'dropdown-select'

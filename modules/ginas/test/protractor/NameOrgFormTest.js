@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'orgForm',
+        buttonID: 'nameOrgs',
         fields: [{
             model: 'org.nameOrg',
             type: 'multi-select'

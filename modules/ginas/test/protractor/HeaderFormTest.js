@@ -14,7 +14,7 @@ var ProteinWizardPage = function () {
 
 //anything with '$$' in fron of the field name should get stripped out with the angular.toJson function
     //2 variables are passed in, so we probably want to check with binding
-
+    //no button to toggle
     this.formElements = {
         formName: 'headerForm',
         fields: [{

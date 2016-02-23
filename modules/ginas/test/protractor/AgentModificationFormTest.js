@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'agentModForm',
+        buttonId:'agentModifications',
         fields: [{
             model: 'agentMod.agentModificationType',
             type: 'dropdown-select'
