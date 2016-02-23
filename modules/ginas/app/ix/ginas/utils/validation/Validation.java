@@ -194,16 +194,31 @@ public class Validation {
 	
 	
 	
+	enum ReferenceAction{
+		FAIL,
+		WARN,
+		ALLOW
+	}
 
-
-	private static boolean validateReferenced(Substance s, GinasAccessReferenceControlled data,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat, boolean required){
+	private static boolean validateReferenced(Substance s, GinasAccessReferenceControlled data,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat, ReferenceAction onemptyref){
 		
 		boolean worked=true;
 		
 		Set<Keyword> references = data.getReferences();
-		if(required && (references == null || references.size()<=0)){
-			Logger.info("Where are the references?");
-			GinasProcessingMessage gpmerr=GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
+		if((references == null || references.size()<=0)){
+			if(onemptyref == ReferenceAction.ALLOW){
+				return worked;
+			}
+			
+			GinasProcessingMessage gpmerr=null;
+			if(onemptyref == ReferenceAction.FAIL){
+				gpmerr=GinasProcessingMessage.ERROR_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
+			}else if(onemptyref == ReferenceAction.WARN){
+				gpmerr=GinasProcessingMessage.WARNING_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
+			}else{
+				gpmerr=GinasProcessingMessage.WARNING_MESSAGE("Data " + data.getClass() + " needs at least 1 reference").appliableChange(true);
+			}
+					
 			strat.processMessage(gpmerr);
 			if(gpmerr.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
 				gpmerr.appliedChange=true;
@@ -284,7 +299,7 @@ public class Validation {
     	                }
                 	}
 	            }
-	            if(!validateReferenced(s,n,gpm,strat,true)){
+	            if(!validateReferenced(s,n,gpm,strat,ReferenceAction.FAIL)){
 	            	return false;
 	            }
 	        }
@@ -359,7 +374,7 @@ public class Validation {
 	                    mes.appliedChange=true;
 	                }
 	            }
-	            if(!validateReferenced(s,n,gpm,strat,true)){
+	            if(!validateReferenced(s,n,gpm,strat,ReferenceAction.FAIL)){
 	            	return false;
 	            }
 	        }
@@ -399,7 +414,7 @@ public class Validation {
                     mes.appliedChange=true;
                 }
             }
-            if(!validateReferenced(s,n,gpm,strat, true)){
+            if(!validateReferenced(s,n,gpm,strat, ReferenceAction.WARN)){
             	return false;
             }
         }
@@ -418,7 +433,7 @@ public class Validation {
                     mes.appliedChange=true;
                 }
             }
-            if(!validateReferenced(s,n,gpm,strat,false)){
+            if(!validateReferenced(s,n,gpm,strat,ReferenceAction.ALLOW)){
             	return false;
             }
         }

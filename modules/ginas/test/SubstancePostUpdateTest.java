@@ -70,6 +70,9 @@ public class SubstancePostUpdateTest {
                         WSResponse wsResponse1 = WS.url(SubstancePostUpdateTest.VALIDATE_URL).post(js).get(timeout);
                         assertThat(wsResponse1.getStatus()).isEqualTo(OK);
                         JsonNode jsonNode1 = wsResponse1.asJson();
+                        System.out.println("VALID:" + jsonNode1.get("valid"));
+                        System.out.println(jsonNode1);
+                        
                         assertThat("initalialValid:" +jsonNode1.get("valid").asBoolean()).isEqualTo("initalialValid:true");
 
                         //create
