@@ -1,7 +1,7 @@
 var ProteinWizardPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get('/ginas/app/wizard?kind=nucleicAcid');
     };
 
     this.clickById = function (name) {
@@ -11,32 +11,30 @@ var ProteinWizardPage = function () {
     this.clickByModel = function (name) {
         element(by.model(name)).click();
     };
-
+///reference apply needs its own functionality check
+    //upload file needs separate testing
+    
     this.formElements = {
-        formName: 'codeForm',
+        formName: 'refForm',
         fields: [{
-            model: 'code.codeSystem',
-            type: 'dropdown-select'
-        }, {
-            model: 'code.type',
-            type: 'dropdown-select'
-        }, {
-            model: 'code.code',
+            model: 'ref.citation',
             type: 'text-input'
         }, {
-            model: 'code.url',
+            model: 'ref.docType',
+            type: 'dropdown-select'
+        }, {
+            model: 'ref.tags',
+            type: 'multi-select'
+        }, {
+            model: 'ref.url',
             type: 'text-input'
         }, {
-            model: 'code.comments',
+            model: 'ref.access',
             type: 'form-selector'
         }, {
-            model: 'code.access',
-            type: 'form-selector'
-        }, {
-            model: 'code.reference',
-            type: 'form-selector'
+            binding: 'ref.uploadedFile',
+            type: 'binding'
         }]
     }
-
 };
 

@@ -1,7 +1,7 @@
 var ProteinWizardPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get('/ginas/app/wizard?kind=mixture');
     };
 
     this.clickById = function (name) {
@@ -12,31 +12,28 @@ var ProteinWizardPage = function () {
         element(by.model(name)).click();
     };
 
+    //this one passes an object name to the site selector form, which adds it to the parent at the field//
     this.formElements = {
-        formName: 'codeForm',
+        formName: 'componentForm',
         fields: [{
-            model: 'code.codeSystem',
+            model: 'component.substance',
+            type: 'substance-chooser'
+        },{
+            model: 'component.type',
             type: 'dropdown-select'
         }, {
-            model: 'code.type',
+            model: 'component.role',
             type: 'dropdown-select'
         }, {
-            model: 'code.code',
-            type: 'text-input'
-        }, {
-            model: 'code.url',
-            type: 'text-input'
-        }, {
-            model: 'code.comments',
+            model: 'component.amount',
             type: 'form-selector'
         }, {
-            model: 'code.access',
+            model: 'component.access',
             type: 'form-selector'
         }, {
-            model: 'code.reference',
+            model: 'component.reference',
             type: 'form-selector'
         }]
     }
-
 };
 

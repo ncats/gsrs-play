@@ -61,11 +61,11 @@
                             <dropdown-view-edit obj= "parent.structure" field = "atropisomerism" label="Additional Stereochemistry" cv = "ATROPISOMERISM"></dropdown-view-edit>
                         </div>
                         <div class="col-md-1 pull-right">
-                            <form-selector referenceobj="code" parent="parent" divid="structureForm"
+                            <form-selector referenceobj="parent" parent="parent" divid="structureForm"
                                            type="access"></form-selector>
                         </div>
                         <div class="col-md-1 pull-right">
-                            <form-selector referenceobj="code" parent="parent" divid="structureForm"
+                            <form-selector referenceobj="parent" parent="parent" divid="structureForm"
                                            type="reference"></form-selector>
                         </div>
                     </div>
@@ -85,7 +85,7 @@
                             <span id ="charge" class="badge">{{parent.structure.charge}}</span>
                         </div>
                         <div class="col-md-2">
-                            <form-selector referenceobj= "parent.structure" formname="moietyForm" field ="stereoComments" parent = parent type = "textbox" divid="structureForm" mode="edit" id = "comments"></form-selector>
+                            <form-selector referenceobj= "parent.structure" formname="structureForm" field ="stereoComments" parent = parent type = "textbox" divid="structureForm" mode="edit" id = "comments"></form-selector>
                         </div>
                     </div>
             </form>

@@ -13,30 +13,17 @@ var ProteinWizardPage = function () {
     };
 
     this.formElements = {
-        formName: 'codeForm',
+        formName: 'parameterForm',
         fields: [{
-            model: 'code.codeSystem',
-            type: 'dropdown-select'
-        }, {
-            model: 'code.type',
-            type: 'dropdown-select'
-        }, {
-            model: 'code.code',
+            model: 'parameter.name',
             type: 'text-input'
         }, {
-            model: 'code.url',
+            model: 'parameter.type',
             type: 'text-input'
         }, {
-            model: 'code.comments',
-            type: 'form-selector'
-        }, {
-            model: 'code.access',
-            type: 'form-selector'
-        }, {
-            model: 'code.reference',
+            model: 'parameter.amount',
             type: 'form-selector'
         }]
     }
-
 };
 

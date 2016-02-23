@@ -1,7 +1,7 @@
 var ProteinWizardPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get('/ginas/app/wizard?kind=nucleicAcid');
     };
 
     this.clickById = function (name) {
@@ -13,30 +13,29 @@ var ProteinWizardPage = function () {
     };
 
     this.formElements = {
-        formName: 'codeForm',
+        formName: 'propertyForm',
         fields: [{
-            model: 'code.codeSystem',
+            model: 'property.name',
             type: 'dropdown-select'
         }, {
-            model: 'code.type',
+            model: 'property.type',
             type: 'dropdown-select'
         }, {
-            model: 'code.code',
-            type: 'text-input'
-        }, {
-            model: 'code.url',
-            type: 'text-input'
-        }, {
-            model: 'code.comments',
+            model: 'property.amount',
             type: 'form-selector'
         }, {
-            model: 'code.access',
+            model: 'property.parameter',
             type: 'form-selector'
         }, {
-            model: 'code.reference',
+            model: 'property.defining',
+            type: 'check-box'
+        }, {
+            model: 'property.access',
+            type: 'form-selector'
+        }, {
+            model: 'property.reference',
             type: 'form-selector'
         }]
     }
-
 };
 

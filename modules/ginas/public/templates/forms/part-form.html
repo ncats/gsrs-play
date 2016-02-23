@@ -5,12 +5,12 @@
     <span><i class="fa fa-question-circle fa-lg"></i></span>
 
     <div class="col-md-12" uib-collapse="iscollapsed">
-            <div class="row form-row">
+        <form class="form-horizontal" name="partForm" role="form" novalidate>
+        <div class="row form-row">
                 <div class="col-md-3">
                     <dropdown-view-edit obj="parent.structurallyDiverse" field="partLocation" cv = "PART_LOCATION" name ="partLocation" label ="Part Location"></dropdown-view-edit>
                 </div>
                 <div class="col-md-3">
-                  <div> {{substance.structurallyDiverse.part}}</div>
                     <multi-view-edit obj="parent.structurallyDiverse" field="part" cv = "PART" id ="part"></multi-view-edit>
                 </div>
                 <div class="col-md-3">
@@ -19,8 +19,8 @@
                 <div class="col-md-3">
                     <dropdown-view-edit obj = "parent.structurallyDiverse" field="fractionMaterialType" cv = "FRACTION_MATERIAL_TYPE" label="Fraction Material Type"></dropdown-view-edit>
                 </div>
-
             </div>
         <p></p>
+            </form>
     </div>
 </div>

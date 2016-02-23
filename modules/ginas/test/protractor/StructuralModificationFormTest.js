@@ -13,30 +13,27 @@ var ProteinWizardPage = function () {
     };
 
     this.formElements = {
-        formName: 'codeForm',
+        formName: 'strucModForm',
         fields: [{
-            model: 'code.codeSystem',
+            model: 'mod.structuralModificationType',
             type: 'dropdown-select'
-        }, {
-            model: 'code.type',
+        },{
+            model: 'mod.molecularFragment',
+            type: 'substance-chooser'
+        },{
+            model: 'mod.locationType',
             type: 'dropdown-select'
-        }, {
-            model: 'code.code',
-            type: 'text-input'
-        }, {
-            model: 'code.url',
-            type: 'text-input'
-        }, {
-            model: 'code.comments',
+        },{
+            model: 'mod.sites',
             type: 'form-selector'
         }, {
-            model: 'code.access',
+            model: 'mod.extent',
+            type: 'dropdown-select'
+        },{
+            model: 'mod.amount',
             type: 'form-selector'
-        }, {
-            model: 'code.reference',
-            type: 'form-selector'
-        }]
+        }
+        ]
     }
-
 };
 
