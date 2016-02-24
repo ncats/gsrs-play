@@ -48,12 +48,17 @@ import net.sf.ehcache.Element;
 import play.Logger;
 
 public class SequenceIndexer {
-    static final String CACHE_NAME =
-        SequenceIndexer.class.getName()+".Cache";
+    static final String CACHE_NAME = SequenceIndexer.class.getName()+".Cache";
     static final Version LUCENE_VERSION = Version.LATEST;
 
-    static final CacheManager CACHE_MANAGER = CacheManager.getInstance();
-    static final Ehcache CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
+    static CacheManager CACHE_MANAGER = CacheManager.getInstance();
+    static Ehcache CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
+    
+    
+    public static void initialize(){
+    	CACHE_MANAGER = CacheManager.getInstance();
+        CACHE = CACHE_MANAGER.addCacheIfAbsent(CACHE_NAME);
+    }
 
     static class HSP implements Comparable<HSP> {
         public String kmer;
@@ -242,6 +247,7 @@ public class SequenceIndexer {
 
     private ExecutorService threadPool;
     private boolean localThreadPool = false;
+    
 
     private AtomicLong lastModified = new AtomicLong (0);
     
@@ -261,9 +267,15 @@ public class SequenceIndexer {
         this (dir, readOnly, Executors.newCachedThreadPool());
         localThreadPool = true;
     }
+    
+  
 
     public SequenceIndexer (File dir, boolean readOnly,
                             ExecutorService threadPool) throws IOException {
+    	initialize();
+    	
+    	
+    	
         if (!readOnly) {
             dir.mkdirs();
         }
@@ -297,6 +309,8 @@ public class SequenceIndexer {
         
         this.baseDir = dir;
         this.threadPool = threadPool;   
+        
+       
     }
 
     @SuppressWarnings("deprecation")
@@ -350,6 +364,7 @@ public class SequenceIndexer {
     }
     
     public void shutdown () {
+    	
         try {
             if (_kmerReader != null)
                 _kmerReader.close();
@@ -752,4 +767,14 @@ public class SequenceIndexer {
             CACHE_MANAGER.shutdown();
         }
     }
+
+	public boolean isClosed() {
+		try{
+    		indexWriter.numDocs();
+    		return false;
+    	}catch(AlreadyClosedException e){
+    		System.out.println("Already closed");
+    	}
+		return true;
+	}
 }

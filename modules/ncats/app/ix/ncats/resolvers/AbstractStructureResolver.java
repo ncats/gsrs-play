@@ -26,6 +26,7 @@ public abstract class AbstractStructureResolver implements Resolver<Structure> {
         if (name == null)
             throw new IllegalArgumentException ("Invalid resolver name: "+name);
         this.name = name;
+        
     }
 
     public String getName () { return name; }

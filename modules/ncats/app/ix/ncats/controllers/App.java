@@ -48,6 +48,7 @@ import ix.core.plugins.IxCache;
 import ix.core.plugins.PersistenceQueue;
 import ix.core.plugins.PayloadPlugin;
 import ix.core.controllers.search.SearchFactory;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.ChemCleaner;
 import ix.core.chem.PolymerDecode;
 import ix.core.chem.PolymerDecode.StructuralUnit;
@@ -111,10 +112,8 @@ public class App extends Authentication {
 
     public static final TextIndexer _textIndexer = 
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
-    public static final StructureIndexer _strucIndexer =
-        Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
-    public static final SequenceIndexer _seqIndexer =
-        Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+    
+    
     public static final PayloadPlugin _payloader =
         Play.application().plugin(PayloadPlugin.class);
         
@@ -1407,11 +1406,11 @@ public class App extends Authentication {
         try {
             final String key = "sequence/"+getKey (seq, identity);
             return getOrElse
-                (_seqIndexer.lastModified(), key,
+                (EntityPersistAdapter.getSequenceIndexer().lastModified(), key,
                  new Callable<SearchResultContext> () {
                      public SearchResultContext call () throws Exception {
                          processor.setResults
-                             (rows, _seqIndexer.search(seq, identity));
+                             (rows, EntityPersistAdapter.getSequenceIndexer().search(seq, identity));
                          return processor.getContext();
                      }
                  });
@@ -1431,11 +1430,11 @@ public class App extends Authentication {
             Logger.debug("substructure: query="+query
                          +" rows="+rows+" page="+page+" key="+key);
             return getOrElse
-                (_strucIndexer.lastModified(),
+                (EntityPersistAdapter.getStructureIndexer().lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
                              processor.setResults
-                                 (rows, _strucIndexer.substructure(query, 0));
+                                 (rows, EntityPersistAdapter.getStructureIndexer().substructure(query, 0));
                              SearchResultContext ctx = processor.getContext();
                              Logger.debug("## cache missed: "+key+" => "+ctx);
                              return ctx;
@@ -1460,11 +1459,11 @@ public class App extends Authentication {
         try {
             final String key = "similarity/"+getKey (query, threshold);
             return getOrElse
-                (_strucIndexer.lastModified(),
+                (EntityPersistAdapter.getStructureIndexer().lastModified(),
                  key, new Callable<SearchResultContext> () {
                          public SearchResultContext call () throws Exception {
                              processor.setResults
-                                 (rows, _strucIndexer.similarity
+                                 (rows, EntityPersistAdapter.getStructureIndexer().similarity
                                   (query, threshold, 0));
                              return processor.getContext();
                          }

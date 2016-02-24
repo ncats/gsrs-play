@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Map;
 import java.util.UUID;
+import play.test.TestServer;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static play.test.Helpers.*;
@@ -61,7 +62,8 @@ public class IntegrationTest {
 
     @Test
     public void testRestAPISubstance() {
-        running(testServer(9001), new Runnable() {
+    	TestServer ts=testServer(9001);
+        running(ts, new Runnable() {
             public void run() {
                 WSResponse wsResponse1 = WS.url("http://localhost:9001/ginas/app/api/v1/substances").get().get(timeout);
                 JsonNode jsonNode1 = wsResponse1.asJson();
@@ -71,12 +73,13 @@ public class IntegrationTest {
             }
         });
 
-        stop(testServer(9001));
+        stop(ts);
     }
 
     @Test
     public void testRestAPIVocabularies() {
-        running(testServer(9001), new Runnable() {
+    	TestServer ts=testServer(9001);
+        running(ts, new Runnable() {
             public void run() {
                 WSResponse wsResponse = WS.url("http://localhost:9001/ginas/app/api/v1/vocabularies").get().get(timeout);
                 JsonNode jsonNode = wsResponse.asJson();
@@ -87,7 +90,7 @@ public class IntegrationTest {
             }
         });
 
-        stop(testServer(9001));
+        stop(ts);
     }
 
      /*

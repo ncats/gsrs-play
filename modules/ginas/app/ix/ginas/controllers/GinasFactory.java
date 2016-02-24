@@ -49,7 +49,7 @@ public class GinasFactory extends EntityFactory {
 		}
 		if(seq==null){
 			
-			seq = GinasApp._seqIndexer.getSeq(id);
+			seq = EntityPersistAdapter.getSequenceIndexer().getSeq(id);
 		}
 		if (seq != null) {
 			seq = seq.replaceAll("[\n\t\\s]", "");

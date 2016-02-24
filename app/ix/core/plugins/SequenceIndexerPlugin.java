@@ -1,26 +1,17 @@
 package ix.core.plugins;
 
-import java.util.*;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.Serializable;
-
-import play.Logger;
-import play.Plugin;
-import play.Application;
 
 import ix.seqaln.SequenceIndexer;
+import play.Application;
+import play.Logger;
+import play.Plugin;
 
 public class SequenceIndexerPlugin extends Plugin {
     private final Application app;
     private IxContext ctx;
     private SequenceIndexer indexer;
+    private boolean closed=false;
 
     public SequenceIndexerPlugin (Application app) {
         this.app = app;
@@ -38,6 +29,8 @@ public class SequenceIndexerPlugin extends Plugin {
             Logger.info("Plugin "+getClass().getName()+" started!");        
         }
         catch (IOException ex) {
+        	System.out.println("Error loading sequence indexer");
+        	ex.printStackTrace();
             throw new RuntimeException
                 ("Can't initialize sequence indexer", ex);
         }
@@ -48,8 +41,9 @@ public class SequenceIndexerPlugin extends Plugin {
         if (indexer != null)
             indexer.shutdown();
         Logger.info("Plugin "+getClass().getName()+" stopped!");
+        closed=true;
     }
 
-    public boolean enabled () { return true; }
+    public boolean enabled () { return !closed; }
     public SequenceIndexer getIndexer () { return indexer; }
 }

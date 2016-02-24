@@ -1,20 +1,7 @@
 package ix.core.adapters;
 
-import ix.core.EntityProcessor;
-import ix.core.models.Edit;
-import ix.core.models.Indexable;
-import ix.core.models.Structure;
-import ix.core.plugins.IxContext;
-import ix.core.plugins.SequenceIndexerPlugin;
-import ix.core.plugins.StructureIndexerPlugin;
-import ix.core.plugins.TextIndexerPlugin;
-import ix.ginas.models.v1.ChemicalSubstance;
-import ix.ginas.models.v1.Substance;
-import ix.seqaln.SequenceIndexer;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,18 +20,25 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
-import play.Logger;
-import play.Play;
-import tripod.chem.indexer.StructureIndexer;
-
 import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import ix.core.EntityProcessor;
+import ix.core.models.Edit;
+import ix.core.models.Indexable;
+import ix.core.plugins.IxContext;
+import ix.core.plugins.SequenceIndexerPlugin;
+import ix.core.plugins.StructureIndexerPlugin;
+import ix.core.plugins.TextIndexerPlugin;
+import ix.seqaln.SequenceIndexer;
+import play.Logger;
+import play.Play;
+import tripod.chem.indexer.StructureIndexer;
 //import javax.annotation.PreDestroy;
 
 public class EntityPersistAdapter extends BeanPersistAdapter {
-    private TextIndexerPlugin plugin = 
-        Play.application().plugin(TextIndexerPlugin.class);
+   
 
     private Map<String, List<Hook>> preInsertCallback = 
         new HashMap<String, List<Hook>>();
@@ -63,10 +57,11 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     
     private Map<Class, EntityProcessor> extraProcessors=new HashMap<Class,EntityProcessor>();
     
-    public static SequenceIndexer _seqIndexer = Play.application()
-            .plugin(SequenceIndexerPlugin.class).getIndexer();
-    public static StructureIndexer _strucIndexer =
-            Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+    private TextIndexerPlugin plugin = 
+            Play.application().plugin(TextIndexerPlugin.class);
+    //public static SequenceIndexer _seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+    private static StructureIndexerPlugin strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
+    private static SequenceIndexerPlugin seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
     
     private static ConcurrentHashMap<String, String> alreadyLoaded = new ConcurrentHashMap<String,String>();
     
@@ -280,7 +275,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                     }
                 }
             }
-
             makeIndexOnBean(bean);
             
         }
@@ -288,18 +282,18 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             Logger.trace("Can't index bean "+bean, ex);
         }
     }
-    private SequenceIndexer getSequenceIndexer(){
-		if (_seqIndexer == null) {
-			_seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
+    public static SequenceIndexer getSequenceIndexer(){
+		if (seqProcessPlugin == null || !seqProcessPlugin.enabled()) {
+			seqProcessPlugin = Play.application().plugin(SequenceIndexerPlugin.class);
 		}
-		return _seqIndexer;
+		return seqProcessPlugin.getIndexer();
 	}
-    private StructureIndexer getStructureIndexer(){
-    	if (_strucIndexer == null) {
-    		_strucIndexer =
-    	            Play.application().plugin(StructureIndexerPlugin.class).getIndexer();
+    
+    public static StructureIndexer getStructureIndexer(){
+    	if (strucProcessPlugin == null || !strucProcessPlugin.enabled()) {
+    		strucProcessPlugin=Play.application().plugin(StructureIndexerPlugin.class);
 		}
-		return _strucIndexer;
+		return strucProcessPlugin.getIndexer();
     }
     
 	private void makeIndexOnBean(Object bean) throws java.io.IOException {

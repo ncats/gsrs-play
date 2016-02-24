@@ -14,23 +14,28 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import play.test.TestServer;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static play.mvc.Http.Status.OK;
 import static play.test.Helpers.*;
 
+import com.github.fge.jsonpatch.diff.JsonDiff;
+import com.github.fge.jsonpatch.JsonPatch;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
 public class SubstancePostUpdateTest {
 
+	
         private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
         private static final String API_URL = "http://localhost:9001/ginas/app/api/v1/substances";
         private static long timeout= 10000L;;
 
         @Parameterized.Parameters(name="{1}")
         static public Collection<Object[]> findFiles(){
+        	
             List<Object[]> myFilelist  =  new ArrayList<Object[]>();
 
             File folder=null;
@@ -57,8 +62,8 @@ public class SubstancePostUpdateTest {
 
         @Test
         public void testAPICreateSubstance() {
-
-            running(testServer(9001), new Runnable() {
+        	TestServer ts=testServer(9001);
+            running(ts, new Runnable() {
                 public void run() {
                     try (InputStream is=new FileInputStream(resource);){
                         JsonNode js=null;
@@ -87,12 +92,20 @@ public class SubstancePostUpdateTest {
                         //System.out.println("jsonNode:" + jsonNode3);
                         assertThat(wsResponse3.getStatus()).isEqualTo(OK);
                         assertThat(!jsonNode3.isNull()).isEqualTo(true);
+
+                        JsonNode jp =JsonDiff.asJson(js,jsonNode3);
+
+                        for(JsonNode jn:jp){
+                        	System.out.println(jn.get("op") + "\t" + jn.get("path") + "\t" + jn.get("value") );	
+                        }
+                        
                         
                         //validate
                         WSResponse wsResponse4 = WS.url(SubstancePostUpdateTest.VALIDATE_URL).post(jsonNode3).get(timeout);
                         assertThat(wsResponse4.getStatus()).isEqualTo(OK);
                         JsonNode jsonNode4 = wsResponse4.asJson();
                         System.out.println("jsonNode:" + jsonNode4);
+                        //jp.
                         assertThat("roundTripValid:" + jsonNode4.get("valid").asBoolean()).isEqualTo("roundTripValid:true");
 
                     } catch (Exception e1) {
@@ -101,7 +114,7 @@ public class SubstancePostUpdateTest {
                 }
             });
 
-            stop(testServer(9001));
+            stop(ts);
         }
 
         @AfterClass

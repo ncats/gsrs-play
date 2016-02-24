@@ -27,6 +27,7 @@ import ix.ginas.utils.validation.DefaultSubstanceValidator;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
 import ix.core.ValidationMessage;
+import ix.core.adapters.EntityPersistAdapter;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
@@ -463,7 +464,7 @@ public class GinasLoad extends App {
 
 			} else {
 				List<String> errors = new ArrayList<String>();
-				if (!GinasUtils.persistSubstance(sub, _strucIndexer, errors)) {
+				if (!GinasUtils.persistSubstance(sub, EntityPersistAdapter.getStructureIndexer(), errors)) {
 					throw new IllegalStateException(errors.toString());
 				}
 			}

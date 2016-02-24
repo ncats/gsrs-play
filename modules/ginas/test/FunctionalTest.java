@@ -4,6 +4,7 @@ import play.mvc.Http;
 import play.mvc.Result;
 import play.test.FakeRequest;
 import play.test.WithApplication;
+import play.test.FakeApplication;
 
 import static org.fest.assertions.Assertions.assertThat;
 import static play.mvc.Http.Status.OK;
@@ -14,8 +15,8 @@ public class FunctionalTest extends WithApplication {
 
      @Test
     public void testRouteGinasHome() {
-
-        running(fakeApplication(), new Runnable() {
+    	FakeApplication fa=fakeApplication();
+        running(fa, new Runnable() {
             public void run() {
                 Result result = route(fakeRequest(GET, "/ginas/app"));
                 assertThat(result).isNotNull();
@@ -24,11 +25,13 @@ public class FunctionalTest extends WithApplication {
                 assertThat(contentAsString(result)).contains("login");
             }
         });
+        stop(fa);
     }
 
    @Test
     public void testRouteSubstance(){
-        running(fakeApplication(), new Runnable() {
+	    FakeApplication fa=fakeApplication();
+        running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/substances");
                 Result result = route(request);
@@ -37,11 +40,13 @@ public class FunctionalTest extends WithApplication {
                 assertThat(contentAsString(result)).contains("substances");
             }
         });
+        stop(fa);
     }
 
     @Test
     public void testRouteLogin() {
-        running(fakeApplication(), new Runnable() {
+    	FakeApplication fa=fakeApplication();
+        running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/login");
                 Result result = route(request);
@@ -50,11 +55,13 @@ public class FunctionalTest extends WithApplication {
                 assertThat(contentAsString(result)).contains("ginas");
             }
         });
+        stop(fa);
     }
 
      @Test
     public void testRouteChemicalWizard() {
-        running(fakeApplication(), new Runnable() {
+    	FakeApplication fa=fakeApplication();
+        running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=chemical");
                 Result result = route(request);
@@ -66,11 +73,14 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
+        stop(fa);
     }
 
     @Test
     public void testRouteProteinWizard() {
-        running(fakeApplication(), new Runnable() {
+    	FakeApplication fa=fakeApplication();
+        
+        running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=protein");
                 Result result = route(request);
@@ -88,10 +98,12 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
+        stop(fa);
     }
     @Test
     public void testRouteStructurallyDiverseWizard(){
-        running(fakeApplication(), new Runnable() {
+    	FakeApplication fa=fakeApplication();
+        running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=structurallyDiverse");
                 Result result = route(request);
@@ -107,11 +119,13 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
+        stop(fa);
     }
 
     @Test
     public void testRoutePolymerWizard(){
-        running(fakeApplication(), new Runnable(){
+    	FakeApplication fa=fakeApplication();
+        running(fa, new Runnable(){
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=polymer");
                 Result result = route(request);
@@ -124,11 +138,14 @@ public class FunctionalTest extends WithApplication {
                 //assertThat(content).contains("Structural Units");
                 testCommonWizardElements(content);
             }
-        });
+        });  
+        stop(fa);
     }
     @Test
     public void testRouteNucleicAcidWizard(){
-        running(fakeApplication(), new Runnable() {
+    	FakeApplication fa=fakeApplication();
+    
+        running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=nucleicAcid");
                 Result result = route(request);
@@ -142,11 +159,15 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
+        stop(fa);
     }
 
     @Test
     public void testRouteConceptWizard() {
-        running(fakeApplication(), new Runnable() {
+    	FakeApplication fa=fakeApplication();
+        
+        
+        running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=concept");
                 Result result = route(request);
@@ -156,6 +177,7 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
+        stop(fa);
     }
 
     public void testCommonWizardElements(String content){

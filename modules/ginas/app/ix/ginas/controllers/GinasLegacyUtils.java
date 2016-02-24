@@ -17,6 +17,7 @@ import ix.ginas.models.GinasCommonSubData;
 import ix.ginas.models.v1.*;
 import ix.ncats.controllers.App;
 import ix.utils.Util;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.chem.Chem;
 import ix.core.controllers.PayloadFactory;
 import ix.core.controllers.ProcessingJobFactory;
@@ -199,7 +200,7 @@ public class GinasLegacyUtils extends App {
         Substance sub = GinasUtils.makeSubstance(is);
         
         if(sub!=null){
-            GinasUtils.persistSubstance(sub, _strucIndexer, null);
+            GinasUtils.persistSubstance(sub, EntityPersistAdapter.getStructureIndexer(), null);
         }
         return sub;
     }

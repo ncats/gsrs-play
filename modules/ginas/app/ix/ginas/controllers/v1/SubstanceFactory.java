@@ -2,6 +2,7 @@ package ix.ginas.controllers.v1;
 
 import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import ix.core.NamedResource;
+import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.models.Group;
 import ix.core.models.Principal;
@@ -59,9 +60,6 @@ public class SubstanceFactory extends EntityFactory {
             new Model.Finder(UUID.class, ProteinSubstance.class);
     
     
-    public static SequenceIndexer _seqIndexer =
-            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
-
     public static Substance getSubstance (String id) {
         if(id==null)return null;
         return getSubstance (UUID.fromString(id));
@@ -328,11 +326,7 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static SequenceIndexer getSeqIndexer(){
-		if(_seqIndexer==null){
-			_seqIndexer =
-		            Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
-		}
-		return _seqIndexer;
+		return EntityPersistAdapter.getSequenceIndexer();
 	}
 
 	public static List<Substance> getNearCollsionProteinSubstances(int top,

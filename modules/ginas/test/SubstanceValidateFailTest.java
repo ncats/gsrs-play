@@ -27,7 +27,9 @@ import org.junit.runners.Parameterized.Parameters;
 import play.Logger;
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
+import play.test.TestServer;
 import play.test.WithApplication;
+import play.test.TestServer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,8 +69,8 @@ public class SubstanceValidateFailTest extends WithApplication {
         
     @Test
     public void testAPIValidateSubstance() {
-    	    	
-        running(testServer(9001), new Runnable() {
+    	TestServer ts=testServer(9001);
+        running(ts, new Runnable() {
             public void run() {
 				try (InputStream is=new FileInputStream(resource);){
 					JsonNode js=null;
@@ -86,7 +88,7 @@ public class SubstanceValidateFailTest extends WithApplication {
             }
         });
         
-        stop(testServer(9001));
+        stop(ts);
     }
     
     @AfterClass

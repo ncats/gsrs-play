@@ -12,6 +12,7 @@ public class TextIndexerPlugin extends Plugin {
     private final Application app;
     private IxContext ctx;
     private TextIndexer indexer;
+    private boolean closed=false;
 
     public TextIndexerPlugin (Application app) {
         this.app = app;
@@ -36,8 +37,10 @@ public class TextIndexerPlugin extends Plugin {
             indexer.shutdown();
             Logger.info("Plugin "+getClass().getName()+" stopped!");
         }
+        closed=true;
     }
+    
 
-    public boolean enabled () { return true; }
+    public boolean enabled () { return !closed; }
     public TextIndexer getIndexer () { return indexer; }
 }
