@@ -1,8 +1,12 @@
 exports.config = {
     framework: 'jasmine',
     seleniumAddress: 'http://localhost:4444/wd/hub',
-    specs: ['TestChemicalWizard.js',
-            'TestProteinWizard.js'
+    specs: [//'TestChemicalWizard.js',
+            //'TestProteinWizard.js',
+            //'TestStructurallyDiverseWizard.js',
+            'TestWizardCommonElements.js',
+            //'NameFormTest.js',
+        'ReferenceFormTest.js'
             ],
 
     baseUrl: 'http://localhost:9000',
@@ -31,11 +35,15 @@ exports.config = {
        var jasmineReporters = require('jasmine-reporters');
        var Jasmine2HtmlReporter = require('protractor-jasmine2-html-reporter');
 
-        var capsPromise = browser.getCapabilities(); //to make the browser wait
+       return browser.getProcessedConfig().then(function(config) {
+           jasmine.getEnv().addReporter(new jasmineReporters.JUnitXmlReporter('protractor_output', true, true));
+       });
+
+       /* var capsPromise = browser.getCapabilities(); //to make the browser wait
         capsPromise.then(function (caps) {
             jasmine.getEnv().addReporter(
             new jasmineReporters.JUnitXmlReporter('protractor_output', true, true));
-        });
+        });*/
 
        jasmine.getEnv().addReporter(
            new Jasmine2HtmlReporter({
