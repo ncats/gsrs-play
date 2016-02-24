@@ -13,31 +13,28 @@ var ProteinWizardPage = function () {
     };
 
     this.formElements = {
-        formName: 'codeForm',
-        buttonId:'codes',
+        formName: 'relationshipForm',
+        buttonID: 'relationships',
         fields: [{
-            model: 'code.codeSystem',
+            model: 'relationship.relatedSubstance',
+            type: 'substance-chooser'
+        },{
+            model: 'relationship.type',
             type: 'dropdown-select'
-        }, {
-            model: 'code.type',
+        },{
+            model: 'relationship.interactionType',
             type: 'dropdown-select'
-        }, {
-            model: 'code.code',
-            type: 'text-input'
-        }, {
-            model: 'code.url',
-            type: 'text-input'
-        }, {
-            model: 'code.comments',
+        },{
+            model: 'relationship.agentSubstance',
+            type: 'substance-chooser'
+        },{
+            model: 'relationship.access',
             type: 'form-selector'
         }, {
-            model: 'code.access',
+            model: 'relationship.reference',
             type: 'form-selector'
-        }, {
-            model: 'code.reference',
-            type: 'form-selector'
-        }]
+        }
+        ]
     }
-
 };
 

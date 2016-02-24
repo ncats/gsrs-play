@@ -11,16 +11,22 @@ var ProteinWizardPage = function () {
     this.clickByModel = function (name) {
         element(by.model(name)).click();
     };
+//the 'getAllSites()' variable is the return of a method call, so I'm not sure how to get it by binding
+    //also has applyAll() button
 
-    //button name is custom binding
     this.formElements = {
-        formName: 'accessForm',
-        buttonId:'{{name}}{{type}}',
+        formName: 'sugarForm',
+        buttonID: 'sugars',
         fields: [{
-            model: 'referenceobj.access',
+            binding: 'getAllSites()',
+            type: 'binding'
+        }, {
+            model: 'sugar.sugar',
             type: 'dropdown-select'
-        }
-        ]
+        },  {
+            model: 'sugar.sites',
+            type: 'form-selector'
+        }]
     }
 };
 

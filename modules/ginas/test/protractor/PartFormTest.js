@@ -12,20 +12,23 @@ var ProteinWizardPage = function () {
         element(by.model(name)).click();
     };
 
+    //this form may need to be examined--- might not be fully enterable
+    //does not have toggle directive -- needs to be upgraded
     this.formElements = {
-        formName: 'diverseDetailsForm',
+        formName: 'partForm',
         buttonID: 'organismDetails',
+
         fields: [{
-            model: 'structurallyDiverse.organismFamily',
+            model: 'parent.structurallyDiverse.partLocation',
             type: 'dropdown-view-edit'
         }, {
-            model: 'structurallyDiverse.organismGenus',
-            type: 'dropdown-view-edit'
+            model: 'parent.structurallyDiverse.part',
+            type: 'multi-select'
         }, {
-            model: 'structurallyDiverse.organismSpecies',
-            type: 'dropdown-view-edit'
-        }, {
-            model: 'structurallyDiverse.organismAuthor',
+            model: 'parent.structurallyDiverse.fractionName',
+            type: 'text-input'
+        },{
+            model: '"parent.structurallyDiverse.fractionMaterialType',
             type: 'dropdown-view-edit'
         }]
     }

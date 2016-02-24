@@ -13,19 +13,16 @@ var ProteinWizardPage = function () {
     };
 
     this.formElements = {
-        formName: 'diverseSourceForm',
-        buttonID: 'sourceMaterials',
+        formName: 'noteForm',
+        buttonID: 'notes',
         fields: [{
-            model: 'structurallyDiverse.sourceMaterialClass',
-            type: 'dropdown-view-edit'
+            model: 'note.note',
+            type: 'text-box'
         }, {
-            model: 'structurallyDiverse.sourceMaterialType',
-            type: 'dropdown-view-edit'
+            model: 'note.access',
+            type: 'form-selector'
         }, {
-            model: 'structurallyDiverse.sourceMaterialState',
-            type: 'dropdown-view-edit'
-        }, {
-            model: 'structurallyDiverse.references',
+            model: 'note.reference',
             type: 'form-selector'
         }]
     }

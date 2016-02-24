@@ -12,12 +12,17 @@ var ProteinWizardPage = function () {
         element(by.model(name)).click();
     };
 
-    //this form should automatically be open
+    //this form has a lot of parsing involved
+
+//not toggleable
     this.formElements = {
-        formName: '',
-        buttonId:''
-        ///This doesn't set any properties, it just calls a method and passes a parameter based on radio button values. will still require intensive testing though////
-        //]
+        formName: 'siteStringForm',
+        buttonID: 'sites',
+        fields: [{
+            model: 'referenceobj.$$displayString',
+            type: 'text-input'
+        }
+        ]
     }
 };
 

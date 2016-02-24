@@ -1,7 +1,7 @@
 var ProteinWizardPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get('/ginas/app/wizard?kind=polymer');
     };
 
     this.clickById = function (name) {
@@ -13,20 +13,26 @@ var ProteinWizardPage = function () {
     };
 
     this.formElements = {
-        formName: 'diverseSourceForm',
-        buttonID: 'sourceMaterials',
+        formName: 'sruForm',
+        buttonID: 'structuralUnits',
         fields: [{
-            model: 'structurallyDiverse.sourceMaterialClass',
+            binding: 'obj.id',
+            type: 'binding'
+        }, {
+            model: 'obj.label',
+            type: 'text-input'
+        }, {
+            model: 'obj.type',
             type: 'dropdown-view-edit'
         }, {
-            model: 'structurallyDiverse.sourceMaterialType',
+            model: 'parent.nucleicAcid.sequenceOrigin',
             type: 'dropdown-view-edit'
         }, {
-            model: 'structurallyDiverse.sourceMaterialState',
-            type: 'dropdown-view-edit'
-        }, {
-            model: 'structurallyDiverse.references',
+            model: 'obj.amount',
             type: 'form-selector'
+        },{
+            model: 'obj._displayConnectivity',
+            type: 'text-input'
         }]
     }
 };

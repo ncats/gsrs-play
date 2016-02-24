@@ -12,12 +12,22 @@ var ProteinWizardPage = function () {
         element(by.model(name)).click();
     };
 
-    //this form should automatically be open
+
+    //test applyAll button
+
     this.formElements = {
-        formName: '',
-        buttonId:''
-        ///This doesn't set any properties, it just calls a method and passes a parameter based on radio button values. will still require intensive testing though////
-        //]
+        formName: 'linkageForm',
+        buttonID: 'linkages',
+        fields: [{
+            binding: 'noLinkages',
+            type: 'binding'
+        }, {
+            model: 'linkage.linkage',
+            type: 'dropdown-select'
+        },  {
+            model: 'linkage.sites',
+            type: 'form-selector'
+        }]
     }
 };
 

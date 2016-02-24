@@ -1,7 +1,7 @@
 var ProteinWizardPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get('/ginas/app/wizard?kind=nucleicAcid');
     };
 
     this.clickById = function (name) {
@@ -13,20 +13,26 @@ var ProteinWizardPage = function () {
     };
 
     this.formElements = {
-        formName: 'diverseDetailsForm',
-        buttonID: 'organismDetails',
+        formName: 'detailsForm',
+        buttonID: 'proteinDetails',
         fields: [{
-            model: 'structurallyDiverse.organismFamily',
+            model: 'parent.protein.proteinType',
             type: 'dropdown-view-edit'
         }, {
-            model: 'structurallyDiverse.organismGenus',
+            model: 'parent.protein.proteinSubType',
             type: 'dropdown-view-edit'
         }, {
-            model: 'structurallyDiverse.organismSpecies',
+            model: 'parent.protein.sequenceOrigin',
             type: 'dropdown-view-edit'
         }, {
-            model: 'structurallyDiverse.organismAuthor',
+            model: 'parent.protein.sequenceType',
             type: 'dropdown-view-edit'
+        }, {
+            model: 'parent.protein.access',
+            type: 'form-selector'
+        }, {
+            model: 'parent.protein.reference',
+            type: 'form-selector'
         }]
     }
 };

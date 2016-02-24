@@ -3,8 +3,7 @@
         <form-header type="structuralUnits" parent="parent" path = "polymer.monomers" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-
-<div>
+        <form class="form-horizontal" name="sruForm" role="form" novalidate>
         <div ng-repeat="obj in parent.polymer.structuralUnits">
             <div class ="row">
                 <hr>
@@ -31,6 +30,6 @@
             </div>
             <div class = {{obj.$$hashKey}}></div>
         </div>
-    </div>
+            </form>
 </div>
     </div>

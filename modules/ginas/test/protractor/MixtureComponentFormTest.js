@@ -1,7 +1,7 @@
 var ProteinWizardPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get('/ginas/app/wizard?kind=mixture');
     };
 
     this.clickById = function (name) {
@@ -14,10 +14,19 @@ var ProteinWizardPage = function () {
 
     //this one passes an object name to the site selector form, which adds it to the parent at the field//
     this.formElements = {
-        formName: 'disulfideLinksForm',
-        buttonId: 'disulfideLinks',
+        formName: 'constituentForm',
+        buttonID: 'components',
         fields: [{
-            model: 'disulfideLink',
+            model: 'component.substance',
+            type: 'substance-chooser'
+        },{
+            model: 'component.type',
+            type: 'dropdown-select'
+        }, {
+            model: 'component.access',
+            type: 'form-selector'
+        }, {
+            model: 'component.reference',
             type: 'form-selector'
         }]
     }

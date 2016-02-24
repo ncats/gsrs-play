@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
                 ///this form operates a little strangely, because the fields can only be set once, they aren't added to an array...
     this.formElements = {
         formName: 'diverseDetailsForm',
+        buttonID:'Details',
         fields: [{
             model: 'structurallyDiverse.infraSpecificType',
             type: 'dropdown-view-edit'

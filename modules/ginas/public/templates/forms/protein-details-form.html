@@ -3,6 +3,7 @@
         <form-header type="proteinDetails" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
+        <form class="form-horizontal" name="detailsForm" id="add-name" role="form" novalidate>
         <div class="row form-row">
             <div class="col-md-2 err-check">
                 <dropdown-view-edit obj = "parent.protein" field="proteinType" cv = "PROTEIN_TYPE" label="Protein Type"></dropdown-view-edit>
@@ -24,5 +25,6 @@
             </div>
         </div>
         <div class="detailsForm"></div>
+            </form>
     </div>
 </div>

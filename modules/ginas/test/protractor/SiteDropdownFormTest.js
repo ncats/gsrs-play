@@ -11,25 +11,22 @@ var ProteinWizardPage = function () {
     this.clickByModel = function (name) {
         element(by.model(name)).click();
     };
-
+//not toggleable
     this.formElements = {
-        formName: 'agentModForm',
-        buttonId:'agentModifications',
+        formName: 'siteForm',
+        buttonID: 'Sites',
         fields: [{
-            model: 'agentMod.agentModificationType',
+            model: 'referenceobj.sites[0].subunitIndex',
             type: 'dropdown-select'
         },{
-            model: 'agentMod.agentModificationProcess',
+            model: 'referenceobj.sites[0].residueIndex',
             type: 'dropdown-select'
         },{
-            model: 'agentMod.agentModificationRole',
+            model: 'referenceobj.sites[1].subunitIndex',
             type: 'dropdown-select'
         },{
-            model: 'agentMod.agentSubstance',
-            type: 'substance-chooser'
-        },{
-            model: 'agentMod.amount',
-            type: 'form-selector'
+            model: 'referenceobj.sites[1].residueIndex',
+            type: 'dropdown-select'
         }
         ]
     }
