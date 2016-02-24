@@ -74,7 +74,7 @@ public class SubstanceValidateFailTest extends WithApplication {
 	               // assertThat(wsResponse1.getStatus()).isEqualTo(OK);
 					assertFalse(jsonNode1.isNull());
 	                //assertThat(!jsonNode1.isNull()).isEqualTo(true);
-					assertTrue(jsonNode1.get("valid").asBoolean());
+					assertFalse(jsonNode1.get("valid").asBoolean());
 	                //assertThat(jsonNode1.get("valid").asBoolean()).isEqualTo(false);
 
 				} catch (Exception e1) {
