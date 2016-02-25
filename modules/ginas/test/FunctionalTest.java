@@ -1,4 +1,6 @@
 import ix.ginas.controllers.GinasFactory;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import play.mvc.Http;
 import play.mvc.Result;
@@ -13,9 +15,20 @@ import static org.mockito.Mockito.*;
 
 public class FunctionalTest extends WithApplication {
 
+    private FakeApplication fa;
+
+    @Before
+    public void startApp(){
+        fa=fakeApplication();
+    }
+
+    @After
+    public void stopApp(){
+        stop(fa);
+    }
      @Test
     public void testRouteGinasHome() {
-    	FakeApplication fa=fakeApplication();
+
         running(fa, new Runnable() {
             public void run() {
                 Result result = route(fakeRequest(GET, "/ginas/app"));
@@ -25,12 +38,11 @@ public class FunctionalTest extends WithApplication {
                 assertThat(contentAsString(result)).contains("login");
             }
         });
-        stop(fa);
+
     }
 
    @Test
     public void testRouteSubstance(){
-	    FakeApplication fa=fakeApplication();
         running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/substances");
@@ -40,12 +52,10 @@ public class FunctionalTest extends WithApplication {
                 assertThat(contentAsString(result)).contains("substances");
             }
         });
-        stop(fa);
     }
 
     @Test
     public void testRouteLogin() {
-    	FakeApplication fa=fakeApplication();
         running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/login");
@@ -55,12 +65,10 @@ public class FunctionalTest extends WithApplication {
                 assertThat(contentAsString(result)).contains("ginas");
             }
         });
-        stop(fa);
     }
 
      @Test
     public void testRouteChemicalWizard() {
-    	FakeApplication fa=fakeApplication();
         running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=chemical");
@@ -73,12 +81,10 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
-        stop(fa);
     }
 
     @Test
     public void testRouteProteinWizard() {
-    	FakeApplication fa=fakeApplication();
         
         running(fa, new Runnable() {
             public void run() {
@@ -98,11 +104,9 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
-        stop(fa);
     }
     @Test
     public void testRouteStructurallyDiverseWizard(){
-    	FakeApplication fa=fakeApplication();
         running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=structurallyDiverse");
@@ -119,12 +123,10 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
-        stop(fa);
     }
 
     @Test
     public void testRoutePolymerWizard(){
-    	FakeApplication fa=fakeApplication();
         running(fa, new Runnable(){
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=polymer");
@@ -138,13 +140,11 @@ public class FunctionalTest extends WithApplication {
                 //assertThat(content).contains("Structural Units");
                 testCommonWizardElements(content);
             }
-        });  
-        stop(fa);
+        });
     }
     @Test
     public void testRouteNucleicAcidWizard(){
-    	FakeApplication fa=fakeApplication();
-    
+
         running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=nucleicAcid");
@@ -159,14 +159,10 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
-        stop(fa);
     }
 
     @Test
     public void testRouteConceptWizard() {
-    	FakeApplication fa=fakeApplication();
-        
-        
         running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=concept");
@@ -177,7 +173,6 @@ public class FunctionalTest extends WithApplication {
                 testCommonWizardElements(content);
             }
         });
-        stop(fa);
     }
 
     public void testCommonWizardElements(String content){
@@ -188,18 +183,5 @@ public class FunctionalTest extends WithApplication {
         assertThat(content).contains("property-form");
         assertThat(content).contains("reference-form-only");
     }
-     /* @Test
-      public void testControllerIndex() {
-          running(fakeApplication(), new Runnable() {
-              public void run() {
-                   Http.Context context = mock(Http.Context.class);
-                   Http.Context.current.set(context);
-                  Result result = ix.ginas.controllers.GinasFactory.index();
-                  assertThat(status(result)).isEqualTo(OK);
-                  assertThat(contentType(result)).isEqualTo("text/html");
-                  assertThat(charset(result)).isEqualTo("utf-8");
-                  assertThat(contentAsString(result)).contains("Welcome");
-              }
-          });
-      }*/
+
 }
