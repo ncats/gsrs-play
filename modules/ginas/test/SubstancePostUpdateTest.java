@@ -171,12 +171,14 @@ public class SubstancePostUpdateTest {
             	
             	if(jn.get("op").asText().equals("remove")){
             		if(jn.get("path").asText().equals("/protein/modifications") ||
-            		   jn.get("path").asText().equals("/nucleicAcid/modifications") ||
+            		   jn.get("path").asText().equals("/nucleicAcid/modifications") 
+            		   ||
             		   jn.get("path").asText().contains("nameOrgs") ||		//silly hacks to allow workaround for above
             		   jn.get("path").asText().contains("domains")  ||
             		   (jn.get("path").asText().startsWith("/names/") &&
             	        jn.get("path").asText().contains("references") 
-            				)){
+            		   		)
+            			){
             			//acceptable removals, do nothing
             			
             		}else{
@@ -186,7 +188,10 @@ public class SubstancePostUpdateTest {
             			if(jsbefore.toString().equals("[\"\"]")){
             				
             			}else{
-            			
+//            				System.out.println("OLD:");
+//            				System.out.println(before);
+//            				System.out.println("NEW:");
+//            				System.out.println(after);
             				throw new AssertionError("removed property at '" + jn.get("path") + "' , was '" + jsbefore+ "'");
             			}
             		}

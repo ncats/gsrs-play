@@ -893,7 +893,7 @@ public class EntityFactory extends Controller {
             return badRequest("Only POST is accepted!");
         }
         String returnType=request().getQueryString(RESPONSE_TYPE_PARAMETER);
-        System.out.println(returnType);
+        
         RESPONSE_TYPE rept= RESPONSE_TYPE.MESSAGES;
         
         try{
@@ -934,7 +934,6 @@ public class EntityFactory extends Controller {
             
             T inst = mapper.treeToValue(node, type);
             
-            System.out.println("Done");
             List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
             boolean valid=false;
             if(validator.validate(inst,validationMessages)){
