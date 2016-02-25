@@ -1,7 +1,7 @@
 var WizardNamePage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get('/ginas/app/wizard?kind=chemical');
     };
 
     this.clickById = function (name) {
@@ -40,14 +40,14 @@ var WizardNamePage = function () {
             model: 'name-reference',
             type: 'form-selector'
         }/*, {
+            model: 'name-access',
+            type: 'form-selector'
+        },{
             model: 'name.domains',
             type: 'multi-select'
         }, {
             model: 'name.nameJurisdiction',
             type: 'multi-select'
-        }, {
-            model: 'name.access',
-            type: 'form-selector'
         }, {
             model: 'name.nameOrgs',
             type: 'form-selector'
@@ -68,8 +68,12 @@ describe ('name form', function() {
         var elements = new commonElementTests;
         var buttonId = wizardNamePage.formElements.buttonID;
         var formElements = wizardNamePage.formElements.fields;
+
         var refElementTests = require('./ReferenceFormTest.js');
         var refPage = new refElementTests;
+        var accessElementTests = require('./AccessFormTest.js');
+        var accessPage = new accessElementTests;
+
         for (var i = 0; i < formElements.length; i++) {
             var elementType = formElements[i].type;
             var model = formElements[i].model;
@@ -82,13 +86,18 @@ describe ('name form', function() {
                     elements.testDropdownSelectInput(buttonId, model);
                     break;
                 case "multi-select":
-                   // elements.testMultiSelectInput(buttonId, model);
+                    elements.testMultiSelectInput(buttonId, model);
                     break;
                 case "check-box":
-                   // elements.testCheckBoxInput(buttonId, model);
+                    elements.testCheckBoxInput(buttonId, model);
                     break;
                 case "form-selector":
-                   // refPage.refPageTests(buttonId, model);
+                    if(model == 'name-reference') {
+                        refPage.refPageTests(buttonId, model);
+                    } else if(model == 'name-access'){
+                        accessPage.accessPageTests(buttonId, model);
+                    }
+
                     break;
             } //switch
         } //for i
