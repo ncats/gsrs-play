@@ -5,8 +5,8 @@
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- Daily rollover with compression -->
       <fileNamePattern>application-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-      <!-- keep 30 days worth of history -->
-      <maxHistory>30</maxHistory>
+      <!-- keep 99999 days worth of history -->
+      <maxHistory>99999</maxHistory>
     </rollingPolicy>
     <encoder>
       <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
@@ -18,8 +18,13 @@
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- daily rollover with compression -->
       <fileNamePattern>access-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-      <!-- keep 1 week worth of history -->
-      <maxHistory>7</maxHistory>
+      <timeBasedFileNamingAndTriggeringPolicy
+          class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+          <!-- or whenever the file size reaches 50MB -->
+        <maxFileSize>50MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+      <!-- keep 99999 days worth of history -->
+      <maxHistory>99999</maxHistory>
     </rollingPolicy>
     <encoder>
       <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>
@@ -31,10 +36,10 @@
    <appender name="FAIL_PERSIST_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${user.dir}/logs/fail-persist.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <!-- daily rollover with compression -->
-      <fileNamePattern>fail-persist-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-      <!-- keep 1 week worth of history -->
-      <maxHistory>7</maxHistory>
+      <!-- weekly rollover with compression -->
+      <fileNamePattern>fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
+      <!-- keep 99999 days worth of history -->
+      <maxHistory>99999</maxHistory>
     </rollingPolicy>
     <encoder>
       <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>
@@ -45,10 +50,10 @@
   <appender name="FAIL_TRANSFORM_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${user.dir}/logs/fail-transform.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <!-- daily rollover with compression -->
-      <fileNamePattern>fail-transform-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-      <!-- keep 1 week worth of history -->
-      <maxHistory>7</maxHistory>
+      <!-- weekly rollover with compression -->
+      <fileNamePattern>fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
+      <!-- keep 99999 days worth of history -->
+      <maxHistory>99999</maxHistory>
     </rollingPolicy>
     <encoder>
       <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>
@@ -60,10 +65,11 @@
   <appender name="FAIL_EXTRACT_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <file>${user.dir}/logs/fail-extract.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <!-- daily rollover with compression -->
-      <fileNamePattern>fail-extract-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-      <!-- keep 1 week worth of history -->
-      <maxHistory>7</maxHistory>
+      <!-- weekly rollover with compression -->
+      <fileNamePattern>fail-persist-log-%d{yyyy-ww}.gz</fileNamePattern>
+      
+      <!-- keep 99999 days worth of history -->
+      <maxHistory>99999</maxHistory>
     </rollingPolicy>
     <encoder>
       <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>

@@ -373,13 +373,21 @@ public class Validation {
 	                    remnames.add(n);
 	                    mes.appliedChange=true;
 	                }
+	            }else{
+	            	if(n.code==null){
+		            	GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("'Code' should not be null in code objects").appliableChange(true);
+		                gpm.add(mes);
+		                strat.processMessage(mes);
+		            }
 	            }
 	            if(!validateReferenced(s,n,gpm,strat,ReferenceAction.FAIL)){
 	            	return false;
 	            }
+	            
 	        }
 	        s.codes.removeAll(remnames);
 	        for(Code n : s.codes){
+	        	
 	        	try{
 	            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstancesWithExactCode(100, 0, n.code, n.codeSystem);
 	            if(sr!=null && !sr.isEmpty()){

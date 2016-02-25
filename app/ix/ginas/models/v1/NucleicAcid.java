@@ -27,6 +27,7 @@ import play.Logger;
 @Entity
 @Table(name="ix_ginas_nucleicacid")
 public class NucleicAcid extends GinasCommonSubData {
+	
 	@JSONEntity(title = "Linkages")
 	@ManyToMany(cascade=CascadeType.ALL)
     @JoinTable(name="ix_ginas_nucleicacid_linkages")

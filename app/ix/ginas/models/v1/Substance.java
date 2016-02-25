@@ -102,6 +102,11 @@ public class Substance extends GinasCommonData {
 	@Indexable(facet = true, name = "Approved Date")
 	@JsonDeserialize(using = DateDeserializer.class)
 	public Date approved;
+	
+	
+	public Date getApproved(){
+		return this.approved;
+	}
 
 	// @ManyToMany(cascade=CascadeType.ALL)
 	// @JoinTable(name="ix_ginas_substance_access")
@@ -391,8 +396,9 @@ public class Substance extends GinasCommonData {
 		return null;
 	}
 	
+	
 	@JsonIgnore
-	public boolean isApproved(){
+	public boolean isValidated(){
 		return this.status.equalsIgnoreCase("Approved");
 	}
 
@@ -404,7 +410,7 @@ public class Substance extends GinasCommonData {
 		if (subRef != null) {
 			return subRef.approvalID;
 		}
-		if(!isApproved()){
+		if(!isValidated()){
 			return this.status + " record";
 		}
 		return "NO APPROVAL ID";

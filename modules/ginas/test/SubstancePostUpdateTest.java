@@ -1,12 +1,9 @@
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.AfterClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import play.Logger;
-import play.libs.ws.WS;
-import play.libs.ws.WSResponse;
+import static org.fest.assertions.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
+import static play.mvc.Http.Status.OK;
+import static play.test.Helpers.running;
+import static play.test.Helpers.stop;
+import static play.test.Helpers.testServer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,15 +11,20 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import play.test.TestServer;
 
-import static org.fest.assertions.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
-import static play.mvc.Http.Status.OK;
-import static play.test.Helpers.*;
+import org.junit.AfterClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
-import com.github.fge.jsonpatch.JsonPatch;
+
+import play.Logger;
+import play.libs.ws.WS;
+import play.libs.ws.WSResponse;
+import play.test.TestServer;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
@@ -93,12 +95,8 @@ public class SubstancePostUpdateTest {
                         assertThat(wsResponse3.getStatus()).isEqualTo(OK);
                         assertThat(!jsonNode3.isNull()).isEqualTo(true);
 
-                        JsonNode jp =JsonDiff.asJson(js,jsonNode3);
-
-                        for(JsonNode jn:jp){
-                        	System.out.println(jn.get("op") + "\t" + jn.get("path") + "\t" + jn.get("value") );	
-                        }
                         
+                        assertThatNonDestructive(js,jsonNode3);                        
                         
                         //validate
                         WSResponse wsResponse4 = WS.url(SubstancePostUpdateTest.VALIDATE_URL).post(jsonNode3).get(timeout);
@@ -115,6 +113,76 @@ public class SubstancePostUpdateTest {
             });
 
             stop(ts);
+        }
+        
+        /**
+         * Ideally this method would actually fail when there is a destructive change between the two
+         * JSON objects. However, the current implementation uses JSONPatch, which is specifically attempting
+         * just to give instructions on how to turn JSON a into JSON b using a few operations.
+         * 
+         * The problem is, we don't consider reordering of list items to be destructive. We consider
+         * those to be "move" operations. It turns out that the server will sometimes reorder
+         * names, for example, which is allowed and expected.The implementation of JSONPatch
+         * we use though doesn't do the heavy-lifting of finding if a "move" is more appropriate.
+         * 
+         * 
+         * So, for example:
+         * 
+         * JSON a:
+         * [
+         * {
+         * 		"name":"myname1"
+         * },
+         * {
+         * 		"name":"myname2",
+         * 		"type":"type2"
+         * }
+         * ]
+         * 
+         * JSON b:
+         * [
+         * {
+         * 		"name":"myname2",
+         * 		"type":"type2"
+         * },
+         * {
+         * 		"name":"myname1"
+         * }
+         * ]
+         *  
+         *  
+         * This implementation is likely to call a->b destructive, because may say 4 operations
+         * have happened:
+         * 
+         * 1. "/0/name", "change", "myname2"
+         * 2. "/0/type", "add", "type2"
+         * 3. "/1/name", "change", "myname1"
+         * 4. "/1/type", "remove", null 
+         * 
+         * TODO: We should fix this to allow any list/array to change the ordering
+         * 
+         * @param before
+         * @param after
+         * @throws AssertionError
+         */
+        public static void assertThatNonDestructive(JsonNode before, JsonNode after) throws AssertionError{
+        	JsonNode jp =JsonDiff.asJson(before,after);
+            for(JsonNode jn:jp){
+            	
+            	if(jn.get("op").asText().equals("remove")){
+            		if(jn.get("path").asText().equals("/protein/modifications") ||
+            		   jn.get("path").asText().equals("/nucleicAcid/modifications") ||
+            		   jn.get("path").asText().contains("nameOrgs") ||
+            		   jn.get("path").asText().contains("domains") 
+            				){
+            			//acceptable removals, do nothing
+            			
+            		}else{
+            			throw new AssertionError("removed property at '" + jn.get("path") + "' , was '" + before.at(jn.get("path").textValue())+ "'");
+            		}
+            		//System.out.println("Error:" + jn + " was:" + before.at(jn.get("path").textValue()));
+            	}
+            }
         }
 
         @AfterClass

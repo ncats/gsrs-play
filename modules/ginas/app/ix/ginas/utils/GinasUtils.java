@@ -501,9 +501,14 @@ public class GinasUtils {
 			throw new IllegalStateException("Must be logged in user to approve substance");
 		}
 		user = up.user;
-		if (s.lastEditedBy == null) {
+		if (s.getLastEditedBy() == null) {
 			throw new IllegalStateException(
 					"There is no last editor associated with this record. One must be present to allow approval. Please contact your system administrator.");
+		}else{
+			if(s.getLastEditedBy().username.equals(user.username)){
+				throw new IllegalStateException(
+					"You cannot approve a substance if you are the last editor of the substance.");
+			}
 		}
 		if (!s.isPrimaryDefinition()) {
 			throw new IllegalStateException(
@@ -519,7 +524,7 @@ public class GinasUtils {
 				throw new IllegalStateException(
 						"Cannot approve substance that depends on " + sr.toString()  + " which is not found in database.");
 			}
-			if(!s2.isApproved()){
+			if(!s2.isValidated()){
 				throw new IllegalStateException(
 						"Cannot approve substance that depends on " + sr.toString()  + " which is not approved.");
 			}

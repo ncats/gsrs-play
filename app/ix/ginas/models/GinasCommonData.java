@@ -45,22 +45,39 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     public final Date created = new Date ();
     
     @OneToOne(cascade=CascadeType.ALL)
-    @JsonSerialize(using = PrincipalSerializer.class)
-    @JsonDeserialize(using = PrincipalDeserializer.class)
     @Indexable(facet = true, name = "Created By")
-    public Principal createdBy;
+    private Principal createdBy;
     
     @Indexable(facet = true, name = "Last Edited Date")
     public Date lastEdited;
     
     //TP: why is this one-to-one?
     @OneToOne(cascade=CascadeType.ALL)
-    @JsonSerialize(using = PrincipalSerializer.class)
-    @JsonDeserialize(using = PrincipalDeserializer.class)
     @Indexable(facet = true, name = "Last Edited By")
-    public Principal lastEditedBy;
+    private Principal lastEditedBy;
     
-    //Where did this come from?
+    @JsonDeserialize(using = PrincipalDeserializer.class)
+    public Principal getCreatedBy() {
+		return createdBy;
+	}
+
+    @JsonSerialize(using = PrincipalSerializer.class)
+	public void setCreatedBy(Principal createdBy) {
+		this.createdBy = createdBy;
+	}
+    
+    @JsonDeserialize(using = PrincipalDeserializer.class)
+    public Principal getLastEditedBy() {
+		return lastEditedBy;
+	}
+
+    @JsonSerialize(using = PrincipalSerializer.class)
+	public void setLastEditedBy(Principal lastEditedBy) {
+		this.lastEditedBy = lastEditedBy;
+	}
+
+
+	//Where did this come from?
     public boolean deprecated;
     
     
