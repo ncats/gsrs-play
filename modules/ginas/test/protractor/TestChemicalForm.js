@@ -1,15 +1,18 @@
 exports.config = {
     framework: 'jasmine',
     seleniumAddress: 'http://localhost:4444/wd/hub',
-    specs: [//'TestChemicalWizard.js',
-            //'TestProteinWizard.js',
-            //'TestStructurallyDiverseWizard.js',
-            'TestWizardCommonElements.js',
-            //'NameFormTest.js',
-        'ReferenceFormTest.js'
+    specs: [//'HeaderFormTest',
+        'NameFormTest.js',
+        //'StructureFormTest.js',
+        //'MoietyFormTest.js',
+        'CodeFormTest.js',
+        'RelationshipFormTest.js',
+        'NoteFormTest.js',
+        'PropertyFormTest.js',
+        'ReferenceFormOnlyFormTest.js'
             ],
 
-    baseUrl: 'http://localhost:9000',
+    baseUrl: 'http://localhost:9000/ginas/app/wizard?kind=chemical',
 
     "scripts": {
         "start": "http-server ./app -a localhost -p 9000"
@@ -37,7 +40,7 @@ exports.config = {
 
        return browser.getProcessedConfig().then(function(config) {
            jasmine.getEnv().addReporter(new jasmineReporters.JUnitXmlReporter('protractor_output', true, true));
-       });
+
 
        /* var capsPromise = browser.getCapabilities(); //to make the browser wait
         capsPromise.then(function (caps) {
@@ -52,5 +55,6 @@ exports.config = {
                , screenshotsFolder: '-images'
                , fixedScreenshotName: true
            }));
+       });
     }
-}
+};
