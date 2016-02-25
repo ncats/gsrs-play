@@ -6,6 +6,7 @@ import org.junit.Test;
 import play.libs.Json;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -96,6 +97,56 @@ public class JsonUtilTest {
         assertTrue(a.get("array").isArray());
         assertEquals(0, a.get("array").size());
 
+    }
+
+
+    @Test
+    public void nested(){
+        /*
+        "names": [{
+		"uuid": "26c09e1c-b1f4-4777-b67d-c405900a0f92",
+		"created": 1456419675628,
+		"createdBy": "AUTO_IMPORTER",
+		"lastEdited": 1456419676224,
+		"lastEditedBy": "AUTO_IMPORTER",
+		"deprecated": false,
+		"name": "ASPIRIN CALCIUM",
+		"type": "of",
+		"nameOrgs": [],
+		"preferred": true,
+		"displayName": true,
+		"domains": [],
+		"languages": ["en"],
+		"nameJurisdiction": [],
+		"references": ["8b804897-28d3-40c0-a44a-a3a5bece4662"],
+		"access": [],
+		"_self": "http://localhost:9001/ginas/app/api/v1/names(26c09e1c-b1f4-4777-b67d-c405900a0f92)?view=full"
+	},
+         */
+        JsonNode a = new JsonUtil.JsonBuilder()
+                .add("names", new JsonUtil.JsonBuilder()
+                                    .add("uuid","26c09e1c-b1f4-4777-b67d-c405900a0f92" )
+                                    .add("displayName", true))
+                .add("type", "type2")
+                .toJson();
+
+        print(a);
+        assertEquals("26c09e1c-b1f4-4777-b67d-c405900a0f92", a.get("names").get("uuid").textValue());
+    }
+    private void print(JsonNode n){
+        print(n, 0);
+    }
+    private void print(JsonNode n, int depth){
+        Iterator <Map.Entry<String, JsonNode>> iter = n.fields();
+       char[] array = new char[depth*4];
+        Arrays.fill(array, ' ');
+        String indentation = new String(array);
+        while(iter.hasNext()){
+            Map.Entry<String, JsonNode> element = iter.next();
+            System.out.println(indentation + element.getKey());
+            print(element.getValue(), depth+1);
+
+        }
     }
 
     @Test

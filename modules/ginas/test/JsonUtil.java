@@ -3,7 +3,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -107,10 +106,35 @@ public class JsonUtil {
         public JsonBuilder(){
 
         }
-        public JsonBuilder add(String key, String value){
+
+        public JsonBuilder add(String key, JsonBuilder child){
             addLeadingCommaIfNeeded();
-            builder.append('\"').append(key).append('\"').append(':')
-                    .append('\"').append(value).append('\"');
+
+            quote(builder, key);
+            builder.append(':')
+                    //child builder should already have leading brace
+                    .append(child.builder)
+                    //but trailing brace not added until toJson()
+                    .append("}");
+            numFields++;
+            return this;
+        }
+        public JsonBuilder add(String key, boolean value){
+            addLeadingCommaIfNeeded();
+            quote(builder, key);
+            builder.append(':');
+            //don't quote boolean
+            builder.append(Boolean.toString(value));
+
+            numFields++;
+
+            return this;
+        }
+        public JsonBuilder add(String key, Object value){
+            addLeadingCommaIfNeeded();
+            quote(builder, key);
+            builder.append(':');
+            quote(builder, value);
 
             numFields++;
 
@@ -119,8 +143,9 @@ public class JsonUtil {
 
         public JsonBuilder add(String key, long value){
             addLeadingCommaIfNeeded();
-            builder.append('\"').append(key).append('\"').append(':')
-                    .append('\"').append(value).append('\"');
+            quote(builder, key);
+            builder.append(':');
+            quote(builder, value);
 
             numFields++;
 
