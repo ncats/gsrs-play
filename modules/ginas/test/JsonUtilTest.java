@@ -1,6 +1,7 @@
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.Test;
 import play.libs.Json;
 
@@ -47,12 +48,62 @@ public class JsonUtilTest {
     }
 
     @Test
+    public void arrayStringSingleElement(){
+        String[] array = {"foo"};
+        JsonNode a = new JsonUtil.JsonBuilder().add("array", array)
+                            .toJson();
+        assertTrue(a.get("array").isArray());
+        assertEquals(1, a.get("array").size());
+        assertEquals("foo", a.get("array").get(0).textValue());
+    }
+
+    @Test
+    public void arrayIntegerSingleElement(){
+        int[] array = {7};
+        JsonNode a = new JsonUtil.JsonBuilder().add("array", array)
+                .toJson();
+        assertTrue(a.get("array").isArray());
+        assertEquals(1, a.get("array").size());
+        assertEquals(7, a.get("array").get(0).intValue());
+    }
+
+    @Test
+    public void arrayMultipleIntegerElements(){
+        int[] array = {7, 9};
+        JsonNode a = new JsonUtil.JsonBuilder().add("array", array)
+                .toJson();
+        assertTrue(a.get("array").isArray());
+        assertEquals(2, a.get("array").size());
+        assertEquals(7, a.get("array").get(0).intValue());
+        assertEquals(9, a.get("array").get(1).intValue());
+    }
+
+    @Test
+    public void arrayStringMultipleElements(){
+        String[] array = {"foo", "bar"};
+        JsonNode a = new JsonUtil.JsonBuilder().add("array", array)
+                .toJson();
+        assertTrue(a.get("array").isArray());
+        assertEquals(2, a.get("array").size());
+        assertEquals("foo", a.get("array").get(0).textValue());
+        assertEquals("bar", a.get("array").get(1).textValue());
+    }
+
+    @Test
+    public void arrayEmptyElements(){
+        JsonNode a = new JsonUtil.JsonBuilder().add("array", new String[0])
+                .toJson();
+        assertTrue(a.get("array").isArray());
+        assertEquals(0, a.get("array").size());
+
+    }
+
+    @Test
     public void sameJSonHasNoChanges() throws IOException {
 
         JsonNode a = new JsonUtil.JsonBuilder().add("name", "myname2")
                                         .add("type", "type2")
                                         .toJson();
-                //mapper.readTree("\"name\":\"myname2\", \"type\":\"type2\" }");
 
         Map<String, JsonUtil.Change> changes = JsonUtil.getDestructiveChanges(a, a);
 

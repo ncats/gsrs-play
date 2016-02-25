@@ -129,17 +129,41 @@ public class JsonUtil {
 
         public JsonBuilder add(String key, Object[] value){
             addLeadingCommaIfNeeded();
-            quote(builder, key);
-            builder.append(":[");
-            for(Object o : value){
-                quote(builder, o);
-                builder.append(',');
-            }
-            builder.setLength(builder.length() -1); // remove trailing comma
-            builder.append(']');
-            builder.append('\"').append(key).append('\"').append(':')
-                    .append('\"').append(Arrays.toString(value)).append('\"');
 
+            quote(builder, key);
+            if(value.length ==0){
+                //special case handle empty
+                builder.append(":[ ]");
+            }else {
+                builder.append(":[");
+
+                for (Object o : value) {
+                    quote(builder, o);
+                    builder.append(',');
+                }
+
+                builder.setLength(builder.length() - 1); // remove trailing comma
+                builder.append(']');
+            }
+            numFields++;
+
+            return this;
+        }
+
+        public JsonBuilder add(String key, int[] value){
+            addLeadingCommaIfNeeded();
+            quote(builder, key);
+            if(value.length ==0){
+                //special case handle empty
+                builder.append(":[ ]");
+            }else {
+                builder.append(":[");
+                for (int i : value) {
+                    builder.append(i).append(',');
+                }
+                builder.setLength(builder.length() - 1); // remove trailing comma
+                builder.append(']');
+            }
             numFields++;
 
             return this;
@@ -159,7 +183,10 @@ public class JsonUtil {
 
         public JsonNode toJson() {
             try {
-                return mapper.readTree(builder.append("}").toString());
+                String content = builder.append("}").toString();
+               // System.out.println(content);
+
+                return mapper.readTree(content);
             } catch (IOException e) {
                 throw new IllegalStateException("error building Json", e);
             }
