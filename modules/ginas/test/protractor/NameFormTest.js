@@ -1,9 +1,5 @@
 var WizardNamePage = function () {
 
- /*   this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
-    };*/
-
     this.clickById = function (name) {
         element(by.id(name)).click();
     };
@@ -37,20 +33,20 @@ var WizardNamePage = function () {
             model: 'name.preferred',
             type: 'check-box'
         }, {
-            model: 'name.reference',
+            model: 'name-reference',
             type: 'form-selector'
         }/*, {
-         model: 'name.access',
-         type: 'form-selector'
-         }, {
             model: 'name.domains',
             type: 'multi-select'
         }, {
-            model: 'name.nameOrgs',
-            type: 'form-selector'
-        }, {
             model: 'name.nameJurisdiction',
             type: 'multi-select'
+        }, {
+            model: 'name.access',
+            type: 'form-selector'
+        }, {
+            model: 'name.nameOrgs',
+            type: 'form-selector'
         }*/
         ]
     }
@@ -63,9 +59,10 @@ describe ('name form', function() {
         var elements = new commonElementTests;
         var wizardNamePage = new WizardNamePage();
         var pageUrl = wizardNamePage.formElements.pageUrl;
-        var formName = wizardNamePage.formElements.formName;
-        var buttonId = wizardNamePage.formElements.buttonId;
+        var buttonId = wizardNamePage.formElements.buttonID;
         var formElements = wizardNamePage.formElements.fields;
+        var refElementTests = require('./ReferenceFormTest.js');
+        var refPage = new refElementTests;
 
 
         for (var i = 0; i < formElements.length; i++) {
@@ -85,10 +82,11 @@ describe ('name form', function() {
                     elements.testCheckBoxInput(buttonId, model, pageUrl);
                     break;
                 case "form-selector":
-                    elements.testReferencesInput(buttonId, model, pageUrl);
+                    refPage.refPageTests(buttonId, model, pageUrl);
                     break;
             } //switch
         } //for i
     });
 });
+
 

@@ -15,10 +15,10 @@ var WizardReferencePage = function () {
         pageUrl:'/ginas/app/wizard?kind=chemical',
         formName: 'refForm',
         buttonId: 'references',
-        fields: [/*{
+        fields: [{
             model: 'ref.citation',
             type: 'text-input'
-        }, */{
+        }, {
             model: 'ref.docType',
             type: 'dropdown-select'
         }, {
@@ -35,9 +35,46 @@ var WizardReferencePage = function () {
             type: 'binding'
         }]
     }
+
+    this.refPageTests = function(buttonId, model, pageUrl){
+        console.log("form selector: " + model);
+        browser.get(pageUrl);
+        this.clickById(buttonId);
+        this.clickById(model);
+
+        var wizardRefPage = new WizardReferencePage();
+        var pageUrl = wizardRefPage.formElements.pageUrl;
+        var formName = wizardRefPage.formElements.formName;
+        var buttonId = wizardRefPage.formElements.buttonId;
+        var refFormElements = wizardRefPage.formElements.fields;
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+
+        for (var i = 0; i < refFormElements.length; i++) {
+            var elementType = refFormElements[i].type;
+            var model = refFormElements[i].model;
+            switch (elementType) {
+                case "text-input":
+                    elements.testTextInput(buttonId, model, pageUrl);
+                    break;
+                case "dropdown-select":
+                    elements.testDropdownSelectInput(buttonId, model, pageUrl);
+                    break;
+                case "multi-select":
+                    elements.testMultiSelectInput(buttonId, model, pageUrl);
+                    break;
+                case "check-box":
+                    elements.testCheckBoxInput(buttonId, model, pageUrl);
+                    break;
+            } //switch
+        } //for i
+
+    }
 };
 
-describe ('name form', function() {
+module.exports = WizardReferencePage;
+
+/*describe ('name form', function() {
 
     it('name form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
@@ -68,5 +105,5 @@ describe ('name form', function() {
             } //switch
         } //for i
     });
-});
+});*/
 
