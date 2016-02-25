@@ -1,6 +1,6 @@
 var WizardCodePage = function () {
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=chemical');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {

@@ -1,7 +1,7 @@
 var WizardNamePage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=chemical');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -20,7 +20,7 @@ var WizardNamePage = function () {
     this.formElements = {
        // pageUrl: '/ginas/app/wizard?kind=chemical',
         formName: 'nameForm',
-        buttonID: 'names',
+        buttonId: 'names',
         fields: [{
             model: 'name.name',
             type: 'text-input'
@@ -62,6 +62,24 @@ describe ('name form', function() {
     beforeEach(function() {
         wizardNamePage.getPage();
     });
+
+    it('should see if form is visible', function(){
+        var vis = browser.findElement(By.id('add-name')).isDisplayed();
+        expect(vis).toBe(false)
+    });
+
+    it('should test form toggling', function(){
+        var buttonId = wizardNamePage.formElements.buttonId;
+        var vis = browser.findElement(By.id('add-name')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId));
+        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(false);
+
+    });
+
 
     it('name form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
