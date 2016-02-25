@@ -15,6 +15,7 @@ var WizardCommonElements = function () {
         var elementId = model.split(".")[1];
         console.log("text-input-elementId: " + elementId);
         this.clickById(buttonId);
+       // browser.findElement(By.id('name')).sendKeys('testing');
         var userType = element(by.id(elementId));
          userType.clear().sendKeys('testing');
          expect(userType.getAttribute('value')).toEqual('testing');

@@ -71,7 +71,6 @@ public class Protein extends GinasCommonSubData {
     		return;
     	}
     	this.modifications=mod;
-    	
     }
     
     @JsonIgnore

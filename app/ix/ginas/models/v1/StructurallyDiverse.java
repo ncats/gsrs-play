@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ix.core.models.Indexable;
@@ -67,6 +68,8 @@ public class StructurallyDiverse extends GinasCommonSubData {
 
     public StructurallyDiverse () {}
     
+    
+    @JsonIgnore
     public String getDisplayParts(){
         String ret="";
         if(part!=null){
