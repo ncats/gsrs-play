@@ -1,5 +1,9 @@
 var WizardNamePage = function () {
 
+    this.getPage = function () {
+        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+    };
+
     this.clickById = function (name) {
         element(by.id(name)).click();
     };
@@ -14,7 +18,7 @@ var WizardNamePage = function () {
     
 
     this.formElements = {
-        pageUrl: '/ginas/app/wizard?kind=chemical',
+       // pageUrl: '/ginas/app/wizard?kind=chemical',
         formName: 'nameForm',
         buttonID: 'names',
         fields: [{
@@ -54,35 +58,37 @@ var WizardNamePage = function () {
 
 describe ('name form', function() {
 
+    var wizardNamePage = new WizardNamePage();
+    beforeEach(function() {
+        wizardNamePage.getPage();
+    });
+
     it('name form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        var wizardNamePage = new WizardNamePage();
-        var pageUrl = wizardNamePage.formElements.pageUrl;
         var buttonId = wizardNamePage.formElements.buttonID;
         var formElements = wizardNamePage.formElements.fields;
         var refElementTests = require('./ReferenceFormTest.js');
         var refPage = new refElementTests;
-
-
         for (var i = 0; i < formElements.length; i++) {
             var elementType = formElements[i].type;
             var model = formElements[i].model;
+            wizardNamePage.getPage();
             switch (elementType) {
                 case "text-input":
-                    elements.testTextInput(buttonId, model, pageUrl);
+                    elements.testTextInput(buttonId, model);
                     break;
                 case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model, pageUrl);
+                    elements.testDropdownSelectInput(buttonId, model);
                     break;
                 case "multi-select":
-                    elements.testMultiSelectInput(buttonId, model, pageUrl);
+                   // elements.testMultiSelectInput(buttonId, model);
                     break;
                 case "check-box":
-                    elements.testCheckBoxInput(buttonId, model, pageUrl);
+                   // elements.testCheckBoxInput(buttonId, model);
                     break;
                 case "form-selector":
-                    refPage.refPageTests(buttonId, model, pageUrl);
+                   // refPage.refPageTests(buttonId, model);
                     break;
             } //switch
         } //for i

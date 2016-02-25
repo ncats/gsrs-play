@@ -8,8 +8,7 @@ var WizardCommonElements = function () {
         element(by.model(name)).click();
     };
 
-    this.testTextInput = function (buttonId, model, pageUrl) {
-        browser.get(pageUrl);
+    this.testTextInput = function (buttonId, model) {
         console.log("text-input-model: " + model);
         console.log("text-input-buttonId: " + buttonId);
         var elementId = model.split(".")[1];
@@ -21,8 +20,7 @@ var WizardCommonElements = function () {
          expect(userType.getAttribute('value')).toEqual('testing');
     };
 
-    this.testDropdownSelectInput = function (buttonId, model, pageUrl) {
-        browser.get(pageUrl);
+    this.testDropdownSelectInput = function (buttonId, model) {
         console.log("drop-down-select: " +model);
         this.clickById(buttonId);
         this.clickByModel(model);
@@ -39,8 +37,7 @@ var WizardCommonElements = function () {
         });
     };
 
-    this.testMultiSelectInput = function (buttonId, model, pageUrl) {
-        browser.get(pageUrl);
+    this.testMultiSelectInput = function (buttonId, model) {
         console.log("multi-select " +model);
         var elementId = model.split(".")[1];
         console.log("elementId: " + elementId);
@@ -58,9 +55,8 @@ var WizardCommonElements = function () {
         });
     };
 
-    this.testCheckBoxInput = function (buttonId, model, pageUrl) {
+    this.testCheckBoxInput = function (buttonId, model) {
         console.log("checkbox: " + model);
-        browser.get(pageUrl);
         var elementId = model.split(".")[1];
         console.log("elementId: " + elementId);
         this.clickById(buttonId);
