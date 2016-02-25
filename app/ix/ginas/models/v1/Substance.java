@@ -48,8 +48,8 @@ import play.Logger;
 @DiscriminatorValue("SUB")
 public class Substance extends GinasCommonData {
 	private static final String DOC_TYPE_PROPERTY_IMPORT = "PROPERTY_IMPORT";
-	public static final String ALTERNATE_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
-	public static final String PRIMARY_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
+	public static final String ALTERNATE_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
+	public static final String PRIMARY_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
 
 	private static final String DEFAULT_NO_NAME = "NO_NAME";
 

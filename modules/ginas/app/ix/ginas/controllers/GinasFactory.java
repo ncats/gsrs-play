@@ -98,13 +98,13 @@ public class GinasFactory extends EntityFactory {
 	
 	@Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approve(String substanceId) {
-		List<Substance> substances = GinasApp.resolve(SubstanceFactory.finder,
+		List<Substance> substances = SubstanceFactory.resolve(
 				substanceId);
 
 		try {
 			if (substances.size() == 1) {
 				Substance s=substances.get(0);
-				GinasUtils.approveSubstance(s);
+				SubstanceFactory.approveSubstance(s);
 				s.save();
 				return ok("Substance approved with approvalID:" + s.approvalID);
 			}
