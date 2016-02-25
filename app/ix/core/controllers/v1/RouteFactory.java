@@ -259,6 +259,20 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
+    public static Result approveUUID (String context, String id) {
+        try {
+            Method m = getMethod (context, "approve", UUID.class);
+            if (m != null)
+                return (Result)m.invoke(null, EntityFactory.toUUID(id));
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.warn("Context {} has no method edits(UUID)",context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+    
     public static Result field (String context, Long id, String field) {
         try {
             Method m = getMethod (context, "field", Long.class, String.class);

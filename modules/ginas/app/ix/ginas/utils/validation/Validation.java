@@ -630,7 +630,7 @@ public class Validation {
         			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Calculated weight [" + tot + "] is greater than 5% off of given weight [" + p.value.average + "]").appliableChange(true));
         		}
         	}
-        	System.out.println("calc:" + tot);
+        	//System.out.println("calc:" + tot);
         }
         strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
         return gpm;

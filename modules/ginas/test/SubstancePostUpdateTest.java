@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -53,13 +55,23 @@ public class SubstancePostUpdateTest {
         }
 
         File resource;
+        private TestServer ts;
+
         public SubstancePostUpdateTest(File f, String dummy){
             this.resource=f;
         }
 
+        @Before
+        public void startServer(){
+            ts=testServer(9001);
+        }
+
+    @After
+    public void stopServer(){
+        stop(ts);
+    }
         @Test
         public void testAPICreateSubstance() {
-        	TestServer ts=testServer(9001);
             running(ts, new Runnable() {
                 public void run() {
                     try (InputStream is=new FileInputStream(resource)){
@@ -112,7 +124,7 @@ public class SubstancePostUpdateTest {
                 }
             });
 
-            stop(ts);
+
         }
         
         /**
@@ -166,17 +178,20 @@ public class SubstancePostUpdateTest {
          * @throws AssertionError
          */
         public static void assertThatNonDestructive(JsonNode before, JsonNode after) throws AssertionError{
-        	JsonNode jp =JsonDiff.asJson(before,after);
+
+            JsonNode jp =JsonDiff.asJson(before,after);
             for(JsonNode jn:jp){
             	
             	if(jn.get("op").asText().equals("remove")){
             		if(jn.get("path").asText().equals("/protein/modifications") ||
-            		   jn.get("path").asText().equals("/nucleicAcid/modifications") ||
+            		   jn.get("path").asText().equals("/nucleicAcid/modifications") 
+            		   ||
             		   jn.get("path").asText().contains("nameOrgs") ||		//silly hacks to allow workaround for above
             		   jn.get("path").asText().contains("domains")  ||
             		   (jn.get("path").asText().startsWith("/names/") &&
             	        jn.get("path").asText().contains("references") 
-            				)){
+            		   		)
+            			){
             			//acceptable removals, do nothing
             			
             		}else{
@@ -186,7 +201,10 @@ public class SubstancePostUpdateTest {
             			if(jsbefore.toString().equals("[\"\"]")){
             				
             			}else{
-            			
+//            				System.out.println("OLD:");
+//            				System.out.println(before);
+//            				System.out.println("NEW:");
+//            				System.out.println(after);
             				throw new AssertionError("removed property at '" + jn.get("path") + "' , was '" + jsbefore+ "'");
             			}
             		}
@@ -195,9 +213,4 @@ public class SubstancePostUpdateTest {
             }
         }
 
-        @AfterClass
-        public static void tearDown(){
-            // Stop the server
-            // stop(testServer);
-        }
     }
