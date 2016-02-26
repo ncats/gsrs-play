@@ -21,6 +21,7 @@ var WizardNamePage = function () {
        // pageUrl: '/ginas/app/wizard?kind=chemical',
         formName: 'nameForm',
         buttonId: 'names',
+        formObj:'name',
         fields: [{
             model: 'name.name',
             type: 'text-input'
@@ -37,7 +38,7 @@ var WizardNamePage = function () {
             model: 'name.preferred',
             type: 'check-box'
         }, {
-            model: 'name-reference',
+            model: 'reference',
             type: 'form-selector'
         }/*, {
             model: 'name-access',
@@ -64,19 +65,19 @@ describe ('name form', function() {
     });
 
     it('should see if form is visible', function(){
-        var vis = browser.findElement(By.id('add-name')).isDisplayed();
+        var vis = browser.findElement(By.id('addNameForm')).isDisplayed();
         expect(vis).toBe(false)
     });
 
     it('should test form toggling', function(){
         var buttonId = wizardNamePage.formElements.buttonId;
-        var vis = browser.findElement(By.id('add-name')).isDisplayed();
+        var vis = browser.findElement(By.id('addNameForm')).isDisplayed();
         var button = browser.findElement(By.id(buttonId));
-        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(false);
+        expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(false);
         button.click();
-        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(true);
+        expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(true);
         button.click();
-        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(false);
+        expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(false);
 
     });
 
@@ -84,7 +85,11 @@ describe ('name form', function() {
     it('name form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        var buttonId = wizardNamePage.formElements.buttonID;
+        browser.findElement(By.id('names')).click();
+       //  var buttonId = wizardNamePage.formElements.buttonId;
+         elements.testInputFields(wizardNamePage.formElements);
+
+       /* var buttonId = wizardNamePage.formElements.buttonID;
         var formElements = wizardNamePage.formElements.fields;
 
         var refElementTests = require('./ReferenceFormTest.js');
@@ -118,7 +123,7 @@ describe ('name form', function() {
 
                     break;
             } //switch
-        } //for i
+        } //for i*/
     });
 });
 

@@ -2,7 +2,7 @@
     <label for={{type}} class="text-capitalize">Amount</label>
         <a ng-show="referenceobj.amount" ng-click="toggle();" role="button"><amount value = "referenceobj.amount"></amount></a>
     <div class="text-center">
-        <a ng-hide="_.isEmpty(referenceobj.amount)" ng-click="toggle();" role="button" aria-label="Add an amount" uib-tooltip="Add an amount" id="{{type}}"><i
+        <a ng-hide="_.isEmpty(referenceobj.amount)" ng-click="toggle();" role="button" aria-label="Add an amount" uib-tooltip="Add an amount" id="{{name}}-{{type}}"><i
                 class="fa fa-plus fa-2x success" ng-show="stage"></i>
             <i class="fa fa-times fa-2x danger" ng-show="!stage"></i></a>
     </div>

@@ -1,5 +1,9 @@
 var WizardCommonElements = function () {
 
+    this.getPage = function () {
+        browser.get(browser.params.url);
+    };
+
     this.clickById = function (name) {
         element(by.id(name)).click();
     };
@@ -8,30 +12,30 @@ var WizardCommonElements = function () {
         element(by.model(name)).click();
     };
 
-    this.testTextInput = function (buttonId, model) {
+    this.testTextInput = function (model) {
         console.log("text-input-model: " + model);
-        console.log("text-input-buttonId: " + buttonId);
+     //   console.log("text-input-buttonId: " + buttonId);
         var elementId = model.split(".")[1];
         console.log("text-input-elementId: " + elementId);
-        this.clickById(buttonId);
+      //  this.clickById(buttonId);
         var userInput = element(by.id(elementId));
         userInput.clear().sendKeys('testing');
          expect(userInput.getAttribute('value')).toEqual('testing');
     };
 
-    this.testTextArea = function(buttonId, model) {
+    this.testTextArea = function(model) {
         console.log("text-area-model: " + model);
-        console.log("text-area-buttonId: " + buttonId);
+    //    console.log("text-area-buttonId: " + buttonId);
         var elementId = model.split(".")[1];
         console.log("text-area-elementId: " + elementId);
         var userInput = element(by.id(elementId));
         userInput.clear().sendKeys('testing');
         expect(userInput.getAttribute('value')).toEqual('testing');
-    }
+    };
 
-    this.testDropdownSelectInput = function (buttonId, model) {
+    this.testDropdownSelectInput = function (model) {
         console.log("drop-down-select: " +model);
-        this.clickById(buttonId);
+       // this.clickById(buttonId);
         this.clickByModel(model);
         var elementId = model.split(".")[1];
         console.log("elementId: " + elementId);
@@ -39,19 +43,19 @@ var WizardCommonElements = function () {
             element.getText().then(function (text) {
                 var items = text.split('\n');
                 console.log(items.length);
-                console.log(items[1] + " : " + items[items.length-2])
+                console.log(items[1] + " : " + items[items.length-2]);
                 expect(items.length).toBeGreaterThan(0);
                 expect(items[items.length - 1]).toBe('Other');
             });
         });
     };
 
-    this.testMultiSelectInput = function (buttonId, model) {
+    this.testMultiSelectInput = function (model) {
         console.log("multi-select model: " +model);
-        console.log("multi-select buttonId: " + buttonId );
+       // console.log("multi-select buttonId: " + buttonId );
         var elementId = model.split(".")[1];
         console.log("elementId: " + elementId);
-        this.clickById(buttonId);
+      //  this.clickById(buttonId);
         element(by.id(elementId)).click();
         //element(by.model(model)).click().then(function(){
             element(by.model(model)).all(by.css('.suggestion-list')).each(function (element, index) {
@@ -64,11 +68,11 @@ var WizardCommonElements = function () {
         //});
     };
 
-    this.testCheckBoxInput = function (buttonId, model) {
+    this.testCheckBoxInput = function (model) {
         console.log("checkbox: " + model);
         var elementId = model.split(".")[1];
         console.log("elementId: " + elementId);
-        this.clickById(buttonId);
+     //   this.clickById(buttonId);
         var chekBox = element(by.id(elementId));
         if(!chekBox.isSelected()){
             console.log("not checked");
@@ -76,5 +80,57 @@ var WizardCommonElements = function () {
         }
         expect(chekBox.isSelected()).toBe(false);
     };
+
+    this.testModelBinding = function (model) {
+console.log(model);
+        expect(element(by.exactBinding(model)).isPresent()).toBe(true);
+       // var elem =
+        var ret = element(by.exactBinding(model));
+        //console.log(ret.getText());
+        return ret;
+    };
+
+    this.testInputFields = function(elements){
+       // var buttonId = wizardNamePage.formElements.buttonID;
+       // var formElements = wizardNamePage.formElements.fields;
+var fields = elements.fields;
+        var refElementTests = require('./ReferenceFormTest.js');
+        var refPage = new refElementTests;
+        var accessElementTests = require('./AccessFormTest.js');
+        var accessPage = new accessElementTests;
+
+        for (var i = 0; i < fields.length; i++) {
+            var elementType = fields[i].type;
+            var model = fields[i].model;
+           this.getPage();
+            browser.findElement(By.id(elements.buttonId)).click();
+            switch (elementType) {
+                case "text-input":
+                    this.testTextInput(model);
+                    break;
+                case "dropdown-select":
+                    this.testDropdownSelectInput(model);
+                    break;
+                case "multi-select":
+                    this.testMultiSelectInput(model);
+                    break;
+                case "check-box":
+                    this.testCheckBoxInput( model);
+                    break;
+                case "form-selector":
+                    if(model == 'reference') {
+                        var newbtn = elements.formObj +"-reference";
+                        this.testInputFields(refPage.formElements, newbtn);
+                    } else if(model == 'access'){
+                        var newbtn = elements.formObj +"-access";
+                        this.testInputFields(accessPage.formElements, newbtn);
+                    }
+
+                    break;
+            } //switch
+        } //for i
+    }
+
+
 };
 module.exports = WizardCommonElements;

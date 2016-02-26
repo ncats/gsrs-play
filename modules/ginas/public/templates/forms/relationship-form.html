@@ -3,7 +3,7 @@
         <form-header type="relationships" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="relationshipForm" role="form" novalidate ng-if = "parent.definitionType.value !='ALTERNATIVE'">
+        <form class="form-horizontal" name="relationshipForm" id="addRelationshipForm" role="form" novalidate ng-if = "parent.definitionType.value !='ALTERNATIVE'">
             <div class="row form-row">
                 <div class="col-md-2">
                     <substance-chooser-selector referenceobj ="relationship" field ="relatedSubstance" name ="relatedSubstance" formname ="relationshipForm" label ="Related Substance" type = "search"></substance-chooser-selector>
