@@ -95,6 +95,8 @@ public class SubstanceFactory extends EntityFactory {
 		}
 		return realList;
 	}
+	
+
 
 	private static Substance getSubstanceByApprovalIDOrUUID(String approvalID, String uuid) {
 		Substance s = getSubstance(uuid);

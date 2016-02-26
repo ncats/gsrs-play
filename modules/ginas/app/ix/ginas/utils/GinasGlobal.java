@@ -23,8 +23,6 @@ public class GinasGlobal extends Global {
 	
 	    @Override
 	    public Promise<Result> call(Http.Context ctx) throws java.lang.Throwable {
-	    	
-	    	
 	    	if(Authentication.getUser()==null){
 	    		if(!Authentication.loginUserFromHeader(null)){
 	    			if(!Authentication.allowNonAuthenticated()){

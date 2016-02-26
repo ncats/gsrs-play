@@ -11,6 +11,7 @@ import java.net.URLDecoder;
 import java.security.*;
 
 import play.Logger;
+import play.Play;
 import play.mvc.Http;
 
 public class Util {
@@ -21,7 +22,8 @@ public class Util {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.1 Safari/537.36",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.0 Safari/537.36"
     };
-
+    public static long TIME_RESOLUTION_MS=Play.application().configuration().getLong("ix.tokenexpiretime",(long)(3600*1000*24));
+    
     static Random rand = new Random ();
     public static String randomUserAgent () {
         return UserAgents[rand.nextInt(UserAgents.length)];
@@ -154,6 +156,21 @@ public class Util {
         return retStream;
 
     }
+    
+    public static String encrypt(String clearTextPassword, String salt) {
+        String text = "---" + clearTextPassword + "---" + salt + "---";
+        return Util.sha1(text);
+    }
+    
+    public static String generateRandomString(int len){
+    	String alpha="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwzyz";
+    	String k="";
+    	for(int i=0;i<len;i++){
+    		int l=(int)(Math.random()*alpha.length());
+    		k+=alpha.substring(l,l+1);
+    	}
+    	return k;
+    }
 
     /**
      * Returns an uncompressed inputstream from possibly multiply compressed
@@ -172,5 +189,15 @@ public class Util {
             is2 = getUncompressedInputStream(is2, test);
         }
         return is2;
+    }
+    
+    public static long getCanonicalCacheTimeStamp(){
+    	long TIMESTAMP=(new Date()).getTime();
+    	long date=(long)(Math.floor(TIMESTAMP/getTimeResolutionMS()));
+    	return date;
+    }
+    public static long getTimeResolutionMS(){
+    	long timeresolution=3600*1000*24;
+    	return timeresolution;
     }
 }

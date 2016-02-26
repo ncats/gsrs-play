@@ -24,7 +24,13 @@ import play.mvc.*;
 import com.avaje.ebean.*;
 
 import ix.core.plugins.IxCache;
+import ix.core.plugins.IxContext;
 import ix.ncats.models.Employee;
+import ix.utils.Util;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
 import ix.ncats.controllers.NIHLdapConnector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +50,35 @@ public class Authentication extends Controller {
             new Model.Finder<UUID, Session>(UUID.class, Session.class);
     static Model.Finder<Long, UserProfile> _profiles =
             new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class);
+    
+    private static Cache tokenCache;
+    private static Cache tokenCacheUserProfile;
+    private static long lastCacheUpdate;
+    
+    static{
+    	String CACHE_NAME="TOKEN_CACHE";
+    	String CACHE_NAME_UP="TOKEN_UP_CACHE";
+    	//always hold onto the tokens for twice the time required
+    	long tres=Util.getTimeResolutionMS()*2;
+    	
+    	int maxElements=99999;
+    	int maxElementsUP=100;
+        Application app=Play.application();
+        
+        CacheConfiguration config =
+            new CacheConfiguration (CACHE_NAME, maxElements)
+            .timeToLiveSeconds(tres/1000);
+        tokenCache = new Cache (config);
+        CacheManager.getInstance().addCache(tokenCache);     
+        tokenCache.setSampledStatisticsEnabled(true);
+        
+        CacheConfiguration configUp =
+                new CacheConfiguration (CACHE_NAME_UP, maxElementsUP)
+                .timeToIdleSeconds(tres/1000/100);
+        tokenCacheUserProfile= new Cache (configUp);
+        CacheManager.getInstance().addCache(tokenCacheUserProfile);     
+        tokenCacheUserProfile.setSampledStatisticsEnabled(true);
+    }
 
     public static class Secured extends Security.Authenticator {
         @Override
@@ -153,6 +188,7 @@ public class Authentication extends Controller {
                 profile.systemAuth = systemAuth;
                 profile.save();
                 tx.commit();
+        		tokenCache.put(new Element(profile.getComputedToken(), profile.getIdentifier()));
             } else {
                 profile = users.iterator().next();
                 profile.user.username = username;
@@ -163,16 +199,7 @@ public class Authentication extends Controller {
             	flash("message", "User is no longer active!");
                 throw new IllegalStateException("User:" + username + " is not an active user");
             }
-            Session session = new Session(profile);
-            session.save();
-
-            IxCache.set(session.id.toString(), session);
-
-            Logger.debug("** new session " + session.id
-                    + " created for user "
-                    + profile.user.username + "!");
-            session().clear();
-            session(SESSION, session.id.toString());
+            setUserSessionDirectly(profile);
             tx.commit();
         } catch (Exception ex) {
             Logger.trace
@@ -184,6 +211,90 @@ public class Authentication extends Controller {
         return profile;
     }
     
+    public static void setUserSessionDirectly(UserProfile profile){
+    	Session session = new Session(profile);
+        session.save();
+
+        IxCache.set(session.id.toString(), session);
+
+        Logger.debug("** new session " + session.id
+                + " created for user "
+                + profile.user.username + "!");
+        session().clear();
+        session(SESSION, session.id.toString());
+    }
+    
+    public static UserProfile getUserProfileFromKey(String username, String key){
+    	UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+    	if(profile!=null){
+    		if(profile.acceptKey(key)){
+    			return profile;
+    		}
+    	}
+    	return null;
+    }
+    public static UserProfile getUserProfileFromPassword(String username, String password){
+    	
+    	UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+    	if(profile!=null){
+    		if(AdminFactory.validatePassword(profile, password)){
+    			return profile;
+    		}
+    	}
+    	return null;
+    }
+    
+    public static UserProfile getUserProfileFromToken(String username, String token){
+    	UserProfile profile = getUserProfile(username);
+    	if(profile!=null){
+    		if(profile.acceptToken(token)){
+    			return profile;
+    		}
+    	}
+    	return null;
+    }
+    
+    public static UserProfile getUserProfileFromTokenAlone(String token){
+    	updateUserProfileTokenCacheIfNecessary();
+    	Element uelm=tokenCache.get(token);
+    	if(uelm!=null){
+    		String username=(String)uelm.getObjectValue();
+    		UserProfile profile = getUserProfile(username);
+    		if(profile.acceptToken(token)){
+    			return profile;
+    		}
+    	}
+    	return null;
+    }
+    
+    public static UserProfile getUserProfile(String username){
+    	Element upelm=tokenCacheUserProfile.get(username);
+    	if(upelm!=null){
+    		return (UserProfile)upelm.getObjectValue();
+    	}
+    	UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+    	if(profile!=null){
+    		tokenCacheUserProfile.put(new Element(username, profile));	
+    	}
+    	return profile;
+    }
+    
+    public static void updateUserProfileTokenCacheIfNecessary(){
+    	if(Util.getCanonicalCacheTimeStamp()!=lastCacheUpdate){
+    		updateUserProfileTokenCache();
+    	}
+    }
+    public static void updateUserProfileToken(UserProfile up){
+    	tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
+    }
+    public static void updateUserProfileTokenCache(){
+    	//tokenCache.removeAll();
+    	for(UserProfile up:_profiles.all()){
+    		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
+    	}
+    	lastCacheUpdate=Util.getCanonicalCacheTimeStamp();
+    }
+    
     public static Result authenticate(String url) {
         DynamicForm requestData = Form.form().bindFromRequest();
         String username = requestData.get("username");
@@ -193,7 +304,7 @@ public class Authentication extends Controller {
         Principal cred;
         UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
 
-        System.out.println("auth1");
+        
         if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
                 cred = profile.user;
         } else {
@@ -209,7 +320,7 @@ public class Authentication extends Controller {
             flash("message", "Invalid credential!");
             return redirect(routes.Authentication.login(null));
         }
-        System.out.println("auth3");
+       
         try{
         	setSessionUser(username);
         }catch(Exception e){
@@ -219,7 +330,6 @@ public class Authentication extends Controller {
         if (url != null) {
             return redirect(url);
         }
-        System.out.println("auth4:" + url);
         return redirect(routes.Authentication.secured());
     }
 
@@ -267,7 +377,31 @@ public class Authentication extends Controller {
 
     public static UserProfile getUserProfile() {
         Session session = getSession();
-        return session != null ? session.profile : null;
+        if(session!=null){
+        	if(session.profile!=null){
+        		return session.profile;
+        	}
+        }
+        //do key auth
+        String user=request().getHeader("auth-username");
+        String key=request().getHeader("auth-key");
+        String token=request().getHeader("auth-token");
+        String password=request().getHeader("auth-password");
+        
+        UserProfile up=null;
+        
+        if(user!=null && key!=null){
+        	up=getUserProfileFromKey(user,key);
+        }else if(token!=null){
+        	up=getUserProfileFromTokenAlone(token);
+        }else if(user!=null && password!=null){
+        	up=getUserProfileFromPassword(user,password);
+        }
+        if(up!=null){
+        	setUserSessionDirectly(up);
+        }
+        
+        return up;
     }
 
     public static Principal getUser(){

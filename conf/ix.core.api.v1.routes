@@ -10,6 +10,9 @@ GET     /    ix.core.controllers.v1.RouteFactory.listResources()
 GET	/edits/:uuid	ix.core.controllers.EditFactory.get(uuid: String)
 GET	/edits/:uuid/	ix.core.controllers.EditFactory.get(uuid: String)
 GET	/edits/:uuid/*field	ix.core.controllers.EditFactory.field(uuid: String, field: String)
+GET	    /whoami													ix.core.controllers.v1.RouteFactory.profile()
+GET	    /profile													ix.core.controllers.v1.RouteFactory.profile()
+GET	    /profile/@keygen												ix.core.controllers.v1.RouteFactory.profileResetKey()
 GET     /search         ix.core.controllers.search.SearchFactory.search(q: String ?= null, top: Int ?= 10, skip: Int ?= 0, fdim: Int ?= 10)
 GET     /suggest/@fields       ix.core.controllers.search.SearchFactory.suggestFields
 GET     /suggest/:field       ix.core.controllers.search.SearchFactory.suggestField(field: String, q: String, max: Int ?= 10)
@@ -48,7 +51,6 @@ GET     /$id<[a-fA-F0-9\-]+>/*field  ix.core.controllers.v1.RouteFactory._fieldU
 GET     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/*field  ix.core.controllers.v1.RouteFactory.fieldUUID(context: String, id: String, field: String)
 PUT     /$context<[a-z0-9_]+>/$id<[a-fA-F0-9\-]+>/*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
 PUT     /$context<[a-z0-9_]+>($id<[a-fA-F0-9\-]+>)/*field       ix.core.controllers.v1.RouteFactory.updateUUID(context: String, id:String, field: String)
-
 
 
 OPTIONS /$path<.*>	ix.core.controllers.v1.RouteFactory.checkPreFlight(path: String)

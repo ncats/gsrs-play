@@ -19,11 +19,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.NamedResource;
 import ix.core.NamedResourceFilter;
+import ix.core.UserFetcher;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Acl;
 import ix.core.models.Namespace;
 import ix.core.models.Principal;
+import ix.core.models.UserProfile;
 import ix.utils.Global;
 import play.Logger;
 import play.Play;
@@ -424,4 +426,29 @@ public class RouteFactory extends Controller {
         response().setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
         return ok();
     }
+    
+    
+    
+    
+    public static Result profile(){
+    	UserProfile p=UserFetcher.getActingUserProfile();
+    	if(p!=null){
+    		ObjectMapper om=new ObjectMapper();
+        	return ok(om.valueToTree(p));	
+    	}
+    	return notFound("No user logged in");
+    }
+    
+    public static Result profileResetKey(){
+    	UserProfile p=UserFetcher.getActingUserProfile();
+    	if(p!=null){
+    		p.regenerateKey();
+    		p.save();
+    		ObjectMapper om=new ObjectMapper();
+        	return ok(om.valueToTree(p));	
+    	}
+    	return notFound("No user logged in");
+    }
+    
+    
 }
