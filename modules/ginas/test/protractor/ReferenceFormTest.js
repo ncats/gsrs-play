@@ -27,7 +27,7 @@ var WizardReferencePage = function () {
         }, {
             model: 'ref.tags',
             type: 'multi-select'
-        },/* {
+        }/* {
             model: 'ref.url',
             type: 'text-input'
         }, {
@@ -37,11 +37,11 @@ var WizardReferencePage = function () {
             binding: 'ref.uploadedFile',
             type: 'binding'
         }*/]
-    }
+    };
 
     this.refPageTests = function(buttonId, model){
         console.log("form selector: " + model);
-           this.clickById(buttonId);
+        this.clickById(buttonId);
         this.clickById(model);
 
         var wizardRefPage = new WizardReferencePage();

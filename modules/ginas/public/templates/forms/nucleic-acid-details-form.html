@@ -3,7 +3,8 @@
         <form-header type="nucleicAcidClassification" parent="parent"></form-header>
     </div>
     <div class="col-md-12">
-            <div class="row form-row">
+        <form class="form-horizontal" name="nucleicAcidClassificationForm" id="addNucleicAcidClassificationForm" role="form" novalidate>
+        <div class="row form-row">
                 <div class="col-md-2 err-check">
                     <dropdown-view-edit obj = "parent.nucleicAcid" field="nucleicAcidType" cv = "NUCLEIC_ACID_TYPE" label="Nucleic Acid Type"></dropdown-view-edit>
                 </div>
@@ -24,6 +25,7 @@
                 </div>
             </div>
             <div class="naDetailsForm"></div>
+            </form>
         </div>
     </div>
 

@@ -2,7 +2,7 @@
     <label for="{{field}}" class="text-capitalize">{{label || field}}</label><br>
     <a href="#" ng-click="edit= !edit" ng-show="!edit">{{obj[field]}}</a>
         <input ng-show="!obj[field] || edit" type="text" class="form-control" ng-model=obj[field] ng-blur="edit = !edit" ng-model-options="{ debounce: 500 }"
-               placeholder ="{{label || field}}" title="{{field}}" name="{{field}}"/>
+               placeholder ="{{label || field}}" title="{{field}}" id="{{field}}" name="{{field}}"/>
 </div>
 
 

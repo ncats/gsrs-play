@@ -14,6 +14,7 @@ var WizardCodePage = function () {
     this.formElements = {
         formName: 'codeForm',
         buttonId:'codes',
+        formObj:'code',
         fields: [{
             model: 'code.codeSystem',
             type: 'dropdown-select'
@@ -33,7 +34,7 @@ var WizardCodePage = function () {
             model: 'code-access',
             type: 'form-selector'
         },*/ {
-            model: 'code-reference',
+            model: 'reference',
             type: 'form-selector'
         }]
     }
@@ -47,6 +48,13 @@ describe ('Code form', function() {
     });*/
 
     it('Code form tests', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        browser.findElement(By.id('codes')).click();
+        //  var buttonId = wizardNamePage.formElements.buttonId;
+        elements.testInputFields(wizardNamePage.formElements);
+
+      /*
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
         var buttonId = wizardCodePage.formElements.buttonId;
@@ -87,7 +95,7 @@ describe ('Code form', function() {
 
                     break;
             } //switch
-        } //for i
+        } //for i*/
     });
 });
 

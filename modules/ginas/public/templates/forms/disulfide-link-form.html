@@ -5,7 +5,7 @@
     <div class="col-md-12" uib-collapse="iscollapsed">
         <span>Number of unspecified Cysteine residues: {{getAllCysteinesWithoutLinkage()}}</span>
 
-        <form class="form-horizontal" name="disulfideLinksForm" role="form" novalidate>
+        <form class="form-horizontal" name="disulfideLinksForm" id="addDisulfideLinksForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-1">
                     <form-selector referenceobj="disulfideLink" parent="parent" field="protein"
