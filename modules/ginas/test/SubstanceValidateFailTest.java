@@ -73,12 +73,10 @@ public class SubstanceValidateFailTest extends WithApplication {
                 try (InputStream is = new FileInputStream(resource)) {
                     JsonNode js = new ObjectMapper().readTree(is);
                     Logger.info("Running: " + resource);
-                    WSResponse wsResponse1 = WS.url(SubstanceValidateFailTest.VALIDATE_URL).post(js).get(timeout);
+                    WSResponse wsResponse1 = ts.validateSubstance(js);
                     JsonNode jsonNode1 = wsResponse1.asJson();
                     assertEquals(OK, wsResponse1.getStatus());
-
                     assertFalse(jsonNode1.isNull());
-
                     assertFalse(jsonNode1.get("valid").asBoolean());
 
                     return null;

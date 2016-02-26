@@ -2,9 +2,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static play.mvc.Http.Status.OK;
-import static play.test.Helpers.running;
-import static play.test.Helpers.stop;
-import static play.test.Helpers.testServer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,9 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -25,18 +20,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import play.Logger;
-import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
-import play.test.TestServer;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
 public class SubstancePostUpdateTest {
 
 	
-        private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
-        private static final String API_URL = "http://localhost:9001/ginas/app/api/v1/substances";
-        private static long timeout= 10000L;
+        
+        
 
         @Parameterized.Parameters(name="{1}")
         static public Collection<Object[]> findFiles(){
@@ -55,24 +47,17 @@ public class SubstancePostUpdateTest {
         }
 
         File resource;
-        private TestServer ts;
+        @Rule
+        public GinasTestServer ts = new GinasTestServer(9001);
+
 
         public SubstancePostUpdateTest(File f, String dummy){
             this.resource=f;
         }
 
-        @Before
-        public void startServer(){
-            ts=testServer(9001);
-        }
-
-    @After
-    public void stopServer(){
-        stop(ts);
-    }
         @Test
         public void testAPICreateSubstance() {
-            running(ts, new Runnable() {
+            ts.run(new Runnable() {
                 public void run() {
                     try (InputStream is=new FileInputStream(resource)){
                         JsonNode js= new ObjectMapper().readTree(is);
@@ -80,7 +65,7 @@ public class SubstancePostUpdateTest {
                         String uuid=js.get("uuid").asText();
                         Logger.info("Running: " + resource);
 
-                        WSResponse wsResponse1 = WS.url(SubstancePostUpdateTest.VALIDATE_URL).post(js).get(timeout);
+                        WSResponse wsResponse1 = ts.validateSubstance(js);
 
                         assertEquals(OK, wsResponse1.getStatus());
 
@@ -91,15 +76,13 @@ public class SubstancePostUpdateTest {
                         //assertThat("initalialValid:" +jsonNode1.get("valid").asBoolean()).isEqualTo("initalialValid:true");
                         assertTrue(jsonNode1.get("valid").asBoolean());
                         //create
-                        WSResponse wsResponse2 = WS.url(SubstancePostUpdateTest.API_URL).post(js).get(timeout);
+                        WSResponse wsResponse2 = ts.submitSubstance(js);
                         int status2 = wsResponse2.getStatus();
                         assertTrue(status2 == 200 || status2 == 201);
-                       // assertThat(wsResponse2.getStatus()).isIn(200, 201);
                         JsonNode jsonNode2 = wsResponse2.asJson();
-                        //assertThat(!jsonNode2.isNull()).isEqualTo(true);
 
                         //search
-                        WSResponse wsResponse3 = WS.url("http://localhost:9001/ginas/app/api/v1/substances(" + uuid + ")?view=full").get().get(timeout);
+                        WSResponse wsResponse3 = ts.fetchSubstance(uuid);
                         JsonNode jsonNode3 = wsResponse3.asJson();
                         //System.out.println("jsonNode:" + jsonNode3);
                         assertEquals(OK, wsResponse3.getStatus());
@@ -110,7 +93,7 @@ public class SubstancePostUpdateTest {
                         assertThatNonDestructive(js,jsonNode3);                        
                         
                         //validate
-                        WSResponse wsResponse4 = WS.url(SubstancePostUpdateTest.VALIDATE_URL).post(jsonNode3).get(timeout);
+                        WSResponse wsResponse4 = ts.validateSubstance(jsonNode3);
                         //assertThat(wsResponse4.getStatus()).isEqualTo(OK);
                         assertEquals(OK, wsResponse4.getStatus());
                         JsonNode jsonNode4 = wsResponse4.asJson();
