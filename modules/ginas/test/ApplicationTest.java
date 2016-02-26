@@ -37,9 +37,7 @@ import static play.test.Helpers.*;
 */
 public class ApplicationTest  {
 
-    private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
-	private static long timeout= 10000L;;
-	
+    
     @Test
     public void simpleCheck() {
         int a = 1 + 1;

@@ -144,7 +144,7 @@ public class FunctionalTest extends WithApplication {
     }
     @Test
     public void testRouteNucleicAcidWizard(){
-
+    	
         running(fa, new Runnable() {
             public void run() {
                 FakeRequest request = new FakeRequest("GET", "/ginas/app/wizard?kind=nucleicAcid");
