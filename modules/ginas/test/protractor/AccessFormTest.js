@@ -15,13 +15,13 @@ var WizardAccessPage = function () {
     //button name is custom binding
     this.formElements = {
         formName: 'accessForm',
-        buttonId:'access',
+       // buttonId:'access',
         fields: [{
             model: 'referenceobj.access',
             type: 'multi-select'
         }
         ]
-    }
+    };
 
     this.accessPageTests = function(buttonId, model){
         console.log("form selector: " + model);

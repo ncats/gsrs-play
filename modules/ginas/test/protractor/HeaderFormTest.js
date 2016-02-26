@@ -29,7 +29,7 @@ var HeaderForm = function () {
             type: 'dropdown-edit'
         },{
 /*            model: 'parent.$$relatedSubstance',
-            type: 'form-selector'
+            type: 'substance-selector'
         },{*/
             model: 'access',
             type: 'form-selector'

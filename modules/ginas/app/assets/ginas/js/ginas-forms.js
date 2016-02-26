@@ -1411,22 +1411,22 @@ console.log(scope);
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        _.set(scope.ref, 'uploadedFile', data.url);
+                        _.set(scope.reference, 'uploadedFile', data.url);
                     }).error(function (err) {
                     });
                 };
 
                 scope.validate = function () {
-                    if (!_.isUndefined(scope.ref.citation)) {
-                        _.set(scope.ref, "uuid", UUID.newID());
-                        if (scope.ref.apply) {
-                            scope.saveReference(scope.ref.uuid, scope.referenceobj);
-                            scope.saveReference(angular.copy(scope.ref), scope.parent);
+                    if (!_.isUndefined(scope.reference.citation)) {
+                        _.set(scope.reference, "uuid", UUID.newID());
+                        if (scope.reference.apply) {
+                            scope.saveReference(scope.reference.uuid, scope.referenceobj);
+                            scope.saveReference(angular.copy(scope.reference), scope.parent);
                         } else {
-                            scope.saveReference(scope.ref, scope.parent);
+                            scope.saveReference(scope.reference, scope.parent);
                         }
-                        scope.ref = {};
-                        scope.ref.apply = true;
+                        scope.reference = {};
+                        scope.reference.apply = true;
                         scope.refForm.$setPristine();
                     }
                 };

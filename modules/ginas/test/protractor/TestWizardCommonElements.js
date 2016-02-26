@@ -61,6 +61,7 @@ var WizardCommonElements = function () {
         elem.click();
             elem.getText().then(function (text) {
                 var items = text.split('\n');
+                console.log(items);
                 console.log(items.length);
                 console.log(items[1] + " : " + items[items.length-2]);
                 expect(items.length).toBeGreaterThan(0);
@@ -76,13 +77,15 @@ var WizardCommonElements = function () {
       //  this.clickById(buttonId);
         element(by.id(elementId)).click();
         //element(by.model(model)).click().then(function(){
-            element(by.model(model)).all(by.css('.suggestion-list')).each(function (element, index) {
-                element.getText().then(function (text) {
-                    var items = text.split('\n');
+        var elem = browser.findElement(by.model(model));
+          //  element(by.model(model)).all(by.css('.suggestion-list')).each(function (element, index) {
+                elem.getText().then(function (text) {
+                    console.log("tttttt" + text);
+                    var items = text.split(' ');
                     console.log(items.length);
                     expect(items.length).toBeGreaterThan(0);
                 });
-            });
+          //  });
         //});
     };
 
@@ -111,7 +114,7 @@ var WizardCommonElements = function () {
             return ret.getText();
     };
 
-    this.testInputFields = function(elements){
+    this.testInputFields = function(elements, parentbutton, button){
        // var buttonId = wizardNamePage.formElements.buttonID;
        // var formElements = wizardNamePage.formElements.fields;
         var fields = elements.fields;
@@ -124,9 +127,17 @@ var WizardCommonElements = function () {
             var model = fields[i].model;
                 this.getPage();
             if(elements.buttonId != undefined) {
-                var toggleButton = browser.findElement(By.id(elements.buttonId));
+                var toggleButton = browser.findElement(By.id(elements.buttonId +'-toggle'));
                 console.log("toggle " + elements.buttonId);
             toggleButton.click();
+            }
+            if(parentbutton) {
+                console.log(parentbutton);
+                var parentButton = browser.findElement(By.id(parentbutton+'-toggle'));
+                parentButton.click().then(function(){
+                var toggleButton = browser.findElement(By.id(button));
+            toggleButton.click();
+                });
             }
             switch (elementType) {
                 case "text-input":
@@ -151,11 +162,12 @@ var WizardCommonElements = function () {
                 case "form-selector":
                     if(model == 'reference') {
                         var newbtn = elements.formObj +"-reference";
-                        this.testInputFields(refPage.formElements, newbtn);
+                        var parentbtn = elements.buttonId;
+                        this.testInputFields(refPage.formElements, parentbtn, newbtn);
                     } else if(model == 'access'){
                         var newbtn = elements.formObj +"-access";
                         console.log(newbtn);
-                     //   this.testInputFields(accessPage.formElements, newbtn);
+                        this.testInputFields(accessPage.formElements, newbtn);
                     }
 
                     break;
