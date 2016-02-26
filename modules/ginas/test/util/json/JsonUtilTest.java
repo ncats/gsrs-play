@@ -1,15 +1,17 @@
-import com.fasterxml.jackson.core.JsonProcessingException;
+package util.json;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.Test;
-import play.libs.Json;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 import static org.junit.Assert.*;
@@ -130,7 +132,7 @@ public class JsonUtilTest {
                 .add("type", "type2")
                 .toJson();
 
-        print(a);
+
         assertEquals("26c09e1c-b1f4-4777-b67d-c405900a0f92", a.get("names").get("uuid").textValue());
     }
     private void print(JsonNode n){
@@ -156,7 +158,7 @@ public class JsonUtilTest {
                                         .add("type", "type2")
                                         .toJson();
 
-        Map<String, JsonUtil.Change> changes = JsonUtil.getDestructiveChanges(a, a);
+        Changes changes = JsonUtil.getDestructiveChanges(a, a);
 
         assertTrue(changes.isEmpty());
     }
@@ -174,15 +176,15 @@ public class JsonUtilTest {
 
 
 
-        Map<String, JsonUtil.Change> changes = JsonUtil.getDestructiveChanges(a, b);
+        Changes changes = JsonUtil.getDestructiveChanges(a, b);
 
-        Map<String, JsonUtil.Change> expected = new HashMap<>();
+        Map<String, Change> expected = new HashMap<>();
 
         JsonNode name = a.path("name");
         //value is full path so has leading slash for root
-        expected.put("/name", new JsonUtil.Change(name, JsonUtil.ChangeType.REMOVED));
+        expected.put("/name", new Change("/name", name, Change.ChangeType.REMOVED));
 
-        assertEquals(expected, changes);
+        assertEquals(new Changes(expected), changes);
     }
 
     @Test
@@ -197,21 +199,121 @@ public class JsonUtilTest {
 
 
 
-        Map<String, JsonUtil.Change> changes = JsonUtil.getDestructiveChanges(b, a);
+        Changes changes = JsonUtil.getDestructiveChanges(b, a);
 
-        Map<String, JsonUtil.Change> expected = new HashMap<>();
+        Map<String, Change> expected = new HashMap<>();
 
         JsonNode name = a.path("name");
         //value is full path so has leading slash for root
-        expected.put("/name", new JsonUtil.Change(name, JsonUtil.ChangeType.ADDED));
+        expected.put("/name", new Change("/name", name, Change.ChangeType.ADDED));
 
-        assertEquals(expected, changes);
+        assertEquals(new Changes(expected), changes);
     }
 
-    private static void assertThatNonDestructive(JsonNode before, JsonNode after){
-        SubstancePostUpdateTest.assertThatNonDestructive(before, after);
+    @Test
+    public void filteredOutChange(){
+        JsonNode a =  new JsonUtil.JsonBuilder().add("name", "myname2")
+                .add("type", "type2")
+                .toJson();
+        JsonNode b =  new JsonUtil.JsonBuilder()
+                .add("type", "type2")
+                .toJson();
+
+        ChangeFilter filter = ChangeFilters.keyMatches("name");
+
+        Changes changes = JsonUtil.getDestructiveChanges(b, a, filter);
+
+        assertTrue(changes.isEmpty());
     }
 
+
+
+    @Test
+    public void getChanges() throws IOException {
+        try(InputStream inBefore = JsonUtilTest.class.getResourceAsStream("OLD_JSON.js");
+            InputStream inAfter = JsonUtilTest.class.getResourceAsStream("New_JSON.js");
+        ){
+            JsonNode before = mapper.readTree(inBefore);
+            JsonNode after = mapper.readTree(inAfter);
+
+            ChangeFilter createdFilter = ChangeFilters.keyMatches("created");
+            ChangeFilter lastEditedFilter = ChangeFilters.keyMatches("lastEdited");
+            ChangeFilter selfFilter = ChangeFilters.keyMatches("_self");
+            ChangeFilter blankOrNullFilter = ChangeFilters.nullOrBlankValues();
+
+            Changes changes = JsonUtil.getDestructiveChanges(before, after,
+                                        createdFilter, lastEditedFilter, selfFilter, blankOrNullFilter);
+
+            Changes expected = new ChangesBuilder(before, after)
+                                .added("/codes/0/uuid")
+                                .added("/codes/1/uuid")
+                                .added("/codes/2/uuid")
+
+                                .removed("/names/6/references/1")
+
+                                .added("/names/0/uuid")
+                                .added("/names/1/uuid")
+                                .added("/names/2/uuid")
+                                .added("/names/3/uuid")
+                                .added("/names/4/uuid")
+                                .added("/names/5/uuid")
+                                .added("/names/6/uuid")
+
+                                .build();
+
+
+
+            assertEquals(expected, changes);
+        }
+    }
+
+    private static class ChangesBuilder{
+        private static Pattern IS_NUMERIC_PATTERN = Pattern.compile("^\\d+$");
+        private Map<String, Change> map = new HashMap<>();
+
+        private final JsonNode before, after;
+
+        public ChangesBuilder(JsonNode before, JsonNode after) {
+            this.before = before;
+            this.after = after;
+        }
+        public ChangesBuilder added(String key){
+            return change(key, Change.ChangeType.ADDED);
+        }
+        public ChangesBuilder removed(String key){
+            return change(key, Change.ChangeType.REMOVED);
+        }
+        public ChangesBuilder change(String key, Change.ChangeType type){
+            String[] path = key.split("/");
+            JsonNode current;
+            if(type == Change.ChangeType.ADDED){
+                //added so node is in after
+                current= after;
+            }else{
+                current = before;
+            }
+            //paths start with leading '/' so skip that?
+            for(int i=1; i< path.length; i++){
+                String fieldName = path[i];
+                Matcher m = IS_NUMERIC_PATTERN.matcher(fieldName);
+                if(m.matches()){
+                    //array ref
+                    current = current.get(Integer.parseInt(fieldName));
+                }else {
+                    current = current.get(path[i]);
+                }
+            }
+
+            map.put(key, new Change(key, current, type));
+
+            return this;
+
+        }
+        public Changes build(){
+            //copy map so future changes don't affect already built objs
+            return new Changes(new HashMap<>(map));
+        }
+    }
 
 
 

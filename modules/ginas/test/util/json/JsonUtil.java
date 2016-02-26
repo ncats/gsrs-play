@@ -1,3 +1,5 @@
+package util.json;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
@@ -5,7 +7,6 @@ import com.github.fge.jsonpatch.diff.JsonDiff;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Created by katzelda on 2/25/16.
@@ -13,66 +14,16 @@ import java.util.Objects;
 public class JsonUtil {
 
 
-    public enum ChangeType{
-        REMOVED,
-        ADDED
-    }
-
-    public static class Change{
-
-        private final JsonNode value;
-        private final ChangeType type;
-
-        public Change(JsonNode value, ChangeType type) {
-            Objects.requireNonNull(value);
-            Objects.requireNonNull(type);
-            this.value = value;
-            this.type = type;
-        }
-
-        public JsonNode getValue() {
-            return value;
-        }
-
-        public ChangeType getType() {
-            return type;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Change change = (Change) o;
-
-            if (!value.equals(change.value)) return false;
-            return type == change.type;
-
-        }
-
-        @Override
-        public int hashCode() {
-            int result = value.hashCode();
-            result = 31 * result + type.hashCode();
-            return result;
-        }
-
-        @Override
-        public String toString() {
-            return "Change{" +
-                    "value=" + value +
-                    ", type=" + type +
-                    '}';
-        }
-    }
-
-    public static Map<String, Change> getDestructiveChanges(JsonNode before, JsonNode after ){
+    public static Changes getDestructiveChanges(JsonNode before, JsonNode after, ChangeFilter...filters ){
         JsonNode jp = JsonDiff.asJson(before,after);
         Map<String, Change> changes = new HashMap<>();
-        for(JsonNode jn:jp){
+
+        //label is for short circuiting
+        //during filter step
+        NODE_LOOP: for(JsonNode jn:jp){
 
             final String op = jn.get("op").asText();
-
+            Change change=null;
             if("remove".equals(op)){
 
                 JsonNode jsbefore=before.at(jn.get("path").textValue());
@@ -81,18 +32,31 @@ public class JsonUtil {
                 if(jsbefore.toString().equals("[\"\"]")){
 
                 }else{
-                    changes.put(jn.get("path").asText(), new Change(jsbefore, ChangeType.REMOVED));
+                    String key = jn.get("path").asText();
+                    change = new Change(key, jsbefore, Change.ChangeType.REMOVED);
 
                 }
 
                 //System.out.println("Error:" + jn + " was:" + before.at(jn.get("path").textValue()));
             }else if("add".equals(op)){
-                JsonNode jsAfter=after.at(jn.get("path").textValue());
-                changes.put(jn.get("path").asText(), new Change(jsAfter, ChangeType.ADDED));
+                String key = jn.get("path").asText();
+                JsonNode jsAfter=after.at(key);
+                change= new Change(key, jsAfter, Change.ChangeType.ADDED);
+            }
+
+
+            if(change !=null){
+                for(ChangeFilter filter : filters){
+                    if(filter.filterOut(change)){
+                        continue NODE_LOOP;
+                    }
+                }
+                //if we get this far we didn't filter out change
+                changes.put(change.getKey(), change);
             }
         }
 
-        return changes;
+        return new Changes(changes);
     }
 
 
