@@ -9,7 +9,7 @@ import java.util.concurrent.Callable;
 
 /**
  * JUnit Rule to handle starting and stopping
- * a Ginas Server for testing.
+ * a Ginas Server around each @Test method.
  *
  * <p>
  *     Example usage:
