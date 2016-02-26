@@ -1,11 +1,11 @@
-import com.fasterxml.jackson.core.JsonProcessingException;
+package util.json;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.Test;
-import play.libs.Json;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -130,7 +130,7 @@ public class JsonUtilTest {
                 .add("type", "type2")
                 .toJson();
 
-        print(a);
+
         assertEquals("26c09e1c-b1f4-4777-b67d-c405900a0f92", a.get("names").get("uuid").textValue());
     }
     private void print(JsonNode n){
@@ -156,7 +156,7 @@ public class JsonUtilTest {
                                         .add("type", "type2")
                                         .toJson();
 
-        Map<String, JsonUtil.Change> changes = JsonUtil.getDestructiveChanges(a, a);
+        Changes changes = JsonUtil.getDestructiveChanges(a, a);
 
         assertTrue(changes.isEmpty());
     }
@@ -174,15 +174,15 @@ public class JsonUtilTest {
 
 
 
-        Map<String, JsonUtil.Change> changes = JsonUtil.getDestructiveChanges(a, b);
+        Changes changes = JsonUtil.getDestructiveChanges(a, b);
 
-        Map<String, JsonUtil.Change> expected = new HashMap<>();
+        Map<String, Change> expected = new HashMap<>();
 
         JsonNode name = a.path("name");
         //value is full path so has leading slash for root
-        expected.put("/name", new JsonUtil.Change(name, JsonUtil.ChangeType.REMOVED));
+        expected.put("/name", new Change("/name", name, Change.ChangeType.REMOVED));
 
-        assertEquals(expected, changes);
+        assertEquals(new Changes(expected), changes);
     }
 
     @Test
@@ -197,21 +197,54 @@ public class JsonUtilTest {
 
 
 
-        Map<String, JsonUtil.Change> changes = JsonUtil.getDestructiveChanges(b, a);
+        Changes changes = JsonUtil.getDestructiveChanges(b, a);
 
-        Map<String, JsonUtil.Change> expected = new HashMap<>();
+        Map<String, Change> expected = new HashMap<>();
 
         JsonNode name = a.path("name");
         //value is full path so has leading slash for root
-        expected.put("/name", new JsonUtil.Change(name, JsonUtil.ChangeType.ADDED));
+        expected.put("/name", new Change("/name", name, Change.ChangeType.ADDED));
 
-        assertEquals(expected, changes);
+        assertEquals(new Changes(expected), changes);
     }
 
-    private static void assertThatNonDestructive(JsonNode before, JsonNode after){
-        SubstancePostUpdateTest.assertThatNonDestructive(before, after);
+    @Test
+    public void filteredOutChange(){
+        JsonNode a =  new JsonUtil.JsonBuilder().add("name", "myname2")
+                .add("type", "type2")
+                .toJson();
+        JsonNode b =  new JsonUtil.JsonBuilder()
+                .add("type", "type2")
+                .toJson();
+
+        ChangeFilter filter = ChangeFilters.keyMatches("name");
+
+        Changes changes = JsonUtil.getDestructiveChanges(b, a, filter);
+
+        assertTrue(changes.isEmpty());
     }
 
+
+
+    @Test
+    public void getChanges() throws IOException {
+        try(InputStream inBefore = JsonUtilTest.class.getResourceAsStream("OLD_JSON.js");
+            InputStream inAfter = JsonUtilTest.class.getResourceAsStream("New_JSON.js");
+        ){
+            JsonNode before = mapper.readTree(inBefore);
+            JsonNode after = mapper.readTree(inAfter);
+
+            ChangeFilter createdFilter = ChangeFilters.keyMatches("created");
+            ChangeFilter lastEditedFilter = ChangeFilters.keyMatches("lastEdited");
+
+            Changes changes = JsonUtil.getDestructiveChanges(before, after,
+                                        createdFilter, lastEditedFilter);
+
+            for(Change entry : changes.getAllChanges()){
+                System.out.println(entry);
+            }
+        }
+    }
 
 
 
