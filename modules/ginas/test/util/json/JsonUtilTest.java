@@ -1,9 +1,11 @@
 package util.json;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -13,8 +15,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.junit.Test;
 
-import static org.junit.Assert.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Created by katzelda on 2/25/16.
  */
@@ -230,9 +234,18 @@ public class JsonUtilTest {
 
     @Test
     public void getChanges() throws IOException {
-        try(InputStream inBefore = JsonUtilTest.class.getResourceAsStream("OLD_JSON.js");
-            InputStream inAfter = JsonUtilTest.class.getResourceAsStream("New_JSON.js");
+    	
+    	//TP:Sorry for direct file access. It seems the resource as stream
+    	//pieces are coming up as either empty or null.
+    	//The direct file path reference pieces are used elsewhere for the same
+    	//reason. Be nice to clean up, but this passes the tests. 
+    	File b4f= new File("test/util/json/OLD_JSON.js");
+    	File aft= new File("test/util/json/New_JSON.js");
+        try(InputStream inBefore = new FileInputStream(b4f);
+        	InputStream inAfter = new FileInputStream(aft);
         ){
+        	
+        	
             JsonNode before = mapper.readTree(inBefore);
             JsonNode after = mapper.readTree(inAfter);
 
