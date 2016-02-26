@@ -103,8 +103,7 @@ public class Administration extends App {
         if (prof == null) {
             prof = new UserProfile(newUser);
             prof.active = Boolean.parseBoolean(requestData.get("active"));
-            prof.salt = AdminFactory.generateSalt();
-            prof.hashp = AdminFactory.encrypt(requestData.get("password"), prof.salt);
+            prof.setPassword(requestData.get("password"));
             for (Role r : rolesChecked) {
                 r.principal = newUser;
                 r.save();
@@ -183,7 +182,8 @@ public class Administration extends App {
         profile.user = user;
 
         if(!password.isEmpty() && password != null) {
-            profile.hashp = AdminFactory.encrypt(password, profile.salt);
+        	profile.setPassword(password);
+            
         }
         profile.active = Boolean.parseBoolean(active);
         AdminFactory.updateGroups(user.id, selectedGroups);

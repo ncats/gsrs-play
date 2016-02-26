@@ -1,13 +1,16 @@
 package ix.core.models;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import play.db.ebean.Model;
-
-import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import play.db.ebean.Model;
 
 @Entity
 @Table(name = "ix_core_role")
@@ -29,6 +32,10 @@ public class Role extends Model implements be.objectify.deadbolt.core.models.Rol
 
 
     //This doesn't make sense ... something is wrong here.
+    //Why ... ?
+    //Ok, this is not exactly a Role object. This is a role-object-link entity.
+    
+    @JsonIgnore
     @ManyToOne()
     public Principal principal;
 
