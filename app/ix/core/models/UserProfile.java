@@ -35,6 +35,11 @@ public class UserProfile extends IxModel implements Subject {
     //This is not a public/private 
     private String key;
     
+    //Not sure if this should be shown here?
+    public String getKey(){
+    	return key;
+    }
+    
     public void regenerateKey(){
     	key=Util.generateRandomString(20);
     	System.out.println("Generated key:" + key + " for user:" + user.username);
@@ -75,6 +80,14 @@ public class UserProfile extends IxModel implements Subject {
     	String date=""+Util.getCanonicalCacheTimeStamp();
     	return Util.sha1(date+this.user.username + this.key);
     }
+    
+    public Long getTokenTimeToExpireMS(){
+    	long date=(Util.getCanonicalCacheTimeStamp()+1)*Util.getTimeResolutionMS();
+    	return (date-System.currentTimeMillis());
+    	
+    }
+    
+    
     
     private String getPreviousComputedToken(){
     	String date=""+(Util.getCanonicalCacheTimeStamp()-1);

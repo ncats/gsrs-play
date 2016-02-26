@@ -197,7 +197,6 @@ public class Util {
     	return date;
     }
     public static long getTimeResolutionMS(){
-    	long timeresolution=3600*1000*24;
-    	return timeresolution;
+    	return TIME_RESOLUTION_MS;
     }
 }

@@ -296,7 +296,7 @@ public class AdminFactory extends Controller {
     }
 
     public static boolean validatePassword(UserProfile profile, String password) {
-        return profile.acceptKey(password);
+        return profile.acceptPassword(password);
     }
 
     public static List<Role> rolesByPrincipal(Principal cred) {
