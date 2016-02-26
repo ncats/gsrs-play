@@ -38,7 +38,7 @@ var WizardNamePage = function () {
             model: 'name.preferred',
             type: 'check-box'
         }, {
-            model: 'reference',
+            model: 'name-reference',
             type: 'form-selector'
         }/*, {
             model: 'name-access',

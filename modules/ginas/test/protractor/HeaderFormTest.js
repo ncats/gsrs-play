@@ -17,20 +17,21 @@ var HeaderForm = function () {
     //no button to toggle
     this.formElements = {
         formName: 'headerForm',
+        formObj:  'parent',
         fields: [{
-            binding: 'formType',
+            model: 'formType',
             type: 'binding'
         },{
-            binding: 'name',
+            model: 'name',
             type: 'binding'
         },{
             model: 'parent.definitionType',
-            type: 'dropdown-select'
+            type: 'dropdown-edit'
         },{
-            model: 'parent.$$relatedSubstance',
+/*            model: 'parent.$$relatedSubstance',
             type: 'form-selector'
-        },{
-            model: 'parent.access',
+        },{*/
+            model: 'access',
             type: 'form-selector'
         }]
     }
@@ -44,53 +45,27 @@ describe ('header form test', function() {
         headerForm.getPage();
     });
 
-
+    it('should check if form is edit or new', function(){
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var kind = browser.params.baseUrl;
+        console.log(kind);
+        expect(elements.testModelBinding('formType')).toEqual('Registering new');
+    });
 
     it('should check the substance class of the form', function(){
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
         var kind = browser.params.baseUrl;
         console.log(kind);
-        var el1 = elements.testModelBinding('formType');
-        console.log(el1);
-        var text = ((el1).getText());
-        console.log("text +" + text);
-        expect(text.toEqual('Registering new'));
-/*        var el2 = elements.testModelBinding('name');
-        expect(el2.toEqual(kind));*/
+        expect(elements.testModelBinding('name')).toEqual(kind);
     });
 
-    /*it('name form tests', function () {
-        var buttonId = headerForm.formElements.buttonID;
-      //  var formElements = headerForm.formElements.fields;
-
-        var refElementTests = require('./ReferenceFormTest.js');
-        var refPage = new refElementTests;
-        var accessElementTests = require('./AccessFormTest.js');
-        var accessPage = new accessElementTests;
-
-        for (var i = 0; i < formElements.length; i++) {
-            var elementType = formElements[i].type;
-            var model = formElements[i].model;
-            headerForm.getPage();
-            switch (elementType) {
-                case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model);
-                    break;
-                case "binding":
-                    elements.testModelBinding(buttonId, model);
-                    break;
-                case "form-selector":
-                    if(model == 'name-reference') {
-                        refPage.refPageTests(buttonId, model);
-                    } else if(model == 'name-access'){
-                        accessPage.accessPageTests(buttonId, model);
-                    }
-
-                    break;
-            } //switch
-        } //for i
-    });*/
+    it('should test if elements loaded', function(){
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        elements.testInputFields(headerForm.formElements);
+    });
 });
 
 
