@@ -1,3 +1,4 @@
+
 var WizardCommonElements = function () {
 
     this.getPage = function () {
@@ -50,6 +51,23 @@ var WizardCommonElements = function () {
         });
     };
 
+    this.testDropdownSelectEdit = function (model) {
+        console.log("drop-down-edit: " +model);
+       // this.clickById(buttonId);
+      //  this.clickByModel(model);
+        var elementId = model.split(".")[1];
+        console.log("elementId: " + elementId);
+        var elem = browser.findElement(By.id(elementId));
+        elem.click();
+            elem.getText().then(function (text) {
+                var items = text.split('\n');
+                console.log(items.length);
+                console.log(items[1] + " : " + items[items.length-2]);
+                expect(items.length).toBeGreaterThan(0);
+                expect(items[items.length - 1]).toBe('Other');
+            });
+    };
+
     this.testMultiSelectInput = function (model) {
         console.log("multi-select model: " +model);
        // console.log("multi-select buttonId: " + buttonId );
@@ -81,29 +99,35 @@ var WizardCommonElements = function () {
         expect(chekBox.isSelected()).toBe(false);
     };
 
+    this.testBinding = function(model){
+        console.log("test binding "  + model);
+       // expect(element(by.exactBinding(model)).isPresent()).toBe(true);
+    };
+
+
     this.testModelBinding = function (model) {
-console.log(model);
-        expect(element(by.exactBinding(model)).isPresent()).toBe(true);
-       // var elem =
+            console.log(model);
         var ret = element(by.exactBinding(model));
-        //console.log(ret.getText());
-        return ret;
+            return ret.getText();
     };
 
     this.testInputFields = function(elements){
        // var buttonId = wizardNamePage.formElements.buttonID;
        // var formElements = wizardNamePage.formElements.fields;
-var fields = elements.fields;
+        var fields = elements.fields;
         var refElementTests = require('./ReferenceFormTest.js');
         var refPage = new refElementTests;
         var accessElementTests = require('./AccessFormTest.js');
         var accessPage = new accessElementTests;
-
         for (var i = 0; i < fields.length; i++) {
             var elementType = fields[i].type;
             var model = fields[i].model;
-           this.getPage();
-            browser.findElement(By.id(elements.buttonId)).click();
+                this.getPage();
+            if(elements.buttonId != undefined) {
+                var toggleButton = browser.findElement(By.id(elements.buttonId));
+                console.log("toggle " + elements.buttonId);
+            toggleButton.click();
+            }
             switch (elementType) {
                 case "text-input":
                     this.testTextInput(model);
@@ -111,11 +135,18 @@ var fields = elements.fields;
                 case "dropdown-select":
                     this.testDropdownSelectInput(model);
                     break;
+                case "dropdown-edit":
+                    this.testDropdownSelectEdit(model);
+                    break;
                 case "multi-select":
                     this.testMultiSelectInput(model);
                     break;
                 case "check-box":
                     this.testCheckBoxInput( model);
+                    break;
+                case "binding":
+                    console.log(model);
+                    this.testBinding(model);
                     break;
                 case "form-selector":
                     if(model == 'reference') {
@@ -123,7 +154,8 @@ var fields = elements.fields;
                         this.testInputFields(refPage.formElements, newbtn);
                     } else if(model == 'access'){
                         var newbtn = elements.formObj +"-access";
-                        this.testInputFields(accessPage.formElements, newbtn);
+                        console.log(newbtn);
+                     //   this.testInputFields(accessPage.formElements, newbtn);
                     }
 
                     break;
