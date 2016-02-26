@@ -4,7 +4,7 @@
     </div>
     <div class="col-md-12">
         <div class="row form-row">
-            <form class="form-horizontal" name="diverseTypeForm" role="form" novalidate>
+            <form class="form-horizontal" name="diverseTypeForm" id="addDiverseTypeForm" role="form" novalidate>
                 <div  ng-class="parent.$$diverseType == 'whole' ? 'col-md-2' : 'col-md-2'">
                     <input type="radio" ng-model="parent.$$diverseType" value="whole"  ng-click = "checkType()">
                     <i ng-class="parent.$$diverseType == 'whole' ? 'fa fa-star fa-2x whole' : 'fa fa-star fa-2x' " ></i><br>Whole

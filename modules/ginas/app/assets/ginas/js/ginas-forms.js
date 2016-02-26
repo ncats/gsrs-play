@@ -293,7 +293,8 @@
                 referenceobj: '=',
                 parent: '=',
                 label: '=',
-                field: '='
+                field: '=',
+                name: '='
             },
             templateUrl: baseurl + "assets/templates/forms/comment-form.html"
         };
@@ -646,7 +647,7 @@
                                 $compile(template)(scope);
                             });
                         }
-                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field></comment-form>';
+                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field name=name></comment-form>';
                         break;
                 }
 
