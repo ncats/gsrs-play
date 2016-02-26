@@ -1,7 +1,7 @@
 var WizardNamePage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -20,7 +20,7 @@ var WizardNamePage = function () {
     this.formElements = {
        // pageUrl: '/ginas/app/wizard?kind=chemical',
         formName: 'nameForm',
-        buttonID: 'names',
+        buttonId: 'names',
         fields: [{
             model: 'name.name',
             type: 'text-input'
@@ -40,14 +40,14 @@ var WizardNamePage = function () {
             model: 'name-reference',
             type: 'form-selector'
         }/*, {
+            model: 'name-access',
+            type: 'form-selector'
+        },{
             model: 'name.domains',
             type: 'multi-select'
         }, {
             model: 'name.nameJurisdiction',
             type: 'multi-select'
-        }, {
-            model: 'name.access',
-            type: 'form-selector'
         }, {
             model: 'name.nameOrgs',
             type: 'form-selector'
@@ -63,13 +63,35 @@ describe ('name form', function() {
         wizardNamePage.getPage();
     });
 
+    it('should see if form is visible', function(){
+        var vis = browser.findElement(By.id('add-name')).isDisplayed();
+        expect(vis).toBe(false)
+    });
+
+    it('should test form toggling', function(){
+        var buttonId = wizardNamePage.formElements.buttonId;
+        var vis = browser.findElement(By.id('add-name')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId));
+        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('add-name')).isDisplayed()).toBe(false);
+
+    });
+
+
     it('name form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
         var buttonId = wizardNamePage.formElements.buttonID;
         var formElements = wizardNamePage.formElements.fields;
+
         var refElementTests = require('./ReferenceFormTest.js');
         var refPage = new refElementTests;
+        var accessElementTests = require('./AccessFormTest.js');
+        var accessPage = new accessElementTests;
+
         for (var i = 0; i < formElements.length; i++) {
             var elementType = formElements[i].type;
             var model = formElements[i].model;
@@ -82,13 +104,18 @@ describe ('name form', function() {
                     elements.testDropdownSelectInput(buttonId, model);
                     break;
                 case "multi-select":
-                   // elements.testMultiSelectInput(buttonId, model);
+                    elements.testMultiSelectInput(buttonId, model);
                     break;
                 case "check-box":
-                   // elements.testCheckBoxInput(buttonId, model);
+                    elements.testCheckBoxInput(buttonId, model);
                     break;
                 case "form-selector":
-                   // refPage.refPageTests(buttonId, model);
+                    if(model == 'name-reference') {
+                        refPage.refPageTests(buttonId, model);
+                    } else if(model == 'name-access'){
+                        accessPage.accessPageTests(buttonId, model);
+                    }
+
                     break;
             } //switch
         } //for i

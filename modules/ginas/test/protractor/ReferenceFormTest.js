@@ -1,5 +1,9 @@
 var WizardReferencePage = function () {
 
+    this.getPage = function(){
+        browser.get(browser.params.url);
+    };
+
     this.clickById = function (name) {
         element(by.id(name)).click();
     };
@@ -12,7 +16,6 @@ var WizardReferencePage = function () {
     //this form is not clooapsible, it is tolggled by the form selector directive
 
     this.formElements = {
-        pageUrl:'/ginas/app/wizard?kind=chemical',
         formName: 'refForm',
         buttonId: 'references',
         fields: [{
@@ -24,7 +27,7 @@ var WizardReferencePage = function () {
         }, {
             model: 'ref.tags',
             type: 'multi-select'
-        }, {
+        },/* {
             model: 'ref.url',
             type: 'text-input'
         }, {
@@ -33,17 +36,15 @@ var WizardReferencePage = function () {
         }, {
             binding: 'ref.uploadedFile',
             type: 'binding'
-        }]
+        }*/]
     }
 
-    this.refPageTests = function(buttonId, model, pageUrl){
+    this.refPageTests = function(buttonId, model){
         console.log("form selector: " + model);
-        browser.get(pageUrl);
-        this.clickById(buttonId);
+           this.clickById(buttonId);
         this.clickById(model);
 
         var wizardRefPage = new WizardReferencePage();
-        var pageUrl = wizardRefPage.formElements.pageUrl;
         var formName = wizardRefPage.formElements.formName;
         var buttonId = wizardRefPage.formElements.buttonId;
         var refFormElements = wizardRefPage.formElements.fields;
@@ -53,18 +54,19 @@ var WizardReferencePage = function () {
         for (var i = 0; i < refFormElements.length; i++) {
             var elementType = refFormElements[i].type;
             var model = refFormElements[i].model;
+            wizardRefPage.getPage();
             switch (elementType) {
                 case "text-input":
-                    elements.testTextInput(buttonId, model, pageUrl);
+                    elements.testTextInput(buttonId, model);
                     break;
                 case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model, pageUrl);
+                    elements.testDropdownSelectInput(buttonId, model);
                     break;
                 case "multi-select":
-                    elements.testMultiSelectInput(buttonId, model, pageUrl);
+                    elements.testMultiSelectInput(buttonId, model);
                     break;
                 case "check-box":
-                    elements.testCheckBoxInput(buttonId, model, pageUrl);
+                    elements.testCheckBoxInput(buttonId, model);
                     break;
             } //switch
         } //for i
@@ -73,37 +75,3 @@ var WizardReferencePage = function () {
 };
 
 module.exports = WizardReferencePage;
-
-/*describe ('name form', function() {
-
-    it('name form tests', function () {
-        var commonElementTests = require('./TestWizardCommonElements.js');
-        var elements = new commonElementTests;
-        var wizardRefPage = new WizardReferencePage();
-        var pageUrl = wizardRefPage.formElements.pageUrl;
-        var formName = wizardRefPage.formElements.formName;
-        var buttonId = wizardRefPage.formElements.buttonId;
-        var formElements = wizardRefPage.formElements.fields;
-
-
-        for (var i = 0; i < formElements.length; i++) {
-            var elementType = formElements[i].type;
-            var model = formElements[i].model;
-            switch (elementType) {
-                case "text-input":
-                    elements.testTextInput(buttonId, model, pageUrl);
-                    break;
-                case "dropdown-select":
-                 //   elements.testDropdownSelectInput(buttonId, model, pageUrl);
-                    break;
-                case "multi-select":
-                 //    elements.testMultiSelectInput(buttonId, model, pageUrl);
-                    break;
-                case "check-box":
-                  //  elements.testCheckBoxInput(buttonId, model, pageUrl);
-                    break;
-            } //switch
-        } //for i
-    });
-});*/
-
