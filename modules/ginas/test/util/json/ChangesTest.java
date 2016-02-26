@@ -79,6 +79,30 @@ public class ChangesTest {
         assertEquals(removed, sut.getChangesByType(Change.ChangeType.REMOVED));
     }
 
+    @Test
+    public void patternMatchByKey(){
+        /*
+        /names/4/created  =>Change{value=1456419675625, type=ADDED}
+/codes/2/createdBy  =>Change{value="AUTO_IMPORTER", type=ADDED}
+/names/4/createdBy  =>Change{value="AUTO_IMPORTER", type=ADDED}
+         */
+
+        JsonNode node = new JsonUtil.JsonBuilder().toJson();
+
+        Map<String, Change> map = new ChangesBuilder()
+                .change("/names/4/created", node, Change.ChangeType.ADDED)
+                .change("/codes/2/createdBy", node, Change.ChangeType.ADDED)
+                .change("/names/4/createdBy", node, Change.ChangeType.ADDED)
+                .change("/codes/1/_self", node, Change.ChangeType.REMOVED)
+                .build();
+
+        Changes sut = new Changes(map);
+
+        List<Change> expected = Arrays.asList(map.get("/names/4/created"),
+                                             map.get("/names/4/createdBy"));
+
+        assertEquals(expected, sut.getChangesByKey("4/created"));
+    }
 
     private static class ChangesBuilder{
         private Map<String, Change> map = new HashMap<>();

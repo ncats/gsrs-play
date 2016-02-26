@@ -20,4 +20,14 @@ public class ChangeFilters {
             }
         };
     }
+
+    public static ChangeFilter nullOrBlankValues() {
+        return new ChangeFilter() {
+            @Override
+            public boolean filterOut(Change change) {
+                String value = change.getValue().textValue();
+                return value==null || value.trim().isEmpty();
+            }
+        };
+    }
 }

@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 import static org.junit.Assert.*;
@@ -236,13 +238,80 @@ public class JsonUtilTest {
 
             ChangeFilter createdFilter = ChangeFilters.keyMatches("created");
             ChangeFilter lastEditedFilter = ChangeFilters.keyMatches("lastEdited");
+            ChangeFilter selfFilter = ChangeFilters.keyMatches("_self");
+            ChangeFilter blankOrNullFilter = ChangeFilters.nullOrBlankValues();
 
             Changes changes = JsonUtil.getDestructiveChanges(before, after,
-                                        createdFilter, lastEditedFilter);
+                                        createdFilter, lastEditedFilter, selfFilter, blankOrNullFilter);
 
-            for(Change entry : changes.getAllChanges()){
-                System.out.println(entry);
+            Changes expected = new ChangesBuilder(before, after)
+                                .added("/codes/0/uuid")
+                                .added("/codes/1/uuid")
+                                .added("/codes/2/uuid")
+
+                                .removed("/names/6/references/1")
+
+                                .added("/names/0/uuid")
+                                .added("/names/1/uuid")
+                                .added("/names/2/uuid")
+                                .added("/names/3/uuid")
+                                .added("/names/4/uuid")
+                                .added("/names/5/uuid")
+                                .added("/names/6/uuid")
+
+                                .build();
+
+
+
+            assertEquals(expected, changes);
+        }
+    }
+
+    private static class ChangesBuilder{
+        private static Pattern IS_NUMERIC_PATTERN = Pattern.compile("^\\d+$");
+        private Map<String, Change> map = new HashMap<>();
+
+        private final JsonNode before, after;
+
+        public ChangesBuilder(JsonNode before, JsonNode after) {
+            this.before = before;
+            this.after = after;
+        }
+        public ChangesBuilder added(String key){
+            return change(key, Change.ChangeType.ADDED);
+        }
+        public ChangesBuilder removed(String key){
+            return change(key, Change.ChangeType.REMOVED);
+        }
+        public ChangesBuilder change(String key, Change.ChangeType type){
+            String[] path = key.split("/");
+            JsonNode current;
+            if(type == Change.ChangeType.ADDED){
+                //added so node is in after
+                current= after;
+            }else{
+                current = before;
             }
+            //paths start with leading '/' so skip that?
+            for(int i=1; i< path.length; i++){
+                String fieldName = path[i];
+                Matcher m = IS_NUMERIC_PATTERN.matcher(fieldName);
+                if(m.matches()){
+                    //array ref
+                    current = current.get(Integer.parseInt(fieldName));
+                }else {
+                    current = current.get(path[i]);
+                }
+            }
+
+            map.put(key, new Change(key, current, type));
+
+            return this;
+
+        }
+        public Changes build(){
+            //copy map so future changes don't affect already built objs
+            return new Changes(new HashMap<>(map));
         }
     }
 
