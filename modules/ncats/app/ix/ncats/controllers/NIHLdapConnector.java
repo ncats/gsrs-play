@@ -167,5 +167,9 @@ public class NIHLdapConnector implements Authenticator{
     public Principal getUser(String username, String password){
     	return getEmployee(username,password);
     }
+    
+    public NIHLdapConnector(){
+    	
+    }
 
 }
