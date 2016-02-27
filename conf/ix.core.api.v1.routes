@@ -7,9 +7,10 @@
 ## API for entity routing
 ##################################
 GET     /    ix.core.controllers.v1.RouteFactory.listResources()
-GET	/edits/:uuid	ix.core.controllers.EditFactory.get(uuid: String)
-GET	/edits/:uuid/	ix.core.controllers.EditFactory.get(uuid: String)
-GET	/edits/:uuid/*field	ix.core.controllers.EditFactory.field(uuid: String, field: String)
+GET	    /edits/:uuid	                    ix.core.controllers.EditFactory.get(uuid: String)
+GET	    /edits/:uuid/	                    ix.core.controllers.EditFactory.get(uuid: String)
+GET	    /edits/:uuid/*field	                ix.core.controllers.EditFactory.field(uuid: String, field: String)
+GET		/@deleteme							ix.core.controllers.v1.RouteFactory.addFakeUsers()
 GET	    /whoami													ix.core.controllers.v1.RouteFactory.profile()
 GET	    /profile													ix.core.controllers.v1.RouteFactory.profile()
 GET	    /profile/@keygen												ix.core.controllers.v1.RouteFactory.profileResetKey()

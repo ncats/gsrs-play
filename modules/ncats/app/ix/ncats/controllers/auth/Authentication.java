@@ -51,11 +51,12 @@ public class Authentication extends Controller {
     static Model.Finder<Long, UserProfile> _profiles =
             new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class);
     
-    private static Cache tokenCache;
-    private static Cache tokenCacheUserProfile;
-    private static long lastCacheUpdate;
+    private static Cache tokenCache=null;
+    private static Cache tokenCacheUserProfile=null;
+    private static long lastCacheUpdate=-1;
     
-    static{
+    
+    public static void setupCache(){
     	String CACHE_NAME="TOKEN_CACHE";
     	String CACHE_NAME_UP="TOKEN_UP_CACHE";
     	//always hold onto the tokens for twice the time required
@@ -79,6 +80,23 @@ public class Authentication extends Controller {
         CacheManager.getInstance().addCache(tokenCacheUserProfile);     
         tokenCacheUserProfile.setSampledStatisticsEnabled(true);
     }
+    public static void setupCacheIfNeccessary(){
+    	if(tokenCache==null){
+    		setupCache();
+    	}else{
+	    	try{
+	    		tokenCache.getSize();
+	    	}catch(Exception e){
+	    		setupCache();
+	    	}
+    	}
+    	
+    }
+    static{
+    	setupCache();
+    }
+    
+    
 
     public static class Secured extends Security.Authenticator {
         @Override
@@ -262,7 +280,10 @@ public class Authentication extends Controller {
     		UserProfile profile = getUserProfile(username);
     		if(profile.acceptToken(token)){
     			return profile;
+    		}else{
     		}
+    	}else{
+    		Logger.warn("token:" + token + " does not exist in cache, size:" + tokenCache.getSize());
     	}
     	return null;
     }
@@ -282,6 +303,7 @@ public class Authentication extends Controller {
     public static void updateUserProfileTokenCacheIfNecessary(){
     	if(Util.getCanonicalCacheTimeStamp()!=lastCacheUpdate){
     		updateUserProfileTokenCache();
+    	}else{
     	}
     }
     public static void updateUserProfileToken(UserProfile up){
@@ -289,10 +311,16 @@ public class Authentication extends Controller {
     }
     public static void updateUserProfileTokenCache(){
     	//tokenCache.removeAll();
-    	for(UserProfile up:_profiles.all()){
-    		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
+    	setupCacheIfNeccessary();
+    	try{
+	    	for(UserProfile up:_profiles.all()){
+	    		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
+	    	}
+	    	lastCacheUpdate=Util.getCanonicalCacheTimeStamp();
+    	}catch(Exception e){
+    		e.printStackTrace();
+    		throw e;
     	}
-    	lastCacheUpdate=Util.getCanonicalCacheTimeStamp();
     }
     
     public static Result authenticate(String url) {
@@ -396,6 +424,8 @@ public class Authentication extends Controller {
         	up=getUserProfileFromTokenAlone(token);
         }else if(user!=null && password!=null){
         	up=getUserProfileFromPassword(user,password);
+        }else{
+        	
         }
         if(up!=null){
         	setUserSessionDirectly(up);

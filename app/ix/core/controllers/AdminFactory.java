@@ -47,12 +47,14 @@ public class AdminFactory extends Controller {
 
     public static Map<String,Group> alreadyRegistered = new ConcurrentHashMap<String,Group>();
 
+    
+    
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
         if (request().body().isMaxSizeExceeded()) {
             return badRequest("Json content too large!");
         }
-
+        
         Principal pal = null;
         try {
             JsonNode node = request().body().asJson();
@@ -71,6 +73,8 @@ public class AdminFactory extends Controller {
                     ("Unable to process request due to internal server error!");
         }
     }
+    
+    
 
     public static Result getUser(Long id) {
         Principal pal = palFinder.byId(id);
@@ -200,6 +204,8 @@ public class AdminFactory extends Controller {
         }
         return sb.toString();
     }
+    
+    
 
     public static Result createTest1() {
 
@@ -221,6 +227,7 @@ public class AdminFactory extends Controller {
         Group group1 = new Group("Illuminati");
         group1.members.add(user1);
         group1.members.add(user3);
+        
 
         Group group2 = new Group("FreeMason");
         group2.members.add(user2);
@@ -416,7 +423,10 @@ public class AdminFactory extends Controller {
             r.save();
         }
     }
-
+    
+    
+    
+    
     public static List<Group> allGroups() {
         return groupfinder.all();
     }

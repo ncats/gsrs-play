@@ -58,7 +58,7 @@ public class UserProfile extends IxModel implements Subject {
 
     @Override
     public List<Role> getRoles(){
-        return AdminFactory.rolesByPrincipal(user); //roles;
+        return AdminFactory.rolesByPrincipal(user); 	//roles;
 
     }
 
@@ -84,9 +84,7 @@ public class UserProfile extends IxModel implements Subject {
     public Long getTokenTimeToExpireMS(){
     	long date=(Util.getCanonicalCacheTimeStamp()+1)*Util.getTimeResolutionMS();
     	return (date-System.currentTimeMillis());
-    	
     }
-    
     
     
     private String getPreviousComputedToken(){

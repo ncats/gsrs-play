@@ -1,3 +1,5 @@
+import static org.fest.assertions.Assertions.assertThat;
+import static play.mvc.Http.Status.OK;
 import static play.test.Helpers.running;
 import static play.test.Helpers.stop;
 import static play.test.Helpers.testServer;
@@ -57,7 +59,14 @@ public class GinasTestServer extends ExternalResource{
 	 private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
 	 private static final String API_URL_SUBMIT = "http://localhost:9001/ginas/app/api/v1/substances";
 	 private static final String API_URL_FETCH = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)?view=full";
+     private static final String API_URL_MAKE_FAKE_USERS="http://localhost:9001/ginas/app/api/v1/@deleteme";
+     private static final String API_URL_WHOAMI="http://localhost:9001/ginas/app/api/v1/whoami";
      
+	 public static final String FAKE_USER_1="fakeuser1";
+	 public static final String FAKE_USER_2="fakeuser2";
+	 public static final String FAKE_PASSWORD_1="madeup1";
+	 public static final String FAKE_PASSWORD_2="madeup2";
+	 
 	 
     private static long timeout= 10000L;
     private TestServer ts;
@@ -91,10 +100,12 @@ public class GinasTestServer extends ExternalResource{
 
 
     public void login(String username, String password){
-        //TODO actually login
+        
+    	ensureSetupUsers();
         loggedIn=true;
         this.username=username;
         this.password=password;
+        
     }
 
     public void logout(){
@@ -107,6 +118,8 @@ public class GinasTestServer extends ExternalResource{
         this.token=null;
         this.deadtime=0;
     }
+    
+    
 
     public void run(final Callable<Void> callable){
         running(ts, new Runnable(){
@@ -131,9 +144,11 @@ public class GinasTestServer extends ExternalResource{
     	WSRequestHolder ws = WS.url(url);
 	    	switch(authType){
 			case TOKEN:
+				refreshTokenIfNeccesarry();
 				ws.setHeader("auth-token", this.token);
 				break;
 			case USERNAME_KEY:
+				refreshTokenIfNeccesarry();
 				ws.setHeader("auth-username", this.username);
 		    	ws.setHeader("auth-key", this.key);
 				break;
@@ -164,7 +179,22 @@ public class GinasTestServer extends ExternalResource{
     	return wsResponse1;
     }
     
+    public WSResponse whoami(){
+    	WSResponse wsResponse1 = this.url(API_URL_WHOAMI).get().get(timeout);
+    	
+    	return wsResponse1;
+    }
     
+    public void ensureSetupUsers(){
+    	
+			    	WSResponse wsResponse1 = url(API_URL_MAKE_FAKE_USERS).get().get(timeout);
+			    	assertThat(wsResponse1.getStatus()).isEqualTo(OK);
+			        assertThat(wsResponse1.getStatus()).isEqualTo(200);
+			    	JsonNode jsonNode1 = wsResponse1.asJson();
+			    	assertThat(jsonNode1.get(0).get("identifier").asText()).isEqualTo(GinasTestServer.FAKE_USER_1);
+			    	assertThat(jsonNode1.get(1).get("identifier").asText()).isEqualTo(GinasTestServer.FAKE_USER_2);
+            
+    }
     
     private void refreshAuthInfoByUserNamePassword(){
     	WSRequestHolder  ws = WS.url(API_URL_USERFETCH);
@@ -179,11 +209,11 @@ public class GinasTestServer extends ExternalResource{
     	
     }
     
+    
     private void refreshTokenIfNeccesarry(){
     	if(System.currentTimeMillis()>this.deadtime){
     		refreshAuthInfoByUserNamePassword();	
     	}
-    	
     }
 
     public void run(final Runnable r){
