@@ -17,12 +17,12 @@ var WizardReferencePage = function () {
 
     this.formElements = {
         formName: 'refForm',
-        buttonId: 'references',
+       // buttonId: 'references',
         fields: [{
-            model: 'ref.citation',
+            model: 'reference.citation',
             type: 'text-input'
         }, {
-            model: 'ref.docType',
+            model: 'reference.docType',
             type: 'dropdown-select'
         }, {
             model: 'ref.tags',

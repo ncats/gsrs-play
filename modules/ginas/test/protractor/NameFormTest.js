@@ -38,7 +38,7 @@ var WizardNamePage = function () {
             model: 'name.preferred',
             type: 'check-box'
         }, {
-            model: 'name-reference',
+            model: 'reference',
             type: 'form-selector'
         }/*, {
             model: 'name-access',
@@ -72,7 +72,7 @@ describe ('name form', function() {
     it('should test form toggling', function(){
         var buttonId = wizardNamePage.formElements.buttonId;
         var vis = browser.findElement(By.id('addNameForm')).isDisplayed();
-        var button = browser.findElement(By.id(buttonId));
+        var button = browser.findElement(By.id(buttonId+"-toggle"));
         expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(false);
         button.click();
         expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(true);
@@ -85,7 +85,7 @@ describe ('name form', function() {
     it('name form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        browser.findElement(By.id('names')).click();
+        browser.findElement(By.id('names-toggle')).click();
        //  var buttonId = wizardNamePage.formElements.buttonId;
          elements.testInputFields(wizardNamePage.formElements);
 

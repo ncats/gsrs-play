@@ -34,7 +34,7 @@ exports.config = {
 
     suites: {
         basic: ['HeaderFormTest.js'
-              // ,'NameFormTest.js'
+               ,'NameFormTest.js'
                //,'CodeFormTest.js'
                //,'RelationshipFormTest.js'
                //,'NoteFormTest.js'
