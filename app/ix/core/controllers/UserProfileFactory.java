@@ -13,7 +13,7 @@ import ix.core.models.UserProfile;
 import play.db.ebean.Model;
 import play.mvc.Result;
 
-/*
+/* TODO: make this a resource eventually
 @NamedResource(name="users",
  
 type=UserProfile.class,

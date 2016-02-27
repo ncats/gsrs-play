@@ -6,6 +6,7 @@ import ix.core.models.Namespace;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
+import ix.ncats.controllers.auth.Authenticator;
 import ix.utils.Util;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Controller;
@@ -47,7 +49,32 @@ public class AdminFactory extends Controller {
 
     public static Map<String,Group> alreadyRegistered = new ConcurrentHashMap<String,Group>();
 
+    public static List<Authenticator> authenticators = new ArrayList<Authenticator>();
     
+    public static void setupAuth () {
+    	List<Object> ls= Play.application().configuration().getList("ix.core.authenticators",null);
+    	if(ls!=null){
+    		for(Object o:ls){
+    			if(o instanceof Map){
+	    			Map m = (Map)o;
+	    			String authClass=(String) m.get("authenticator");
+	    			String debug="Setting up authenticator [" + authClass + "] ... ";
+	    			try {
+						Class entityCls = Class.forName(authClass);
+						Authenticator auth=(Authenticator) entityCls.newInstance();
+						authenticators.add(auth);
+					} catch (Exception e) {
+						Logger.info(debug + "failed");
+						e.printStackTrace();
+					}
+    			}
+    			
+    		}
+    	}
+    }
+    static{
+    	setupAuth();
+    }
     
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
@@ -304,6 +331,16 @@ public class AdminFactory extends Controller {
 
     public static boolean validatePassword(UserProfile profile, String password) {
         return profile.acceptPassword(password);
+    }
+    public static Principal externalAuthenticate(String username, String password){
+    	Principal cred=null;
+    	for(Authenticator auth: authenticators){
+    		cred = auth.getUser(username, password);
+            if(cred!=null){
+        		break;
+            }
+    	}
+    	return cred;
     }
 
     public static List<Role> rolesByPrincipal(Principal cred) {

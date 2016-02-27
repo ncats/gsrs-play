@@ -11,6 +11,7 @@ import be.objectify.deadbolt.core.models.Permission;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ix.core.EntityProcessor;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.*;
@@ -31,7 +32,6 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
-import ix.ncats.controllers.NIHLdapConnector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -40,12 +40,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 
 public class Authentication extends Controller {
-    public static final String SESSION = "ix.session";
     public static final String APP = Play.application()
             .configuration().getString("ix.app", "MyApp");
+    public static final String SESSION = "ix.session";
     public static final int TIMEOUT = 1000 * Play.application()
             .configuration().getInt(SESSION, 7200); // session idle
 
+    
     static Model.Finder<UUID, Session> _sessions =
             new Model.Finder<UUID, Session>(UUID.class, Session.class);
     static Model.Finder<Long, UserProfile> _profiles =
@@ -55,6 +56,11 @@ public class Authentication extends Controller {
     private static Cache tokenCacheUserProfile=null;
     private static long lastCacheUpdate=-1;
     
+    
+    static{
+    	setupCache();
+    	
+    }
     
     public static void setupCache(){
     	String CACHE_NAME="TOKEN_CACHE";
@@ -79,7 +85,11 @@ public class Authentication extends Controller {
         tokenCacheUserProfile= new Cache (configUp);
         CacheManager.getInstance().addCache(tokenCacheUserProfile);     
         tokenCacheUserProfile.setSampledStatisticsEnabled(true);
+        
+        
     }
+    
+    
     public static void setupCacheIfNeccessary(){
     	if(tokenCache==null){
     		setupCache();
@@ -92,23 +102,9 @@ public class Authentication extends Controller {
     	}
     	
     }
-    static{
-    	setupCache();
-    }
     
     
-
-    public static class Secured extends Security.Authenticator {
-        @Override
-        public String getUsername(Http.Context ctx) {
-            return ctx.session().get(SESSION);
-        }
-
-        @Override
-        public Result onUnauthorized(Http.Context ctx) {
-            return redirect(routes.Authentication.login(null));
-        }
-    }
+    
 
     public static boolean loginUserFromHeader(){
     	return loginUserFromHeader();
@@ -157,14 +153,16 @@ public class Authentication extends Controller {
     }
     
     public static boolean allowNonAuthenticated(){
-    	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true) ||
+    	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true) 
+    			||
     			Play.application().configuration().getBoolean("ix.admin",false);
     }
     
-    private static UserProfile setSessionUser(String username){
+    static UserProfile setSessionUser(String username){
     	return setSessionUser(username,null);
     }
     
+    //Set and trust username / email as user
     private static UserProfile setSessionUser(String username, String email){
         boolean systemAuth = false;
         boolean newregistered=false;
@@ -323,85 +321,13 @@ public class Authentication extends Controller {
     	}
     }
     
-    public static Result authenticate(String url) {
-        DynamicForm requestData = Form.form().bindFromRequest();
-        String username = requestData.get("username");
-        String password = requestData.get("password");
-        Logger.debug("username: " + username);
-        boolean systemAuth = false;
-        Principal cred;
-        UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
-
-        
-        if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
-                cred = profile.user;
-        } else {
-            cred = NIHLdapConnector.getEmployee(username, password);
-            systemAuth = true;
-        }
-        if (username.equalsIgnoreCase("caodac")
-                && password.equalsIgnoreCase("foobar")) {
-            cred = new Principal();
-            cred.username = username;
-        }
-        if (cred == null) {
-            flash("message", "Invalid credential!");
-            return redirect(routes.Authentication.login(null));
-        }
-       
-        try{
-        	setSessionUser(username);
-        }catch(Exception e){
-        	return internalServerError(e.getMessage());
-        }
-
-        if (url != null) {
-            return redirect(url);
-        }
-        return redirect(routes.Authentication.secured());
-    }
-
-    public static Result login(String url) {
-        Session session = getSession();
-        Logger.debug("url:" +  url + "  app: " + APP);
-        if (session != null) {
-            return url != null ? redirect(url)
-                    : redirect(routes.Authentication.secured());
-        }
-        return ok(ix.ncats.views.html.login.render(url, APP));
-    }
-
-    public static Result logout() {
-        Session session = getSession();
-        if (session != null) {
-            flash("message", session.profile.user.username
-                    + ", you've logged out!");
-            flush(session);
-        }
-        return redirect(routes.Authentication.login(null));
-    }
+    
+    
 
     static ix.core.plugins.SchedulerPlugin scheduler =
             Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
 
-    @Security.Authenticated(Secured.class)
-    @JsonIgnore
-    public static Result secured() {
-    	Session session = getSession();
-        if (session.expired || !session.profile.active) {
-            flash("message", "Session timeout; please login again!");
-            return redirect(routes.Authentication.login(null));
-        }
-        
-       // scheduler.submit(session.id.toString());
-
-        ObjectMapper mapper = new ObjectMapper();
-        //mapper.valueToTree(session);
-        //return ok(mapper.valueToTree(session));
-        String context = Play.application().configuration().getString("application.context");
-        Logger.debug("context:" + context);
-        return redirect(context);
-    }
+    
 
     public static UserProfile getUserProfile() {
         Session session = getSession();
@@ -520,8 +446,6 @@ public class Authentication extends Controller {
 				}
 			}
 		}
-		
-		
 		return null;
 	}
 }

@@ -484,7 +484,6 @@ public class RouteFactory extends Controller {
     			}
     		}
 	    	ObjectMapper om = new ObjectMapper();
-	        
 	        //flash("success", " " + requestData.get("username") + " has been created");
         	return ok(om.valueToTree(ups));
     	}else{
