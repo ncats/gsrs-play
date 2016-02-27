@@ -58,8 +58,26 @@ public class UserProfile extends IxModel implements Subject {
 
     @Override
     public List<Role> getRoles(){
-        return AdminFactory.rolesByPrincipal(user); 	//roles;
-
+    	System.out.println("Grabbing roles admin");
+    	List<Role> roles=AdminFactory.rolesByPrincipal(user); 	//roles;
+    	if(roles==null || roles.isEmpty()){
+    		System.out.println("There are no roles here");
+    	}else{
+	    	for(Role r:roles){
+	    		System.out.println("Fetchin roles:" + r.getName());
+	    	}
+    	}
+    	
+        return roles;
+    }
+    
+    
+    public void setRoleKinds(List<Role.Kind> rolekinds){
+    	List<Role> tempRoles=new ArrayList<Role>();
+    	for(Role.Kind rk:rolekinds){
+    		tempRoles.add(new Role(rk));
+    	}
+    	AdminFactory.updateRolesF(this.id, tempRoles);
     }
 
     @Override

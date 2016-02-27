@@ -449,12 +449,11 @@ public class AdminFactory extends Controller {
     }
 
     //TODO: look into this
-    public static void updateRoles(Long userId, List<Role> roles){
+    public static void updateRolesF(Long userId, List<Role> roles){
         Principal user = palFinder.byId(userId);
         for(Role r : AdminFactory.rolesByPrincipal(user)){
             AdminFactory.deleteRole(r.id);
         }
-        
         for (Role r : roles) {
             r.principal = user;
             r.save();

@@ -85,7 +85,7 @@ public class Authentication extends Controller {
         tokenCacheUserProfile= new Cache (configUp);
         CacheManager.getInstance().addCache(tokenCacheUserProfile);     
         tokenCacheUserProfile.setSampledStatisticsEnabled(true);
-        
+        lastCacheUpdate=-1;
         
     }
     
@@ -281,7 +281,7 @@ public class Authentication extends Controller {
     		}else{
     		}
     	}else{
-    		Logger.warn("token:" + token + " does not exist in cache, size:" + tokenCache.getSize());
+    		System.out.println("token:" + token + " does not exist in cache, size:" + tokenCache.getSize());
     	}
     	return null;
     }
@@ -299,6 +299,7 @@ public class Authentication extends Controller {
     }
     
     public static void updateUserProfileTokenCacheIfNecessary(){
+    	setupCacheIfNeccessary();
     	if(Util.getCanonicalCacheTimeStamp()!=lastCacheUpdate){
     		updateUserProfileTokenCache();
     	}else{
@@ -309,7 +310,7 @@ public class Authentication extends Controller {
     }
     public static void updateUserProfileTokenCache(){
     	//tokenCache.removeAll();
-    	setupCacheIfNeccessary();
+    	
     	try{
 	    	for(UserProfile up:_profiles.all()){
 	    		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
@@ -336,6 +337,7 @@ public class Authentication extends Controller {
         		return session.profile;
         	}
         }
+        
         //do key auth
         String user=request().getHeader("auth-username");
         String key=request().getHeader("auth-key");
@@ -345,13 +347,20 @@ public class Authentication extends Controller {
         UserProfile up=null;
         
         if(user!=null && key!=null){
+        	System.out.println("KEY-lookup");
         	up=getUserProfileFromKey(user,key);
         }else if(token!=null){
+        	System.out.println("TOKEN-lookup");
+        	try{
         	up=getUserProfileFromTokenAlone(token);
+        	}catch(Exception e){
+        		e.printStackTrace();
+        	}
         }else if(user!=null && password!=null){
+        	System.out.println("PASSWORD-lookup");
         	up=getUserProfileFromPassword(user,password);
         }else{
-        	
+        	System.out.println("Nothin-lookup");
         }
         if(up!=null){
         	setUserSessionDirectly(up);

@@ -99,13 +99,17 @@ public class GinasTestServer extends ExternalResource{
     }
 
 
+    //logs in user, also sets default authentication type
+    //if previously set to NONE
     public void login(String username, String password){
         
     	ensureSetupUsers();
         loggedIn=true;
         this.username=username;
         this.password=password;
-        
+        if(this.authType==AUTH_TYPE.NONE){
+        	this.authType=AUTH_TYPE.USERNAME_PASSWORD;
+        }
     }
 
     public void logout(){
@@ -136,8 +140,19 @@ public class GinasTestServer extends ExternalResource{
     
     public void setAuthenticationType(AUTH_TYPE atype){
     	this.authType=atype;
-    	
-    			
+    }
+    
+    public GinasTestServer withTokenAuth(){
+    	this.setAuthenticationType(AUTH_TYPE.TOKEN);
+    	return this;
+    }
+    public GinasTestServer withKeyAuth(){
+    	this.setAuthenticationType(AUTH_TYPE.USERNAME_KEY);
+    	return this;
+    }
+    public GinasTestServer withPasswordAuth(){
+    	this.setAuthenticationType(AUTH_TYPE.USERNAME_PASSWORD);
+    	return this;
     }
     
     public WSRequestHolder  url(String url){

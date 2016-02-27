@@ -267,7 +267,8 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
-    public static Result approveUUID (String context, String id) {
+    @Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result approveUUID (String context, String id) {
         try {
             Method m = getMethod (context, "approve", UUID.class);
             if (m != null)
@@ -333,7 +334,8 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
-    @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
+    @Dynamic(value = "canRegister", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result create (String context) {
         try {
             Method m = getMethod (context, "create"); 
@@ -457,7 +459,7 @@ public class RouteFactory extends Controller {
     }
     
     
-    //@Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+    @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result addFakeUsers(){
     	if(Play.isTest()){
     		List<UserProfile> ups = new ArrayList<UserProfile>();
@@ -467,6 +469,7 @@ public class RouteFactory extends Controller {
 	    		
 		    	List<Role.Kind> rolekind = new ArrayList<Role.Kind>();
 		    			rolekind.add(Role.Kind.SuperUpdate);
+		    			rolekind.add(Role.Kind.SuperDataEntry);
 		    	List<Group> groups = new ArrayList<Group>();
 		    			groups.add(g);
 		    	

@@ -30,53 +30,59 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                     	if(Play.application().configuration().getBoolean("ix.admin", false))return true;
                     	
                         Subject subject = deadboltHandler.getSubject(context);
-                        boolean allowed;
-
+                        boolean allowed=false;
                         DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
 
-                        if (analyzer.hasRole(subject, "Admin")) {
+                        if (analyzer.hasRole(subject, ix.core.models.Role.Kind.Admin.toString())) {
                             allowed = true;
-                        } else {
-                            // a call to view profile is probably a get request, so
-                            // the query string is used to provide info
-                            Map<String, String[]> queryStrings = context.request().queryString();
-                            String[] requestedNames = queryStrings.get("userName");
-                            allowed = requestedNames != null
-                                    && requestedNames.length == 1
-                                    && requestedNames[0].equals(subject.getIdentifier());
                         }
-
                         return allowed;
                     }
                 });
         HANDLERS.put("canApprove",
-                new AbstractDynamicResourceHandler() {
-                    public boolean isAllowed(final String name,
-                                             final String meta,
-                                             final DeadboltHandler deadboltHandler,
-                                             final Http.Context context) {
-                    	Subject subject = deadboltHandler.getSubject(context);
-                        boolean allowed=false;
-
-                        DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
-
-                        if (analyzer.hasRole(subject, "SuperUpdate") ||
-                        		analyzer.hasRole(subject, "Update")
-                        		) {
-                            allowed = true;
-                        } else {
-                            // a call to view profile is probably a get request, so
-                            // the query string is used to provide info
-                            Map<String, String[]> queryStrings = context.request().queryString();
-                            String[] requestedNames = queryStrings.get("userName");
-                            allowed = requestedNames != null
-                                    && requestedNames.length == 1
-                                    && requestedNames[0].equals(subject.getIdentifier());
-                        }
-
-                        return allowed;
-                    }
-                });
+        		new SimpleRoleDynamicResourceHandler(
+        				ix.core.models.Role.Kind.Updater,
+        				ix.core.models.Role.Kind.SuperUpdate
+        				));
+        HANDLERS.put("canRegister",
+                new SimpleRoleDynamicResourceHandler(
+                		ix.core.models.Role.Kind.DataEntry,
+                		ix.core.models.Role.Kind.SuperDataEntry
+                		));
+    }
+    
+    public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{
+    	ix.core.models.Role.Kind[] roles; 
+    	public SimpleRoleDynamicResourceHandler(ix.core.models.Role.Kind... kind){
+    		roles=kind;
+    	}
+    	public boolean isAllowed(final String name,
+                final String meta,
+                final DeadboltHandler deadboltHandler,
+                final Http.Context context) {
+    			System.out.println("OK ... let's look then");
+    			Subject subject=null;
+    			try{
+    				subject = deadboltHandler.getSubject(context);
+    				System.out.println(subject);
+    			}catch(Exception e){
+    				e.printStackTrace();
+    			}
+				boolean allowed=false;
+				
+				DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
+				
+				for(ix.core.models.Role.Kind k:roles){
+					System.out.println("Checking for role:" + k);
+					if (analyzer.hasRole(subject, k.toString())) {
+						allowed = true;
+						System.out.println("Got it");
+						break;
+					}
+				}
+				return allowed;
+		}
+    	
     }
     
     
@@ -86,6 +92,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                              String meta,
                              DeadboltHandler deadboltHandler,
                              Http.Context context) {
+    	System.out.println("Authorizing:" + name);
         DynamicResourceHandler handler = HANDLERS.get(name);
         boolean result = false;
         if (handler == null) {

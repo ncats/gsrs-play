@@ -67,7 +67,7 @@ public class Administration extends App {
         newUser.username = requestData.get("username");
         String groupName = requestData.get("grpName");
 
-        ArrayList<Role> rolesChecked = new ArrayList<Role>();
+        ArrayList<Role.Kind> rolesChecked = new ArrayList<Role.Kind>();
         ArrayList<Acl> aclsChecked = new ArrayList<Acl>();
         List<Group> groupsChecked = new ArrayList<Group>();
 
@@ -80,7 +80,7 @@ public class Administration extends App {
         for (String key : requestData.data().keySet()) {
             if (key.contains("r-")) {
                 Role r = new Role(Role.Kind.valueOf(requestData.data().get(key)));
-                rolesChecked.add(r);
+                rolesChecked.add(r.role);
             }
 
             if (key.contains("p-")) {
@@ -104,10 +104,7 @@ public class Administration extends App {
             prof = new UserProfile(newUser);
             prof.active = Boolean.parseBoolean(requestData.get("active"));
             prof.setPassword(requestData.get("password"));
-            for (Role r : rolesChecked) {
-                r.principal = newUser;
-                r.save();
-            }
+            prof.setRoleKinds(rolesChecked);
 
             for (Acl p : aclsChecked) {
                 p.principals.add(newUser);
@@ -142,7 +139,7 @@ public class Administration extends App {
         String active = requestData.get("active");
         String groupName = requestData.get("grpName");
 
-        List<Role> selectedRoles = new ArrayList<Role>();
+        List<Role.Kind> selectedRoles = new ArrayList<Role.Kind>();
         List<Acl> selectedPerms = new ArrayList<Acl>();
         List<Group> selectedGroups = new ArrayList<Group>();
 
@@ -154,7 +151,7 @@ public class Administration extends App {
         for (String key : requestData.data().keySet()) {
             if (key.contains("r-")) {
                 Role r = new Role(Role.Kind.valueOf(requestData.data().get(key)));
-                selectedRoles.add(r);
+                selectedRoles.add(r.role);
             }
 
             if (key.contains("p-")) {
@@ -186,9 +183,10 @@ public class Administration extends App {
             
         }
         profile.active = Boolean.parseBoolean(active);
+        profile.setRoleKinds(selectedRoles);
         AdminFactory.updateGroups(user.id, selectedGroups);
         AdminFactory.updatePermissions(user.id, selectedPerms);
-        AdminFactory.updateRoles(user.id, selectedRoles);
+        //AdminFactory.updateRoles(user.id, selectedRoles);
         profile.save();
 
         flash("success", " " + userName + " has been updated");

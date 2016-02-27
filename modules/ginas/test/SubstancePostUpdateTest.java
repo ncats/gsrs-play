@@ -59,6 +59,8 @@ public class SubstancePostUpdateTest {
         public void testAPICreateSubstance() {
             ts.run(new Runnable() {
                 public void run() {
+                	ts.login(ts.FAKE_USER_1, ts.FAKE_PASSWORD_1);
+                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
                     try (InputStream is=new FileInputStream(resource)){
                         JsonNode js= new ObjectMapper().readTree(is);
                         
@@ -70,8 +72,8 @@ public class SubstancePostUpdateTest {
                         assertEquals(OK, wsResponse1.getStatus());
 
                         JsonNode jsonNode1 = wsResponse1.asJson();
-                        System.out.println("VALID:" + jsonNode1.get("valid"));
-                        System.out.println(jsonNode1);
+                        //System.out.println("VALID:" + jsonNode1.get("valid"));
+                        //System.out.println(jsonNode1);
                         
                         //assertThat("initalialValid:" +jsonNode1.get("valid").asBoolean()).isEqualTo("initalialValid:true");
                         assertTrue(jsonNode1.get("valid").asBoolean());
@@ -97,7 +99,7 @@ public class SubstancePostUpdateTest {
                         //assertThat(wsResponse4.getStatus()).isEqualTo(OK);
                         assertEquals(OK, wsResponse4.getStatus());
                         JsonNode jsonNode4 = wsResponse4.asJson();
-                        System.out.println("jsonNode:" + jsonNode4);
+                       // System.out.println("jsonNode:" + jsonNode4);
                         //jp.
                        // assertThat("roundTripValid:" + jsonNode4.get("valid").asBoolean()).isEqualTo("roundTripValid:true");
                         assertTrue(jsonNode4.get("valid").asBoolean());
