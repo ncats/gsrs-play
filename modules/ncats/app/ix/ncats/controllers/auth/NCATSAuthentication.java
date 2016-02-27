@@ -41,7 +41,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * A simple controller to authenticate via ldap
  */
 
-public class SpecialAuthentication extends Controller {
+public class NCATSAuthentication extends Controller {
    
     public static class Secured extends Security.Authenticator {
         @Override
@@ -51,7 +51,7 @@ public class SpecialAuthentication extends Controller {
 
         @Override
         public Result onUnauthorized(Http.Context ctx) {
-            return redirect(routes.SpecialAuthentication.login(null));
+            return redirect(routes.NCATSAuthentication.login(null));
         }
     }
     public static Result authenticate(String url) {
@@ -79,7 +79,7 @@ public class SpecialAuthentication extends Controller {
         }
         if (cred == null) {
             flash("message", "Invalid credential!");
-            return redirect(routes.SpecialAuthentication.login(null));
+            return redirect(routes.NCATSAuthentication.login(null));
         }
        
         try{
@@ -91,7 +91,7 @@ public class SpecialAuthentication extends Controller {
         if (url != null) {
             return redirect(url);
         }
-        return redirect(routes.SpecialAuthentication.secured());
+        return redirect(routes.NCATSAuthentication.secured());
     }
 
     public static Result login(String url) {
@@ -99,7 +99,7 @@ public class SpecialAuthentication extends Controller {
         Logger.debug("url:" +  url + "  app: " + Authentication.APP);
         if (session != null) {
             return url != null ? redirect(url)
-                    : redirect(routes.SpecialAuthentication.secured());
+                    : redirect(routes.NCATSAuthentication.secured());
         }
         return ok(ix.ncats.views.html.login.render(url, Authentication.APP));
     }
@@ -111,7 +111,7 @@ public class SpecialAuthentication extends Controller {
                     + ", you've logged out!");
             Authentication.flush(session);
         }
-        return redirect(routes.SpecialAuthentication.login(null));
+        return redirect(routes.NCATSAuthentication.login(null));
     }
     
     @Security.Authenticated(Secured.class)
@@ -120,7 +120,7 @@ public class SpecialAuthentication extends Controller {
     	Session session = Authentication.getSession();
         if (session.expired || !session.profile.active) {
             flash("message", "Session timeout; please login again!");
-            return redirect(routes.SpecialAuthentication.login(null));
+            return redirect(routes.NCATSAuthentication.login(null));
         }
         
         String context = Play.application().configuration().getString("application.context");
