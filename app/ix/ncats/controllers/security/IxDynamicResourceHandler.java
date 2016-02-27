@@ -60,7 +60,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                 final String meta,
                 final DeadboltHandler deadboltHandler,
                 final Http.Context context) {
-    			System.out.println("OK ... let's look then");
+    			//System.out.println("OK ... let's look then");
     			Subject subject=null;
     			try{
     				subject = deadboltHandler.getSubject(context);
@@ -73,10 +73,10 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 				DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
 				
 				for(ix.core.models.Role.Kind k:roles){
-					System.out.println("Checking for role:" + k);
+					//System.out.println("Checking for role:" + k);
 					if (analyzer.hasRole(subject, k.toString())) {
 						allowed = true;
-						System.out.println("Got it");
+						//System.out.println("Got it");
 						break;
 					}
 				}
@@ -92,7 +92,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                              String meta,
                              DeadboltHandler deadboltHandler,
                              Http.Context context) {
-    	System.out.println("Authorizing:" + name);
+    	//System.out.println("Authorizing:" + name);
         DynamicResourceHandler handler = HANDLERS.get(name);
         boolean result = false;
         if (handler == null) {

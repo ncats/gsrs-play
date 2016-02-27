@@ -347,20 +347,20 @@ public class Authentication extends Controller {
         UserProfile up=null;
         
         if(user!=null && key!=null){
-        	System.out.println("KEY-lookup");
+        	//System.out.println("KEY-lookup");
         	up=getUserProfileFromKey(user,key);
         }else if(token!=null){
-        	System.out.println("TOKEN-lookup");
+        	//System.out.println("TOKEN-lookup");
         	try{
         	up=getUserProfileFromTokenAlone(token);
         	}catch(Exception e){
         		e.printStackTrace();
         	}
         }else if(user!=null && password!=null){
-        	System.out.println("PASSWORD-lookup");
+        	//System.out.println("PASSWORD-lookup");
         	up=getUserProfileFromPassword(user,password);
         }else{
-        	System.out.println("Nothin-lookup");
+        	//System.out.println("Nothin-lookup");
         }
         if(up!=null){
         	setUserSessionDirectly(up);
