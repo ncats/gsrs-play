@@ -5,7 +5,6 @@ import java.util.Set;
 
 public abstract class RandomAlphaNumericIDGenerator extends IDGenerator<String>{
 	private char[] alphabet;
-	private int len;
 	private int idLen=9;
 	private boolean check=false;
 	Set<String> recentlyGenerated = new HashSet<String>();
@@ -22,16 +21,17 @@ public abstract class RandomAlphaNumericIDGenerator extends IDGenerator<String>{
 	public synchronized String generateID() {
 		int sum=0;		
 		int totalLength=idLen;
+		
 		if(check)totalLength++;
 		char[] retid= new char[totalLength];
 		
 		for(int i=0;i<idLen;i++){
-			int k=(int) (Math.random()*len);
+			int k=(int) (Math.random()*alphabet.length);
 			retid[i]=alphabet[k];
 			sum+=k;
 		}
 		if(check){
-			int chk=sum%len;
+			int chk=sum%alphabet.length;
 			retid[idLen]=alphabet[chk];
 		}
 		
@@ -57,7 +57,7 @@ public abstract class RandomAlphaNumericIDGenerator extends IDGenerator<String>{
 
 
 	public int charValue(char c){
-		for(int k=0;k<len;k++){
+		for(int k=0;k<alphabet.length;k++){
 			if(c==alphabet[k]){
 				return k;
 			}
@@ -85,7 +85,7 @@ public abstract class RandomAlphaNumericIDGenerator extends IDGenerator<String>{
 			sum+=t;
 		}
 		if(check){
-			int chk=sum%len;
+			int chk=sum%alphabet.length;
 			if(chk==charValue(v.charAt(idLen))){
 				return true;
 			}else{
