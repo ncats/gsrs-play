@@ -161,7 +161,7 @@ public class Name extends GinasCommonSubData {
     	r.citation=this.name + " [" + loc + "]";
     	r.publicDomain=true;
     	this.addReference(r,sub);
-    	sub.tags.add(new Keyword(this.TAG,loc));
+    	sub.addTag(new Keyword(this.TAG,loc));
     }
     
     /**

@@ -2,6 +2,7 @@ package ix.ginas.utils;
 
 import ix.core.models.Keyword;
 import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.v1.Note;
 import ix.ginas.models.v1.Substance;
 
 import java.util.ArrayList;
@@ -120,10 +121,12 @@ public abstract class GinasProcessingStrategy {
 		if (warningHandle == HANDLING_TYPE.MARK) {
 			for (GinasProcessingMessage gpm : list) {
 				if (gpm.messageType == GinasProcessingMessage.MESSAGE_TYPE.WARNING) {
+					cs.addTag(new Keyword(GinasCommonSubData.TAG, GinasProcessingStrategy.WARNING));
+					Note n=cs.addPropertyNote(gpm.message, GinasProcessingStrategy.WARNING);
+					if(n!=null){
+						n.addRestrictGroup(GinasProcessingStrategy.GROUP_ADMIN);
+					}
 					
-					cs.tags.add(new Keyword(GinasCommonSubData.TAG, GinasProcessingStrategy.WARNING));
-					cs.addPropertyNote(gpm.message, GinasProcessingStrategy.WARNING);
-					cs.addRestrictGroup(GinasProcessingStrategy.GROUP_ADMIN);
 				}
 			}
 		}
