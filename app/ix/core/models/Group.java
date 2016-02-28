@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import play.db.ebean.Model;
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 @Entity
 @Table(name="ix_core_group")
 public class Group extends Model {
@@ -17,6 +19,7 @@ public class Group extends Model {
     @ManyToMany(cascade=CascadeType.ALL)
     @Basic(fetch=FetchType.EAGER)
     @JoinTable(name="ix_core_group_principal")
+    @JsonView(BeanViews.Full.class)
     public List<Principal> members = new ArrayList<Principal>();
 
     public Group () {}

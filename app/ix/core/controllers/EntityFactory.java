@@ -55,6 +55,7 @@ import com.avaje.ebean.bean.*;
 import ix.core.ValidationMessage;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.ETag;
 import ix.core.models.ETagRef;
 import ix.core.models.Edit;
@@ -167,7 +168,9 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
-        
+        public static EntityMapper FULL_ENTITY_MAPPER(){
+        	return new EntityMapper(BeanViews.Full.class);
+        }
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             _serializationConfig = getSerializationConfig();
@@ -437,12 +440,15 @@ public class EntityFactory extends Controller {
         return q.toString();
     }
 
+    
+    
     static public EntityMapper getEntityMapper () {
         List<Class> views = new ArrayList<Class>();
 
         Map<String, String[]> params = request().queryString();
         String[] args = params.get("view");
         if (args != null) {
+        	
             Class[] classes = BeanViews.class.getClasses();
             for (String a : args) {
                 int matches = 0;
@@ -840,7 +846,7 @@ public class EntityFactory extends Controller {
         }
 
         try {
-            ObjectMapper mapper = new ObjectMapper ();
+            EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
             mapper.addHandler(new DeserializationProblemHandler () {
                     public boolean handleUnknownProperty
                         (DeserializationContext ctx, JsonParser parser,
@@ -875,7 +881,7 @@ public class EntityFactory extends Controller {
             inst.save();
 	        
 
-            return created (mapper.valueToTree(inst));
+            return created (mapper.toJson(inst));
         }
         catch (Exception ex) {
             return internalServerError (ex.getMessage());
@@ -1421,7 +1427,7 @@ public class EntityFactory extends Controller {
     }
 
     protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
-        EntityMapper mapper = getEntityMapper ();       
+        EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
         Transaction tx = Ebean.beginTransaction();
         try {       
             Object value = mapper.treeToValue(json, type);

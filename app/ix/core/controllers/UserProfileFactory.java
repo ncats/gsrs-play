@@ -38,13 +38,7 @@ public class UserProfileFactory extends EntityFactory {
         	groupsChecked=new ArrayList<Group>();
         }
         
-        List<Role> rolesChecked= new ArrayList<Role>();
-        if(rolesCheckeda!=null){
-	        for(Role.Kind r:rolesCheckeda){
-	        	Role r2 = new Role(r);
-	            rolesChecked.add(r2);
-	        }
-        }
+        
         
         newUser.save();
         UserProfile prof = UserProfileFactory.finder.where().eq("user.username", newUser.username).findUnique();
@@ -53,13 +47,7 @@ public class UserProfileFactory extends EntityFactory {
             prof = new UserProfile(newUser);
             prof.active = true;
             prof.setPassword(password);
-            //prof.setRoles(rolesChecked);
-            
-            for (Role r : rolesChecked) {
-                r.principal = newUser;
-                r.save();
-            }
-            
+            prof.setRoleKinds(rolesCheckeda);
             
             for (Group g : groupsChecked) {
                 if(g.id != null) {

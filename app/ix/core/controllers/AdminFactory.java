@@ -49,6 +49,8 @@ public class AdminFactory extends Controller {
 
     public static Map<String,Group> alreadyRegistered = new ConcurrentHashMap<String,Group>();
 
+    
+    //Authenticators are used as fallback to authenticate if built in auth doesn't work
     public static List<Authenticator> authenticators = new ArrayList<Authenticator>();
     
     public static void setupAuth () {
@@ -126,28 +128,7 @@ public class AdminFactory extends Controller {
         return notFound("Unknown principal: " + id);
     }
 
-    public static Result getRole(Long id) {
-        Role role = roleFinder.byId(id);
-        if (role != null) {
-            ObjectMapper mapper = new ObjectMapper();
-            return ok(mapper.valueToTree(role));
-        }
-        return notFound("Unknown role: " + id);
-    }
 
-    public static Result deleteRole(Long id) {
-        Role role = roleFinder.byId(id);
-        if (role != null) {
-            try {
-                role.delete();
-                ObjectMapper mapper = new ObjectMapper();
-                return ok(mapper.valueToTree(role));
-            } catch (Exception ex) {
-                return badRequest(ex.getMessage());
-            }
-        }
-        return notFound("Unknown role: " + id);
-    }
 
     public static Result deletePermission(Long id) {
         Acl permission = aclFinder.byId(id);
@@ -343,18 +324,6 @@ public class AdminFactory extends Controller {
     	return cred;
     }
 
-    public static List<Role> rolesByPrincipal(Principal cred) {
-        return roleFinder.where().eq("principal.id", cred.id).findList();
-    }
-
-    public static List<String> roleNamesByPrincipal(Principal cred) {
-        List<Role> roles = rolesByPrincipal(cred);
-        List<String> roleList = new ArrayList<String>();
-        for(Role r : roles){
-            roleList.add(r.getName());
-        }
-        return roleList;
-    }
 
     public static List<String> aclNamesByPrincipal(Principal cred) {
         List<Acl> perms = permissionByPrincipal(cred);
@@ -445,18 +414,6 @@ public class AdminFactory extends Controller {
                 p.principals.add(user);
                 p.save();
             }
-        }
-    }
-
-    //TODO: look into this
-    public static void updateRolesF(Long userId, List<Role> roles){
-        Principal user = palFinder.byId(userId);
-        for(Role r : AdminFactory.rolesByPrincipal(user)){
-            AdminFactory.deleteRole(r.id);
-        }
-        for (Role r : roles) {
-            r.principal = user;
-            r.save();
         }
     }
     

@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ix.core.EntityProcessor;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
+import ix.core.controllers.UserProfileFactory;
 import ix.core.models.*;
 import play.*;
 import play.Logger;
@@ -55,7 +56,10 @@ public class Authentication extends Controller {
     private static Cache tokenCache=null;
     private static Cache tokenCacheUserProfile=null;
     private static long lastCacheUpdate=-1;
-    
+
+    static ix.core.plugins.SchedulerPlugin scheduler =
+            Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
+
     
     static{
     	setupCache();
@@ -102,21 +106,14 @@ public class Authentication extends Controller {
     	}
     	
     }
-    
-    
-    
 
-    public static boolean loginUserFromHeader(){
-    	return loginUserFromHeader();
-    }
     public static boolean loginUserFromHeader(Http.Request r){
-    	
 		try {
 			if(r==null){
 				r=request();
 			}
 			if (Play.application().configuration()
-					.getBoolean("ix.authentication.trustheader")) {
+					    .getBoolean("ix.authentication.trustheader")) {
 				String usernameheader = Play.application().configuration()
 						.getString("ix.authentication.usernameheader");
 				String usernameEmailheader = Play.application().configuration()
@@ -154,8 +151,8 @@ public class Authentication extends Controller {
     
     public static boolean allowNonAuthenticated(){
     	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true) 
-    			||
-    			Play.application().configuration().getBoolean("ix.admin",false);
+    		   ||
+    		   Play.application().configuration().getBoolean("ix.admin",false);
     }
     
     static UserProfile setSessionUser(String username){
@@ -163,6 +160,7 @@ public class Authentication extends Controller {
     }
     
     //Set and trust username / email as user
+    //Only call after authenticated
     private static UserProfile setSessionUser(String username, String email){
         boolean systemAuth = false;
         boolean newregistered=false;
@@ -227,10 +225,9 @@ public class Authentication extends Controller {
         return profile;
     }
     
-    public static void setUserSessionDirectly(UserProfile profile){
+    private static void setUserSessionDirectly(UserProfile profile){
     	Session session = new Session(profile);
         session.save();
-
         IxCache.set(session.id.toString(), session);
 
         Logger.debug("** new session " + session.id
@@ -256,8 +253,30 @@ public class Authentication extends Controller {
     		if(AdminFactory.validatePassword(profile, password)){
     			return profile;
     		}
+    	}else{
+    		
     	}
     	return null;
+    }
+    
+    public static UserProfile directlogin(String username, String password) throws Exception{
+    	Principal cred;
+        UserProfile profile = UserProfileFactory.finder.where().eq("user.username", username).findUnique();
+        
+        if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
+                cred = profile.user;
+        } else {
+        		cred = AdminFactory.externalAuthenticate(username,password);
+        }
+        if (cred == null) {
+            throw new IllegalArgumentException("Invalid credentials!");
+        }
+        try{
+        	Authentication.setSessionUser(username);
+        }catch(Exception e){
+        	throw e;
+        }
+        return profile;
     }
     
     public static UserProfile getUserProfileFromToken(String username, String token){
@@ -286,7 +305,7 @@ public class Authentication extends Controller {
     	return null;
     }
     
-    public static UserProfile getUserProfile(String username){
+    private static UserProfile getUserProfile(String username){
     	Element upelm=tokenCacheUserProfile.get(username);
     	if(upelm!=null){
     		return (UserProfile)upelm.getObjectValue();
@@ -309,8 +328,6 @@ public class Authentication extends Controller {
     	tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
     }
     public static void updateUserProfileTokenCache(){
-    	//tokenCache.removeAll();
-    	
     	try{
 	    	for(UserProfile up:_profiles.all()){
 	    		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
@@ -324,9 +341,6 @@ public class Authentication extends Controller {
     
     
     
-
-    static ix.core.plugins.SchedulerPlugin scheduler =
-            Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
 
     
 

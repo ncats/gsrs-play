@@ -1,11 +1,11 @@
 package ix.core.controllers.v1;
 
-import be.objectify.deadbolt.java.actions.Dynamic;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
@@ -15,10 +15,12 @@ import java.util.concurrent.ConcurrentMap;
 import javax.persistence.Id;
 
 import com.avaje.ebean.Expr;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import be.objectify.deadbolt.java.actions.Dynamic;
 import ix.core.NamedResource;
 import ix.core.NamedResourceFilter;
 import ix.core.UserFetcher;
@@ -269,6 +271,7 @@ public class RouteFactory extends Controller {
     
     @Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approveUUID (String context, String id) {
+    	System.out.println("Approving via API");
         try {
             Method m = getMethod (context, "approve", UUID.class);
             if (m != null)
@@ -278,7 +281,7 @@ public class RouteFactory extends Controller {
             Logger.trace("["+context+"]", ex);
             return internalServerError (context);
         }
-        Logger.warn("Context {} has no method edits(UUID)",context);
+        Logger.warn("Context {} has no method for approving",context);
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
@@ -456,6 +459,24 @@ public class RouteFactory extends Controller {
         	return ok(om.valueToTree(p));	
     	}
     	return notFound("No user logged in");
+    }
+    
+    private static JsonNode getError(Throwable t, int status){
+    	Map m=new HashMap();
+    	m.put("message", t.getMessage());
+    	m.put("status", status);
+    	ObjectMapper om = new ObjectMapper();
+    	return om.valueToTree(m);
+    }
+    
+    public static Result _apiBadRequest(Throwable t){
+    	return badRequest(getError(t, play.mvc.Http.Status.BAD_REQUEST));
+    }
+    public static Result _apiInternalServerError(Throwable t){
+    	return internalServerError(getError(t, play.mvc.Http.Status.INTERNAL_SERVER_ERROR));
+    }
+    public static Result _apiUnauthorized(Throwable t){
+    	return internalServerError(getError(t, play.mvc.Http.Status.UNAUTHORIZED));
     }
     
     

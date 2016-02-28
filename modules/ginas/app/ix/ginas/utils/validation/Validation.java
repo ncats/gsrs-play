@@ -478,10 +478,10 @@ public class Validation {
         }
     	return gpm;
     }
-    public static List<GinasProcessingMessage> validateSequenceDuplicates(ProteinSubstance cs){
+    public static List<GinasProcessingMessage> validateSequenceDuplicates(ProteinSubstance proteinsubstance){
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
     	try {
-    		for(Subunit su : cs.protein.subunits){
+    		for(Subunit su : proteinsubstance.protein.subunits){
     			Payload payload = _payload.createPayload
                         ("Sequence Search", "text/plain", su.sequence);
 	            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getNearCollsionProteinSubstancesToSubunit(10, 0, su);
@@ -489,7 +489,8 @@ public class Validation {
 	                int dupes=0;
 	                GinasProcessingMessage mes=null;
 	                for(Substance s:sr){
-	                    if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
+	                    if(proteinsubstance.uuid==null || !s.uuid.toString().equals(proteinsubstance.uuid.toString())){
+	                    	
 	                    	if(dupes<=0){
 	                    		mes=GinasProcessingMessage.WARNING_MESSAGE("There is 1 substance with a similar sequence to subunit [" + su.subunitIndex + "]:");
 	                    		Link l = new Link();

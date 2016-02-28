@@ -197,8 +197,14 @@ public class Administration extends App {
         Principal user = AdminFactory.palFinder.byId(id);
         UserProfile up = _profiles.where().eq("user.username", user.username).findUnique();
         up.user = user;
-        return ok(ix.ncats.views.html.admin.edituser.render(id, up, AdminFactory.roleNamesByPrincipal(user), AdminFactory.aclNamesByPrincipal(user),
-                AdminFactory.groupNamesByPrincipal(user), appContext));
+        return ok(ix.ncats.views.html.admin.edituser.render(
+        		id, 
+        		up,
+        		up.getRolesKinds(), 
+        		AdminFactory.aclNamesByPrincipal(user),
+                AdminFactory.groupNamesByPrincipal(user), 
+                appContext
+                ));
     }
 
     public static Result deletePrincipal(Long id) {

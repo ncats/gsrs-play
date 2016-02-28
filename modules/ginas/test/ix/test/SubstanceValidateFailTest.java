@@ -1,3 +1,4 @@
+package ix.test;
 import static org.junit.Assert.*;
 import static play.mvc.Http.Status.OK;
 import static play.test.Helpers.running;

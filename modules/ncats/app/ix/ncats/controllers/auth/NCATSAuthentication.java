@@ -59,31 +59,11 @@ public class NCATSAuthentication extends Controller {
         String username = requestData.get("username");
         String password = requestData.get("password");
         Logger.debug("username: " + username);
-        boolean systemAuth = false;
-        Principal cred;
-        UserProfile profile = UserProfileFactory.finder.where().eq("user.username", username).findUnique();
-
         
-        if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
-                cred = profile.user;
-        } else {
-        		cred = AdminFactory.externalAuthenticate(username,password);
-        		if(cred!=null){
-        			systemAuth=true;
-        		}
-        }
-        if (username.equalsIgnoreCase("caodac")
-                && password.equalsIgnoreCase("foobar")) {
-            cred = new Principal();
-            cred.username = username;
-        }
-        if (cred == null) {
-            flash("message", "Invalid credential!");
-            return redirect(routes.NCATSAuthentication.login(null));
-        }
-       
         try{
-        	Authentication.setSessionUser(username);
+        	Authentication.directlogin(username,password);
+        }catch(IllegalArgumentException e){
+        	return redirect(routes.NCATSAuthentication.login(null));
         }catch(Exception e){
         	return internalServerError(e.getMessage());
         }
@@ -93,6 +73,10 @@ public class NCATSAuthentication extends Controller {
         }
         return redirect(routes.NCATSAuthentication.secured());
     }
+    
+   
+    
+    
 
     public static Result login(String url) {
         Session session = Authentication.getSession();

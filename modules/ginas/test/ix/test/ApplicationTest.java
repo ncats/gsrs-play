@@ -1,3 +1,4 @@
+package ix.test;
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;

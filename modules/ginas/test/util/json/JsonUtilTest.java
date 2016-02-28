@@ -235,10 +235,11 @@ public class JsonUtilTest {
     @Test
     public void getChanges() throws IOException {
     	
-    	//TP:Sorry for direct file access. It seems the resource as stream
-    	//pieces are coming up as either empty or null.
-    	//The direct file path reference pieces are used elsewhere for the same
-    	//reason. Be nice to clean up, but this passes the tests. 
+    	// TP:Sorry for direct file access. It seems the resource as stream
+    	// pieces are coming up as either empty or null.
+    	// The direct file path reference pieces are used elsewhere for the same
+    	// reason. Be nice to clean up, but this passes the tests.
+    	
     	File b4f= new File("test/util/json/OLD_JSON.js");
     	File aft= new File("test/util/json/New_JSON.js");
         try(InputStream inBefore = new FileInputStream(b4f);
@@ -258,10 +259,7 @@ public class JsonUtilTest {
                                         createdFilter, lastEditedFilter, selfFilter, blankOrNullFilter);
 
             Changes expected = new ChangesBuilder(before, after)
-                                .added("/codes/0/uuid")
-                                .added("/codes/1/uuid")
-                                .added("/codes/2/uuid")
-
+                                
                                 .removed("/names/6/references/1")
 
                                 .added("/names/0/uuid")

@@ -29,14 +29,11 @@ public class UserFetcher {
 	public static UserProfile getActingUserProfile(){
 		Principal p= getActingUser();
 		if(p!=null){
-			return getActingUserProfile(p.username);
+			return UserProfileFactory.getUserProfileForPrincipal(p);
 		}
 		return null;
 	}
 	
-	private static UserProfile getActingUserProfile(String username){
-		UserProfile profile = UserProfileFactory.finder.where().eq("user.username", username).findUnique();
-    	return profile;
-	}
+	
 	
 }

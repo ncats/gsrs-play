@@ -64,7 +64,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
     			Subject subject=null;
     			try{
     				subject = deadboltHandler.getSubject(context);
-    				System.out.println(subject);
+    				
     			}catch(Exception e){
     				e.printStackTrace();
     			}
@@ -73,7 +73,6 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 				DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
 				
 				for(ix.core.models.Role.Kind k:roles){
-					//System.out.println("Checking for role:" + k);
 					if (analyzer.hasRole(subject, k.toString())) {
 						allowed = true;
 						//System.out.println("Got it");
