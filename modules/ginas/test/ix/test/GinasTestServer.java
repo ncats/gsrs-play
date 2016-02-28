@@ -262,7 +262,6 @@ public class GinasTestServer extends ExternalResource{
     private JsonNode ensureExctractJSON(WSResponse wsResponse1){
     	assertTrue(wsResponse1!=null);
         int status2 = wsResponse1.getStatus();
-        System.out.println(status2);
         if(status2>300){
         	System.out.println("That's an error!");
         	System.out.println(wsResponse1.getBody());

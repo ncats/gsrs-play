@@ -89,20 +89,21 @@ public class EditingWorkflowTest {
                 		JsonNode jp = JsonDiff.asJson(updated,updateFetched);
                 		int changes=0;
                 		for(JsonNode jschange: jp){
-	                    	changes++;
+	                    	
 	                    	String path=jschange.get("path").asText();
 	                    	if(path.equals("/version") ||
 	                    	   path.equals("/_name") ||
 	                    	   path.equals("/lastEdited") ||
 	                    	   path.equals("/names/0/lastEdited")
 	                    			){
-	                    		
 	                    	}else{
 	                    		System.out.println("CHANGED:" + jschange + " old: " + updated.at(jschange.get("path").asText()));
+	                    		changes++;
 	                    	}
+	                    	assertTrue(changes==0);
 	                    }
-                		System.out.println("Old tags:" + updated.at("/tags"));
-                		System.out.println("New tags:" + updateFetched.at("/tags"));
+                		
+                		
                 	}
                 	
                 	

@@ -409,7 +409,6 @@ public class SubstanceFactory extends EntityFactory {
 	}
 
 	public static Result approve(UUID substanceId) {
-		System.out.println("CALLED APPROVE");
 		return approve(substanceId.toString());
 	}
 	

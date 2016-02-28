@@ -271,8 +271,7 @@ public class RouteFactory extends Controller {
     
     @Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approveUUID (String context, String id) {
-    	System.out.println("Approving via API");
-        try {
+    	try {
             Method m = getMethod (context, "approve", UUID.class);
             if (m != null)
                 return (Result)m.invoke(null, EntityFactory.toUUID(id));
