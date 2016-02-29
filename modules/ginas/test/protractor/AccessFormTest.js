@@ -23,7 +23,7 @@ var WizardAccessPage = function () {
         ]
     };
 
-    this.accessPageTests = function(buttonId, model){
+    /*this.accessPageTests = function(buttonId, model){
         console.log("form selector: " + model);
         this.clickById(buttonId);
         this.clickById(model);
@@ -45,6 +45,6 @@ var WizardAccessPage = function () {
                     break;
             } //switch
         } //for i
-    }
+    }*/
 };
 module.exports = WizardAccessPage;

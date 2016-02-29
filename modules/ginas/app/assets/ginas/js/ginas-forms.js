@@ -227,7 +227,6 @@
                 parent: '='
             },
             link: function (scope, element, attrs) {
-                scope.iscollapsed = false;
             }
         };
     });
@@ -647,7 +646,7 @@
                                 $compile(template)(scope);
                             });
                         }
-                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field name=name></comment-form>';
+                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field ></comment-form>';
                         break;
                 }
 

@@ -40,10 +40,10 @@ var WizardNamePage = function () {
         }, {
             model: 'reference',
             type: 'form-selector'
-        }/*, {
-            model: 'name-access',
+        }, {
+            model: 'access',
             type: 'form-selector'
-        },{
+        }/*,{
             model: 'name.domains',
             type: 'multi-select'
         }, {
@@ -57,7 +57,7 @@ var WizardNamePage = function () {
     }
 };
 
-describe ('name form', function() {
+describe ('name form test', function() {
 
     var wizardNamePage = new WizardNamePage();
     beforeEach(function() {
@@ -85,45 +85,8 @@ describe ('name form', function() {
     it('name form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        browser.findElement(By.id('names-toggle')).click();
-       //  var buttonId = wizardNamePage.formElements.buttonId;
-         elements.testInputFields(wizardNamePage.formElements);
-
-       /* var buttonId = wizardNamePage.formElements.buttonID;
-        var formElements = wizardNamePage.formElements.fields;
-
-        var refElementTests = require('./ReferenceFormTest.js');
-        var refPage = new refElementTests;
-        var accessElementTests = require('./AccessFormTest.js');
-        var accessPage = new accessElementTests;
-
-        for (var i = 0; i < formElements.length; i++) {
-            var elementType = formElements[i].type;
-            var model = formElements[i].model;
-            wizardNamePage.getPage();
-            switch (elementType) {
-                case "text-input":
-                    elements.testTextInput(buttonId, model);
-                    break;
-                case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model);
-                    break;
-                case "multi-select":
-                    elements.testMultiSelectInput(buttonId, model);
-                    break;
-                case "check-box":
-                    elements.testCheckBoxInput(buttonId, model);
-                    break;
-                case "form-selector":
-                    if(model == 'name-reference') {
-                        refPage.refPageTests(buttonId, model);
-                    } else if(model == 'name-access'){
-                        accessPage.accessPageTests(buttonId, model);
-                    }
-
-                    break;
-            } //switch
-        } //for i*/
+        var breadcrumb =['names-toggle'];
+         elements.testInputFields(wizardNamePage.formElements, breadcrumb);
     });
 });
 

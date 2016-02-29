@@ -27,12 +27,12 @@ var HeaderForm = function () {
         },{
             model: 'parent.definitionType',
             type: 'dropdown-edit'
-        },{
-/*            model: 'parent.$$relatedSubstance',
-            type: 'substance-selector'
-        },{*/
+/*        },{
+/!*            model: 'parent.$$relatedSubstance',
+            type: 'substance-selector'*/
+/*        },{
             model: 'access',
-            type: 'form-selector'
+            type: 'form-selector'*/
         }]
     }
 };
@@ -64,7 +64,7 @@ describe ('header form test', function() {
     it('should test if elements loaded', function(){
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        elements.testInputFields(headerForm.formElements);
+        elements.testInputFields(headerForm.formElements, []);
     });
 });
 

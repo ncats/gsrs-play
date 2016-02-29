@@ -1,4 +1,4 @@
-var WizardCodePage = function () {
+var CodeForm = function () {
     this.getPage = function () {
         browser.get(browser.params.url);
     };
@@ -27,75 +27,49 @@ var WizardCodePage = function () {
         }, {
             model: 'code.url',
             type: 'text-input'
-        },/* {
-            model: 'textbox',
+        }, {
+            model: 'comments',
             type: 'form-selector'
         }, {
-            model: 'code-access',
+            model: 'access',
             type: 'form-selector'
-        },*/ {
+        }, {
             model: 'reference',
             type: 'form-selector'
         }]
     }
 };
 
-describe ('Code form', function() {
+describe ('Code form test', function() {
 
-    var wizardCodePage = new WizardCodePage();
-    /*beforeEach(function() {
-        wizardCodePage.getPage();
-    });*/
+    var codeForm = new CodeForm();
+    beforeEach(function() {
+        codeForm.getPage();
+    });
 
-    it('Code form tests', function () {
+    it('should see if form is visible', function(){
+        var vis = browser.findElement(By.id('addCodeForm')).isDisplayed();
+        expect(vis).toBe(false)
+    });
+
+    it('should test form toggling', function(){
+        var buttonId = codeForm.formElements.buttonId;
+        var vis = browser.findElement(By.id('addCodeForm')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId+"-toggle"));
+        expect(browser.findElement(By.id('addCodeForm')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('addCodeForm')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('addCodeForm')).isDisplayed()).toBe(false);
+
+    });
+
+
+    it('code form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        browser.findElement(By.id('codes')).click();
-        //  var buttonId = wizardNamePage.formElements.buttonId;
-        elements.testInputFields(wizardNamePage.formElements);
-
-      /*
-        var commonElementTests = require('./TestWizardCommonElements.js');
-        var elements = new commonElementTests;
-        var buttonId = wizardCodePage.formElements.buttonId;
-        var formElements = wizardCodePage.formElements.fields;
-
-        var refElementTests = require('./ReferenceFormTest.js');
-        var refPage = new refElementTests;
-        var accessElementTests = require('./AccessFormTest.js');
-        var accessPage = new accessElementTests;
-        var commentElementTests = require('./CommentFormTest.js');
-        var commentPage = new commentElementTests;
-
-        for (var i = 0; i < formElements.length; i++) {
-            var elementType = formElements[i].type;
-            var model = formElements[i].model;
-            wizardCodePage.getPage();
-            switch (elementType) {
-                case "text-input":
-                    elements.testTextInput(buttonId, model);
-                    break;
-                case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model);
-                    break;
-                case "multi-select":
-                    elements.testMultiSelectInput(buttonId, model);
-                    break;
-                case "check-box":
-                    elements.testCheckBoxInput(buttonId, model);
-                    break;
-                case "form-selector":
-                    if(model == 'code-reference') {
-                        refPage.refPageTests(buttonId, model);
-                    } else if(model == 'code-access'){
-                        accessPage.accessPageTests(buttonId, model);
-                    }else if(model == 'textbox'){
-                        commentPage.commentPageTests(buttonId, model);
-                    }
-
-                    break;
-            } //switch
-        } //for i*/
+        var breadcrumb =['codes-toggle'];
+        elements.testInputFields(codeForm.formElements, breadcrumb);
     });
 });
 

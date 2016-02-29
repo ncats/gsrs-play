@@ -34,8 +34,8 @@ exports.config = {
 
     suites: {
         basic: ['HeaderFormTest.js'
-               ,'NameFormTest.js'
-               //,'CodeFormTest.js'
+              // ,'NameFormTest.js'
+               ,'CodeFormTest.js'
                //,'RelationshipFormTest.js'
                //,'NoteFormTest.js'
                //,'PropertyFormTest.js'
@@ -77,7 +77,8 @@ exports.config = {
 
     jasmineNodeOpts: {
         showColors: true,
-        isVerbose: true
+        isVerbose: true,
+        realtimeFailure: true
     },
     params: {
         baseUrl: "",

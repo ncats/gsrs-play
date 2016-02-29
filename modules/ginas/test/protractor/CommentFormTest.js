@@ -1,7 +1,7 @@
 var WizardCommentPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=chemical');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -19,9 +19,9 @@ var WizardCommentPage = function () {
             type: 'text-box'
             }
         ]
-    }
+    };
 
-    this.commentPageTests = function(buttonId, model){
+   /* this.commentPageTests = function(buttonId, model){
         console.log("form selector: " + model);
         this.clickById(buttonId);
         this.clickById(model);
@@ -43,7 +43,7 @@ var WizardCommentPage = function () {
                     break;
             } //switch
         } //for i
-    }
+    }*/
 };
 
 module.exports=WizardCommentPage;

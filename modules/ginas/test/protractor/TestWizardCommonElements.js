@@ -30,8 +30,8 @@ var WizardCommonElements = function () {
         var elementId = model.split(".")[1];
         console.log("text-area-elementId: " + elementId);
         var userInput = element(by.id(elementId));
-        userInput.clear().sendKeys('testing');
-        expect(userInput.getAttribute('value')).toEqual('testing');
+/*        userInput.sendKeys('testing');
+        expect(userInput.getAttribute('value')).toEqual('testing');*/
     };
 
     this.testDropdownSelectInput = function (model) {
@@ -80,7 +80,6 @@ var WizardCommonElements = function () {
         var elem = browser.findElement(by.model(model));
           //  element(by.model(model)).all(by.css('.suggestion-list')).each(function (element, index) {
                 elem.getText().then(function (text) {
-                    console.log("tttttt" + text);
                     var items = text.split(' ');
                     console.log(items.length);
                     expect(items.length).toBeGreaterThan(0);
@@ -104,7 +103,7 @@ var WizardCommonElements = function () {
 
     this.testBinding = function(model){
         console.log("test binding "  + model);
-       // expect(element(by.exactBinding(model)).isPresent()).toBe(true);
+       expect(element(by.exactBinding(model)).isPresent()).toBe(true);
     };
 
 
@@ -114,34 +113,25 @@ var WizardCommonElements = function () {
             return ret.getText();
     };
 
-    this.testInputFields = function(elements, parentbutton, button){
-       // var buttonId = wizardNamePage.formElements.buttonID;
-       // var formElements = wizardNamePage.formElements.fields;
+    this.testInputFields = function(elements, breadcrumb){
         var fields = elements.fields;
-        var refElementTests = require('./ReferenceFormTest.js');
-        var refPage = new refElementTests;
-        var accessElementTests = require('./AccessFormTest.js');
-        var accessPage = new accessElementTests;
         for (var i = 0; i < fields.length; i++) {
             var elementType = fields[i].type;
             var model = fields[i].model;
                 this.getPage();
-            if(elements.buttonId != undefined) {
-                var toggleButton = browser.findElement(By.id(elements.buttonId +'-toggle'));
-                console.log("toggle " + elements.buttonId);
-            toggleButton.click();
-            }
-            if(parentbutton) {
-                console.log(parentbutton);
-                var parentButton = browser.findElement(By.id(parentbutton+'-toggle'));
-                parentButton.click().then(function(){
-                var toggleButton = browser.findElement(By.id(button));
-            toggleButton.click();
-                });
+            if(breadcrumb) {
+                for (var j = 0; j < breadcrumb.length; j++) {
+                    console.log(breadcrumb[0]);
+                    var button = browser.findElement(By.id(breadcrumb[j]));
+                    button.click();
+                }
             }
             switch (elementType) {
                 case "text-input":
                     this.testTextInput(model);
+                    break;
+                case "text-box":
+                    this.testTextArea(model);
                     break;
                 case "dropdown-select":
                     this.testDropdownSelectInput(model);
@@ -160,16 +150,35 @@ var WizardCommonElements = function () {
                     this.testBinding(model);
                     break;
                 case "form-selector":
-                    if(model == 'reference') {
-                        var newbtn = elements.formObj +"-reference";
-                        var parentbtn = elements.buttonId;
-                        this.testInputFields(refPage.formElements, parentbtn, newbtn);
-                    } else if(model == 'access'){
-                        var newbtn = elements.formObj +"-access";
-                        console.log(newbtn);
-                        this.testInputFields(accessPage.formElements, newbtn);
+                    var parentFormBtn = elements.buttonId +"-toggle";
+                    var newFormToggleBtn = elements.formObj +"-" + model;
+                    if(breadcrumb.length == 0 ) {
+                        breadcrumb = [parentFormBtn, newFormToggleBtn];
+                    }else{
+                    breadcrumb.push(newFormToggleBtn);
                     }
-
+                    switch(model){
+                        case 'access':
+                            var accessElementTests = require('./AccessFormTest.js');
+                            var accessPage = new accessElementTests;
+                            this.testInputFields(accessPage.formElements, breadcrumb);
+                            break;
+                        case 'reference':
+                            var refElementTests = require('./ReferenceFormTest.js');
+                            var refPage = new refElementTests;
+                            this.testInputFields(refPage.formElements, breadcrumb);
+                            break;
+                        case 'comments':
+                            var commentElementTests = require('./CommentFormTest.js');
+                            var commentPage = new commentElementTests;
+                            this.testInputFields(commentPage.formElements, breadcrumb);
+                            break;
+                        /*case 'reference':
+                            break;
+                        case 'reference':
+                            break;
+*/
+                    }
                     break;
             } //switch
         } //for i
