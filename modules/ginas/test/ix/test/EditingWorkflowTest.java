@@ -74,6 +74,7 @@ public class EditingWorkflowTest {
 	                    }
 	                    assertTrue(changes==1);
                 	}
+                	
                 	//submit edit
                 	{
                 		updatedReturned = ts.updateSubstanceJSON(updated);
@@ -100,10 +101,43 @@ public class EditingWorkflowTest {
 	                    		System.out.println("CHANGED:" + jschange + " old: " + updated.at(jschange.get("path").asText()));
 	                    		changes++;
 	                    	}
-	                    	assertTrue(changes==0);
+	                    	
 	                    }
-                		
-                		
+                		assertTrue(changes==0);
+                	}
+                	
+                	{
+                		JsonNode edits = ts.fetchSubstanceHistoryJSON(uuid);
+                		for(JsonNode edit: edits){
+                			//Ok, I'm just going to look at the null-path edits
+                			//there should be 1
+                			if(
+                			   !edit.get("oldValue").isNull() && 
+                			   !edit.get("newValue").isNull() &&
+                			   edit.get("path").isNull()
+                					){
+                				JsonNode oldv=ts.urlJSON(edit.get("oldValue").asText());
+                				JsonNode newv=ts.urlJSON(edit.get("newValue").asText());
+                				JsonNode jp = JsonDiff.asJson(updateFetched,newv);
+                				//Expecting nothin'
+                				//System.out.println("Hopefully, there's nothing here:");
+                				int chcount=0;
+                				for(JsonNode jschange: jp){
+        	                    		System.out.println("CHANGES FROM NEW:" + jschange + " old: " + updateFetched.at(jschange.get("path").asText()));
+        	                    		chcount++;
+        	                    }
+                				assertTrue(chcount==0);
+                				jp = JsonDiff.asJson(fetched,oldv);
+                				//Expecting nothin'
+                				//System.out.println("Hopefully, there's nothing here too:");
+                				chcount=0;
+                				for(JsonNode jschange: jp){
+        	                    		System.out.println("CHANGES FROM OLD:" + jschange + " old: " + fetched.at(jschange.get("path").asText()));
+        	                    		chcount++;
+        	                    }
+                				assertTrue(chcount==0);
+                			}
+	                    }
                 	}
                 	
                 	
@@ -115,4 +149,5 @@ public class EditingWorkflowTest {
         });
 	}
 	
+    
 }

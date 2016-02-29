@@ -61,6 +61,8 @@ public class GinasTestServer extends ExternalResource{
 	 private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
 	 private static final String API_URL_SUBMIT = "http://localhost:9001/ginas/app/api/v1/substances";
 	 private static final String API_URL_FETCH = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)?view=full";
+	 private static final String API_URL_HISTORY = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@edits?view=full";
+	 
 	 private static final String API_URL_APPROVE = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@approve";
 	 private static final String API_URL_UPDATE = "http://localhost:9001/ginas/app/api/v1/substances";
 	 
@@ -201,6 +203,10 @@ public class GinasTestServer extends ExternalResource{
     	WSResponse wsResponse1 = this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
     	return wsResponse1;
     }
+    public WSResponse fetchSubstanceHistory(String uuid){
+    	WSResponse wsResponse1 = this.url(API_URL_HISTORY.replace("$UUID$", uuid)).get().get(timeout);
+    	return wsResponse1;
+    }
     
     public WSResponse updateSubstance(JsonNode js){
     	WSResponse wsResponse1 = this.url(API_URL_UPDATE).put(js).get(timeout);
@@ -208,7 +214,9 @@ public class GinasTestServer extends ExternalResource{
     }
     
     
-    
+    public JsonNode fetchSubstanceHistoryJSON(String uuid){
+    	return ensureExctractJSON(fetchSubstanceHistory(uuid));
+    }
     public JsonNode fetchSubstanceJSON(String uuid){
     	return ensureExctractJSON(fetchSubstance(uuid));
     }
@@ -221,6 +229,10 @@ public class GinasTestServer extends ExternalResource{
 
 	public JsonNode updateSubstanceJSON(JsonNode updated) {
 		return ensureExctractJSON(updateSubstance(updated));
+	}
+	
+	public JsonNode urlJSON(String url){
+		return ensureExctractJSON(url(url).get().get(timeout));
 	}
     
     

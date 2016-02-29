@@ -128,7 +128,6 @@ public class IntegrationTest {
                 	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
                 	
             		WSResponse wsResponse1 = ts.whoami();
-            		System.out.println(wsResponse1.getBody());
             		JsonNode jsn=wsResponse1.asJson();
                 	assertThat(jsn.get("identifier").asText()).isEqualTo(ts.FAKE_USER_1);
                 	
