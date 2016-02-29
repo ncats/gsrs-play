@@ -90,7 +90,7 @@ do{
 }while($tries < 10 && $startResponse->is_error());
 
 if($startResponse->is_error()){
-	die "could not connect to ginas ", $startReq->status_line, "\n";
+	die "could not connect to ginas ", $startReq->status_line(), "\n";
 }
 
 my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
