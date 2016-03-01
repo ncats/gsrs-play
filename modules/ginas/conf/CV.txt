@@ -1329,8 +1329,8 @@ MOLECULAR_WEIGHT_TYPE		VISCOSITY AVERAGE	VISCOSITY AVERAGE
 MOLECULAR_WEIGHT_TYPE		WEIGHT AVERAGE	WEIGHT AVERAGE				
 MOLECULAR_WEIGHT_TYPE		Z AVERAGE	Z AVERAGE				
 NUCLEIC_ACID_SUGAR	sugars.sugar	LR	L-Ribose	LR		OC[C@@H](O)[C@@H](O)[C@@H](O)C=O	O[C@@H]1[C@@H]([*])O[C@@H](CO[*])[C@@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|
-NUCLEIC_ACID_SUGAR	sugars.sugar	R	Ribose	R		OC[C@@H](O)[C@@H](O)[C@@H](O)C=O	O[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|
-NUCLEIC_ACID_SUGAR	sugars.sugar	dR	Deoxy-Ribose	dR		OC[C@@H](O)[C@@H](O)CC=O	[*]OC[C@H]1O[C@@H]([*])C[C@@H]1O[*] |$_R91;;;;;;_R90;;;;_R92$|
+NUCLEIC_ACID_SUGAR	sugars.sugar	R	D-Ribose (RNA)	R		OC[C@@H](O)[C@@H](O)[C@@H](O)C=O	O[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;_R90;;;;;_R91;;;_R92$|
+NUCLEIC_ACID_SUGAR	sugars.sugar	dR	Deoxyribose (DNA)	dR		OC[C@@H](O)[C@@H](O)CC=O	[*]OC[C@H]1O[C@@H]([*])C[C@@H]1O[*] |$_R91;;;;;;_R90;;;;_R92$|
 NUCLEIC_ACID_SUGAR	sugars.sugar	MOE	2'-O-Methoxyethyl ribose	MOE			COCCO[C@H]1[C@H]([*])O[C@H](CO[*])[C@H]1O[*] |$;;;;;;;_R90;;;;;_R91;;;_R92$|
 NUCLEIC_ACID_SUGAR	sugars.sugar	mph	morpholino	mph			[*]OC[C@@H]1CN([*])C[C@H]([*])O1 |$_R91;;;;;;_R92;;;_R90;$|
 NUCLEIC_ACID_SUGAR	sugars.sugar	dier	"5- 1,2-Dierucyl-rac-glycerol (Genzyme)"	dier			CCCCCCCC_C=C/CCCCCCCCCCCCOCC(CO[*])OCCCCCCCCCCCC_C=C/CCCCCCCC |$;;;;;;;;;;;;;;;;;;;;;;;;;;;_R92;;;;;;;;;;;;;;;;;;;;;;;$|
