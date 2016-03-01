@@ -14,6 +14,7 @@ use LWP::UserAgent;
 
 sub getOldPid($);
 sub getValue($$);
+sub toString($);
 
 my @files = glob('modules/ginas/target/universal/*.zip');
 #should only be one file
@@ -87,11 +88,14 @@ do{
   $startResponse = $ua->request($startReq);
   $tries++;
   print "$tries\n";
-}while($tries < 50 && $startResponse->is_error());
+}while($tries < 10 && $startResponse->is_error());
 
 if($startResponse->is_error()){
-	die "could not connect to ginas ", $startReq->status_line(), "\n";
+my $stdErr = toString($abs_path . "/daemon.err");
+	die "could not connect to ginas ", $startReq->status_line(), "\nSTDERR=\n", $stdErr;
 }
+
+
 
 my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
 
@@ -168,7 +172,16 @@ sub getValue($$){
 	
 }
 
+sub toString($){
+    open my $fh, "<", shift;
+    my $buf="";
 
+    while(<$fh>){
+        $buf .= $_;
+    }
+    close $fh;
+    return $buf;
+}
 
 sub getOldPid($){
 	my $dir = shift;
