@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var WizardNamePage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -18,8 +18,10 @@ var ProteinWizardPage = function () {
     
 
     this.formElements = {
+       // pageUrl: '/ginas/app/wizard?kind=chemical',
         formName: 'nameForm',
-        buttonID: 'names',
+        buttonId: 'names',
+        formObj:'name',
         fields: [{
             model: 'name.name',
             type: 'text-input'
@@ -36,22 +38,56 @@ var ProteinWizardPage = function () {
             model: 'name.preferred',
             type: 'check-box'
         }, {
-            model: 'name.access',
+            model: 'reference',
             type: 'form-selector'
         }, {
-            model: 'name.reference',
+            model: 'access',
             type: 'form-selector'
-        }, {
+        }/*,{
             model: 'name.domains',
+            type: 'multi-select'
+        }, {
+            model: 'name.nameJurisdiction',
             type: 'multi-select'
         }, {
             model: 'name.nameOrgs',
             type: 'form-selector'
-        }, {
-            model: 'name.nameJurisdiction',
-            type: 'multi-select'
-        }
+        }*/
         ]
     }
 };
+
+describe ('name form test', function() {
+
+    var wizardNamePage = new WizardNamePage();
+    beforeEach(function() {
+        wizardNamePage.getPage();
+    });
+
+    it('should see if form is visible', function(){
+        var vis = browser.findElement(By.id('addNameForm')).isDisplayed();
+        expect(vis).toBe(false)
+    });
+
+    it('should test form toggling', function(){
+        var buttonId = wizardNamePage.formElements.buttonId;
+        var vis = browser.findElement(By.id('addNameForm')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId+"-toggle"));
+        expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(false);
+
+    });
+
+
+    it('name form tests', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var breadcrumb =['names-toggle'];
+         elements.testInputFields(wizardNamePage.formElements, breadcrumb);
+    });
+});
+
 

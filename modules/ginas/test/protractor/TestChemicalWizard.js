@@ -41,7 +41,15 @@ var ChemicalWizardPage = function() {
     this.clickByModel = function (name) {
         element(by.model(name)).click();
     };
-}
+};
+
+describe('Chemical names form test' , function(){
+    for (var i = 0; i < forms.formElements.length; i++) {
+        var elementType = forms.formElements[i].type;
+        var model = forms.formElements[i].model;
+
+});
+
 
 describe('Wizard Chemical', function() {
 

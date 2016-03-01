@@ -373,10 +373,17 @@ public class Validation {
 	                    remnames.add(cd);
 	                    mes.appliedChange=true;
 	                }
+	            }else{
+	            	if(cd.code==null){
+		            	GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("'Code' should not be null in code objects").appliableChange(true);
+		                gpm.add(mes);
+		                strat.processMessage(mes);
+		            }
 	            }
 	            if(!validateReferenced(s,cd,gpm,strat,ReferenceAction.FAIL)){
 	            	return false;
 	            }
+	            
 	        }
 	        s.codes.removeAll(remnames);
 	        for(Code cd : s.codes){
@@ -622,7 +629,7 @@ public class Validation {
         			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Calculated weight [" + tot + "] is greater than 5% off of given weight [" + p.value.average + "]").appliableChange(true));
         		}
         	}
-        	System.out.println("calc:" + tot);
+        	//System.out.println("calc:" + tot);
         }
         strat.addAndProcess(validateSequenceDuplicates(cs), gpm);
         return gpm;

@@ -356,7 +356,8 @@ public class GinasApp extends App {
         
         return badRequest ("Invalid \"sequence\" parameter specified!");
     }
-    
+    //@Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	
     @Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
     public static Result admin () {
         return ok (ix.ginas.views.html.admin.admin.render());

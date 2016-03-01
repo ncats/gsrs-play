@@ -6,6 +6,7 @@ import ix.core.models.Namespace;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
+import ix.utils.Util;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -46,12 +47,14 @@ public class AdminFactory extends Controller {
 
     public static Map<String,Group> alreadyRegistered = new ConcurrentHashMap<String,Group>();
 
+    
+    
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
         if (request().body().isMaxSizeExceeded()) {
             return badRequest("Json content too large!");
         }
-
+        
         Principal pal = null;
         try {
             JsonNode node = request().body().asJson();
@@ -70,6 +73,8 @@ public class AdminFactory extends Controller {
                     ("Unable to process request due to internal server error!");
         }
     }
+    
+    
 
     public static Result getUser(Long id) {
         Principal pal = palFinder.byId(id);
@@ -199,6 +204,8 @@ public class AdminFactory extends Controller {
         }
         return sb.toString();
     }
+    
+    
 
     public static Result createTest1() {
 
@@ -220,6 +227,7 @@ public class AdminFactory extends Controller {
         Group group1 = new Group("Illuminati");
         group1.members.add(user1);
         group1.members.add(user3);
+        
 
         Group group2 = new Group("FreeMason");
         group2.members.add(user2);
@@ -288,20 +296,14 @@ public class AdminFactory extends Controller {
         return badRequest("Unknown resource: " + name);
     }
 
-    public static String encrypt(String clearTextPassword, String salt) {
-        String text = "---" + clearTextPassword + "---" + salt + "---";
-        return DigestUtils.shaHex(text);
-    }
+    
 
     public static String generateSalt() {
-        return encrypt(new Date().toString(), String.valueOf(Math.random()));
+        return Util.encrypt(new Date().toString(), String.valueOf(Math.random()));
     }
 
     public static boolean validatePassword(UserProfile profile, String password) {
-        if (profile.salt == null || profile.hashp == null) {
-            return false;
-        }
-        return profile.hashp.equals(encrypt(password, profile.salt));
+        return profile.acceptPassword(password);
     }
 
     public static List<Role> rolesByPrincipal(Principal cred) {
@@ -409,17 +411,22 @@ public class AdminFactory extends Controller {
         }
     }
 
+    //TODO: look into this
     public static void updateRoles(Long userId, List<Role> roles){
         Principal user = palFinder.byId(userId);
         for(Role r : AdminFactory.rolesByPrincipal(user)){
             AdminFactory.deleteRole(r.id);
         }
+        
         for (Role r : roles) {
             r.principal = user;
             r.save();
         }
     }
-
+    
+    
+    
+    
     public static List<Group> allGroups() {
         return groupfinder.all();
     }

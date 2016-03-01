@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var HeaderForm = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -17,22 +17,55 @@ var ProteinWizardPage = function () {
     //no button to toggle
     this.formElements = {
         formName: 'headerForm',
+        formObj:  'parent',
         fields: [{
-            binding: 'formType',
+            model: 'formType',
             type: 'binding'
         },{
-            binding: 'name',
+            model: 'name',
             type: 'binding'
         },{
             model: 'parent.definitionType',
-            type: 'dropdown-select'
-        },{
-            model: 'parent.$$relatedSubstance',
-            type: 'form-selector'
-        },{
-            model: 'parent.access',
-            type: 'form-selector'
+            type: 'dropdown-edit'
+/*        },{
+/!*            model: 'parent.$$relatedSubstance',
+            type: 'substance-selector'*/
+/*        },{
+            model: 'access',
+            type: 'form-selector'*/
         }]
     }
 };
+
+describe ('header form test', function() {
+
+    var headerForm = new HeaderForm();
+
+    beforeEach(function() {
+        headerForm.getPage();
+    });
+
+    it('should check if form is edit or new', function(){
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var kind = browser.params.baseUrl;
+        console.log(kind);
+        expect(elements.testModelBinding('formType')).toEqual('Registering new');
+    });
+
+    it('should check the substance class of the form', function(){
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var kind = browser.params.baseUrl;
+        console.log(kind);
+        expect(elements.testModelBinding('name')).toEqual(kind);
+    });
+
+    it('should test if elements loaded', function(){
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        elements.testInputFields(headerForm.formElements, []);
+    });
+});
+
 

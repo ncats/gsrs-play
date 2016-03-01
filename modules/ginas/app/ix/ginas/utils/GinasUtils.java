@@ -55,7 +55,17 @@ import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import java.util.Date;
 
 public class GinasUtils {
-	public static IDGenerator<String> APPROVAL_ID_GEN = new UNIIGenerator();
+	private static IDGenerator<String> APPROVAL_ID_GEN = new UNIIGenerator();
+	
+
+
+	public static IDGenerator<String> getAPPROVAL_ID_GEN() {
+		return APPROVAL_ID_GEN;
+	}
+
+	public static void setAPPROVAL_ID_GEN(IDGenerator<String> aPPROVAL_ID_GEN) {
+		APPROVAL_ID_GEN = aPPROVAL_ID_GEN;
+	}
 
 	public static ChemicalFactory DEFAULT_FACTORY = new JchemicalReader();
 	public static String NULL_MOLFILE = "\n\n\n  0  0  0     0  0            999 V2000\nM  END\n\n$$$$";
@@ -493,42 +503,5 @@ public class GinasUtils {
 		public abstract Substance transformSubstance(K rec) throws Throwable;
 	}
 
-	public static synchronized void approveSubstance(Substance s) {
-
-		UserProfile up = getUserProfile();
-		Principal user = null;
-		if (up == null || up.user == null) {
-			throw new IllegalStateException("Must be logged in user to approve substance");
-		}
-		user = up.user;
-		if (s.lastEditedBy == null) {
-			throw new IllegalStateException(
-					"There is no last editor associated with this record. One must be present to allow approval. Please contact your system administrator.");
-		}
-		if (!s.isPrimaryDefinition()) {
-			throw new IllegalStateException(
-					"Cannot approve non-primary definitions.");
-		}
-		if (!s.isNonSubstanceConcept()) {
-			throw new IllegalStateException(
-					"Cannot approve non-substance concepts.");
-		}
-		for(SubstanceReference sr:s.getDependsOnSubstanceReferences()){
-			Substance s2=SubstanceFactory.getFullSubstance(sr);
-			if(s2==null){
-				throw new IllegalStateException(
-						"Cannot approve substance that depends on " + sr.toString()  + " which is not found in database.");
-			}
-			if(!s2.isApproved()){
-				throw new IllegalStateException(
-						"Cannot approve substance that depends on " + sr.toString()  + " which is not approved.");
-			}
-		}
-		
-		
-		s.approvalID=APPROVAL_ID_GEN.generateID();
-		s.approved=new Date();
-		s.approvedBy=user;
-		
-	}
+	
 }

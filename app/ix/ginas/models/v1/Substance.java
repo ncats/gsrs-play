@@ -48,8 +48,8 @@ import play.Logger;
 @DiscriminatorValue("SUB")
 public class Substance extends GinasCommonData {
 	private static final String DOC_TYPE_PROPERTY_IMPORT = "PROPERTY_IMPORT";
-	public static final String ALTERNATE_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
-	public static final String PRIMARY_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
+	public static final String ALTERNATE_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
+	public static final String PRIMARY_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
 
 	private static final String DEFAULT_NO_NAME = "NO_NAME";
 
@@ -102,6 +102,11 @@ public class Substance extends GinasCommonData {
 	@Indexable(facet = true, name = "Approved Date")
 	@JsonDeserialize(using = DateDeserializer.class)
 	public Date approved;
+	
+	
+	public Date getApproved(){
+		return this.approved;
+	}
 
 	// @ManyToMany(cascade=CascadeType.ALL)
 	// @JoinTable(name="ix_ginas_substance_access")
@@ -391,8 +396,9 @@ public class Substance extends GinasCommonData {
 		return null;
 	}
 	
+	
 	@JsonIgnore
-	public boolean isApproved(){
+	public boolean isValidated(){
 		return this.status.equalsIgnoreCase("Approved");
 	}
 
@@ -404,7 +410,7 @@ public class Substance extends GinasCommonData {
 		if (subRef != null) {
 			return subRef.approvalID;
 		}
-		if(!isApproved()){
+		if(!isValidated()){
 			return this.status + " record";
 		}
 		return "NO APPROVAL ID";

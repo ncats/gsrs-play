@@ -4,8 +4,13 @@ import java.lang.reflect.Method;
 
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.Principal;
+import ix.core.models.UserProfile;
+import play.db.ebean.Model;
 
 public class UserFetcher {
+	static Model.Finder<Long, UserProfile> _profiles =
+            new Model.Finder<Long, UserProfile>(Long.class, UserProfile.class);
+	
 	private static final String DEFAULT_USERNAME = "AUTO_IMPORTER";
 	private static final String USER_FETCH_METHOD = "getUser";
 	private static final String USER_FETCH_CLASS = "ix.ncats.controllers.auth.Authentication";
@@ -38,4 +43,17 @@ public class UserFetcher {
 			
 		}
 	}
+	public static UserProfile getActingUserProfile(){
+		Principal p= getActingUser();
+		if(p!=null){
+			return getActingUserProfile(p.username);
+		}
+		return null;
+	}
+	
+	private static UserProfile getActingUserProfile(String username){
+		UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+    	return profile;
+	}
+	
 }

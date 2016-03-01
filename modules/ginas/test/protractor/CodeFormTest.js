@@ -1,7 +1,6 @@
-var ProteinWizardPage = function () {
-
+var CodeForm = function () {
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -15,6 +14,7 @@ var ProteinWizardPage = function () {
     this.formElements = {
         formName: 'codeForm',
         buttonId:'codes',
+        formObj:'code',
         fields: [{
             model: 'code.codeSystem',
             type: 'dropdown-select'
@@ -28,16 +28,49 @@ var ProteinWizardPage = function () {
             model: 'code.url',
             type: 'text-input'
         }, {
-            model: 'code.comments',
+            model: 'comments',
             type: 'form-selector'
         }, {
-            model: 'code.access',
+            model: 'access',
             type: 'form-selector'
         }, {
-            model: 'code.reference',
+            model: 'reference',
             type: 'form-selector'
         }]
     }
-
 };
+
+describe ('Code form test', function() {
+
+    var codeForm = new CodeForm();
+    beforeEach(function() {
+        codeForm.getPage();
+    });
+
+    it('should see if form is visible', function(){
+        var vis = browser.findElement(By.id('addCodeForm')).isDisplayed();
+        expect(vis).toBe(false)
+    });
+
+    it('should test form toggling', function(){
+        var buttonId = codeForm.formElements.buttonId;
+        var vis = browser.findElement(By.id('addCodeForm')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId+"-toggle"));
+        expect(browser.findElement(By.id('addCodeForm')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('addCodeForm')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('addCodeForm')).isDisplayed()).toBe(false);
+
+    });
+
+
+    it('code form tests', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var breadcrumb =['codes-toggle'];
+        elements.testInputFields(codeForm.formElements, breadcrumb);
+    });
+});
+
 

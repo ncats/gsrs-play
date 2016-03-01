@@ -1,44 +1,24 @@
-import com.fasterxml.jackson.databind.JsonNode;
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import ix.core.models.Payload;
-import ix.core.plugins.PayloadPlugin;
-import ix.ginas.models.v1.Name;
-import ix.ginas.models.v1.Substance;
-import ix.ginas.utils.GinasSDFUtils;
+import static org.fest.assertions.Assertions.assertThat;
+import static play.mvc.Http.Status.OK;
+import static play.test.Helpers.running;
+import static play.test.Helpers.stop;
+import static play.test.Helpers.testServer;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
-import play.Play;
-import play.libs.F;
-import play.libs.Json;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
 import play.libs.ws.WS;
 import play.libs.ws.WSResponse;
-import play.mvc.Result;
-import play.test.FakeRequest;
-import play.test.TestBrowser;
-import play.test.WithBrowser;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.util.Map;
-import java.util.UUID;
 import play.test.TestServer;
-
-import static org.fest.assertions.Assertions.assertThat;
-import static play.test.Helpers.*;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class IntegrationTest {
 
         private static long timeout;
-        // Test Server
-       // private static TestServer testServer = testServer(3332, fakeApplication(inMemoryDatabase()));
-        private static JsonNode subNode;
-
-        static play.api.Application app;
 
         @BeforeClass
         public static void setUp() {
@@ -59,107 +39,148 @@ public class IntegrationTest {
             */
           //  start(testServer);
         }
+        @Rule
+        public GinasTestServer ts = new GinasTestServer(9001);
+
+       
 
     @Test
     public void testRestAPISubstance() {
-    	TestServer ts=testServer(9001);
-        running(ts, new Runnable() {
+    	ts.run(new Runnable() {
             public void run() {
-                WSResponse wsResponse1 = WS.url("http://localhost:9001/ginas/app/api/v1/substances").get().get(timeout);
-                JsonNode jsonNode1 = wsResponse1.asJson();
+            	try{
+                WSResponse wsResponse1 = ts.url("http://localhost:9001/ginas/app/api/v1/substances").get().get(timeout);
                 assertThat(wsResponse1.getStatus()).isEqualTo(OK);
                 assertThat(wsResponse1.getStatus()).isEqualTo(200);
+                JsonNode jsonNode1 = wsResponse1.asJson();
                 assertThat(!jsonNode1.isNull()).isEqualTo(true);
+            	}catch(Exception e){
+            		throw e;
+            	}
             }
         });
 
-        stop(ts);
     }
+    
+    @Test 
+    public void testFakeUserSetup(){
+    	ts.run(new Runnable() {
+            public void run() {
+            	try{
+            		ts.ensureSetupUsers();
+            	}catch(Exception e){
+            		throw e;
+            	}
+            }
+        });
+    }
+    
+    @Test
+    public void testFakeUserLoginPassword(){
+    	ts.run(new Runnable() {
+            public void run() {
+            	try{
+            		ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.USERNAME_PASSWORD);
+                	
+            		WSResponse wsResponse1 = ts.whoami();
+            		JsonNode jsn=wsResponse1.asJson();
+                	assertThat(jsn.get("identifier").asText()).isEqualTo(ts.FAKE_USER_1);
+                	
+            	}catch(Exception e){
+            		throw e;
+            	}
+            }
+        });
+    	//ts.logout();
+    	
+    }
+    
+    @Test
+    public void testFakeUserLoginKey(){
+    	ts.run(new Runnable() {
+            public void run() {
+            	try{
+            		ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.USERNAME_KEY);
+                	
+            		WSResponse wsResponse1 = ts.whoami();
+            		JsonNode jsn=wsResponse1.asJson();
+                	assertThat(jsn.get("identifier").asText()).isEqualTo(ts.FAKE_USER_1);
+                	
+            	}catch(Exception e){
+            		throw e;
+            	}
+            }
+        });
+    	//ts.logout();
+    	
+    }
+    
+
+    @Test
+    public void testFakeUserLoginToken(){
+    	ts.run(new Runnable() {
+            public void run() {
+            	try{
+            		ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
+                	
+            		WSResponse wsResponse1 = ts.whoami();
+            		System.out.println(wsResponse1.getBody());
+            		JsonNode jsn=wsResponse1.asJson();
+                	assertThat(jsn.get("identifier").asText()).isEqualTo(ts.FAKE_USER_1);
+                	
+            	}catch(Exception e){
+            		throw e;
+            	}
+            }
+        });
+    	//ts.logout();
+    	
+    }
+    
+    @Test
+    public void testFakeUserLoginNone(){
+    	ts.run(new Runnable() {
+            public void run() {
+            	try{
+            		ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.NONE);
+                	
+            		WSResponse wsResponse1 = ts.whoami();
+            		if(wsResponse1.getStatus()==OK){
+                      JsonNode jsn=wsResponse1.asJson();
+              		  assertThat(jsn.get("identifier").asText()).isNotEqualTo(ts.FAKE_USER_1);
+            		}
+                	
+            	}catch(Exception e){
+            		throw e;
+            	}
+            }
+        });
+    	//ts.logout();
+    	
+    }
+    
 
     @Test
     public void testRestAPIVocabularies() {
-    	TestServer ts=testServer(9001);
-        running(ts, new Runnable() {
+    	ts.run(new Runnable() {
             public void run() {
+            	try{
                 WSResponse wsResponse = WS.url("http://localhost:9001/ginas/app/api/v1/vocabularies").get().get(timeout);
                 JsonNode jsonNode = wsResponse.asJson();
                 assertThat(wsResponse.getStatus()).isEqualTo(OK);
                 assertThat(wsResponse.getStatus()).isEqualTo(200);
                 assertThat(!jsonNode.isNull()).isEqualTo(true);
                 assertThat(jsonNode.path("total").asInt()).isGreaterThan(1);
-            }
-        });
-
-        stop(ts);
-    }
-
-     /*
-    @Test
-    public void runInBrowser() {
-        running(testServer(3331), HTMLUNIT, new F.Callback<TestBrowser>() {
-            public void invoke(TestBrowser browser) {
-                browser.goTo("http://localhost:3331");
-                assertThat(browser.$("#title").getText()).isEqualTo("Welcome to Play!");
-                browser.$("a").click();
-                assertThat(browser.url()).isEqualTo("http://localhost:3333/login");
+            	}catch(Exception e){
+            		throw e;
+            	}
             }
         });
     }
-  */
-
- /*   @Test
-    public void testBrowserConcept() throws Exception {
-        running(testServer(9001), HTMLUNIT , new F.Callback<TestBrowser>() {
-
-            @Override
-            public void invoke(TestBrowser browser) throws Throwable{
-                browser.goTo("http://localhost:9001/ginas/app");
-                assertThat(!browser.$("title").isEmpty());
-*//*
-                WebClient webClient = new WebClient(BrowserVersion.FIREFOX_24);
-                final HtmlPage page =
-                        (HtmlPage)webClient.getPage("http://localhost:9001/ginas/app/wizard?kind=concept");
-                webClient.getOptions().setThrowExceptionOnScriptError(false);
-*//*
-
-               //assertThat(page.getBody()..contains("geetha"));
-            }
-        });
-    }*/
-
-  /*  @Test
-    public void testJsonLoad() throws Exception {
-
-    running(fakeApplication(), new Runnable() {
-        public void run() {
-
-            PayloadPlugin payloadPlugin = Play.application().plugin(
-                    PayloadPlugin.class);
-
-            FileInputStream fs = null;
-            try {
-                fs = new FileInputStream("test/testdumps/aspirinsetsmall.txt.gz");
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            Payload  sdpayload = null;
-            try {
-                sdpayload = payloadPlugin.createPayload("aspirinsetsmall.txt.gz",
-                            "application/gzip", fs.toString() );
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            if (sdpayload != null) {
-                sdpayload.save();
-                Map<String, GinasSDFUtils.GinasSDFExtractor.FieldStatistics> m = GinasSDFUtils.GinasSDFExtractor
-                        .getFieldStatistics(sdpayload, 100);
-                assertThat(m.values() != null);
-            }
-        }
-    });
-    }*/
 
     @AfterClass
     public static void tearDown(){

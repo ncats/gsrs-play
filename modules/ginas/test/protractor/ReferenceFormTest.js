@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var WizardReferencePage = function () {
 
-    this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=nucleicAcid');
+    this.getPage = function(){
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -17,11 +17,12 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'refForm',
+       // buttonId: 'references',
         fields: [{
-            model: 'ref.citation',
+            model: 'reference.citation',
             type: 'text-input'
         }, {
-            model: 'ref.docType',
+            model: 'reference.docType',
             type: 'dropdown-select'
         }, {
             model: 'ref.tags',
@@ -29,13 +30,14 @@ var ProteinWizardPage = function () {
         }, {
             model: 'ref.url',
             type: 'text-input'
-        }, {
+        },/* {
             model: 'ref.access',
             type: 'form-selector'
         }, {
             binding: 'ref.uploadedFile',
             type: 'binding'
-        }]
-    }
+        }*/]
+    };
 };
 
+module.exports = WizardReferencePage;

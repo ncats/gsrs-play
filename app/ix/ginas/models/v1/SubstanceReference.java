@@ -15,6 +15,7 @@ import ix.ginas.models.GinasCommonSubData;
 @JSONEntity(name = "substanceReference", isFinal = true)
 public class SubstanceReference extends GinasCommonSubData {
     @JSONEntity(title = "Substance Name")
+    @Column(length=1024)
     public String refPname;
     
     @JSONEntity(isRequired = true)

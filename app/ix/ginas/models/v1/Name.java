@@ -50,6 +50,7 @@ public class Name extends GinasCommonSubData {
 
     @Lob
     @Basic(fetch=FetchType.EAGER)
+    @JsonIgnore
     public String fullName;
     
     @JSONEntity(title = "Name Type", format = JSONConstants.CV_NAME_TYPE, values = "JSONConstants.ENUM_NAMETYPE")

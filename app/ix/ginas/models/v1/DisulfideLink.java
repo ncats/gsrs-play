@@ -11,13 +11,13 @@ import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import ix.ginas.models.GinasCommonSubData;
+import ix.ginas.models.GinasCommonSimplifiedSubData;
 
 
 @SuppressWarnings("serial")
 @Entity
 @Table(name="ix_ginas_disulfide")
-public class DisulfideLink extends GinasCommonSubData {
+public class DisulfideLink extends GinasCommonSimplifiedSubData {
 //    @ManyToMany(cascade=CascadeType.ALL)
 //    @JoinTable(name="ix_ginas_disulfide_site")
 //    public List<Site> sites = new ArrayList<Site>();

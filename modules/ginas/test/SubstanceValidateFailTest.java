@@ -1,24 +1,23 @@
-import static org.fest.assertions.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static play.mvc.Http.Status.OK;
 import static play.test.Helpers.running;
 import static play.test.Helpers.stop;
 import static play.test.Helpers.testServer;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -39,20 +38,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SubstanceValidateFailTest extends WithApplication {
 
     private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
-	private static long timeout= 10000L;;
+	private static long timeout= 10000L;
     
     @Parameters(name="{1}")
     static public Collection<Object[]> findstuff(){
     	List<Object[]> mylist  =  new ArrayList<Object[]>();
     	
-    	File folder=null;
-    	try{
-    		folder = new File("test/testJSON/fail");
-    	}catch(Exception e){
-    		
-    		e.printStackTrace();
-    		throw new IllegalStateException(e);
-    	}
+    	File folder= new File("test/testJSON/fail");
+
     	assertTrue(folder.exists());
     	for(File s:folder.listFiles()){
     		if(s.getName().endsWith(".json")){
@@ -63,37 +56,36 @@ public class SubstanceValidateFailTest extends WithApplication {
     }
 
     File resource;
+
+    @Rule
+    public GinasTestServer ts = new GinasTestServer(9001);
+
+
     public SubstanceValidateFailTest(File f, String dummy){
     	this.resource=f;
     }
-        
+
+
     @Test
     public void testAPIValidateSubstance() {
-    	TestServer ts=testServer(9001);
-        running(ts, new Runnable() {
-            public void run() {
-				try (InputStream is=new FileInputStream(resource);){
-					JsonNode js=null;
-					js = (new ObjectMapper()).readTree(is);
-	            	Logger.info("Running: " + resource);
-	                WSResponse wsResponse1 = WS.url(SubstanceValidateFailTest.VALIDATE_URL).post(js).get(timeout);
-	                JsonNode jsonNode1 = wsResponse1.asJson();
-	                assertThat(wsResponse1.getStatus()).isEqualTo(OK);
-	                assertThat(!jsonNode1.isNull()).isEqualTo(true);
-	                assertThat(jsonNode1.get("valid").asBoolean()).isEqualTo(false);
+    	ts.run(new Callable<Void>() {
+            public Void call() throws IOException {
+                try (InputStream is = new FileInputStream(resource)) {
+                    JsonNode js = new ObjectMapper().readTree(is);
+                    Logger.info("Running: " + resource);
+                    WSResponse wsResponse1 = ts.validateSubstance(js);
+                    JsonNode jsonNode1 = wsResponse1.asJson();
+                    assertEquals(OK, wsResponse1.getStatus());
+                    assertFalse(jsonNode1.isNull());
+                    assertFalse(jsonNode1.get("valid").asBoolean());
 
-				} catch (Exception e1) {
-					throw new IllegalStateException(e1);
-				}             	
+                    return null;
+                }
             }
+
         });
-        
-        stop(ts);
+
     }
     
-    @AfterClass
-    public static void tearDown(){
-        // Stop the server
-       // stop(testServer);
-    }
+
 }

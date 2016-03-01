@@ -1,5 +1,7 @@
 package ix.core.controllers.v1;
 
+import be.objectify.deadbolt.java.actions.Dynamic;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -19,11 +21,17 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.NamedResource;
 import ix.core.NamedResourceFilter;
+import ix.core.UserFetcher;
+import ix.core.controllers.AdminFactory;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.UserProfileFactory;
 import ix.core.controllers.search.SearchFactory;
 import ix.core.models.Acl;
+import ix.core.models.Group;
 import ix.core.models.Namespace;
 import ix.core.models.Principal;
+import ix.core.models.Role;
+import ix.core.models.UserProfile;
 import ix.utils.Global;
 import play.Logger;
 import play.Play;
@@ -259,6 +267,20 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
     
+    public static Result approveUUID (String context, String id) {
+        try {
+            Method m = getMethod (context, "approve", UUID.class);
+            if (m != null)
+                return (Result)m.invoke(null, EntityFactory.toUUID(id));
+        }
+        catch (Exception ex) {
+            Logger.trace("["+context+"]", ex);
+            return internalServerError (context);
+        }
+        Logger.warn("Context {} has no method edits(UUID)",context);
+        return badRequest ("Unknown Context: \""+context+"\"");
+    }
+    
     public static Result field (String context, Long id, String field) {
         try {
             Method m = getMethod (context, "field", Long.class, String.class);
@@ -409,5 +431,64 @@ public class RouteFactory extends Controller {
         response().setHeader("Access-Control-Max-Age", "300");          // Cache response for 5 minutes
         response().setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");         // Ensure this header is also allowed!  
         return ok();
+    }
+    
+    
+    
+    
+    public static Result profile(){
+    	UserProfile p=UserFetcher.getActingUserProfile();
+    	if(p!=null){
+    		ObjectMapper om=new ObjectMapper();
+        	return ok(om.valueToTree(p));	
+    	}
+    	return notFound("No user logged in");
+    }
+    
+    public static Result profileResetKey(){
+    	UserProfile p=UserFetcher.getActingUserProfile();
+    	if(p!=null){
+    		p.regenerateKey();
+    		p.save();
+    		ObjectMapper om=new ObjectMapper();
+        	return ok(om.valueToTree(p));	
+    	}
+    	return notFound("No user logged in");
+    }
+    
+    
+    //@Dynamic(value = "isAdmin", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	public static Result addFakeUsers(){
+    	if(Play.isTest()){
+    		List<UserProfile> ups = new ArrayList<UserProfile>();
+    		Group g=AdminFactory.groupfinder.where().eq("name", "fake").findUnique();
+    		if(g==null){
+	    		g=new Group("fake");
+	    		
+		    	List<Role.Kind> rolekind = new ArrayList<Role.Kind>();
+		    			rolekind.add(Role.Kind.SuperUpdate);
+		    	List<Group> groups = new ArrayList<Group>();
+		    			groups.add(g);
+		    	
+		    	try{
+			    	UserProfile up1= UserProfileFactory.addActiveUser("fakeuser1","madeup1",rolekind,groups);
+			    	UserProfile up2= UserProfileFactory.addActiveUser("fakeuser2","madeup2",rolekind,groups);
+			    	ups.add(up1);
+			    	ups.add(up2);
+		    	}catch(Exception e){
+		    		e.printStackTrace();
+		    	}
+    		}else{
+    			for(Principal p: g.members){
+    				ups.add(UserProfileFactory.getUserProfileForPrincipal(p));
+    			}
+    		}
+	    	ObjectMapper om = new ObjectMapper();
+	        
+	        //flash("success", " " + requestData.get("username") + " has been created");
+        	return ok(om.valueToTree(ups));
+    	}else{
+    		return badRequest ("Unknown Context: \"@deleteme\"");
+    	}
     }
 }

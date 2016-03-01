@@ -87,10 +87,10 @@ do{
   $startResponse = $ua->request($startReq);
   $tries++;
   print "$tries\n";
-}while($tries < 10 && $startResponse->is_error());
+}while($tries < 50 && $startResponse->is_error());
 
 if($startResponse->is_error()){
-	die "could not connect to ginas ", $startReq->status_line, "\n";
+	die "could not connect to ginas ", $startReq->status_line(), "\n";
 }
 
 my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
@@ -141,6 +141,8 @@ my $records = getValue($jsonResponse, "recordsPersistedSuccess");
 
 my $workspace = $ENV{'WORKSPACE'};
 my $jobName = $ENV{'JOB_NAME'};
+
+
 
 my $baseDir = "$workspace/deploy_metrics";
 make_path($baseDir);
