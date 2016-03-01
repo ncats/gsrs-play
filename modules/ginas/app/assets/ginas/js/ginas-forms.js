@@ -1055,6 +1055,7 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/nucleic-acid-sugar-form.html",
             link: function (scope, attrs, element) {
+                console.log(scope);
                 scope.sugar = {};
 
                 if (!scope.parent.nucleicAcid.sugars) {

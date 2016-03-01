@@ -5,9 +5,10 @@
         <substance-view  subref= subref></substance-view>
     </div>
 </a>
-    <div ng-show="!subref"  id="{{field}}">
+    <div ng-show="!subref" name="{{field}}" id="{{field}}">
         <div ng-if = "type==='search'">
-        <a ng-click ="toggleStage()" uib-tooltip="search for substance"><i class="fa fa-search fa-2x"></i></a>
+        <a ng-click ="toggleStage()" uib-tooltip="search for substance" aria-label="Search"><span class="sr-only">Search ginas</span>
+            <i class="fa fa-search fa-2x" aria-label="Search"></i></a>
         </div>
         <substance-typeahead subref = "subref"></substance-typeahead>
         </div>

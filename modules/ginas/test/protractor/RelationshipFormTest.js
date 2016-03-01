@@ -15,6 +15,7 @@ var WizardRelationshipPage = function () {
     this.formElements = {
         formName: 'relationshipForm',
         buttonID: 'relationships',
+        formObj: 'relationship',
         fields: [{
             model: 'relationship.relatedSubstance',
             type: 'substance-chooser'
@@ -28,22 +29,24 @@ var WizardRelationshipPage = function () {
             model: 'relationship.agentSubstance',
             type: 'substance-chooser'
         },{
-            model: 'relationship-access',
+            model: 'access',
             type: 'form-selector'
         }, {
-            model: 'relationship-reference',
+            model: 'reference',
             type: 'form-selector'
         }
         ]
     }
 };
 
-describe ('name form', function() {
+describe ('Relationship form', function() {
 
     var WizRelPage = new WizardRelationshipPage();
-    it('name form tests', function () {
+    it('Relationship form tests', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
+        var breadcrumb =['relationships-toggle'];
+        elements.testInputFields(WizRelPage.formElements, breadcrumb);
        /* var buttonId = WizRelPage.formElements.buttonID;
         var formElements = WizRelPage.formElements.fields;
 

@@ -15,13 +15,13 @@ var WizardNamePage = function () {
     //validation on duplicates
     //testing of name resolver function
     //required fields
-    
+
 
     this.formElements = {
-       // pageUrl: '/ginas/app/wizard?kind=chemical',
+        // pageUrl: '/ginas/app/wizard?kind=chemical',
         formName: 'nameForm',
         buttonId: 'names',
-        formObj:'name',
+        formObj: 'name',
         fields: [{
             model: 'name.name',
             type: 'text-input'
@@ -37,42 +37,50 @@ var WizardNamePage = function () {
         }, {
             model: 'name.preferred',
             type: 'check-box'
-        }, {
+        }/*,{
+         model: 'name.domains',
+         type: 'multi-select'
+         }, {
+         model: 'name.nameJurisdiction',
+         type: 'multi-select'
+         }, {
+         model: 'name.nameOrgs',
+         type: 'form-selector'
+         }*/
+        ]
+    };
+
+    this.subForms = {
+        formName: 'nameForm',
+        buttonId: 'names',
+        formObj: 'name',
+        fields: [{
             model: 'reference',
             type: 'form-selector'
         }, {
             model: 'access',
             type: 'form-selector'
-        }/*,{
-            model: 'name.domains',
-            type: 'multi-select'
-        }, {
-            model: 'name.nameJurisdiction',
-            type: 'multi-select'
-        }, {
-            model: 'name.nameOrgs',
-            type: 'form-selector'
-        }*/
+        }
         ]
     }
 };
 
-describe ('name form test', function() {
+describe('name form test', function () {
 
     var wizardNamePage = new WizardNamePage();
-    beforeEach(function() {
+    beforeEach(function () {
         wizardNamePage.getPage();
     });
 
-    it('should see if form is visible', function(){
+    it('should see if form is visible', function () {
         var vis = browser.findElement(By.id('addNameForm')).isDisplayed();
         expect(vis).toBe(false)
     });
 
-    it('should test form toggling', function(){
+    it('should test form toggling', function () {
         var buttonId = wizardNamePage.formElements.buttonId;
         var vis = browser.findElement(By.id('addNameForm')).isDisplayed();
-        var button = browser.findElement(By.id(buttonId+"-toggle"));
+        var button = browser.findElement(By.id(buttonId + "-toggle"));
         expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(false);
         button.click();
         expect(browser.findElement(By.id('addNameForm')).isDisplayed()).toBe(true);
@@ -82,11 +90,18 @@ describe ('name form test', function() {
     });
 
 
-    it('name form tests', function () {
+    it('should test all basic form elements', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        var breadcrumb =['names-toggle'];
-         elements.testInputFields(wizardNamePage.formElements, breadcrumb);
+        var breadcrumb = ['names-toggle'];
+        elements.testInputFields(wizardNamePage.formElements, breadcrumb);
+    });
+
+    it('should test subforms', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var breadcrumb = ['names-toggle'];
+        elements.testInputFields(wizardNamePage.subForms, breadcrumb);
     });
 });
 

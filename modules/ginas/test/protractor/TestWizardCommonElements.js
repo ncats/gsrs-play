@@ -30,8 +30,8 @@ var WizardCommonElements = function () {
         var elementId = model.split(".")[1];
         console.log("text-area-elementId: " + elementId);
         var userInput = element(by.id(elementId));
-/*        userInput.sendKeys('testing');
-        expect(userInput.getAttribute('value')).toEqual('testing');*/
+        userInput.clear().sendKeys('testing');
+        expect(userInput.getAttribute('value')).toEqual('testing');
     };
 
     this.testDropdownSelectInput = function (model) {
@@ -121,7 +121,7 @@ var WizardCommonElements = function () {
                 this.getPage();
             if(breadcrumb) {
                 for (var j = 0; j < breadcrumb.length; j++) {
-                    console.log(breadcrumb[0]);
+                    console.log(breadcrumb[j]);
                     var button = browser.findElement(By.id(breadcrumb[j]));
                     button.click();
                 }
@@ -151,24 +151,33 @@ var WizardCommonElements = function () {
                     break;
                 case "form-selector":
                     var parentFormBtn = elements.buttonId +"-toggle";
-                    var newFormToggleBtn = elements.formObj +"-" + model;
+                    console.log("elements.formObj");
+                    console.log(elements.formObj);
                     if(breadcrumb.length == 0 ) {
-                        breadcrumb = [parentFormBtn, newFormToggleBtn];
-                    }else{
-                    breadcrumb.push(newFormToggleBtn);
+                        breadcrumb = [parentFormBtn];
                     }
                     switch(model){
                         case 'access':
+                            console.log("breadcrumb");
+                            var newFormToggleBtn = elements.formObj +"-" + model;
+                            breadcrumb.push(newFormToggleBtn);
+                            console.log(breadcrumb);
+
                             var accessElementTests = require('./AccessFormTest.js');
                             var accessPage = new accessElementTests;
                             this.testInputFields(accessPage.formElements, breadcrumb);
                             break;
                         case 'reference':
+                            console.log("reference breadcrumb");
+                            var newFormToggleBtn = elements.formObj +"-" + model;
+                            breadcrumb.push(newFormToggleBtn);
+                            console.log(breadcrumb);
                             var refElementTests = require('./ReferenceFormTest.js');
                             var refPage = new refElementTests;
                             this.testInputFields(refPage.formElements, breadcrumb);
                             break;
                         case 'comments':
+
                             var commentElementTests = require('./CommentFormTest.js');
                             var commentPage = new commentElementTests;
                             this.testInputFields(commentPage.formElements, breadcrumb);

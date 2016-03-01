@@ -1,7 +1,7 @@
 (function () {
     var tagsInput = angular.module('ngTagsInput', []);
 
-    var ginasApp = angular.module('ginas', ['ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
+    var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch'
     ]).
         run(['$anchorScroll', function ($anchorScroll) {
@@ -1278,7 +1278,9 @@
                 };
 
                 scope.parseSubunit = function () {
-                    console.log(scope.obj.sequence);
+                    if(!_.has(scope.parent, '$$subunitDisplay')) {
+                        _.set(scope.parent, '$$subunitDisplay', []);
+                    }
                     scope.obj.$$cysteineIndices = [];
                     var display = [];
                     _.forEach(scope.obj.sequence, function (aa, index) {
@@ -1340,8 +1342,10 @@
                         display.push(obj);
                     });
                     display = _.chunk(display, 10);
-                    _.set(scope.obj, '$$subunitDisplay', display);
                     console.log(scope);
+                    scope.parent.$$subunitDisplay.push(display);
+
+                   // _.set(scope.obj, '$$subunitDisplay', display);
                 };
 
                 scope.highlight = function(acid){
@@ -1645,18 +1649,18 @@
                 scope.stage = true;
                 switch (attrs.type) {
                     case "upload":
-                        template = angular.element(' <a href = "#" aria-label="Export" uib-tooltip ="Upload" structureid=structureid format=format export><i class="fa fa-upload fa-2x"></i></a>');
+                        template = angular.element(' <a aria-label="Upload" uib-tooltip ="Upload" structureid=structureid format=format export><span class="sr-only">Upload Data</span><i class="fa fa-upload fa-2x"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         break;
                     case "import":
-                        template = angular.element(' <a href = "#" aria-label="Import" uib-tooltip ="Import" ng-click="getImport()"><i class="fa fa-clipboard fa-2x success"></i></a>');
+                        template = angular.element(' <a aria-label="Import" uib-tooltip ="Import" ng-click="getImport()"><span class="sr-only">Import Data</span><i class="fa fa-clipboard fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         templateUrl= baseurl + "assets/templates/modals/mol-import.html";
                         break;
                     case "export":
-                        template = angular.element(' <a href = "#" aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "getExport()"><i class="fa fa-external-link fa-2x success"></i></a>');
+                        template = angular.element(' <a aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "getExport()"><span class="sr-only">Export Data</span><i class="fa fa-external-link fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
                         templateUrl= baseurl + "assets/templates/modals/mol-export.html";

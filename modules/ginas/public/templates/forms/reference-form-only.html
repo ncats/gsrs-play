@@ -33,8 +33,9 @@
                     <br>
                     {{uploadFile.name}}
                     <br>
-                    <button ng-hide ="ref.uploadedFile || !uploadFile" class ="btn btn-default" ng-click ="submitFile();"><i class="fa fa-upload"></i></button>
-                    <button ng-show ="ref.uploadedFile" class ="btn btn-success" disabled><i class="fa fa-check"></i></button>
+                    <button ng-hide ="ref.uploadedFile || !uploadFile" class ="btn btn-default" ng-click ="submitFile();"><span class="sr-only">Upload File</span><i class="fa fa-upload"></i></button>
+                    <button ng-show ="ref.uploadedFile" class ="btn btn-success" disabled><span class="sr-only">File Uploaded</span>
+                        <i class="fa fa-check"></i></button>
                 </div>
                     </ng-form>
             </div>

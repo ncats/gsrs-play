@@ -13,8 +13,8 @@ var CodeForm = function () {
 
     this.formElements = {
         formName: 'codeForm',
-        buttonId:'codes',
-        formObj:'code',
+        buttonId: 'codes',
+        formObj: 'code',
         fields: [{
             model: 'code.codeSystem',
             type: 'dropdown-select'
@@ -27,7 +27,14 @@ var CodeForm = function () {
         }, {
             model: 'code.url',
             type: 'text-input'
-        }, {
+        }]
+    };
+
+    this.subForms = {
+        formName: 'codeForm',
+        buttonId: 'codes',
+        formObj: 'code',
+        fields: [{
             model: 'comments',
             type: 'form-selector'
         }, {
@@ -37,25 +44,25 @@ var CodeForm = function () {
             model: 'reference',
             type: 'form-selector'
         }]
-    }
+    };
 };
 
-describe ('Code form test', function() {
+describe('Code form test', function () {
 
     var codeForm = new CodeForm();
-    beforeEach(function() {
+    beforeEach(function () {
         codeForm.getPage();
     });
 
-    it('should see if form is visible', function(){
+    it('should see if form is visible', function () {
         var vis = browser.findElement(By.id('addCodeForm')).isDisplayed();
         expect(vis).toBe(false)
     });
 
-    it('should test form toggling', function(){
+    it('should test form toggling', function () {
         var buttonId = codeForm.formElements.buttonId;
         var vis = browser.findElement(By.id('addCodeForm')).isDisplayed();
-        var button = browser.findElement(By.id(buttonId+"-toggle"));
+        var button = browser.findElement(By.id(buttonId + "-toggle"));
         expect(browser.findElement(By.id('addCodeForm')).isDisplayed()).toBe(false);
         button.click();
         expect(browser.findElement(By.id('addCodeForm')).isDisplayed()).toBe(true);
@@ -65,11 +72,18 @@ describe ('Code form test', function() {
     });
 
 
-    it('code form tests', function () {
+    it('should test all basic form elements', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        var breadcrumb =['codes-toggle'];
+        var breadcrumb = ['codes-toggle'];
         elements.testInputFields(codeForm.formElements, breadcrumb);
+    });
+
+    it('should test all subforms', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var breadcrumb = ['codes-toggle'];
+        elements.testInputFields(codeForm.subForms, breadcrumb);
     });
 });
 

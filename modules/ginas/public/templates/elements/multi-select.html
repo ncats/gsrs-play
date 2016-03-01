@@ -1,5 +1,5 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">{{label || field}}</label>
+    <label id ="tags-label" for="{{label}}" class="text-capitalize">{{label || field}}</label>
     <tags-input custom-class="form-control" title="{{field}}" placeholder="{{field}}" id="{{field}}" name="{{label}}"
                 ng-model="obj" ng-blur="editing(obj[field]);" display-property="display" key-property="value"
                 addFromAutocompleteOnly="true" max-tags={{max}}>
