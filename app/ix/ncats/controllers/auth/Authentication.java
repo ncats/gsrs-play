@@ -1,33 +1,20 @@
 package ix.ncats.controllers.auth;
 
-import java.io.*;
 import java.util.*;
-import java.sql.*;
-import java.net.*;
 import java.util.concurrent.Callable;
-import java.util.logging.*;
 
-import be.objectify.deadbolt.core.models.Permission;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import ix.core.EntityProcessor;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.controllers.UserProfileFactory;
 import ix.core.models.*;
 import play.*;
 import play.Logger;
-import play.api.mvc.Request;
 import play.db.ebean.*;
-import play.data.*;
 import play.mvc.*;
 
 import com.avaje.ebean.*;
 
 import ix.core.plugins.IxCache;
-import ix.core.plugins.IxContext;
-import ix.ncats.models.Employee;
 import ix.utils.Util;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -464,7 +451,7 @@ public class Authentication extends Controller {
 		
 		for(UserProfile profile:  _profiles.findList()){
 			for(Role r:profile.getRoles()){
-				if(r.role == Role.Kind.Admin){
+				if(r == Role.Admin){
 					return profile;
 				}
 			}

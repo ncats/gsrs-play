@@ -1,11 +1,7 @@
-@import ix.core.models.UserProfile
-@import ix.core.models.Role
-@import ix.core.models.Role.Kind
-@import ix.core.models.Acl
+@import ix.core.models.{Acl, UserProfile, Role}
 @import ix.core.controllers.AdminFactory
 @import helper._
-
-@(id: Long, userForm: UserProfile, roleList: List[Role.Kind], permList: List[String], grpList: List[String], appContext: String)
+@(id: Long, userForm: UserProfile, roleList: List[Role], permList: List[String], grpList: List[String], appContext: String)
 
 @implicitFieldConstructor = @{ FieldConstructor(ix.ncats.views.html.admin.twitterBootstrapInput.render) }
 

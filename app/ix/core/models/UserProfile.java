@@ -17,7 +17,6 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import be.objectify.deadbolt.core.models.Permission;
 import be.objectify.deadbolt.core.models.Subject;
 import ix.core.controllers.AdminFactory;
 import ix.utils.Util;
@@ -69,9 +68,9 @@ public class UserProfile extends IxModel implements Subject {
     }
 
     /*
-    public List<Role.Kind> getRolesKinds(){
+    public List<Role> getRoles(){
     	List<Role> roles=AdminFactory.rolesByPrincipal(user); 	//roles;
-    	List<Role.Kind> rkind = new ArrayList<Role.Kind>();
+    	List<Role> rkind = new ArrayList<Role>();
     	if(roles==null || roles.isEmpty()){
     		
     	}else{
@@ -82,29 +81,29 @@ public class UserProfile extends IxModel implements Subject {
     	}
         return rkind;
     }
-    public void addRoleKind(Role.Kind role){
-    	List<Role.Kind> roles=getRolesKinds();
+    public void addRole(Role role){
+    	List<Role> roles=getRoles();
     	roles.add(role);
-    	setRoleKinds(new ArrayList<Role.Kind>(new LinkedHashSet<Role.Kind>(roles)));
+    	setRoleKinds(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
     }
     
-    public void setRoleKinds(List<Role.Kind> rolekinds){
+    public void setRoleKinds(List<Role> rolekinds){
     	List<Role> tempRoles=new ArrayList<Role>();
-    	for(Role.Kind rk:rolekinds){
+    	for(Role rk:rolekinds){
     		tempRoles.add(new Role(rk));
     	}
     	AdminFactory.updateRolesF(this.id, tempRoles);
     }
     */
-    public List<Role.Kind> getRolesKinds(){
-    	List<Role.Kind> rolekinds=new ArrayList<Role.Kind>();
+    public List<Role> getRoles(){
+    	List<Role> rolekinds=new ArrayList<Role>();
     	if(this._roles!=null){
     		try{
 	    		ObjectMapper om = new ObjectMapper();
 	    		List l=om.readValue(_roles, List.class);
 	    		for(Object o:l){
 	    			try{
-	    				rolekinds.add(Role.Kind.valueOf(o.toString()));
+	    				rolekinds.add(Role.valueOf(o.toString()));
 	    			}catch(Exception e){
 	    				e.printStackTrace();
 	    			}
@@ -117,26 +116,18 @@ public class UserProfile extends IxModel implements Subject {
         return rolekinds;
     }
     
-    public void addRoleKind(Role.Kind role){
-    	List<Role.Kind> roles=getRolesKinds();
+    public void addRole(Role role){
+    	List<Role> roles=getRoles();
     	roles.add(role);
-    	setRoleKinds(new ArrayList<Role.Kind>(new LinkedHashSet<Role.Kind>(roles)));
+    	setRoles(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
     }
     
-    public void setRoleKinds(List<Role.Kind> rolekinds){
+    public void setRoles(List<Role> rolekinds){
     	ObjectMapper om = new ObjectMapper();
     	_roles=om.valueToTree(rolekinds).toString();
     }
     
-    @JsonIgnore
-    public List<Role> getRoles(){
-    	List<Role.Kind> rkinds=getRolesKinds();
-    	List<Role> roles=new ArrayList<Role>();
-    	for(Role.Kind rk:rkinds){
-    		roles.add(new Role(rk));
-    	}
-    	return roles;
-    }
+
     
     
     @Override

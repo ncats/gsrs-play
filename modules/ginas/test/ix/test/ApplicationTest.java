@@ -1,33 +1,17 @@
 package ix.test;
+import ix.core.models.Role;
 import ix.core.models.Group;
 import ix.core.models.Principal;
-import ix.core.models.Role;
 import ix.core.models.UserProfile;
-import ix.ginas.controllers.GinasFactory;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import play.api.mvc.Content;
-import play.libs.ws.WS;
-import play.libs.ws.WSResponse;
-import play.mvc.Result;
-import play.test.Helpers;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.fest.assertions.Assertions.assertThat;
-import static play.mvc.Http.Status.OK;
-import static play.test.Helpers.*;
-
 
 
 /**
@@ -79,7 +63,7 @@ public class ApplicationTest  {
         // Create and train mock repository
         UserProfile mockProfile = mock(UserProfile.class);
         List<Role> roles = new ArrayList<Role>();
-        roles.add(new Role(Role.Kind.Admin));
+        roles.add(Role.Admin);
         when(mockProfile.getRoles()).thenReturn(roles);
         assertTrue(!mockProfile.getRoles().isEmpty());
         verify(mockProfile).getRoles();

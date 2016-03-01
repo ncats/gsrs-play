@@ -6,6 +6,7 @@ import be.objectify.deadbolt.core.models.Subject;
 import be.objectify.deadbolt.java.AbstractDynamicResourceHandler;
 import be.objectify.deadbolt.java.DeadboltHandler;
 import be.objectify.deadbolt.java.DynamicResourceHandler;
+import ix.core.models.Role;
 import play.Logger;
 import play.Play;
 import play.mvc.Http;
@@ -33,7 +34,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                         boolean allowed=false;
                         DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
 
-                        if (analyzer.hasRole(subject, ix.core.models.Role.Kind.Admin.toString())) {
+                        if (analyzer.hasRole(subject, Role.Admin.toString())) {
                             allowed = true;
                         }
                         return allowed;
@@ -41,19 +42,19 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                 });
         HANDLERS.put("canApprove",
         		new SimpleRoleDynamicResourceHandler(
-        				ix.core.models.Role.Kind.Updater,
-        				ix.core.models.Role.Kind.SuperUpdate
+        				Role.Updater,
+        				Role.SuperUpdate
         				));
         HANDLERS.put("canRegister",
                 new SimpleRoleDynamicResourceHandler(
-                		ix.core.models.Role.Kind.DataEntry,
-                		ix.core.models.Role.Kind.SuperDataEntry
+                		Role.DataEntry,
+                		Role.SuperDataEntry
                 		));
     }
     
     public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{
-    	ix.core.models.Role.Kind[] roles; 
-    	public SimpleRoleDynamicResourceHandler(ix.core.models.Role.Kind... kind){
+    	Role[] roles;
+    	public SimpleRoleDynamicResourceHandler(Role... kind){
     		roles=kind;
     	}
     	public boolean isAllowed(final String name,
@@ -72,7 +73,7 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
 				
 				DeadboltAnalyzer analyzer = new DeadboltAnalyzer();
 				
-				for(ix.core.models.Role.Kind k:roles){
+				for(Role k:roles){
 					if (analyzer.hasRole(subject, k.toString())) {
 						allowed = true;
 						//System.out.println("Got it");

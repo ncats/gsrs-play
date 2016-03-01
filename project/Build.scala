@@ -165,7 +165,8 @@ public class BuildInfo {
       libraryDependencies  += "junit" % "junit" % "4.11" % Test,
       libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test,
       javacOptions ++= javaBuildOptions,
-      javaOptions in Test += "-Dconfig.file=conf/ginas.conf"
+      javaOptions in Test += "-Dconfig.file=conf/ginas.conf",
+    cleanFiles += file("modules/ginas/ginas.ix")
   ).dependsOn(ncats).aggregate(ncats)
 
 

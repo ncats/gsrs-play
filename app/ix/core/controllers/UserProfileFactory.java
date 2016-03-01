@@ -3,15 +3,11 @@ package ix.core.controllers;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ix.core.NamedResource;
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import play.db.ebean.Model;
-import play.mvc.Result;
 
 /* TODO: make this a resource eventually
 @NamedResource(name="users",
@@ -30,7 +26,7 @@ public class UserProfileFactory extends EntityFactory {
 	}
 	
 	//@Dynamic(value = "adminUser", handlerKey = "idg")
-    public static UserProfile addActiveUser(String username, String password, List<Role.Kind> rolesCheckeda,List<Group> groupsChecked ) {
+    public static UserProfile addActiveUser(String username, String password, List<Role> rolesCheckeda, List<Group> groupsChecked ) {
         Principal newUser = new Principal();
         newUser.username =username;
         
@@ -47,7 +43,7 @@ public class UserProfileFactory extends EntityFactory {
             prof = new UserProfile(newUser);
             prof.active = true;
             prof.setPassword(password);
-            prof.setRoleKinds(rolesCheckeda);
+            prof.setRoles(rolesCheckeda);
             
             for (Group g : groupsChecked) {
                 if(g.id != null) {

@@ -1,11 +1,7 @@
 package ix.core.controllers;
 
-import ix.core.models.Acl;
-import ix.core.models.Group;
-import ix.core.models.Namespace;
-import ix.core.models.Principal;
+import ix.core.models.*;
 import ix.core.models.Role;
-import ix.core.models.UserProfile;
 import ix.ncats.controllers.auth.Authenticator;
 import ix.utils.Util;
 
@@ -15,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.commons.codec.digest.DigestUtils;
 
 import play.Logger;
 import play.Play;
