@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,10 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.diff.JsonDiff;
+import util.json.Change;
+import util.json.Changes;
+import util.json.ChangesBuilder;
+import util.json.JsonUtil;
 
 import static org.junit.Assert.*;
 
@@ -41,28 +46,37 @@ public class EditingWorkflowTest {
                 	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
                 	
                 	//register and store returned
-                	{
-	                	InputStream is=new FileInputStream(resource);
+                	try(InputStream is=new FileInputStream(resource)){
 	                	entered= new ObjectMapper().readTree(is);
 	                    uuid=entered.get("uuid").asText();
 	                    returned = ts.submitSubstanceJSON(entered);
                 	}
                 	
                 	//fetch registered
-                	{
-                		fetched = ts.fetchSubstanceJSON(uuid);
-                	}
+
+					fetched = ts.fetchSubstanceJSON(uuid);
+
                 	String oldName="TRANSFERRIN ALDIFITOX S EPIMER";
                 	String newName="TRANSFERRIN ALDIFITOX S EPIMER CHANGED";
                 	String oldVersion="1";
                 	String newVersion="2";
                 	//make name change
                 	{
-                		updated=fetched.deepCopy();
-                		Map edited = (new ObjectMapper()).treeToValue(updated, Map.class);
+
+                		Map edited = (new ObjectMapper()).treeToValue(fetched, Map.class);
                 		((Map)((List)(edited.get("names"))).get(0)).put("name", newName);
                 		updated=(new ObjectMapper()).valueToTree(edited);
-                		JsonNode jp = JsonDiff.asJson(fetched,updated);
+
+						Changes changes = JsonUtil.getDestructiveChanges(fetched, updated);
+
+
+						Map<String, Change> changesMap = new HashMap<String, Change>();
+						changesMap.put("/names/0/name", new Change("/names/0/name", oldName, newName, Change.ChangeType.REPLACED));
+
+						Changes expectedChanges = new Changes(changesMap);
+
+						assertEquals(expectedChanges, changes);
+						/*JsonNode jp = JsonDiff.asJson(fetched,updated);
 	                    int changes=0;
 	                    
 	                    for(JsonNode jschange: jp){
@@ -73,6 +87,7 @@ public class EditingWorkflowTest {
 	                    	assertEquals(jschange.get("value").asText(),newName);
 	                    }
 	                    assertTrue(changes==1);
+	                    */
                 	}
                 	
                 	//submit edit

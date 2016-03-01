@@ -1,9 +1,8 @@
 package util.json;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+
+
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,5 +74,39 @@ public class Changes {
         return "Changes{" +
                 "changes=" + changes +
                 '}';
+    }
+
+    public Changes intersection(Changes actual) {
+        Set<Change> copy = new HashSet<>(changes.values());
+        copy.retainAll(actual.changes.values());
+
+        return toChanges(copy);
+
+    }
+
+    private Changes toChanges(Set<Change> copy) {
+        Map<String, Change> map = new HashMap<>(copy.size());
+        for(Change c: copy){
+            map.put(c.getKey(), c);
+        }
+        return new Changes(map);
+    }
+
+    public Changes union(Changes actual) {
+        Map<String, Change> map = new HashMap<>(changes);
+        map.putAll(actual.changes);
+
+        return new Changes(map);
+    }
+
+    public Changes diff(Changes other){
+        Changes union = union(other);
+        Changes intersecion = intersection(other);
+
+        Set<Change> v = new HashSet<>(union.changes.values());
+        v.removeAll(intersecion.changes.values());
+
+        return toChanges(v);
+
     }
 }

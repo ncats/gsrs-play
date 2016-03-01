@@ -186,7 +186,7 @@ public class JsonUtilTest {
 
         JsonNode name = a.path("name");
         //value is full path so has leading slash for root
-        expected.put("/name", new Change("/name", name, null, Change.ChangeType.REMOVED));
+        expected.put("/name", new Change("/name", name.asText(), null, Change.ChangeType.REMOVED));
 
         assertEquals(new Changes(expected), changes);
     }
@@ -207,7 +207,7 @@ public class JsonUtilTest {
 
         Map<String, Change> expected = new HashMap<>();
 
-        JsonNode name = a.path("name");
+        String name = a.path("name").asText();
         //value is full path so has leading slash for root
         expected.put("/name", new Change("/name",null, name, Change.ChangeType.ADDED));
 
@@ -234,116 +234,62 @@ public class JsonUtilTest {
 
     @Test
     public void getChanges() throws IOException {
-    	
-    	// TP:Sorry for direct file access. It seems the resource as stream
-    	// pieces are coming up as either empty or null.
-    	// The direct file path reference pieces are used elsewhere for the same
-    	// reason. Be nice to clean up, but this passes the tests.
-    	
-    	File b4f= new File("test/util/json/OLD_JSON.js");
-    	File aft= new File("test/util/json/New_JSON.js");
-        try(InputStream inBefore = new FileInputStream(b4f);
-        	InputStream inAfter = new FileInputStream(aft);
-        ){
-        	
-        	
+
+        // TP:Sorry for direct file access. It seems the resource as stream
+        // pieces are coming up as either empty or null.
+        // The direct file path reference pieces are used elsewhere for the same
+        // reason. Be nice to clean up, but this passes the tests.
+        File b4f = new File("test/util/json/OLD_JSON.js");
+        File aft = new File("test/util/json/New_JSON.js");
+        try (InputStream inBefore = new FileInputStream(b4f);
+             InputStream inAfter = new FileInputStream(aft);
+        ) {
+
+
             JsonNode before = mapper.readTree(inBefore);
             JsonNode after = mapper.readTree(inAfter);
 
             ChangeFilter createdFilter = ChangeFilters.keyMatches("created");
             ChangeFilter lastEditedFilter = ChangeFilters.keyMatches("lastEdited");
             ChangeFilter selfFilter = ChangeFilters.keyMatches("_self");
+            ChangeFilter uuidFilter = ChangeFilters.keyMatches("uuid");
             ChangeFilter blankOrNullFilter = ChangeFilters.nullOrBlankValues();
 
             Changes changes = JsonUtil.getDestructiveChanges(before, after,
-                                        createdFilter, lastEditedFilter, selfFilter, blankOrNullFilter);
+                    createdFilter, lastEditedFilter, selfFilter, blankOrNullFilter,uuidFilter,
+                    ChangeFilters.filterOutType(Change.ChangeType.REPLACED));
 
             Changes expected = new ChangesBuilder(before, after)
-                                
-                                .removed("/names/6/references/1")
 
-                                .added("/names/0/uuid")
-                                .added("/names/1/uuid")
-                                .added("/names/2/uuid")
-                                .added("/names/3/uuid")
-                                .added("/names/4/uuid")
-                                .added("/names/5/uuid")
-                                .added("/names/6/uuid")
+                    .removed("/names/6/references/1")
 
-                                .build();
+                    .added("/names/0/uuid")
+                    .added("/names/1/uuid")
+                    .added("/names/2/uuid")
+                    .added("/names/3/uuid")
+                    .added("/names/4/uuid")
+                    .added("/names/5/uuid")
+                    .added("/names/6/uuid")
+
+                    .build();
 
 
 
-            assertEquals(expected, changes);
+
+            assertChangesEqual(expected, changes);
         }
     }
 
-    private static class ChangesBuilder{
-        private static Pattern IS_NUMERIC_PATTERN = Pattern.compile("^\\d+$");
-        private Map<String, Change> map = new HashMap<>();
-
-        private final JsonNode before, after;
-
-        public ChangesBuilder(JsonNode before, JsonNode after) {
-            this.before = before;
-            this.after = after;
-        }
-        public ChangesBuilder added(String key){
-            return change(key, Change.ChangeType.ADDED);
-        }
-        public ChangesBuilder removed(String key){
-            return change(key, Change.ChangeType.REMOVED);
-        }
-        public ChangesBuilder change(String key, Change.ChangeType type){
-            String[] path = key.split("/");
-            JsonNode currentBefore= null;
-            JsonNode currentAfter=null;
-            switch(type){
-                case ADDED: currentAfter=after; break;
-                case REMOVED: currentBefore = before; break;
-                case REPLACED:
-                    currentAfter = after;
-                    currentBefore = before;
-                    break;
-                default:
-                    //shouldn't happen unless we add a new type
-                    //and forget to add it to switch
-                    throw new IllegalStateException("unknown type "+type);
-
-            }
 
 
-            map.put(key,new Change(key,getNodeFromPath(currentBefore, path),
-                    getNodeFromPath(currentAfter, path),
-                    type));
+    private void assertChangesEqual(Changes expected, Changes actual){
 
-            return this;
+        if(!expected.equals(actual)){
+            throw new AssertionError(expected.diff(actual));
 
-        }
-
-        private JsonNode getNodeFromPath(JsonNode root, String[] path) {
-            JsonNode current= root;
-            if(current !=null) {
-                //paths start with leading '/' so skip that?
-                for (int i = 1; i < path.length; i++) {
-                    String fieldName = path[i];
-                    Matcher m = IS_NUMERIC_PATTERN.matcher(fieldName);
-                    if (m.matches()) {
-                        //array ref
-                        current = current.get(Integer.parseInt(fieldName));
-                    } else {
-                        current = current.get(path[i]);
-                    }
-                }
-            }
-            return current;
-        }
-
-        public Changes build(){
-            //copy map so future changes don't affect already built objs
-            return new Changes(new HashMap<>(map));
         }
     }
+
 
 
 

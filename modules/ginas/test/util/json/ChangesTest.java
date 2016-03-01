@@ -120,7 +120,7 @@ public class ChangesTest {
 
 
         private ChangesBuilder change(String key, JsonNode before, JsonNode after, Change.ChangeType type){
-            map.put(key, new Change(key,before,  after, type));
+            map.put(key, new Change(key,before ==null  ? null :before.asText(), after==null? null:  after.asText(), type));
 
             return this;
 

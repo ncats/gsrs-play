@@ -16,10 +16,10 @@ public class Change {
     }
 
     private final String key;
-    private final JsonNode newValue, oldValue;
+    private final String newValue, oldValue;
     private final ChangeType type;
 
-    public Change(String key, JsonNode oldValue, JsonNode newValue, ChangeType type) {
+    public Change(String key, String oldValue, String newValue, ChangeType type) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(type);
 
@@ -36,11 +36,11 @@ public class Change {
         return key;
     }
 
-    public JsonNode getNewValue() {
+    public String getNewValue() {
         return newValue;
     }
 
-    public JsonNode getOldValue() {
+    public String getOldValue() {
         return oldValue;
     }
 

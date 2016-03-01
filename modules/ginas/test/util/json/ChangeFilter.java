@@ -5,4 +5,5 @@ package util.json;
  */
 public interface ChangeFilter {
     boolean filterOut(Change change);
+
 }

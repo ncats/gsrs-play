@@ -23,15 +23,27 @@ public class ChangeFilters {
         };
     }
 
+
+
+    public static ChangeFilter filterOutType(final Change.ChangeType type){
+        return new ChangeFilter(){
+
+            @Override
+            public boolean filterOut(Change change) {
+                return type ==change.getType();
+            }
+        };
+    }
+
     public static ChangeFilter nullOrBlankValues() {
         return new ChangeFilter() {
             @Override
             public boolean filterOut(Change change) {
-                JsonNode newValue = change.getNewValue();
-                if(newValue ==null){
-                    return true;
+                String value = change.getNewValue();
+                if(value ==null){
+                    value = change.getOldValue();;
                 }
-                String value = newValue.textValue();
+
                 return value==null || value.trim().isEmpty();
             }
         };
