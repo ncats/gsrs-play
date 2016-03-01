@@ -26,10 +26,10 @@ DELETE	/cache/*key	ix.ncats.controllers.App.cacheDelete(key: String)
 GET	 /statistics/:kind	ix.ncats.controllers.App.statistics(kind: String)
 
 # authentication
-GET	/login	ix.ncats.controllers.auth.Authentication.login(url: String ?= null)
-GET	/logout	ix.ncats.controllers.auth.Authentication.logout
-POST	/login	ix.ncats.controllers.auth.Authentication.authenticate(url: String ?= null)
-GET	/session	ix.ncats.controllers.auth.Authentication.secured
+GET	/login	ix.ncats.controllers.auth.NCATSAuthentication.login(url: String ?= null)
+GET	/logout	ix.ncats.controllers.auth.NCATSAuthentication.logout
+POST	/login	ix.ncats.controllers.auth.NCATSAuthentication.authenticate(url: String ?= null)
+GET	/session	ix.ncats.controllers.auth.NCATSAuthentication.secured
 
 # user adminitsration
 GET    /admin/users	ix.ncats.controllers.crud.Administration.listPrincipals(page: Int ?= 1, soryBy: String ?= null, order: String ?= null, filter: String ?= null )

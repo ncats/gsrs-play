@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.jsonpatch.diff.JsonDiff;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -52,9 +53,11 @@ import com.avaje.ebean.annotation.Transactional;
 import com.avaje.ebean.event.BeanPersistListener;
 import com.avaje.ebean.bean.*;
 
+import ix.core.UserFetcher;
 import ix.core.ValidationMessage;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.ETag;
 import ix.core.models.ETagRef;
 import ix.core.models.Edit;
@@ -167,7 +170,9 @@ public class EntityFactory extends Controller {
 
 
     static public class EntityMapper extends ObjectMapper {
-        
+        public static EntityMapper FULL_ENTITY_MAPPER(){
+        	return new EntityMapper(BeanViews.Full.class);
+        }
         public EntityMapper (Class<?>... views) {
             configure (MapperFeature.DEFAULT_VIEW_INCLUSION, true);
             _serializationConfig = getSerializationConfig();
@@ -236,8 +241,9 @@ public class EntityFactory extends Controller {
             
         public EditHistory (String payload) throws Exception {
             edit = new Edit ();
-            edit.path = request().uri(); // must be in a context
+            edit.path = null; 
             edit.newValue = payload;
+           
         }
 
         public void add (Edit e) { edits.add(e); }
@@ -437,12 +443,15 @@ public class EntityFactory extends Controller {
         return q.toString();
     }
 
+    
+    
     static public EntityMapper getEntityMapper () {
         List<Class> views = new ArrayList<Class>();
 
         Map<String, String[]> params = request().queryString();
         String[] args = params.get("view");
         if (args != null) {
+        	
             Class[] classes = BeanViews.class.getClasses();
             for (String a : args) {
                 int matches = 0;
@@ -840,7 +849,7 @@ public class EntityFactory extends Controller {
         }
 
         try {
-            ObjectMapper mapper = new ObjectMapper ();
+            EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
             mapper.addHandler(new DeserializationProblemHandler () {
                     public boolean handleUnknownProperty
                         (DeserializationContext ctx, JsonParser parser,
@@ -875,7 +884,7 @@ public class EntityFactory extends Controller {
             inst.save();
 	        
 
-            return created (mapper.valueToTree(inst));
+            return created (mapper.toJson(inst));
         }
         catch (Exception ex) {
             return internalServerError (ex.getMessage());
@@ -1420,34 +1429,58 @@ public class EntityFactory extends Controller {
         return updateEntity (json, type, null);
     }
 
+    /*
+     * Ok, at the most fundamental level, assuming all changes come only through this method,
+     * then we just need to store the old JSON, and the new.
+     * 
+     */
     protected static Result updateEntity (JsonNode json, Class<?> type, Validator validator ) {
-        EntityMapper mapper = getEntityMapper ();       
+        EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();  
         Transaction tx = Ebean.beginTransaction();
         try {       
-            Object value = mapper.treeToValue(json, type);
+            Object newValue = mapper.treeToValue(json, type);
             if(validator!=null){
 	            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
-	            if(!validator.validate(value,validationMessages)){
+	            if(!validator.validate(newValue,validationMessages)){
 	            	return validationResponse(false, validationMessages);
 	            }
             }
+
+            FetchedValue previousValContainer=getCurrentValue(newValue);
+            String oldJSON=mapper.toJson(previousValContainer.value);
+            
             EditHistory eh = new EditHistory (json.toString());
-            value = instrument (eh, value, json);
             
-            if (value != null) {
-                Object id = getId (value);
-                eh.edit.refid = id != null ? id.toString() : null;
-                eh.edit.kind = value.getClass().getName();
-                eh.edit.save();
-                for (Edit e : eh.edits()) {
-                    e.batch = eh.edit.id.toString();
-                    e.save();
-                }
-                Logger.debug("** New edit history "+eh.edit.id);
+            
+            //this saves and everything
+            EntityPersistAdapter.storeEditForUpdate(previousValContainer.getValueClass(), previousValContainer.id, eh.edit);
+            newValue = instrument (eh, newValue, json);
+            String newJSON=mapper.toJson(newValue);
+            
+            if (newValue != null) {
+            	//for now, we won't use this form of edithistory
+            	if(true){
+	                Object id = getId (newValue);
+	                eh.edit.refid = id != null ? id.toString() : null;
+	                eh.edit.kind = newValue.getClass().getName();
+	                eh.edit.oldValue=oldJSON;
+	                eh.edit.newValue=newJSON;
+	                eh.edit.save();
+	                for (Edit e : eh.edits()) {
+	                    e.batch = eh.edit.id.toString();
+	                    e.save();
+	                }
+	                Logger.debug("** New edit history "+eh.edit.id);
+            	}
+            	
+            	
+               
             }
-            tx.commit();
+            //Should this really be here?
+            //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
             
-            return ok (mapper.valueToTree(value));          
+            tx.commit();
+            return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1583,9 +1616,194 @@ public class EntityFactory extends Controller {
                      +" context="+ebi.getPersistenceContext());
     }
 
+    /**
+     * Ok, this method seems overly complicated. What it's doing is recursively
+     * going through and saving each property. That sounds fine, but it causes a 
+     * lot of problems elsewhere.
+     * 
+     * For example, because this is a depth-first traversal, the individual elements
+     * will be changed before the parent is. Elsewhere, in a postUpdate hook, each model
+     * tries to save its full serialized version before and after update. So consider
+     * the following:
+     * 
+     * OLD value:
+     * {
+     *  version:1,
+     * 	names:[
+     * 		{
+     * 			"name":"oldname"
+     * 		}
+     *  ]
+     * }
+     * 
+     * NEW value:
+     * {
+     *  version:2,
+     * 	names:[
+     * 		{
+     * 			"name":"newname"
+     * 		}
+     *  ]
+     * }
+     * 
+     * This code will save the "newname" change at '/names/0/' before saving '/'.
+     * Then, when the postUpdate hook is called on the parent ('/'), it will fetch
+     * the value before update and store it. In this case, that value will still 
+     * point to the "newname" updated object. 
+     * 
+ * 
+     * Another problem is that this method uses reflection, and trusts that the POJO
+     * are roughly what they need to be for updating. With advanced getters/setters,
+     * this may cause problems.
+     * 
+     * @param eh
+     * @param value
+     * @param json
+     * @return
+     * @throws Exception
+     */
     protected static Object instrument
-        (EditHistory eh, Object value, JsonNode json) throws Exception {
-        Class cls = value.getClass();
+    (EditHistory eh, Object value, JsonNode json) throws Exception {
+    	FetchedValue fv=getCurrentValue(value);
+    	Class cls;
+    	Object xval;
+    	Object id;
+    	
+	    cls=fv.getValueClass();
+	    id=fv.id;
+	    xval=fv.value;
+	    
+	    /*
+	    if(xval!=null){
+		    EntityMapper om = EntityMapper.FULL_ENTITY_MAPPER();
+		    JsonNode o=om.valueToTree(xval);
+		    JsonNode n=om.valueToTree(fv.value);
+		    JsonNode jp = JsonDiff.asJson(o,n);
+			for(JsonNode jschange: jp){
+		    	System.out.println("#READ CHANGE:" + jschange + " old:" + o.at(jschange.get("path").asText()));
+		
+		    }
+	    }*/
+	    //xval=fv.value;
+    
+    
+    
+    
+    if (xval == null) {
+    	((Model)value).save();
+        id = getId (value);
+        Logger.debug("<<< " + id);
+        
+        Edit e = new Edit (value.getClass(), id);
+        ObjectMapper mapper = new ObjectMapper ();
+        e.newValue = mapper.writeValueAsString(value);
+        eh.add(e);
+        return value;
+    }else{
+    	
+    }
+
+    eh.attach(xval);
+
+    // now sync up val and value
+    Map<Field, Object> values = new HashMap<Field, Object>();
+    for (Field f : cls.getFields()) {
+        JsonProperty prop = f.getAnnotation(JsonProperty.class);
+        JsonNode node = json.get(prop != null ? prop.value() : f.getName());
+
+        Class type = f.getType();       
+        Logger.debug("field \""+f.getName()+"\"["+type
+                     +"] valid="+isValid(f)
+                     +" node="+node);            
+        if (!isValid (f) || node == null)
+            continue;
+        
+        Object v = f.get(value);
+        if (v != null) {
+            if (type.getAnnotation(Entity.class) != null) {
+                setValue (xval, f, instrument (eh, v, node));
+            }
+            else if (type.isArray()) {
+                Class<?> t = type.getComponentType();
+                if (t.getAnnotation(Entity.class) != null) {
+                    int len = Array.getLength(v);
+                    Object vv = f.get(xval);
+                    if (vv != null && Array.getLength(vv) > 0) {
+                        Logger.debug("$$ TODO: handle array properly!");
+                    }
+                    else {
+                        Object vals = Array.newInstance(t, len);
+                        for (int i = 0; i < len; ++i) {
+                            Object xv = Array.get(v, i);
+                            Array.set(vals, i,
+                                      instrument (eh, xv, node.get(i)));
+                        }
+                        setValue (xval, f, vals);
+                    }
+                }
+                else {
+                    // just copy over
+                    setValue (xval, f, v);
+                }
+            }
+            else if (Collection.class.isAssignableFrom(type)) {
+                Collection col = (Collection)v;
+                //Logger.debug("Enter Collection.."+col.size());
+                if (!col.isEmpty()) {
+                    Class t = getComponentType (f.getGenericType());
+                    //Logger.debug("..component type "+t);
+                    if (t.getAnnotation(Entity.class) != null) {
+                        Collection xcol = (Collection)f.get(xval);
+                        if (xcol == null) {
+                            setValue (xval, f, xcol = new ArrayList ());
+                        }
+                        // update the list wholesale..
+                        xcol.clear();
+                        
+                        int i = 0;
+                        for (Iterator it = col.iterator();
+                             it.hasNext(); ++i) {
+                            Object xv = it.next();
+                            Logger.debug(i+": "+xv+" <=> "+node.get(i));
+                            xv = instrument (eh, xv, node.get(i));
+                            xcol.add(xv);
+                        }
+                    }
+                    else {
+                        setValue (xval, f, v);
+                    }
+                }
+            }
+            else {
+                setValue (xval, f, v);
+            }
+        }
+    }
+    ((Model)xval).update();
+    Logger.debug("<<< "+id);
+    eh.detach(xval);
+    
+    return xval;
+}
+    public static class FetchedValue{
+    	public Object value;
+    	public Object id;
+    	public Class cls;
+    	
+    	public FetchedValue(Object val, Object id, Class cls){
+    		this.value=val;
+    		this.id=id;
+    		this.cls=cls;
+    	}
+    	
+    	public Class getValueClass(){
+    		return cls;
+    	}
+    	
+    }
+    
+    private static FetchedValue getCurrentValue(Object value) throws Exception{
+    	Class cls = value.getClass();
         if (cls.getAnnotation(Entity.class) == null)
             throw new IllegalArgumentException
                 ("Class "+cls.getName()+" is not an entity");
@@ -1628,105 +1846,7 @@ public class EntityFactory extends Controller {
         else {
             xval = finder.byId(id);
         }
-
-        Logger.debug(">>> "+id+" <=> "+value+" json="+json);
-        debugBean (xval);
-        
-        if (xval == null) {
-        	((Model)value).save();
-            id = getId (value);
-            Logger.debug("<<< " + id);
-            
-            Edit e = new Edit (value.getClass(), id);
-            ObjectMapper mapper = new ObjectMapper ();
-            e.newValue = mapper.writeValueAsString(value);
-            eh.add(e);
-            return value;
-        }else{
-        	
-        }
-
-        eh.attach(xval);
-
-        // now sync up val and value
-        Map<Field, Object> values = new HashMap<Field, Object>();
-        for (Field f : cls.getFields()) {
-            JsonProperty prop = f.getAnnotation(JsonProperty.class);
-            JsonNode node = json.get(prop != null ? prop.value() : f.getName());
-
-            Class type = f.getType();       
-            Logger.debug("field \""+f.getName()+"\"["+type
-                         +"] valid="+isValid(f)
-                         +" node="+node);            
-            if (!isValid (f) || node == null)
-                continue;
-            
-            Object v = f.get(value);
-            if (v != null) {
-                if (type.getAnnotation(Entity.class) != null) {
-                    setValue (xval, f, instrument (eh, v, node));
-                }
-                else if (type.isArray()) {
-                    Class<?> t = type.getComponentType();
-                    if (t.getAnnotation(Entity.class) != null) {
-                        int len = Array.getLength(v);
-                        Object vv = f.get(xval);
-                        if (vv != null && Array.getLength(vv) > 0) {
-                            Logger.debug("$$ TODO: handle array properly!");
-                        }
-                        else {
-                            Object vals = Array.newInstance(t, len);
-                            for (int i = 0; i < len; ++i) {
-                                Object xv = Array.get(v, i);
-                                Array.set(vals, i,
-                                          instrument (eh, xv, node.get(i)));
-                            }
-                            setValue (xval, f, vals);
-                        }
-                    }
-                    else {
-                        // just copy over
-                        setValue (xval, f, v);
-                    }
-                }
-                else if (Collection.class.isAssignableFrom(type)) {
-                    Collection col = (Collection)v;
-                    //Logger.debug("Enter Collection.."+col.size());
-                    if (!col.isEmpty()) {
-                        Class t = getComponentType (f.getGenericType());
-                        //Logger.debug("..component type "+t);
-                        if (t.getAnnotation(Entity.class) != null) {
-                            Collection xcol = (Collection)f.get(xval);
-                            if (xcol == null) {
-                                setValue (xval, f, xcol = new ArrayList ());
-                            }
-                            // update the list wholesale..
-                            xcol.clear();
-                            
-                            int i = 0;
-                            for (Iterator it = col.iterator();
-                                 it.hasNext(); ++i) {
-                                Object xv = it.next();
-                                Logger.debug(i+": "+xv+" <=> "+node.get(i));
-                                xv = instrument (eh, xv, node.get(i));
-                                xcol.add(xv);
-                            }
-                        }
-                        else {
-                            setValue (xval, f, v);
-                        }
-                    }
-                }
-                else {
-                    setValue (xval, f, v);
-                }
-            }
-        }
-        ((Model)xval).update();
-        Logger.debug("<<< "+id);
-        eh.detach(xval);
-        
-        return xval;
+        return new FetchedValue(xval,id,cls);
     }
     
     protected static Object getJsonValue 

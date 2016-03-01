@@ -364,38 +364,37 @@ public class Validation {
 	}
 	private static boolean validateCodes(Substance s,List<GinasProcessingMessage> gpm, GinasProcessingStrategy strat ){
 	        List<Code> remnames = new ArrayList<Code>();
-	        for(Code n : s.codes){
-	            if(n == null){
+	        for(Code cd : s.codes){
+	            if(cd == null){
 	                GinasProcessingMessage mes=GinasProcessingMessage.WARNING_MESSAGE("Null code objects are not allowed").appliableChange(true);
 	                gpm.add(mes);
 	                strat.processMessage(mes);
 	                if(mes.actionType==GinasProcessingMessage.ACTION_TYPE.APPLY_CHANGE){
-	                    remnames.add(n);
+	                    remnames.add(cd);
 	                    mes.appliedChange=true;
 	                }
 	            }else{
-	            	if(n.code==null){
+	            	if(cd.code==null){
 		            	GinasProcessingMessage mes=GinasProcessingMessage.ERROR_MESSAGE("'Code' should not be null in code objects").appliableChange(true);
 		                gpm.add(mes);
 		                strat.processMessage(mes);
 		            }
 	            }
-	            if(!validateReferenced(s,n,gpm,strat,ReferenceAction.FAIL)){
+	            if(!validateReferenced(s,cd,gpm,strat,ReferenceAction.FAIL)){
 	            	return false;
 	            }
 	            
 	        }
 	        s.codes.removeAll(remnames);
-	        for(Code n : s.codes){
-	        	
+	        for(Code cd : s.codes){
 	        	try{
-	            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstancesWithExactCode(100, 0, n.code, n.codeSystem);
+	            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstancesWithExactCode(100, 0, cd.code, cd.codeSystem);
 	            if(sr!=null && !sr.isEmpty()){
 	                Substance s2=sr.iterator().next();
 	                if(!s2.uuid.toString().equals(s.uuid.toString())){
 	                    GinasProcessingMessage mes = GinasProcessingMessage
 	                        .WARNING_MESSAGE("Code '"
-	                                         + n.code
+	                                         + cd.code
 	                                         + "' collides with existing code & codeSystem for substance:").addSubstanceLink(s2);
 	                    gpm.add(mes);
 	                    strat.processMessage(mes);
@@ -478,10 +477,10 @@ public class Validation {
         }
     	return gpm;
     }
-    public static List<GinasProcessingMessage> validateSequenceDuplicates(ProteinSubstance cs){
+    public static List<GinasProcessingMessage> validateSequenceDuplicates(ProteinSubstance proteinsubstance){
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
     	try {
-    		for(Subunit su : cs.protein.subunits){
+    		for(Subunit su : proteinsubstance.protein.subunits){
     			Payload payload = _payload.createPayload
                         ("Sequence Search", "text/plain", su.sequence);
 	            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getNearCollsionProteinSubstancesToSubunit(10, 0, su);
@@ -489,7 +488,8 @@ public class Validation {
 	                int dupes=0;
 	                GinasProcessingMessage mes=null;
 	                for(Substance s:sr){
-	                    if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
+	                    if(proteinsubstance.uuid==null || !s.uuid.toString().equals(proteinsubstance.uuid.toString())){
+	                    	
 	                    	if(dupes<=0){
 	                    		mes=GinasProcessingMessage.WARNING_MESSAGE("There is 1 substance with a similar sequence to subunit [" + su.subunitIndex + "]:");
 	                    		Link l = new Link();

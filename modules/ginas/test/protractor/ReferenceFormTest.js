@@ -13,11 +13,12 @@ var WizardReferencePage = function () {
     };
 ///reference apply needs its own functionality check
     //upload file needs separate testing
-    //this form is not clooapsible, it is tolggled by the form selector directive
+    //this form is not collapsible, it is toggled by the form selector directive
 
     this.formElements = {
         formName: 'refForm',
-       // buttonId: 'references',
+        buttonId: 'references',
+        formObj: 'reference',
         fields: [{
             model: 'reference.citation',
             type: 'text-input'
@@ -25,18 +26,18 @@ var WizardReferencePage = function () {
             model: 'reference.docType',
             type: 'dropdown-select'
         }, {
-            model: 'ref.tags',
+            model: 'reference.tags',
             type: 'multi-select'
         }, {
-            model: 'ref.url',
+            model: 'reference.url',
             type: 'text-input'
-        },/* {
-            model: 'ref.access',
-            type: 'form-selector'
-        }, {
-            binding: 'ref.uploadedFile',
-            type: 'binding'
-        }*/]
+/*        },{
+            model: 'access',
+            type: 'form-selector'*/
+/*        }, {
+            binding: 'reference.uploadedFile',
+            type: 'binding'*/
+        }]
     };
 };
 

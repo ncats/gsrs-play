@@ -47,19 +47,19 @@ import play.Logger;
 @Inheritance
 @DiscriminatorValue("SUB")
 public class Substance extends GinasCommonData {
+
+	public static final boolean REMOVE_INVALID_RELATIONSHIPS = false;
+	private static final String DEFAULT_NO_NAME = "NO_NAME";
+	
 	private static final String DOC_TYPE_PROPERTY_IMPORT = "PROPERTY_IMPORT";
 	public static final String ALTERNATE_SUBSTANCE_REL = "SUBSTANCE->SUB_ALTERNATE";
 	public static final String PRIMARY_SUBSTANCE_REL = "SUB_ALTERNATE->SUBSTANCE";
-
-	private static final String DEFAULT_NO_NAME = "NO_NAME";
-
+	
 	private static final String DOC_TYPE_BATCH_IMPORT = "BATCH_IMPORT";
+	public static final String STATUS_APPROVED = "approved";
+	public static final String STATUS_PENDING = "pending";
 
-	public static final boolean REMOVE_INVALID_RELATIONSHIPS = false;
-
-	/**
-	 * sigh.. can we be at least case-consistent?
-	 */
+	
 	public enum SubstanceClass {
 		chemical, 
 		protein, 
@@ -89,7 +89,7 @@ public class Substance extends GinasCommonData {
 	public SubstanceClass substanceClass;
 
 	@Indexable(suggest = true, facet = true, name = "Record Status")
-	public String status = "PENDING";
+	public String status = STATUS_PENDING;
 	public String version = "1";
 	
 
@@ -166,7 +166,15 @@ public class Substance extends GinasCommonData {
 	@JoinTable(name = "ix_ginas_substance_tag")
 	@JsonSerialize(using = KeywordListSerializer.class)
 	@JsonDeserialize(using = TagListDeserializer.class)
-	public List<Keyword> tags = new ArrayList<Keyword>();
+	private List<Keyword> tags = new ArrayList<Keyword>();
+	
+	public void addTag(Keyword tag){
+		for(Keyword k:tags){
+			if(k.getValue().equals(tag.getValue()))return;
+		}
+		tags.add(tag);
+	}
+	
 
 	@Transient
 	protected transient ObjectMapper mapper = new ObjectMapper();
@@ -399,7 +407,7 @@ public class Substance extends GinasCommonData {
 	
 	@JsonIgnore
 	public boolean isValidated(){
-		return this.status.equalsIgnoreCase("Approved");
+		return this.status.equalsIgnoreCase(STATUS_APPROVED);
 	}
 
 	@JsonProperty("_approvalIDDisplay")
@@ -558,6 +566,11 @@ public class Substance extends GinasCommonData {
 		r.citation = property;
 		r.documentDate = new Date();
 		n.addReference(r);
+		for(Note oldNote:this.notes){
+			if(oldNote.note.equals(n.note)){
+				return null;
+			}
+		}
 		this.references.add(r);
 		this.notes.add(n);
 		return n;
@@ -571,7 +584,7 @@ public class Substance extends GinasCommonData {
 
 	@JsonIgnore
 	public String getDisplayStatus(){
-		if("approved".equalsIgnoreCase(status)){
+		if(STATUS_APPROVED.equalsIgnoreCase(status)){
 			return "Validated (UNII)";
 		}
 		return status;
@@ -604,14 +617,20 @@ public class Substance extends GinasCommonData {
 	public List<SubstanceReference> getDependsOnSubstanceReferences(){
 		
 		List<SubstanceReference> srefs=new ArrayList<SubstanceReference>();
-		
-		for(AgentModification am:this.getModifications().agentModifications){
-			if(am.agentSubstance!=null)
-				srefs.add(am.agentSubstance);
-		}
-		for(StructuralModification sm:this.getModifications().structuralModifications){
-			if(sm.molecularFragment!=null)
-				srefs.add(sm.molecularFragment);
+		Modifications m=this.getModifications();
+		if(m!=null){
+			if(m.agentModifications!=null){
+				for(AgentModification am:m.agentModifications){
+					if(am.agentSubstance!=null)
+						srefs.add(am.agentSubstance);
+				}
+			}
+			if(m.structuralModifications!=null){
+				for(StructuralModification sm:m.structuralModifications){
+					if(sm.molecularFragment!=null)
+						srefs.add(sm.molecularFragment);
+				}
+			}
 		}
 		return srefs;
 	}

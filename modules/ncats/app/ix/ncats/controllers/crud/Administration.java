@@ -1,23 +1,16 @@
 package ix.ncats.controllers.crud;
 
-import be.objectify.deadbolt.java.actions.Dynamic;
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.Transaction;
-import com.fasterxml.jackson.databind.JsonNode;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
 import ix.core.models.*;
 import ix.ncats.controllers.App;
 import ix.ncats.controllers.routes;
-import play.Logger;
 import play.Play;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.db.ebean.Model;
 import play.mvc.Result;
-import play.mvc.Controller;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,7 +72,7 @@ public class Administration extends App {
 
         for (String key : requestData.data().keySet()) {
             if (key.contains("r-")) {
-                Role r = new Role(Role.Kind.valueOf(requestData.data().get(key)));
+                Role r = Role.valueOf(requestData.data().get(key));
                 rolesChecked.add(r);
             }
 
@@ -104,10 +97,7 @@ public class Administration extends App {
             prof = new UserProfile(newUser);
             prof.active = Boolean.parseBoolean(requestData.get("active"));
             prof.setPassword(requestData.get("password"));
-            for (Role r : rolesChecked) {
-                r.principal = newUser;
-                r.save();
-            }
+            prof.setRoles(rolesChecked);
 
             for (Acl p : aclsChecked) {
                 p.principals.add(newUser);
@@ -153,13 +143,13 @@ public class Administration extends App {
 
         for (String key : requestData.data().keySet()) {
             if (key.contains("r-")) {
-                Role r = new Role(Role.Kind.valueOf(requestData.data().get(key)));
+                Role r = Role.valueOf(requestData.data().get(key));
                 selectedRoles.add(r);
             }
 
             if (key.contains("p-")) {
                 String permName = requestData.data().get(key);
-                Acl perm = AdminFactory.aclFinder.where().eq("Permission", Acl.Permission.valueOf(permName)).findUnique();
+                Acl perm = AdminFactory.aclFinder.where().eq("Acl", Acl.Permission.valueOf(permName)).findUnique();
                 if(perm == null) {
                     perm = new Acl(Acl.Permission.valueOf(permName));
                 }
@@ -186,9 +176,10 @@ public class Administration extends App {
             
         }
         profile.active = Boolean.parseBoolean(active);
+        profile.setRoles(selectedRoles);
         AdminFactory.updateGroups(user.id, selectedGroups);
         AdminFactory.updatePermissions(user.id, selectedPerms);
-        AdminFactory.updateRoles(user.id, selectedRoles);
+        //AdminFactory.updateRoles(user.id, selectedRoles);
         profile.save();
 
         flash("success", " " + userName + " has been updated");
@@ -199,8 +190,14 @@ public class Administration extends App {
         Principal user = AdminFactory.palFinder.byId(id);
         UserProfile up = _profiles.where().eq("user.username", user.username).findUnique();
         up.user = user;
-        return ok(ix.ncats.views.html.admin.edituser.render(id, up, AdminFactory.roleNamesByPrincipal(user), AdminFactory.aclNamesByPrincipal(user),
-                AdminFactory.groupNamesByPrincipal(user), appContext));
+        return ok(ix.ncats.views.html.admin.edituser.render(
+        		id, 
+        		up,
+        		up.getRoles(),
+        		AdminFactory.aclNamesByPrincipal(user),
+                AdminFactory.groupNamesByPrincipal(user), 
+                appContext
+                ));
     }
 
     public static Result deletePrincipal(Long id) {

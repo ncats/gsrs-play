@@ -1,6 +1,6 @@
 <div>
     <label for="{{name}}-{{field}}" class="text-capitalize">{{label || field}}</label><br>
-    <a href="#" ng-click="edit= !edit" ng-show="!edit">{{obj[field]}}</a>
+    <a ng-click="edit= !edit" ng-show="!edit">{{obj[field]}}</a>
         <input ng-show="!obj[field] || edit" type="text" class="form-control" ng-model=obj[field] ng-blur="edit = !edit" ng-model-options="{ debounce: 500 }"
                placeholder ="{{label || field}}" title="{{field}}" id="{{name}}-{{field}}" name="{{field}}"/>
 </div>
