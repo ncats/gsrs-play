@@ -14,6 +14,7 @@ use LWP::UserAgent;
 
 sub getOldPid($);
 sub getValue($$);
+sub toString($);
 
 my @files = glob('modules/ginas/target/universal/*.zip');
 #should only be one file
@@ -90,8 +91,11 @@ do{
 }while($tries < 10 && $startResponse->is_error());
 
 if($startResponse->is_error()){
-	die "could not connect to ginas ", $startReq->status_line(), "\n";
+my $stdErr = toString($abs_path . "/daemon.err");
+	die "could not connect to ginas ", $startReq->status_line(), "\nSTDERR=\n", $stdErr;
 }
+
+
 
 my $ginasFileDump = "modules/ginas/test/testdumps/rep90.ginas";
 
@@ -142,6 +146,8 @@ my $records = getValue($jsonResponse, "recordsPersistedSuccess");
 my $workspace = $ENV{'WORKSPACE'};
 my $jobName = $ENV{'JOB_NAME'};
 
+
+
 my $baseDir = "$workspace/deploy_metrics";
 make_path($baseDir);
 open(RECORD_OUT, ">$baseDir/records.properties")|| die "can not open output file: $!";
@@ -166,7 +172,16 @@ sub getValue($$){
 	
 }
 
+sub toString($){
+    open my $fh, "<", shift;
+    my $buf="";
 
+    while(<$fh>){
+        $buf .= $_;
+    }
+    close $fh;
+    return $buf;
+}
 
 sub getOldPid($){
 	my $dir = shift;
