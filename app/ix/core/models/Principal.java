@@ -5,6 +5,7 @@ import be.objectify.deadbolt.core.models.Subject;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
+import ix.core.controllers.UserProfileFactory;
 import play.data.validation.Constraints.*;
 
 import java.util.List;
@@ -37,6 +38,7 @@ public class Principal extends IxModel {
     public Figure selfie;
 
     public Principal () {}
+    
     public Principal (boolean admin) {
         this.admin = admin;
     }
@@ -55,6 +57,11 @@ public class Principal extends IxModel {
     @JsonIgnore
     public String toString(){
     	return username;
+    }
+    
+    @JsonIgnore
+    public UserProfile getUserProfile(){
+    	return UserProfileFactory.getUserProfileForPrincipal(this);
     }
 
     public boolean isAdmin () { return admin; }

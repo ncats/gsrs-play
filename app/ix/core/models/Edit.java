@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.JsonNodeDeserializer;
 
+import ix.core.UserFetcher;
 import ix.utils.Global;
 
 @Entity
@@ -53,6 +54,18 @@ public class Edit extends Model {
     public Edit (Class<?> type, Object refid) {
         this.kind = type.getName();
         this.refid = refid.toString();
+    }
+    
+    @PrePersist
+    public void preCommit(){
+    	this.editor=UserFetcher.getActingUser();
+    }
+    
+    
+    
+    public String getEditor(){
+    	if(editor==null)return null;
+    	return editor.username;
     }
     
     public String getOldValue () {

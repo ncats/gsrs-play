@@ -1,3 +1,4 @@
+package ix.test;
 import ix.ginas.controllers.GinasFactory;
 import org.junit.After;
 import org.junit.Before;

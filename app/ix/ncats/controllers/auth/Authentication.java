@@ -1,37 +1,25 @@
 package ix.ncats.controllers.auth;
 
-import java.io.*;
 import java.util.*;
-import java.sql.*;
-import java.net.*;
 import java.util.concurrent.Callable;
-import java.util.logging.*;
-
-import be.objectify.deadbolt.core.models.Permission;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ix.core.controllers.AdminFactory;
 import ix.core.controllers.PrincipalFactory;
+import ix.core.controllers.UserProfileFactory;
 import ix.core.models.*;
 import play.*;
 import play.Logger;
-import play.api.mvc.Request;
 import play.db.ebean.*;
-import play.data.*;
 import play.mvc.*;
 
 import com.avaje.ebean.*;
 
 import ix.core.plugins.IxCache;
-import ix.core.plugins.IxContext;
-import ix.ncats.models.Employee;
 import ix.utils.Util;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
-import ix.ncats.controllers.NIHLdapConnector;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -40,12 +28,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 
 public class Authentication extends Controller {
-    public static final String SESSION = "ix.session";
     public static final String APP = Play.application()
             .configuration().getString("ix.app", "MyApp");
+    public static final String SESSION = "ix.session";
     public static final int TIMEOUT = 1000 * Play.application()
             .configuration().getInt(SESSION, 7200); // session idle
 
+    
     static Model.Finder<UUID, Session> _sessions =
             new Model.Finder<UUID, Session>(UUID.class, Session.class);
     static Model.Finder<Long, UserProfile> _profiles =
@@ -54,7 +43,15 @@ public class Authentication extends Controller {
     private static Cache tokenCache=null;
     private static Cache tokenCacheUserProfile=null;
     private static long lastCacheUpdate=-1;
+
+    static ix.core.plugins.SchedulerPlugin scheduler =
+            Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
+
     
+    static{
+    	setupCache();
+    	
+    }
     
     public static void setupCache(){
     	String CACHE_NAME="TOKEN_CACHE";
@@ -79,7 +76,11 @@ public class Authentication extends Controller {
         tokenCacheUserProfile= new Cache (configUp);
         CacheManager.getInstance().addCache(tokenCacheUserProfile);     
         tokenCacheUserProfile.setSampledStatisticsEnabled(true);
+        lastCacheUpdate=-1;
+        
     }
+    
+    
     public static void setupCacheIfNeccessary(){
     	if(tokenCache==null){
     		setupCache();
@@ -92,35 +93,14 @@ public class Authentication extends Controller {
     	}
     	
     }
-    static{
-    	setupCache();
-    }
-    
-    
 
-    public static class Secured extends Security.Authenticator {
-        @Override
-        public String getUsername(Http.Context ctx) {
-            return ctx.session().get(SESSION);
-        }
-
-        @Override
-        public Result onUnauthorized(Http.Context ctx) {
-            return redirect(routes.Authentication.login(null));
-        }
-    }
-
-    public static boolean loginUserFromHeader(){
-    	return loginUserFromHeader();
-    }
     public static boolean loginUserFromHeader(Http.Request r){
-    	
 		try {
 			if(r==null){
 				r=request();
 			}
 			if (Play.application().configuration()
-					.getBoolean("ix.authentication.trustheader")) {
+					    .getBoolean("ix.authentication.trustheader")) {
 				String usernameheader = Play.application().configuration()
 						.getString("ix.authentication.usernameheader");
 				String usernameEmailheader = Play.application().configuration()
@@ -157,14 +137,17 @@ public class Authentication extends Controller {
     }
     
     public static boolean allowNonAuthenticated(){
-    	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true) ||
-    			Play.application().configuration().getBoolean("ix.admin",false);
+    	return Play.application().configuration().getBoolean("ix.authentication.allownonauthenticated",true) 
+    		   ||
+    		   Play.application().configuration().getBoolean("ix.admin",false);
     }
     
-    private static UserProfile setSessionUser(String username){
+    static UserProfile setSessionUser(String username){
     	return setSessionUser(username,null);
     }
     
+    //Set and trust username / email as user
+    //Only call after authenticated
     private static UserProfile setSessionUser(String username, String email){
         boolean systemAuth = false;
         boolean newregistered=false;
@@ -229,10 +212,9 @@ public class Authentication extends Controller {
         return profile;
     }
     
-    public static void setUserSessionDirectly(UserProfile profile){
+    private static void setUserSessionDirectly(UserProfile profile){
     	Session session = new Session(profile);
         session.save();
-
         IxCache.set(session.id.toString(), session);
 
         Logger.debug("** new session " + session.id
@@ -258,8 +240,30 @@ public class Authentication extends Controller {
     		if(AdminFactory.validatePassword(profile, password)){
     			return profile;
     		}
+    	}else{
+    		
     	}
     	return null;
+    }
+    
+    public static UserProfile directlogin(String username, String password) throws Exception{
+    	Principal cred;
+        UserProfile profile = UserProfileFactory.finder.where().eq("user.username", username).findUnique();
+        
+        if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
+                cred = profile.user;
+        } else {
+        		cred = AdminFactory.externalAuthenticate(username,password);
+        }
+        if (cred == null) {
+            throw new IllegalArgumentException("Invalid credentials!");
+        }
+        try{
+        	Authentication.setSessionUser(username);
+        }catch(Exception e){
+        	throw e;
+        }
+        return profile;
     }
     
     public static UserProfile getUserProfileFromToken(String username, String token){
@@ -283,12 +287,12 @@ public class Authentication extends Controller {
     		}else{
     		}
     	}else{
-    		Logger.warn("token:" + token + " does not exist in cache, size:" + tokenCache.getSize());
+    		System.out.println("token:" + token + " does not exist in cache, size:" + tokenCache.getSize());
     	}
     	return null;
     }
     
-    public static UserProfile getUserProfile(String username){
+    private static UserProfile getUserProfile(String username){
     	Element upelm=tokenCacheUserProfile.get(username);
     	if(upelm!=null){
     		return (UserProfile)upelm.getObjectValue();
@@ -301,6 +305,7 @@ public class Authentication extends Controller {
     }
     
     public static void updateUserProfileTokenCacheIfNecessary(){
+    	setupCacheIfNeccessary();
     	if(Util.getCanonicalCacheTimeStamp()!=lastCacheUpdate){
     		updateUserProfileTokenCache();
     	}else{
@@ -310,8 +315,6 @@ public class Authentication extends Controller {
     	tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
     }
     public static void updateUserProfileTokenCache(){
-    	//tokenCache.removeAll();
-    	setupCacheIfNeccessary();
     	try{
 	    	for(UserProfile up:_profiles.all()){
 	    		tokenCache.put(new Element(up.getComputedToken(), up.getIdentifier()));
@@ -323,85 +326,10 @@ public class Authentication extends Controller {
     	}
     }
     
-    public static Result authenticate(String url) {
-        DynamicForm requestData = Form.form().bindFromRequest();
-        String username = requestData.get("username");
-        String password = requestData.get("password");
-        Logger.debug("username: " + username);
-        boolean systemAuth = false;
-        Principal cred;
-        UserProfile profile = _profiles.where().eq("user.username", username).findUnique();
+    
+    
 
-        
-        if (profile != null && AdminFactory.validatePassword(profile, password) && profile.active) {
-                cred = profile.user;
-        } else {
-            cred = NIHLdapConnector.getEmployee(username, password);
-            systemAuth = true;
-        }
-        if (username.equalsIgnoreCase("caodac")
-                && password.equalsIgnoreCase("foobar")) {
-            cred = new Principal();
-            cred.username = username;
-        }
-        if (cred == null) {
-            flash("message", "Invalid credential!");
-            return redirect(routes.Authentication.login(null));
-        }
-       
-        try{
-        	setSessionUser(username);
-        }catch(Exception e){
-        	return internalServerError(e.getMessage());
-        }
-
-        if (url != null) {
-            return redirect(url);
-        }
-        return redirect(routes.Authentication.secured());
-    }
-
-    public static Result login(String url) {
-        Session session = getSession();
-        Logger.debug("url:" +  url + "  app: " + APP);
-        if (session != null) {
-            return url != null ? redirect(url)
-                    : redirect(routes.Authentication.secured());
-        }
-        return ok(ix.ncats.views.html.login.render(url, APP));
-    }
-
-    public static Result logout() {
-        Session session = getSession();
-        if (session != null) {
-            flash("message", session.profile.user.username
-                    + ", you've logged out!");
-            flush(session);
-        }
-        return redirect(routes.Authentication.login(null));
-    }
-
-    static ix.core.plugins.SchedulerPlugin scheduler =
-            Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
-
-    @Security.Authenticated(Secured.class)
-    @JsonIgnore
-    public static Result secured() {
-    	Session session = getSession();
-        if (session.expired || !session.profile.active) {
-            flash("message", "Session timeout; please login again!");
-            return redirect(routes.Authentication.login(null));
-        }
-        
-       // scheduler.submit(session.id.toString());
-
-        ObjectMapper mapper = new ObjectMapper();
-        //mapper.valueToTree(session);
-        //return ok(mapper.valueToTree(session));
-        String context = Play.application().configuration().getString("application.context");
-        Logger.debug("context:" + context);
-        return redirect(context);
-    }
+    
 
     public static UserProfile getUserProfile() {
         Session session = getSession();
@@ -410,6 +338,7 @@ public class Authentication extends Controller {
         		return session.profile;
         	}
         }
+        
         //do key auth
         String user=request().getHeader("auth-username");
         String key=request().getHeader("auth-key");
@@ -419,13 +348,20 @@ public class Authentication extends Controller {
         UserProfile up=null;
         
         if(user!=null && key!=null){
+        	//System.out.println("KEY-lookup");
         	up=getUserProfileFromKey(user,key);
         }else if(token!=null){
+        	//System.out.println("TOKEN-lookup");
+        	try{
         	up=getUserProfileFromTokenAlone(token);
+        	}catch(Exception e){
+        		e.printStackTrace();
+        	}
         }else if(user!=null && password!=null){
+        	//System.out.println("PASSWORD-lookup");
         	up=getUserProfileFromPassword(user,password);
         }else{
-        	
+        	//System.out.println("Nothin-lookup");
         }
         if(up!=null){
         	setUserSessionDirectly(up);
@@ -515,13 +451,11 @@ public class Authentication extends Controller {
 		
 		for(UserProfile profile:  _profiles.findList()){
 			for(Role r:profile.getRoles()){
-				if(r.role == Role.Kind.Admin){
+				if(r == Role.Admin){
 					return profile;
 				}
 			}
 		}
-		
-		
 		return null;
 	}
 }

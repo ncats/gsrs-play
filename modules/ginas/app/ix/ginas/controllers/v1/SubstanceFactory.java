@@ -5,6 +5,7 @@ import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import ix.core.NamedResource;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
+import ix.core.controllers.v1.RouteFactory;
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
@@ -390,24 +391,23 @@ public class SubstanceFactory extends EntityFactory {
 		return slist;
 	}
 
-	@Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approve(String substanceId) {
-		List<Substance> substances = SubstanceFactory.resolve(substanceId);
-
 		try {
+			List<Substance> substances = SubstanceFactory.resolve(substanceId);
+		
 			if (substances.size() == 1) {
 				Substance s = substances.get(0);
 				approveSubstance(s);
 				s.save();
-				return ok("Substance approved with approvalID:" + s.approvalID);
+				EntityMapper em=EntityMapper.FULL_ENTITY_MAPPER();
+				return ok(em.toJson(s));
 			}
 			throw new IllegalStateException("More than one substance matches that term");
 		} catch (Exception ex) {
-			return GinasApp._internalServerError(ex);
+			return RouteFactory._apiBadRequest(ex);
 		}
 	}
 
-	@Dynamic(value = "canApprove", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
 	public static Result approve(UUID substanceId) {
 		return approve(substanceId.toString());
 	}
@@ -468,7 +468,7 @@ public class SubstanceFactory extends EntityFactory {
 		if (!s.isPrimaryDefinition()) {
 			throw new IllegalStateException("Cannot approve non-primary definitions.");
 		}
-		if (!s.isNonSubstanceConcept()) {
+		if (s.isNonSubstanceConcept()) {
 			throw new IllegalStateException("Cannot approve non-substance concepts.");
 		}
 		for (SubstanceReference sr : s.getDependsOnSubstanceReferences()) {
@@ -486,6 +486,6 @@ public class SubstanceFactory extends EntityFactory {
 		s.approvalID = GinasUtils.getAPPROVAL_ID_GEN().generateID();
 		s.approved = new Date();
 		s.approvedBy = user;
-
+		s.status=Substance.STATUS_APPROVED;
 	}
 }

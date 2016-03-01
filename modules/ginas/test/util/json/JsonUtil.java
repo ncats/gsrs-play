@@ -27,9 +27,13 @@ public class JsonUtil {
             if("remove".equals(op)){
 
                 JsonNode jsbefore=before.at(jn.get("path").textValue());
-                //TODO check if jsbefore is equivalent to null in some way:
+                // checks if jsbefore is equivalent to null in some way:
                 // [], {}, "", [""]
-                if(jsbefore.toString().equals("[\"\"]")){
+                if(jsbefore.toString().equals("[\"\"]") ||
+                   jsbefore.toString().equals("{}") ||
+                   jsbefore.toString().equals("") ||
+                   jsbefore.toString().equals("[]")
+                		){
 
                 }else{
                     String key = jn.get("path").asText();
@@ -115,6 +119,7 @@ public class JsonUtil {
 
             return this;
         }
+        
 
         public JsonBuilder add(String key, Object[] value){
             addLeadingCommaIfNeeded();

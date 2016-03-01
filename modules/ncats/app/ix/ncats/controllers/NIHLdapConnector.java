@@ -7,9 +7,10 @@ import javax.naming.directory.*;
 import javax.naming.ldap.*;
 import java.text.*;
 import ix.core.models.Principal;
+import ix.ncats.controllers.auth.Authenticator;
 import ix.ncats.models.Employee;
 
-public class NIHLdapConnector {
+public class NIHLdapConnector implements Authenticator{
     /* 
      * change these values accordingly
      */
@@ -35,6 +36,8 @@ public class NIHLdapConnector {
         NIHLdapConnector ldap = new NIHLdapConnector (username, password);
         return ldap.authenticate();
     }
+    
+    
     
     public static Employee getEmployee (String username, String password) {
         NIHLdapConnector ldap = new NIHLdapConnector (username, password);
@@ -160,4 +163,13 @@ public class NIHLdapConnector {
         Attribute a = attrs.get(name);
         return a != null ? a.get().toString() : "";
     }
+    
+    public Principal getUser(String username, String password){
+    	return getEmployee(username,password);
+    }
+    
+    public NIHLdapConnector(){
+    	
+    }
+
 }

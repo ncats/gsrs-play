@@ -1,10 +1,7 @@
-@import ix.core.models.UserProfile
-@import ix.core.models.Role
-@import ix.core.models.Acl
+@import ix.core.models.{Acl, UserProfile, Role}
 @import ix.core.controllers.AdminFactory
 @import helper._
-
-@(id: Long, userForm: UserProfile, roleList: List[String], permList: List[String], grpList: List[String], appContext: String)
+@(id: Long, userForm: UserProfile, roleList: List[Role], permList: List[String], grpList: List[String], appContext: String)
 
 @implicitFieldConstructor = @{ FieldConstructor(ix.ncats.views.html.admin.twitterBootstrapInput.render) }
 
@@ -50,7 +47,7 @@
                                 <td id="roleGroup">
                                 @for(rs <- Role.options()) {
                                     <input class="form-input" type="checkbox" name="r-@rs.toString()" id="r-@rs.toString()" value="@rs.toString()"
-                                    @if(roleList.contains(rs.toString())) {checked="checked"} />
+                                    @if(roleList.contains(rs)) {checked="checked"} />
                                     <span>@rs.toString()</span><br/>
                                 }
                                 </td>
