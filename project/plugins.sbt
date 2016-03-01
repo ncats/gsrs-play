@@ -23,4 +23,11 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.0.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.0.0")
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.3.5")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.3.5" % "test")
+
+libraryDependencies ++= Seq(
+  "org.jacoco" % "org.jacoco.core"   % "0.7.1.201405082137" % "test",
+  "org.jacoco" % "org.jacoco.report" % "0.7.1.201405082137" % "test"
+)
+
+addSbtPlugin("de.johoop" % "jacoco4sbt" % "2.1.6" % "test")
