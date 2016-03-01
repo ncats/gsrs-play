@@ -41,8 +41,8 @@ import ix.ginas.models.ReferenceListSerializer;
 @DiscriminatorValue("GSRS")
 public class GinasChemicalStructure extends Structure implements GinasAccessReferenceControlled {
 
-	//TP: why is this final?
-    public final Date created = new Date ();
+	
+    public Date created=null;
     
     @OneToOne(cascade=CascadeType.ALL)
     @JsonSerialize(using = PrincipalSerializer.class)
@@ -175,6 +175,9 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     @PrePersist
     @PreUpdate
     public void modifiedV2() {
+    	if(created==null){
+    		created=new Date();
+    	}
     	Principal p1=UserFetcher.getActingUser();
     	if(p1!=null){
     		lastEditedBy=p1;

@@ -202,7 +202,7 @@ public class GinasApp extends App {
     }
     
     public static Result _internalServerError(Throwable t) {
-        t.printStackTrace();
+        //t.printStackTrace();
         return internalServerError
             (ix.ginas.views.html.error.render
              (500, "Internal server error: " + t.getMessage()));
@@ -294,7 +294,7 @@ public class GinasApp extends App {
             
             if ("EP".equalsIgnoreCase(label))
                 return "PH. EUR";
-            if("approved".equalsIgnoreCase(label))
+            if(Substance.STATUS_APPROVED.equalsIgnoreCase(label))
             	return "Validated (UNII)";
             if("non-approved".equalsIgnoreCase(label))
             	return "Non-Validated";

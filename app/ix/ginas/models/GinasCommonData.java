@@ -41,8 +41,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     public UUID uuid;
 
     
-    //TP: why is this final?
-    public final Date created = new Date ();
+    public Date created=null;
     
     @OneToOne(cascade=CascadeType.ALL)
     @Indexable(facet = true, name = "Created By")
@@ -150,6 +149,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     		lastEditedBy=p1;
     		if(this.createdBy==null){
     			createdBy=p1;
+    			created= new Date();
         	}
         }
         

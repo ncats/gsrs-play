@@ -3,17 +3,13 @@ package ix.core.controllers;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ix.core.NamedResource;
 import ix.core.models.Group;
 import ix.core.models.Principal;
 import ix.core.models.Role;
 import ix.core.models.UserProfile;
 import play.db.ebean.Model;
-import play.mvc.Result;
 
-/*
+/* TODO: make this a resource eventually
 @NamedResource(name="users",
  
 type=UserProfile.class,
@@ -30,7 +26,7 @@ public class UserProfileFactory extends EntityFactory {
 	}
 	
 	//@Dynamic(value = "adminUser", handlerKey = "idg")
-    public static UserProfile addActiveUser(String username, String password, List<Role.Kind> rolesCheckeda,List<Group> groupsChecked ) {
+    public static UserProfile addActiveUser(String username, String password, List<Role> rolesCheckeda, List<Group> groupsChecked ) {
         Principal newUser = new Principal();
         newUser.username =username;
         
@@ -38,13 +34,7 @@ public class UserProfileFactory extends EntityFactory {
         	groupsChecked=new ArrayList<Group>();
         }
         
-        List<Role> rolesChecked= new ArrayList<Role>();
-        if(rolesCheckeda!=null){
-	        for(Role.Kind r:rolesCheckeda){
-	        	Role r2 = new Role(r);
-	            rolesChecked.add(r2);
-	        }
-        }
+        
         
         newUser.save();
         UserProfile prof = UserProfileFactory.finder.where().eq("user.username", newUser.username).findUnique();
@@ -53,13 +43,7 @@ public class UserProfileFactory extends EntityFactory {
             prof = new UserProfile(newUser);
             prof.active = true;
             prof.setPassword(password);
-            //prof.setRoles(rolesChecked);
-            
-            for (Role r : rolesChecked) {
-                r.principal = newUser;
-                r.save();
-            }
-            
+            prof.setRoles(rolesCheckeda);
             
             for (Group g : groupsChecked) {
                 if(g.id != null) {

@@ -22,9 +22,9 @@ import javax.persistence.PreUpdate;
 
 import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ix.core.EntityProcessor;
+import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
 import ix.core.plugins.IxContext;
@@ -57,6 +57,8 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     
     private Map<Class, EntityProcessor> extraProcessors=new HashMap<Class,EntityProcessor>();
     
+    
+    
     private TextIndexerPlugin plugin = 
             Play.application().plugin(TextIndexerPlugin.class);
     //public static SequenceIndexer _seqIndexer = Play.application().plugin(SequenceIndexerPlugin.class).getIndexer();
@@ -64,6 +66,26 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     private static SequenceIndexerPlugin seqProcessPlugin=Play.application().plugin(SequenceIndexerPlugin.class);
     
     private static ConcurrentHashMap<String, String> alreadyLoaded = new ConcurrentHashMap<String,String>();
+    
+    private static ConcurrentHashMap<String, Edit> editMap = new ConcurrentHashMap<String,Edit>();
+    
+    
+    public static void storeEditForUpdate(Class c, Object id, Edit e){
+    	String s1=c.getName() + ":" + id;
+    	editMap.put(s1,e);
+    }
+    
+    public static Edit popEditForUpdate(Class c, Object id){
+    	String s1=c.getName() + ":" + id;
+    	Edit e= editMap.get(s1);
+    	if(e!=null){
+    		editMap.remove(s1);
+    	}
+    	return e;
+    }
+    public static int getEditUpdateCount(){
+    	return editMap.size();
+    }
     
     private static boolean UPDATE_INDEX = false;
     
@@ -370,7 +392,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     @Override
     public void postUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
-        ObjectMapper mapper = new ObjectMapper ();
+        EntityMapper mapper = EntityMapper.FULL_ENTITY_MAPPER();
         
         Class cls = bean.getClass();
         if (Edit.class.isAssignableFrom(cls)) {
@@ -382,12 +404,24 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             if (f.getAnnotation(Id.class) != null) {
                 try {
                     Object id = f.get(bean);
+                    
                     if (id != null) {
-                        Edit edit = new Edit (cls, id);
-                        edit.oldValue = mapper.writeValueAsString
-                            (request.getOldValues());
-                        edit.newValue = mapper.writeValueAsString(bean);
+                    	Edit edit=EntityPersistAdapter.popEditForUpdate(cls, id);
+                    	//TP: Are these done 2 places now?
+                    	//won't edits be stored twice?
+                    	//Also, this isn't sufficient to capture everything.
+                    	//It seems that it only grabs the previous values
+                    	//that are top-level. If an object inside a collection,
+                    	//or with some other identifier changes internally,
+                    	//that info is lost.
+                    	if(edit==null){
+                    		 edit = new Edit (cls, id);
+                    	}
+                    	edit.oldValue = mapper.toJson
+                                (request.getOldValues());
+               	     	edit.newValue = mapper.toJson(bean);
                         edit.save();
+                        
                     }
                     else {
                         Logger.warn("Entity bean ["+cls.getName()+"]="+id

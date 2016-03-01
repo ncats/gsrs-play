@@ -1,11 +1,8 @@
 package ix.core.controllers;
 
-import ix.core.models.Acl;
-import ix.core.models.Group;
-import ix.core.models.Namespace;
-import ix.core.models.Principal;
+import ix.core.models.*;
 import ix.core.models.Role;
-import ix.core.models.UserProfile;
+import ix.ncats.controllers.auth.Authenticator;
 import ix.utils.Util;
 
 import java.util.ArrayList;
@@ -15,9 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import play.Logger;
+import play.Play;
 import play.db.ebean.Model;
 import play.mvc.BodyParser;
 import play.mvc.Controller;
@@ -48,6 +44,33 @@ public class AdminFactory extends Controller {
     public static Map<String,Group> alreadyRegistered = new ConcurrentHashMap<String,Group>();
 
     
+    //Authenticators are used as fallback to authenticate if built in auth doesn't work
+    public static List<Authenticator> authenticators = new ArrayList<Authenticator>();
+    
+    public static void setupAuth () {
+    	List<Object> ls= Play.application().configuration().getList("ix.core.authenticators",null);
+    	if(ls!=null){
+    		for(Object o:ls){
+    			if(o instanceof Map){
+	    			Map m = (Map)o;
+	    			String authClass=(String) m.get("authenticator");
+	    			String debug="Setting up authenticator [" + authClass + "] ... ";
+	    			try {
+						Class entityCls = Class.forName(authClass);
+						Authenticator auth=(Authenticator) entityCls.newInstance();
+						authenticators.add(auth);
+					} catch (Exception e) {
+						Logger.info(debug + "failed");
+						e.printStackTrace();
+					}
+    			}
+    			
+    		}
+    	}
+    }
+    static{
+    	setupAuth();
+    }
     
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
@@ -99,28 +122,7 @@ public class AdminFactory extends Controller {
         return notFound("Unknown principal: " + id);
     }
 
-    public static Result getRole(Long id) {
-        Role role = roleFinder.byId(id);
-        if (role != null) {
-            ObjectMapper mapper = new ObjectMapper();
-            return ok(mapper.valueToTree(role));
-        }
-        return notFound("Unknown role: " + id);
-    }
 
-    public static Result deleteRole(Long id) {
-        Role role = roleFinder.byId(id);
-        if (role != null) {
-            try {
-                role.delete();
-                ObjectMapper mapper = new ObjectMapper();
-                return ok(mapper.valueToTree(role));
-            } catch (Exception ex) {
-                return badRequest(ex.getMessage());
-            }
-        }
-        return notFound("Unknown role: " + id);
-    }
 
     public static Result deletePermission(Long id) {
         Acl permission = aclFinder.byId(id);
@@ -305,19 +307,17 @@ public class AdminFactory extends Controller {
     public static boolean validatePassword(UserProfile profile, String password) {
         return profile.acceptPassword(password);
     }
-
-    public static List<Role> rolesByPrincipal(Principal cred) {
-        return roleFinder.where().eq("principal.id", cred.id).findList();
+    public static Principal externalAuthenticate(String username, String password){
+    	Principal cred=null;
+    	for(Authenticator auth: authenticators){
+    		cred = auth.getUser(username, password);
+            if(cred!=null){
+        		break;
+            }
+    	}
+    	return cred;
     }
 
-    public static List<String> roleNamesByPrincipal(Principal cred) {
-        List<Role> roles = rolesByPrincipal(cred);
-        List<String> roleList = new ArrayList<String>();
-        for(Role r : roles){
-            roleList.add(r.getName());
-        }
-        return roleList;
-    }
 
     public static List<String> aclNamesByPrincipal(Principal cred) {
         List<Acl> perms = permissionByPrincipal(cred);
@@ -408,19 +408,6 @@ public class AdminFactory extends Controller {
                 p.principals.add(user);
                 p.save();
             }
-        }
-    }
-
-    //TODO: look into this
-    public static void updateRoles(Long userId, List<Role> roles){
-        Principal user = palFinder.byId(userId);
-        for(Role r : AdminFactory.rolesByPrincipal(user)){
-            AdminFactory.deleteRole(r.id);
-        }
-        
-        for (Role r : roles) {
-            r.principal = user;
-            r.save();
         }
     }
     

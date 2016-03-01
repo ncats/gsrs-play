@@ -3,8 +3,8 @@
 #
 GET     /principal/:id    ix.core.controllers.AdminFactory.getUser(id:Long)
 DELETE  /principal/:id    ix.core.controllers.AdminFactory.deleteUser(id:Long)
-GET     /role/:id         ix.core.controllers.AdminFactory.getRole(id:Long)
-DELETE  /role/:id         ix.core.controllers.AdminFactory.deleteRole(id:Long)
+#GET     /role/:id         ix.core.controllers.AdminFactory.getRole(id:Long)
+#DELETE  /role/:id         ix.core.controllers.AdminFactory.deleteRole(id:Long)
 GET     /namespace/:id         ix.core.controllers.AdminFactory.getNamespace(id:Long)
 DELETE  /namespace/:id         ix.core.controllers.AdminFactory.deleteNamespace(id:Long)
 GET     /:namespace    ix.core.controllers.AdminFactory.get(namespace: String)

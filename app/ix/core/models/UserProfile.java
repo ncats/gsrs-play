@@ -1,20 +1,25 @@
 package ix.core.models;
 
-import java.util.Date;
-import java.util.UUID;
-import java.util.List;
-import java.security.MessageDigest;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+import javax.persistence.Basic;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinTable;
+import javax.persistence.Lob;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import be.objectify.deadbolt.core.models.Subject;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import ix.core.controllers.AdminFactory;
-import ix.core.models.Acl.Permission;
 import ix.utils.Util;
-import play.db.ebean.Model;
-import javax.persistence.*;
 
 @Entity
 @Table(name="ix_core_userprof")
@@ -31,19 +36,25 @@ public class UserProfile extends IxModel implements Subject {
     private String salt;
     public boolean systemAuth; //FDA, NIH employee
     
+    @Lob
+    @JsonIgnore
+    private String _roles=null;  //this is a silly, but quick way to serialize roles
+    
+    
     //private key to be used in authentication
     //This is not a public/private 
     private String key;
     
     //Not sure if this should be shown here?
     public String getKey(){
+    	
     	return key;
     }
     
     public void regenerateKey(){
     	key=Util.generateRandomString(20);
-    	System.out.println("Generated key:" + key + " for user:" + user.username);
-    	System.out.println("Current token:" + this.getComputedToken());
+    	//System.out.println("Generated key:" + key + " for user:" + user.username);
+    	//System.out.println("Current token:" + this.getComputedToken());
     }
     
     @ManyToMany(cascade=CascadeType.ALL)
@@ -56,12 +67,69 @@ public class UserProfile extends IxModel implements Subject {
         regenerateKey();
     }
 
-    @Override
+    /*
     public List<Role> getRoles(){
-        return AdminFactory.rolesByPrincipal(user); 	//roles;
-
+    	List<Role> roles=AdminFactory.rolesByPrincipal(user); 	//roles;
+    	List<Role> rkind = new ArrayList<Role>();
+    	if(roles==null || roles.isEmpty()){
+    		
+    	}else{
+	    	for(Role r:roles){
+	    		System.out.println("Fetchin roles:" + r.getName());
+	    		rkind.add(r.role);
+	    	}
+    	}
+        return rkind;
     }
+    public void addRole(Role role){
+    	List<Role> roles=getRoles();
+    	roles.add(role);
+    	setRoleKinds(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
+    }
+    
+    public void setRoleKinds(List<Role> rolekinds){
+    	List<Role> tempRoles=new ArrayList<Role>();
+    	for(Role rk:rolekinds){
+    		tempRoles.add(new Role(rk));
+    	}
+    	AdminFactory.updateRolesF(this.id, tempRoles);
+    }
+    */
+    public List<Role> getRoles(){
+    	List<Role> rolekinds=new ArrayList<Role>();
+    	if(this._roles!=null){
+    		try{
+	    		ObjectMapper om = new ObjectMapper();
+	    		List l=om.readValue(_roles, List.class);
+	    		for(Object o:l){
+	    			try{
+	    				rolekinds.add(Role.valueOf(o.toString()));
+	    			}catch(Exception e){
+	    				e.printStackTrace();
+	    			}
+	    		}
+    		}catch(Exception e){
+    			
+    		}
+    		
+    	}
+        return rolekinds;
+    }
+    
+    public void addRole(Role role){
+    	List<Role> roles=getRoles();
+    	roles.add(role);
+    	setRoles(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
+    }
+    
+    public void setRoles(List<Role> rolekinds){
+    	ObjectMapper om = new ObjectMapper();
+    	_roles=om.valueToTree(rolekinds).toString();
+    }
+    
 
+    
+    
     @Override
     public List<Acl> getPermissions(){
         return AdminFactory.permissionByPrincipal(user); //return permissions;
@@ -85,7 +153,6 @@ public class UserProfile extends IxModel implements Subject {
     	long date=(Util.getCanonicalCacheTimeStamp()+1)*Util.getTimeResolutionMS();
     	return (date-System.currentTimeMillis());
     }
-    
     
     private String getPreviousComputedToken(){
     	String date=""+(Util.getCanonicalCacheTimeStamp()-1);

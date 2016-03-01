@@ -1,4 +1,6 @@
+package ix.test;
 import static org.fest.assertions.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static play.mvc.Http.Status.OK;
 import static play.test.Helpers.running;
 import static play.test.Helpers.stop;
@@ -59,7 +61,12 @@ public class GinasTestServer extends ExternalResource{
 	 private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
 	 private static final String API_URL_SUBMIT = "http://localhost:9001/ginas/app/api/v1/substances";
 	 private static final String API_URL_FETCH = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)?view=full";
-     private static final String API_URL_MAKE_FAKE_USERS="http://localhost:9001/ginas/app/api/v1/@deleteme";
+	 private static final String API_URL_HISTORY = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@edits?view=full";
+	 
+	 private static final String API_URL_APPROVE = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@approve";
+	 private static final String API_URL_UPDATE = "http://localhost:9001/ginas/app/api/v1/substances";
+	 
+	 private static final String API_URL_MAKE_FAKE_USERS="http://localhost:9001/ginas/app/api/v1/@deleteme";
      private static final String API_URL_WHOAMI="http://localhost:9001/ginas/app/api/v1/whoami";
      
 	 public static final String FAKE_USER_1="fakeuser1";
@@ -99,13 +106,17 @@ public class GinasTestServer extends ExternalResource{
     }
 
 
+    //logs in user, also sets default authentication type
+    //if previously set to NONE
     public void login(String username, String password){
         
     	ensureSetupUsers();
         loggedIn=true;
         this.username=username;
         this.password=password;
-        
+        if(this.authType==AUTH_TYPE.NONE){
+        	this.authType=AUTH_TYPE.USERNAME_PASSWORD;
+        }
     }
 
     public void logout(){
@@ -136,8 +147,19 @@ public class GinasTestServer extends ExternalResource{
     
     public void setAuthenticationType(AUTH_TYPE atype){
     	this.authType=atype;
-    	
-    			
+    }
+    
+    public GinasTestServer withTokenAuth(){
+    	this.setAuthenticationType(AUTH_TYPE.TOKEN);
+    	return this;
+    }
+    public GinasTestServer withKeyAuth(){
+    	this.setAuthenticationType(AUTH_TYPE.USERNAME_KEY);
+    	return this;
+    }
+    public GinasTestServer withPasswordAuth(){
+    	this.setAuthenticationType(AUTH_TYPE.USERNAME_PASSWORD);
+    	return this;
     }
     
     public WSRequestHolder  url(String url){
@@ -166,6 +188,7 @@ public class GinasTestServer extends ExternalResource{
     	WSResponse wsResponse1 = this.url(VALIDATE_URL).post(js).get(timeout);
     	return wsResponse1;
         
+    	
     }
     
     public WSResponse submitSubstance(JsonNode js){
@@ -174,8 +197,48 @@ public class GinasTestServer extends ExternalResource{
         
     }
     
+    
+    
     public WSResponse fetchSubstance(String uuid){
     	WSResponse wsResponse1 = this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
+    	return wsResponse1;
+    }
+    public WSResponse fetchSubstanceHistory(String uuid){
+    	WSResponse wsResponse1 = this.url(API_URL_HISTORY.replace("$UUID$", uuid)).get().get(timeout);
+    	return wsResponse1;
+    }
+    
+    public WSResponse updateSubstance(JsonNode js){
+    	WSResponse wsResponse1 = this.url(API_URL_UPDATE).put(js).get(timeout);
+    	return wsResponse1;
+    }
+    
+    
+    public JsonNode fetchSubstanceHistoryJSON(String uuid){
+    	return ensureExctractJSON(fetchSubstanceHistory(uuid));
+    }
+    public JsonNode fetchSubstanceJSON(String uuid){
+    	return ensureExctractJSON(fetchSubstance(uuid));
+    }
+    public JsonNode submitSubstanceJSON(JsonNode js){
+    	return ensureExctractJSON(submitSubstance(js));
+    }
+    public JsonNode approveSubstanceJSON(String uuid){
+    	return ensureExctractJSON(approveSubstance(uuid));
+    }
+
+	public JsonNode updateSubstanceJSON(JsonNode updated) {
+		return ensureExctractJSON(updateSubstance(updated));
+	}
+	
+	public JsonNode urlJSON(String url){
+		return ensureExctractJSON(url(url).get().get(timeout));
+	}
+    
+    
+    
+    public WSResponse approveSubstance(String uuid){
+    	WSResponse wsResponse1 = this.url(API_URL_APPROVE.replace("$UUID$", uuid)).get().get(timeout);
     	return wsResponse1;
     }
     
@@ -186,7 +249,6 @@ public class GinasTestServer extends ExternalResource{
     }
     
     public void ensureSetupUsers(){
-    	
 			    	WSResponse wsResponse1 = url(API_URL_MAKE_FAKE_USERS).get().get(timeout);
 			    	assertThat(wsResponse1.getStatus()).isEqualTo(OK);
 			        assertThat(wsResponse1.getStatus()).isEqualTo(200);
@@ -207,6 +269,19 @@ public class GinasTestServer extends ExternalResource{
     	deadtime=System.currentTimeMillis()+userinfo.get("tokenTimeToExpireMS").asLong();
     	
     	
+    }
+    
+    private JsonNode ensureExctractJSON(WSResponse wsResponse1){
+    	assertTrue(wsResponse1!=null);
+        int status2 = wsResponse1.getStatus();
+        if(status2>300){
+        	System.out.println("That's an error!");
+        	System.out.println(wsResponse1.getBody());
+        }
+        assertTrue(status2 == 200 || status2 == 201);
+        JsonNode returned = wsResponse1.asJson();
+        assertTrue(returned!=null);
+        return returned;
     }
     
     
@@ -232,4 +307,5 @@ public class GinasTestServer extends ExternalResource{
         }
         stop(ts);
     }
+
 }
