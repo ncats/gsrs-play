@@ -26,7 +26,7 @@ public class ChangesTest {
         JsonNode node = new JsonUtil.JsonBuilder().toJson();
 
         Map<String, Change> map = new ChangesBuilder()
-                .change("foo", node, Change.ChangeType.ADDED)
+                .added("foo", node)
                 .build();
 
         Changes sut = new Changes(map);
@@ -40,8 +40,8 @@ public class ChangesTest {
         JsonNode node = new JsonUtil.JsonBuilder().toJson();
 
         Map<String, Change> map = new ChangesBuilder()
-                .change("foo", node, Change.ChangeType.ADDED)
-                .change("bar", node, Change.ChangeType.ADDED)
+                .added("foo", node)
+                .added("bar", node)
                 .build();
 
         Changes sut = new Changes(map);
@@ -55,9 +55,9 @@ public class ChangesTest {
         JsonNode node = new JsonUtil.JsonBuilder().toJson();
 
         Map<String, Change> map = new ChangesBuilder()
-                .change("foo", node, Change.ChangeType.ADDED)
-                .change("bar", node, Change.ChangeType.ADDED)
-                .change("baz", node, Change.ChangeType.REMOVED)
+                .added("foo", node)
+                .added("bar", node)
+                .removed("baz", node)
                 .build();
 
         Changes sut = new Changes(map);
@@ -90,10 +90,10 @@ public class ChangesTest {
         JsonNode node = new JsonUtil.JsonBuilder().toJson();
 
         Map<String, Change> map = new ChangesBuilder()
-                .change("/names/4/created", node, Change.ChangeType.ADDED)
-                .change("/codes/2/createdBy", node, Change.ChangeType.ADDED)
-                .change("/names/4/createdBy", node, Change.ChangeType.ADDED)
-                .change("/codes/1/_self", node, Change.ChangeType.REMOVED)
+                .added("/names/4/created", node)
+                .added("/codes/2/createdBy", node)
+                .added("/names/4/createdBy", node)
+                .removed("/codes/1/_self", node)
                 .build();
 
         Changes sut = new Changes(map);
@@ -107,8 +107,20 @@ public class ChangesTest {
     private static class ChangesBuilder{
         private Map<String, Change> map = new HashMap<>();
 
-        public ChangesBuilder change(String key, JsonNode node, Change.ChangeType type){
-            map.put(key, new Change(key, node, Change.ChangeType.ADDED));
+        public ChangesBuilder added(String key, JsonNode node){
+            return change(key, null, node, Change.ChangeType.ADDED);
+        }
+
+        public ChangesBuilder removed(String key, JsonNode node){
+            return change(key, node, null, Change.ChangeType.REMOVED);
+        }
+        public ChangesBuilder replace(String key, JsonNode before, JsonNode after){
+            return change(key, before, after, Change.ChangeType.REMOVED);
+        }
+
+
+        private ChangesBuilder change(String key, JsonNode before, JsonNode after, Change.ChangeType type){
+            map.put(key, new Change(key,before,  after, type));
 
             return this;
 

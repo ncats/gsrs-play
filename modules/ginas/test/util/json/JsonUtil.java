@@ -33,7 +33,7 @@ public class JsonUtil {
 
                 }else{
                     String key = jn.get("path").asText();
-                    change = new Change(key, jsbefore, Change.ChangeType.REMOVED);
+                    change = new Change(key, jsbefore, null, Change.ChangeType.REMOVED);
 
                 }
 
@@ -41,7 +41,7 @@ public class JsonUtil {
             }else if("add".equals(op)){
                 String key = jn.get("path").asText();
                 JsonNode jsAfter=after.at(key);
-                change= new Change(key, jsAfter, Change.ChangeType.ADDED);
+                change= new Change(key, null, jsAfter, Change.ChangeType.ADDED);
             }
 
 

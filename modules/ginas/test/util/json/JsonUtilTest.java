@@ -186,7 +186,7 @@ public class JsonUtilTest {
 
         JsonNode name = a.path("name");
         //value is full path so has leading slash for root
-        expected.put("/name", new Change("/name", name, Change.ChangeType.REMOVED));
+        expected.put("/name", new Change("/name", name, null, Change.ChangeType.REMOVED));
 
         assertEquals(new Changes(expected), changes);
     }
@@ -209,7 +209,7 @@ public class JsonUtilTest {
 
         JsonNode name = a.path("name");
         //value is full path so has leading slash for root
-        expected.put("/name", new Change("/name", name, Change.ChangeType.ADDED));
+        expected.put("/name", new Change("/name",null, name, Change.ChangeType.ADDED));
 
         assertEquals(new Changes(expected), changes);
     }
@@ -298,30 +298,49 @@ public class JsonUtilTest {
         }
         public ChangesBuilder change(String key, Change.ChangeType type){
             String[] path = key.split("/");
-            JsonNode current;
-            if(type == Change.ChangeType.ADDED){
-                //added so node is in after
-                current= after;
-            }else{
-                current = before;
-            }
-            //paths start with leading '/' so skip that?
-            for(int i=1; i< path.length; i++){
-                String fieldName = path[i];
-                Matcher m = IS_NUMERIC_PATTERN.matcher(fieldName);
-                if(m.matches()){
-                    //array ref
-                    current = current.get(Integer.parseInt(fieldName));
-                }else {
-                    current = current.get(path[i]);
-                }
+            JsonNode currentBefore= null;
+            JsonNode currentAfter=null;
+            switch(type){
+                case ADDED: currentAfter=after; break;
+                case REMOVED: currentBefore = before; break;
+                case REPLACED:
+                    currentAfter = after;
+                    currentBefore = before;
+                    break;
+                default:
+                    //shouldn't happen unless we add a new type
+                    //and forget to add it to switch
+                    throw new IllegalStateException("unknown type "+type);
+
             }
 
-            map.put(key, new Change(key, current, type));
+
+            map.put(key,new Change(key,getNodeFromPath(currentBefore, path),
+                    getNodeFromPath(currentAfter, path),
+                    type));
 
             return this;
 
         }
+
+        private JsonNode getNodeFromPath(JsonNode root, String[] path) {
+            JsonNode current= root;
+            if(current !=null) {
+                //paths start with leading '/' so skip that?
+                for (int i = 1; i < path.length; i++) {
+                    String fieldName = path[i];
+                    Matcher m = IS_NUMERIC_PATTERN.matcher(fieldName);
+                    if (m.matches()) {
+                        //array ref
+                        current = current.get(Integer.parseInt(fieldName));
+                    } else {
+                        current = current.get(path[i]);
+                    }
+                }
+            }
+            return current;
+        }
+
         public Changes build(){
             //copy map so future changes don't affect already built objs
             return new Changes(new HashMap<>(map));

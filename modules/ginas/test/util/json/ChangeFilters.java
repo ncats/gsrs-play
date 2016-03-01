@@ -1,5 +1,7 @@
 package util.json;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,7 +27,11 @@ public class ChangeFilters {
         return new ChangeFilter() {
             @Override
             public boolean filterOut(Change change) {
-                String value = change.getValue().textValue();
+                JsonNode newValue = change.getNewValue();
+                if(newValue ==null){
+                    return true;
+                }
+                String value = newValue.textValue();
                 return value==null || value.trim().isEmpty();
             }
         };

@@ -69,4 +69,11 @@ public class Changes {
         }
         return list;
     }
+
+    @Override
+    public String toString() {
+        return "Changes{" +
+                "changes=" + changes +
+                '}';
+    }
 }
