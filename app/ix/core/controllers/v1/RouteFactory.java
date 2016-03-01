@@ -487,9 +487,9 @@ public class RouteFactory extends Controller {
     		if(g==null){
 	    		g=new Group("fake");
 	    		
-		    	List<Role.Kind> rolekind = new ArrayList<Role.Kind>();
-		    			rolekind.add(Role.Kind.SuperUpdate);
-		    			rolekind.add(Role.Kind.SuperDataEntry);
+		    	List<Role> rolekind = new ArrayList<Role>();
+		    			rolekind.add(Role.SuperUpdate);
+		    			rolekind.add(Role.SuperDataEntry);
 		    	List<Group> groups = new ArrayList<Group>();
 		    			groups.add(g);
 		    	
