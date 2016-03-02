@@ -30,6 +30,10 @@ public class Changes {
         return getChangesByKey(Pattern.compile(regex));
     }
 
+    public Change get(String key){
+        return changes.get(key);
+    }
+
     public Iterable<Change> getChangesByKey(Pattern pattern){
         List<Change> list = new ArrayList<>();
         for(Change change : changes.values()){
