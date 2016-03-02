@@ -1894,7 +1894,7 @@
                 html += ' ng-class="{ checked:' + attrs.ngModel + ' }"';
                 html += '>';
                 html += '<small></small>';
-                html += '<input type="checkbox"';
+                html += '<input aria-label ="toggle-switch" type="checkbox"';
                 html += attrs.id ? ' id="' + attrs.id + '"' : '';
                 html += attrs.name ? ' name="' + attrs.name + '"' : '';
                 html += attrs.ngModel ? ' ng-model="' + attrs.ngModel + '"' : '';

@@ -9,32 +9,38 @@
                 <div class ="col-md-2">
                     <a ng-click = "changeClass('chemical');" ng-href = "app/substance/{{editid}}/edit">
                     <!--<input type="radio" ng-model="parent.substanceClass" value="chemical"  ng-click = "changeClass()" href =>-->
-                    <img ng-src = "app/assets/ginas/images/chemical.svg">Chemical
+                    <img ng-src = "app/assets/ginas/images/chemical.svg" alt = "Chemical">Chemical
                         </a>
                 </div>
                 <div class ="col-md-2">
-                    <input type="radio" ng-model="parent.substanceClass" value="protein" ng-class="part" ng-click = "changeClass('protein')">
-                    <img ng-src = "app/assets/ginas/images/protein.svg">Protein
+                    <a ng-click = "changeClass('protein');" ng-href = "app/substance/{{editid}}/edit">
+                    <img ng-src = "app/assets/ginas/images/protein.svg" alt ="protein">Protein
+                        </a>
                 </div>
                 <div class ="col-md-2">
-                    <input type="radio" ng-model="parent.substanceClass" value="structurallyDiverse" ng-class="part" ng-click = "changeClass('structurallyDiverse')">
-                    <img ng-src = "app/assets/ginas/images/structurally-diverse.svg">Structurally Diverse
+                    <a ng-click = "changeClass('structurallyDiverse');" ng-href = "app/substance/{{editid}}/edit">
+                    <img ng-src = "app/assets/ginas/images/structurally-diverse.svg" alt = "structurally diverse">Structurally Diverse
+                        </a>
                 </div>
                 <div class ="col-md-2">
-                    <input type="radio" ng-model="parent.substanceClass" value="polymer" ng-class="part" ng-click = "changeClass('polymer')">
-                    <img ng-src = "app/assets/ginas/images/polymer.svg">Polymer
+                    <a ng-click = "changeClass('polymer');" ng-href = "app/substance/{{editid}}/edit">
+                    <img ng-src = "app/assets/ginas/images/polymer.svg" alt = "polymer">Polymer
+                        </a>
                 </div>
                 <div class ="col-md-2">
-                    <input type="radio" ng-model="parent.substanceClass" value="nucleicAcid" ng-class="part" ng-click = "changeClass('nucleidAcid')">
-                    <img ng-src = "app/assets/ginas/images/nucleic-acid.svg">Nucelic Acid
+                    <a ng-click = "changeClass('nucleicAcid');" ng-href = "app/substance/{{editid}}/edit">
+                    <img ng-src = "app/assets/ginas/images/nucleic-acid.svg" alt = "nucleic acid">Nucelic Acid
+                        </a>
                 </div>
                 <div class ="col-md-2">
-                    <input type="radio" ng-model="parent.substanceClass" value="mixture" ng-class="part" ng-click = "changeClass('mixture')">
-                    <img ng-src = "app/assets/ginas/images/mixture.svg">Mixture
+                    <a ng-click = "changeClass('mixture');" ng-href = "app/substance/{{editid}}/edit">
+                    <img ng-src = "app/assets/ginas/images/mixture.svg" alt = "mixture">Mixture
+                        </a>
                 </div>
                 <div class ="col-md-2">
-                    <input type="radio" ng-model="parent.substanceClass" value="g1ss" ng-class="part" ng-click = "changeClass('g1ss')">
-                    <img ng-src = "app/assets/ginas/images/concept.svg">Group 1 Specified Substance
+                    <a ng-click = "changeClass('g1ss');" ng-href = "app/substance/{{editid}}/edit">
+                    <img ng-src = "app/assets/ginas/images/concept.svg" alt ="Group 1 Specified Substance">Group 1 Specified Substance
+                        </a>
                 </div>
 
 

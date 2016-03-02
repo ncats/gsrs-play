@@ -1,9 +1,9 @@
 <div>
-    <label for="{{field}}" class="text-capitalize">{{label || field}}</label><br>
+    <label id="{{field}}-label" class="text-capitalize">{{label || field}}</label><br>
     <a ng-hide="obj[field]._editing || obj[field].display =='Other'" class="ng-hide" aria-hidden="true" ng-click="editing(obj[field]);">{{obj[field].display}}</a>
         <select ng-show="obj[field]._editing || !obj[field].display  || !obj[field].display =='Other'" class="form-control" ng-model=obj[field] ng-change="obj[field]._editing=false;"
-                ng-options="r.display for r in values track by r.display" placeholder ="{{field}}" title="{{field}}" name="{{field}}" id ="{{field}}">
+                ng-options="r.display for r in values track by r.display" placeholder ="{{field}}" title="{{field}}" name="{{field}}" id ="{{field}}" aria-labelledby="{{field}}-label">
                 <option class= "text-capitalize" value='' disabled selected>{{label || field}}...</option>
         </select>
-    <input type="text" class="form-control" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();" ng-if="obj[field].display=='Other'"/>
+    <input type="text" class="form-control" ng-model=obj.new placeholder = "Add new value..." ng-blur ="makeNewCV();" ng-if="obj[field].display=='Other'" aria-labelledby="{{field}}-label"/>
 </div>

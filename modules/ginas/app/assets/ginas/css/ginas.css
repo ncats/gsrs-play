@@ -1036,6 +1036,7 @@ div.col-md-9> div#subunits > div> subunit > div > div> div> span> amino-acid>a.a
 }
 
 .url{
+    word-break: break-word;
 word-wrap: break-word;
 }
 

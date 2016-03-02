@@ -42,7 +42,7 @@ angular.module('bootstrap.fileField',[])
                     fileField[0].click()
                 });
             },
-            template:'<button type="button" class = "btn btn-primary"><ng-transclude></ng-transclude><input type="file" style="display:none" name="file-name" id="file-name"></button>',
+            template:'<button type="button" class = "btn btn-primary"><ng-transclude></ng-transclude><input type="file" style="display:none" name="file-name" id="file-name" aria-label="upload button input"></button>',
             replace:true,
             transclude:true
         };

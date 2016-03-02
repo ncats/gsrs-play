@@ -5,12 +5,12 @@
     <div class="col-md-12">
         <div class="row form-row">
             <form class="form-horizontal" name="diverseTypeForm" id="addDiverseTypeForm" role="form" novalidate>
-                <div  ng-class="parent.$$diverseType == 'whole' ? 'col-md-2' : 'col-md-2'">
-                    <input type="radio" ng-model="parent.$$diverseType" value="whole"  ng-click = "checkType()">
+                <div ng-class="parent.$$diverseType == 'whole' ? 'col-md-2' : 'col-md-2'">
+                    <input type="radio" ng-model="parent.$$diverseType" value="whole"  ng-click = "checkType()" aria-label ="whole substance">
                     <i ng-class="parent.$$diverseType == 'whole' ? 'fa fa-star fa-2x whole' : 'fa fa-star fa-2x' " ></i><br>Whole
                 </div>
                 <div  ng-class="parent.$$diverseType == 'part' ? 'col-md-2' : 'col-md-2'">
-                    <input type="radio" ng-model="parent.$$diverseType" value="part" ng-class="part" ng-click = "checkType()">
+                    <input type="radio" ng-model="parent.$$diverseType" value="part" ng-class="part" ng-click = "checkType()" aria-label ="substance part">
                     <i ng-class="parent.$$diverseType == 'part' ? 'fa fa-star-half-o fa-2x part' : 'fa fa-star-half-o fa-2x'"></i><br>Part/Fraction
                 </div>
             </form>

@@ -693,7 +693,15 @@
         return {
             restrict: 'E',
             replace: true,
-            templateUrl: baseurl + "assets/templates/admin/load-cv-form.html"
+            templateUrl: baseurl + "assets/templates/admin/load-cv-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+
+                scope.loadCVFile = function (file) {
+                    console.log('loading');
+                    console.log(file);
+                };
+            }
         };
     });
 

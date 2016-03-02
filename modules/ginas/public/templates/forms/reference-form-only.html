@@ -28,13 +28,13 @@
             <div class ="row form-row">
                 <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
                 <div class="col-md-6">
-                    <label for="upload">Upload a Document</label><br>
+                    <label id="upload-label">Upload a Document</label><br>
                     <file-field ng-show="!ref.uploadedFile && !uploadFile" ng-model="uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
                     <br>
                     {{uploadFile.name}}
                     <br>
-                    <button ng-hide ="ref.uploadedFile || !uploadFile" class ="btn btn-default" ng-click ="submitFile();"><span class="sr-only">Upload File</span><i class="fa fa-upload"></i></button>
-                    <button ng-show ="ref.uploadedFile" class ="btn btn-success" disabled><span class="sr-only">File Uploaded</span>
+                    <button ng-hide ="ref.uploadedFile || !uploadFile" class ="btn btn-default" ng-click ="submitFile();" aria-labelledby="upload-label"><span class="sr-only">Upload File</span><i class="fa fa-upload"></i></button>
+                    <button ng-show ="ref.uploadedFile" class ="btn btn-success" disabled aria-labelledby="upload-label"><span class="sr-only">File Uploaded</span>
                         <i class="fa fa-check"></i></button>
                 </div>
                     </ng-form>
