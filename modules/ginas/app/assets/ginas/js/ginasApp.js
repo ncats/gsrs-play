@@ -1078,7 +1078,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><span id="comment">{{value|limitTo:40}}...</span></div>'
+            template: '<div><span id="comment-text">{{value|limitTo:40}}...</span></div>'
         };
     });
 
@@ -1457,7 +1457,7 @@
         };
     });
 
-    ginasApp.directive('substanceSearchForm', function ($http) {
+    ginasApp.directive('substanceSearchForm', function ($http, CVFields) {
         return {
             restrict: 'E',
             replace: true,
@@ -1479,7 +1479,16 @@
                     temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
                     if(attrs.definition){
+                        var r = {relatedSubstance: temp};
+                        CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
+                            console.log(response);
+                            var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            r.type = type;
+                            console.log(r);
+                        });
+/*
                         var r = {type:{value:'SUB_ALTERNATE->SUBSTANCE', display:'SUB_ALTERNATE->SUBSTANCE'}, relatedSubstance: temp};
+*/
                         if(!_.has(scope.referenceobj, 'relationships')){
                             _.set(scope.referenceobj, 'relationships', []);
                         }

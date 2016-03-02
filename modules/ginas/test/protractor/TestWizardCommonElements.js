@@ -25,13 +25,21 @@ var WizardCommonElements = function () {
     };
 
     this.testTextArea = function(model) {
-        console.log("text-area-model: " + model);
-    //    console.log("text-area-buttonId: " + buttonId);
         var elementId = model.split(".")[1];
-        console.log("text-area-elementId: " + elementId);
         var userInput = element(by.id(elementId));
-        userInput.clear().sendKeys('testing');
-        expect(userInput.getAttribute('value')).toEqual('testing');
+
+        var updateInput = "var input = document.getElementById('"+ elementId +"');" +
+            "input.value = 'testing';" +
+            "angular.element(input).scope().$apply(function(s) { s.formName[input.name].$setViewValue(input.value)});";
+        browser.executeScript(updateInput);
+/*        console.log("text-area-model: " + model);
+    //    console.log("text-area-buttonId: " + buttonId);
+
+        console.log("text-area-elementId: " + elementId);
+        userInput.clear().then(function(){
+            userInput.sendKeys('testing');*/
+            expect(userInput.getAttribute('value')).toEqual('testing');
+     //   });
     };
 
     this.testDropdownSelectInput = function (model) {
@@ -102,13 +110,11 @@ var WizardCommonElements = function () {
     };
 
     this.testBinding = function(model){
-        console.log("test binding "  + model);
        expect(element(by.exactBinding(model)).isPresent()).toBe(true);
     };
 
 
     this.testModelBinding = function (model) {
-            console.log(model);
         var ret = element(by.exactBinding(model));
             return ret.getText();
     };
@@ -121,7 +127,6 @@ var WizardCommonElements = function () {
                 this.getPage();
             if(breadcrumb) {
                 for (var j = 0; j < breadcrumb.length; j++) {
-                    console.log(breadcrumb[j]);
                     var button = browser.findElement(By.id(breadcrumb[j]));
                     button.click();
                 }
@@ -151,33 +156,29 @@ var WizardCommonElements = function () {
                     break;
                 case "form-selector":
                     var parentFormBtn = elements.buttonId +"-toggle";
-                    console.log("elements.formObj");
-                    console.log(elements.formObj);
                     if(breadcrumb.length == 0 ) {
                         breadcrumb = [parentFormBtn];
                     }
                     switch(model){
                         case 'access':
-                            console.log("breadcrumb");
                             var newFormToggleBtn = elements.formObj +"-" + model;
                             breadcrumb.push(newFormToggleBtn);
-                            console.log(breadcrumb);
 
                             var accessElementTests = require('./AccessFormTest.js');
                             var accessPage = new accessElementTests;
                             this.testInputFields(accessPage.formElements, breadcrumb);
                             break;
                         case 'reference':
-                            console.log("reference breadcrumb");
+                            console.log(elements.formObj);
                             var newFormToggleBtn = elements.formObj +"-" + model;
                             breadcrumb.push(newFormToggleBtn);
-                            console.log(breadcrumb);
                             var refElementTests = require('./ReferenceFormTest.js');
                             var refPage = new refElementTests;
                             this.testInputFields(refPage.formElements, breadcrumb);
                             break;
                         case 'comments':
-
+                            var newFormToggleBtn = elements.formObj +"-" + model;
+                            breadcrumb.push(newFormToggleBtn);
                             var commentElementTests = require('./CommentFormTest.js');
                             var commentPage = new commentElementTests;
                             this.testInputFields(commentPage.formElements, breadcrumb);

@@ -15,15 +15,23 @@ var NoteForm = function () {
     this.formElements = {
         formName: 'noteForm',
         buttonId: 'notes',
+        formObj: 'note',
         fields: [{
             model: 'note.note',
             type: 'text-box'
-/*        }, {
+        }]
+    };
+
+    this.subForms = {
+        formName: 'noteForm',
+        buttonId: 'notes',
+        formObj: 'note',
+        fields: [{
             model: 'note.access',
             type: 'form-selector'
         }, {
             model: 'note.reference',
-            type: 'form-selector'*/
+            type: 'form-selector'
         }]
     }
 };
@@ -35,35 +43,35 @@ describe ('note form tests', function() {
         noteForm.getPage();
     });
 
-    it('tests all form elements are loaded', function () {
+    it('should see if form is visible', function () {
+        var vis = browser.findElement(By.id('addNoteForm')).isDisplayed();
+        expect(vis).toBe(false)
+    });
+
+    it('should test form toggling', function () {
+        var buttonId = noteForm.formElements.buttonId;
+        var vis = browser.findElement(By.id('addNoteForm')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId + "-toggle"));
+        expect(browser.findElement(By.id('addNoteForm')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('addNoteForm')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('addNoteForm')).isDisplayed()).toBe(false);
+
+    });
+
+    it('should test all basic form elements', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        var buttonId = noteForm.formElements.buttonId;
-        var formElements = noteForm.formElements.fields;
-        var refElementTests = require('./ReferenceFormTest.js');
-        var refPage = new refElementTests;
-        for (var i = 0; i < formElements.length; i++) {
-            var elementType = formElements[i].type;
-            var model = formElements[i].model;
-            noteForm.getPage();
-            switch (elementType) {
-                case "text-input":
-                    elements.testTextInput(buttonId, model);
-                    break;
-                case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model);
-                    break;
-                case "multi-select":
-                    // elements.testMultiSelectInput(buttonId, model);
-                    break;
-                case "check-box":
-                    // elements.testCheckBoxInput(buttonId, model);
-                    break;
-                case "form-selector":
-                    // refPage.refPageTests(buttonId, model);
-                    break;
-            } //switch
-        } //for i
+        var breadcrumb = ['notes-toggle'];
+        elements.testInputFields(noteForm.formElements, breadcrumb);
+    });
+
+    it('should test subforms', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var breadcrumb = ['notes-toggle'];
+        elements.testInputFields(noteForm.subForms, breadcrumb);
     });
 });
 
