@@ -917,7 +917,7 @@
         var references = {};
         var refFinder = {
             getAll: function (uuid) {
-                return $http.get(url + uuid + ")/references", {
+                return $http.get(url + uuid + ")/references",{cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
