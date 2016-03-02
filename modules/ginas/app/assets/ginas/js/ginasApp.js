@@ -59,6 +59,7 @@
                     break;
             }
             substance.references = [];
+            substance.access =[{value:'protected', display: 'PROTECTED'}];
             console.log(substance);
             return substance;
         };
@@ -218,7 +219,7 @@
             //   console.log((e.target.result));
             return e.target.result;
         };
-        reader.readAsText(file);
+       // reader.readAsText(file);
     });
 
     ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll,

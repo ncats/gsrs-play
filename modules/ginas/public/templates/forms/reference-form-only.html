@@ -21,6 +21,9 @@
                 <div class="col-md-2">
                     <text-input ng-model="ref.url" field="url"></text-input>
                 </div>
+                <div class="col-md-2">
+                    <check-box ng-model="ref.publicDomain" field="publicDomain" label="Public Domain"></check-box>
+                </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="ref" parent="parent" divid="refOnlyForm" type="access"></form-selector>
                 </div>
@@ -69,6 +72,9 @@
             </div>
             <div class="col-md-2 url">
                 <text-view-edit obj="reference" field="url"></text-view-edit>
+            </div>
+            <div class="col-md-1">
+                <check-box-view-edit ng-model="reference.publicDomain" field="publicDomain" label="Public Domain"></check-box-view-edit>
             </div>
             <div ng-if="reference.uploadedFile" class="col-md-1">
                 <a ng-href = {{reference.uploadedFile}}><i class ="fa fa-file-text fa-2x success"></i></a>

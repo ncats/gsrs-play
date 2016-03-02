@@ -1759,6 +1759,7 @@ console.log(scope);
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 if (scope.parent._name) {
                     scope.formType ='Editing';
                     scope.name = scope.parent._name;
