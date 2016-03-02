@@ -62,97 +62,63 @@ public class EditingWorkflowTest {
                 	String newVersion="2";
                 	//make name change
                 	{
-
-                		Map edited = (new ObjectMapper()).treeToValue(fetched, Map.class);
-                		((Map)((List)(edited.get("names"))).get(0)).put("name", newName);
-                		updated=(new ObjectMapper()).valueToTree(edited);
-
-						Changes changes = JsonUtil.getDestructiveChanges(fetched, updated);
-
-
-						Map<String, Change> changesMap = new HashMap<String, Change>();
-						changesMap.put("/names/0/name", new Change("/names/0/name", oldName, newName, Change.ChangeType.REPLACED));
-
-						Changes expectedChanges = new Changes(changesMap);
-
+                		updated=new JsonUtil.JsonNodeBuilder(fetched).set("/names/0/name", newName).build();
+						
+                		Changes changes = JsonUtil.computeChanges(fetched, updated);
+						Changes expectedChanges = new ChangesBuilder()
+													.replaced("/names/0/name", oldName, newName)
+													.build();
+						Changes expectedChangesDirect = new ChangesBuilder(fetched,updated)
+													.replace("/names/0/name")
+													.build();
+						
 						assertEquals(expectedChanges, changes);
-						/*JsonNode jp = JsonDiff.asJson(fetched,updated);
-	                    int changes=0;
-	                    
-	                    for(JsonNode jschange: jp){
-	                    	changes++;
-	                    	assertEquals(fetched.at(jschange.get("path").asText()).asText(),oldName);
-	                    	assertEquals(jschange.get("op").asText(),"replace");
-	                    	assertEquals(jschange.get("path").asText(),"/names/0/name");
-	                    	assertEquals(jschange.get("value").asText(),newName);
-	                    }
-	                    assertTrue(changes==1);
-	                    */
+						assertEquals(expectedChangesDirect, changes);
                 	}
                 	
                 	//submit edit
-                	{
-                		updatedReturned = ts.updateSubstanceJSON(updated);
-                		
-                	}
+                	updatedReturned = ts.updateSubstanceJSON(updated);
                 	
                 	//refetch editted
                 	{
-                		updateFetched = ts.fetchSubstanceJSON(uuid);
-                		assertEquals(Integer.parseInt(newVersion),Integer.parseInt(updateFetched.at("/version").asText()));
-                		assertEquals(newName,updateFetched.at("/_name").asText());
-                		
-                		JsonNode jp = JsonDiff.asJson(updated,updateFetched);
-                		int changes=0;
-                		for(JsonNode jschange: jp){
-	                    	
-	                    	String path=jschange.get("path").asText();
-	                    	if(path.equals("/version") ||
-	                    	   path.equals("/_name") ||
-	                    	   path.equals("/lastEdited") ||
-	                    	   path.equals("/names/0/lastEdited")
-	                    			){
-	                    	}else{
-	                    		System.out.println("CHANGED:" + jschange + " old: " + updated.at(jschange.get("path").asText()));
-	                    		changes++;
-	                    	}
-	                    	
-	                    }
-                		assertTrue(changes==0);
+						updateFetched = ts.fetchSubstanceJSON(uuid);
+						assertEquals(Integer.parseInt(newVersion), Integer
+								.parseInt(updateFetched.at("/version").asText()));
+						assertEquals(newName, updateFetched.at("/_name").asText());
+	
+						Changes changes = JsonUtil.computeChanges(updated, updateFetched);
+						Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
+						
+												.replace("/version")
+												.replace("/_name")
+												.replace("/lastEdited")
+												.replace("/names/0/lastEdited")
+												
+												.build();
+						assertEquals(expectedChanges, changes);
                 	}
                 	
                 	{
                 		JsonNode edits = ts.fetchSubstanceHistoryJSON(uuid);
+                		int changecount=0;
                 		for(JsonNode edit: edits){
                 			//Ok, I'm just going to look at the null-path edits
                 			//there should be 1
-                			if(
-                			   !edit.get("oldValue").isNull() && 
-                			   !edit.get("newValue").isNull() &&
-                			   edit.get("path").isNull()
-                					){
-                				JsonNode oldv=ts.urlJSON(edit.get("oldValue").asText());
-                				JsonNode newv=ts.urlJSON(edit.get("newValue").asText());
-                				JsonNode jp = JsonDiff.asJson(updateFetched,newv);
-                				//Expecting nothin'
-                				//System.out.println("Hopefully, there's nothing here:");
-                				int chcount=0;
-                				for(JsonNode jschange: jp){
-        	                    		System.out.println("CHANGES FROM NEW:" + jschange + " old: " + updateFetched.at(jschange.get("path").asText()));
-        	                    		chcount++;
-        	                    }
-                				assertTrue(chcount==0);
-                				jp = JsonDiff.asJson(fetched,oldv);
-                				//Expecting nothin'
-                				//System.out.println("Hopefully, there's nothing here too:");
-                				chcount=0;
-                				for(JsonNode jschange: jp){
-        	                    		System.out.println("CHANGES FROM OLD:" + jschange + " old: " + fetched.at(jschange.get("path").asText()));
-        	                    		chcount++;
-        	                    }
-                				assertTrue(chcount==0);
-                			}
+                			JsonNode oldv=ts.urlJSON(edit.get("oldValue").asText());
+                			JsonNode newv=ts.urlJSON(edit.get("newValue").asText());
+                				
+                			Changes changes = JsonUtil.computeChanges(updateFetched, newv);
+        					Changes expectedChanges = new ChangesBuilder(updateFetched,newv)
+        												.build();
+        					assertEquals(expectedChanges, changes);
+        						
+        					changes = JsonUtil.computeChanges(fetched, oldv);
+        					expectedChanges = new ChangesBuilder(fetched,oldv)
+        											.build();
+        					assertEquals(expectedChanges, changes);
+        					changecount++;                			
 	                    }
+                		assertEquals(1,changecount);
                 	}
                 	
                 	

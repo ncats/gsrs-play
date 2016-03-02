@@ -86,8 +86,8 @@ public class EntityFactory extends Controller {
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
     public static class FetchOptions {
-        public int top;
-        public int skip;
+        public int top=10;
+        public int skip=0;
         public String filter;
         public List<String> expand = new ArrayList<String>();
         public List<String> order = new ArrayList<String>();
@@ -155,6 +155,41 @@ public class EntityFactory extends Controller {
             this.top = top;
             this.skip = skip;
             this.filter = filter;
+        }
+        // TP: 03/01/2016
+        // TODO: have someone look into this
+        public static String normalizeFilter(String f){
+        	if(f!=null){
+        		f=f.replaceAll("\\s*=\\s*null", " is null");
+        		return f;
+        	}
+        	return f;
+        }
+        public Query applyToQuery(Query q){
+        	for (String path : this.expand) {
+                Logger.debug("  -> fetch "+path);
+                q = q.fetch(path);
+            }
+        	if(this.filter!=null){
+        		q = q.where(normalizeFilter(this.filter));
+        	}
+
+            if (!this.order.isEmpty()) {
+                for (String order : this.order) {
+                    Logger.debug("  -> order "+order);
+                    char ch = order.charAt(0);
+                    if (ch == '$') { // desc
+                        q = q.order(order.substring(1)+" desc");
+                    }else {
+                        if (ch == '^') {
+                            order = order.substring(1);
+                        }
+                    // default to asc
+                        q = q.order(order+" asc");
+                    }
+                }
+            }
+            return q;
         }
 
         public String toString () {
@@ -302,6 +337,8 @@ public class EntityFactory extends Controller {
         }
         Query<T> query = finder.query();
         
+        query=options.applyToQuery(query);
+        /*
         for (String path : options.expand) {
             Logger.debug("  -> fetch "+path);
             query = query.fetch(path);
@@ -327,6 +364,7 @@ public class EntityFactory extends Controller {
         else {
             //query = query.orderBy("id asc");
         }
+        */
 
         try {
             long start = System.currentTimeMillis();
@@ -989,11 +1027,16 @@ public class EntityFactory extends Controller {
 
     protected static Result edits (Object id, Class<?>... cls) {
     	List<Edit> edits = new ArrayList<Edit>();
+    	FetchOptions fe=new FetchOptions ();
     	
+    	//if(true)return EditFactory.page(fe.top, fe.skip, fe.filter);
+    	//EditFactory.page(top, skip, filter)
         for (Class<?> c : cls) {
-            List<Edit> tmpedits = EditFactory.finder.where
-                (Expr.and(Expr.eq("refid", id.toString()),
-                          Expr.eq("kind", c.getName())))
+        	Query q=EditFactory.finder.where
+                    (Expr.and(Expr.eq("refid", id.toString()),
+                            Expr.eq("kind", c.getName())));
+        	q=fe.applyToQuery(q);
+            List<Edit> tmpedits = q
                 .findList();
             if(tmpedits!=null){
             	edits.addAll(tmpedits);

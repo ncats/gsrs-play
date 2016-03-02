@@ -204,7 +204,9 @@ public class GinasTestServer extends ExternalResource{
     	return wsResponse1;
     }
     public WSResponse fetchSubstanceHistory(String uuid){
-    	WSResponse wsResponse1 = this.url(API_URL_HISTORY.replace("$UUID$", uuid)).get().get(timeout);
+    	WSResponse wsResponse1 = this.url(API_URL_HISTORY.replace("$UUID$", uuid))
+    			.setQueryParameter("filter","path=null")
+    			.get().get(timeout);
     	return wsResponse1;
     }
     

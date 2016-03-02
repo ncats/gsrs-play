@@ -19,6 +19,16 @@ public class Change {
     private final String newValue, oldValue;
     private final ChangeType type;
 
+    
+    public static Change add(String key, String newValue){
+    	return new Change(key,null,newValue, ChangeType.ADDED);
+    }
+    public static Change remove(String key, String oldValue){
+    	return new Change(key,oldValue,null, ChangeType.REMOVED);
+    }
+    public static Change replace(String key, String oldValue, String newValue){
+    	return new Change(key,oldValue,newValue, ChangeType.REPLACED);
+    }
     public Change(String key, String oldValue, String newValue, ChangeType type) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(type);
@@ -63,7 +73,7 @@ public class Change {
     }
 
     public int hashCode() {
-        int result = super.hashCode();
+        int result = 1;
         result = 31 * result + key.hashCode();
         result = 31 * result + (newValue != null ? newValue.hashCode() : 0);
         result = 31 * result + (oldValue != null ? oldValue.hashCode() : 0);

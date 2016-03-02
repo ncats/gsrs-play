@@ -162,7 +162,7 @@ public class JsonUtilTest {
                                         .add("type", "type2")
                                         .toJson();
 
-        Changes changes = JsonUtil.getDestructiveChanges(a, a);
+        Changes changes = JsonUtil.computeChanges(a, a);
 
         assertTrue(changes.isEmpty());
     }
@@ -180,7 +180,7 @@ public class JsonUtilTest {
 
 
 
-        Changes changes = JsonUtil.getDestructiveChanges(a, b);
+        Changes changes = JsonUtil.computeChanges(a, b);
 
         Map<String, Change> expected = new HashMap<>();
 
@@ -203,7 +203,7 @@ public class JsonUtilTest {
 
 
 
-        Changes changes = JsonUtil.getDestructiveChanges(b, a);
+        Changes changes = JsonUtil.computeChanges(b, a);
 
         Map<String, Change> expected = new HashMap<>();
 
@@ -225,7 +225,7 @@ public class JsonUtilTest {
 
         ChangeFilter filter = ChangeFilters.keyMatches("name");
 
-        Changes changes = JsonUtil.getDestructiveChanges(b, a, filter);
+        Changes changes = JsonUtil.computeChanges(b, a, filter);
 
         assertTrue(changes.isEmpty());
     }
@@ -252,11 +252,11 @@ public class JsonUtilTest {
             ChangeFilter createdFilter = ChangeFilters.keyMatches("created");
             ChangeFilter lastEditedFilter = ChangeFilters.keyMatches("lastEdited");
             ChangeFilter selfFilter = ChangeFilters.keyMatches("_self");
-            ChangeFilter uuidFilter = ChangeFilters.keyMatches("uuid");
+            ChangeFilter displayNameFilter = ChangeFilters.keyMatches("display");
             ChangeFilter blankOrNullFilter = ChangeFilters.nullOrBlankValues();
 
-            Changes changes = JsonUtil.getDestructiveChanges(before, after,
-                    createdFilter, lastEditedFilter, selfFilter, blankOrNullFilter,uuidFilter,
+            Changes changes = JsonUtil.computeChanges(before, after,
+                    createdFilter, lastEditedFilter, selfFilter, blankOrNullFilter, displayNameFilter,
                     ChangeFilters.filterOutType(Change.ChangeType.REPLACED));
 
             Changes expected = new ChangesBuilder(before, after)
@@ -275,7 +275,6 @@ public class JsonUtilTest {
 
 
 
-
             assertChangesEqual(expected, changes);
         }
     }
@@ -285,6 +284,7 @@ public class JsonUtilTest {
     private void assertChangesEqual(Changes expected, Changes actual){
 
         if(!expected.equals(actual)){
+        	expected.printDifferences(actual);
             throw new AssertionError(expected.diff(actual));
 
         }

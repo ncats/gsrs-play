@@ -2,10 +2,15 @@ package util.json;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,8 +18,23 @@ import java.util.Map;
  */
 public class JsonUtil {
 
+	
 
-    public static Changes getDestructiveChanges(JsonNode before, JsonNode after, ChangeFilter...filters ){
+	//public static JsonNode
+	
+	
+	// TP: This method takes arbitrary objects, serialized them, and returns the difference
+	// this may be useful if you'd like to see the difference between random seralizable objects
+	public static Changes computeChanges(Object before, Object after, ChangeFilter...filters ){
+		ObjectMapper om = new ObjectMapper();
+		JsonNode beforeNode=om.valueToTree(before);
+		JsonNode afterNode=om.valueToTree(after);
+		return computeChanges(beforeNode,afterNode,filters);
+	}
+	
+	
+	
+    public static Changes computeChanges(JsonNode before, JsonNode after, ChangeFilter...filters ){
         JsonNode jp = JsonDiff.asJson(before,after);
         Map<String, Change> changes = new HashMap<>();
 
@@ -46,11 +66,12 @@ public class JsonUtil {
                 String key = jn.get("path").asText();
                 JsonNode jsAfter=after.at(key);
                 change= new Change(key, null, jsAfter.asText(), Change.ChangeType.ADDED);
-            }
-            else if("replace".equals(op)){
+            }else if("replace".equals(op)){
+            	
                 String key = jn.get("path").asText();
-                JsonNode jsAfter=after.at(key);
-                change= new Change(key, before.at(key).asText(), jsAfter.asText(), Change.ChangeType.REPLACED);
+                String vold=before.at(key).asText();
+                String vnew=after.at(key).asText();
+                change= new Change(key, vold, vnew, Change.ChangeType.REPLACED);
             }
 
 
@@ -69,7 +90,81 @@ public class JsonUtil {
     }
 
 
-
+    public static class JsonNodeBuilder{
+    	final JsonNode oldJson;
+    	public static class JsonChange{
+    		public String op;
+    		public String path;
+    		public String value;
+    		public String from;
+    		public static JsonChange set(String path, String value){
+    			JsonChange jsc=new JsonChange();
+    			jsc.op="replace";
+    			jsc.path=path;
+    			jsc.value=value;
+    			return jsc;
+    		}
+    		public static JsonChange remove(String path){
+    			JsonChange jsc=new JsonChange();
+    			jsc.op="remove";
+    			jsc.path=path;
+    			return jsc;
+    		}
+    		public static JsonChange add(String path, String value){
+    			JsonChange jsc=new JsonChange();
+    			jsc.op="add";
+    			jsc.path=path;
+    			jsc.value=value;
+    			return jsc;
+    		}
+    		public static JsonChange move(String path, String from){
+    			JsonChange jsc=new JsonChange();
+    			jsc.op="move";
+    			jsc.path=path;
+    			jsc.from=from;
+    			return jsc;
+    		}
+    	}
+    	List<JsonChange> changes = new ArrayList<JsonChange>();
+    	public JsonNodeBuilder(JsonNode jt){
+    		this.oldJson=jt.deepCopy();
+    	}
+    	
+    	public JsonNodeBuilder set(String path, String value){
+    		try{
+	    		if(oldJson.at(path).isNull()){
+	    			changes.add(JsonChange.add(path, value));
+	    			return this;
+	    		}
+    		}catch(Exception e){
+    			
+    		}
+    		changes.add(JsonChange.set(path, value));
+    		return this;
+    	}
+    	public JsonNodeBuilder remove(String path){
+    		changes.remove(JsonChange.remove(path));
+    		return this;
+    	}
+    	public JsonNodeBuilder add(String path,String value){
+    		changes.remove(JsonChange.add(path,value));
+    		return this;
+    	}
+    	public JsonNodeBuilder move(String path, String from){
+    		changes.remove(JsonChange.move(path,from));
+    		return this;
+    	}
+    	public JsonNode build(){
+    		try {
+				return JsonPatch.fromJson((new ObjectMapper()).valueToTree(changes)).apply(oldJson);
+			} catch (JsonPatchException | IOException e) {
+				e.printStackTrace();
+			}
+    		return null;
+    	}
+    	
+    	
+    }
     public static class JsonBuilder{
         ObjectMapper mapper = new ObjectMapper();
         StringBuilder builder = new StringBuilder("{");
@@ -190,5 +285,8 @@ public class JsonUtil {
                 throw new IllegalStateException("error building Json", e);
             }
         }
+    }
+    public static void main(String[] ar){
+    	System.out.println("LOL");
     }
 }

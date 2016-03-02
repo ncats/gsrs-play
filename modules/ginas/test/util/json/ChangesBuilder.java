@@ -17,6 +17,11 @@ public class ChangesBuilder {
 
     private final JsonNode before, after;
 
+    public ChangesBuilder(){
+    	before=null;
+    	after=null;
+    }
+    
     public ChangesBuilder(JsonNode before, JsonNode after) {
         this.before = before;
         this.after = after;
@@ -36,6 +41,15 @@ public class ChangesBuilder {
     public ChangesBuilder change(Change change){
         map.put(change.getKey(), change);
         return this;
+    }
+    public ChangesBuilder added(String key, String value){
+    	return change(Change.add(key, value));
+    }
+    public ChangesBuilder removed(String key, String oldValue, String newValue){
+    	return change(Change.remove(key, oldValue));
+    }
+    public ChangesBuilder replaced(String key, String oldValue, String newValue){
+    	return change(Change.replace(key, oldValue, newValue));
     }
 
 

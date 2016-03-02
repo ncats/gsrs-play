@@ -76,12 +76,23 @@ public class Changes {
                 '}';
     }
 
+    public Changes missing(Changes actual) {
+        Set<Change> copy = new HashSet<>(actual.changes.values());
+        copy.removeAll(this.changes.values());
+
+        return toChanges(copy);
+    }
+    
+    public Changes extra(Changes actual) {
+       return actual.missing(this);
+    }
+
+    
     public Changes intersection(Changes actual) {
         Set<Change> copy = new HashSet<>(changes.values());
         copy.retainAll(actual.changes.values());
 
         return toChanges(copy);
-
     }
 
     private Changes toChanges(Set<Change> copy) {
@@ -107,6 +118,16 @@ public class Changes {
         v.removeAll(intersecion.changes.values());
 
         return toChanges(v);
-
     }
+    
+    public void printDifferences(Changes other){
+    	System.out.println("Missing:");
+    	System.out.println(this.missing(other));
+    	System.out.println("Extra:");
+    	System.out.println(this.extra(other));
+    }
+
+	public int size() {
+		return changes.size();
+	}
 }
