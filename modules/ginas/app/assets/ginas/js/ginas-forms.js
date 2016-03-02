@@ -157,7 +157,7 @@
 
 
                 scope.showInfo = function () {
-                    toggler.show(scope, type, url);
+                    toggler.show(scope, scope.type, url);
                 };
             }
         }
