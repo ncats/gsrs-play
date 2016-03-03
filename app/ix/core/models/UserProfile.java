@@ -38,7 +38,7 @@ public class UserProfile extends IxModel implements Subject {
     
     @Lob
     @JsonIgnore
-    private String _roles=null;  //this is a silly, but quick way to serialize roles
+    private String rolesJSON=null;  //this is a silly, but quick way to serialize roles
     
     
     //private key to be used in authentication
@@ -69,10 +69,10 @@ public class UserProfile extends IxModel implements Subject {
 
     public List<Role> getRoles(){
     	List<Role> rolekinds=new ArrayList<Role>();
-    	if(this._roles!=null){
+    	if(this.rolesJSON!=null){
     		try{
 	    		ObjectMapper om = new ObjectMapper();
-	    		List l=om.readValue(_roles, List.class);
+	    		List l=om.readValue(rolesJSON, List.class);
 	    		for(Object o:l){
 	    			try{
 	    				rolekinds.add(Role.valueOf(o.toString()));
@@ -96,7 +96,7 @@ public class UserProfile extends IxModel implements Subject {
     
     public void setRoles(List<Role> rolekinds){
     	ObjectMapper om = new ObjectMapper();
-    	_roles=om.valueToTree(rolekinds).toString();
+    	rolesJSON=om.valueToTree(rolekinds).toString();
     }
     
     
