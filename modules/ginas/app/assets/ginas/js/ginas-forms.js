@@ -689,7 +689,7 @@
         };
     });
 
-    ginasForms.directive('loadCvForm', function () {
+    ginasForms.directive('loadCvForm', function (FileReader) {
         return {
             restrict: 'E',
             replace: true,
@@ -698,8 +698,9 @@
                 console.log(scope);
 
                 scope.loadCVFile = function (file) {
-                    console.log('loading');
-                    console.log(file);
+                        FileReader.readAsText(file, scope).then(function(response){
+                            console.log(response);
+                        });
                 };
             }
         };
