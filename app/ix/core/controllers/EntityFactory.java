@@ -2136,18 +2136,6 @@ public class EntityFactory extends Controller {
         return UUID.fromString(id);
     }
 
-    public static abstract class EntityFilter {
-        public abstract boolean accept (Object sub);
-        public List filter(List results) {
-			List filteredSubstances = new ArrayList<Substance>();
-			for (Object sub : results) {
-				if (accept(sub)) {
-					filteredSubstances.add(sub);
-				}
-			}
-			return filteredSubstances;
-		}
-    }
 
 	public static Object getIdForBean(Object entity){
 	    if (!entity.getClass().isAnnotationPresent(Entity.class)) {
@@ -2202,6 +2190,17 @@ public class EntityFactory extends Controller {
 	    if(id!=null)return id.toString();
 	    return null;
 	}
-    
-    
+
+    public static abstract class EntityFilter {
+        public abstract boolean accept (Object sub);
+        public List filter(List results) {
+			List filteredSubstances = new ArrayList<Substance>();
+			for (Object sub : results) {
+				if (accept(sub)) {
+					filteredSubstances.add(sub);
+				}
+			}
+			return filteredSubstances;
+		}
+    }
 }
