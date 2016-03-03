@@ -5,15 +5,15 @@
 
 
 
-@(relationships: List[Relationship], id:String)
+@(relationships: List[Relationship], title: String, id:String)
 
 <button class="btn btn-primary label-offset det">
-    Relationships&nbsp;<span class="badge"> @relationships.length</span></button>
+    @title&nbsp;<span class="badge"> @relationships.length</span></button>
 <div class="col-md-12">
     <table class="table">
         <thead>
             <tr>
-                <th></th>
+                <th>Substance</th>
                 <th>Name</th>
                 <th>Type</th>
                 <th>Comments</th>
@@ -23,9 +23,9 @@
                 <th>References</th>
             </tr>
         </thead>
-       
+
         @for(r <- relationships) {
-        
+
             <tr>
                     @if(SubstanceFactory.getFullSubstance(r.relatedSubstance) != null) {
                 

@@ -17,12 +17,14 @@
     <div class= "panel-body list-item">
         <div class = "row">
             <div class = "col-md-3">
-                <img ng-click="toggle()" src="@routes.Assets.at("ginas/images/mixture.svg")" class="struc-thumb img-responsive" id="" />
+                <img ng-click="toggle()" class="struc-thumb img-responsive" id="" alt="mixture" src="@routes.Assets.at("ginas/images/mixture.svg")"  />
                 <div class = "row">
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled tools">
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Mixture"> <span class="fa fa-pencil fa-2x success"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))" uib-tooltip="Edit" target="_self" aria-label="Edit Mixture">
+                                    <span class="sr-only">Edit Mixture</span>
+                                    <span class="fa fa-pencil fa-2x success"></span></a>
                             </li>
                         </ul>
                     </div>

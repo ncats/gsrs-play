@@ -114,10 +114,6 @@ public class GinasFactory extends EntityFactory {
 		}
 	}
 
-	public static Result login() {
-		return ok(ix.ginas.views.html.login.render());
-	}
-
 	public static Principal byUsername(String user) {
 		return finder.where().eq("username", user).findUnique();
 	}

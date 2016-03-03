@@ -300,6 +300,48 @@ public class Substance extends GinasCommonData {
 	}
 
 	@JsonIgnore
+	public List<Relationship> getMetabolites() {
+		List<Relationship> ret = new ArrayList<Relationship>();
+		for (Relationship r : this.relationships) {
+			if (r.type.toLowerCase().contains("metabolite")) {
+				ret.add(r);
+			}
+		}
+		return ret;
+	}
+
+	@JsonIgnore
+	public List<Relationship> getImpurities() {
+		List<Relationship> ret = new ArrayList<Relationship>();
+		for (Relationship r : this.relationships) {
+			if (r.type.toLowerCase().contains("impurity")) {
+				ret.add(r);
+			}
+		}
+		return ret;
+	}
+
+	@JsonIgnore
+	public List<Relationship> getActiveMoieties() {
+		List<Relationship> ret = new ArrayList<Relationship>();
+		for (Relationship r : this.relationships) {
+			if (r.type.toLowerCase().contains("active moiety")) {
+				ret.add(r);
+			}
+		}
+		return ret;
+	}
+
+	@JsonIgnore
+	public List<Relationship> getFilteredRelationships() {
+		List<Relationship> ret = new ArrayList<Relationship>(this.relationships);
+		ret.removeAll(getImpurities());
+		ret.removeAll(getMetabolites());
+		ret.removeAll(getActiveMoieties());
+		return ret;
+	}
+
+	@JsonIgnore
 	public List<Name> getOfficialNames() {
 		List<Name> officialNames = new ArrayList<Name>();
 		for (Name n : this.names) {

@@ -1,5 +1,7 @@
 package util.json;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,11 +23,27 @@ public class ChangeFilters {
         };
     }
 
+
+
+    public static ChangeFilter filterOutType(final Change.ChangeType type){
+        return new ChangeFilter(){
+
+            @Override
+            public boolean filterOut(Change change) {
+                return type ==change.getType();
+            }
+        };
+    }
+
     public static ChangeFilter nullOrBlankValues() {
         return new ChangeFilter() {
             @Override
             public boolean filterOut(Change change) {
-                String value = change.getValue().textValue();
+                String value = change.getNewValue();
+                if(value ==null){
+                    value = change.getOldValue();;
+                }
+
                 return value==null || value.trim().isEmpty();
             }
         };

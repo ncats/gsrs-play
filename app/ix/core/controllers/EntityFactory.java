@@ -82,8 +82,8 @@ public class EntityFactory extends Controller {
         Play.application().plugin(TextIndexerPlugin.class).getIndexer();
 
     public static class FetchOptions {
-        public int top;
-        public int skip;
+        public int top=10;
+        public int skip=0;
         public String filter;
         public List<String> expand = new ArrayList<String>();
         public List<String> order = new ArrayList<String>();
@@ -151,6 +151,41 @@ public class EntityFactory extends Controller {
             this.top = top;
             this.skip = skip;
             this.filter = filter;
+        }
+        // TP: 03/01/2016
+        // TODO: have someone look into this
+        public static String normalizeFilter(String f){
+        	if(f!=null){
+        		f=f.replaceAll("\\s*=\\s*null", " is null");
+        		return f;
+        	}
+        	return f;
+        }
+        public Query applyToQuery(Query q){
+        	for (String path : this.expand) {
+                Logger.debug("  -> fetch "+path);
+                q = q.fetch(path);
+            }
+        	if(this.filter!=null){
+        		q = q.where(normalizeFilter(this.filter));
+        	}
+
+            if (!this.order.isEmpty()) {
+                for (String order : this.order) {
+                    Logger.debug("  -> order "+order);
+                    char ch = order.charAt(0);
+                    if (ch == '$') { // desc
+                        q = q.order(order.substring(1)+" desc");
+                    }else {
+                        if (ch == '^') {
+                            order = order.substring(1);
+                        }
+                    // default to asc
+                        q = q.order(order+" asc");
+                    }
+                }
+            }
+            return q;
         }
 
         public String toString () {
@@ -298,6 +333,8 @@ public class EntityFactory extends Controller {
         }
         Query<T> query = finder.query();
         
+        query=options.applyToQuery(query);
+        /*
         for (String path : options.expand) {
             Logger.debug("  -> fetch "+path);
             query = query.fetch(path);
@@ -323,6 +360,7 @@ public class EntityFactory extends Controller {
         else {
             //query = query.orderBy("id asc");
         }
+        */
 
         try {
             long start = System.currentTimeMillis();
@@ -985,11 +1023,16 @@ public class EntityFactory extends Controller {
 
     protected static Result edits (Object id, Class<?>... cls) {
     	List<Edit> edits = new ArrayList<Edit>();
+    	FetchOptions fe=new FetchOptions ();
     	
+    	//if(true)return EditFactory.page(fe.top, fe.skip, fe.filter);
+    	//EditFactory.page(top, skip, filter)
         for (Class<?> c : cls) {
-            List<Edit> tmpedits = EditFactory.finder.where
-                (Expr.and(Expr.eq("refid", id.toString()),
-                          Expr.eq("kind", c.getName())))
+        	Query q=EditFactory.finder.where
+                    (Expr.and(Expr.eq("refid", id.toString()),
+                            Expr.eq("kind", c.getName())));
+        	q=fe.applyToQuery(q);
+            List<Edit> tmpedits = q
                 .findList();
             if(tmpedits!=null){
             	edits.addAll(tmpedits);
@@ -1057,8 +1100,8 @@ public class EntityFactory extends Controller {
                     if (m instanceof Model) {
                         try {
                             
-                            Method f = EntityPersistAdapter.getIdSettingMethodForBean(m);
-                            Object _id = EntityPersistAdapter.getIdForBean(m);
+                            Method f = EntityFactory.getIdSettingMethodForBean(m);
+                            Object _id = EntityFactory.getIdForBean(m);
                             oldObjects.put(_id, (Model) m);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -1101,7 +1144,7 @@ public class EntityFactory extends Controller {
 	            	return validationResponse(false, validationMessages);
 	            }
                 try {
-                    Method m=EntityPersistAdapter.getIdSettingMethodForBean(inst);
+                    Method m=EntityFactory.getIdSettingMethodForBean(inst);
                     m.invoke(inst, id);
                 }catch (Exception ex) {
                     ex.printStackTrace();
@@ -1116,8 +1159,8 @@ public class EntityFactory extends Controller {
                             if(m instanceof Model){
                                 try{
                                     
-                                    Method f=EntityPersistAdapter.getIdSettingMethodForBean(m);
-                                    Object _id=EntityPersistAdapter.getIdForBean(m);
+                                    Method f=EntityFactory.getIdSettingMethodForBean(m);
+                                    Object _id=EntityFactory.getIdForBean(m);
 
                                     //Get old model, do something with it?
                                     old=oldObjects.get(_id);
@@ -1305,7 +1348,7 @@ public class EntityFactory extends Controller {
                         if (val != null) {
                             ftype = val.getClass();
                             if (null != ftype.getAnnotation(Entity.class)) {
-                                Object tid=EntityPersistAdapter.getIdForBean(val);
+                                Object tid=EntityFactory.getIdForBean(val);
                                 if(tid!=null){
                                     tempid=tid;
                                     temptype=ftype;
@@ -1487,9 +1530,22 @@ public class EntityFactory extends Controller {
         }
     }
 
-    static List<Field> getFields (Object entity, Class... annotation) {
+    private static List<Field> getFields (Object entity, Class... annotation) {
         List<Field> fields = new ArrayList<Field>();
         for (Field f : entity.getClass().getFields()) {
+            for (Class c : annotation) {
+                if (f.getAnnotation(c) != null) {
+                    fields.add(f);
+                    break;
+                }
+            }
+        }
+        return fields;
+    }
+    
+    private static List<Field> getFieldsForClass (Class entity, Class... annotation) {
+        List<Field> fields = new ArrayList<Field>();
+        for (Field f : entity.getFields()) {
             for (Class c : annotation) {
                 if (f.getAnnotation(c) != null) {
                     fields.add(f);
@@ -1511,7 +1567,7 @@ public class EntityFactory extends Controller {
         return values;
     }
 
-    static Object getId (Object entity) throws Exception {
+    public static Object getId (Object entity) throws Exception {
         Field f = getIdField (entity);
         Object id = null;
         if (f != null) {
@@ -1530,8 +1586,12 @@ public class EntityFactory extends Controller {
         return id;
     }
 
-    static Field getIdField (Object entity) throws Exception {
+    public static Field getIdField (Object entity) throws Exception {
         List<Field> fields = getFields (entity, Id.class);
+        return fields.isEmpty() ? null : fields.iterator().next();
+    }
+    public static Field getIdFieldForClass (Class entity) throws Exception {
+        List<Field> fields = getFieldsForClass (entity, Id.class);
         return fields.isEmpty() ? null : fields.iterator().next();
     }
     
@@ -2088,6 +2148,60 @@ public class EntityFactory extends Controller {
 			return filteredSubstances;
 		}
     }
+
+	public static Object getIdForBean(Object entity){
+	    if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+	        return null;
+	    }
+	    try {
+	        Object id = EntityFactory.getId(entity);
+	        if (id != null) {
+	            return id;
+	        }
+	    }
+	    catch (Exception ex) {
+	        Logger.trace("Unable to fetch ID for "+entity, ex);
+	    }
+	    return null;
+	}
+
+	public static Field getIdFieldForBean(Object entity){
+	    if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+	        return null;
+	    }
+	    try {
+	        for (Field f : entity.getClass().getFields()) {
+	            if (f.getAnnotation(Id.class) != null) {
+	                return f;
+	            }
+	        }
+	    } catch (Exception ex) {
+	        Logger.trace("Unable to update index for "+entity, ex);
+	    }
+	    return null;
+	}
+
+	public static Method getIdSettingMethodForBean(Object entity){
+	    Field f=getIdFieldForBean(entity);
+	    for(Method m:entity.getClass().getMethods()){
+	        if(m.getName().toLowerCase().equals("set" + f.getName().toLowerCase())){
+	            return m;
+	        }
+	    }
+	    return null;
+	}
+
+	public static String getIdForBeanAsString(Object entity){
+	    Object id=getIdForBean(entity);
+	    if(id!=null)return id.toString();
+	    return null;
+	}
+
+	public static String setIdForBean(Object entity){
+	    Object id=getIdForBean(entity);
+	    if(id!=null)return id.toString();
+	    return null;
+	}
     
     
 }

@@ -3,8 +3,7 @@
 
     var ginasApp = angular.module('ginas', ['ngAria', 'ngMessages', 'ngResource', 'ui.bootstrap', 'ui.bootstrap.showErrors',
         'LocalStorageModule', 'ngTagsInput', 'jsonFormatter', 'ginasForms', 'ginasFormElements', 'ginasAdmin', 'diff-match-patch'
-    ]).
-        run(['$anchorScroll', function ($anchorScroll) {
+    ]).run(['$anchorScroll', function ($anchorScroll) {
             $anchorScroll.yOffset = 150;   // always scroll by 100 extra pixels
         }])
         .config(function (localStorageServiceProvider, $locationProvider) {
@@ -18,59 +17,60 @@
 
     ginasApp.factory('Substance', function () {
         var substance = {};
-        substance.$$setClass = function(subClass){
-            var substanceClass= subClass;
-        switch (substanceClass) {
-            case "chemical":
-                substance.substanceClass = substanceClass;
-                substance.structure = {};
-                _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
-                substance.moieties = [];
-                break;
-            case "protein":
-                substance.substanceClass = substanceClass;
-                substance.protein = {};
-                substance.protein.subunits = [];
-                break;
-            case "structurallyDiverse":
-                substance.substanceClass = substanceClass;
-                substance.structurallyDiverse = {};
-                break;
-            case "nucleicAcid":
-                substance.substanceClass = substanceClass;
-                substance.nucleicAcid = {};
-                substance.nucleicAcid.subunits = [];
-                break;
-            case "mixture":
-                substance.substanceClass = substanceClass;
-                substance.mixture = {};
-                break;
-            case "polymer":
-                substance.substanceClass = substanceClass;
-                substance.polymer = {};
-                break;
-            case "specifiedSubstanceG1":
-                substance.substanceClass = substanceClass;
-                substance.specifiedSubstance = {};
-                break;
-            default:
-                substance.substanceClass = substanceClass;
+        substance.$$setClass = function (subClass) {
+            var substanceClass = subClass;
+            switch (substanceClass) {
+                case "chemical":
+                    substance.substanceClass = substanceClass;
+                    substance.structure = {};
+                    _.set(substance.structure, 'opticalActivity', {value: "UNSPECIFIED"});
+                    substance.moieties = [];
+                    break;
+                case "protein":
+                    substance.substanceClass = substanceClass;
+                    substance.protein = {};
+                    substance.protein.subunits = [];
+                    break;
+                case "structurallyDiverse":
+                    substance.substanceClass = substanceClass;
+                    substance.structurallyDiverse = {};
+                    break;
+                case "nucleicAcid":
+                    substance.substanceClass = substanceClass;
+                    substance.nucleicAcid = {};
+                    substance.nucleicAcid.subunits = [];
+                    break;
+                case "mixture":
+                    substance.substanceClass = substanceClass;
+                    substance.mixture = {};
+                    break;
+                case "polymer":
+                    substance.substanceClass = substanceClass;
+                    substance.polymer = {};
+                    break;
+                case "specifiedSubstanceG1":
+                    substance.substanceClass = substanceClass;
+                    substance.specifiedSubstance = {};
+                    break;
+                default:
+                    substance.substanceClass = substanceClass;
 //                substance.polymer = {};
-                console.log('invalid substance class');
-                break;
-        }
-        substance.references = [];
+                    console.log('invalid substance class');
+                    break;
+            }
+            substance.references = [];
+            substance.access =[{value:'protected', display: 'PROTECTED'}];
             console.log(substance);
             return substance;
         };
 
-        substance.$$changeClass = function(newClass){
+        substance.$$changeClass = function (newClass) {
             substance.substanceClass = newClass;
             return substance;
         };
 
-        substance.$$setSubstance = function(sub){
-        substance = sub;
+        substance.$$setSubstance = function (sub) {
+            substance = sub;
             return substance;
         };
         return substance;
@@ -134,7 +134,6 @@
         };
         return nameFinder;
     });
-
 
     ginasApp.factory('substanceIDRetriever', ['$http', function ($http) {
         var url = baseurl + "api/v1/substances(";
@@ -203,6 +202,26 @@
         };
     });
 
+    ginasApp.service('fileReader', function () {
+        var reader = new FileReader();
+
+        reader.onerror = function (e) {
+            alert("Error reading file");
+        };
+        reader.onprogress = function (e) {
+        };
+        reader.onabort = function (e) {
+            alert('File read cancelled');
+        };
+        reader.onloadstart = function (e) {
+        };
+        reader.onload = function (e) {
+            //   console.log((e.target.result));
+            return e.target.result;
+        };
+       // reader.readAsText(file);
+    });
+
     ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger) {
         var ginasCtrl = this;
@@ -220,10 +239,10 @@
             $scope.submitSubstanceView = $scope.fromFormSubstance(angular.copy($scope.substance));
         };
 
-        $scope.toggleGrid = function(){
+        $scope.toggleGrid = function () {
             console.log("grid");
             //  $scope.gridView = !$scope.gridView;
-            localStorageService.set('gridView',  $scope.gridView);
+            localStorageService.set('gridView', $scope.gridView);
         };
 
         $scope.compare = function () {
@@ -281,26 +300,26 @@
                 delete formSub.subref;
             }
 
-            if(formSub.substanceClass ==='protein'){
-                if(_.has(formSub.protein, 'disulfideLinks')){
-                    _.forEach(formSub.protein.disulfideLinks, function(value, key){
-                        console.log( _.toArray(value.sites));
+            if (formSub.substanceClass === 'protein') {
+                if (_.has(formSub.protein, 'disulfideLinks')) {
+                    _.forEach(formSub.protein.disulfideLinks, function (value, key) {
+                        console.log(_.toArray(value.sites));
                         //object   protein
                         //array    disulfideLinks
                         //object   disulfideLink
                         //array    sites
                         //object   site
                         var disulfideLink = {};
-                        var sites =  _.toArray(value.sites);
+                        var sites = _.toArray(value.sites);
                         console.log(sites);
                         disulfideLink.sites = sites;
                         //_.set(formSub.protein.disulfideLinks[key], 'disulfideLink', _.toArray(value.sites));
-                        formSub.protein.disulfideLinks[key]= disulfideLink;
+                        formSub.protein.disulfideLinks[key] = disulfideLink;
                     });
                 }
-                if(_.has(formSub.protein, 'otherLinks')){
-                    _.forEach(formSub.protein.otherLinks, function(value, key){
-                        formSub.protein.otherLinks[key]=value.sites;
+                if (_.has(formSub.protein, 'otherLinks')) {
+                    _.forEach(formSub.protein.otherLinks, function (value, key) {
+                        formSub.protein.otherLinks[key] = value.sites;
                         console.log(key);
                         console.log(value);
                     });
@@ -308,15 +327,15 @@
             }
 
             formSub = $scope.flattenCV(formSub);
-            if (_.has(formSub, 'moieties')){
+            if (_.has(formSub, 'moieties')) {
                 _.forEach(formSub.moieties, function (m) {
                     m.id = UUID.newID();
                 });
             }
-            if (_.has(formSub, 'structure')){
+            if (_.has(formSub, 'structure')) {
                 //apparently needs to be reset as well
                 formSub.structure.id = UUID.newID();
-                if(formSub.substanceClass ==='polymer'){
+                if (formSub.substanceClass === 'polymer') {
                     _.set(formSub, 'polymer.idealizedStructure', formSub.structure);
                     console.log(formSub);
                     formSub = _.omit(formSub, 'structure');
@@ -512,19 +531,19 @@
             modalInstance.close();
         };
 
-        $scope.open = function(url){
+        $scope.open = function (url) {
             modalInstance = $uibModal.open({
                 templateUrl: url,
                 scope: $scope
             });
         };
 
-        $scope.viewSubstance = function(){
+        $scope.viewSubstance = function () {
 
         };
 
         $scope.submitSubstanceConfirm = function () {
-            var f=function () {
+            var f = function () {
                 var url = baseurl + "assets/templates/modals/substance-submission.html";
                 $scope.open(url);
             };
@@ -559,8 +578,6 @@
                 callback();
             });
         };
-
-
 
 
         $scope.submitSubstance = function () {
@@ -675,10 +692,10 @@
             var sub = JSON.parse(input);
             //  $scope.substance = sub;
             $scope.substance = $scope.toFormSubstance(sub);
-            if($scope.substance.substanceClass==='chemical') {
+            if ($scope.substance.substanceClass === 'chemical') {
                 molChanger.setMol($scope.substance.structure.molfile);
             }
-            if($scope.substance.substanceClass==='polymer') {
+            if ($scope.substance.substanceClass === 'polymer') {
                 molChanger.setMol($scope.substance.idealizedStructure.molfile);
             }
         };
@@ -901,7 +918,7 @@
         var references = {};
         var refFinder = {
             getAll: function (uuid) {
-                return $http.get(url + uuid + ")/references", {
+                return $http.get(url + uuid + ")/references",{cache: true}, {
                     headers: {
                         'Content-Type': 'text/plain'
                     }
@@ -1078,7 +1095,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><span id="comment">{{value|limitTo:40}}...</span></div>'
+            template: '<div><span id="comment-text">{{value|limitTo:40}}...</span></div>'
         };
     });
 
@@ -1114,7 +1131,7 @@
                 acid: '='
             },
             link: function (scope, element, attrs) {
-                scope.bridged= false;
+                scope.bridged = false;
                 var aa = scope.acid;
                 var template;
                 if (aa.valid == false) {
@@ -1143,13 +1160,13 @@
                         scope.acidClass = 'plain';
                     }
 
-                    if(scope.acidClass ==='disulfide' || scope.acidClass ==='otherLinks'){
+                    if (scope.acidClass === 'disulfide' || scope.acidClass === 'otherLinks') {
                         $templateRequest(baseurl + "assets/templates/tooltips/bridge-tooltip-template.html").then(function (html) {
                             template = angular.element(html);
                             element.html(template).show();
                             $compile(element.contents())(scope);
                         });
-                    }else{
+                    } else {
                         $templateRequest(baseurl + "assets/templates/tooltips/tooltip-template.html").then(function (html) {
                             template = angular.element(html);
                             element.html(template).show();
@@ -1159,18 +1176,18 @@
                     }
                 }
 
-                scope.showBridge = function(){
-                    scope.bridged= !scope.bridged;
+                scope.showBridge = function () {
+                    scope.bridged = !scope.bridged;
                 };
 
-                scope.scrollTo= function(div, acid){
+                scope.scrollTo = function (div, acid) {
                     $anchorScroll(div);
                 };
             }
         };
     });
 
-    ginasApp.service('APIFetcher', function($http){
+    ginasApp.service('APIFetcher', function ($http) {
         var url = baseurl + "api/v1/substances(";
         var fetcher = {
             fetch: function (uuid) {
@@ -1195,25 +1212,25 @@
                 parent: '=',
                 obj: '=',
                 uuid: '=',
-                index:'=',
+                index: '=',
                 view: '@',
-                numbers:'='
+                numbers: '='
             },
             link: function (scope, element, attrs) {
                 scope.numbers = true;
                 scope.edit = false;
 
-                scope.toggleEdit= function(){
+                scope.toggleEdit = function () {
                     scope.edit = !scope.edit;
                 };
 
-                scope.getResidues = function(){
+                scope.getResidues = function () {
                     if (scope.parent.substanceClass === 'protein') {
                         CVFields.getCV("AMINO_ACID_RESIDUE").then(function (data) {
                             scope.residues = data.data.content[0].terms;
                             scope.parseSubunit();
                         });
-                    }else {
+                    } else {
                         CVFields.getCV("NUCLEIC_ACID_BASE").then(function (data) {
                             scope.residues = data.data.content[0].terms;
                             scope.parseSubunit();
@@ -1247,14 +1264,14 @@
                                             _.set(siteObj, name, mod.molecularFragment);
                                         }
                                     });
-                                }else if (name === 'sugar' || name ==='linkage') {
+                                } else if (name === 'sugar' || name === 'linkage') {
                                     _.forEach(mod.sites, function (site) {
                                         if (site.subunitIndex == siteObj.subunitIndex && site.residueIndex == siteObj.residueIndex) {
                                             var obj = mod[name];
                                             _.set(siteObj, name, obj);
-                                            if(!_.has(obj, 'display')){
+                                            if (!_.has(obj, 'display')) {
                                                 var type = _.toUpper(name);
-                                                type = 'NUCLEIC_ACID_'+type;
+                                                type = 'NUCLEIC_ACID_' + type;
                                                 CVFields.getCV(type).then(function (data) {
                                                     cv = data.data.content[0].terms;
                                                     newobj = _.find(cv, ['value', obj]);
@@ -1278,7 +1295,7 @@
                 };
 
                 scope.parseSubunit = function () {
-                    if(!_.has(scope.parent, '$$subunitDisplay')) {
+                    if (!_.has(scope.parent, '$$subunitDisplay')) {
                         _.set(scope.parent, '$$subunitDisplay', []);
                     }
                     scope.obj.$$cysteineIndices = [];
@@ -1342,21 +1359,19 @@
                         display.push(obj);
                     });
                     display = _.chunk(display, 10);
-                    console.log(scope);
+                    _.set(scope.obj, '$$subunitDisplay', display);
                     scope.parent.$$subunitDisplay.push(display);
-
-                   // _.set(scope.obj, '$$subunitDisplay', display);
                 };
 
-                scope.highlight = function(acid){
-                    var bridge ={};
-                    if(_.has(acid, 'disulfide')){
+                scope.highlight = function (acid) {
+                    var bridge = {};
+                    if (_.has(acid, 'disulfide')) {
                         bridge = acid.disulfide;
-                    }else{
+                    } else {
                         bridge = acid.otherLinks;
                     }
-                    var allAA= element[0].querySelectorAll('amino-acid');
-                    var targetElement = angular.element(allAA[bridge.residueIndex-1]);
+                    var allAA = element[0].querySelectorAll('amino-acid');
+                    var targetElement = angular.element(allAA[bridge.residueIndex - 1]);
                     targetElement.isolateScope().showBridge();
                 };
 
@@ -1366,7 +1381,6 @@
                     /* scope.obj.sequence = _.filter(scope.obj.sequence, ['valid', true]);
                      console.log(temp);*/
                     scope.obj.sequence = _.filter(scope.obj.sequence, function (aa) {
-                        console.log(aa);
                         var temp = (_.find(scope.residues, ['value', aa.toUpperCase()]));
                         if (!_.isUndefined(temp)) {
                             return temp;
@@ -1376,17 +1390,17 @@
                 };
 
                 var display = [];
-                if(_.isUndefined(scope.parent)){
-                    APIFetcher.fetch(scope.uuid).then(function(data){
+                if (_.isUndefined(scope.parent)) {
+                    APIFetcher.fetch(scope.uuid).then(function (data) {
                         scope.parent = data;
-                        if(_.has(data, 'protein')) {
+                        if (_.has(data, 'protein')) {
                             scope.obj = data.protein.subunits[scope.index];
-                        }else{
+                        } else {
                             scope.obj = data.nucleicAcid.subunits[scope.index];
                         }
                         scope.getResidues();
                     });
-                }else{
+                } else {
                     scope.getResidues();
                 }
 
@@ -1426,7 +1440,7 @@
                             element.append(template);
                             $compile(template)(scope);
                         });
-                        if(attrs.definition){
+                        if (attrs.definition) {
                             scope.definition = attrs.definition;
                         }
                         formHolder = '<substance-search-form referenceobj = referenceobj field =field q=q  definition={{definition}}></substance-search-form>';
@@ -1457,7 +1471,7 @@
         };
     });
 
-    ginasApp.directive('substanceSearchForm', function ($http) {
+    ginasApp.directive('substanceSearchForm', function ($http, CVFields) {
         return {
             restrict: 'E',
             replace: true,
@@ -1478,14 +1492,23 @@
                     temp.refPname = selectedItem._name;
                     temp.approvalID = selectedItem.approvalID;
                     temp.substanceClass = "reference";
-                    if(attrs.definition){
-                        var r = {type:{value:'SUB_ALTERNATE->SUBSTANCE', display:'SUB_ALTERNATE->SUBSTANCE'}, relatedSubstance: temp};
-                        if(!_.has(scope.referenceobj, 'relationships')){
+                    if (attrs.definition) {
+                        var r = {relatedSubstance: temp};
+                        CVFields.getCV('RELATIONSHIP_TYPE').then(function (response) {
+                            console.log(response);
+                            var type = _.find(response.data.content[0].terms, ['value', 'SUB_ALTERNATE->SUBSTANCE']);
+                            r.type = type;
+                            console.log(r);
+                        });
+                        /*
+                         var r = {type:{value:'SUB_ALTERNATE->SUBSTANCE', display:'SUB_ALTERNATE->SUBSTANCE'}, relatedSubstance: temp};
+                         */
+                        if (!_.has(scope.referenceobj, 'relationships')) {
                             _.set(scope.referenceobj, 'relationships', []);
                         }
                         scope.referenceobj.relationships.push(r);
                     }
-                        _.set(scope.referenceobj, scope.field, angular.copy(temp));
+                    _.set(scope.referenceobj, scope.field, angular.copy(temp));
                     scope.q = null;
                     scope.$parent.$parent.toggleStage();
                 };
@@ -1539,17 +1562,17 @@
     });
 
     //this is solely to set the molfile in the sketcher externally
-    ginasApp.service('molChanger', function($http, CVFields, UUID) {
+    ginasApp.service('molChanger', function ($http, CVFields, UUID) {
         var sketcher;
-        this.setSketcher = function(sketcherInstance){
+        this.setSketcher = function (sketcherInstance) {
             sketcher = sketcherInstance;
         };
-        this.setMol = function(mol){
+        this.setMol = function (mol) {
             sketcher.setMolfile(mol);
         };
     });
 
-    ginasApp.directive('sketcher', function($compile, $http, UUID, polymerUtils, CVFields, localStorageService, molChanger){
+    ginasApp.directive('sketcher', function ($compile, $http, UUID, polymerUtils, CVFields, localStorageService, molChanger) {
         return {
             restrict: 'E',
             replace: true,
@@ -1560,17 +1583,17 @@
             },
 
             link: function (scope, element, attrs) {
-                var url = baseurl+'structure';
+                var url = baseurl + 'structure';
 
-                if(!_.isUndefined(scope.parent.structure)){
-                    scope.mol =scope.parent.structure.molfile;
+                if (!_.isUndefined(scope.parent.structure)) {
+                    scope.mol = scope.parent.structure.molfile;
                 }
-                var template= angular.element('<div id="sketcherForm" dataformat="molfile"></div>');
+                var template = angular.element('<div id="sketcherForm" dataformat="molfile"></div>');
                 element.append(template);
                 $compile(template)(scope);
 
-                scope.updateMol = function(){
-                    var url = baseurl+'structure';
+                scope.updateMol = function () {
+                    var url = baseurl + 'structure';
                     $http.post(url, scope.mol, {
                         headers: {
                             'Content-Type': 'text/plain'
@@ -1590,7 +1613,7 @@
                         }
                         scope.parent.structure = data.structure;
                         scope.parent.moieties = [];
-                        _.forEach(data.moieties, function(m){
+                        _.forEach(data.moieties, function (m) {
                             m._id = UUID.newID();
                             scope.parent.moieties.push(m);
                         });
@@ -1599,9 +1622,9 @@
                 };
 
                 scope.sketcher = new JSDraw("sketcherForm");
-                scope.sketcher.options.data= scope.mol;
+                scope.sketcher.options.data = scope.mol;
                 scope.sketcher.setMolfile(scope.mol);
-                scope.sketcher.options.ondatachange = function(){
+                scope.sketcher.options.ondatachange = function () {
                     scope.mol = scope.sketcher.getMolfile();
                     scope.updateMol();
                 };
@@ -1611,7 +1634,7 @@
                     structureid = false;
                 }
 
-                if(scope.parent.substanceClass ==='polymer') {
+                if (scope.parent.substanceClass === 'polymer') {
                     scope.mol = scope.parent.polymer.displayStructure.molfile;
                     scope.updateMol();
                 }
@@ -1631,7 +1654,7 @@
         };
     });
 
-    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http,  $uibModal, molChanger) {
+    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, fileReader) {
         return {
             /*            restrict: 'AE',
              replace: 'true',*/
@@ -1657,17 +1680,17 @@
                         template = angular.element(' <a aria-label="Import" uib-tooltip ="Import" ng-click="getImport()"><span class="sr-only">Import Data</span><i class="fa fa-clipboard fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
-                        templateUrl= baseurl + "assets/templates/modals/mol-import.html";
+                        templateUrl = baseurl + "assets/templates/modals/mol-import.html";
                         break;
                     case "export":
                         template = angular.element(' <a aria-label="Export" uib-tooltip ="Export" structureid=structureid format=format ng-click = "getExport()"><span class="sr-only">Export Data</span><i class="fa fa-external-link fa-2x success"></i></a>');
                         element.append(template);
                         $compile(template)(scope);
-                        templateUrl= baseurl + "assets/templates/modals/mol-export.html";
+                        templateUrl = baseurl + "assets/templates/modals/mol-export.html";
                         break;
                 }
 
-                scope.setPreview = function(file){
+                scope.setPreview = function (file) {
                     var reader = new FileReader();
                     reader.onerror = function (e) {
                         alert("Error reading file");
@@ -1680,31 +1703,31 @@
                     reader.onloadstart = function (e) {
                     };
                     reader.onload = function (e) {
-                     //   console.log((e.target.result));
+                        //   console.log((e.target.result));
                         scope.molfile = e.target.result;
                     };
-                   reader.readAsText(file);
+                    reader.readAsText(file);
                 };
 
                 scope.resolveMol = function (mol) {
-                     var url = baseurl + 'structure';
-                     $http.post(url, mol, {
-                     headers: {
-                     'Content-Type': 'text/plain'
-                     }
-                     }).success(function (data) {
-                     console.log(data);
-                         if(!_.isEmpty(data)) {
-                             molChanger.setMol(data.structure.molfile);
-                             scope.close();
-                         }else{
-                             var warning= {type:'warning', message:'not a vaild molfile'};
-                             scope.warnings.push(warning);
-                         }
-                     });
+                    var url = baseurl + 'structure';
+                    $http.post(url, mol, {
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        }
+                    }).success(function (data) {
+                        console.log(data);
+                        if (!_.isEmpty(data)) {
+                            molChanger.setMol(data.structure.molfile);
+                            scope.close();
+                        } else {
+                            var warning = {type: 'warning', message: 'not a vaild molfile'};
+                            scope.warnings.push(warning);
+                        }
+                    });
                 };
 
-                scope.getSmiles = function() {
+                scope.getSmiles = function () {
                     var url = baseurl + 'export/' + scope.structureid + '.smiles';
                     $http.get(url, {
                         headers: {
@@ -1745,7 +1768,7 @@
                     modalInstance.close();
                 };
 
-                scope.getImport = function(){
+                scope.getImport = function () {
                     console.log(scope);
                     scope.open();
 
@@ -1872,7 +1895,7 @@
                 html += ' ng-class="{ checked:' + attrs.ngModel + ' }"';
                 html += '>';
                 html += '<small></small>';
-                html += '<input type="checkbox"';
+                html += '<input aria-label ="toggle-switch" type="checkbox"';
                 html += attrs.id ? ' id="' + attrs.id + '"' : '';
                 html += attrs.name ? ' name="' + attrs.name + '"' : '';
                 html += attrs.ngModel ? ' ng-model="' + attrs.ngModel + '"' : '';

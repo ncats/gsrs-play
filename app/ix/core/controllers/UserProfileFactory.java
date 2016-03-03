@@ -24,28 +24,54 @@ public class UserProfileFactory extends EntityFactory {
 		UserProfile profile = finder.where().eq("user.username", p.username).findUnique();
 		return profile;
 	}
-	
-	//@Dynamic(value = "adminUser", handlerKey = "idg")
-    public static UserProfile addActiveUser(String username, String password, List<Role> rolesCheckeda, List<Group> groupsChecked ) {
-        Principal newUser = new Principal();
-        newUser.username =username;
+	public static UserProfile addActiveUser(Principal newUser, String password, List rolesChecked, List groupsChecked ) {
+		
         
         if(groupsChecked==null){
-        	groupsChecked=new ArrayList<Group>();
+        	groupsChecked=new ArrayList<>();
         }
+        if(rolesChecked==null){
+        	rolesChecked=new ArrayList<>();
+        }
+        List<Role> applyRoles= new ArrayList<Role>();
+	        for(Object r:rolesChecked){
+	        	if(r instanceof Role){
+	        		applyRoles.add((Role)r);
+	        	}else{
+	        		try{
+	        			applyRoles.add(Role.valueOf(r.toString()));
+	        		}catch(Exception e){
+	        			System.err.println("Uknown role:'" + r.toString() + "'");
+	        		}
+	        	}
+	        }
+        List<Group> applyGroups= new ArrayList<Group>();
+	        for(Object r:groupsChecked){
+	        	if(r instanceof Group){
+	        		applyGroups.add((Group)r);
+	        	}else{
+	        		try{
+	        			Group g = new Group(r.toString());
+	        			g=AdminFactory.registerGroupIfAbsent(g);
+	        			applyGroups.add(g);
+	        		}catch(Exception e){
+	        			System.err.println("Error adding group");
+	        		}
+	        	}
+	        }
         
         
+        newUser=PrincipalFactory.registerIfAbsent(newUser);
         
-        newUser.save();
-        UserProfile prof = UserProfileFactory.finder.where().eq("user.username", newUser.username).findUnique();
+        UserProfile prof = getUserProfileForPrincipal(newUser);
 
         if (prof == null) {
             prof = new UserProfile(newUser);
             prof.active = true;
             prof.setPassword(password);
-            prof.setRoles(rolesCheckeda);
+            prof.setRoles(applyRoles);
             
-            for (Group g : groupsChecked) {
+            for (Group g : applyGroups) {
                 if(g.id != null) {
                     g.members.add(newUser);
                     g.saveManyToManyAssociations("members");
@@ -57,5 +83,12 @@ public class UserProfileFactory extends EntityFactory {
             prof.save();
         }
         return prof;
+	}
+	
+	//@Dynamic(value = "adminUser", handlerKey = "idg")
+    public static UserProfile addActiveUser(String username, String password, List rolesChecked, List groupsChecked ) {
+        Principal newUser = new Principal();
+        newUser.username =username;
+        return addActiveUser(newUser,password,rolesChecked,groupsChecked);
     }
 }

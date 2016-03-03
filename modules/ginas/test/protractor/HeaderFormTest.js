@@ -49,7 +49,6 @@ describe ('header form test', function() {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
         var kind = browser.params.baseUrl;
-        console.log(kind);
         expect(elements.testModelBinding('formType')).toEqual('Registering new');
     });
 
@@ -57,7 +56,6 @@ describe ('header form test', function() {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
         var kind = browser.params.baseUrl;
-        console.log(kind);
         expect(elements.testModelBinding('name')).toEqual(kind);
     });
 

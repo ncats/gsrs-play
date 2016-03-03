@@ -157,7 +157,7 @@
 
 
                 scope.showInfo = function () {
-                    toggler.show(scope, type, url);
+                    toggler.show(scope, scope.type, url);
                 };
             }
         }
@@ -636,7 +636,7 @@
                         break;
                     case "textbox":
                         if (attrs.mode == "edit") {
-                            template = angular.element('<div><label for="comments" class="text-capitalize">{{label || field}}</label><a ng-click ="toggle()"><comment value = "referenceobj[field]" id="comments"></comment></a></div>');
+                            template = angular.element('<div><label for="comments" class="text-capitalize">{{label || field}}</label><a ng-click ="toggle()"><comment value = "referenceobj[field]" id="comment-directive"></comment></a></div>');
                             element.append(template);
                             $compile(template)(scope);
                         } else {
@@ -646,7 +646,7 @@
                                 $compile(template)(scope);
                             });
                         }
-                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field ></comment-form>';
+                        formHolder = '<comment-form referenceobj = referenceobj parent = parent label = label field = field name = name ></comment-form>';
                         break;
                 }
 
@@ -693,7 +693,15 @@
         return {
             restrict: 'E',
             replace: true,
-            templateUrl: baseurl + "assets/templates/admin/load-cv-form.html"
+            templateUrl: baseurl + "assets/templates/admin/load-cv-form.html",
+            link: function (scope, element, attrs) {
+                console.log(scope);
+
+                scope.loadCVFile = function (file) {
+                    console.log('loading');
+                    console.log(file);
+                };
+            }
         };
     });
 
@@ -1751,6 +1759,7 @@ console.log(scope);
                 parent: '='
             },
             link: function (scope, element, attrs) {
+                console.log(scope);
                 if (scope.parent._name) {
                     scope.formType ='Editing';
                     scope.name = scope.parent._name;

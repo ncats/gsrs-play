@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import ix.core.controllers.EntityFactory;
 import ix.core.models.DynamicFacet;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
@@ -1116,19 +1117,8 @@ public class TextIndexer {
             return null;
 
         Class cls = entity.getClass();
-        Object id = null;
-        for (Field f : cls.getFields()) {
-            if (null != f.getAnnotation(Id.class)) {
-                try {
-                    id = f.get(entity);
-                    break;
-                }
-                catch (Exception ex) {
-                    Logger.error("Can't retrieve entity Id", ex);
-                }
-            }
-        }
-
+        Object id = EntityFactory.getIdForBean(entity);
+        
         if (id == null) {
             Logger.warn("Entity "+entity+"["
                         +entity.getClass()+"] has no Id field!");
@@ -1262,13 +1252,8 @@ public class TextIndexer {
             Logger.debug(">>> Updating "+entity+"...");
 
         try {
-            Object id = null;
+            Object id = EntityFactory.getIdForBean(entity);
             
-            for (Field f : entity.getClass().getFields()) {
-                if (f.getAnnotation(Id.class) != null) {
-                    id = f.get(entity);
-                }
-            }
 
             if (id != null) {
             	
@@ -1301,12 +1286,7 @@ public class TextIndexer {
         Class cls = entity.getClass();
         if (cls.isAnnotationPresent(Entity.class)) {
             Field[] fields = cls.getDeclaredFields();
-            Object id = null;       
-            for (Field f : fields) {
-                if (f.getAnnotation(Id.class) != null) {
-                    id = f.get(entity);
-                }
-            }
+            Object id = EntityFactory.getId(entity);
             if (id != null) {
                 String field = entity.getClass().getName()+".id";
                 if (DEBUG (2))

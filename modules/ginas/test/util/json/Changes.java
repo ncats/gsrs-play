@@ -1,9 +1,8 @@
 package util.json;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+
+
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,4 +68,66 @@ public class Changes {
         }
         return list;
     }
+
+    @Override
+    public String toString() {
+        return "Changes{" +
+                "changes=" + changes +
+                '}';
+    }
+
+    public Changes missing(Changes actual) {
+        Set<Change> copy = new HashSet<>(actual.changes.values());
+        copy.removeAll(this.changes.values());
+
+        return toChanges(copy);
+    }
+    
+    public Changes extra(Changes actual) {
+       return actual.missing(this);
+    }
+
+    
+    public Changes intersection(Changes actual) {
+        Set<Change> copy = new HashSet<>(changes.values());
+        copy.retainAll(actual.changes.values());
+
+        return toChanges(copy);
+    }
+
+    private Changes toChanges(Set<Change> copy) {
+        Map<String, Change> map = new HashMap<>(copy.size());
+        for(Change c: copy){
+            map.put(c.getKey(), c);
+        }
+        return new Changes(map);
+    }
+
+    public Changes union(Changes actual) {
+        Map<String, Change> map = new HashMap<>(changes);
+        map.putAll(actual.changes);
+
+        return new Changes(map);
+    }
+
+    public Changes diff(Changes other){
+        Changes union = union(other);
+        Changes intersecion = intersection(other);
+
+        Set<Change> v = new HashSet<>(union.changes.values());
+        v.removeAll(intersecion.changes.values());
+
+        return toChanges(v);
+    }
+    
+    public void printDifferences(Changes other){
+    	System.out.println("Missing:");
+    	System.out.println(this.missing(other));
+    	System.out.println("Extra:");
+    	System.out.println(this.extra(other));
+    }
+
+	public int size() {
+		return changes.size();
+	}
 }
