@@ -15,67 +15,74 @@ var PropertyForm = function () {
     this.formElements = {
         formName: 'propertyForm',
         buttonId: 'properties',
+        formObj: 'property',
         fields: [{
             model: 'property.name',
             type: 'dropdown-select'
-        }, {
+        },{
             model: 'property.type',
             type: 'dropdown-select'
-/*        }, {
-            model: 'property.amount',
-            type: 'form-selector'
-        }, {
-            model: 'property.parameter',
-            type: 'form-selector'*/
         }, {
             model: 'property.defining',
             type: 'check-box'
-/*        }, {
-            model: 'property.access',
+        }]
+    };
+
+    this.subForms = {
+        formName: 'propertyForm',
+        buttonId: 'properties',
+        formObj: 'property',
+        fields: [/*{
+            model: 'amount',
             type: 'form-selector'
         }, {
-            model: 'property.reference',
-            type: 'form-selector'*/
+            model: 'parameter',
+            type: 'form-selector'
+        },*/ {
+            model: 'access',
+            type: 'form-selector'
+        }, {
+            model: 'reference',
+            type: 'form-selector'
         }]
     }
+
 };
 
-describe ('property form tests', function() {
-
+describe ('property form', function() {
     var propertyForm = new PropertyForm();
-    beforeEach(function() {
+    beforeEach(function () {
         propertyForm.getPage();
     });
 
-    it('tests all form elements are loaded', function () {
+    it('should see if form is visible', function () {
+        var vis = browser.findElement(By.id('addPropertyForm')).isDisplayed();
+        expect(vis).toBe(false)
+    });
+
+    it('should test form toggling', function () {
+        var buttonId = propertyForm.formElements.buttonId;
+        var vis = browser.findElement(By.id('addPropertyForm')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId + "-toggle"));
+        expect(browser.findElement(By.id('addPropertyForm')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('addPropertyForm')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('addPropertyForm')).isDisplayed()).toBe(false);
+
+    });
+
+    it('should test all basic form elements', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        var buttonId = propertyForm.formElements.buttonId;
-        var formElements = propertyForm.formElements.fields;
-        var refElementTests = require('./ReferenceFormTest.js');
-        var refPage = new refElementTests;
-        for (var i = 0; i < formElements.length; i++) {
-            var elementType = formElements[i].type;
-            var model = formElements[i].model;
-            propertyForm.getPage();
-            switch (elementType) {
-                case "text-input":
-                    elements.testTextInput(buttonId, model);
-                    break;
-                case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model);
-                    break;
-                case "multi-select":
-                    // elements.testMultiSelectInput(buttonId, model);
-                    break;
-                case "check-box":
-                    // elements.testCheckBoxInput(buttonId, model);
-                    break;
-                case "form-selector":
-                    // refPage.refPageTests(buttonId, model);
-                    break;
-            } //switch
-        } //for i
+        var breadcrumb = ['properties-toggle'];
+        elements.testInputFields(propertyForm.formElements, breadcrumb);
+    });
+
+    it('should test subforms', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var breadcrumb = ['properties-toggle'];
+        elements.testInputFields(propertyForm.subForms, breadcrumb);
     });
 });
-

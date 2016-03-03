@@ -183,11 +183,21 @@ var WizardCommonElements = function () {
                             var commentPage = new commentElementTests;
                             this.testInputFields(commentPage.formElements, breadcrumb);
                             break;
-                        /*case 'reference':
+                        case 'parameter':
+                            var newFormToggleBtn = elements.formObj +"-" + model;
+                            breadcrumb.push(newFormToggleBtn);
+                            var paramElementTests = require('./ParameterFormTest.js');
+                            var paramPage = new paramElementTests;
+                            this.testInputFields(paramPage.formElements, breadcrumb);
                             break;
-                        case 'reference':
+                        case 'amount':
+                            var newFormToggleBtn = elements.formObj +"-" + model;
+                            breadcrumb.push(newFormToggleBtn);
+                            var amountElementTests = require('./AmountFormTest.js');
+                            var amountPage = new amountElementTests;
+                            this.testInputFields(amountPage.formElements, breadcrumb);
                             break;
-*/
+
                     }
                     break;
             } //switch
