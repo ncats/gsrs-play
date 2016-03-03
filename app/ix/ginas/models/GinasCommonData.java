@@ -38,22 +38,22 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     static public final String TAG = "GInAS Tag";
     
     @Id
-    private UUID uuid;
+    public UUID uuid;
 
-    
-    private Date created=null;
+
+    public Date created=null;
     
     @OneToOne(cascade=CascadeType.ALL)
     @Indexable(facet = true, name = "Created By")
-    private Principal createdBy;
+    public Principal createdBy;
     
     @Indexable(facet = true, name = "Last Edited Date")
-    private Date lastEdited;
+    public Date lastEdited;
     
     //TP: why is this one-to-one?
     @OneToOne(cascade=CascadeType.ALL)
     @Indexable(facet = true, name = "Last Edited By")
-    private Principal lastEditedBy;
+    public Principal lastEditedBy;
     
     @JsonDeserialize(using = PrincipalDeserializer.class)
     public Principal getCreatedBy() {
@@ -77,12 +77,12 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
 
 
 	//Where did this come from?
-    private boolean deprecated;
+    public boolean deprecated;
     
     
     @JsonIgnore
     @OneToOne(cascade=CascadeType.ALL)
-    private GinasAccessContainer recordAccess;
+    public GinasAccessContainer recordAccess;
 
     public UUID getUuid() {
         return uuid;

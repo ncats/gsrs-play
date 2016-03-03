@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class GinasCommonSubData extends GinasCommonData implements GinasAccessReferenceControlled{
     @JsonIgnore
     @OneToOne(cascade=CascadeType.ALL)
-    private GinasReferenceContainer recordReference;
+	public GinasReferenceContainer recordReference;
     
    
     @JsonSerialize(using = ReferenceListSerializer.class)

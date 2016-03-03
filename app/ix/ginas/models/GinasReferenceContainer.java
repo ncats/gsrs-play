@@ -19,13 +19,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @Table(name = "ix_ginas_reference_cit")
 public class GinasReferenceContainer {
 	@Id
-	private Long id;
+    public Long id;
 	
 	@ManyToMany(cascade = CascadeType.PERSIST)
     @JsonSerialize(using=ReferenceListSerializer.class)    
 	@JsonDeserialize(using=ReferenceListDeserializer.class)
-    private Set<Keyword> references = new LinkedHashSet<Keyword>();
-	private String entityType;
+    public Set<Keyword> references = new LinkedHashSet<Keyword>();
+    public String entityType;
 
 	
 	public GinasReferenceContainer(){

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @Table(name = "ix_ginas_access")
 public class GinasAccessContainer {
 	@Id
-	private Long id;
+	public Long id;
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@JsonSerialize(using = GroupListSerializer.class)
