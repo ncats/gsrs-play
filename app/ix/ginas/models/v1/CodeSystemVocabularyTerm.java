@@ -22,8 +22,8 @@ public class CodeSystemVocabularyTerm extends VocabularyTerm{
 		return regex;
 	}
 	public void setRegex(String regex) {
-		if(regex.equals("")){
-			regex=null;
+		if(regex==null || regex.equals("")){
+			this.regex=null;
 		}else{
 			this.regex = regex;
 		}

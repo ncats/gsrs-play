@@ -3,7 +3,15 @@ package ix.ginas.controllers.v1;
 import java.util.*;
 import java.io.*;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import ix.ginas.utils.GinasProcessingStrategy;
 import play.*;
 import play.db.ebean.*;
@@ -39,6 +47,76 @@ public class ControlledVocabularyFactory extends EntityFactory {
 	public static List<ControlledVocabulary> getDomain() {
 		return finder.where().select("domain").findList();
 	}
+
+	public static void loadCVJson(InputStream is) {
+		JsonFactory f = new JsonFactory();
+		ObjectMapper mapper = new ObjectMapper ();
+		mapper.addHandler(new DeserializationProblemHandler() {
+			public boolean handleUnknownProperty
+					(DeserializationContext ctx, JsonParser parser,
+					 JsonDeserializer deser, Object bean, String property) {
+				try {
+					Logger.warn("Unknown property \""
+							+property+"\" (token="
+							+parser.getCurrentToken()
+							+") while parsing "
+							+bean+"; skipping it..");
+					parser.skipChildren();
+				}
+				catch (IOException ex) {
+					ex.printStackTrace();
+					Logger.error
+							("Unable to handle unknown property!", ex);
+					return false;
+				}
+				return true;
+			}
+		});
+
+		Set<String> fragmentDomains = new HashSet<String>();
+		fragmentDomains.add("NUCLEIC_ACID_SUGAR");
+		fragmentDomains.add("NUCLEIC_ACID_LINKAGE");
+		fragmentDomains.add("NUCLEIC_ACID_BASE");
+		fragmentDomains.add("AMINO_ACID_RESIDUE");
+		Set<String> codeSystemDomains = new HashSet<String>();
+		codeSystemDomains.add("CODE_SYSTEM");
+
+
+
+		try {
+			JsonNode rawValues = mapper.readTree(is);
+			for(JsonNode cvValue: rawValues){
+				String domain=cvValue.at("/domain").asText();
+				ControlledVocabulary cv = mapper.treeToValue(cvValue, ControlledVocabulary.class);
+				if(fragmentDomains.contains(domain)){
+					List<VocabularyTerm> vterms = new ArrayList<VocabularyTerm>();
+					JsonParser jp = f.createJsonParser(cvValue.at("/terms").toString());
+					jp.nextToken();
+					while (jp.nextToken() == JsonToken.START_OBJECT) {
+						VocabularyTerm cvt = mapper.readValue(jp, FragmentVocabularyTerm.class);
+						vterms.add(cvt);
+					}
+					cv.terms=vterms;
+				}else if(codeSystemDomains.contains(domain)){
+					List<VocabularyTerm> vterms = new ArrayList<VocabularyTerm>();
+					JsonParser jp = f.createJsonParser(cvValue.at("/terms").toString());
+					jp.nextToken();
+					while (jp.nextToken() == JsonToken.START_OBJECT) {
+						VocabularyTerm cvt = mapper.readValue(jp, CodeSystemVocabularyTerm.class);
+						vterms.add(cvt);
+					}
+					cv.terms=vterms;
+				}else{
+					cv = mapper.treeToValue(cvValue, ControlledVocabulary.class);
+				}
+				cv.save();
+			}
+
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 
 	public static void loadSeedCV(InputStream is) {
 		
