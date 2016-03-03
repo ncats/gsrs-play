@@ -3,19 +3,19 @@
         <form-header type="proteinDetails" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="detailsForm" name="addDetailsForm" id="add-name" role="form" novalidate>
+        <form class="form-horizontal" name="detailsForm" id="addDetailsForm" id="add-name" role="form" novalidate>
         <div class="row form-row">
             <div class="col-md-2 err-check">
-                <dropdown-view-edit obj = "parent.protein" field="proteinType" cv = "PROTEIN_TYPE" label="Protein Type"></dropdown-view-edit>
+                <dropdown-view-edit obj = "parent-protein" field="proteinType" cv = "PROTEIN_TYPE" label="Protein Type"></dropdown-view-edit>
             </div>
             <div class="col-md-2 err-check">
-                <dropdown-view-edit obj = "parent.protein" field="proteinSubType" cv = "PROTEIN_SUBTYPE" label="Protein Subtype"></dropdown-view-edit>
+                <dropdown-view-edit obj = "parent-protein" field="proteinSubType" cv = "PROTEIN_SUBTYPE" label="Protein Subtype"></dropdown-view-edit>
             </div>
             <div class="col-md-2 err-check">
-                <dropdown-view-edit obj = "parent.protein" field="sequenceOrigin" cv = "SEQUENCE_ORIGIN" label="Sequence Origin"></dropdown-view-edit>
+                <dropdown-view-edit obj = "parent-protein" field="sequenceOrigin" cv = "SEQUENCE_ORIGIN" label="Sequence Origin"></dropdown-view-edit>
             </div>
             <div class="col-md-2 err-check">
-                <dropdown-view-edit obj = "parent.protein" field="sequenceType" cv = "SEQUENCE_TYPE" label="Sequence Type"></dropdown-view-edit>
+                <dropdown-view-edit obj = "parent-protein" field="sequenceType" cv = "SEQUENCE_TYPE" label="Sequence Type"></dropdown-view-edit>
             </div>
             <div class="col-md-1 pull-right">
                 <form-selector referenceobj ="parent.protein" parent = "parent" divid="detailsForm" type = "access"></form-selector>

@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var SiteStringPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -17,12 +17,14 @@ var ProteinWizardPage = function () {
 //not toggleable
     this.formElements = {
         formName: 'siteStringForm',
-        buttonID: 'sites',
+        formObj:'site',
+        buttonId: 'sites',
         fields: [{
             model: 'referenceobj.$$displayString',
-            type: 'text-input'
+            type: 'text-box'
         }
         ]
     }
 };
+module.exports=SiteStringPage;
 

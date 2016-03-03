@@ -26,20 +26,14 @@ var WizardCommonElements = function () {
 
     this.testTextArea = function(model) {
         var elementId = model.split(".")[1];
+        console.log("elementId:" + elementId);
         var userInput = element(by.id(elementId));
 
         var updateInput = "var input = document.getElementById('"+ elementId +"');" +
             "input.value = 'testing';" +
             "angular.element(input).scope().$apply(function(s) { s.formName[input.name].$setViewValue(input.value)});";
         browser.executeScript(updateInput);
-/*        console.log("text-area-model: " + model);
-    //    console.log("text-area-buttonId: " + buttonId);
-
-        console.log("text-area-elementId: " + elementId);
-        userInput.clear().then(function(){
-            userInput.sendKeys('testing');*/
-            expect(userInput.getAttribute('value')).toEqual('testing');
-     //   });
+        expect(userInput.getAttribute('value')).toEqual('testing');
     };
 
     this.testDropdownSelectInput = function (model) {
@@ -61,19 +55,16 @@ var WizardCommonElements = function () {
 
     this.testDropdownSelectEdit = function (model) {
         console.log("drop-down-edit: " +model);
-       // this.clickById(buttonId);
-      //  this.clickByModel(model);
         var elementId = model.split(".")[1];
         console.log("elementId: " + elementId);
         var elem = browser.findElement(By.id(elementId));
         elem.click();
             elem.getText().then(function (text) {
                 var items = text.split('\n');
-                console.log(items);
                 console.log(items.length);
                 console.log(items[1] + " : " + items[items.length-2]);
                 expect(items.length).toBeGreaterThan(0);
-                expect(items[items.length - 1]).toBe('Other');
+              //  expect(items[items.length - 1]).toBe('Other');
             });
     };
 
@@ -196,6 +187,14 @@ var WizardCommonElements = function () {
                             var amountElementTests = require('./AmountFormTest.js');
                             var amountPage = new amountElementTests;
                             this.testInputFields(amountPage.formElements, breadcrumb);
+                            break;
+                        case 'site':
+                            var newFormToggleBtn = elements.formObj +"-" + model;
+                            console.log("toggle button:" + newFormToggleBtn);
+                            breadcrumb.push(newFormToggleBtn);
+                            var siteElementTests = require('./SiteStringFormTest.js');
+                            var sitePage = new siteElementTests;
+                            this.testInputFields(sitePage.formElements, breadcrumb);
                             break;
 
                     }

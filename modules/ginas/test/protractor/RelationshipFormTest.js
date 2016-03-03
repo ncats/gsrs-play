@@ -39,7 +39,7 @@ var RelationshipForm = function () {
         },{
             model: 'relationship.agentSubstance',
             type: 'substance-chooser'
-        },{
+        },*/{
             model: 'access',
             type: 'form-selector'
         }, {
@@ -48,7 +48,7 @@ var RelationshipForm = function () {
         }, {
             model: 'comments',
             type: 'form-selector'
-        },*/ {
+        }, {
             model: 'amount',
             type: 'form-selector'
         }
@@ -79,12 +79,12 @@ describe ('Relationship form', function() {
 
     });
 
-   /* it('should test all basic form elements', function () {
+    it('should test all basic form elements', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
         var breadcrumb = ['relationships-toggle'];
         elements.testInputFields(relationshipForm.formElements, breadcrumb);
-    });*/
+    });
 
     it('should test subforms', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
