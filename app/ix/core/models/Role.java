@@ -25,5 +25,5 @@ public enum Role implements be.objectify.deadbolt.core.models.Role {
             return vals;
         }
 
-    }
+}
 

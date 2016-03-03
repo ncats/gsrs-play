@@ -11,6 +11,7 @@ import javax.persistence.*;
 import play.Logger;
 import play.db.ebean.Model;
 
+import ix.core.controllers.EntityFactory;
 import ix.utils.Global;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -64,23 +65,13 @@ public class XRef extends IxModel {
             throw new IllegalArgumentException
                 ("Can't create XRef for non-Entity instance");
         try {
-            Field fid = getIdField (cls);
-            if (fid != null) {
-                Object id = fid.get(instance);
-                if (id != null) {
+        	Object id = EntityFactory.getId(instance);
+            if (id != null) {
                     this.refid = id.toString();
-                }
-                else {
+            } else {
                     throw new IllegalArgumentException
-                        (cls.getName()+": Can't create XRef with null id!");
-                }
+                       (cls.getName()+": Can't create XRef with null id!");
             }
-            else {
-                throw new IllegalArgumentException
-                    (cls.getName()+": Can't create XRef for Entity "
-                     +"with no Id defined!");
-            }
-
             kind = cls.getName();
         }
         catch (Exception ex) {
@@ -98,7 +89,7 @@ public class XRef extends IxModel {
         if (_instance == null || force) {
             try {
                 Class cls = Class.forName(kind);
-                Field fid = getIdField (cls);
+                Field fid = EntityFactory.getIdFieldForClass(cls);
                 if (fid != null) {
                     Class type = fid.getType();
                     Model.Finder finder = new Model.Finder(type, cls);
@@ -136,13 +127,6 @@ public class XRef extends IxModel {
         return value;
     }
     
-    static Field getIdField (Class cls) {
-        for (Field f : cls.getFields())
-            if (null != f.getAnnotation(Id.class))
-                return f;
-        return null;
-    }
-
     public String getHRef () {
         return Global.getRef(kind, refid);
     }
@@ -152,15 +136,13 @@ public class XRef extends IxModel {
             Class cls = Class.forName(kind);
             Class type = instance.getClass();
             if (cls.isAssignableFrom(type) || type.isAssignableFrom(cls)) {
-                Field fid = getIdField (type);
-                if (fid != null) {
-                    Object id = fid.get(instance);
-                    if (id != null)
-                        return refid.equals(id.toString());
+                Object id=EntityFactory.getId(instance);
+            	if (id != null) {
+                    return refid.equals(id.toString());
                 }
                 else {
                     Logger.error
-                        ("Class "+type.getName()+" has no @Id annotation!");
+                        ("Class "+type.getName()+" has no @Id annotation, or no Id found!");
                 }
             }
         }

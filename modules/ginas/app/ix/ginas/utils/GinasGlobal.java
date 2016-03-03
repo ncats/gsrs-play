@@ -57,6 +57,7 @@ public class GinasGlobal extends Global {
 	}
 
 	public void onStart(Application app) {
+		super.onStart(app);
 		if (!ControlledVocabularyFactory.isloaded()) {
 			ControlledVocabularyFactory.loadSeedCV(Play.application().resourceAsStream("CV.txt"));
 			String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
@@ -78,7 +79,6 @@ public class GinasGlobal extends Global {
 		}
 		
 		
-		super.onStart(app);
     }
 	
 }

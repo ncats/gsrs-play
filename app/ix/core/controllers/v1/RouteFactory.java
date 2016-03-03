@@ -85,12 +85,7 @@ public class RouteFactory extends Controller {
         if (named != null) {
             try {
                 Class cls = named.type();
-                Field id = null;
-                for (Field f : cls.getFields()) {
-                    if (null != f.getAnnotation(Id.class)) {
-                        id = f;
-                    }
-                }
+                Field id = EntityFactory.getIdFieldForClass(cls);
 
                 if (id == null) { // possible?
                     Logger.error("Fatal error: Entity "+cls.getName()

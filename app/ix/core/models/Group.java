@@ -1,7 +1,10 @@
 package ix.core.models;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+
 import play.db.ebean.Model;
 import javax.persistence.*;
 
@@ -20,7 +23,7 @@ public class Group extends Model {
     @Basic(fetch=FetchType.EAGER)
     @JoinTable(name="ix_core_group_principal")
     @JsonView(BeanViews.Full.class)
-    public List<Principal> members = new ArrayList<Principal>();
+    public Set<Principal> members = new HashSet<Principal>();
 
     public Group () {}
     public Group (String name) {

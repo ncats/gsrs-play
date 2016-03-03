@@ -1104,8 +1104,8 @@ public class EntityFactory extends Controller {
                     if (m instanceof Model) {
                         try {
                             
-                            Method f = EntityPersistAdapter.getIdSettingMethodForBean(m);
-                            Object _id = EntityPersistAdapter.getIdForBean(m);
+                            Method f = EntityFactory.getIdSettingMethodForBean(m);
+                            Object _id = EntityFactory.getIdForBean(m);
                             oldObjects.put(_id, (Model) m);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -1148,7 +1148,7 @@ public class EntityFactory extends Controller {
 	            	return validationResponse(false, validationMessages);
 	            }
                 try {
-                    Method m=EntityPersistAdapter.getIdSettingMethodForBean(inst);
+                    Method m=EntityFactory.getIdSettingMethodForBean(inst);
                     m.invoke(inst, id);
                 }catch (Exception ex) {
                     ex.printStackTrace();
@@ -1163,8 +1163,8 @@ public class EntityFactory extends Controller {
                             if(m instanceof Model){
                                 try{
                                     
-                                    Method f=EntityPersistAdapter.getIdSettingMethodForBean(m);
-                                    Object _id=EntityPersistAdapter.getIdForBean(m);
+                                    Method f=EntityFactory.getIdSettingMethodForBean(m);
+                                    Object _id=EntityFactory.getIdForBean(m);
 
                                     //Get old model, do something with it?
                                     old=oldObjects.get(_id);
@@ -1352,7 +1352,7 @@ public class EntityFactory extends Controller {
                         if (val != null) {
                             ftype = val.getClass();
                             if (null != ftype.getAnnotation(Entity.class)) {
-                                Object tid=EntityPersistAdapter.getIdForBean(val);
+                                Object tid=EntityFactory.getIdForBean(val);
                                 if(tid!=null){
                                     tempid=tid;
                                     temptype=ftype;
@@ -1534,9 +1534,22 @@ public class EntityFactory extends Controller {
         }
     }
 
-    static List<Field> getFields (Object entity, Class... annotation) {
+    private static List<Field> getFields (Object entity, Class... annotation) {
         List<Field> fields = new ArrayList<Field>();
         for (Field f : entity.getClass().getFields()) {
+            for (Class c : annotation) {
+                if (f.getAnnotation(c) != null) {
+                    fields.add(f);
+                    break;
+                }
+            }
+        }
+        return fields;
+    }
+    
+    private static List<Field> getFieldsForClass (Class entity, Class... annotation) {
+        List<Field> fields = new ArrayList<Field>();
+        for (Field f : entity.getFields()) {
             for (Class c : annotation) {
                 if (f.getAnnotation(c) != null) {
                     fields.add(f);
@@ -1558,7 +1571,7 @@ public class EntityFactory extends Controller {
         return values;
     }
 
-    static Object getId (Object entity) throws Exception {
+    public static Object getId (Object entity) throws Exception {
         Field f = getIdField (entity);
         Object id = null;
         if (f != null) {
@@ -1577,8 +1590,12 @@ public class EntityFactory extends Controller {
         return id;
     }
 
-    static Field getIdField (Object entity) throws Exception {
+    public static Field getIdField (Object entity) throws Exception {
         List<Field> fields = getFields (entity, Id.class);
+        return fields.isEmpty() ? null : fields.iterator().next();
+    }
+    public static Field getIdFieldForClass (Class entity) throws Exception {
+        List<Field> fields = getFieldsForClass (entity, Id.class);
         return fields.isEmpty() ? null : fields.iterator().next();
     }
     
@@ -2126,6 +2143,60 @@ public class EntityFactory extends Controller {
     public interface EntityFilter {
         public boolean hasAccess (Object grp, Object sub);
     }
+
+	public static Object getIdForBean(Object entity){
+	    if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+	        return null;
+	    }
+	    try {
+	        Object id = EntityFactory.getId(entity);
+	        if (id != null) {
+	            return id;
+	        }
+	    }
+	    catch (Exception ex) {
+	        Logger.trace("Unable to fetch ID for "+entity, ex);
+	    }
+	    return null;
+	}
+
+	public static Field getIdFieldForBean(Object entity){
+	    if (!entity.getClass().isAnnotationPresent(Entity.class)) {
+	        return null;
+	    }
+	    try {
+	        for (Field f : entity.getClass().getFields()) {
+	            if (f.getAnnotation(Id.class) != null) {
+	                return f;
+	            }
+	        }
+	    } catch (Exception ex) {
+	        Logger.trace("Unable to update index for "+entity, ex);
+	    }
+	    return null;
+	}
+
+	public static Method getIdSettingMethodForBean(Object entity){
+	    Field f=getIdFieldForBean(entity);
+	    for(Method m:entity.getClass().getMethods()){
+	        if(m.getName().toLowerCase().equals("set" + f.getName().toLowerCase())){
+	            return m;
+	        }
+	    }
+	    return null;
+	}
+
+	public static String getIdForBeanAsString(Object entity){
+	    Object id=getIdForBean(entity);
+	    if(id!=null)return id.toString();
+	    return null;
+	}
+
+	public static String setIdForBean(Object entity){
+	    Object id=getIdForBean(entity);
+	    if(id!=null)return id.toString();
+	    return null;
+	}
     
     
 }

@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
 import javax.persistence.PostRemove;
@@ -24,6 +23,7 @@ import com.avaje.ebean.event.BeanPersistAdapter;
 import com.avaje.ebean.event.BeanPersistRequest;
 
 import ix.core.EntityProcessor;
+import ix.core.controllers.EntityFactory;
 import ix.core.controllers.EntityFactory.EntityMapper;
 import ix.core.models.Edit;
 import ix.core.models.Indexable;
@@ -324,7 +324,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 
 		List<Field> sequenceFields = getSequenceIndexableField(bean);
 		if (sequenceFields != null && sequenceFields.size()>0) {
-			String _id = getIdForBeanAsString(bean);
+			String _id = EntityFactory.getIdForBeanAsString(bean);
 			for(Field seq:sequenceFields){
 				String indexSequence;
 				try {
@@ -340,7 +340,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 		
 		List<Field> structureFields = getStructureIndexableField(bean);
 		if (structureFields != null && structureFields.size()>0) {
-			String _id = getIdForBeanAsString(bean);
+			String _id = EntityFactory.getIdForBeanAsString(bean);
 			for(Field seq:structureFields){
 				String structure;
 				try {
@@ -356,7 +356,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
 	private void deleteIndexOnBean(Object bean) throws Exception {
 		if (plugin != null)
             plugin.getIndexer().remove(bean);
-		String _id = getIdForBeanAsString(bean);
+		String _id = EntityFactory.getIdForBeanAsString(bean);
 		List<Field> sequenceFields = getSequenceIndexableField(bean);
 		if (sequenceFields != null && sequenceFields.size()>0) {
 			getSequenceIndexer().remove(_id);
@@ -400,10 +400,9 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             return;
         }
 
-        for (Field f : cls.getFields()) {
-            if (f.getAnnotation(Id.class) != null) {
+        
                 try {
-                    Object id = f.get(bean);
+                    Object id = EntityFactory.getId(bean);
                     
                     if (id != null) {
                     	Edit edit=EntityPersistAdapter.popEditForUpdate(cls, id);
@@ -431,8 +430,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
                 catch (Exception ex) {
                     Logger.trace("Can't retrieve bean id", ex);
                 }
-            }
-        }
+            
         
         if (debug (2)) {
             Logger.debug(">> Old: "+mapper.valueToTree(request.getOldValues())
@@ -532,7 +530,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     }
     
     public void reindex(Object bean){
-        String _id=getIdForBeanAsString(bean);
+        String _id=EntityFactory.getIdForBeanAsString(bean);
         if(alreadyLoaded.containsKey(bean.getClass()+_id)){
             return;
         }
@@ -544,57 +542,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-    public static Object getIdForBean(Object entity){
-        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
-            return null;
-        }
-        try {
-            Object id = null;
-            Field f=getIdFieldForBean(entity);
-            id = f.get(entity);
-            if (id != null) {
-                return id;
-            }
-        }
-        catch (Exception ex) {
-            Logger.trace("Unable to update index for "+entity, ex);
-        }
-        return null;
-    }
-    public static Field getIdFieldForBean(Object entity){
-        if (!entity.getClass().isAnnotationPresent(Entity.class)) {
-            return null;
-        }
-        try {
-            for (Field f : entity.getClass().getFields()) {
-                if (f.getAnnotation(Id.class) != null) {
-                    return f;
-                }
-            }
-        } catch (Exception ex) {
-            Logger.trace("Unable to update index for "+entity, ex);
-        }
-        return null;
-    }
-    public static Method getIdSettingMethodForBean(Object entity){
-        Field f=getIdFieldForBean(entity);
-        for(Method m:entity.getClass().getMethods()){
-            if(m.getName().toLowerCase().equals("set" + f.getName().toLowerCase())){
-                return m;
-            }
-        }
-        return null;
-    }
-    public static String getIdForBeanAsString(Object entity){
-        Object id=getIdForBean(entity);
-        if(id!=null)return id.toString();
-        return null;
-    }
-    public static String setIdForBean(Object entity){
-        Object id=getIdForBean(entity);
-        if(id!=null)return id.toString();
-        return null;
     }
     public static List<Field> getSequenceIndexableField(Object entity){
     	List<Field> flist = new ArrayList<Field>();
