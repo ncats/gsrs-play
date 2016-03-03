@@ -62,7 +62,7 @@ public class ChemicalSubstance extends Substance  {
             try {
                 ObjectNode n = mapper.createObjectNode();
                 n.put("count", moieties.size());
-                n.put("href", Global.getRef(getClass (), uuid)
+                n.put("href", Global.getRef(getClass (), getUuid())
                       +"/moieties");
                 node = n;
             }

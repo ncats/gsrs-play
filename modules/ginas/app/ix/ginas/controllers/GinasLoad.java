@@ -414,8 +414,8 @@ public class GinasLoad extends App {
 			GinasUtils.GinasAbstractSubstanceTransformer trans = (GinasUtils.GinasAbstractSubstanceTransformer) ex
 					.getTransformer();
 			sub = trans.transformSubstance(jn);
-			Substance osub = (sub.uuid == null) ? null : SubstanceFactory
-					.getSubstance(sub.uuid);
+			Substance osub = (sub.getUuid() == null) ? null : SubstanceFactory
+					.getSubstance(sub.getUuid());
 
 			DefaultSubstanceValidator dsv = new DefaultSubstanceValidator(
 					GinasProcessingStrategy.ACCEPT_APPLY_ALL_MARK_FAILED()

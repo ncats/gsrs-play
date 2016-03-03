@@ -40,12 +40,12 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     @Id
     public UUID uuid;
 
-    
+
     public Date created=null;
     
     @OneToOne(cascade=CascadeType.ALL)
     @Indexable(facet = true, name = "Created By")
-    private Principal createdBy;
+    public Principal createdBy;
     
     @Indexable(facet = true, name = "Last Edited Date")
     public Date lastEdited;
@@ -53,7 +53,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     //TP: why is this one-to-one?
     @OneToOne(cascade=CascadeType.ALL)
     @Indexable(facet = true, name = "Last Edited By")
-    private Principal lastEditedBy;
+    public Principal lastEditedBy;
     
     @JsonDeserialize(using = PrincipalDeserializer.class)
     public Principal getCreatedBy() {
@@ -82,12 +82,48 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     
     @JsonIgnore
     @OneToOne(cascade=CascadeType.ALL)
-    GinasAccessContainer recordAccess;
-    
-    
-   
-    
-    
+    public GinasAccessContainer recordAccess;
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    public Date getLastEdited() {
+        return lastEdited;
+    }
+
+    public void setLastEdited(Date lastEdited) {
+        this.lastEdited = lastEdited;
+    }
+
+    public boolean isDeprecated() {
+        return deprecated;
+    }
+
+    public void setDeprecated(boolean deprecated) {
+        this.deprecated = deprecated;
+    }
+
+    public GinasAccessContainer getRecordAccess() {
+        return recordAccess;
+    }
+
+    public void setRecordAccess(GinasAccessContainer recordAccess) {
+        this.recordAccess = recordAccess;
+    }
+
     @JsonProperty("access")
     public void setAccess(Collection<String> access){
     	ObjectMapper om = new ObjectMapper();

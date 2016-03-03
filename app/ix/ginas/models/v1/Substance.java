@@ -3,6 +3,7 @@ package ix.ginas.models.v1;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -195,7 +196,7 @@ public class Substance extends GinasCommonData {
 			try {
 				ObjectNode n = mapper.createObjectNode();
 				n.put("count", names.size());
-				n.put("href", Global.getRef(getClass(), uuid) + "/names");
+				n.put("href", Global.getRef(getClass(), getUuid()) + "/names");
 				node = n;
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -215,7 +216,7 @@ public class Substance extends GinasCommonData {
 			try {
 				ObjectNode n = mapper.createObjectNode();
 				n.put("count", references.size());
-				n.put("href", Global.getRef(getClass(), uuid) + "/references");
+				n.put("href", Global.getRef(getClass(), getUuid()) + "/references");
 				node = n;
 			} catch (Exception ex) {
 				// this means that the class doesn't have the NamedResource
@@ -234,7 +235,7 @@ public class Substance extends GinasCommonData {
 			try {
 				ObjectNode n = mapper.createObjectNode();
 				n.put("count", codes.size());
-				n.put("href", Global.getRef(getClass(), uuid) + "/codes");
+				n.put("href", Global.getRef(getClass(), getUuid()) + "/codes");
 				node = n;
 			} catch (Exception ex) {
 				// this means that the class doesn't have the NamedResource
@@ -253,7 +254,7 @@ public class Substance extends GinasCommonData {
 			try {
 				ObjectNode n = mapper.createObjectNode();
 				n.put("count", relationships.size());
-				n.put("href", Global.getRef(getClass(), uuid)
+				n.put("href", Global.getRef(getClass(), getUuid())
 						+ "/relationships");
 				node = n;
 			} catch (Exception ex) {
@@ -273,7 +274,7 @@ public class Substance extends GinasCommonData {
 			try {
 				ObjectNode n = mapper.createObjectNode();
 				n.put("count", properties.size());
-				n.put("href", Global.getRef(getClass(), uuid) + "/properties");
+				n.put("href", Global.getRef(getClass(), getUuid()) + "/properties");
 				node = n;
 			} catch (Exception ex) {
 				// this means that the class doesn't have the NamedResource
@@ -519,7 +520,7 @@ public class Substance extends GinasCommonData {
 	@JsonIgnore
 	public boolean addAlternativeSubstanceDefinitionRelationship(Substance sub) {
 		for(Relationship sref:getAlternativeDefinitionRelationships()){
-			if(sref.relatedSubstance.refuuid.equals(sub.uuid.toString())){
+			if(sref.relatedSubstance.refuuid.equals(sub.getUuid().toString())){
 				return true;
 			}
 		}
@@ -535,7 +536,7 @@ public class Substance extends GinasCommonData {
 	public List<Relationship> removeAlternativeSubstanceDefinitionRelationship(Substance sub) {
 		List<Relationship> toRemove= new ArrayList<Relationship>();
 		for(Relationship sref:getAlternativeDefinitionRelationships()){
-			if(sref.relatedSubstance.refuuid.equals(sub.uuid.toString())){
+			if(sref.relatedSubstance.refuuid.equals(sub.getUuid().toString())){
 				toRemove.add(sref);
 			}
 		}
@@ -583,7 +584,7 @@ public class Substance extends GinasCommonData {
 
 	public Reference getReferenceByUUID(String uuid) {
 		for (Reference r : this.references) {
-			if (r.uuid.toString().equals(uuid))
+			if (r.getUuid().toString().equals(uuid))
 				return r;
 		}
 		return null;
@@ -637,6 +638,7 @@ public class Substance extends GinasCommonData {
 	        if(approvalID!=null){
 	                return approvalID;
 	        }
+			UUID uuid = getUuid();
 	        if(uuid!=null){
 	                return uuid.toString().split("-")[0];
 	        }
