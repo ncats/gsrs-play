@@ -58,16 +58,12 @@ import ix.core.ValidationMessage;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory.EntityMapper;
-import ix.core.models.ETag;
-import ix.core.models.ETagRef;
-import ix.core.models.Edit;
 import ix.core.models.Principal;
-import ix.core.models.Structure;
-import ix.core.models.BeanViews;
-import ix.core.models.Curation;
 import ix.core.search.TextIndexer;
 import ix.core.plugins.TextIndexerPlugin;
 import ix.ginas.models.KeywordListDeserializer;
+import ix.ginas.models.v1.Substance;
+import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.utils.Util;
 import ix.utils.Global;
 
@@ -2140,9 +2136,6 @@ public class EntityFactory extends Controller {
         return UUID.fromString(id);
     }
 
-    public interface EntityFilter {
-        public boolean hasAccess (Object grp, Object sub);
-    }
 
 	public static Object getIdForBean(Object entity){
 	    if (!entity.getClass().isAnnotationPresent(Entity.class)) {
@@ -2197,6 +2190,17 @@ public class EntityFactory extends Controller {
 	    if(id!=null)return id.toString();
 	    return null;
 	}
-    
-    
+
+    public static abstract class EntityFilter {
+        public abstract boolean accept (Object sub);
+        public List filter(List results) {
+			List filteredSubstances = new ArrayList<Substance>();
+			for (Object sub : results) {
+				if (accept(sub)) {
+					filteredSubstances.add(sub);
+				}
+			}
+			return filteredSubstances;
+		}
+    }
 }
