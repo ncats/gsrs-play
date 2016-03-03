@@ -38,17 +38,17 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     static public final String TAG = "GInAS Tag";
     
     @Id
-    public UUID uuid;
+    private UUID uuid;
 
     
-    public Date created=null;
+    private Date created=null;
     
     @OneToOne(cascade=CascadeType.ALL)
     @Indexable(facet = true, name = "Created By")
     private Principal createdBy;
     
     @Indexable(facet = true, name = "Last Edited Date")
-    public Date lastEdited;
+    private Date lastEdited;
     
     //TP: why is this one-to-one?
     @OneToOne(cascade=CascadeType.ALL)
@@ -77,17 +77,53 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
 
 
 	//Where did this come from?
-    public boolean deprecated;
+    private boolean deprecated;
     
     
     @JsonIgnore
     @OneToOne(cascade=CascadeType.ALL)
-    GinasAccessContainer recordAccess;
-    
-    
-   
-    
-    
+    private GinasAccessContainer recordAccess;
+
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    public Date getLastEdited() {
+        return lastEdited;
+    }
+
+    public void setLastEdited(Date lastEdited) {
+        this.lastEdited = lastEdited;
+    }
+
+    public boolean isDeprecated() {
+        return deprecated;
+    }
+
+    public void setDeprecated(boolean deprecated) {
+        this.deprecated = deprecated;
+    }
+
+    public GinasAccessContainer getRecordAccess() {
+        return recordAccess;
+    }
+
+    public void setRecordAccess(GinasAccessContainer recordAccess) {
+        this.recordAccess = recordAccess;
+    }
+
     @JsonProperty("access")
     public void setAccess(Collection<String> access){
     	ObjectMapper om = new ObjectMapper();

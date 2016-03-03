@@ -76,7 +76,7 @@
         </div>
         <div class = "col-md-12">
         @for(i <- 0 until sub.protein.subunits.size()) {
-            <subunit uuid="'@sub.uuid'" index ='@i' view='subunits' numbers="numbers"></subunit>
+            <subunit uuid="'@sub.getUuid'" index ='@i' view='subunits' numbers="numbers"></subunit>
         }
 
 

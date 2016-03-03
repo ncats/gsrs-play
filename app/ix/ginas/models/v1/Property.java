@@ -16,26 +16,74 @@ import java.util.List;
 public class Property extends GinasCommonSubData {
     @JSONEntity(title = "Property Name", isRequired = true)
     @Column(nullable = false)
-    public String name;
+    private String name;
 
     @JSONEntity(title = "Value Type", values = "JSONConstants.ENUM_PROPERTY_TYPE", isRequired = true)
-    public String type;
+    private String type;
 
     @JSONEntity(title = "Property Type")
-    public String propertyType;
+    private String propertyType;
 
     @JSONEntity(title = "Property Value")
     @OneToOne(cascade = CascadeType.ALL)
-    public Amount value;
+    private Amount value;
 
     @JSONEntity(title = "Defining")
-    public Boolean defining;
+    private Boolean defining;
 
     @JSONEntity(title = "Parameters", format = "table")
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "ix_ginas_property_parameter")
-    public List<Parameter> parameters = new ArrayList<Parameter>();
+    private List<Parameter> parameters = new ArrayList<Parameter>();
 
     public Property() {
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getPropertyType() {
+        return propertyType;
+    }
+
+    public void setPropertyType(String propertyType) {
+        this.propertyType = propertyType;
+    }
+
+    public Amount getValue() {
+        return value;
+    }
+
+    public void setValue(Amount value) {
+        this.value = value;
+    }
+
+    public Boolean isDefining() {
+        return defining;
+    }
+
+    public void setDefining(Boolean defining) {
+        this.defining = defining;
+    }
+
+    public List<Parameter> getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(List<Parameter> parameters) {
+        this.parameters = parameters;
     }
 }

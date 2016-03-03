@@ -82,7 +82,7 @@ public class ProteinUtils {
 				ObjectMapper om = new ObjectMapper();
 				JsonNode asJson=om.valueToTree(p);
 				//System.out.println(p.type + "\t" + p.name +"\t" + p.propertyType + "\t" + p.value.average +"\t" + asJson);
-				if(p.name.startsWith("MOL_WEIGHT")){
+				if(p.getName().startsWith("MOL_WEIGHT")){
 					props.add(p);
 				}
 			}
@@ -103,13 +103,15 @@ public class ProteinUtils {
 	}
 	public static Property makeMolWeightProperty(double avg){
 		Property p= new Property();
-		p.name="MOL_WEIGHT:NUMBER(CALCULATED)";
-		p.type="amount";
-		p.propertyType="CHEMICAL";
-		p.value= new Amount();
-		p.value.type="ESTIMATED";
-		p.value.average=roundToSignificantFigures(avg,3);
-		p.value.units="Da";
+		p.setName("MOL_WEIGHT:NUMBER(CALCULATED)");
+		p.setType("amount");
+		p.setPropertyType("CHEMICAL");
+
+		Amount amt = new Amount();
+		amt.type="ESTIMATED";
+		amt.average=roundToSignificantFigures(avg,3);
+		amt.units="Da";
+		p.setValue(amt);
 		
 		return p;
 		

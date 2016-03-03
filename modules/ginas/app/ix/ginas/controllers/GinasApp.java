@@ -868,7 +868,7 @@ public class GinasApp extends App {
         // return official != null ? official
         // : substance.uuid.toString().substring(0, 8);
 
-        return substance.uuid.toString().substring(0, 8);
+        return substance.getUuid().toString().substring(0, 8);
     }
 
     static abstract class GetResult<T extends Substance> {
@@ -1385,7 +1385,7 @@ public class GinasApp extends App {
                 .findUnique();
         } catch (Exception ex) {
             Logger.warn("Can't retrieve related substance "
-                        + "from relationship " + rel.uuid);
+                        + "from relationship " + rel.getUuid());
         }
         return relsub;
     }

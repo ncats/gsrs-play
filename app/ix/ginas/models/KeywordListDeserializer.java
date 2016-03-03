@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 public class KeywordListDeserializer extends JsonDeserializer<List<Keyword>> {
-    final String label;
+    private final String label;
     public KeywordListDeserializer (String label) {
         this.label = label;
     }
@@ -51,5 +51,10 @@ public class KeywordListDeserializer extends JsonDeserializer<List<Keyword>> {
     		}
     	}
     	return keywords;
+    }
+    //kept getter package-private to keep it
+    //the same as when we used direct field access
+    String getLabel() {
+        return label;
     }
 }

@@ -260,7 +260,7 @@ public class Global extends GlobalSettings {
             if (fid == null) {
                 Logger.trace("Entity doesn't have id field: "+instance);
                 throw new IllegalArgumentException
-                    ("Entity type does not have id field!");
+                    ("Entity type does not have id field!" + cls.getCanonicalName());
             }
             Object id = fid.get(instance);
             return getNamespace()+"/"+name+"("+id+")";

@@ -25,13 +25,13 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 public class GinasCommonSubData extends GinasCommonData implements GinasAccessReferenceControlled{
     @JsonIgnore
     @OneToOne(cascade=CascadeType.ALL)
-    GinasReferenceContainer recordReference;
+    private GinasReferenceContainer recordReference;
     
    
     @JsonSerialize(using = ReferenceListSerializer.class)
     public Set<Keyword> getReferences(){
     	if(recordReference!=null){
-    		return recordReference.references;
+    		return recordReference.getReferences();
     	}
     	return new HashSet<Keyword>();
     }
@@ -53,13 +53,20 @@ public class GinasCommonSubData extends GinasCommonData implements GinasAccessRe
     
     public GinasCommonSubData () {
     }
-    
-    
-    public void addReference(String refUUID){
+
+	public GinasReferenceContainer getRecordReference() {
+		return recordReference;
+	}
+
+	public void setRecordReference(GinasReferenceContainer recordReference) {
+		this.recordReference = recordReference;
+	}
+
+	public void addReference(String refUUID){
 		if(this.recordReference==null){
 			this.recordReference= new GinasReferenceContainer(this);
 		}
-		this.recordReference.references.add(new Keyword(GinasCommonSubData.REFERENCE, 
+		this.recordReference.getReferences().add(new Keyword(GinasCommonSubData.REFERENCE,
 				refUUID
 		));
 		

@@ -67,7 +67,7 @@ public class Validation {
 	            gpm.add(GinasProcessingMessage.ERROR_MESSAGE("Substance cannot be parsed"));
 	            return gpm;
 	        }
-	        if(s.uuid==null){
+	        if(s.getUuid()==null){
 	        	UUID uuid=s.getOrGenerateUUID();
 	        	gpm.add(GinasProcessingMessage.INFO_MESSAGE("Substance had no UUID, generated one:" + uuid));
 	        }
@@ -346,7 +346,7 @@ public class Validation {
 	            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstancesWithExactName(100, 0, n.name);
 	            if(sr!=null && !sr.isEmpty()){
 	                Substance s2=sr.iterator().next();
-	                if(!s2.uuid.toString().equals(s.uuid.toString())){
+	                if(!s2.getUuid().toString().equals(s.getUuid().toString())){
 	                    GinasProcessingMessage mes = GinasProcessingMessage
 	                        .WARNING_MESSAGE("Name '"
 	                                         + n.name
@@ -391,7 +391,7 @@ public class Validation {
 	            List<Substance> sr=ix.ginas.controllers.v1.SubstanceFactory.getSubstancesWithExactCode(100, 0, cd.code, cd.codeSystem);
 	            if(sr!=null && !sr.isEmpty()){
 	                Substance s2=sr.iterator().next();
-	                if(!s2.uuid.toString().equals(s.uuid.toString())){
+	                if(!s2.getUuid().toString().equals(s.getUuid().toString())){
 	                    GinasProcessingMessage mes = GinasProcessingMessage
 	                        .WARNING_MESSAGE("Code '"
 	                                         + cd.code
@@ -460,7 +460,7 @@ public class Validation {
                 GinasProcessingMessage mes=null;
                 for(Substance s:sr){
                 	
-                    if(cs.uuid==null || !s.uuid.toString().equals(cs.uuid.toString())){
+                    if(cs.getUuid()==null || !s.getUuid().toString().equals(cs.getUuid().toString())){
                     	if(dupes<=0)mes=GinasProcessingMessage.WARNING_MESSAGE("Structure has 1 possible duplicate:");
                         dupes++;
                         mes.addSubstanceLink(s);
@@ -488,7 +488,7 @@ public class Validation {
 	                int dupes=0;
 	                GinasProcessingMessage mes=null;
 	                for(Substance s:sr){
-	                    if(proteinsubstance.uuid==null || !s.uuid.toString().equals(proteinsubstance.uuid.toString())){
+	                    if(proteinsubstance.getUuid()==null || !s.getUuid().toString().equals(proteinsubstance.getUuid().toString())){
 	                    	
 	                    	if(dupes<=0){
 	                    		mes=GinasProcessingMessage.WARNING_MESSAGE("There is 1 substance with a similar sequence to subunit [" + su.subunitIndex + "]:");
@@ -618,8 +618,8 @@ public class Validation {
         		}
         	}else{
         		Property p=molprops.get(0);
-        		double delta=tot-p.value.average;
-        		double pdiff=delta/(p.value.average);
+        		double delta=tot-p.getValue().average;
+        		double pdiff=delta/(p.getValue().average);
         		int len=0;
         		for(Subunit su:cs.protein.subunits){
         			len += su.sequence.length();
@@ -627,7 +627,7 @@ public class Validation {
         		double avgoff=delta/len;
         		//System.out.println("Diff:" + pdiff + "\t" + avgoff);
         		if(Math.abs(pdiff)>.05){
-        			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Calculated weight [" + tot + "] is greater than 5% off of given weight [" + p.value.average + "]").appliableChange(true));
+        			gpm.add(GinasProcessingMessage.WARNING_MESSAGE("Calculated weight [" + tot + "] is greater than 5% off of given weight [" + p.getValue().average + "]").appliableChange(true));
         		}
         	}
         	//System.out.println("calc:" + tot);

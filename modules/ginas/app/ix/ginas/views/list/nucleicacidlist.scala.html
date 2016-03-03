@@ -24,7 +24,7 @@
                     <div class = "col-md-12 text-center">
                         <ul class= "list-inline list-unstyled tools">
                             <li>
-                                <modal-button type= "export" structureid ="'@nuc.uuid'" format="fas" ></modal-button>
+                                <modal-button type= "export" structureid ="'@nuc.getUuid'" format="fas" ></modal-button>
                             </li>
                             <li>
                                 <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(nuc.nucleicAcid.getSubunits().get(0).sequence)" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
@@ -75,7 +75,7 @@
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Last modified: <h6>{{moment(@nuc.lastEdited.getTime())}}</h6>
+                        Last modified: <h6>{{moment(@nuc.getLastEdited.getTime())}}</h6>
                     </div>
                 </div>
                 <div class = "row">

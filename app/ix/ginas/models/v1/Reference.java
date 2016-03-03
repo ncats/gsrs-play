@@ -59,7 +59,7 @@ public class Reference extends GinasCommonSubData {
     public String url;
 
     public Reference () {
-    	this.uuid= UUID.randomUUID();
+    	this.setUuid(UUID.randomUUID());
     	
     }
     

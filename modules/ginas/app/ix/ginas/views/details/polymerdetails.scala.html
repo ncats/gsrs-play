@@ -205,7 +205,7 @@
             <div class = "row">
                 <div class = "col-md-6 col-md-offset-6">
                     <ul class= "form-inline pull-right list-unstyled" id = "exportSave">
-                        <li  class = "padded"> <export-button structureid ="'@sub.uuid'" format="'sdf'" ></export-button></li>
+                        <li  class = "padded"> <export-button structureid ="'@sub.getUuid'" format="'sdf'" ></export-button></li>
                         <li class = "padded">
                             <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(sub))"  target="_self" class="btn btn-primary" aria-label="Edit Substance"> <span class="fa fa-wrench chem-button"></span></a>
                     </ul>

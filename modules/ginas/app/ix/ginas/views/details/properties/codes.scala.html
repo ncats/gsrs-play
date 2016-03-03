@@ -28,10 +28,10 @@
                 <td>@c.comments</td>
                 @if(c.getReferences.size > 0){
                     <td>
-                <referencesmanager indices substance ="'@id'" divid ="'@c.uuid'" references = "@GinasApp.getAsJson(c.getReferences())"></referencesmanager>
+                <referencesmanager indices substance ="'@id'" divid ="'@c.getUuid'" references = "@GinasApp.getAsJson(c.getReferences())"></referencesmanager>
             </td>
             </tr>
-            <tr><td class = "'@c.uuid'" colspan = "5"></td></tr>
+            <tr><td class = "'@c.getUuid'" colspan = "5"></td></tr>
         }else{
                 <td>no refs</td>
             }

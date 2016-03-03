@@ -88,7 +88,7 @@ public class SubstanceFactory extends EntityFactory {
 		List<Substance> realList = new ArrayList<Substance>();
 		for (Substance sub : sublist) {
 			for (SubstanceReference sref : sub.getAlternativeDefinitionReferences()) {
-				if (sref.refuuid.equals(altSub.uuid.toString())) {
+				if (sref.refuuid.equals(altSub.getUuid().toString())) {
 					realList.add(sub);
 					break;
 				}

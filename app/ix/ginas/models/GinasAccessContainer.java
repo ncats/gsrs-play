@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @Table(name = "ix_ginas_access")
 public class GinasAccessContainer {
 	@Id
-	Long id;
+	private Long id;
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@JsonSerialize(using = GroupListSerializer.class)
@@ -40,7 +40,17 @@ public class GinasAccessContainer {
 	public GinasAccessContainer(){
 		
 	}
-	public GinasAccessContainer(Object o){
+
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public GinasAccessContainer(Object o){
 		this.entityType=o.getClass().getName();
 	}
 	

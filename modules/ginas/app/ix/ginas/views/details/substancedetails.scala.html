@@ -32,7 +32,7 @@
                         <li role="presentation"><a href="#codes" prevent-default="" ng-click="scrollTo('codes')">
                             Codes <span class="badge pull-right">@sub.codes.size()</span></a></li>
                     }
-                    @if(GinasApp.resolveRelationships(sub.uuid.toString()).size() > 0) {
+                    @if(GinasApp.resolveRelationships(sub.getUuid.toString()).size() > 0) {
                         <li role="presentation" ><a href="#relationships" prevent-default="" ng-click="scrollTo('relationships')" id = "relation">
                             Relationships <span class="badge pull-right">@sub.relationships.size()</span></a></li>
                     }
@@ -105,7 +105,7 @@
 
             @if(sub.codes.size() > 0) {
                 <div class="row info" id="codes">
-                @properties.codes(sub.codes, sub.uuid.toString)
+                @properties.codes(sub.codes, sub.getUuid.toString)
                 </div>
             }
             @if(sub.hasChildConceptReferences()) {
@@ -115,23 +115,23 @@
             }
             @if(sub.relationships.size() > 0) {
                 <div class="row info" id="relationships">
-                @properties.relationships(sub.relationships, sub.uuid.toString)
+                @properties.relationships(sub.relationships, sub.getUuid.toString)
                 </div>
             }
             @if(sub.properties != null && sub.properties.size() > 0) {
                 <div class="row info" id="properties">
-                @properties.properties(sub.properties, sub.uuid.toString)
+                @properties.properties(sub.properties, sub.getUuid.toString)
                 </div>
             }
             @if(sub.notes != null && sub.notes.size() > 0) {
                 <div class="row info" id="notes">
-                @properties.notes(sub.notes, sub.uuid.toString)
+                @properties.notes(sub.notes, sub.getUuid.toString)
                 </div>
             }
 
             @dynamic(name = "isAdmin", handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                 <div class="row info" id="refs">
-                    <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
+                    <referencesmanager reftable substance ="'@sub.getUuid'"></referencesmanager>
                 </div>
             }
 
