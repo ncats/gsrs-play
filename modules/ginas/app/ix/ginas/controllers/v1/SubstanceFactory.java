@@ -3,6 +3,7 @@ package ix.ginas.controllers.v1;
 import be.objectify.deadbolt.java.actions.Dynamic;
 import static ix.ncats.controllers.auth.Authentication.getUserProfile;
 import ix.core.NamedResource;
+import ix.core.UserFetcher;
 import ix.core.adapters.EntityPersistAdapter;
 import ix.core.controllers.EntityFactory;
 import ix.core.controllers.v1.RouteFactory;
@@ -145,7 +146,7 @@ public class SubstanceFactory extends EntityFactory {
 	public static List<Substance> getSubstances(int top, int skip, String filter) {
 		SubstanceFilter subFilter = new SubstanceFilter();
 		List<Substance> substances = filter(new FetchOptions(top, skip, filter), finder);
-		return subFilter.filterByAccess(substances);
+		return subFilter.filter(substances);
 	}
 
 	// TODO: Doesn't support top/skip
@@ -292,42 +293,43 @@ public class SubstanceFactory extends EntityFactory {
 		List<Substance> dupeList = finder.where().like("structure.properties.term", hash).findList();
 		return dupeList;
 	}
+	//TODO
+	/*
+	 * This filter isn't quite sufficient for what we need, though it's a good start
+	 * 
+	 * 
+	 * 
+	 */
+	public static class SubstanceFilter extends EntityFilter {
 
-	public static class SubstanceFilter implements EntityFilter {
-
-		UserProfile profile = getUserProfile();
+		UserProfile profile = UserFetcher.getActingUserProfile();
 		Principal user = profile != null ? profile.user : null;
 		boolean hasAdmin = false;
-
-		public boolean hasAccess(Object grp, Object sub) {
-			Group group = (Group) grp;
-			Substance substance = (Substance) sub;
-			return substance.getAccess().contains(group);
-		}
-
-		public List<Substance> filterByAccess(List<Substance> results) {
-			List<Substance> filteredSubstances = new ArrayList<Substance>();
-
+		List<Group> groups=null;
+		
+		public SubstanceFilter(){
+			if(profile!=null){
+				groups=profile.getGroups();
+			}
 			if (IxDeadboltHandler.activeSessionHasPermission("isAdmin")) {
-				return results;
+				hasAdmin=true;
 			}
-
-			for (Substance sub : results) {
-				Set<Group> accessG = sub.getAccess();
-				if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
-					filteredSubstances.add(sub);
-				} else {
-					if (user != null) {
-						for (Group grp : profile.getGroups()) {
-							if (hasAccess(grp, sub)) {
-								filteredSubstances.add(sub);
-							}
-						}
-					}
-				}
-			}
-			return filteredSubstances;
 		}
+
+		public boolean accept(Object sub) {
+			if(hasAdmin)return true;
+			//Group group = (Group) grp;
+			Substance substance = (Substance) sub;
+			Set<Group> accessG = substance.getAccess();
+			if (accessG == null || accessG.isEmpty() || accessG.size() == 0) {
+				return true;
+			}
+			if(Collections.disjoint(accessG, groups)){
+				return false;
+			}
+			return true;
+		}
+
 	}
 
 	public static SequenceIndexer getSeqIndexer() {

@@ -1,7 +1,13 @@
 package ix.utils;
 
+import ix.core.EntityProcessor;
 import ix.core.NamedResource;
 import ix.core.controllers.v1.RouteFactory;
+import ix.core.controllers.EntityFactory;
+import ix.core.controllers.PrincipalFactory;
+import ix.core.controllers.UserProfileFactory;
+import ix.core.models.Principal;
+import ix.core.models.UserProfile;
 import ix.core.plugins.IxContext;
 
 import java.lang.reflect.Field;
@@ -102,6 +108,9 @@ public class Global extends GlobalSettings {
             RouteFactory.register(res.name(), c);
         }
 
+        loadDefaultUsers();
+        
+        
         //Logger.debug("IDG routes: "+ix.idg.Routes.routes().getClass());
         /*
         EbeanPlugin eb = new EbeanPlugin (app);
@@ -118,6 +127,39 @@ public class Global extends GlobalSettings {
         Logger.info("## starting app: secret=\""
                     +app.configuration().getString("application.secret")+"\"");
         */
+    }
+    
+    void loadDefaultUsers(){
+    	List<Object> ls= Play.application().configuration().getList("ix.core.users",null);
+    	if(ls!=null){
+    		for(Object o:ls){
+    			if(o instanceof Map){
+	    			Map m = (Map)o;
+	    			String username=(String) m.get("username");
+	    			String email=(String) m.get("email");
+	    			String password=(String) m.get("password");
+	    			List roles=(List) m.get("roles");
+	    			List groups=(List) m.get("groups");
+	    			Principal p=new Principal(username,email);
+	    			
+	    			Principal p2=PrincipalFactory.byUserName(username);
+	    			if(p2==null){
+		    			try {
+		    				//System.out.println("TRYING TO REGISTER USER:" + username);
+		    				
+		    				UserProfile up=UserProfileFactory.addActiveUser(p, password, roles, groups);
+		    				//System.out.println("SUCCESS!!!!!");
+							
+						} catch (Exception e) {
+							Logger.error(username + "failed");
+							e.printStackTrace();
+						}
+	    			}else{
+	    				//System.err.println(username + "already exists");
+	    			}
+    			}
+    		}
+    	}
     }
 
     void dumpRoute () {
@@ -249,20 +291,7 @@ public class Global extends GlobalSettings {
         }
 
         try {
-            Field fid = null;
-            for (Field f : cls.getFields()) {
-                if (f.getAnnotation(Id.class) != null) {
-                    fid = f;
-                    break;
-                }
-            }
-            
-            if (fid == null) {
-                Logger.trace("Entity doesn't have id field: "+instance);
-                throw new IllegalArgumentException
-                    ("Entity type does not have id field!" + cls.getCanonicalName());
-            }
-            Object id = fid.get(instance);
+            Object id = EntityFactory.getId(instance);
             return getNamespace()+"/"+name+"("+id+")";
         }
         catch (Exception ex) {

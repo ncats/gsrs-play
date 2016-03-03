@@ -1,4 +1,4 @@
-var WizardRelationshipPage = function () {
+var RelationshipForm = function () {
 
     this.getPage = function () {
         browser.get(browser.params.url);
@@ -14,74 +14,77 @@ var WizardRelationshipPage = function () {
 
     this.formElements = {
         formName: 'relationshipForm',
-        buttonID: 'relationships',
+        buttonId: 'relationships',
         formObj: 'relationship',
         fields: [{
-            model: 'relationship.relatedSubstance',
-            type: 'substance-chooser'
-        },{
             model: 'relationship.type',
             type: 'dropdown-select'
         },{
             model: 'relationship.interactionType',
             type: 'dropdown-select'
+        }
+        ]
+    };
+
+    this.subForms = {
+        formName: 'relationshipForm',
+        buttonID: 'relationships',
+        formObj: 'relationship',
+        fields: [{
+ /*           model: 'relationship.relatedSubstance',
+            type: 'substance-chooser'
         },{
             model: 'relationship.agentSubstance',
             type: 'substance-chooser'
-        },{
-            model: 'access',
+        },{*/
+/*            model: 'access',
             type: 'form-selector'
-        }, {
+        }, {*/
             model: 'reference',
             type: 'form-selector'
+/*        }, {
+            model: 'comments',
+            type: 'form-selector'*/
         }
         ]
     }
 };
 
 describe ('Relationship form', function() {
+    var relationshipForm = new RelationshipForm();
+    beforeEach(function () {
+        relationshipForm.getPage();
+    });
+/*
+    it('should see if form is visible', function () {
+        var vis = browser.findElement(By.id('addRelationshipForm')).isDisplayed();
+        expect(vis).toBe(false)
+    });
 
-    var WizRelPage = new WizardRelationshipPage();
-    it('Relationship form tests', function () {
+    it('should test form toggling', function () {
+        var buttonId = relationshipForm.formElements.buttonId;
+        var vis = browser.findElement(By.id('addRelationshipForm')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId + "-toggle"));
+        expect(browser.findElement(By.id('addRelationshipForm')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('addRelationshipForm')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('addRelationshipForm')).isDisplayed()).toBe(false);
+
+    });
+
+    it('should test all basic form elements', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        var breadcrumb =['relationships-toggle'];
-        elements.testInputFields(WizRelPage.formElements, breadcrumb);
-       /* var buttonId = WizRelPage.formElements.buttonID;
-        var formElements = WizRelPage.formElements.fields;
+        var breadcrumb = ['relationships-toggle'];
+        elements.testInputFields(relationshipForm.formElements, breadcrumb);
+    });*/
 
-        var refElementTests = require('./ReferenceFormTest.js');
-        var refPage = new refElementTests;
-        var accessElementTests = require('./AccessFormTest.js');
-        var accessPage = new accessElementTests;
-
-        for (var i = 0; i < formElements.length; i++) {
-            var elementType = formElements[i].type;
-            var model = formElements[i].model;
-            WizRelPage.getPage();
-            switch (elementType) {
-                case "text-input":
-                    elements.testTextInput(buttonId, model);
-                    break;
-                case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model);
-                    break;
-                case "multi-select":
-                    elements.testMultiSelectInput(buttonId, model);
-                    break;
-                case "check-box":
-                    elements.testCheckBoxInput(buttonId, model);
-                    break;
-                case "form-selector":
-                    if(model == 'relationship-reference') {
-                        refPage.refPageTests(buttonId, model);
-                    } else if(model == 'relationship-access'){
-                        accessPage.accessPageTests(buttonId, model);
-                    }
-
-                    break;
-            } //switch
-        } //for i*/
+    it('should test subforms', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var breadcrumb = ['relationships-toggle'];
+        elements.testInputFields(relationshipForm.subForms, breadcrumb);
     });
 });
 

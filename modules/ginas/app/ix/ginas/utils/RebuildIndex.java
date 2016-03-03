@@ -1,5 +1,6 @@
 package ix.ginas.utils;
 import ix.core.adapters.EntityPersistAdapter;
+import ix.core.controllers.EntityFactory;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -34,10 +35,9 @@ public class RebuildIndex  {
         EntityPersistAdapter.setUpdatingIndex(true);
         for(Class<?> eclass: classes){
         	Class idClass=Long.class;
-        	for(Field f:eclass.getFields()){
-        		if(f.isAnnotationPresent(Id.class)){
-        			idClass=f.getType();
-        		}
+        	Field idf=EntityFactory.getIdFieldForClass(eclass);
+        	if(idf!=null){
+        		idClass=idf.getType();
         	}
         	//System.out.println(eclass + "\t" + idClass);
         	Model.Finder finder = new Model.Finder(idClass, eclass);

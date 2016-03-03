@@ -11,7 +11,7 @@
         </thead>
         <tr ng-repeat="r in references" ng-class="getClass(r.$$index)">
             <td>{{r.$$index}}</td>
-            <td>
+            <td class ="url">
                 <citation citation=r></citation>
             </td>
             <td><a ng-href="app/substances?facet=Reference+Type/{{r.docType}}" target="_self"

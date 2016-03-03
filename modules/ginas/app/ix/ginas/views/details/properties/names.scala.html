@@ -22,7 +22,7 @@
         </thead>
         @for(n <- names) {
             <tr>
-                 <td><span>@n.name</span>
+                 <td  class ="url"><span>@n.name</span><br/>
                 
                 @for(l <- n.getLocators(substance)) {
                     <span uib-tooltip="@GinasApp.getCV.getDisplay("LOCATORS", l)" class="badge" >@l</span> &nbsp;

@@ -53,10 +53,10 @@
                                 <modal-button type= "export" structureid ="'@chem.structure.id'" format="sdf" ></modal-button>
                             </li>
                             <li>
-                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click= "passStructure('@chem.structure.id')" uib-tooltip="Structure Search" aria-label="Structure Search"> <span class="fa fa-search fa-2x success"></span></a>
+                                <a ng-href="@ix.ginas.controllers.routes.GinasFactory.structuresearch()" target="_self" ng-click= "passStructure('@chem.structure.id')" uib-tooltip="Structure Search" aria-label="Structure Search"><span class="sr-only">Search for Structure</span><span class="fa fa-search fa-2x success"></span></a>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"> <span class="fa fa-pencil fa-2x success"></span></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(chem))" uib-tooltip="Edit" target="_self" aria-label="Edit Chemical Substance"><span class="sr-only">Edit Chemical</span><span class="fa fa-pencil fa-2x success"></span></a>
                             </li>
                         </ul>
                     </div>

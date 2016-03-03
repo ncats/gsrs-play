@@ -32,9 +32,21 @@
                         <li role="presentation"><a href="#codes" prevent-default="" ng-click="scrollTo('codes')">
                             Codes <span class="badge pull-right">@sub.codes.size()</span></a></li>
                     }
-                    @if(GinasApp.resolveRelationships(sub.getUuid.toString()).size() > 0) {
+                    @if(sub.getActiveMoieties.size() > 0) {
+                        <li role="presentation" ><a href="#activemoieties" prevent-default="" ng-click="scrollTo('activemoieties')" >
+                            Active Moieties <span class="badge pull-right">@sub.getActiveMoieties.size()</span></a></li>
+                    }
+                    @if(sub.getMetabolites.size() > 0) {
+                    <li role="presentation" ><a href="#metabolites" prevent-default="" ng-click="scrollTo('metabolites')" >
+                        Metabolites <span class="badge pull-right">@sub.getMetabolites.size()</span></a></li>
+                    }
+                    @if(sub.getImpurities.size() > 0) {
+                    <li role="presentation" ><a href="#impurities" prevent-default="" ng-click="scrollTo('impurities')">
+                        Impurities <span class="badge pull-right">@sub.getImpurities.size()</span></a></li>
+                    }
+                    @if(sub.getFilteredRelationships.size() > 0) {
                         <li role="presentation" ><a href="#relationships" prevent-default="" ng-click="scrollTo('relationships')" id = "relation">
-                            Relationships <span class="badge pull-right">@sub.relationships.size()</span></a></li>
+                            Relationships <span class="badge pull-right">@sub.getFilteredRelationships.size()</span></a></li>
                     }
                     @if(sub.properties.size() > 0) {
                         <li role="presentation"><a href="#properties" prevent-default="" ng-click="scrollTo('properties')">
@@ -59,7 +71,7 @@
                     <div class="col-md-3">
                     <code class="text-uppercase">Record Status: @sub.getDisplayStatus()</code> <br>
                     <code class ="text-uppercase"> version:
-                        <select><option ng-repeat="version in getRange(1, '@sub.version');">{{version}}</option></select>
+                        <select aria-label="version"><option ng-repeat="version in getRange(1, '@sub.version');">{{version}}</option></select>
                     </code>
                 </div>
                 <div class = "col-md-3 pull-right">
@@ -105,7 +117,7 @@
 
             @if(sub.codes.size() > 0) {
                 <div class="row info" id="codes">
-                @properties.codes(sub.codes, sub.getUuid.toString)
+                @properties.codes(sub.codes, sub.uuid.toString)
                 </div>
             }
             @if(sub.hasChildConceptReferences()) {
@@ -113,25 +125,45 @@
                 @properties.variantconcepts(sub)
                 </div>
             }
-            @if(sub.relationships.size() > 0) {
-                <div class="row info" id="relationships">
-                @properties.relationships(sub.relationships, sub.getUuid.toString)
+
+           @if(sub.getActiveMoieties().size() > 0) {
+                <div class="row info" id="activemoieties">
+                @properties.relationships(sub.getActiveMoieties(), "Active Moieties", sub.uuid.toString)
                 </div>
             }
+
+            @if(sub.getMetabolites().size() > 0) {
+                <div class="row info" id="metabolites">
+                @properties.relationships(sub.getMetabolites(), "Metabolites", sub.uuid.toString)
+                </div>
+            }
+
+            @if(sub.getImpurities().size() > 0) {
+            <div class="row info" id="impurities">
+                @properties.relationships(sub.getImpurities(), "Impurities", sub.uuid.toString)
+            </div>
+            }
+
+            @if(sub.getFilteredRelationships().size() > 0) {
+                <div class="row info" id="relationships">
+                @properties.relationships(sub.getFilteredRelationships(), "Relationships", sub.uuid.toString)
+                </div>
+            }
+
             @if(sub.properties != null && sub.properties.size() > 0) {
                 <div class="row info" id="properties">
-                @properties.properties(sub.properties, sub.getUuid.toString)
+                @properties.properties(sub.properties, sub.uuid.toString)
                 </div>
             }
             @if(sub.notes != null && sub.notes.size() > 0) {
                 <div class="row info" id="notes">
-                @properties.notes(sub.notes, sub.getUuid.toString)
+                @properties.notes(sub.notes, sub.uuid.toString)
                 </div>
             }
 
             @dynamic(name = "isAdmin", handler = new ix.ncats.controllers.security.IxDeadboltHandler()) {
                 <div class="row info" id="refs">
-                    <referencesmanager reftable substance ="'@sub.getUuid'"></referencesmanager>
+                    <referencesmanager reftable substance ="'@sub.uuid'"></referencesmanager>
                 </div>
             }
 

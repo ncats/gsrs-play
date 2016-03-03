@@ -38,7 +38,7 @@ public class UserProfile extends IxModel implements Subject {
     
     @Lob
     @JsonIgnore
-    private String _roles=null;  //this is a silly, but quick way to serialize roles
+    private String rolesJSON=null;  //this is a silly, but quick way to serialize roles
     
     
     //private key to be used in authentication
@@ -67,40 +67,12 @@ public class UserProfile extends IxModel implements Subject {
         regenerateKey();
     }
 
-    /*
-    public List<Role> getRoles(){
-    	List<Role> roles=AdminFactory.rolesByPrincipal(user); 	//roles;
-    	List<Role> rkind = new ArrayList<Role>();
-    	if(roles==null || roles.isEmpty()){
-    		
-    	}else{
-	    	for(Role r:roles){
-	    		System.out.println("Fetchin roles:" + r.getName());
-	    		rkind.add(r.role);
-	    	}
-    	}
-        return rkind;
-    }
-    public void addRole(Role role){
-    	List<Role> roles=getRoles();
-    	roles.add(role);
-    	setRoleKinds(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
-    }
-    
-    public void setRoleKinds(List<Role> rolekinds){
-    	List<Role> tempRoles=new ArrayList<Role>();
-    	for(Role rk:rolekinds){
-    		tempRoles.add(new Role(rk));
-    	}
-    	AdminFactory.updateRolesF(this.id, tempRoles);
-    }
-    */
     public List<Role> getRoles(){
     	List<Role> rolekinds=new ArrayList<Role>();
-    	if(this._roles!=null){
+    	if(this.rolesJSON!=null){
     		try{
 	    		ObjectMapper om = new ObjectMapper();
-	    		List l=om.readValue(_roles, List.class);
+	    		List l=om.readValue(rolesJSON, List.class);
 	    		for(Object o:l){
 	    			try{
 	    				rolekinds.add(Role.valueOf(o.toString()));
@@ -124,8 +96,9 @@ public class UserProfile extends IxModel implements Subject {
     
     public void setRoles(List<Role> rolekinds){
     	ObjectMapper om = new ObjectMapper();
-    	_roles=om.valueToTree(rolekinds).toString();
+    	rolesJSON=om.valueToTree(rolekinds).toString();
     }
+    
     
 
     

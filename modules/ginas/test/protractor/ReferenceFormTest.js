@@ -28,9 +28,9 @@ var WizardReferencePage = function () {
         }, {
             model: 'reference.tags',
             type: 'multi-select'
-        }, {
+/*        }, {
             model: 'reference.url',
-            type: 'text-input'
+            type: 'text-input'*/
 /*        },{
             model: 'access',
             type: 'form-selector'*/

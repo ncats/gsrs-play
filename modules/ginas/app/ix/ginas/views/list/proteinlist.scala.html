@@ -23,18 +23,22 @@
     <div class= "panel-body list-item">
         <div class = "row">
             <div class = "col-md-3 text-center">
-                <img ng-click="toggle()" src="@routes.Assets.at("ginas/images/protein.svg")" alt ="Protein" aria-label="Protein" class="struc-thumb img-responsive" id="" />
+                <img alt ="Protein" aria-label="Protein" class="struc-thumb img-responsive" id="" ng-click="toggle()" ng-src="@routes.Assets.at("ginas/images/protein.svg")"/>
                 <div class = "row">
                     <div class = "col-md-12">
                         <ul class= "list-inline list-unstyled tools">
                             <li>
-                                <modal-button type= "export" structureid ="'@prot.getUuid()'" format="fas" ></modal-button>
+                                <modal-button type= "export" structureid ="'@prot.uuid'" format="fas" ></modal-button>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).getUuid.toString())" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search"> <i class="fa fa-search fa-2x success"></i></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.sequence(prot.protein.subunits(0).uuid.toString())" target="_self" uib-tooltip="Sequence Search" aria-label="Structure Search">
+                                    <span class="sr-only">Sequence Search</span>
+                                    <i class="fa fa-search fa-2x success"></i></a>
                             </li>
                             <li>
-                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" uib-tooltip="Edit" aria-label="Edit Protein Substance"> <i class="fa fa-pencil fa-2x success"></i></a>
+                                <a href="@ix.ginas.controllers.routes.GinasFactory.edit(GinasApp.getId(prot))"  target="_self" uib-tooltip="Edit" aria-label="Edit Protein Substance">
+                                    <span class="sr-only">Edit Protein</span>
+                                    <i class="fa fa-pencil fa-2x success"></i></a>
                             </li>
                         </ul>
                     </div>
@@ -77,7 +81,7 @@
                 </div>
                 <div class = "row">
                     <div class = "col-md-12">
-                        Last modified: <h6>{{moment(@prot.getLastEdited.getTime())}}</h6>
+                        Last modified: <h6>{{moment(@prot.lastEdited.getTime())}}</h6>
                     </div>
                 </div>
                 <div class = "row">
@@ -91,10 +95,10 @@
         <div class = "row">
               <div class = "col-md-12">
 		  @for(subunit <- prot.protein.subunits) {
-		      @defining(GinasApp.getSeqAlignment(ctx,subunit.getUuid.toString)){ r =>
+		      @defining(GinasApp.getSeqAlignment(ctx,subunit.uuid.toString)){ r =>
   		         @if(r != null) {
 			 <br>
-			 <em>Subunit @subunit.subunitIndex</em> <code>@subunit.getUuid</code>
+			 <em>Subunit @subunit.subunitIndex</em> <code>@subunit.uuid</code>
 			     <pre ng-click="toggle()" class = "struc-thumb img-responsive">
 @{"identity = %.3f".format(r.alignments(0).iden)}
 @r.alignments(0).alignment
