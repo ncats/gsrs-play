@@ -34,23 +34,24 @@ exports.config = {
 
     suites: {
         basic: [//'HeaderFormTest.js'
-               'NameFormTest.js' //passes
-              // ,'CodeFormTest.js'//passes
+               //'NameFormTest.js' //passes
+              //'CodeFormTest.js'//passes
             // ,'NoteFormTest.js' passes
-            //'RelationshipFormTest.js'
-               //,'PropertyFormTest.js'
-              // ,'ReferenceFormOnlyFormTest.js'
+            'RelationshipFormTest.js'
+            //,   'PropertyFormTest.js'
+            //,  'ReferenceFormOnlyFormTest.js'
         ],
         modifications: [
-            'AgentModificationFormTest.js'
-            ,'StructuralModificationFormTest.js'
-            ,'PhysicalModificationFormTest.js'
+          //  'AgentModificationFormTest.js'
+          //, 'StructuralModificationFormTest.js'
+            'PhysicalModificationFormTest.js'
         ],
         chemical: [ 'StructureFormTest.js'
                     ,'MoietyFormTest.js'
         ],
-        protein: [ 'SubunitFormTest.js'
-                    ,'GlycosylationFormTest.js'
+        protein: [ 'ProteinDetailsFormTest.js'
+                   // ,'SubunitFormTest.js'
+                  //  ,'GlycosylationFormTest.js'
         ],
         structurallyDiverse: [ 'DiverseDetailsFormTest.js'
                     ,'DiverseDetailsFormTest.js'

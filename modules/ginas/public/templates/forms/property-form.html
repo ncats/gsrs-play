@@ -3,7 +3,7 @@
         <form-header type="properties" parent="parent" iscollapsed = "iscollapsed"></form-header>
     </div>
     <div class="col-md-12" uib-collapse="iscollapsed">
-        <form class="form-horizontal" name="propertyForm" name="addPropertyForm" role="form" novalidate>
+        <form class="form-horizontal" name="propertyForm" id="addPropertyForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
                     <dropdown-select ng-model="property.name" field="name" cv = "PROPERTY_NAME" ng-change="filterCV(property.name)"></dropdown-select>
