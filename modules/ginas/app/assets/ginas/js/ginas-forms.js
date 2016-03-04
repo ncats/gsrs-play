@@ -212,7 +212,8 @@
             scope: {
                 amount: '=',
                 referenceobj: '=',
-                parent: '='
+                parent: '=',
+                field: '='
             },
             templateUrl: baseurl + "assets/templates/forms/amount-form.html"
         };
@@ -653,13 +654,17 @@
 
                 switch (scope.type) {
                     case "amount":
+                        console.log(scope);
+                        if(!scope.field){
+                            scope.field = 'amount';
+                        }
                             $templateRequest(baseurl + "assets/templates/selectors/amount-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
 
                             });
-                        formHolder = '<amount-form referenceobj = referenceobj parent = parent amount=referenceobj.amount></amount-form>';
+                        formHolder = '<amount-form referenceobj = referenceobj parent = parent field=field amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
                         scope.formtype = attrs.formtype;

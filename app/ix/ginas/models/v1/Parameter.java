@@ -27,7 +27,7 @@ public class Parameter extends GinasCommonSubData {
 
     public Parameter () {}
     
-    public String toString(){
+/*    public String toString(){
     	return name + "," + type + "," + value.toString();
-    }
+    }*/
 }
