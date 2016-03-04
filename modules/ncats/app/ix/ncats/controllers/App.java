@@ -625,6 +625,21 @@ public class App extends Authentication {
         return sb.toString();
     }
     
+    public static String hashvar (int size, Object o) {
+        char[] alpha = {'a','b','c','d','e','f','g','h','i','j','k',
+                        'l','m','n','o','p','q','r','s','t','u','v',
+                        'x','y','z'};
+        
+        StringBuilder sb = new StringBuilder ();
+        int ohash=o.hashCode();
+        for (int i = 0; i < size; ++i){
+        	int p=Math.abs((ohash%alpha.length));
+            sb.append(alpha[p]);
+            ohash+=(ohash+"").toString().hashCode();
+        }
+        return sb.toString();
+    }
+    
     public static String randvar () {
         return randvar (5);
     }
