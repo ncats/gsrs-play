@@ -22,7 +22,7 @@
             <td>@m.agentModificationProcess</td>
             <td>@m.agentModificationRole</td>
             <td>@m.agentModificationType</td>
-            <td><amount value=@m.amount.toJson()></amount></td>
+            <amount value="@GinasApp.getAsJson(m.amount)"></amount>
             <td>@m.agentSubstance.refPname</td>
             <td>
               <a href="@ix.ginas.controllers.routes.GinasApp.substance(m.agentSubstance.getLinkingID())">@m.agentSubstance.getLinkingID()</a>

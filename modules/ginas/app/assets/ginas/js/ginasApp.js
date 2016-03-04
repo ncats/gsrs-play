@@ -887,7 +887,7 @@
             },
             link: function (scope, element, attrs) {
                 scope.display = function () {
-                    if (!_.isUndefined(scope.value)) {
+                    if (!_.isUndefined(scope.value) && !_.isNull(scope.value)) {
                         var ret = "";
                         var addedunits = false;
                         var unittext = "";
