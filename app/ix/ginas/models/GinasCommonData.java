@@ -4,14 +4,17 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
+import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
@@ -25,32 +28,36 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import ix.core.UserFetcher;
 import ix.core.controllers.AdminFactory;
+import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
+import ix.ginas.models.v1.Subunit;
 import ix.utils.Global;
+import ix.utils.Util;
 import play.Logger;
 import play.db.ebean.Model;
 
 @MappedSuperclass
-public class GinasCommonData extends Model implements GinasAccessControlled{
+public class GinasCommonData extends Model implements GinasAccessControlled,ForceUpdatableModel{
     static public final String REFERENCE = "GInAS Reference";
     static public final String TAG = "GInAS Tag";
     
     
+    //used only for forcing updates
+    @JsonIgnore
+    private int currentVersion=0;
+    
+    
     @Id
     public UUID uuid;
-
-
     public Date created=null;
-    
     @OneToOne(cascade=CascadeType.ALL)
     @Indexable(facet = true, name = "Created By")
     public Principal createdBy;
-    
     @Indexable(facet = true, name = "Last Edited Date")
     public Date lastEdited;
-    
     //TP: why is this one-to-one?
     @OneToOne(cascade=CascadeType.ALL)
     @Indexable(facet = true, name = "Last Edited By")
@@ -158,6 +165,9 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
         
     }
     
+    
+    
+    
     /**
      * Called before saving. Updates with the current time and user
      * for bookkeeping purposes. Note that this method currently uses
@@ -180,7 +190,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     @PrePersist
     @PreUpdate
     public void modified () {
-        this.lastEdited = new Date ();
+    	this.lastEdited = new Date ();
         Principal p1=UserFetcher.getActingUser();
         if(p1!=null){
     		lastEditedBy=p1;
@@ -189,7 +199,35 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     			created= new Date();
         	}
         }
+        if(this.uuid==null){
+        	this.uuid=UUID.randomUUID();
+        }
+        //if(this instanceof Subunit)
+        //System.out.println("saving:" + this.getClass() + "\t" + this.uuid);
         
+    }
+    
+//    @PostLoad
+//    public void test2(){
+//    	System.out.println(this.getClass() + " fetched with " + this.defhash + " to " + s1);
+//		
+//    }
+    
+    @JsonIgnore
+    public String getDefinitionalHash(){
+    	StringBuilder sb=new StringBuilder();
+    	EntityMapper om = EntityMapper.FULL_ENTITY_MAPPER();
+    	JsonNode jsn=om.valueToTree(this);
+    	
+    	Iterator<String> fields=jsn.fieldNames();
+    	
+    	while(fields.hasNext()){
+    		String f=fields.next();
+    		sb.append(f  +":" +  jsn.get(f).toString() + "\n");
+    	}
+    	
+    	
+        return Util.sha1(sb.toString());
     }
     
     @JsonProperty("_self")
@@ -233,6 +271,25 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
 	public Set<Group> getAccessGroups() {
 		return this.getAccess();
 	}
+
+	@Override
+	public void forceUpdate() {
+		currentVersion++;
+		super.update();
+		
+	}
+	
+	public boolean tryUpdate(){
+		String ohash=getDefinitionalHash();
+		super.update();
+		String nhash=getDefinitionalHash();
+		if(ohash.equals(nhash)){
+			return false;
+		}
+		return true;
+	}
+	
+	
 	
 	
 	

@@ -1,6 +1,7 @@
 package ix.ginas.models;
 
 import ix.core.models.Keyword;
+import play.db.ebean.Model;
 
 import java.util.LinkedHashSet;
 import java.util.Set;

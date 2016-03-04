@@ -1,6 +1,7 @@
 package ix.ginas.models;
 
 import ix.core.models.Group;
+import play.db.ebean.Model;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -19,7 +20,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @Entity
 @Table(name = "ix_ginas_access")
-public class GinasAccessContainer {
+public class GinasAccessContainer{
 	@Id
 	public Long id;
 

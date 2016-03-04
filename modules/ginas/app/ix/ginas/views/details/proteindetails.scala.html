@@ -15,7 +15,7 @@
     <li role="presentation"><a href="#subunits">Subunits
         <span class= "badge pull-right">@sub.protein.subunits.length</span></a>
     </li>
-    @defining(sub.protein.disulfideLinks.length) { count =>
+    @defining(sub.protein.getDisulfideLinks().length) { count =>
         @if(count > 0 ){
             <li role="presentation"><a href="#disulfide">Disulfide Links
                 <span class= "badge pull-right">@count</span></a>
@@ -149,7 +149,7 @@
 
     </div>
 
-    @defining(sub.protein.disulfideLinks.length) { count =>
+    @defining(sub.protein.getDisulfideLinks().length) { count =>
         @if(count > 0) {
             <div class="row info" id="disulfide">
                 <button class="btn btn-primary label-offset det">
@@ -161,7 +161,7 @@
                                 <th>Residue Index</th>
                             </tr>
                         </thead>
-                        @for(disLink <- sub.protein.disulfideLinks) {
+                        @for(disLink <- sub.protein.getDisulfideLinks()) {
                             <tr>
                             @for(s <- disLink.getSites()) {
 

@@ -58,6 +58,7 @@ public class EditingWorkflowTest {
                 	try(InputStream is=new FileInputStream(resource)){
 	                	entered= new ObjectMapper().readTree(is);
 	                    uuid=entered.get("uuid").asText();
+	                    System.out.println("Saving");
 	                    returned = ts.submitSubstanceJSON(entered);
                 	}
                 	
@@ -207,9 +208,12 @@ public class EditingWorkflowTest {
 									.build();
 		
 		assertEquals(expectedChanges, changes);
+		
 		//submit edit
 		updatedReturnedb = ts.updateSubstanceJSON(updated2);
     	Changes changes2 = JsonUtil.computeChanges(updated2, updatedReturnedb);
+    	System.out.println("Old disulfides:"+ updated2.at("/protein/disulfideLinks").size());
+    	System.out.println("New disulfides:"+ updatedReturnedb.at("/protein/disulfideLinks").size());
     	assertEquals(new ChangesBuilder(updated2, updatedReturnedb)
     			
     			.replace("/version")

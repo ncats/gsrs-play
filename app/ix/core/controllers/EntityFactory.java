@@ -269,20 +269,38 @@ public class EntityFactory extends Controller {
         List<Edit> edits = new ArrayList<Edit>();
         ObjectMapper mapper = getEntityMapper ();
         final public Edit edit;
-            
+        
+        
+        
         public EditHistory (String payload) throws Exception {
             edit = new Edit ();
             edit.path = null; 
             edit.newValue = payload;
            
         }
+        
 
         public void add (Edit e) { edits.add(e); }
         public List<Edit> edits () { return edits; }
-        public void attach (Object ebean) {
+        public void attach (Object ebean, final Callable callback) {
             if (ebean instanceof EntityBean) {
                 ((EntityBean)ebean)._ebean_intercept()
-                    .addPropertyChangeListener(this);
+                    .addPropertyChangeListener(new PropertyChangeListener(){
+
+						@Override
+						public void propertyChange(PropertyChangeEvent evt) {
+							System.out.println(evt.getPropertyName() + " changed to " + evt.getNewValue() + " from " + evt.getOldValue());
+							EditHistory.this.propertyChange(evt);
+							try {
+								callback.call();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+                    	
+                    	
+                    });
+                
             }
             else {
                 throw new IllegalArgumentException
@@ -316,6 +334,7 @@ public class EntityFactory extends Controller {
                 edit.oldValue = mapper.writeValueAsString(e.getOldValue());
                 edit.newValue = mapper.writeValueAsString(e.getNewValue());
                 edits.add(edit);
+                
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -1498,7 +1517,15 @@ public class EntityFactory extends Controller {
             
             //this saves and everything
             EntityPersistAdapter.storeEditForUpdate(previousValContainer.getValueClass(), previousValContainer.id, eh.edit);
-            newValue = instrument (eh, newValue, json);
+            try{
+            	System.out.println("Instrumenting");
+            	Instrumented inst=instrument (eh, newValue, json,"");
+            	newValue = inst.newObject;
+            	System.out.println("Instrumented");
+            }catch(Throwable e){
+            	e.printStackTrace();
+            	throw e;
+            }
             String newJSON=mapper.toJson(newValue);
             
             if (newValue != null) {
@@ -1630,7 +1657,7 @@ public class EntityFactory extends Controller {
         return (!Modifier.isStatic(mods)
                 && !Modifier.isFinal(mods)
                 && !Modifier.isTransient(mods)
-                && f.getAnnotation(JsonIgnore.class) == null
+                //&& f.getAnnotation(JsonIgnore.class) == null
                 && f.getAnnotation(DataVersion.class) == null
                 && f.getAnnotation(Id.class) == null);
     }
@@ -1641,6 +1668,7 @@ public class EntityFactory extends Controller {
      */
     static Object setValue (Object instance, Field field, Object value)
         throws Exception {
+    	//System.out.println("Setting field:" + field.getName());
         Logger.debug("** setValue: field "+field.getName()+"["
                      +instance.getClass().getName()+"] value="+value);
         
@@ -1703,6 +1731,11 @@ public class EntityFactory extends Controller {
                      +" context="+ebi.getPersistenceContext());
     }
 
+    
+    public static class Instrumented{
+    	Object newObject;
+    	boolean changed=false;
+    }
     /**
      * Ok, this method seems overly complicated. What it's doing is recursively
      * going through and saving each property. That sounds fine, but it causes a 
@@ -1749,9 +1782,10 @@ public class EntityFactory extends Controller {
      * @return
      * @throws Exception
      */
-    protected static Object instrument
-    (EditHistory eh, Object value, JsonNode json) throws Exception {
+    protected static Instrumented instrument
+    (EditHistory eh, Object value, JsonNode json, String path) throws Exception {
     	FetchedValue fv=getCurrentValue(value);
+    	
     	Class cls;
     	Object xval;
     	Object id;
@@ -1759,6 +1793,8 @@ public class EntityFactory extends Controller {
 	    cls=fv.getValueClass();
 	    id=fv.id;
 	    xval=fv.value;
+	    final Instrumented retInst= new Instrumented();
+	    
 	    
 	    /*
 	    if(xval!=null){
@@ -1777,7 +1813,13 @@ public class EntityFactory extends Controller {
     
     
     if (xval == null) {
+    	if(!(value instanceof Model)){
+    		retInst.newObject=value;
+    		return retInst;
+    	}
+    	System.out.println("Saving new:" + path);
     	((Model)value).save();
+    	
         id = getId (value);
         Logger.debug("<<< " + id);
         
@@ -1785,30 +1827,51 @@ public class EntityFactory extends Controller {
         ObjectMapper mapper = new ObjectMapper ();
         e.newValue = mapper.writeValueAsString(value);
         eh.add(e);
-        return value;
+        retInst.newObject=value;
+        
+        //retInst.changed=true;
+        return retInst;
     }else{
     	
     }
 
-    eh.attach(xval);
+    
+    
+    eh.attach(xval, new Callable(){
+
+		@Override
+		public Object call() throws Exception {
+			
+			//retInst.changed=true;
+			return null;
+		}
+    	
+    });
 
     // now sync up val and value
     Map<Field, Object> values = new HashMap<Field, Object>();
     for (Field f : cls.getFields()) {
         JsonProperty prop = f.getAnnotation(JsonProperty.class);
-        JsonNode node = json.get(prop != null ? prop.value() : f.getName());
+        JsonNode node = null;
+        if(json!=null){
+        	node=json.get(prop != null ? prop.value() : f.getName());
+        }
 
         Class type = f.getType();       
         Logger.debug("field \""+f.getName()+"\"["+type
                      +"] valid="+isValid(f)
                      +" node="+node);            
-        if (!isValid (f) || node == null)
+        if (!isValid (f) 
+        		//|| node == null
+        		)
             continue;
         
         Object v = f.get(value);
         if (v != null) {
             if (type.getAnnotation(Entity.class) != null) {
-                setValue (xval, f, instrument (eh, v, node));
+            	Instrumented sinst=instrument (eh, v, node,path+ "/" + f.getName());
+                retInst.changed|=sinst.changed;
+                setValue (xval, f, sinst.newObject);
             }
             else if (type.isArray()) {
                 Class<?> t = type.getComponentType();
@@ -1822,8 +1885,10 @@ public class EntityFactory extends Controller {
                         Object vals = Array.newInstance(t, len);
                         for (int i = 0; i < len; ++i) {
                             Object xv = Array.get(v, i);
+                            Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
+                            retInst.changed|=sinst.changed;
                             Array.set(vals, i,
-                                      instrument (eh, xv, node.get(i)));
+                                      sinst.newObject);
                         }
                         setValue (xval, f, vals);
                     }
@@ -1852,7 +1917,9 @@ public class EntityFactory extends Controller {
                              it.hasNext(); ++i) {
                             Object xv = it.next();
                             Logger.debug(i+": "+xv+" <=> "+node.get(i));
-                            xv = instrument (eh, xv, node.get(i));
+                            Instrumented sinst=instrument (eh, xv, node.get(i),path+ "/" + f.getName());
+                            retInst.changed|=sinst.changed;
+                            xv = sinst.newObject;
                             xcol.add(xv);
                         }
                     }
@@ -1867,19 +1934,31 @@ public class EntityFactory extends Controller {
         }
     }
     
-    if(EntityFactory.getVersionForBeanAsString(xval)!=null){
+    if(false || xval instanceof ForceUpdatableModel){
     	
-    	//((Model)xval).update();
+    	
+    	boolean applied=((ForceUpdatableModel)xval).tryUpdate();
+    	if(!applied && retInst.changed){
+    		((ForceUpdatableModel)xval).forceUpdate();
+    		applied=true;
+    	}else{
+    		
+    	}
+    	retInst.changed|=applied;
+    	
+    }else{
+    	if(xval instanceof Model){
+    		((Model)xval).update();
+    	}
     }
     
-    //I don't think this does anything unless it has to
-    ((Model)xval).update();
+    
     
     
     Logger.debug("<<< "+id);
     eh.detach(xval);
-    
-    return xval;
+    retInst.newObject=xval;
+    return retInst;
 }
     public static class FetchedValue{
     	public Object value;
