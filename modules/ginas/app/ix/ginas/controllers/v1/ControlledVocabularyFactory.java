@@ -18,7 +18,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 	static public final Model.Finder<Long, ControlledVocabulary> finder = new Model.Finder(
 			Long.class, ControlledVocabulary.class);
 
-	static public boolean isloaded=false;
+	//static public boolean isloaded=false;
 	
 	public static ControlledVocabulary getControlledVocabulary(String domain) {
 		return finder.where().eq("domain", domain).findUnique();
@@ -151,10 +151,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 	}
 
 	public static boolean isloaded() {
-		if(!isloaded){
-			isloaded=!finder.all().isEmpty();
-		}
-		return isloaded;
+		return (finder.findRowCount()!=0);
 	}
 
 	public static int size() {

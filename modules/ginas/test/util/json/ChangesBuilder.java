@@ -42,6 +42,8 @@ public class ChangesBuilder {
         map.put(change.getKey(), change);
         return this;
     }
+    
+    
     public ChangesBuilder added(String key, String value){
     	return change(Change.add(key, value));
     }
@@ -96,7 +98,7 @@ public class ChangesBuilder {
             }
         }
 
-        return current.asText();
+        return JsonUtil.toString(current);
     }
 
     public Changes build(){

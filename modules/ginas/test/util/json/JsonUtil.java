@@ -18,7 +18,10 @@ import java.util.Map;
  */
 public class JsonUtil {
 
-	
+	public static String toString(JsonNode jsn){
+		if(jsn.isTextual())return jsn.asText();
+		return jsn.toString();
+	}
 
 	//public static JsonNode
 	
@@ -36,6 +39,7 @@ public class JsonUtil {
 	
     public static Changes computeChanges(JsonNode before, JsonNode after, ChangeFilter...filters ){
         JsonNode jp = JsonDiff.asJson(before,after);
+        //System.out.println("THE CHANGES:" + jp);
         Map<String, Change> changes = new HashMap<>();
 
         //label is for short circuiting
@@ -47,8 +51,6 @@ public class JsonUtil {
             if("remove".equals(op)){
 
                 JsonNode jsbefore=before.at(jn.get("path").textValue());
-                // checks if jsbefore is equivalent to null in some way:
-                // [], {}, "", [""]
                 if(jsbefore.toString().equals("[\"\"]") ||
                    jsbefore.toString().equals("{}") ||
                    jsbefore.toString().equals("") ||
@@ -57,20 +59,19 @@ public class JsonUtil {
 
                 }else{
                     String key = jn.get("path").asText();
-                    change = new Change(key, jsbefore.asText(), null, Change.ChangeType.REMOVED);
-
+                    change = new Change(key, toString(jsbefore), null, Change.ChangeType.REMOVED);
                 }
 
                 //System.out.println("Error:" + jn + " was:" + before.at(jn.get("path").textValue()));
             }else if("add".equals(op)){
                 String key = jn.get("path").asText();
                 JsonNode jsAfter=after.at(key);
-                change= new Change(key, null, jsAfter.asText(), Change.ChangeType.ADDED);
+                change= new Change(key, null, toString(jsAfter), Change.ChangeType.ADDED);
             }else if("replace".equals(op)){
             	
                 String key = jn.get("path").asText();
-                String vold=before.at(key).asText();
-                String vnew=after.at(key).asText();
+                String vold=toString(before.at(key));
+                String vnew=toString(after.at(key));
                 change= new Change(key, vold, vnew, Change.ChangeType.REPLACED);
             }
 
@@ -143,20 +144,23 @@ public class JsonUtil {
     		return this;
     	}
     	public JsonNodeBuilder remove(String path){
-    		changes.remove(JsonChange.remove(path));
+    		changes.add(JsonChange.remove(path));
     		return this;
     	}
     	public JsonNodeBuilder add(String path,String value){
-    		changes.remove(JsonChange.add(path,value));
+    		changes.add(JsonChange.add(path,value));
     		return this;
     	}
     	public JsonNodeBuilder move(String path, String from){
-    		changes.remove(JsonChange.move(path,from));
+    		changes.add(JsonChange.move(path,from));
     		return this;
     	}
     	public JsonNode build(){
     		try {
-				return JsonPatch.fromJson((new ObjectMapper()).valueToTree(changes)).apply(oldJson);
+    			//System.out.println("There are these changes, which will be turned into a patch:" + changes.size());
+    			JsonPatch jp=JsonPatch.fromJson((new ObjectMapper()).valueToTree(changes));
+    			//System.out.println("THE PATCH:" + jp);
+				return jp.apply(oldJson);
 			} catch (JsonPatchException | IOException e) {
 				e.printStackTrace();
 			}
@@ -285,8 +289,5 @@ public class JsonUtil {
                 throw new IllegalStateException("error building Json", e);
             }
         }
-    }
-    public static void main(String[] ar){
-    	System.out.println("LOL");
     }
 }

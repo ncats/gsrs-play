@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import ix.core.models.BeanViews;
+import ix.core.models.DataVersion;
 import ix.core.models.Indexable;
 import ix.core.models.Keyword;
 import ix.core.models.Principal;
@@ -88,11 +89,36 @@ public class Substance extends GinasCommonData {
 	@Column(name = "class")
 	public SubstanceClass substanceClass;
 
+	
 	@Indexable(suggest = true, facet = true, name = "Record Status")
 	public String status = STATUS_PENDING;
+	
+	@DataVersion
 	public String version = "1";
 	
 
+	private int updates=0;
+	// this is here to force an update at the substance level
+	// we actually need this a few other places as well
+	// TODO: Discuss this
+    @Override
+	public void update(){
+    	updates++;
+		//System.out.println("Actually updating");
+		super.update();
+	}
+    
+    @Override
+	public void save(){
+    	updates++;
+		//System.out.println("Actually saving");
+		super.save();
+	}
+	
+	
+	
+	
+	
 	@OneToOne(cascade = CascadeType.ALL)
 	@JsonSerialize(using = PrincipalSerializer.class)
 	@JsonDeserialize(using = PrincipalDeserializer.class)
@@ -652,7 +678,10 @@ public class Substance extends GinasCommonData {
 			
 		}
 		i++;
+		
+		System.out.println("Updating version from:"  + version);
 		this.version=i+"";
+		System.out.println("Updating version to:"  + version);
 	}
 	
 	@JsonIgnore

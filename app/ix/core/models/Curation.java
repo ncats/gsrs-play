@@ -15,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 @Table(name="ix_core_curation")
 public class Curation extends Model {
     public enum Status {
-        Unknown,
+        	Unknown,
             Pending,
             Rejected,
             Accepted

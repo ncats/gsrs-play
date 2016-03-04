@@ -25,6 +25,7 @@ public class DisulfideLink extends GinasCommonSimplifiedSubData {
 	@JsonIgnore
 	@OneToOne(cascade=CascadeType.ALL)
     SiteContainer siteContainer;
+	
     public List<Site> getSites(){
     	if(siteContainer!=null){
     		return siteContainer.getSites();
@@ -38,6 +39,20 @@ public class DisulfideLink extends GinasCommonSimplifiedSubData {
     	siteContainer.setSites(sites);
     }
     
-    
+    public void setSitesShorthand(String sites){
+    	if(siteContainer==null){
+    		siteContainer=new SiteContainer(this.getClass().getName());
+    	}
+    	siteContainer.setShorthand(sites);
+    }
+
+    // @JsonView(BeanViews.Internal.class)
+	public String getSitesShorthand(){
+		if(siteContainer!=null){
+    		return siteContainer.getShorthand();
+    	}
+    	return "";
+	}
+	
     public DisulfideLink () {}
 }
