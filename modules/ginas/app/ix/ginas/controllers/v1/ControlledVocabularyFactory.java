@@ -26,8 +26,7 @@ public class ControlledVocabularyFactory extends EntityFactory {
 	static public final Model.Finder<Long, ControlledVocabulary> finder = new Model.Finder(
 			Long.class, ControlledVocabulary.class);
 
-	//static public boolean isloaded=false;
-	
+
 	public static ControlledVocabulary getControlledVocabulary(String domain) {
 		return finder.where().eq("domain", domain).findUnique();
 	}

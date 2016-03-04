@@ -28,11 +28,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 
 public class Authentication extends Controller {
-    public static final String APP = Play.application()
-            .configuration().getString("ix.app", "MyApp");
+    public static String APP;
     public static final String SESSION = "ix.session";
-    public static final int TIMEOUT = 1000 * Play.application()
-            .configuration().getInt(SESSION, 7200); // session idle
+    public static int TIMEOUT; // session idle
 
     
     static Model.Finder<UUID, Session> _sessions =
@@ -44,14 +42,26 @@ public class Authentication extends Controller {
     private static Cache tokenCacheUserProfile=null;
     private static long lastCacheUpdate=-1;
 
-    static ix.core.plugins.SchedulerPlugin scheduler =
-            Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
+    static ix.core.plugins.SchedulerPlugin scheduler;
 
     
     static{
-    	setupCache();
+    	init();
     	
     }
+
+	public static void init(){
+		APP = Play.application()
+				.configuration().getString("ix.app", "MyApp");
+
+		TIMEOUT = 1000 * Play.application()
+				.configuration().getInt(SESSION, 7200); // session idle
+
+        scheduler =
+                Play.application().plugin(ix.core.plugins.SchedulerPlugin.class);
+		setupCache();
+
+	}
     
     public static void setupCache(){
     	String CACHE_NAME="TOKEN_CACHE";
@@ -67,13 +77,18 @@ public class Authentication extends Controller {
             new CacheConfiguration (CACHE_NAME, maxElements)
             .timeToLiveSeconds(tres/1000);
         tokenCache = new Cache (config);
-        CacheManager.getInstance().addCache(tokenCache);     
+        CacheManager.getInstance().removeCache(CACHE_NAME);
+		CacheManager.getInstance().addCache(tokenCache);
+
         tokenCache.setSampledStatisticsEnabled(true);
         
         CacheConfiguration configUp =
                 new CacheConfiguration (CACHE_NAME_UP, maxElementsUP)
                 .timeToIdleSeconds(tres/1000/100);
         tokenCacheUserProfile= new Cache (configUp);
+
+        CacheManager.getInstance().removeCache(CACHE_NAME_UP);
+
         CacheManager.getInstance().addCache(tokenCacheUserProfile);     
         tokenCacheUserProfile.setSampledStatisticsEnabled(true);
         lastCacheUpdate=-1;

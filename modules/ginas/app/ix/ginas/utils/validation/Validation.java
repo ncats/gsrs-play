@@ -46,20 +46,25 @@ import play.mvc.Call;
 public class Validation {
 	
 	private static CodeSequentialGenerator seqGen=null;
-	
-	static{
-		String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
-		String codeSystemSuffix = Play.application().configuration().getString("ix.ginas.generatedcode.suffix", null);
-		int length = Play.application().configuration().getInt("ix.ginas.generatedcode.length", 10);
-		boolean padding = Play.application().configuration().getBoolean("ix.ginas.generatedcode.padding", true);
-		if(codeSystem!=null){
-			seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
-		}
+
+    static PayloadPlugin _payload =null;
+
+    static{
+        init();
 	}
-	static final PayloadPlugin _payload =
-	        Play.application().plugin(PayloadPlugin.class);
-	
-	static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
+
+    public static void init() {
+        String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
+        String codeSystemSuffix = Play.application().configuration().getString("ix.ginas.generatedcode.suffix", null);
+        int length = Play.application().configuration().getInt("ix.ginas.generatedcode.length", 10);
+        boolean padding = Play.application().configuration().getBoolean("ix.ginas.generatedcode.padding", true);
+        if(codeSystem!=null){
+            seqGen=new CodeSequentialGenerator(length,codeSystemSuffix,padding,codeSystem);
+        }
+        _payload = Play.application().plugin(PayloadPlugin.class);
+    }
+
+    static List<GinasProcessingMessage> validateAndPrepare(Substance s, GinasProcessingStrategy strat){
     	List<GinasProcessingMessage> gpm=new ArrayList<GinasProcessingMessage>();
     	try{
 	    	
