@@ -19,19 +19,22 @@
         </thead>
         @for(n <- properties) {
             <tr>
-                <td>@n.getName</td>
+                <td class="url">@n.getName</td>
                 <td>@GinasApp.getCV.getDisplay("NAME_TYPE", {n.`getType`})</td>
                 <td>@GinasApp.getCV.getDisplay("Property_TYPE", {n.getPropertyType})</td>
-                <amount value="@GinasApp.getAsJson(n.getValue())"></amount>
-
-
-
+                <td><amount value="@GinasApp.getAsJson(n.getValue())"></amount></td>
                 <td>@if(n.isDefining == true) {
                     <i class="fa fa-check fa-2x success"></i>
-                } else {}</td>
-                <td>PARAMETERS</td>
-@*                @referencetable(n.getReferences(), n.uuid.toString(), 7)
-            </tr>*@
+                } else {<td></td>}
+                @if(n.getParameters().size > 0) {
+                    <td>
+                    @for(pr <- n.getParameters()) {
+                            @pr.name <br>
+                            @pr.`type`<br>
+                        <amount value="@GinasApp.getAsJson(pr.value)"></amount>
+                    }
+                    </td>
+                }else{<td></td>}
         @if(n.getReferences.size > 0){
             <td>
                 <referencesmanager indices substance ="'@id'" divid ="'@n.getUuid'" references = "@GinasApp.getAsJson(n.getReferences())"></referencesmanager>
@@ -39,7 +42,8 @@
             </tr>
             <tr><td class = "'@n.getUuid'" colspan = "7"></td></tr>
         }else{
-            <td>none</td></tr>
+            <td>none</td>
+                </tr>
         }
         }
     </table>
