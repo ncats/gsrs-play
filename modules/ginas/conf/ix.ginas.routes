@@ -6,6 +6,7 @@ GET         /register                   ix.ginas.controllers.GinasFactory.regist
 GET         /test/submit                ix.ginas.controllers.GinasLoad.testSubmit
 GET         /structure                  ix.ginas.controllers.GinasFactory.structuresearch
 GET         /substance/:name            ix.ginas.controllers.GinasApp.substance(name: String)
+GET         /substance/:name/v/:version ix.ginas.controllers.GinasApp.substanceVersion(name: String, version: String)
 GET         /substance/:name/edit       ix.ginas.controllers.GinasFactory.edit(name: String)
 GET         /substance/:name/approve    ix.ginas.controllers.GinasFactory.approve(name: String)
 GET         /substances                 ix.ginas.controllers.GinasApp.substances(q: String ?= null, rows: Int ?= 16, page: Int ?= 1)

@@ -564,19 +564,41 @@ public class GinasApp extends App {
                    substances, null, result.getSearchContextAnalyzer().getFieldFacets()));
 
     }
-
+    public static class SubstanceVersionFetcher extends GetResult<Substance>{
+    	String version;
+    	public SubstanceVersionFetcher(String version){
+    		super(Substance.class, SubstanceFactory.finder);
+    		this.version=version;
+    	}
+    	Result getResult(List<Substance> e) throws Exception{
+    		System.out.println("Found the substances, now look for history");
+    		List<Substance> slist=new ArrayList<Substance>();
+    		for(Substance s:e){
+    			Substance s2=SubstanceFactory.getSubstanceVersion(s.uuid.toString(),version);
+    			slist.add(s2);
+    		}
+    		 return _getSubstanceResult(slist);
+    	}
+    }
+    public static final GetResult<Substance> SubstanceVersionResult =
+            new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
+                public Result getResult(List<Substance> substances) throws Exception {
+                    return _getSubstanceResult(substances);
+                }
+            };
     public static final GetResult<Substance> SubstanceResult =
-        new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
-            public Result getResult(List<Substance> substances) throws Exception {
-                return _getSubstanceResult(substances);
-            }
-        };
+            new GetResult<Substance>(Substance.class, SubstanceFactory.finder) {
+                public Result getResult(List<Substance> substances) throws Exception {
+                    return _getSubstanceResult(substances);
+                }
+            };
+        
     
     static Result _getSubstanceResult(List<Substance> substances)
         throws Exception {
         // force it to show only one since it's possible that the provided
         // name isn't unique
-        if (true || substances.size() == 1) {
+        if (substances.size() == 1) {
             Substance substance = substances.iterator().next();
             Substance.SubstanceClass type = substance.substanceClass;
             switch (type) {
@@ -633,6 +655,9 @@ public class GinasApp extends App {
 
     public static Result substance(String name) {
         return SubstanceResult.get(name);
+    }
+    public static Result substanceVersion(String name, String version) {
+        return new SubstanceVersionFetcher(version).get(name);
     }
 
     public static Result chemicals(final String q, final int rows,
@@ -931,6 +956,16 @@ public class GinasApp extends App {
         (Model.Finder<UUID, T> finder, String name) {
         if (name == null) {
             return null;
+        }else{
+        	try{
+        		UUID uuid = UUID.fromString(name);
+        		List<T> slist=new ArrayList<T>();
+        		slist.add((T)SubstanceFactory.getSubstance(uuid));
+        		return slist;
+        	}catch(Exception e){
+        		//Not a UUID
+        	}
+        	
         }
         List<T> values = new ArrayList<T>();
         if (name.length() == 8) { // might be uuid

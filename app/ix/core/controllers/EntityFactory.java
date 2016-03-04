@@ -1486,6 +1486,11 @@ public class EntityFactory extends Controller {
             }
 
             FetchedValue previousValContainer=getCurrentValue(newValue);
+            String oldVersion=EntityFactory.getVersionForBeanAsString(previousValContainer.value);
+            System.out.println("The old version was:" + oldVersion);
+            String newVersion=EntityFactory.getVersionForBeanAsString(newValue);
+            
+            
             String oldJSON=mapper.toJson(previousValContainer.value);
             
             EditHistory eh = new EditHistory (json.toString());
@@ -1504,11 +1509,13 @@ public class EntityFactory extends Controller {
 	                eh.edit.kind = newValue.getClass().getName();
 	                eh.edit.oldValue=oldJSON;
 	                eh.edit.newValue=newJSON;
+	                eh.edit.version=oldVersion;
 	                eh.edit.save();
 	                for (Edit e : eh.edits()) {
 	                    e.batch = eh.edit.id.toString();
 	                    e.save();
 	                }
+	                System.out.println("Saved new edit version?");
 	                Logger.debug("** New edit history "+eh.edit.id);
             	}
             	
@@ -1519,6 +1526,7 @@ public class EntityFactory extends Controller {
             //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
             
             tx.commit();
+            System.out.println("completely done saving");
             return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {
@@ -1585,7 +1593,29 @@ public class EntityFactory extends Controller {
         }
         return id;
     }
+    public static Object getVersion (Object entity) throws Exception {
+        Field f = getVersionField (entity);
+        Object version = null;
+        if (f != null) {
+            version = f.get(entity);
+            if (version == null) { // now try bean method
+                try {
+                    Method m = entity.getClass().getMethod
+                        ("get"+getBeanName (f.getName()));
+                    version = m.invoke(entity, new Object[0]);
+                }
+                catch (NoSuchMethodException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+        return version;
+    }
 
+    public static Field getVersionField (Object entity) throws Exception {
+        List<Field> fields = getFields (entity, DataVersion.class);
+        return fields.isEmpty() ? null : fields.iterator().next();
+    }
     public static Field getIdField (Object entity) throws Exception {
         List<Field> fields = getFields (entity, Id.class);
         return fields.isEmpty() ? null : fields.iterator().next();
@@ -1601,6 +1631,7 @@ public class EntityFactory extends Controller {
                 && !Modifier.isFinal(mods)
                 && !Modifier.isTransient(mods)
                 && f.getAnnotation(JsonIgnore.class) == null
+                && f.getAnnotation(DataVersion.class) == null
                 && f.getAnnotation(Id.class) == null);
     }
 
@@ -1835,7 +1866,16 @@ public class EntityFactory extends Controller {
             }
         }
     }
+    
+    if(EntityFactory.getVersionForBeanAsString(xval)!=null){
+    	
+    	//((Model)xval).update();
+    }
+    
+    //I don't think this does anything unless it has to
     ((Model)xval).update();
+    
+    
     Logger.debug("<<< "+id);
     eh.detach(xval);
     
@@ -2143,9 +2183,7 @@ public class EntityFactory extends Controller {
 	    }
 	    try {
 	        Object id = EntityFactory.getId(entity);
-	        if (id != null) {
-	            return id;
-	        }
+	        if (id != null) return id;
 	    }
 	    catch (Exception ex) {
 	        Logger.trace("Unable to fetch ID for "+entity, ex);
@@ -2184,10 +2222,14 @@ public class EntityFactory extends Controller {
 	    if(id!=null)return id.toString();
 	    return null;
 	}
-
-	public static String setIdForBean(Object entity){
-	    Object id=getIdForBean(entity);
-	    if(id!=null)return id.toString();
+	
+	public static String getVersionForBeanAsString(Object entity){
+		try{
+		    Object version=getVersion(entity);
+		    if(version!=null)return version.toString();
+		}catch(Exception e){
+			Logger.warn(e.getMessage());
+		}
 	    return null;
 	}
 

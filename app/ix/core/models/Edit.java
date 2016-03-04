@@ -39,6 +39,8 @@ public class Edit extends Model {
     @Lob
     @Basic(fetch=FetchType.EAGER)
     public String comments;
+    
+    public String version=null;
 
     @Basic(fetch=FetchType.EAGER)
     @Lob

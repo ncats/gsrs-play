@@ -1,7 +1,7 @@
-var ProteinWizardPage = function () {
+var WizardAmountPage = function () {
 
     this.getPage = function () {
-        browser.get('/ginas/app/wizard?kind=structurallyDiverse');
+        browser.get(browser.params.url);
     };
 
     this.clickById = function (name) {
@@ -14,6 +14,7 @@ var ProteinWizardPage = function () {
 
     this.formElements = {
         formName: 'amountForm',
+        formObj: 'amount',
         fields: [{
             model: 'amount.type',
             type: 'dropdown-select'
@@ -42,4 +43,5 @@ var ProteinWizardPage = function () {
         ]
     }
 };
+module.exports=WizardAmountPage;
 

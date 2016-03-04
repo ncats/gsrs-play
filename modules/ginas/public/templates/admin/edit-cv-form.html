@@ -5,69 +5,36 @@
     <span><i class="fa fa-question-circle fa-lg"></i></span>
 
     <div class="col-md-12">
-        <form class="form-horizontal" name="cvEditForm" role="form" novalidate>
+        <!--<form class="form-horizontal" name="cvEditForm" role="form" novalidate>
             <div class="row form-row">
                 <div class="col-md-3">
                         <dropdown-select ng-model ="vocab" field="domain" cv = "CV_DOMAIN"></dropdown-select>
                     </div>
-<!--                    <text-input ng-model="cv.domain" field="domain" name="domain" id="domain" form="cvEditForm"
-                                validate="true"></text-input>
-                </div>-->
                 <br>
                 <a ng-click="getValues()" aria-label="Create" uib-tooltip="Create Domain"><i
                         class="fa fa-check fa-2x success"></i></a>
 
             </div>
-<!--            <div class="row form-row" ng-if="create">
-
-                <div class="col-md-3">
-                    <text-input ng-model="vt.value" field="value" name="value" id="value" form="cvEditForm"
-                                validate="true"></text-input>
-                </div>
-                <div class="col-md-3">
-                    <text-input ng-model="vt.display" field="display" name="display" id="display" form="cvEditForm"
-                                validate="true"></text-input>
-                </div>
-                <div class="col-md-3">
-                    <text-input ng-model="vt.description" field="description" name="description" id="description"
-                                form="cvEditForm" validate="true"></text-input>
-                </div>
-                <div class="col-md-3">
-                    <text-input ng-model="vt.origin" field="origin" name="origin" id="origin" form="cvEditForm"
-                                validate="true"></text-input>
-                </div>
+        </form>-->
+        <div ng-repeat="obj in domains">
+        <div class = "row">
+            <div class="col-md-3">
+                <text-view-edit obj="obj" field="domain"></text-view-edit>
             </div>
-            Coming Soon
-            <submit-buttons submit="vt" form="cvEditForm" path="cvs"></submit-buttons>-->
-        </form>
+            <div class="col-md-1">
+                <check-box-view-edit obj = "obj" field="editable"></check-box-view-edit>
+            </div>
+            <div class="col-md-2">
+                {{obj.terms.length}} Terms
+                <i class = "fa fa-plane fa-2x success" ng-click = "showTerms(obj);" uib-tooltip="Update Domain in database"></i>
 
-        <div ng-repeat="obj in values" ng-if="create">
-            <div class="row">
-<hr>
-               <div class="col-md-1">
-                   <i class = "fa fa-times fa-2x danger" ng-click = "deleteCV(obj);" uib-tooltip="Delete Term from database"></i>
-                </div>
-                <div class="col-md-2">
-                    <text-view-edit obj="obj" field="value"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <text-view-edit obj="obj" field="display"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <text-view-edit obj="obj" field="description"></text-view-edit>
-                </div>
-                <div class="col-md-2">
-                    <text-view-edit obj="obj" field="origin"></text-view-edit>
-                </div>
-                <div class="col-md-1">
-                    <check-box-view-edit obj = "obj" field="hidden" label="Hidden"></check-box-view-edit>
-                </div>
-<div class  = "col-md-2">
-    <label>Save to Database</label><br>
-    <i class = "fa fa-floppy-o fa-2x success" ng-click = "updateCV();" uib-tooltip="Update Term to database"></i>
+            </div>
+            <div class  = "col-md-2">
+                <label>Save to Database</label><br>
+                <i class = "fa fa-floppy-o fa-2x success" ng-click = "updateCV(obj);" uib-tooltip="Update Domain in database"></i>
+            </div>
 </div>
-                </div>
-            </div>
             <div class={{obj.$$hashKey}}></div>
         </div>
     </div>
+</div>

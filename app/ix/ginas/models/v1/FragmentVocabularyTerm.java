@@ -12,7 +12,7 @@ import javax.persistence.Inheritance;
 @Inheritance
 @DiscriminatorValue("FRAG")
 public class FragmentVocabularyTerm extends VocabularyTerm{
-    
+
 	public String fragmentStructure;
 	public String simplifiedStructure;
 	

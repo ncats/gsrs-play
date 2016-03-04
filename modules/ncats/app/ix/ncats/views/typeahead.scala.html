@@ -4,8 +4,9 @@
 <script>
 $(document).ready(function () {
    var sources = [];
+   
    @for(f <- fields) {
-     @defining(App.randvar()) { xx =>     
+     @defining(App.hashvar(5,f)) { xx =>     
        var @xx = new Bloodhound({
           datumTokenizer: function(d) {
               return Bloodhound.tokenizers.whitespace(d.key);

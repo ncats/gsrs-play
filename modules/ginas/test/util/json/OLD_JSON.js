@@ -55,26 +55,5 @@
 		"references": ["b4545563-ac7e-48dc-b233-fa659743fc1a", "581fbf37-43e3-47da-bbf2-8009560ac2cd"],
 		"preferred": false,
 		"access": []
-	}],
-	"codes": [{
-		"code": "69-46-5",
-		"codeSystem": "CAS",
-		"references": ["6ea9eb65-c2cd-4645-9b1b-3a83d381ab99"],
-		"url": "http://chem.sis.nlm.nih.gov/chemidplus/direct.jsp?regno=69-46-5&result=advanced",
-		"type": "PRIMARY",
-		"access": []
-	}, {
-		"code": "C83539",
-		"codeSystem": "NCI_THESAURUS",
-		"references": ["6ea9eb65-c2cd-4645-9b1b-3a83d381ab99"],
-		"url": "http://ncit.nci.nih.gov/ncitbrowser/ConceptReport.jsp?dictionary=NCI%20Thesaurus&code=C83539",
-		"type": "PRIMARY",
-		"access": []
-	}, {
-		"code": "200-707-6",
-		"codeSystem": "EC (EINECS)",
-		"references": ["6ea9eb65-c2cd-4645-9b1b-3a83d381ab99"],
-		"type": "PRIMARY",
-		"access": []
 	}]
 }

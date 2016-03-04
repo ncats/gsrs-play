@@ -53,8 +53,6 @@ public class UserProfile extends IxModel implements Subject {
     
     public void regenerateKey(){
     	key=Util.generateRandomString(20);
-    	//System.out.println("Generated key:" + key + " for user:" + user.username);
-    	//System.out.println("Current token:" + this.getComputedToken());
     }
     
     @ManyToMany(cascade=CascadeType.ALL)

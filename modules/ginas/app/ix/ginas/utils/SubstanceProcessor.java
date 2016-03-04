@@ -62,7 +62,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
                for(Name n:obj.names){
                        //System.out.println(obj.getApprovalIDDisplay() + "\t" + internalCode +"\t" + n.getName() + "\t" + n.type);
                }
-               
+              //System.out.println("Updating the substance:" + obj.approvalID); 
                
             if (obj instanceof ChemicalSubstance) {
             	
@@ -89,8 +89,6 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 	
 	@Override
 	public void prePersist(Substance s) {
-
-		
 		Logger.debug("Persisting substance:" + s);
 		if (s.definitionType == SubstanceDefinitionType.ALTERNATIVE) {
 			Logger.debug("It's alternative");

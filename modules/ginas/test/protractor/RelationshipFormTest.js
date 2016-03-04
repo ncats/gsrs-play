@@ -22,6 +22,9 @@ var RelationshipForm = function () {
         },{
             model: 'relationship.interactionType',
             type: 'dropdown-select'
+        },{
+            model: 'relationship.qualification',
+            type: 'dropdown-select'
         }
         ]
     };
@@ -30,21 +33,24 @@ var RelationshipForm = function () {
         formName: 'relationshipForm',
         buttonID: 'relationships',
         formObj: 'relationship',
-        fields: [{
- /*           model: 'relationship.relatedSubstance',
+        fields: [/*{
+            model: 'relationship.relatedSubstance',
             type: 'substance-chooser'
         },{
             model: 'relationship.agentSubstance',
             type: 'substance-chooser'
-        },{*/
-/*            model: 'access',
+        },*/{
+            model: 'access',
             type: 'form-selector'
-        }, {*/
+        }, {
             model: 'reference',
             type: 'form-selector'
-/*        }, {
+        }, {
             model: 'comments',
-            type: 'form-selector'*/
+            type: 'form-selector'
+        }, {
+            model: 'amount',
+            type: 'form-selector'
         }
         ]
     }
@@ -55,7 +61,7 @@ describe ('Relationship form', function() {
     beforeEach(function () {
         relationshipForm.getPage();
     });
-/*
+
     it('should see if form is visible', function () {
         var vis = browser.findElement(By.id('addRelationshipForm')).isDisplayed();
         expect(vis).toBe(false)
@@ -78,7 +84,7 @@ describe ('Relationship form', function() {
         var elements = new commonElementTests;
         var breadcrumb = ['relationships-toggle'];
         elements.testInputFields(relationshipForm.formElements, breadcrumb);
-    });*/
+    });
 
     it('should test subforms', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');

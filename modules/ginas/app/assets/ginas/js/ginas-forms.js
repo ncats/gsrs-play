@@ -499,7 +499,41 @@
         };
     });
 
-    ginasForms.directive('editCvForm', function (CVFields) {
+    ginasForms.directive('cvTermsForm', function (CVFields) {
+        return {
+            restrict: 'E',
+            replace: true,
+            /*scope: {
+                terms: '=',
+                domain: '='
+            },*/
+            templateUrl: baseurl + "assets/templates/admin/cv-terms.html",
+            link: function(scope){
+                console.log(scope);
+
+               /* scope.deleteCV = function(obj){
+                    var r = confirm("Are you sure you want to delete this CV?");
+                    if (r == true) {
+                        console.log(obj);
+                        console.log(scope.terms);
+                        console.log(scope.terms.indexOf(obj));
+                        var terms = scope.terms.splice(scope.terms.indexOf(obj), 1);
+                        CVFields.updateCV(obj);
+                    }
+                };
+
+                scope.updateCV = function(obj){
+                    var r = confirm("Are you sure you want to update this CV?");
+                    if (r == true) {
+                        CVFields.updateCV(obj);
+                    }
+                };*/
+            }
+        };
+    });
+
+
+    ginasForms.directive('editCvForm', function ($templateRequest, CVFields, toggler) {
         return {
             restrict: 'E',
             replace: true,
@@ -508,10 +542,18 @@
             },
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
+                CVFields.all().then(function (response){
+                    console.log(response);
+                    scope.domains = response.data.content;
+                });
+
+                scope.stage = true;
+
+
                 scope.getValues = function () {
                     console.log(scope);
                     CVFields.getCV(scope.vocab.display).then(function (data) {
-                        scope.values = data.data.content[0].terms;
+                        scope.terms = data.data.content[0].terms;
                         scope.domain = data.data.content[0];
                     });
                     scope.create = true;
@@ -521,9 +563,9 @@
                     var r = confirm("Are you sure you want to delete this CV?");
                     if (r == true) {
                         console.log(obj);
-                        console.log(scope.values);
-                        console.log(scope.values.indexOf(obj));
-                        var terms = scope.values.splice(scope.values.indexOf(obj), 1);
+                        console.log(scope.terms);
+                        console.log(scope.terms.indexOf(obj));
+                        var terms = scope.terms.splice(scope.terms.indexOf(obj), 1);
                         CVFields.updateCV(scope.domain);
                     }
                 };
@@ -533,7 +575,20 @@
                     if (r == true) {
                         CVFields.updateCV(scope.domain);
                     }
+                };
+
+                scope.showTerms= function(obj){
+                    console.log(obj);
+                    scope.terms = obj.terms;
+                    scope.domain = obj;
+                    var formHolder = '<cv-terms-form domain = domain terms = terms ></cv-terms-form>';
+                    var url = baseurl + "assets/templates/admin/cv-terms.html";
+                     //   toggler.toggle(scope, obj.$$hashKey, formHolder);
+                    toggler.show(scope, obj.$$hashKey, url);
+
+
                 }
+
             }
         };
     });

@@ -42,6 +42,8 @@ public class ChangesBuilder {
         map.put(change.getKey(), change);
         return this;
     }
+    
+    
     public ChangesBuilder added(String key, String value){
     	return change(Change.add(key, value));
     }
@@ -89,22 +91,7 @@ public class ChangesBuilder {
             return null;
         }
 
-        return node.asText();
-       /*
-        //paths start with leading '/' so skip that?
-        for (int i = 1; i < path.length; i++) {
-            String fieldName = path[i];
-            Matcher m = IS_NUMERIC_PATTERN.matcher(fieldName);
-            if (m.matches()) {
-                //array ref
-                current = current.get(Integer.parseInt(fieldName));
-            } else {
-                current = current.get(path[i]);
-            }
-        }
-
-        return current.asText();
-        */
+        return JsonUtil.toString(node);
     }
 
     public Changes build(){

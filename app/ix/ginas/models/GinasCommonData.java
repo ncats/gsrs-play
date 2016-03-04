@@ -37,6 +37,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
     static public final String REFERENCE = "GInAS Reference";
     static public final String TAG = "GInAS Tag";
     
+    
     @Id
     public UUID uuid;
 
@@ -232,6 +233,7 @@ public class GinasCommonData extends Model implements GinasAccessControlled{
 	public Set<Group> getAccessGroups() {
 		return this.getAccess();
 	}
+	
 	
 	
 }

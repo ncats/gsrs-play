@@ -58,7 +58,7 @@ import play.test.TestServer;
  */
 public class GinasTestServer extends ExternalResource{
 	 private static final String API_URL_USERFETCH = "http://localhost:9001/ginas/app/api/v1/whoami";
-	 private static final String VALIDATE_URL = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
+	 private static final String API_URL_VALIDATE = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
 	 private static final String API_URL_SUBMIT = "http://localhost:9001/ginas/app/api/v1/substances";
 	 private static final String API_URL_FETCH = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)?view=full";
 	 private static final String API_URL_HISTORY = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@edits?view=full";
@@ -68,6 +68,10 @@ public class GinasTestServer extends ExternalResource{
 	 
 	 private static final String API_URL_MAKE_FAKE_USERS="http://localhost:9001/ginas/app/api/v1/@deleteme";
      private static final String API_URL_WHOAMI="http://localhost:9001/ginas/app/api/v1/whoami";
+     
+     
+     private static final String UI_URL_SUBSTANCE="http://localhost:9001/ginas/app/substance/$ID$";
+     private static final String UI_URL_SUBSTANCE_VERSION="http://localhost:9001/ginas/app/substance/$ID$/v/$VERSION$";
      
 	 public static final String FAKE_USER_1="fakeuser1";
 	 public static final String FAKE_USER_2="fakeuser2";
@@ -185,7 +189,7 @@ public class GinasTestServer extends ExternalResource{
     }
     
     public WSResponse validateSubstance(JsonNode js){
-    	WSResponse wsResponse1 = this.url(VALIDATE_URL).post(js).get(timeout);
+    	WSResponse wsResponse1 = this.url(API_URL_VALIDATE).post(js).get(timeout);
     	return wsResponse1;
         
     	
@@ -235,6 +239,20 @@ public class GinasTestServer extends ExternalResource{
 	
 	public JsonNode urlJSON(String url){
 		return ensureExctractJSON(url(url).get().get(timeout));
+	}
+	
+	public String fetchSubstanceUI(String id){
+		return urlString(UI_URL_SUBSTANCE.replace("$ID$", id));
+	}
+
+	public String fetchSubstanceVersionUI(String id, String version){
+		return urlString(UI_URL_SUBSTANCE_VERSION.replace("$ID$", id).replace("$VERSION$", version));
+	}
+	
+	public String urlString(String url){
+		WSResponse wsResponse1 = this.url(url).get().get(timeout);
+		assertThat(wsResponse1.getStatus()).isEqualTo(OK);
+		return wsResponse1.getBody();
 	}
     
     
