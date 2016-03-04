@@ -7,8 +7,9 @@
         </span>
     <tags-input ng-show="obj[field]._editing || !obj[field] || obj[field].length == 0" custom-class="form-control" title="{{field}}" placeholder="{{label || field}}"
                 name="{{field}}"
-                ng-model=obj[field] ng-blur="editing(obj[field]);" display-property="display" key-property="value"
-                addFromAutocompleteOnly="true" max-tags={{max}}>
+                ng-model=obj[field] ng-blur="editing(obj[field]);" display-property="display" key-property="value" max-tags={{max}}>
+                <!--addFromAutocompleteOnly="true"-->
+
         <auto-complete source="loadItems($query)" min-length="1" debounce-delay="0"
                        load-on-empty="true" load-on-focus="true"
                        load-on-down-arrow="true"></auto-complete>

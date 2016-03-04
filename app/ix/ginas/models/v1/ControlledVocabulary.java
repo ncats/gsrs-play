@@ -1,8 +1,15 @@
 package ix.ginas.models.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import ix.core.models.Indexable;
 import ix.core.models.IxModel;
+import ix.core.models.Keyword;
+import ix.ginas.models.KeywordListDeserializer;
+import ix.ginas.models.KeywordListSerializer;
+import ix.ginas.models.utils.JSONConstants;
+import ix.ginas.models.utils.JSONEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +31,11 @@ public class ControlledVocabulary extends IxModel{
 	@Column(unique=true)
 	@Indexable(name="Domain", facet=true)
 	public String domain;
+
+    @ManyToMany(cascade=CascadeType.ALL)
+    @JsonSerialize(using=KeywordListSerializer.class)
+    @JsonDeserialize(using=KeywordListDeserializer.class)
+    public List<Keyword> fields = new ArrayList<Keyword>();
 
 	public boolean editable = true;
 

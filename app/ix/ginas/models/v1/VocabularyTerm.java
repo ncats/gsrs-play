@@ -30,6 +30,7 @@ public class VocabularyTerm extends IxModel{
     public String display;
     public String description;
     public String origin;
+    public String filter;
     public boolean hidden=false;
     public VocabularyTerm(){};
 }

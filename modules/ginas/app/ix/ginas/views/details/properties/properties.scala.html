@@ -22,9 +22,8 @@
                 <td>@n.getName</td>
                 <td>@GinasApp.getCV.getDisplay("NAME_TYPE", {n.`getType`})</td>
                 <td>@GinasApp.getCV.getDisplay("Property_TYPE", {n.getPropertyType})</td>
+                <amount value="@GinasApp.getAsJson(n.getValue())"></amount>
 
-                <td>@n.getValue.toString()
-                </td>
 
 
                 <td>@if(n.isDefining == true) {
