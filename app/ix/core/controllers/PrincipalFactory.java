@@ -21,10 +21,21 @@ import com.fasterxml.jackson.databind.JsonNode;
         type = Principal.class,
         description = "Users, groups and organizations")
 public class PrincipalFactory extends EntityFactory {
-    public static final Model.Finder<Long, Principal> finder =
-            new Model.Finder(Long.class, Principal.class);
+    public static Model.Finder<Long, Principal> finder;
 
-    public static Map<String, Principal> justRegisteredCache = new ConcurrentHashMap<String, Principal>();
+    public static Map<String, Principal> justRegisteredCache;
+
+
+    static{
+        init();
+    }
+
+    public static void init(){
+        finder =
+                new Model.Finder(Long.class, Principal.class);
+
+        justRegisteredCache = new ConcurrentHashMap<String, Principal>();
+    }
 
     public static List<Principal> all() {
         return all(finder);

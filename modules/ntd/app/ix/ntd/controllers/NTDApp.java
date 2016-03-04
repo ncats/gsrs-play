@@ -37,8 +37,7 @@ import play.mvc.Result;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class NTDApp extends App {
-    static final TextIndexer TEXT_INDEXER = 
-        Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+    private static TextIndexer TEXT_INDEXER;
 
 
     // substance finder
@@ -49,7 +48,8 @@ public class NTDApp extends App {
     static final Model.Finder<UUID, Relationship> RELFINDER =
         new Model.Finder(UUID.class, Relationship.class);
 
-    
+    public static Map<String,Map<String,String>> cvlist;
+
     public static final String[] CHEMICAL_FACETS = {
         "Status",
         "Substance Class",
@@ -78,6 +78,26 @@ public class NTDApp extends App {
             "Genus",
             "Species"
     };
+
+    static {
+
+        init();
+    }
+
+    public static void init(){
+
+        TEXT_INDEXER =
+                Play.application().plugin(TextIndexerPlugin.class).getIndexer();
+        cvlist = new HashMap<String,Map<String,String>>();
+
+        Map<String, String> strains = new HashMap<String,String>();
+        strains.put("strain_1", "strain 1");
+        strains.put("strain_2", "strain 2");
+        strains.put("strain_3", "strain 3");
+        strains.put("strain_4", "strain 4");
+        cvlist.put("strains", strains);
+
+    }
 
     static <T> List<T> filter (Class<T> cls, List values, int max) {
         List<T> fv = new ArrayList<T>();
@@ -162,16 +182,8 @@ public class NTDApp extends App {
         return count;
 
     }
-    public static Map<String,Map<String,String>> cvlist = new HashMap<String,Map<String,String>>();
-    static {
-        Map<String, String> strains = new HashMap<String,String>();
-        strains.put("strain_1", "strain 1");
-        strains.put("strain_2", "strain 2");
-        strains.put("strain_3", "strain 3");
-        strains.put("strain_4", "strain 4");
-        cvlist.put("strains", strains);
 
-    }
+
 
     //Return the CV (value + display text) for given element
     public static Map<String,String> getCVList(String domain){

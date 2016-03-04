@@ -371,9 +371,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public boolean preUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
         String name = bean.getClass().getName();
-        
-        System.out.println("Called preUpdate for:" + bean);
-        
+
         List<Hook> methods = preUpdateCallback.get(name);
         if (methods != null) {
             for (Hook m : methods) {
@@ -401,7 +399,7 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
             // don't touch this class
             return;
         }
-        System.out.println("Called postUpdate for:" + bean);
+
         
                 try {
                     Object id = EntityFactory.getId(bean);

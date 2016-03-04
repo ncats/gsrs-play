@@ -44,33 +44,44 @@ import play.mvc.Result;
 
 public class RouteFactory extends Controller {
     private static final int MAX_POST_PAYLOAD = 1024*1024*10;
-	static final public Model.Finder<Long, Namespace> resFinder = 
-        new Model.Finder(Long.class, Namespace.class);
-    static final public Model.Finder<Long, Acl> aclFinder = 
-        new Model.Finder(Long.class, Acl.class);
-    static final public Model.Finder<Long, Principal> palFinder =
-        new Model.Finder(Long.class, Principal.class);
+	static public Model.Finder<Long, Namespace> resFinder;
+    static public Model.Finder<Long, Acl> aclFinder;
+    static public Model.Finder<Long, Principal> palFinder;
 
-    static final ConcurrentMap<String, Class> _registry = 
-        new ConcurrentHashMap<String, Class>();
+    static final ConcurrentMap<String, Class> _registry = new ConcurrentHashMap<String, Class>();
     static final Set<String> _uuid = new TreeSet<String>();
     
     private static NamedResourceFilter resourceFilter=null;
     
     static{
+
+        init();
     	
-    	String resproc= Play.application().configuration().getString("ix.core.resourcefilter",null);
-    	
-    	if(resproc!=null){
-    		Class processorCls;
-			try {
-				processorCls = Class.forName(resproc);
-				resourceFilter=(NamedResourceFilter) processorCls.newInstance();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-    	}
-    	
+    }
+
+    public static void init() {
+        String resproc= Play.application().configuration().getString("ix.core.resourcefilter",null);
+
+        if(resproc!=null){
+            Class processorCls;
+            try {
+                processorCls = Class.forName(resproc);
+                resourceFilter=(NamedResourceFilter) processorCls.newInstance();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        resFinder =
+                new Model.Finder(Long.class, Namespace.class);
+
+        aclFinder =
+                new Model.Finder(Long.class, Acl.class);
+
+        palFinder =
+                new Model.Finder(Long.class, Principal.class);
+
+
     }
 
     public static <T  extends EntityFactory> void register 

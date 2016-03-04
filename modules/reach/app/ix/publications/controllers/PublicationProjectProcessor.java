@@ -60,18 +60,13 @@ import ix.ncats.controllers.reach.EmployeeFactory;
 import ix.publications.views.html.*;
 
 public class PublicationProjectProcessor extends Controller {
-    static final Model.Finder<Long, Project> projFinder = 
-        new Model.Finder(Long.class, Project.class);
-    static final Model.Finder<Long, Publication> pubFinder =
-        new Model.Finder(Long.class, Publication.class);
-    static final Model.Finder<Long, Employee> emplFinder =
-        new Model.Finder(Long.class, Employee.class);
-    static final Model.Finder<Long, Namespace> resFinder = 
-        new Model.Finder(Long.class, Namespace.class);
-    static final Model.Finder<Long, Program> progFinder = 
-        new Model.Finder(Long.class, Program.class);
-    static final EutilsPlugin eutils =
-        Play.application().plugin(EutilsPlugin.class);
+    static Model.Finder<Long, Project> projFinder;
+    static Model.Finder<Long, Publication> pubFinder;
+    static Model.Finder<Long, Employee> emplFinder;
+    static Model.Finder<Long, Namespace> resFinder;
+    static Model.Finder<Long, Program> progFinder;
+
+    static EutilsPlugin eutils ;
 
     static {
         try {
@@ -80,9 +75,31 @@ public class PublicationProjectProcessor extends Controller {
         catch (Exception ex) {
             ex.printStackTrace();
         }
+        init();
     }
 
     static ActorRef DaemonActorRef;
+
+    public static void init(){
+
+        projFinder =
+                new Model.Finder(Long.class, Project.class);
+
+        pubFinder =
+                new Model.Finder(Long.class, Publication.class);
+
+        emplFinder =
+                new Model.Finder(Long.class, Employee.class);
+
+        resFinder =
+                new Model.Finder(Long.class, Namespace.class);
+
+        progFinder =
+                new Model.Finder(Long.class, Program.class)
+
+        eutils =
+                Play.application().plugin(EutilsPlugin.class);
+    }
 
     static class UpdateOp {
         final long id;
