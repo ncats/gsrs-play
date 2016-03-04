@@ -124,7 +124,7 @@
                         'Content-Type': 'application/json'
                     }
                 }).success(function(data){
-                   // alert('update was performed.');
+                    alert('update was performed.');
                 });
             },
 
@@ -731,7 +731,7 @@ ginasFormElements.directive('substanceViewer', function(){
                         });
                     } else {
                         var b;
-                        var fileType = json;
+                        var fileType = "json";
                         if(attrs.format ==='mol'){
                              b = new Blob([scope.data]);
                             fileType = "mol";

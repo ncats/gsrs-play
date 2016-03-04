@@ -16,6 +16,7 @@ var ReferenceForm = function () {
     this.formElements = {
         formName: 'refOnlyForm',
         buttonId: 'references',
+        formObj: 'reference',
         fields: [{
             model: 'ref.citation',
             type: 'text-input'
@@ -25,55 +26,66 @@ var ReferenceForm = function () {
         }, {
             model: 'ref.tags',
             type: 'multi-select'
-        }, {
+        }, /*{
             model: 'ref.url',
             type: 'text-input'
-/*        }, {
-            model: 'ref.access',
-            type: 'form-selector'
-        }, {
-            binding: 'ref.uploadedFile',
-            type: 'binding'*/
+        },*/{
+            model: 'reference.publicDomain',
+            type: 'check-box'
         }]
+    }
+
+    this.subForms = {
+        formName: 'refOnlyForm',
+        buttonId: 'references',
+        formObj: 'ref',
+        fields: [{
+            model: 'access',
+            type: 'form-selector'
+        } /*,{
+         binding: 'ref.uploadedFile',
+         type: 'binding'
+         }*/]
     }
 };
 
-describe ('reference form tests', function() {
 
-    var referenceForm = new ReferenceForm();
-    beforeEach(function() {
-        referenceForm.getPage();
+describe('reference form test', function () {
+
+    var refForm = new ReferenceForm();
+    beforeEach(function () {
+        refForm.getPage();
     });
 
-    it('tests all form elements are loaded', function () {
+    it('should see if form is visible', function () {
+        var vis = browser.findElement(By.id('addRefOnlyForm')).isDisplayed();
+        expect(vis).toBe(false)
+    });
+
+    it('should test form toggling', function () {
+        var buttonId = refForm.formElements.buttonId;
+        var vis = browser.findElement(By.id('addRefOnlyForm')).isDisplayed();
+        var button = browser.findElement(By.id(buttonId + "-toggle"));
+        expect(browser.findElement(By.id('addRefOnlyForm')).isDisplayed()).toBe(false);
+        button.click();
+        expect(browser.findElement(By.id('addRefOnlyForm')).isDisplayed()).toBe(true);
+        button.click();
+        expect(browser.findElement(By.id('addRefOnlyForm')).isDisplayed()).toBe(false);
+
+    });
+
+
+    it('should test all basic form elements', function () {
         var commonElementTests = require('./TestWizardCommonElements.js');
         var elements = new commonElementTests;
-        var buttonId = referenceForm.formElements.buttonId;
-        var formElements = referenceForm.formElements.fields;
-        var refElementTests = require('./ReferenceFormTest.js');
-        var refPage = new refElementTests;
-        for (var i = 0; i < formElements.length; i++) {
-            var elementType = formElements[i].type;
-            var model = formElements[i].model;
-            referenceForm.getPage();
-            switch (elementType) {
-                case "text-input":
-                    elements.testTextInput(buttonId, model);
-                    break;
-                case "dropdown-select":
-                    elements.testDropdownSelectInput(buttonId, model);
-                    break;
-                case "multi-select":
-                    // elements.testMultiSelectInput(buttonId, model);
-                    break;
-                case "check-box":
-                    // elements.testCheckBoxInput(buttonId, model);
-                    break;
-                case "form-selector":
-                    // refPage.refPageTests(buttonId, model);
-                    break;
-            } //switch
-        } //for i
+        var breadcrumb = ['references-toggle'];
+        elements.testInputFields(refForm.formElements, breadcrumb);
+    });
+
+    it('should test all subforms', function () {
+        var commonElementTests = require('./TestWizardCommonElements.js');
+        var elements = new commonElementTests;
+        var breadcrumb = ['references-toggle'];
+        elements.testInputFields(refForm.subForms, breadcrumb);
     });
 });
-

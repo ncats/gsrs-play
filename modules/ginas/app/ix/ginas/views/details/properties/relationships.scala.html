@@ -104,10 +104,10 @@
                 </td>
                 @if(r.getReferences().size > 0){
                         <td>       
-                            <referencesmanager indices substance ="'@id'" divid ="'@r.uuid'" references = "@GinasApp.getAsJson(r.getReferences())"></referencesmanager>
+                            <referencesmanager indices substance ="'@id'" divid ="'@r.getUuid'" references = "@GinasApp.getAsJson(r.getReferences())"></referencesmanager>
                         </td>
                         </tr>
-                        <tr><td class = "'@r.uuid'" colspan = "8"></td></tr>
+                        <tr><td class = "'@r.getUuid'" colspan = "8"></td></tr>
                 
                 }else{
                         <td>none</td>

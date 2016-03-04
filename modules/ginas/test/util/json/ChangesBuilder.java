@@ -21,7 +21,7 @@ public class ChangesBuilder {
     	before=null;
     	after=null;
     }
-    
+
     public ChangesBuilder(JsonNode before, JsonNode after) {
         this.before = before;
         this.after = after;
@@ -56,7 +56,7 @@ public class ChangesBuilder {
 
 
     private ChangesBuilder change(String key, Change.ChangeType type){
-        String[] path = key.split("/");
+       // String[] path = key.split("/");
         JsonNode currentBefore= null;
         JsonNode currentAfter=null;
         switch(type){
@@ -73,32 +73,25 @@ public class ChangesBuilder {
 
         }
 
-        map.put(key,new Change(key,getNodeFromPath(currentBefore, path),
-                getNodeFromPath(currentAfter, path),
+        map.put(key,new Change(key,getNodeFromPath(currentBefore, key),
+                getNodeFromPath(currentAfter, key),
                 type));
 
         return this;
 
     }
 
-    private String getNodeFromPath(JsonNode root, String[] path) {
+    private String getNodeFromPath(JsonNode root, String path) {
         JsonNode current= root;
-        if(current ==null) {
+        if(root ==null) {
             return null;
         }
-        //paths start with leading '/' so skip that?
-        for (int i = 1; i < path.length; i++) {
-            String fieldName = path[i];
-            Matcher m = IS_NUMERIC_PATTERN.matcher(fieldName);
-            if (m.matches()) {
-                //array ref
-                current = current.get(Integer.parseInt(fieldName));
-            } else {
-                current = current.get(path[i]);
-            }
+        JsonNode node= root.at(path);
+        if(node ==null) {
+            return null;
         }
 
-        return JsonUtil.toString(current);
+        return JsonUtil.toString(node);
     }
 
     public Changes build(){

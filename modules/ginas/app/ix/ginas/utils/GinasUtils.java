@@ -332,7 +332,7 @@ public class GinasUtils {
 			}
 			prec.rec.save();
 
-			Logger.debug("Saved substance " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.uuid : null)
+			Logger.debug("Saved substance " + (prec.theRecordToPersist != null ? prec.theRecordToPersist.getUuid() : null)
 					+ " record " + prec.rec.id);
 			if (!worked)
 				throw new IllegalStateException(prec.rec.message);

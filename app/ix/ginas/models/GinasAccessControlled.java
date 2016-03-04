@@ -6,9 +6,9 @@ import java.util.Collection;
 import java.util.Set;
 
 public interface GinasAccessControlled {
-	public Set<Group> getAccess();
-	public void addRestrictGroup(Group p);
-	public void addRestrictGroup(String group);
-	public void setAccess(Collection<String> access);
+	Set<Group> getAccess();
+	void addRestrictGroup(Group p);
+	void addRestrictGroup(String group);
+	void setAccess(Collection<String> access);
 	
 }

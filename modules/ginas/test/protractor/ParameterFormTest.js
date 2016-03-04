@@ -1,4 +1,4 @@
-var ProteinWizardPage = function () {
+var WizardParameterPage = function () {
 
     this.getPage = function () {
         browser.get('/ginas/app/wizard?kind=structurallyDiverse');
@@ -15,6 +15,7 @@ var ProteinWizardPage = function () {
     this.formElements = {
         formName: 'parameterForm',
         buttonID: 'parameters',
+        formObj: 'parameter',
         fields: [{
             model: 'parameter.name',
             type: 'text-input'
@@ -27,4 +28,5 @@ var ProteinWizardPage = function () {
         }]
     }
 };
+module.exports = WizardParameterPage;
 

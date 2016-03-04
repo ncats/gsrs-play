@@ -202,25 +202,83 @@
         };
     });
 
-    ginasApp.service('fileReader', function () {
-        var reader = new FileReader();
 
-        reader.onerror = function (e) {
-            alert("Error reading file");
+    ginasApp.factory('FileReader', ['$q', '$window', function ($q, $window) {
+
+        // Wrap the onLoad event in the promise
+        var onLoad = function(reader, deferred, scope) {
+            return function () {
+                scope.$apply(function () {
+                    deferred.resolve(reader.result);
+                });
+            };
         };
-        reader.onprogress = function (e) {
+
+        // Wrap the onLoad event in the promise
+        var onError = function (reader, deferred, scope) {
+            return function () {
+                scope.$apply(function () {
+                    deferred.reject(reader.result);
+                });
+            };
         };
-        reader.onabort = function (e) {
-            alert('File read cancelled');
+
+        // Wrap the onProgress event by broadcasting an event
+        var onProgress = function(reader, scope) {
+            console.log(scope);
+            return function (event) {
+                scope.$broadcast('fileProgress', {
+                    total: event.total,
+                    loaded: event.loaded
+                });
+            };
         };
-        reader.onloadstart = function (e) {
+
+        // Instantiate a new Filereader with the wrapped properties
+        var getReader = function(deferred, scope) {
+            var reader = new $window.FileReader();
+            reader.onload = onLoad(reader, deferred, scope);
+            reader.onerror = onError(reader, deferred, scope);
+            reader.onprogress = onProgress(reader, scope);
+            return reader;
         };
-        reader.onload = function (e) {
-            //   console.log((e.target.result));
-            return e.target.result;
+
+        // Read a file as a data url
+        var readAsDataURL = function (file, scope) {
+            var deferred = $q.defer();
+
+            var reader = getReader(deferred, scope);
+            reader.readAsDataURL(file);
+
+            return deferred.promise;
         };
-       // reader.readAsText(file);
-    });
+
+        // Read a file as a text
+        var readAsText = function(file, scope) {
+            var deferred = $q.defer();
+
+            var reader = getReader(deferred, scope);
+            reader.readAsText(file, 'UTF-8');
+
+            return deferred.promise;
+        };
+
+        // Read a file as a binary data
+        var readAsBinaryString = function (file, scope) {
+            var deferred = $q.defer();
+
+            var reader = getReader(deferred, scope);
+            reader.readAsBinaryString(file);
+
+            return deferred.promise;
+        };
+
+        return {
+            readAsDataURL: readAsDataURL,
+            readAsBinaryString: readAsBinaryString,
+            readAsText: readAsText
+        };
+    }]);
 
     ginasApp.controller("GinasController", function ($scope, $resource, $location, $compile, $uibModal, $http, $window, $anchorScroll,
                                                      localStorageService, Substance, UUID, substanceSearch, substanceIDRetriever, CVFields, molChanger) {
@@ -1654,7 +1712,7 @@
         };
     });
 
-    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, fileReader) {
+    ginasApp.directive('modalButton', function ($compile, $templateRequest, $http, $uibModal, molChanger, FileReader) {
         return {
             /*            restrict: 'AE',
              replace: 'true',*/
@@ -1691,22 +1749,9 @@
                 }
 
                 scope.setPreview = function (file) {
-                    var reader = new FileReader();
-                    reader.onerror = function (e) {
-                        alert("Error reading file");
-                    };
-                    reader.onprogress = function (e) {
-                    };
-                    reader.onabort = function (e) {
-                        alert('File read cancelled');
-                    };
-                    reader.onloadstart = function (e) {
-                    };
-                    reader.onload = function (e) {
-                        //   console.log((e.target.result));
-                        scope.molfile = e.target.result;
-                    };
-                    reader.readAsText(file);
+                    FileReader.readAsText(file, scope).then(function(response){
+                        scope.molfile=response;
+                    });
                 };
 
                 scope.resolveMol = function (mol) {

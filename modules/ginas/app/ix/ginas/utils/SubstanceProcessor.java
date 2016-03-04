@@ -97,7 +97,7 @@ public class SubstanceProcessor implements EntityProcessor<Substance>{
 			Set<String> oldprimary = new HashSet<String>();
 			for(Substance pri:realPrimarysubs){
 				
-				oldprimary.add(pri.uuid.toString());
+				oldprimary.add(pri.getUuid().toString());
 				
 			}
 			

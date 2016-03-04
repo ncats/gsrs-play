@@ -26,7 +26,7 @@ public class GinasCommonSimplifiedSubData extends GinasCommonSubData implements 
 	 	
 	 	@JsonIgnore
 	 	public UUID getUuid() {
-			return uuid;
+			return super.getUuid();
 		}
 
 	 	@JsonIgnore
@@ -37,7 +37,7 @@ public class GinasCommonSimplifiedSubData extends GinasCommonSubData implements 
 
 	 	@JsonIgnore
 		public Date getLastEdited() {
-			return lastEdited;
+			return super.getLastEdited();
 		}
 
 	 	@JsonIgnore
@@ -48,12 +48,12 @@ public class GinasCommonSimplifiedSubData extends GinasCommonSubData implements 
 
 	 	@JsonIgnore
 		public boolean isDeprecated() {
-			return deprecated;
+			return super.isDeprecated();
 		}
 
 	 	@JsonIgnore
 		public Date getCreated() {
-			return created;
+			return super.getCreated();
 		}
 	 	
 	 	

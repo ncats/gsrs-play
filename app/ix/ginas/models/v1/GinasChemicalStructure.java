@@ -129,7 +129,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 	@JsonSerialize(using = ReferenceListSerializer.class)
 	public Set<Keyword> getReferences() {
 		if (recordReference != null) {
-			return recordReference.references;
+			return recordReference.getReferences();
 		}
 		return null;
 	}
@@ -158,13 +158,13 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		if(this.recordReference==null){
 			this.recordReference= new GinasReferenceContainer(this);
 		}
-		this.recordReference.references.add(new Keyword("REFERENCE", 
+		this.recordReference.getReferences().add(new Keyword("REFERENCE",
 				refUUID
 		));
 	}
 	
 	public void addReference(Reference r){
-		addReference(r.uuid.toString());
+		addReference(r.getUuid().toString());
 	}
 	
 	public void addReference(Reference r, Substance s){
