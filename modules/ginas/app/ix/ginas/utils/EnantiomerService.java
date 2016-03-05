@@ -5,17 +5,17 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import chemaxon.formats.*;
-import chemaxon.struc.*;
-import chemaxon.util.MolHandler;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.JsonNode;
-
-import gov.nih.ncgc.util.GrayCode;
-import static ginas.registry.ChemUtils.*;
+//import chemaxon.formats.*;
+//import chemaxon.struc.*;
+//import chemaxon.util.MolHandler;
+//
+//import org.codehaus.jackson.map.ObjectMapper;
+//import org.codehaus.jackson.node.ArrayNode;
+//import org.codehaus.jackson.node.ObjectNode;
+//import org.codehaus.jackson.JsonNode;
+//
+//import gov.nih.ncgc.util.GrayCode;
+//import static ginas.registry.ChemUtils.*;
 
 //Uncomment and actually use when ready
 public class EnantiomerService {
