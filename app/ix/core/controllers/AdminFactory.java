@@ -27,27 +27,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class AdminFactory extends Controller {
-    static final public Model.Finder<Long, Namespace> resFinder =
-            new Model.Finder(Long.class, Namespace.class);
-    static final public Model.Finder<Long, Acl> aclFinder =
-            new Model.Finder(Long.class, Acl.class);
-    static final public Model.Finder<Long, Principal> palFinder =
-            new Model.Finder(Long.class, Principal.class);
-    static final public Model.Finder<Long, Role> roleFinder =
-            new Model.Finder(Long.class, Role.class);
-    static final public Model.Finder<Long, UserProfile> proFinder =
-            new Model.Finder(Long.class, UserProfile.class);
-    public static final Model.Finder<Long, Group> groupfinder =
-            new Model.Finder(Long.class, Group.class);
+    static public Model.Finder<Long, Namespace> resFinder;
+    static public Model.Finder<Long, Acl> aclFinder;
+    static public Model.Finder<Long, Principal> palFinder;
+    static public Model.Finder<Long, Role> roleFinder;
+    static public Model.Finder<Long, UserProfile> proFinder;
+    public static Model.Finder<Long, Group> groupfinder;
     
 
-    public static Map<String,Group> alreadyRegistered = new ConcurrentHashMap<String,Group>();
+    private static Map<String,Group> alreadyRegistered;
 
     
     //Authenticators are used as fallback to authenticate if built in auth doesn't work
-    public static List<Authenticator> authenticators = new ArrayList<Authenticator>();
+    private static List<Authenticator> authenticators;
     
-    public static void setupAuth () {
+    private static void setupAuth () {
     	List<Object> ls= Play.application().configuration().getList("ix.core.authenticators",null);
     	if(ls!=null){
     		for(Object o:ls){
@@ -69,9 +63,31 @@ public class AdminFactory extends Controller {
     	}
     }
     static{
-    	setupAuth();
+        init();
     }
-    
+
+    public static void init(){
+        resFinder = new Model.Finder(Long.class, Namespace.class);
+        aclFinder =
+                new Model.Finder(Long.class, Acl.class);
+
+        palFinder =
+                new Model.Finder(Long.class, Principal.class);
+
+        roleFinder =
+                new Model.Finder(Long.class, Role.class);
+
+        proFinder =
+                new Model.Finder(Long.class, UserProfile.class);
+
+        groupfinder =
+                new Model.Finder(Long.class, Group.class);
+
+        authenticators = new ArrayList<Authenticator>();
+        alreadyRegistered = new ConcurrentHashMap<String,Group>();
+        setupAuth();
+    }
+
     @BodyParser.Of(value = BodyParser.Json.class)
     public static Result createUser() {
         if (request().body().isMaxSizeExceeded()) {

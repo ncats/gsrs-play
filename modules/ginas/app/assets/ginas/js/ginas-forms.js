@@ -212,7 +212,8 @@
             scope: {
                 amount: '=',
                 referenceobj: '=',
-                parent: '='
+                parent: '=',
+                field: '='
             },
             templateUrl: baseurl + "assets/templates/forms/amount-form.html"
         };
@@ -542,6 +543,7 @@
             },
             templateUrl: baseurl + "assets/templates/admin/edit-cv-form.html",
             link: function (scope) {
+                console.log(scope);
                 CVFields.all().then(function (response){
                     console.log(response);
                     scope.domains = response.data.content;
@@ -570,21 +572,51 @@
                     }
                 };
 
-                scope.updateCV = function(){
-                    var r = confirm("Are you sure you want to update this CV?");
-                    if (r == true) {
+                scope.addCV = function(term){
+                        console.log(term);
+                        scope.terms.push(term);
                         CVFields.updateCV(scope.domain);
+                    scope.term={};
+                };
+
+                scope.addDomain = function(cv){
+                        console.log(cv);
+                    console.log(scope);
+                       // scope.domains.push(cv);
+                        CVFields.updateCV(cv);
+                    scope.cv={};
+                };
+
+                scope.updateCV = function(obj){
+                 var r = confirm("Are you sure you want to update this CV?");
+                    if (r == true) {
+                        if(obj){
+                            _.forEach(obj.fields, function(value, key) {
+                                if(!value.value){
+                                    obj.fields[key] = value.display;
+                                }else {
+                                    obj.fields[key] = value.value;
+                                }
+                            });
+                            console.log(obj);
+                            CVFields.updateCV(obj);
+                        }else {
+                            CVFields.updateCV(scope.domain);
+                        }
                     }
                 };
 
-                scope.showTerms= function(obj){
+                scope.showTerms= function(obj, divid){
                     console.log(obj);
                     scope.terms = obj.terms;
                     scope.domain = obj;
+                    if(!divid){
+                        var divid = obj.$$hashKey;
+                    }
                     var formHolder = '<cv-terms-form domain = domain terms = terms ></cv-terms-form>';
                     var url = baseurl + "assets/templates/admin/cv-terms.html";
                      //   toggler.toggle(scope, obj.$$hashKey, formHolder);
-                    toggler.show(scope, obj.$$hashKey, url);
+                    toggler.show(scope, divid, url);
 
 
                 }
@@ -622,13 +654,17 @@
 
                 switch (scope.type) {
                     case "amount":
+                        console.log(scope);
+                        if(!scope.field){
+                            scope.field = 'amount';
+                        }
                             $templateRequest(baseurl + "assets/templates/selectors/amount-selector.html").then(function (html) {
                                 template = angular.element(html);
                                 element.append(template);
                                 $compile(template)(scope);
 
                             });
-                        formHolder = '<amount-form referenceobj = referenceobj parent = parent amount=referenceobj.amount></amount-form>';
+                        formHolder = '<amount-form referenceobj = referenceobj parent = parent field=field amount=referenceobj.amount></amount-form>';
                         break;
                     case "site":
                         scope.formtype = attrs.formtype;
@@ -1729,7 +1765,8 @@ console.log(scope);
             scope: {
                 obj: '=submit',
                 form: '=form',
-                path: '@path'
+                path: '@path',
+                name:'@submit'
             },
             templateUrl: baseurl + "assets/templates/submit-buttons.html",
             link: function (scope, element, attrs) {

@@ -35,6 +35,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.diff.JsonDiff;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationConfig;
@@ -66,6 +68,7 @@ import ix.ginas.models.v1.Substance;
 import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.utils.Util;
 import ix.utils.Global;
+import ix.utils.Tester;
 
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
@@ -289,7 +292,7 @@ public class EntityFactory extends Controller {
 
 						@Override
 						public void propertyChange(PropertyChangeEvent evt) {
-							System.out.println(evt.getPropertyName() + " changed to " + evt.getNewValue() + " from " + evt.getOldValue());
+							//System.out.println(evt.getPropertyName() + " changed to " + evt.getNewValue() + " from " + evt.getOldValue());
 							EditHistory.this.propertyChange(evt);
 							try {
 								callback.call();
@@ -1486,6 +1489,8 @@ public class EntityFactory extends Controller {
     protected static Result updateEntity (JsonNode json, Class<?> type) {
         return updateEntity (json, type, null);
     }
+    
+   
 
     /*
      * Ok, at the most fundamental level, assuming all changes come only through this method,
@@ -1506,22 +1511,81 @@ public class EntityFactory extends Controller {
 
             FetchedValue previousValContainer=getCurrentValue(newValue);
             String oldVersion=EntityFactory.getVersionForBeanAsString(previousValContainer.value);
-            System.out.println("The old version was:" + oldVersion);
+            //System.out.println("The old version was:" + oldVersion);
             String newVersion=EntityFactory.getVersionForBeanAsString(newValue);
             
-            
+            if(previousValContainer.value instanceof Substance){
+            	System.out.println("record access thing:" + ((Substance)previousValContainer.value).recordAccess);
+            }
             String oldJSON=mapper.toJson(previousValContainer.value);
+            
             
             EditHistory eh = new EditHistory (json.toString());
             
             
             //this saves and everything
             EntityPersistAdapter.storeEditForUpdate(previousValContainer.getValueClass(), previousValContainer.id, eh.edit);
+            LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
             try{
-            	System.out.println("Instrumenting");
-            	Instrumented inst=instrument (eh, newValue, json,"");
-            	newValue = inst.newObject;
-            	System.out.println("Instrumented");
+            	JsonNode jp = JsonDiff.asJson(
+        			mapper.readTree(oldJSON),
+        			mapper.valueToTree(newValue)
+        			);
+            	
+            	System.out.println("============");
+            	if(jp==null){
+            		System.out.println("There are no changes?");
+            	}
+            	for(JsonNode change:jp){
+            		
+            		
+            		
+            		
+            		
+            		
+            		System.out.println(
+            				change.get("op").asText() + "\t" + 
+            				change.get("path").asText() + "\t" + 
+            				change.get("value")
+            				);
+            		String path=change.get("path").asText();
+            		if("replace".equals(change.get("op").asText())){
+            			Object newv=Tester.ObjectPointerFetcher.getObjectAt(newValue, path,null);
+            			Tester.ObjectPointerFetcher.setObjectAt(previousValContainer.value, path, newv,changedContainers);
+            			System.out.println("Now it's:" + Tester.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path,null));
+            		}else if("remove".equals(change.get("op").asText())){
+            			Tester.ObjectPointerFetcher.removeObjectAt(previousValContainer.value, path,changedContainers);
+            			//System.out.println("Now it's:" + Tester.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path));
+            			
+            		}
+                	
+            	}
+            	System.out.println("============");
+            	Stack<Object> changeStack = new Stack<Object>();
+            	for(Object o:changedContainers){
+            		changeStack.push(o);
+            	}
+            	while(!changeStack.isEmpty()){
+            		
+            		Object v=changeStack.pop();
+            		System.out.println("Setting ... " + v.getClass().getName());
+            		if(v instanceof ForceUpdatableModel){
+                		((ForceUpdatableModel)v).forceUpdate();
+                	}else if(v instanceof Model){
+                		((Model)v).update();
+                	}
+            	}
+            	
+            	
+            	newValue = previousValContainer.value;
+            	
+            	
+            	//Instrumented inst=instrument (eh, newValue, json,"");
+            	
+            	//(new JsonDiff()).
+            	
+            	
+                
             }catch(Throwable e){
             	e.printStackTrace();
             	throw e;
@@ -1542,7 +1606,7 @@ public class EntityFactory extends Controller {
 	                    e.batch = eh.edit.id.toString();
 	                    e.save();
 	                }
-	                System.out.println("Saved new edit version?");
+	                //System.out.println("Saved new edit version?");
 	                Logger.debug("** New edit history "+eh.edit.id);
             	}
             	
@@ -1553,7 +1617,7 @@ public class EntityFactory extends Controller {
             //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
             
             tx.commit();
-            System.out.println("completely done saving");
+            //System.out.println("completely done saving");
             return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {
@@ -1654,6 +1718,8 @@ public class EntityFactory extends Controller {
     
     static boolean isValid (Field f) {
         int mods = f.getModifiers();
+        JsonProperty jp;
+        
         return (!Modifier.isStatic(mods)
                 && !Modifier.isFinal(mods)
                 && !Modifier.isTransient(mods)
@@ -2236,6 +2302,9 @@ public class EntityFactory extends Controller {
                 Logger.debug("Ignore field '"+jf.getKey()+"'");
             }
             catch (NoSuchMethodException ex) {
+            	System.out.println("No such method '"
+                        +set+"("+type+")' for class "
+                        +bean.getClass());
                 Logger.error("No such method '"
                              +set+"("+type+")' for class "
                              +bean.getClass());

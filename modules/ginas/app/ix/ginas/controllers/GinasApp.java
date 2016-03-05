@@ -571,7 +571,7 @@ public class GinasApp extends App {
     		this.version=version;
     	}
     	Result getResult(List<Substance> e) throws Exception{
-    		System.out.println("Found the substances, now look for history");
+    		//System.out.println("Found the substances, now look for history");
     		List<Substance> slist=new ArrayList<Substance>();
     		for(Substance s:e){
     			Substance s2=SubstanceFactory.getSubstanceVersion(s.uuid.toString(),version);

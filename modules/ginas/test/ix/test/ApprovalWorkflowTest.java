@@ -34,7 +34,7 @@ public class ApprovalWorkflowTest {
 		ts.run(new Runnable() {
             public void run() {
                 try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+                	ts.loginFakeUser1();
                 	
                 	InputStream is=new FileInputStream(resource);
                     JsonNode js= new ObjectMapper().readTree(is);
@@ -44,21 +44,19 @@ public class ApprovalWorkflowTest {
                     JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
                     assertEquals(jsonNode2.get("status").asText().toLowerCase(),Substance.STATUS_PENDING);
                     
-                    //approval, can't approve if same user
-                    {
-	                    WSResponse wsResponse3 = ts.approveSubstance(uuid);
-	                    assertEquals(400, wsResponse3.getStatus());
-	                    
-                    }
+                    ts.approveSubstanceFail(uuid);
+                    
+                    
                     String approvalID;
                     JsonNode before=null;
                     JsonNode after=null;
                     
+                    
                     //approval, CAN approve if different user
                     {
-	                    ts.login(GinasTestServer.FAKE_USER_2, GinasTestServer.FAKE_PASSWORD_2);
+                    	ts.loginFakeUser2();
 	                    before = ts.approveSubstanceJSON(uuid);
-	                    assertFalse(null == before.get("approvalID"));
+	                    assertTrue("Approval ID should not be null",before.get("approvalID")!=null);
 	                    approvalID=before.get("approvalID").asText();
                     }
                     
@@ -77,6 +75,75 @@ public class ApprovalWorkflowTest {
 	                    }
 	                    assertTrue(changes==0);
                     }
+                    
+                    
+                } catch (Exception e1) {
+                	e1.printStackTrace();
+                    throw new IllegalStateException(e1);
+                }
+            }
+        });
+
+	}
+	
+	@Test
+	public void testFailNonLoggedApprover() {
+		final File resource=new File("test/testJSON/toapprove.json");
+		ts.run(new Runnable() {
+            public void run() {
+                try {
+                	ts.loginFakeUser1();
+                	
+                	InputStream is=new FileInputStream(resource);
+                	JsonNode js= new ObjectMapper().readTree(is);
+                    is.close();
+                    
+                    String uuid=js.get("uuid").asText();
+                    JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
+                    assertEquals(jsonNode2.get("status").asText().toLowerCase(),Substance.STATUS_PENDING);
+                    ts.approveSubstanceFail(uuid);                    
+                    ts.logout();
+                    ts.approveSubstanceFail(uuid);
+                    
+                    
+                } catch (Exception e1) {
+                	e1.printStackTrace();
+                    throw new IllegalStateException(e1);
+                }
+            }
+        });
+
+	}
+	
+	@Test
+	public void testFailDoubeApproved() {
+		final File resource=new File("test/testJSON/toapprove.json");
+		ts.run(new Runnable() {
+            public void run() {
+                try {
+                	ts.loginFakeUser1();
+                	
+                	InputStream is=new FileInputStream(resource);
+                	JsonNode js= new ObjectMapper().readTree(is);
+                    is.close();
+                    
+                    String uuid=js.get("uuid").asText();
+                    JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
+                    assertEquals(jsonNode2.get("status").asText().toLowerCase(),Substance.STATUS_PENDING);
+                    ts.loginFakeUser2();
+                    JsonNode before = ts.approveSubstanceJSON(uuid);
+                    String approvalID1=before.get("approvalID").asText();
+                    assertTrue("Approval ID should not be null",approvalID1!=null);
+                    
+                    ts.approveSubstanceFail(uuid); 
+                    //System.out.println("Same dude couldn't do it twice");
+                    ts.loginFakeUser1();
+                    System.out.println("");
+                    ts.approveSubstanceFail(uuid);   
+                    JsonNode sub=ts.fetchSubstanceJSON(uuid);
+                    String approvalID2=before.get("approvalID").asText();
+                    
+                    assertEquals(approvalID1,approvalID2);
                     
                     
                 } catch (Exception e1) {

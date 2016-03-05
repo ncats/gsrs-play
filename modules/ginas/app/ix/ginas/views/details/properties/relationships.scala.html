@@ -96,7 +96,7 @@
                 </td>
                 <td>
                 @if(r.amount != null) {
-                    <span class="amt">@r.amount.toString</span>
+                    <amount value="@GinasApp.getAsJson(r.amount)"></amount>
                     @*
                     @GinasApp.getType(r.amount) @r.amount.average @r.amount.units
                     *@

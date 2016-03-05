@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -147,12 +148,13 @@ public class GinasCommonData extends Model implements GinasAccessControlled,Forc
     	return;
     }
     
+    @JsonProperty("access")
     @JsonSerialize(using = GroupListSerializer.class)
     public Set<Group> getAccess(){
     	if(recordAccess!=null){
     		return recordAccess.access;
     	}
-    	return null;
+    	return new LinkedHashSet<Group>();
     }
     
 

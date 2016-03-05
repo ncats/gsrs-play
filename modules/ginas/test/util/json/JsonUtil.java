@@ -65,7 +65,7 @@ public class JsonUtil {
                 //System.out.println("Error:" + jn + " was:" + before.at(jn.get("path").textValue()));
             }else if("add".equals(op)){
                 String key = jn.get("path").asText();
-                JsonNode jsAfter=after.at(key);
+                JsonNode jsAfter=after.at(normalizePath(op,key,before));
                 change= new Change(key, null, toString(jsAfter), Change.ChangeType.ADDED);
             }else if("replace".equals(op)){
             	
@@ -90,6 +90,21 @@ public class JsonUtil {
         return new Changes(changes);
     }
 
+    // The '-' character from JSON pointer can throw some of this
+    // off a little. May need more thought, so for now just return
+    // the path again.
+    public static String normalizePath(String op, String path, JsonNode refObj){
+    	return path;
+    	/*
+    	if(path.endsWith("/-")){
+    		JsonNode nodeArray=refObj.at(path.replaceAll("[/]-$", ""));
+    		int len=nodeArray.size();
+    		if("add".equals(op)){
+    			return path.replaceAll("[/]-$", "/" + (len));
+    		}
+    	}
+    	return path;*/
+    }
 
     public static class JsonNodeBuilder{
     	final JsonNode oldJson;

@@ -86,7 +86,7 @@ public class SubstanceFactory extends EntityFactory {
 	public static Substance getSubstanceVersion(String id, String version) {
 		if (id == null)
 			return null;
-		System.out.println("Looking for history, this is likely broken");
+		//System.out.println("Looking for history, this is likely broken");
 		List<Edit> edits = new ArrayList<Edit>();
     	Class oclass=null;
     	
@@ -100,7 +100,7 @@ public class SubstanceFactory extends EntityFactory {
                      );
         	List<Edit> tmpedits = q.findList();
             if(tmpedits!=null && !tmpedits.isEmpty()){
-            	System.out.println("OK, I found some");
+            	//System.out.println("OK, I found some");
             	edits.addAll(tmpedits);
             	oclass=c;
             	break;
@@ -513,6 +513,9 @@ public class SubstanceFactory extends EntityFactory {
 
 		UserProfile up = getUserProfile();
 		Principal user = null;
+		if(s.status==Substance.STATUS_APPROVED){
+			throw new IllegalStateException("Cannot approve an approved substance");
+		}
 		if (up == null || up.user == null) {
 			throw new IllegalStateException("Must be logged in user to approve substance");
 		}

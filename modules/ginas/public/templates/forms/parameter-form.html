@@ -13,7 +13,7 @@
                     <text-input ng-model="parameter.type" field="type"></text-input>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="parameter" divid="parameterForm" type="amount"></form-selector>
+                    <form-selector referenceobj="parameter" field="value" divid="parameterForm" type="amount"></form-selector>
                 </div>
             </div>
             <div class="row">
@@ -36,7 +36,7 @@
                 <text-view-edit obj="param" field="type"></text-view-edit>
             </div>
             <div class="col-md-1">
-                <form-selector referenceobj="param" parent="substance" formname="parameterForm" type="amount"
+                <form-selector referenceobj="param" parent="substance" formname="parameterForm" field="value" type="amount"
                                divid={{param.$$hashKey}}></form-selector>
             </div>
         </div>

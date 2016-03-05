@@ -371,7 +371,6 @@ public class EntityPersistAdapter extends BeanPersistAdapter {
     public boolean preUpdate (BeanPersistRequest<?> request) {
         Object bean = request.getBean();
         String name = bean.getClass().getName();
-        
         List<Hook> methods = preUpdateCallback.get(name);
         if (methods != null) {
             for (Hook m : methods) {

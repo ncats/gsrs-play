@@ -33,7 +33,7 @@
                                      label="Extent"></dropdown-select>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="mod" parent="parent" divid="strucModForm"
+                    <form-selector referenceobj="mod" parent="parent" field="extentAmount" divid="strucModForm"
                                    type="amount"></form-selector>
                 </div>
             </div>
@@ -68,7 +68,7 @@
                                         label="Extent"></dropdown-view-edit>
                 </div>
                 <div class="col-md-1">
-                    <form-selector referenceobj="obj.extentAmount" parent="parent" type="amount" divid={{obj.$$hashKey}}></form-selector>
+                    <form-selector referenceobj="obj" parent="parent" field="extentAmount" type="amount" divid={{obj.$$hashKey}}></form-selector>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" type="access" divid={{obj.$$hashKey}}></form-selector>

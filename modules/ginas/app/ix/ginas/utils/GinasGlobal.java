@@ -60,7 +60,7 @@ public class GinasGlobal extends Global {
 		super.onStart(app);
 		if (!ControlledVocabularyFactory.isloaded()) {
 		//	ControlledVocabularyFactory.loadSeedCV(Play.application().resourceAsStream("CV.txt"));
-			ControlledVocabularyFactory.loadCVJson(Play.application().resourceAsStream("results.json"));
+			ControlledVocabularyFactory.loadCVJson(Play.application().resourceAsStream("cv.json"));
 			String codeSystem = Play.application().configuration().getString("ix.ginas.generatedcode.codesystem", null);
 			if(codeSystem!=null){
 				ControlledVocabulary cvv = ControlledVocabularyFactory.getControlledVocabulary("CODE_SYSTEM");
@@ -74,7 +74,9 @@ public class GinasGlobal extends Global {
 				
 				
 			}
-			System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
+			if(!Play.isTest()){
+				System.out.println("Loaded CV:" + ControlledVocabularyFactory.size());
+			}
 		}else{
 			//System.out.println("CV already loaded:" + ControlledVocabularyFactory.size());
 		}
