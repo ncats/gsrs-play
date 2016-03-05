@@ -681,9 +681,9 @@ public class Substance extends GinasCommonData {
 		}
 		i++;
 		
-		System.out.println("Updating version from:"  + version);
+		//System.out.println("Updating version from:"  + version);
 		this.version=i+"";
-		System.out.println("Updating version to:"  + version);
+		//System.out.println("Updating version to:"  + version);
 	}
 	
 	@JsonIgnore

@@ -59,8 +59,12 @@ public class ChangesBuilder {
        // String[] path = key.split("/");
         JsonNode currentBefore= null;
         JsonNode currentAfter=null;
+        String key2=key;
         switch(type){
-            case ADDED: currentAfter=after; break;
+            case ADDED: 
+            	currentAfter=after; 
+            	key2=JsonUtil.normalizePath("add", key, before);
+            	break;
             case REMOVED: currentBefore = before; break;
             case REPLACED:
                 currentAfter = after;
@@ -72,9 +76,9 @@ public class ChangesBuilder {
                 throw new IllegalStateException("unknown type "+type);
 
         }
-
+        
         map.put(key,new Change(key,getNodeFromPath(currentBefore, key),
-                getNodeFromPath(currentAfter, key),
+                				   getNodeFromPath(currentAfter, key2),
                 type));
 
         return this;

@@ -74,7 +74,7 @@ public class GinasTestServer extends ExternalResource{
 	 private static final String API_URL_VALIDATE = "http://localhost:9001/ginas/app/api/v1/substances/@validate";
 	 private static final String API_URL_SUBMIT = "http://localhost:9001/ginas/app/api/v1/substances";
 	 private static final String API_URL_FETCH = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)?view=full";
-	 private static final String API_URL_HISTORY = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@edits?view=full";
+	 private static final String API_URL_HISTORY = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@edits";
 	 
 	 private static final String API_URL_APPROVE = "http://localhost:9001/ginas/app/api/v1/substances($UUID$)/@approve";
 	 private static final String API_URL_UPDATE = "http://localhost:9001/ginas/app/api/v1/substances";
@@ -122,6 +122,12 @@ public class GinasTestServer extends ExternalResource{
     	this.setAuthenticationType(atype);
     }
 
+    public void loginFakeUser1(){
+    	login(FAKE_USER_1,FAKE_PASSWORD_1);
+    }
+    public void loginFakeUser2(){
+    	login(FAKE_USER_2,FAKE_PASSWORD_2);
+    }
 
     //logs in user, also sets default authentication type
     //if previously set to NONE
@@ -217,9 +223,9 @@ public class GinasTestServer extends ExternalResource{
     	WSResponse wsResponse1 = this.url(API_URL_FETCH.replace("$UUID$", uuid)).get().get(timeout);
     	return wsResponse1;
     }
-    public WSResponse fetchSubstanceHistory(String uuid){
+    public WSResponse fetchSubstanceHistory(String uuid, String version){
     	WSResponse wsResponse1 = this.url(API_URL_HISTORY.replace("$UUID$", uuid))
-    			.setQueryParameter("filter","path=null")
+    			.setQueryParameter("filter","path=null AND version=\'" + version + "\'")
     			.get().get(timeout);
     	return wsResponse1;
     }
@@ -229,9 +235,25 @@ public class GinasTestServer extends ExternalResource{
     	return wsResponse1;
     }
     
+    //Failure methods
     
-    public JsonNode fetchSubstanceHistoryJSON(String uuid){
-    	return ensureExctractJSON(fetchSubstanceHistory(uuid));
+    public WSResponse fetchSubstanceFail(String uuid){
+    	return ensureFailure(fetchSubstance(uuid));
+    }
+    public WSResponse updateSubstanceFail(JsonNode updated) {
+		return ensureFailure(updateSubstance(updated));
+	}
+    public WSResponse submitSubstanceFail(JsonNode js) {
+		return ensureFailure(submitSubstance(js));
+	}
+    public WSResponse approveSubstanceFail(String uuid) {
+    	return ensureFailure(approveSubstance(uuid));
+		
+	}
+    
+    //JSON methods
+    public JsonNode fetchSubstanceHistoryJSON(String uuid, String version){
+    	return ensureExctractJSON(fetchSubstanceHistory(uuid, version));
     }
     public JsonNode fetchSubstanceJSON(String uuid){
     	return ensureExctractJSON(fetchSubstance(uuid));
@@ -242,15 +264,15 @@ public class GinasTestServer extends ExternalResource{
     public JsonNode approveSubstanceJSON(String uuid){
     	return ensureExctractJSON(approveSubstance(uuid));
     }
-
 	public JsonNode updateSubstanceJSON(JsonNode updated) {
 		return ensureExctractJSON(updateSubstance(updated));
 	}
-	
 	public JsonNode urlJSON(String url){
 		return ensureExctractJSON(url(url).get().get(timeout));
 	}
 	
+	
+	//UI (HTML) methods
 	public String fetchSubstanceUI(String id){
 		return urlString(UI_URL_SUBSTANCE.replace("$ID$", id));
 	}
@@ -313,6 +335,15 @@ public class GinasTestServer extends ExternalResource{
         assertTrue(returned!=null);
         return returned;
     }
+    
+    private WSResponse ensureFailure(WSResponse wsResponse1){
+    	assertTrue(wsResponse1!=null);
+        int status2 = wsResponse1.getStatus();
+        assertTrue("Expected failure code, got:" + status2, status2 != 200 && status2 != 201);
+        return wsResponse1;
+    }
+    
+    
     
     
     private void refreshTokenIfNeccesarry(){
@@ -386,5 +417,7 @@ public class GinasTestServer extends ExternalResource{
         }
         stop(ts);
     }
+
+	
 
 }

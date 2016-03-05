@@ -1487,7 +1487,7 @@ public class EntityFactory extends Controller {
 
             FetchedValue previousValContainer=getCurrentValue(newValue);
             String oldVersion=EntityFactory.getVersionForBeanAsString(previousValContainer.value);
-            System.out.println("The old version was:" + oldVersion);
+            //System.out.println("The old version was:" + oldVersion);
             String newVersion=EntityFactory.getVersionForBeanAsString(newValue);
             
             
@@ -1515,7 +1515,7 @@ public class EntityFactory extends Controller {
 	                    e.batch = eh.edit.id.toString();
 	                    e.save();
 	                }
-	                System.out.println("Saved new edit version?");
+	                //System.out.println("Saved new edit version?");
 	                Logger.debug("** New edit history "+eh.edit.id);
             	}
             	
@@ -1526,7 +1526,7 @@ public class EntityFactory extends Controller {
             //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
             
             tx.commit();
-            System.out.println("completely done saving");
+            //System.out.println("completely done saving");
             return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {
