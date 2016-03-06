@@ -468,7 +468,6 @@ public class EditingWorkflowTest {
 		
 		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
 		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
-								.added("/access/-")
 								.replace("/version")
 								.replace("/lastEdited")
 								
