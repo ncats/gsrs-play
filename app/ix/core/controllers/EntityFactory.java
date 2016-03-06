@@ -1516,6 +1516,9 @@ public class EntityFactory extends Controller {
             //System.out.println("The old version was:" + oldVersion);
             String newVersion=EntityFactory.getVersionForBeanAsString(newValue);
             
+            if(previousValContainer.value==null){
+            	throw new IllegalStateException("Cannot update a non-existing record");
+            }
             
             String oldJSON=mapper.toJson(previousValContainer.value);
             

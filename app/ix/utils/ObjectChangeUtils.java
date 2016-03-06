@@ -8,11 +8,49 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+
+/**
+ * Author: Tyler Peryea
+ * 
+ * 
+ * The purpose of this set of utilities will be to bring the flexibility and
+ * ease-of-use of JSON serialization, JSONPatch and JSONDiff to objects themselves.
+ * 
+ * Specifically, the intended use is eventually to apply a JSONPatch directly to a
+ * source object, as if it had been serialized to JSON, applied, and then de-serialized 
+ * back. That naive direct approach is not always sufficient, as the specific objects
+ * meant to be patched may have additional information that is needed for tracking (e.g.
+ * ebean enrichment) which will be lost.
+ * 
+ * Right now, these utilities (still incomplete) do the following:
+ * 
+ * 1. Serialize to objects to JSON
+ * 2. Get the JSONPatch from the first to second
+ * 3. Find the ACTUAL object instance that each "path" in the JSONPatch is
+ *    referencing (by reflection / recursion, attempting to honor Jackson's annotations)
+ * 4. Set the fetched ACTUAL object instance from the *new* object to the actual location
+ *    of the *existing* Object (again using Jackson's annotations for setters)
+ * 5. Recursively call the appropriate setters all the way up the tree, to ensure that
+ *    any specific setting methods expected to be called are called.
+ * 6. Keep track of each object instance where a mutate operation was called
+ * 
+ *  
+ * What is not yet done:
+ * 	[ ]	"move" and "copy" operations of JSONPatch are not applied
+ *  [ ] A JSONPatch itself can not be applied an existing object
+ * 	[ ] Array handling is likely broken
+ *  [ ] Certain Collection operations are also problematic, specifically involving
+ *      the ambiguous '/-' JSONPointer notation, which may mean different things
+ *      depending on context
+ * 
+ * 
+ * 
+ */
 
 public class ObjectChangeUtils {
 	public static class TypeRegistry{

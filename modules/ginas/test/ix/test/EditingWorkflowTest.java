@@ -21,7 +21,20 @@ import util.json.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
+/**
+ * 
+ * @author peryeata
+ *
+ * TODO: 
+ * add references (add/remove) check
+ * add names (add/remove) check
+ * add codes (add/remove) check
+ * add chemical access (add/remove) check
+ * add names reordering check
+ * add access reordering check
+ * add what would look like a "copy" operation check
+ *
+ */
 public class EditingWorkflowTest {
 	private final static boolean THIS_IS_TERRIBLE=true;
 	private final static boolean WE_NEED_TO_FIX_THIS=true;
@@ -181,7 +194,7 @@ public class EditingWorkflowTest {
            });
    	}
     
-    @Ignore("This test will fail, because we can't completely empty an array")
+    //@Ignore("This test will fail, because we can't completely empty an array")
     @Test
    	public void testRemoveAllDisuflidesProtein() {
    		final File resource=new File("test/testJSON/toedit.json");
@@ -295,7 +308,7 @@ public class EditingWorkflowTest {
    	}
     
    //This test makes sure that updating a substance before registering it fails
-    @Ignore("I believe this fails now, because the PUT method allows for non-existent substances. It shouldn't")
+    //@Ignore("I believe this fails now, because the PUT method allows for non-existent substances. It shouldn't")
     @Test
    	public void testFailUpdateNewSubstance() {
    		final File resource=new File("test/testJSON/toedit.json");
