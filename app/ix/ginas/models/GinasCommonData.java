@@ -1,21 +1,19 @@
 package ix.ginas.models;
 
-import java.lang.reflect.Method;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Id;
-import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
-import javax.persistence.PostLoad;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
@@ -34,7 +32,7 @@ import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Group;
 import ix.core.models.Indexable;
 import ix.core.models.Principal;
-import ix.ginas.models.v1.Subunit;
+import ix.ginas.models.v1.Substance;
 import ix.utils.Global;
 import ix.utils.Util;
 import play.Logger;
@@ -125,26 +123,28 @@ public class GinasCommonData extends Model implements GinasAccessControlled,Forc
         this.deprecated = deprecated;
     }
 
+    @JsonIgnore
     public GinasAccessContainer getRecordAccess() {
         return recordAccess;
     }
 
+    @JsonIgnore
     public void setRecordAccess(GinasAccessContainer recordAccess) {
         this.recordAccess = recordAccess;
     }
 
     @JsonProperty("access")
-    public void setAccess(Collection<String> access){
-    	ObjectMapper om = new ObjectMapper();
-    	Map mm = new HashMap();
-    	mm.put("access", access);
-    	mm.put("entityType", this.getClass().getName());
-    	JsonNode jsn=om.valueToTree(mm);
-    	try {
-			recordAccess= om.treeToValue(jsn, GinasAccessContainer.class);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
+    @JsonDeserialize(using = GroupListDeserializer.class)
+    public void setAccess(Set<Group> access){
+    	List<String> accessGroups=new ArrayList<String>();
+    	for(Group g: access){
+    		accessGroups.add(g.name);
+    	}
+    	if(recordAccess==null){
+    		recordAccess=new GinasAccessContainer(this);
+    	}
+    	
+    	recordAccess.access=new LinkedHashSet<Group>(access);
     	return;
     }
     
@@ -277,6 +277,10 @@ public class GinasCommonData extends Model implements GinasAccessControlled,Forc
 	@Override
 	public void forceUpdate() {
 		currentVersion++;
+		if(this.recordAccess!=null){
+			//System.out.println("Saving record access too");
+			this.recordAccess.save();
+		}
 		super.update();
 		
 	}

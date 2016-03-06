@@ -25,7 +25,7 @@ import play.libs.ws.WSResponse;
 
 //@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(Parameterized.class)
-public class SubstancePostUpdateTest {
+public class SubstanceSubmitTest {
 
 	
         
@@ -52,15 +52,73 @@ public class SubstancePostUpdateTest {
         public GinasTestServer ts = new GinasTestServer(9001);
 
 
-        public SubstancePostUpdateTest(File f, String dummy){
+        public SubstanceSubmitTest(File f, String dummy){
             this.resource=f;
         }
 
         @Test
-        public void testAPICreateSubstance() {
+        public void testAPIValidateSubstance() {
             ts.run(new Runnable() {
                 public void run() {
-                	ts.login(ts.FAKE_USER_1, ts.FAKE_PASSWORD_1);
+                	ts.loginFakeUser1();
+                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
+                    try (InputStream is=new FileInputStream(resource)){
+                        JsonNode js= new ObjectMapper().readTree(is);
+                        JsonNode jsonNode1 = ts.validateSubstanceJSON(js);
+                        assertTrue(jsonNode1.get("valid").asBoolean());
+                        
+                    } catch (Exception e1) {
+                    	e1.printStackTrace();
+                        throw new IllegalStateException(e1);
+                    }
+                }
+            });
+        }
+        @Test
+        public void testAPIValidateSubmitSubstance() {
+            ts.run(new Runnable() {
+                public void run() {
+                	ts.loginFakeUser1();
+                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
+                    try (InputStream is=new FileInputStream(resource)){
+                        JsonNode js= new ObjectMapper().readTree(is);
+                        JsonNode jsonNode1 = ts.validateSubstanceJSON(js);
+                        assertTrue(jsonNode1.get("valid").asBoolean());
+                        JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
+                    } catch (Exception e1) {
+                    	e1.printStackTrace();
+                        throw new IllegalStateException(e1);
+                    }
+                }
+            });
+        }
+        @Test
+        public void testAPIValidateSubmitFetchSubstance() {
+            ts.run(new Runnable() {
+                public void run() {
+                	ts.loginFakeUser1();
+                	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
+                    try (InputStream is=new FileInputStream(resource)){
+                        JsonNode js= new ObjectMapper().readTree(is);
+                        String uuid=js.get("uuid").asText();
+                        JsonNode jsonNode1 = ts.validateSubstanceJSON(js);
+                        assertTrue(jsonNode1.get("valid").asBoolean());
+                        JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
+                        JsonNode jsonNode3= ts.fetchSubstanceJSON(uuid);
+                        assertFalse(jsonNode3.isNull());
+                        assertThatNonDestructive(js,jsonNode3);    
+                    } catch (Exception e1) {
+                    	e1.printStackTrace();
+                        throw new IllegalStateException(e1);
+                    }
+                }
+            });
+        }
+        @Test
+        public void testAPIValidateSubmitFetchValidateSubstance() {
+            ts.run(new Runnable() {
+                public void run() {
+                	ts.loginFakeUser1();
                 	ts.setAuthenticationType(GinasTestServer.AUTH_TYPE.TOKEN);
                     try (InputStream is=new FileInputStream(resource)){
                         JsonNode js= new ObjectMapper().readTree(is);
@@ -68,43 +126,22 @@ public class SubstancePostUpdateTest {
                         String uuid=js.get("uuid").asText();
                         Logger.info("Running: " + resource);
 
-                        WSResponse wsResponse1 = ts.validateSubstance(js);
-
-                        assertEquals(OK, wsResponse1.getStatus());
-
-                        JsonNode jsonNode1 = wsResponse1.asJson();
-                        //System.out.println("VALID:" + jsonNode1.get("valid"));
-                        //System.out.println(jsonNode1);
-                        
-                        //assertThat("initalialValid:" +jsonNode1.get("valid").asBoolean()).isEqualTo("initalialValid:true");
+                        JsonNode jsonNode1 = ts.validateSubstanceJSON(js);
                         assertTrue(jsonNode1.get("valid").asBoolean());
+                        
                         //create
-                        WSResponse wsResponse2 = ts.submitSubstance(js);
-                        int status2 = wsResponse2.getStatus();
-                        assertTrue(status2 == 200 || status2 == 201);
-                        JsonNode jsonNode2 = wsResponse2.asJson();
-
-                        //search
-                        WSResponse wsResponse3 = ts.fetchSubstance(uuid);
-                        JsonNode jsonNode3 = wsResponse3.asJson();
-                        //System.out.println("jsonNode:" + jsonNode3);
-                        assertEquals(OK, wsResponse3.getStatus());
+                        JsonNode jsonNode2 = ts.submitSubstanceJSON(js);
+                        //fetch
+                        JsonNode jsonNode3= ts.fetchSubstanceJSON(uuid);
                         assertFalse(jsonNode3.isNull());
 
-
-                        
                         assertThatNonDestructive(js,jsonNode3);                        
                         
                         //validate
-                        WSResponse wsResponse4 = ts.validateSubstance(jsonNode3);
-                        //assertThat(wsResponse4.getStatus()).isEqualTo(OK);
-                        assertEquals(OK, wsResponse4.getStatus());
-                        JsonNode jsonNode4 = wsResponse4.asJson();
-                       // System.out.println("jsonNode:" + jsonNode4);
-                        //jp.
-                       // assertThat("roundTripValid:" + jsonNode4.get("valid").asBoolean()).isEqualTo("roundTripValid:true");
+                        JsonNode jsonNode4 = ts.validateSubstanceJSON(jsonNode3);
                         assertTrue(jsonNode4.get("valid").asBoolean());
                     } catch (Exception e1) {
+                    	e1.printStackTrace();
                         throw new IllegalStateException(e1);
                     }
                 }

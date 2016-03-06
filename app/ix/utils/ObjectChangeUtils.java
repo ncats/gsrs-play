@@ -14,58 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Tester {
-	public static class TestStructure{
-		public String rootProperty1;
-		public boolean rootProperty2;
-		public int rootProperty3;
-		private String hiddenProperty;
-		
-		@JsonIgnore
-		public String hiddenPropertySpecial;
-		
-		
-		public String getHiddenProperty(){
-			return this.hiddenProperty;
-		}
-		public void setHiddenProperty(String hidd){
-			this.hiddenProperty=hidd;
-		}
-		
-		public String getSpecialHiddenProperty(){
-			return this.hiddenPropertySpecial;
-		}
-		
-		public void setSpecialHiddenProperty(String hidd){
-			this.hiddenPropertySpecial=hidd;
-		}
-		
-		public TestStructure(String t1,boolean t2, int t3){
-			rootProperty1=t1;
-			rootProperty2=t2;
-			rootProperty3=t3;
-			this.setHiddenProperty(t1+t2);
-			this.setSpecialHiddenProperty(t1+t2+t3);
-		}
-		public TestStructure(){
-			
-		}
-		
-	}
-	public static void main(String[] args) throws NoSuchMethodException, SecurityException{
-		//boolean b=Boolean.class..isAssignableFrom(TestGuy.class.getMethod("test2",null).getReturnType());
-		//System.out.println(b);
-		TestStructure g1= new TestStructure("Test", false, 5);
-		TestStructure g2= new TestStructure("AnotherTest", true, 4);
-		
-	
-		ObjectPointerFetcher.setObjectAt(g1, "/rootProperty1", "WHAT!?",null);
-		System.out.println(g1.rootProperty1);
-		
-//		Map<String, ObjectPointerFetcher.Getter> mygetters=ObjectPointerFetcher.getGetters(TestGuy.class);
-//		System.out.println(mygetters.toString());
-//		
-	}
+public class ObjectChangeUtils {
 	public static class TypeRegistry{
 		private Class cls;
 		Map<String,Getter> getters;
@@ -385,10 +334,14 @@ public class Tester {
 			TypeRegistry tr=registries.get(o.getClass().getName());
 			
 			if(o instanceof Collection){
+				int c=-1;
 				if(prop.equals("-")){
-					throw new IllegalStateException("'-'  not yet implemented");
+					System.err.println(" '-' can mean either the end of this list, or the virtual object just beyond the end of a different list, depending on context");
+					c=((Collection)o).size()-1;
+					//throw new IllegalStateException("'-'  not yet implemented");
+				}else{
+					c=Integer.parseInt(prop);
 				}
-				int c=Integer.parseInt(prop);
 				if(((Collection)o).size()<=c){
 					throw new IllegalStateException("Element '" + c + "' does not exist in collection of size " + ((Collection)o).size());
 				}
@@ -508,6 +461,73 @@ public class Tester {
 			}
 			return null;
 		}
+		private static TypeRegistry.Setter getAdderDirect(Object o, final String prop){
+			addClassToRegistry(o.getClass());
+			TypeRegistry tr=registries.get(o.getClass().getName());
+			
+			if(o instanceof Collection){
+				Collection col = (Collection)o;
+				int cind=-1;
+				if(prop.equals("-")){
+					//throw new IllegalStateException("'-'  not yet implemented");
+				}else{
+					cind=Integer.parseInt(prop);
+				}
+				final int c=cind;
+				if(o instanceof List){
+					return new TypeRegistry.Setter(){
+
+						@Override
+						public void set(Object instance, Object set) {
+							if(c<0){
+								((List)instance).add(set);
+							}else{
+								((List)instance).add(c, set);
+							}
+						}
+						@Override
+						public boolean isIgnored() {return false;}
+						
+					};
+				}else{
+					System.err.println("Setters for non-list collections are experimental");
+					//final Object old=col.toArray()[c];
+					return new TypeRegistry.Setter(){
+
+						@Override
+						public void set(Object instance, Object set) {
+							if(c<0){
+								((Collection)instance).add(set);
+							}else{
+								List<Object> tempGuy = new ArrayList<Object>();
+								((Collection)instance).removeAll(tempGuy);
+								for(int i=0;i<c;i++){
+									((Collection)instance).add(tempGuy.get(i));
+								}
+								((Collection)instance).add(set);
+								for(int i=c;i<tempGuy.size();i++){
+									((Collection)instance).add(tempGuy.get(i));
+								}
+								
+							}
+							
+						}
+						@Override
+						public boolean isIgnored() {return false;}
+						
+					};
+				}
+				
+			}
+			if(tr.setters.containsKey(prop)){
+				final TypeRegistry.Setter setter=tr.setters.get(prop);
+				return setter;
+			}else{
+				//System.out.println(tr.setters.keySet() + " in class '" + o.getClass() +  "' does not have " + prop);
+				//System.out.println(tr.getters.keySet() + " are the getters");
+			}
+			return null;
+		}
 		public static Object getObjectAt(Object src, String objPointer, Collection chainChange){
 			//System.out.println(objPointer);
 			if(chainChange!=null)
@@ -570,7 +590,30 @@ public class Tester {
 			}
 			changeChain.addAll(visited);
 		}
-		
+		public static void addObjectAt(Object src, String objPointer, Object set, Collection<Object> changeChain){
+			//System.out.println(objPointer);
+			List<Object> visited= new ArrayList<Object>();
+			String subPath=objPointer.replaceAll("/[^/]*$", "");
+			String lastPath=objPointer.replaceAll(".*/([^/]*)$", "$1");
+			
+			//this is the container for that object
+			Object fetched=getObjectAt(src,subPath,visited);
+			
+			
+			//This gets the setter for the object 
+			TypeRegistry.Setter s=getAdderDirect(fetched,lastPath);
+			if(s!=null){
+				s.set(fetched, set);
+				System.out.println("able to add:" + fetched.getClass());
+				//Ideally, "fetched" is set correctly now,
+				//so save up the tree
+				setObjectAt(src,subPath,fetched,visited);
+				
+			}else{
+				System.out.println("not able to add:" + fetched.getClass());
+			}
+			changeChain.addAll(visited);
+		}
 		
 		
 		

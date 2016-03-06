@@ -68,7 +68,7 @@ import ix.ginas.models.v1.Substance;
 import ix.ncats.controllers.security.IxDeadboltHandler;
 import ix.utils.Util;
 import ix.utils.Global;
-import ix.utils.Tester;
+import ix.utils.ObjectChangeUtils;
 
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
@@ -928,6 +928,7 @@ public class EntityFactory extends Controller {
                     }
                 });
             
+            
             JsonNode node = request().body().asJson();
             T inst = mapper.treeToValue(node, type);
             if(validator!=null){
@@ -938,11 +939,12 @@ public class EntityFactory extends Controller {
             }
             
             inst.save();
-	        
-
-            return created (mapper.toJson(inst));
+            
+            Status s=created (mapper.toJson(inst));
+            return s;
         }
-        catch (Exception ex) {
+        catch (Throwable ex) {
+        	ex.printStackTrace();
             return internalServerError (ex.getMessage());
         }
     }
@@ -1514,9 +1516,7 @@ public class EntityFactory extends Controller {
             //System.out.println("The old version was:" + oldVersion);
             String newVersion=EntityFactory.getVersionForBeanAsString(newValue);
             
-            if(previousValContainer.value instanceof Substance){
-            	System.out.println("record access thing:" + ((Substance)previousValContainer.value).recordAccess);
-            }
+            
             String oldJSON=mapper.toJson(previousValContainer.value);
             
             
@@ -1537,12 +1537,6 @@ public class EntityFactory extends Controller {
             		System.out.println("There are no changes?");
             	}
             	for(JsonNode change:jp){
-            		
-            		
-            		
-            		
-            		
-            		
             		System.out.println(
             				change.get("op").asText() + "\t" + 
             				change.get("path").asText() + "\t" + 
@@ -1550,12 +1544,19 @@ public class EntityFactory extends Controller {
             				);
             		String path=change.get("path").asText();
             		if("replace".equals(change.get("op").asText())){
-            			Object newv=Tester.ObjectPointerFetcher.getObjectAt(newValue, path,null);
-            			Tester.ObjectPointerFetcher.setObjectAt(previousValContainer.value, path, newv,changedContainers);
-            			System.out.println("Now it's:" + Tester.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path,null));
+            			Object newv=ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(newValue, path,null);
+            			ObjectChangeUtils.ObjectPointerFetcher.setObjectAt(previousValContainer.value, path, newv,changedContainers);
+            			System.out.println("Now it's:" + ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path,null));
             		}else if("remove".equals(change.get("op").asText())){
-            			Tester.ObjectPointerFetcher.removeObjectAt(previousValContainer.value, path,changedContainers);
+            			ObjectChangeUtils.ObjectPointerFetcher.removeObjectAt(previousValContainer.value, path,changedContainers);
             			//System.out.println("Now it's:" + Tester.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path));
+            			
+            		}else if("add".equals(change.get("op").asText())){
+            			System.out.println("It was:" + ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path.replaceAll("[/][^/]*$", ""),null));
+            			
+            			Object newv=ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(newValue, path,null);
+            			ObjectChangeUtils.ObjectPointerFetcher.addObjectAt(previousValContainer.value, path,newv,changedContainers);
+            			System.out.println("Now it's:" + ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path.replaceAll("[/][^/]*$", ""),null));
             			
             		}
                 	
@@ -1578,12 +1579,6 @@ public class EntityFactory extends Controller {
             	
             	
             	newValue = previousValContainer.value;
-            	
-            	
-            	//Instrumented inst=instrument (eh, newValue, json,"");
-            	
-            	//(new JsonDiff()).
-            	
             	
                 
             }catch(Throwable e){

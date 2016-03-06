@@ -205,7 +205,7 @@ public class EditingWorkflowTest {
            });
    	}
     
-    @Ignore("This test will fail, because there is a non-trivial mapping from the JSON to the old substance record. The recursive strategy can't discover the right properties")
+    //@Ignore("This test will fail, because there is a non-trivial mapping from the JSON to the old substance record. The recursive strategy can't discover the right properties")
     @Test
    	public void testAddAccessGroupToExistingProtein() {
    		final File resource=new File("test/testJSON/toedit.json");
@@ -466,9 +466,10 @@ public class EditingWorkflowTest {
 		assertTrue("Fetched access group is not Empty, afer being added",accessArray.size()>0);
 		assertEquals("testGROUP",updateFetched.at("/access/0").textValue());
 		
+		
+		System.out.println("This is the group now" + updateFetched.at("/access/0").textValue());
 		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
 		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
-								.added("/access/-")
 								.replace("/version")
 								.replace("/lastEdited")
 								

@@ -261,6 +261,9 @@ public class GinasTestServer extends ExternalResource{
     public JsonNode submitSubstanceJSON(JsonNode js){
     	return ensureExctractJSON(submitSubstance(js));
     }
+    public JsonNode validateSubstanceJSON(JsonNode js) {
+    	return ensureExctractJSON(validateSubstance(js));
+	}
     public JsonNode approveSubstanceJSON(String uuid){
     	return ensureExctractJSON(approveSubstance(uuid));
     }
@@ -417,6 +420,8 @@ public class GinasTestServer extends ExternalResource{
         }
         stop(ts);
     }
+
+	
 
 	
 
