@@ -83,10 +83,10 @@
                 </div>
                 <div  class="col-md-1">
                     <label for="uploader">Document</label><br>
-                    <a ng-href = {{uploadedFile}} ng-if="obj.uploadedFile">
+                    <a ng-href = {{obj.uploadedFile}} ng-if="obj.uploadedFile">
                         <i class ="fa fa-file-text fa-stack-2x success"></i>
                         </a>
-                    <i class="fa fa-upload fa-2x success"  ng-show="!obj.uploadedFile" ng-click = "uploadDoc=!uploadDoc; print();" id="uploader" ></i>
+                    <i class="fa fa-upload fa-2x success"  ng-show="!obj.uploadedFile" ng-click = "uploadDoc=!uploadDoc" id="uploader" ></i>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" formname="refForm" type="access"

@@ -1499,7 +1499,6 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
-            //scope.uploadDoc=false;
                 scope.submitFile = function (obj) {
                     //create form data object
                     var fd = new FormData();
@@ -1567,10 +1566,13 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
             link: function (scope, element, attrs) {
-                scope.submitFile = function () {
+
+                scope.submitFile = function (obj) {
                     //create form data object
                     var fd = new FormData();
-                    //  fd.append('file', scope.$$uploadFile);
+                    if(obj){
+                        scope.$$uploadFile = obj.$$uploadFile;
+                    }
                     fd.append('file-name', scope.$$uploadFile);
                     fd.append('file-type', scope.$$uploadFile.type);
                     //send the file / data to your server
@@ -1578,10 +1580,17 @@ console.log(scope);
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        _.set(scope.ref, 'uploadedFile', data.url);
+                        if(obj){
+                            _.set(obj, 'uploadedFile', data.url);
+                            _.set(scope, 'uploadDoc', false);
+                            delete obj.$$uploadFile;
+                        }else {
+                            _.set(scope.reference, 'uploadedFile', data.url);
+                        }
                     }).error(function (err) {
-                        console.log(err);
                     });
+                    _.set(scope, 'uploadDoc', false);
+                    delete scope.$$uploadFile;
                 };
 
 
