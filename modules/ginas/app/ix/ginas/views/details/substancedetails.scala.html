@@ -5,9 +5,10 @@
 @(sub: ix.ginas.models.v1.Substance)(breadcrumb: Html)(details: Html)(content: Html)
 
 
-@ix.ginas.views.html.ginas(sub.getName, "ix.ginas.models.v1.StructurallyDiverseSubstance") {
+@ix.ginas.views.html.ginas(sub.getName, "ix.ginas.models.v1.Substance") {
     @ix.ginas.views.html.menu()
 } {
+
     <div class = "row">
         <div class = "col-md-3 hidden-xs hidden-sm sidebar">
             <h3 class="display-name"><em>@sub.getName()</em></h3>
