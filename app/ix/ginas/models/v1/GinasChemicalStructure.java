@@ -139,12 +139,14 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     	return new LinkedHashSet<Group>();
     }
 
+	
+	
 	@JsonSerialize(using = ReferenceSetSerializer.class)
 	public Set<Keyword> getReferences() {
 		if (recordReference != null) {
 			return recordReference.getReferences();
 		}
-		return new HashSet<Keyword>();
+		return new LinkedHashSet<Keyword>();
 	}
 	
 	@JsonProperty("references")    
@@ -165,7 +167,7 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
 		if(this.recordReference==null){
 			this.recordReference= new GinasReferenceContainer(this);
 		}
-		this.recordReference.getReferences().add(new Keyword("REFERENCE",
+		this.recordReference.references.add(new Keyword("REFERENCE",
 				refUUID
 		));
 	}

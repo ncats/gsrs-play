@@ -106,6 +106,20 @@ public class EditingWorkflowTest {
    	}
     
     @Test
+   	public void testAddNameRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	submitSubstance(entered);
+                   	testAddNameServer(uuid);
+                   	//JsonNode edited=testRenameServer(uuid);
+               }
+           });
+   	}
+    
+    @Test
    	public void testChangeHistoryProteinRemote() {
    		ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
@@ -397,6 +411,36 @@ public class EditingWorkflowTest {
 								.replace("/_name")
 								.replace("/lastEdited")
 								.replace("/names/0/lastEdited")
+								
+								.build();
+		
+		assertEquals(expectedChanges, changes);
+		return fetched;
+    }
+    
+    @Ignore("Never finished writing this")
+    public JsonNode testAddNameServer(String uuid){
+    	
+    	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+
+    	String oldVersion=fetched.at("/version").asText();
+    	String newName="TRANSFERRIN ALDIFITOX S EPIMER CHANGED";
+    
+    	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched)
+    			.copy("/names/-","/names/0")
+    			.set("/names/1/name", newName)
+    			.build();
+    	
+		ts.updateSubstanceJSON(updated);
+		JsonNode updateFetched = ts.fetchSubstanceJSON(uuid);
+		
+		assertEquals(Integer.parseInt(oldVersion) + 1, Integer.parseInt(updateFetched.at("/version").asText()));
+		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
+		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
+		
+								.replace("/version")
+								.replace("/lastEdited")
+								.replace("/names/1/lastEdited")
 								
 								.build();
 		
