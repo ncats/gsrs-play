@@ -944,7 +944,7 @@ public class EntityFactory extends Controller {
             return s;
         }
         catch (Throwable ex) {
-        	ex.printStackTrace();
+        	Logger.error("Problem creating record", ex);
             return internalServerError (ex.getMessage());
         }
     }
@@ -1528,51 +1528,14 @@ public class EntityFactory extends Controller {
             
             //this saves and everything
             EntityPersistAdapter.storeEditForUpdate(previousValContainer.getValueClass(), previousValContainer.id, eh.edit);
-            LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
+            
             try{
-            	JsonNode jp = JsonDiff.asJson(
-        			mapper.readTree(oldJSON),
-        			mapper.valueToTree(newValue)
-        			);
+            	Stack<Object> changeStack =ObjectChangeUtils.applyChanges(previousValContainer.value, newValue);
             	
-            	System.out.println("============");
-            	if(jp==null){
-            		System.out.println("There are no changes?");
-            	}
-            	for(JsonNode change:jp){
-            		System.out.println(
-            				change.get("op").asText() + "\t" + 
-            				change.get("path").asText() + "\t" + 
-            				change.get("value")
-            				);
-            		String path=change.get("path").asText();
-            		if("replace".equals(change.get("op").asText())){
-            			Object newv=ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(newValue, path,null);
-            			ObjectChangeUtils.ObjectPointerFetcher.setObjectAt(previousValContainer.value, path, newv,changedContainers);
-            			System.out.println("Now it's:" + ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path,null));
-            		}else if("remove".equals(change.get("op").asText())){
-            			ObjectChangeUtils.ObjectPointerFetcher.removeObjectAt(previousValContainer.value, path,changedContainers);
-            			//System.out.println("Now it's:" + Tester.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path));
-            			
-            		}else if("add".equals(change.get("op").asText())){
-            			System.out.println("It was:" + ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path.replaceAll("[/][^/]*$", ""),null));
-            			
-            			Object newv=ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(newValue, path,null);
-            			ObjectChangeUtils.ObjectPointerFetcher.addObjectAt(previousValContainer.value, path,newv,changedContainers);
-            			System.out.println("Now it's:" + ObjectChangeUtils.ObjectPointerFetcher.getObjectAt(previousValContainer.value, path.replaceAll("[/][^/]*$", ""),null));
-            			
-            		}
-                	
-            	}
-            	System.out.println("============");
-            	Stack<Object> changeStack = new Stack<Object>();
-            	for(Object o:changedContainers){
-            		changeStack.push(o);
-            	}
             	while(!changeStack.isEmpty()){
             		
             		Object v=changeStack.pop();
-            		System.out.println("Setting ... " + v.getClass().getName());
+            		//System.out.println("Setting ... " + v.getClass().getName());
             		if(v instanceof ForceUpdatableModel){
                 		((ForceUpdatableModel)v).forceUpdate();
                 	}else if(v instanceof Model){
@@ -1611,7 +1574,7 @@ public class EntityFactory extends Controller {
             	
                
             }
-            //Should this really be here?
+            //Should this be here?
             //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
             
             tx.commit();
@@ -1619,7 +1582,7 @@ public class EntityFactory extends Controller {
             return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {
-            ex.printStackTrace();
+        	Logger.error("Error updating record", ex);
             return internalServerError (ex.getMessage());
         }
         finally {

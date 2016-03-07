@@ -5,13 +5,24 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import com.github.fge.jsonpatch.diff.JsonDiff;
+
+import ix.core.controllers.EntityFactory;
+import ix.core.controllers.EntityFactory.EntityMapper;
 
 
 /**
@@ -41,18 +52,87 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * 
  *  
  * What is not yet done:
- * 	[ ]	"move" and "copy" operations of JSONPatch are not applied
- *  [ ] A JSONPatch itself can not be applied an existing object
+ * 	[?]	"move" and "copy" operations of JSONPatch are not applied
+ *  [?] A JSONPatch itself can not be applied an existing object
  * 	[ ] Array handling is likely broken
  *  [ ] Certain Collection operations are also problematic, specifically involving
  *      the ambiguous '/-' JSONPointer notation, which may mean different things
  *      depending on context
  * 
- * 
+ *  [?]=Possibly fixed, untested
+ *  [ ]=No fix attempted
+ *  [X]=Fixed, tested
  * 
  */
 
 public class ObjectChangeUtils {
+	
+	public static Stack applyPatch(Object oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
+		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+		JsonNode newNode=jp.apply(mapper.valueToTree(oldValue));
+		Object newValue = mapper.treeToValue(newNode,oldValue.getClass());
+		return applyChanges(oldValue,newValue);
+	}
+	
+	public static Stack applyChanges(Object oldValue, Object newValue){
+		LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
+		ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+		JsonNode jp = JsonDiff.asJson(
+    			mapper.valueToTree(oldValue),
+    			mapper.valueToTree(newValue)
+    			);
+        	
+        	if(jp==null){
+        		System.out.println("There are no changes?");
+        	}
+        	for(JsonNode change:jp){
+        		/*
+        		System.out.println(
+        				change.get("op").asText() + "\t" + 
+        				change.get("path").asText() + "\t" + 
+        				change.get("value")
+        				);
+        		*/
+        		String path=change.get("path").asText();
+        		String from=path;
+        		Object newv=null;
+        		String op=change.get("op").asText();
+        		if("replace".equals(op) ||
+        			   "add".equals(op)	
+        				){
+        			newv=Manipulator.getObjectAt(newValue, path, null);
+        		}
+        		if("copy".equals(op) ||
+        		   "move".equals(op) 
+         				){
+        			from=change.get("from").asText();
+         			newv=Manipulator.getObjectAt(oldValue, from, null);
+         		}
+        		
+        		
+        	    if("replace".equals(op)){
+        			Manipulator.setObjectAt(oldValue, path, newv, changedContainers);
+        		}
+        	    if("remove".equals(op) ||
+        	         "move".equals(op)
+        	    		){
+        			Manipulator.removeObjectAt(oldValue, from, changedContainers);
+        		}
+        	    if( "add".equals(op) ||
+        		   "copy".equals(op) ||
+        		   "move".equals(op)
+        				){
+        			Manipulator.addObjectAt(oldValue, path, newv, changedContainers);
+        		}
+            	
+        	}
+        	//System.out.println("============");
+        	Stack<Object> changeStack = new Stack<Object>();
+        	for(Object o:changedContainers){
+        		changeStack.push(o);
+        	}
+        	return changeStack;
+	}
 	public static class TypeRegistry{
 		private Class cls;
 		Map<String,Getter> getters;
@@ -65,6 +145,10 @@ public class ObjectChangeUtils {
 		}
 		
 		public static Map<String,Getter> getGetters(Class cls){
+			// You may wonder why this is concurrent. That's because it's
+			// written to use putIfAbsent, which exists in java 8,
+			// but not Maps in java 7. It is only default in ConcurrentHashMap
+			
 			ConcurrentHashMap<String,Getter> getterMap = new ConcurrentHashMap<String,Getter>();
 			
 			for(Method m: cls.getMethods()){
@@ -93,6 +177,7 @@ public class ObjectChangeUtils {
 							);
 				}
 			}
+			
 			for(Field m: cls.getFields()){
 				if(isImplicitGetterField(m)){
 					getterMap.putIfAbsent(
@@ -113,7 +198,6 @@ public class ObjectChangeUtils {
 				getterMap.remove(s);
 			}
 			
-			
 			return getterMap;
 		}
 		
@@ -121,7 +205,6 @@ public class ObjectChangeUtils {
 			ConcurrentHashMap<String,Setter> setterMap = new ConcurrentHashMap<String,Setter>();
 			
 			for(Method m: cls.getMethods()){
-				
 				if(isExplicitSetterMethod(m)){
 					setterMap.putIfAbsent(
 							getMethodProperty(m),
@@ -166,11 +249,8 @@ public class ObjectChangeUtils {
 			for(String s:toRemove){
 				setterMap.remove(s);
 			}
-			
-			
 			return setterMap;
 		}
-		
 		public static boolean isExplicitGetterMethod(Method m){
 			JsonProperty jp= m.getAnnotation(JsonProperty.class);
 			if(jp!=null){
@@ -357,9 +437,9 @@ public class ObjectChangeUtils {
 			@Override
 			public boolean isIgnored() {return this.ignore;}
 		}
-		
 	}
-	public static class ObjectPointerFetcher {
+	
+	public static class Manipulator {
 		private static Map<String, TypeRegistry> registries= new HashMap<String,TypeRegistry>();
 		
 		public static void addClassToRegistry(Class cls){
@@ -384,15 +464,12 @@ public class ObjectChangeUtils {
 					throw new IllegalStateException("Element '" + c + "' does not exist in collection of size " + ((Collection)o).size());
 				}
 				int i=0;
-				
 				for(Object f:(Collection)o){
 					if(i==c){
 						return f;
 					}
 					i++;
 				}
-				
-				
 			}
 			return tr.getters.get(prop).get(o);
 		}
@@ -436,9 +513,6 @@ public class ObjectChangeUtils {
 			}
 			if(tr.setters.containsKey(prop)){
 				return tr.setters.get(prop);
-			}else{
-				//System.out.println(tr.setters.keySet() + " in class '" + o.getClass() +  "' does not have " + prop);
-				//System.out.println(tr.getters.keySet() + " are the getters");
 			}
 			return null;
 		}
@@ -493,9 +567,6 @@ public class ObjectChangeUtils {
 					@Override
 					public boolean isIgnored() {return false;}
 				};
-			}else{
-				//System.out.println(tr.setters.keySet() + " in class '" + o.getClass() +  "' does not have " + prop);
-				//System.out.println(tr.getters.keySet() + " are the getters");
 			}
 			return null;
 		}
@@ -560,9 +631,6 @@ public class ObjectChangeUtils {
 			if(tr.setters.containsKey(prop)){
 				final TypeRegistry.Setter setter=tr.setters.get(prop);
 				return setter;
-			}else{
-				//System.out.println(tr.setters.keySet() + " in class '" + o.getClass() +  "' does not have " + prop);
-				//System.out.println(tr.getters.keySet() + " are the getters");
 			}
 			return null;
 		}
@@ -588,7 +656,6 @@ public class ObjectChangeUtils {
 		}
 		
 		public static void setObjectAt(Object src, String objPointer, Object newValue, Collection<Object> changeChain){
-			//System.out.println(objPointer);
 			if(objPointer==null||objPointer.equals(""))return;
 			String subPath=objPointer.replaceAll("/[^/]*$", "");
 			String lastPath=objPointer.replaceAll(".*/([^/]*)$", "$1");
@@ -598,14 +665,13 @@ public class ObjectChangeUtils {
 			TypeRegistry.Setter s=getSetterDirect(fetched,lastPath);
 			if(s!=null){
 				s.set(fetched, newValue);
-				System.out.println("able to set:" + fetched.getClass());
+				//System.out.println("able to set:" + fetched.getClass());
 				setObjectAt(src,subPath,fetched,changeChain);
 			}else{
-				System.out.println("not able to set:" + fetched.getClass());
+				//System.out.println("not able to set:" + fetched.getClass());
 			}
 		}
 		public static void removeObjectAt(Object src, String objPointer, Collection<Object> changeChain){
-			//System.out.println(objPointer);
 			List<Object> visited= new ArrayList<Object>();
 			String subPath=objPointer.replaceAll("/[^/]*$", "");
 			String lastPath=objPointer.replaceAll(".*/([^/]*)$", "$1");
@@ -618,7 +684,7 @@ public class ObjectChangeUtils {
 			TypeRegistry.Setter s=getRemoverDirect(fetched,lastPath);
 			if(s!=null){
 				s.set(fetched, null);
-				System.out.println("able to remove:" + fetched.getClass());
+				//System.out.println("able to remove:" + fetched.getClass());
 				//Ideally, "fetched" is set correctly now,
 				//so save up the tree
 				setObjectAt(src,subPath,fetched,visited);
@@ -642,7 +708,7 @@ public class ObjectChangeUtils {
 			TypeRegistry.Setter s=getAdderDirect(fetched,lastPath);
 			if(s!=null){
 				s.set(fetched, set);
-				System.out.println("able to add:" + fetched.getClass());
+				//System.out.println("able to add:" + fetched.getClass());
 				//Ideally, "fetched" is set correctly now,
 				//so save up the tree
 				setObjectAt(src,subPath,fetched,visited);
@@ -652,9 +718,5 @@ public class ObjectChangeUtils {
 			}
 			changeChain.addAll(visited);
 		}
-		
-		
-		
-		
 	}
 }

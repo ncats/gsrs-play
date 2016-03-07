@@ -480,7 +480,7 @@ public class EditingWorkflowTest {
 		assertEquals("testGROUP",updateFetched.at("/access/0").textValue());
 		
 		
-		System.out.println("This is the group now" + updateFetched.at("/access/0").textValue());
+		//System.out.println("This is the group now" + updateFetched.at("/access/0").textValue());
 		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
 		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
 								.replace("/version")
