@@ -107,7 +107,7 @@ public class EditingWorkflowTest {
    	}
     
     @Test
-    @Ignore("Never finished writing this")
+  //  @Ignore("Never finished writing this")
    	public void testAddNameRemote() {
    		ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
@@ -430,6 +430,8 @@ public class EditingWorkflowTest {
     	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched)
     			.copy("/names/-","/names/0")
     			.set("/names/1/name", newName)
+    			.remove("/names/1/uuid")
+    			.remove("/names/1/displayName")
     			.build();
     	
 		ts.updateSubstanceJSON(updated);
@@ -442,6 +444,8 @@ public class EditingWorkflowTest {
 								.replace("/version")
 								.replace("/lastEdited")
 								.replace("/names/1/lastEdited")
+								.replace("/names/1/_self")
+								.added("/names/1/uuid")
 								
 								.build();
 		
