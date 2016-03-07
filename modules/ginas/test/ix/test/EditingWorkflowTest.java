@@ -63,11 +63,9 @@ public class EditingWorkflowTest {
    		ts.run(new Runnable() {
                public void run() {
                    try {
-                   	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+                   	ts.loginFakeUser1();
                    	JsonNode entered=getTestSubstance(resource);
-                   	String uuid=entered.get("uuid").asText();              	
                    	testEntered(entered);
-                   	
    					
                    } catch (Throwable e1) {
                    	e1.printStackTrace();

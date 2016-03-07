@@ -1,4 +1,5 @@
 package ix.utils;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -53,46 +54,91 @@ import ix.core.controllers.EntityFactory.EntityMapper;
  *  
  * What is not yet done:
  * 	[?]	"move" and "copy" operations of JSONPatch are not applied
- *  [?] A JSONPatch itself can not be applied an existing object
+ *  [/] A JSONPatch itself can not be applied an existing object
  * 	[ ] Array handling is likely broken
  *  [ ] Certain Collection operations are also problematic, specifically involving
  *      the ambiguous '/-' JSONPointer notation, which may mean different things
  *      depending on context
  * 
- *  [?]=Possibly fixed, untested
  *  [ ]=No fix attempted
+ *  [?]=Possibly fixed, untested
+ *  [/]=Probably fixed, a little tested
  *  [X]=Fixed, tested
  * 
  */
 
-public class ObjectChangeUtils {
+public class ObjectDiff {
 	
-	public static Stack applyPatch(Object oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
-		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
-		JsonNode newNode=jp.apply(mapper.valueToTree(oldValue));
-		Object newValue = mapper.treeToValue(newNode,oldValue.getClass());
-		return applyChanges(oldValue,newValue);
+	public static class JsonObjectPatch implements ObjectPatch{
+		private JsonPatch jp;
+		public JsonObjectPatch(JsonPatch jp){this.jp=jp;}
+		public Stack apply(Object old) throws Exception{
+			return applyPatch(old,jp);
+		}
 	}
 	
-	public static Stack applyChanges(Object oldValue, Object newValue){
-		LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
-		ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
-		JsonNode jp = JsonDiff.asJson(
-    			mapper.valueToTree(oldValue),
-    			mapper.valueToTree(newValue)
-    			);
+	public static class LazyObjectPatch implements ObjectPatch{
+		private Object oldV;
+		private Object newV;
+		JsonNode jp;
+		public LazyObjectPatch(Object oldV, Object newV){
+			this.oldV=oldV;
+			this.newV=newV;
+		}
+		public Stack apply(Object old) throws Exception{
+			if(jp==null){
+				jp=getJsonDiff(oldV,newV);
+			}
+			if(old==oldV){
+				return applyChanges(oldV,newV, jp);
+			}else{
+				return new JsonObjectPatch(JsonPatch.fromJson(jp)).apply(old);
+			}
+		}
+	}
+	
+	
+	public static ObjectPatch getDiff(Object oldValue, Object newValue){
+		return new LazyObjectPatch(oldValue,newValue);
+	}
+	
+	public static ObjectPatch fromJsonPatch(JsonPatch jp) throws IOException{
+		return new JsonObjectPatch(jp);
+	}
+	
+	
+	private static Stack applyPatch(Object oldValue, JsonPatch jp) throws IllegalArgumentException, JsonPatchException, JsonProcessingException{
+		EntityMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+		JsonNode oldNode=mapper.valueToTree(oldValue);
+		JsonNode newNode=jp.apply(oldNode);
+		//jp.
+		Object newValue = mapper.treeToValue(newNode,oldValue.getClass());
+		return applyChanges(oldValue,newValue,null);
+	}
+	private static JsonNode getJsonDiff(Object oldValue, Object newValue){
+		
+			ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+			
+			return JsonDiff.asJson(
+	    			mapper.valueToTree(oldValue),
+	    			mapper.valueToTree(newValue)
+	    			);
+	}
+	
+	private static Stack applyChanges(Object oldValue, Object newValue, JsonNode jsonpatch){
+			LinkedHashSet<Object> changedContainers = new LinkedHashSet<Object>();
+			if(jsonpatch==null){
+				ObjectMapper mapper = EntityFactory.EntityMapper.FULL_ENTITY_MAPPER();
+				jsonpatch = JsonDiff.asJson(
+		    			mapper.valueToTree(oldValue),
+		    			mapper.valueToTree(newValue)
+		    			);
+			}
         	
-        	if(jp==null){
+        	if(jsonpatch==null){
         		System.out.println("There are no changes?");
         	}
-        	for(JsonNode change:jp){
-        		/*
-        		System.out.println(
-        				change.get("op").asText() + "\t" + 
-        				change.get("path").asText() + "\t" + 
-        				change.get("value")
-        				);
-        		*/
+        	for(JsonNode change:jsonpatch){
         		String path=change.get("path").asText();
         		String from=path;
         		Object newv=null;
@@ -133,7 +179,7 @@ public class ObjectChangeUtils {
         	}
         	return changeStack;
 	}
-	public static class TypeRegistry{
+	private static class TypeRegistry{
 		private Class cls;
 		Map<String,Getter> getters;
 		Map<String,Setter> setters;
@@ -439,7 +485,7 @@ public class ObjectChangeUtils {
 		}
 	}
 	
-	public static class Manipulator {
+	private static class Manipulator {
 		private static Map<String, TypeRegistry> registries= new HashMap<String,TypeRegistry>();
 		
 		public static void addClassToRegistry(Class cls){

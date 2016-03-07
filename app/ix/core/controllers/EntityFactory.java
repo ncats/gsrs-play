@@ -1,74 +1,84 @@
 package ix.core.controllers;
 
-import java.io.*;
-import java.security.*;
-import java.util.*;
-import java.util.regex.*;
-import java.util.concurrent.*;
-import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Array;
-import java.lang.reflect.Type;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.TreeSet;
+import java.util.UUID;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Column;
-import javax.persistence.Id;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.OptimisticLockException;
 
-import ix.core.models.*;
-import ix.core.models.Principal;
-import play.libs.Json;
-import play.*;
-import play.db.ebean.*;
-import play.data.*;
-import play.mvc.*;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Expr;
+import com.avaje.ebean.FutureRowCount;
+import com.avaje.ebean.Query;
+import com.avaje.ebean.Transaction;
+import com.avaje.ebean.annotation.Transactional;
+import com.avaje.ebean.bean.EntityBean;
+import com.avaje.ebean.bean.EntityBeanIntercept;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.JsonPatchException;
-import com.github.fge.jsonpatch.diff.JsonDiff;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationConfig;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.Version;
-import com.avaje.ebean.*;
-import com.avaje.ebean.annotation.Transactional;
-import com.avaje.ebean.event.BeanPersistListener;
-import com.avaje.ebean.bean.*;
 
-import ix.core.UserFetcher;
 import ix.core.ValidationMessage;
 import ix.core.Validator;
 import ix.core.adapters.EntityPersistAdapter;
-import ix.core.controllers.EntityFactory.EntityMapper;
+import ix.core.models.BeanViews;
+import ix.core.models.DataVersion;
+import ix.core.models.ETag;
+import ix.core.models.Edit;
+import ix.core.models.ForceUpdatableModel;
 import ix.core.models.Principal;
-import ix.core.search.TextIndexer;
+import ix.core.models.Structure;
 import ix.core.plugins.TextIndexerPlugin;
-import ix.ginas.models.KeywordListDeserializer;
+import ix.core.search.TextIndexer;
 import ix.ginas.models.v1.Substance;
-import ix.ncats.controllers.security.IxDeadboltHandler;
-import ix.utils.Util;
 import ix.utils.Global;
-import ix.utils.ObjectChangeUtils;
+import ix.utils.ObjectDiff;
+import ix.utils.ObjectPatch;
+import ix.utils.Util;
+import play.Logger;
+import play.Play;
+import play.db.ebean.Model;
+import play.mvc.Controller;
+import play.mvc.Http;
+import play.mvc.Result;
+import play.mvc.Results;
 
 public class EntityFactory extends Controller {
     private static final String RESPONSE_TYPE_PARAMETER = "type";
@@ -1505,58 +1515,52 @@ public class EntityFactory extends Controller {
         try {       
             Object newValue = mapper.treeToValue(json, type);
             if(validator!=null){
-	            List<ValidationMessage> validationMessages= (List<ValidationMessage>) validator.getValidationMessageContainer();
+	            List<ValidationMessage> validationMessages= 
+	            		(List<ValidationMessage>) validator.getValidationMessageContainer();
 	            if(!validator.validate(newValue,validationMessages)){
 	            	return validationResponse(false, validationMessages);
 	            }
             }
 
-            FetchedValue previousValContainer=getCurrentValue(newValue);
-            String oldVersion=EntityFactory.getVersionForBeanAsString(previousValContainer.value);
-            //System.out.println("The old version was:" + oldVersion);
-            String newVersion=EntityFactory.getVersionForBeanAsString(newValue);
+            FetchedValue oldValueContainer=getCurrentValue(newValue);
+            String oldVersion=EntityFactory.getVersionForBeanAsString(oldValueContainer.value);
             
-            if(previousValContainer.value==null){
+            if(oldValueContainer.value==null){
             	throw new IllegalStateException("Cannot update a non-existing record");
             }
             
-            String oldJSON=mapper.toJson(previousValContainer.value);
-            
+            String oldJSON=mapper.toJson(oldValueContainer.value);
             
             EditHistory eh = new EditHistory (json.toString());
             
-            
             //this saves and everything
-            EntityPersistAdapter.storeEditForUpdate(previousValContainer.getValueClass(), previousValContainer.id, eh.edit);
+            EntityPersistAdapter.storeEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id, eh.edit);
             
-            try{
-            	Stack<Object> changeStack =ObjectChangeUtils.applyChanges(previousValContainer.value, newValue);
-            	
-            	while(!changeStack.isEmpty()){
-            		
-            		Object v=changeStack.pop();
-            		//System.out.println("Setting ... " + v.getClass().getName());
-            		if(v instanceof ForceUpdatableModel){
-                		((ForceUpdatableModel)v).forceUpdate();
-                	}else if(v instanceof Model){
-                		((Model)v).update();
-                	}
+            //Get the difference as a patch
+            ObjectPatch op =ObjectDiff.getDiff(oldValueContainer.value, newValue);
+            
+            //Apply the changes, grabbing every change along the way
+            Stack changeStack=op.apply(oldValueContainer.value);
+        	
+            
+        	while(!changeStack.isEmpty()){
+        		Object v=changeStack.pop();
+        		if(v instanceof ForceUpdatableModel){
+            		((ForceUpdatableModel)v).forceUpdate();
+            	}else if(v instanceof Model){
+            		((Model)v).update();
             	}
-            	
-            	
-            	newValue = previousValContainer.value;
-            	
-                
-            }catch(Throwable e){
-            	e.printStackTrace();
-            	throw e;
-            }
+        	}
+        	
+        	//The old value is now the new value
+        	newValue = oldValueContainer.value;
+        	
+        	
             String newJSON=mapper.toJson(newValue);
             
+            //granular parts not working yet
             if (newValue != null) {
-            	//for now, we won't use this form of edithistory
-            	if(true){
-	                Object id = getId (newValue);
+            	    Object id = getId (newValue);
 	                eh.edit.refid = id != null ? id.toString() : null;
 	                eh.edit.kind = newValue.getClass().getName();
 	                eh.edit.oldValue=oldJSON;
@@ -1567,18 +1571,12 @@ public class EntityFactory extends Controller {
 	                    e.batch = eh.edit.id.toString();
 	                    e.save();
 	                }
-	                //System.out.println("Saved new edit version?");
 	                Logger.debug("** New edit history "+eh.edit.id);
-            	}
-            	
-            	
-               
             }
             //Should this be here?
             //EntityPersistAdapter.popEditForUpdate(previousValContainer.getValueClass(), previousValContainer.value);
             
             tx.commit();
-            //System.out.println("completely done saving");
             return ok (mapper.valueToTree(newValue));          
         }
         catch (Exception ex) {
