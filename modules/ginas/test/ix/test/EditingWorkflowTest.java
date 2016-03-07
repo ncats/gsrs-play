@@ -27,12 +27,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * TODO: 
  * [done] add references (add/remove) check
+ * add checks for access control of edits for non-logged in users
  * add names (add/remove) check
  * add codes (add/remove) check
+ * add other editor changing something
  * add chemical access (add/remove) check
  * add names reordering check
  * add access reordering check
- * add what would look like a "copy" operation check
+ * add what would look like a "copy" operation check 
+ * refactor
  *
  */
 public class EditingWorkflowTest {
@@ -272,7 +275,7 @@ public class EditingWorkflowTest {
    		ts.run(new Runnable() {
                public void run() {
                    try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+                	ts.loginFakeUser1();
                    	
                    	JsonNode entered=getTestSubstance(resource);
                    	String uuid=entered.get("uuid").asText();              	
@@ -280,7 +283,7 @@ public class EditingWorkflowTest {
    					
    					
                    } catch (Throwable e1) {
-                   	e1.printStackTrace();
+                   	   e1.printStackTrace();
                        throw new IllegalStateException(e1);
                    }
                }
