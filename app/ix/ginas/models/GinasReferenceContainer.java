@@ -23,8 +23,8 @@ public class GinasReferenceContainer {
     public Long id;
 	
 	@ManyToMany(cascade = CascadeType.PERSIST)
-    @JsonSerialize(using=ReferenceListSerializer.class)    
-	@JsonDeserialize(using=ReferenceListDeserializer.class)
+    @JsonSerialize(using=ReferenceSetSerializer.class)    
+	@JsonDeserialize(using=ReferenceSetDeserializer.class)
     public Set<Keyword> references = new LinkedHashSet<Keyword>();
     public String entityType;
 

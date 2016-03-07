@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author peryeata
  *
  * TODO: 
- * add references (add/remove) check
+ * [done] add references (add/remove) check
  * add names (add/remove) check
  * add codes (add/remove) check
  * add chemical access (add/remove) check
@@ -232,6 +232,29 @@ public class EditingWorkflowTest {
                    	
                    	testEntered(entered);
                    	testAddAccessGroupServer(uuid);
+   					
+   					
+                   } catch (Throwable e1) {
+                   	e1.printStackTrace();
+                       throw new IllegalStateException(e1);
+                   }
+               }
+           });
+   	}
+    
+    @Test
+   	public void testAddReferenceToExistingProtein() {
+   		final File resource=new File("test/testJSON/toedit.json");
+   		ts.run(new Runnable() {
+               public void run() {
+                   try {
+                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+                   	
+                   	JsonNode entered=getTestSubstance(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	
+                   	testEntered(entered);
+                   	testAddReferenceNameServer(uuid);
    					
    					
                    } catch (Throwable e1) {
@@ -485,6 +508,29 @@ public class EditingWorkflowTest {
 		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
 								.replace("/version")
 								.replace("/lastEdited")
+								
+								.build();
+		
+		assertEquals(expectedChanges, changes);
+		return fetched;
+    }
+    
+    public JsonNode testAddReferenceNameServer(String uuid){
+    	
+    	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+    
+    	String ref=fetched.at("/references/5/uuid").asText();
+    	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/names/0/references/-", ref).build();
+		ts.updateSubstanceJSON(updated);
+		JsonNode updateFetched = ts.fetchSubstanceJSON(uuid);
+		
+		
+		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
+		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
+				
+								.replace("/version")
+								.replace("/lastEdited")
+								.replace("/names/0/lastEdited")
 								
 								.build();
 		

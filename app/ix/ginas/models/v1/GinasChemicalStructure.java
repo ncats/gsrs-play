@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,8 @@ import ix.ginas.models.GroupListDeserializer;
 import ix.ginas.models.GroupListSerializer;
 import ix.ginas.models.PrincipalDeserializer;
 import ix.ginas.models.PrincipalSerializer;
-import ix.ginas.models.ReferenceListSerializer;
+import ix.ginas.models.ReferenceSetDeserializer;
+import ix.ginas.models.ReferenceSetSerializer;
 
 @Entity
 @DiscriminatorValue("GSRS")
@@ -137,28 +139,22 @@ public class GinasChemicalStructure extends Structure implements GinasAccessRefe
     	return new LinkedHashSet<Group>();
     }
 
-	@JsonSerialize(using = ReferenceListSerializer.class)
+	@JsonSerialize(using = ReferenceSetSerializer.class)
 	public Set<Keyword> getReferences() {
 		if (recordReference != null) {
 			return recordReference.getReferences();
 		}
-		return null;
+		return new HashSet<Keyword>();
 	}
-
-	@JsonProperty("references")
-	public void setReferences(Collection<String> references) {
-		ObjectMapper om = new ObjectMapper();
-		Map mm = new HashMap();
-		mm.put("references", references);
-		mm.put("entityType", this.getClass().getName());
-		JsonNode jsn = om.valueToTree(mm);
-		
-		try {
-			recordReference = om.treeToValue(jsn, GinasReferenceContainer.class);
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
-		return;
+	
+	@JsonProperty("references")    
+    @JsonDeserialize(using = ReferenceSetDeserializer.class)
+	@Override
+	public void setReferences(Set<Keyword> references) {
+    	if(this.recordReference==null){
+    		this.recordReference=new GinasReferenceContainer(this);
+    	}
+    	this.recordReference.setReferences(references);
 	}
 
 	public Set<Group> getAccessGroups() {
