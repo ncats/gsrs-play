@@ -1171,7 +1171,7 @@
             scope: {
                 value: '='
             },
-            template: '<div><i class="fa fa-lock fa-2x warning" id="access-directive"></i><span ng-repeat = "access in value"><br>{{access.display}}</span></div>'
+            template: '<div><i class="fa fa-lock fa-2x warning" id="access-directive"></i><span ng-repeat = "access in value"><br>{{access.display || access}}</span></div>'
         };
     });
 

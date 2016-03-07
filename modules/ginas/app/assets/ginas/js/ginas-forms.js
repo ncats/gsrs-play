@@ -1500,9 +1500,15 @@ console.log(scope);
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
 
-                scope.submitFile = function () {
+                scope.submitFile = function (file) {
+                    console.log(scope);
+                    console.log(scope.uploadFile);
+                    console.log(file);
                     //create form data object
                     var fd = new FormData();
+                    if(file){
+                        scope.uploadFile = file;
+                    }
                     //  fd.append('file', scope.uploadFile);
                     fd.append('file-name', scope.uploadFile);
                     fd.append('file-type', scope.uploadFile.type);
@@ -1512,6 +1518,8 @@ console.log(scope);
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
                         _.set(scope.reference, 'uploadedFile', data.url);
+                        scope.uploadFile={};
+                        scope.uploadDoc=false;
                     }).error(function (err) {
                     });
                 };
