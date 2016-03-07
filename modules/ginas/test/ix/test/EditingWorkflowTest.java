@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * TODO: 
  * [done] add references (add/remove) check
- * add checks for access control of edits for non-logged in users
+ * [done] add checks for access control of edits for non-logged in users
  * add names (add/remove) check
  * add codes (add/remove) check
  * add other editor changing something
@@ -37,23 +37,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  */
 public class EditingWorkflowTest {
-	private final static boolean THIS_IS_TERRIBLE=true;
-	private final static boolean WE_NEED_TO_FIX_THIS=true;
-	
-	//Change this to make the testVersionUpdate test pass, and the others fail
-	private final static boolean EVERYTHING_WILL_BE_OK=true;
+
 
     final File resource=new File("test/testJSON/toedit.json");
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
 
-    //@Ignore("This test is ignored, because it will explicitly fail. If you can make it pass, you can make the other failed tests pass.")
-    @Test
-    public void testVersionUpdate(){
-    	assert(THIS_IS_TERRIBLE);
-    	assert(WE_NEED_TO_FIX_THIS);
-    	assert(EVERYTHING_WILL_BE_OK);     //commented out, to ensure next code executes
-    }
+
     
        
     @Test
@@ -335,9 +325,9 @@ public class EditingWorkflowTest {
 
         System.out.println("LEV DISTANCE = " + distance);
 
-    	assertTrue("Levenshtein Distance (" + distance + ") of page HTML should be greater than (1)",distance>0);
-    	assertTrue("New lines (" + inNewButNotOld.size() + ") of page HTML should be greater than (1)",inNewButNotOld.size()>0);
-    	assertTrue("Removed lines (" + inOldButNotNew.size() + ") of page HTML should be greater than (1)",inOldButNotNew.size()>0);
+    	assertTrue("Levenshtein Distance (" + distance + ") of page HTML should be greater than (0)",distance>0);
+    	assertTrue("New lines (" + inNewButNotOld.size() + ") of page HTML should be greater than (0)",inNewButNotOld.size()>0);
+    	assertTrue("Removed lines (" + inOldButNotNew.size() + ") of page HTML should be greater than (0)",inOldButNotNew.size()>0);
     	
     }
     
@@ -532,9 +522,9 @@ public class EditingWorkflowTest {
     	
     	//This should be set to true to make the REAL test run.
     	//It's hardcoded at false now to stop the test from failing
-    	if(EVERYTHING_WILL_BE_OK){
+    	//if(EVERYTHING_WILL_BE_OK){
     		changeBuilder=changeBuilder.replace("/protein/lastEdited");
-    	}
+    	//}
     	
     	assertEquals(
     			changeBuilder.build()
