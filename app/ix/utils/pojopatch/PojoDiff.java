@@ -1,4 +1,4 @@
-package ix.utils;
+package ix.utils.pojopatch;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -67,9 +67,9 @@ import ix.core.controllers.EntityFactory.EntityMapper;
  * 
  */
 
-public class ObjectDiff {
+public class PojoDiff {
 	
-	public static class JsonObjectPatch implements ObjectPatch{
+	public static class JsonObjectPatch implements PojoPatch{
 		private JsonPatch jp;
 		public JsonObjectPatch(JsonPatch jp){this.jp=jp;}
 		public Stack apply(Object old) throws Exception{
@@ -77,7 +77,7 @@ public class ObjectDiff {
 		}
 	}
 	
-	public static class LazyObjectPatch implements ObjectPatch{
+	public static class LazyObjectPatch implements PojoPatch{
 		private Object oldV;
 		private Object newV;
 		JsonNode jp;
@@ -98,11 +98,11 @@ public class ObjectDiff {
 	}
 	
 	
-	public static ObjectPatch getDiff(Object oldValue, Object newValue){
+	public static PojoPatch getDiff(Object oldValue, Object newValue){
 		return new LazyObjectPatch(oldValue,newValue);
 	}
 	
-	public static ObjectPatch fromJsonPatch(JsonPatch jp) throws IOException{
+	public static PojoPatch fromJsonPatch(JsonPatch jp) throws IOException{
 		return new JsonObjectPatch(jp);
 	}
 	

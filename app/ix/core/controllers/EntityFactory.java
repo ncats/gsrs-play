@@ -69,9 +69,9 @@ import ix.core.plugins.TextIndexerPlugin;
 import ix.core.search.TextIndexer;
 import ix.ginas.models.v1.Substance;
 import ix.utils.Global;
-import ix.utils.ObjectDiff;
-import ix.utils.ObjectPatch;
 import ix.utils.Util;
+import ix.utils.pojopatch.PojoDiff;
+import ix.utils.pojopatch.PojoPatch;
 import play.Logger;
 import play.Play;
 import play.db.ebean.Model;
@@ -1537,10 +1537,10 @@ public class EntityFactory extends Controller {
             EntityPersistAdapter.storeEditForUpdate(oldValueContainer.getValueClass(), oldValueContainer.id, eh.edit);
             
             //Get the difference as a patch
-            ObjectPatch op =ObjectDiff.getDiff(oldValueContainer.value, newValue);
+            PojoPatch patch =PojoDiff.getDiff(oldValueContainer.value, newValue);
             
             //Apply the changes, grabbing every change along the way
-            Stack changeStack=op.apply(oldValueContainer.value);
+            Stack changeStack=patch.apply(oldValueContainer.value);
         	
             
         	while(!changeStack.isEmpty()){
