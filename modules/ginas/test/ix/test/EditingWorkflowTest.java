@@ -58,6 +58,29 @@ public class EditingWorkflowTest {
     
        
     @Test
+   	public void testFailUpdateNoUserProtein() {
+   		final File resource=new File("test/testJSON/toedit.json");
+   		ts.run(new Runnable() {
+               public void run() {
+                   try {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered=getTestSubstance(resource);
+                   	testEntered(entered);
+                   	ts.logout();
+                   	String uuid=entered.get("uuid").asText();              	
+                   	
+                   	ts.fetchSubstance(uuid);
+                   	ts.updateSubstanceFail(entered);
+   					
+                   } catch (Throwable e1) {
+                   	e1.printStackTrace();
+                       throw new IllegalStateException(e1);
+                   }
+               }
+           });
+   	}
+    
+    @Test
    	public void testSubmitProtein() {
    		final File resource=new File("test/testJSON/toedit.json");
    		ts.run(new Runnable() {
