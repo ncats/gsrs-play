@@ -38,11 +38,11 @@
                 <ng-form class="form" enctype="multipart/form-data" ng-submit="submitFile()">
                     <div class="col-md-6">
                         <label for="upload">Upload a Document</label><br>
-                        <file-field ng-show="!reference.uploadedFile && !uploadFile" ng-model="uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                        <file-field ng-show="!reference.uploadedFile && !$$uploadFile" ng-model="$$uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
                         <br>
-                        {{uploadFile.name}}
+                        {{$$uploadFile.name}}
                         <br>
-                        <button ng-hide ="reference.uploadedFile || !uploadFile" class ="btn btn-default" ng-click ="submitFile();"><i class="fa fa-upload"></i></button>
+                        <button ng-hide ="reference.uploadedFile || !$$uploadFile" class ="btn btn-default" ng-click ="submitFile();"><i class="fa fa-upload"></i></button>
                         <button ng-show ="reference.uploadedFile" class ="btn btn-success" disabled><i class="fa fa-check"></i></button>
                     </div>
                 </ng-form>
@@ -81,27 +81,26 @@
                 <div class="col-md-1">
                     <check-box-view-edit obj="obj" field="publicDomain" label="Public Domain"></check-box-view-edit>
                 </div>
-                <div class="col-md-1">
-                    <label for="uploader">Upload a Document</label><br>
-                    <i class="fa fa-upload fa-2x success" ng-click = "uploadDoc=true" id="uploader"></i>
-                </div>
-                <div ng-if="obj.uploadedFile" class="col-md-1">
-                    <a ng-href = {{uploadedFile}}><i class ="fa fa-file-text fa-2x success"></i></a>
+                <div  class="col-md-1">
+                    <label for="uploader">Document</label><br>
+                    <a ng-href = {{obj.uploadedFile}} ng-if="obj.uploadedFile">
+                        <i class ="fa fa-file-text fa-stack-2x success"></i>
+                        </a>
+                    <i class="fa fa-upload fa-2x success"  ng-show="!obj.uploadedFile" ng-click = "uploadDoc=!uploadDoc" id="uploader" ></i>
                 </div>
                 <div class="col-md-1 pull-right">
                     <form-selector referenceobj="obj" parent="parent" formname="refForm" type="access"
                                    divid={{reference.$$hashKey}}></form-selector>
                 </div>
             </div>
-            <div class ="row form-row" ng-show="uploadDoc==true">
-                    <div class="col-md-6">
+            <div class ="row form-row" >
+                    <div class="col-md-6"  ng-hide ="obj.uploadedFile || !uploadDoc">
                         <label for="upload">Upload a Document</label><br>
-                        <file-field ng-show="!obj.uploadedFile && !obj.uploadFile" ng-model="obj.uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
+                        <file-field ng-show="!obj.uploadedFile && !obj.$$uploadFile" ng-model="obj.$$uploadFile" id = "upload"><i class="fa fa-folder-open fa-lg"></i> Browse</file-field>
                         <br>
-                        {{obj.uploadFile.name}}
+                        {{obj.$$uploadFile.name}}
                         <br>
-                        <button ng-hide ="obj.uploadedFile || !obj.uploadFile" class ="btn btn-default" ng-click ="submitFile(obj.uploadFile);"><i class="fa fa-upload"></i></button>
-                        <button ng-show ="uploadedFile" class ="btn btn-success" disabled><i class="fa fa-check"></i></button>
+                        <button ng-hide ="obj.uploadedFile || !obj.$$uploadFile" class ="btn btn-default" ng-click ="submitFile(obj);"><i class="fa fa-upload"></i></button>
                     </div>
             </div>
             <div class={{obj.$$hashKey}}></div>

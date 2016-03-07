@@ -18,8 +18,8 @@
                    uib-tooltip="Filter all substances by {{r.docType}}">{{r.docType}}</a></td>
             <td><span ng-repeat="tag in r.tags" class="badge">{{tag}}</span></td>
             <td>
-                <div ng-if="reference.uploadedFile">
-                    <a ng-href={{reference.uploadedFile}}><i class="fa fa-file-text fa-2x success"></i></a>
+                <div ng-if="r.uploadedFile">
+                    <a ng-href={{r.uploadedFile}} target="_blank"><i class="fa fa-file-text fa-2x success"></i></a>
                 </div>
             </td>
             <td>{{r.documentDate | date: 'mediumDate' || r.dateCreated | date: 'mediumDate'}}</td>

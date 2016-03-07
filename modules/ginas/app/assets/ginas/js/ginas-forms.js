@@ -1499,32 +1499,34 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form.html",
             link: function (scope, element, attrs) {
-
-                scope.submitFile = function (file) {
-                    console.log(scope);
-                    console.log(scope.uploadFile);
-                    console.log(file);
+                scope.submitFile = function (obj) {
                     //create form data object
                     var fd = new FormData();
-                    if(file){
-                        scope.uploadFile = file;
+                    if(obj){
+                        scope.$$uploadFile = obj.$$uploadFile;
                     }
-                    //  fd.append('file', scope.uploadFile);
-                    fd.append('file-name', scope.uploadFile);
-                    fd.append('file-type', scope.uploadFile.type);
+                    //  fd.append('file', scope.$$uploadFile);
+                    fd.append('file-name', scope.$$uploadFile);
+                    fd.append('file-type', scope.$$uploadFile.type);
                     //send the file / data to your server
                     $http.post(baseurl + 'upload', fd, {
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        _.set(scope.reference, 'uploadedFile', data.url);
-                        scope.uploadFile={};
-                        scope.uploadDoc=false;
+                        if(obj){
+                            _.set(obj, 'uploadedFile', data.url);
+                            _.set(scope, 'uploadDoc', false);
+                            delete obj.$$uploadFile;
+                        }else {
+                            _.set(scope.reference, 'uploadedFile', data.url);
+                        }
                     }).error(function (err) {
                     });
+                    _.set(scope, 'uploadDoc', false);
+                    delete scope.$$uploadFile;
                 };
 
-                scope.validate = function () {
+                    scope.validate = function () {
                     if (!_.isUndefined(scope.reference.citation)) {
                         _.set(scope.reference, "uuid", UUID.newID());
                         if (scope.reference.apply) {
@@ -1564,21 +1566,31 @@ console.log(scope);
             },
             templateUrl: baseurl + "assets/templates/forms/reference-form-only.html",
             link: function (scope, element, attrs) {
-                scope.submitFile = function () {
+
+                scope.submitFile = function (obj) {
                     //create form data object
                     var fd = new FormData();
-                    //  fd.append('file', scope.uploadFile);
-                    fd.append('file-name', scope.uploadFile);
-                    fd.append('file-type', scope.uploadFile.type);
+                    if(obj){
+                        scope.$$uploadFile = obj.$$uploadFile;
+                    }
+                    fd.append('file-name', scope.$$uploadFile);
+                    fd.append('file-type', scope.$$uploadFile.type);
                     //send the file / data to your server
                     $http.post(baseurl + 'upload', fd, {
                         transformRequest: angular.identity,
                         headers: {'Content-Type': undefined}
                     }).success(function (data) {
-                        _.set(scope.ref, 'uploadedFile', data.url);
+                        if(obj){
+                            _.set(obj, 'uploadedFile', data.url);
+                            _.set(scope, 'uploadDoc', false);
+                            delete obj.$$uploadFile;
+                        }else {
+                            _.set(scope.reference, 'uploadedFile', data.url);
+                        }
                     }).error(function (err) {
-                        console.log(err);
                     });
+                    _.set(scope, 'uploadDoc', false);
+                    delete scope.$$uploadFile;
                 };
 
 

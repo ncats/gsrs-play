@@ -96,10 +96,10 @@
 
         <div class = "row info">
             <div class="col-md-4">
-                <button class="btn btn-primary" ng-hide="show" ng-click="viewToggle(); show=true" id="showJSON">Show JSON</button>
-                <button class="btn btn-primary" ng-show="show" ng-click="show=false" id="hideJSON" >Hide JSON</button>
-                <button class="btn btn-primary" ng-click="validateSubstance(substance)" id="validate">Validate</button>
-                <button class="btn btn-primary" ng-click="compare(); diff = true" id = "compare">Compare</button></div>
+                <button class="btn btn-primary" ng-hide="show" ng-click="viewToggle(); show=true" id="showJSONBtn">Show JSON</button>
+                <button class="btn btn-primary" ng-show="show" ng-click="show=false" id="hideJSONBth" >Hide JSON</button>
+                <button class="btn btn-primary" ng-click="validateSubstance(substance)" id="validateBtn">Validate</button>
+                <button class="btn btn-primary" ng-click="compare(); diff = true" id = "compareBtn">Compare</button></div>
             <div class="col-md-2 pull-right">
                 <button disabled="canApprove()" class="btn btn-primary" ng-click="approveSubstance(substance)">Approve</button>
                 <button class="btn btn-primary" ng-click="submitSubstanceConfirm(substance)">Submit</button>
@@ -141,7 +141,7 @@
     </div>
         </div>
     <div class ="row info">
-        <button ng-click="submitpaster(paste); validate(substance)" id="pasteSubstance">paste</button>
+        <button ng-click="submitpaster(paste); validate(substance)" id="pasteSubstanceBtn">paste</button>
 </div>
         </div>
         <div ng-if="diff==true">
