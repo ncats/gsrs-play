@@ -468,6 +468,8 @@
 
         $scope.flattenCV = function (sub) {
             for (var v in sub) {
+                console.log(sub);
+                console.log(v);
                 if ($scope.isCV(sub[v])) {
                     if (sub[v].value) {
                         sub[v] = sub[v].value;

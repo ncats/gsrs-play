@@ -98,13 +98,13 @@
                     <button class="btn btn-primary label-offset det ">
                         Modifications&nbsp;<span class="badge head"> @sub.getModificationCount()</span></button>
                     <div class="col-md-12">
-                        @if(sub.getModifications().agentModifications.length > 0) {
+                        @if(sub.getModifications().agentModifications.size > 0) {
                             @properties.agentmodifications(sub.getModifications().agentModifications)
                         }
-                        @if(sub.getModifications().physicalModifications.length > 0) {
+                        @if(sub.getModifications().physicalModifications.size > 0) {
                             @properties.physicalmodifications(sub.getModifications().physicalModifications)
                         }
-                        @if(sub.getModifications().structuralModifications.length > 0) {
+                        @if(sub.getModifications().structuralModifications.size > 0) {
                             @properties.structuralmodifications(sub.getModifications().structuralModifications)
                         }
                     </div>
