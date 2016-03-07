@@ -13,8 +13,8 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
-public class ReferenceListDeserializer extends JsonDeserializer<Set<Keyword>> {
-    public ReferenceListDeserializer () {
+public class ReferenceSetDeserializer extends JsonDeserializer<Set<Keyword>> {
+    public ReferenceSetDeserializer () {
     }
 
     public Set<Keyword> deserialize

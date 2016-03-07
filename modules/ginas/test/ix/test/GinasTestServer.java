@@ -109,6 +109,11 @@ public class GinasTestServer extends ExternalResource{
     	TOKEN,
     	NONE
     }
+
+
+    public static interface ServerWorker {
+        void doWork() throws Exception;
+    }
     
     private AUTH_TYPE authType=AUTH_TYPE.NONE; 
 
@@ -154,7 +159,16 @@ public class GinasTestServer extends ExternalResource{
     }
     
     
+    public void run(final ServerWorker work){
+        run(new Callable<Void>(){
 
+            @Override
+            public Void call() throws Exception {
+                work.doWork();
+                return null;
+            }
+        });
+    }
     public void run(final Callable<Void> callable){
 
         try {
@@ -261,6 +275,9 @@ public class GinasTestServer extends ExternalResource{
     public JsonNode submitSubstanceJSON(JsonNode js){
     	return ensureExctractJSON(submitSubstance(js));
     }
+    public JsonNode validateSubstanceJSON(JsonNode js) {
+    	return ensureExctractJSON(validateSubstance(js));
+	}
     public JsonNode approveSubstanceJSON(String uuid){
     	return ensureExctractJSON(approveSubstance(uuid));
     }
@@ -417,6 +434,8 @@ public class GinasTestServer extends ExternalResource{
         }
         stop(ts);
     }
+
+	
 
 	
 

@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -21,42 +20,58 @@ import util.json.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
+/**
+ * 
+ * @author peryeata
+ *
+ * TODO: 
+ * [done] add references (add/remove) check
+ * [done] add checks for access control of edits for non-logged in users
+ * add names (add/remove) check
+ * add codes (add/remove) check
+ * add other editor changing something
+ * add chemical access (add/remove) check
+ * add names reordering check
+ * add access reordering check
+ * add what would look like a "copy" operation check 
+ * refactor
+ *
+ */
 public class EditingWorkflowTest {
-	private final static boolean THIS_IS_TERRIBLE=true;
-	private final static boolean WE_NEED_TO_FIX_THIS=true;
-	
-	//Change this to make the testVersionUpdate test pass, and the others fail
-	private final static boolean EVERYTHING_WILL_BE_OK=false;
 
+
+    final File resource=new File("test/testJSON/toedit.json");
     @Rule
     public GinasTestServer ts = new GinasTestServer(9001);
 
-    @Ignore("This test is ignored, because it will explicitly fail. If you can make it pass, you can make the other failed tests pass.")
-    @Test
-    public void testVersionUpdate(){
-    	assert(THIS_IS_TERRIBLE);
-    	assert(WE_NEED_TO_FIX_THIS);
-    	assert(EVERYTHING_WILL_BE_OK);     //commented out, to ensure next code executes
-    }
+
     
        
     @Test
-   	public void testSubmitProtein() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                   	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
-                   	JsonNode entered=getTestSubstance(resource);
+   	public void testFailUpdateNoUserProtein() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	submitSubstance(entered);
+                   	ts.logout();
                    	String uuid=entered.get("uuid").asText();              	
-                   	testEntered(entered);
                    	
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+                   	ts.fetchSubstance(uuid);
+                   	ts.updateSubstanceFail(entered);
+
+               }
+           });
+   	}
+    
+    @Test
+   	public void testSubmitProtein() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	submitSubstance(entered);
+
                }
            });
    	}
@@ -64,91 +79,81 @@ public class EditingWorkflowTest {
     
     @Test
    	public void testChangeProteinLocal() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                   	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
-                   	JsonNode entered=getTestSubstance(resource);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
-                   	testEntered(entered);
+                   	submitSubstance(entered);
                    	testRenameLocal(uuid);
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
                }
            });
    	}
     
     @Test
    	public void testChangeProteinRemote() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                   	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
-                   	JsonNode entered=getTestSubstance(resource);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
-                   	testEntered(entered);
+                   	submitSubstance(entered);
                    	testRenameLocal(uuid);
                    	JsonNode edited=testRenameServer(uuid);
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
+               }
+           });
+   	}
+    
+    @Test
+    @Ignore("Never finished writing this")
+   	public void testAddNameRemote() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                   	ts.loginFakeUser1();
+                   	JsonNode entered= parseJsonFile(resource);
+                   	String uuid=entered.get("uuid").asText();              	
+                   	submitSubstance(entered);
+                   	testAddNameServer(uuid);
+                   	//JsonNode edited=testRenameServer(uuid);
                }
            });
    	}
     
     @Test
    	public void testChangeHistoryProteinRemote() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
                    	
-                   	testEntered(entered);
+                   	submitSubstance(entered);
                    	testRenameLocal(uuid);
                    	JsonNode edited=testRenameServer(uuid);
    					testMostRecentEditHistory(uuid,edited);
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
                }
            });
    	}
     
     @Test
    	public void testChangeDisuflideProteinRemote() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
                    	
-                   	testEntered(entered);
+                   	submitSubstance(entered);
                    	testRenameLocal(uuid);
                    	JsonNode edited=testRenameServer(uuid);
    					testMostRecentEditHistory(uuid,edited);
    					edited=testRemoveLastDisulfide(uuid);
-   					
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
                }
            });
    	}
@@ -156,75 +161,67 @@ public class EditingWorkflowTest {
     
     @Test
    	public void testChangeDisuflideProteinHistoryRemote() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
                    	
-                   	testEntered(entered);
+                   	submitSubstance(entered);
                    	testRenameLocal(uuid);
                    	JsonNode edited=testRenameServer(uuid);
    					testMostRecentEditHistory(uuid,edited);
    					edited=testRemoveLastDisulfide(uuid);
    					testMostRecentEditHistory(uuid,edited);
-   					
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
                }
            });
    	}
     
-    @Ignore("This test will fail, because we can't completely empty an array")
+    //@Ignore("This test will fail, because we can't completely empty an array")
     @Test
    	public void testRemoveAllDisuflidesProtein() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile(resource);
                    	String uuid=entered.get("uuid").asText();              	
                    	
-                   	testEntered(entered);
+                   	submitSubstance(entered);
    					testIterativeRemovalOfDisulfides(uuid);
-   					
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
                }
            });
    	}
     
-    @Ignore("This test will fail, because there is a non-trivial mapping from the JSON to the old substance record. The recursive strategy can't discover the right properties")
+    //@Ignore("This test will fail, because there is a non-trivial mapping from the JSON to the old substance record. The recursive strategy can't discover the right properties")
     @Test
    	public void testAddAccessGroupToExistingProtein() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile("test/testJSON/toedit.json");
                    	String uuid=entered.get("uuid").asText();              	
                    	
-                   	testEntered(entered);
+                   	submitSubstance(entered);
                    	testAddAccessGroupServer(uuid);
-   					
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+               }
+           });
+   	}
+    
+    @Test
+   	public void testAddReferenceToExistingProtein() {
+   		ts.run(new GinasTestServer.ServerWorker() {
+               public void doWork() throws Exception {
+                	ts.loginFakeUser1();
+                   	
+                   	JsonNode entered= parseJsonFile("test/testJSON/toedit.json");
+                   	String uuid=entered.get("uuid").asText();              	
+                   	
+                   	submitSubstance(entered);
+                   	testAddReferenceNameServer(uuid);
                }
            });
    	}
@@ -232,21 +229,13 @@ public class EditingWorkflowTest {
     //This test, however, passes. It also checks for the new access group
     @Test
    	public void testAddAccessGroupToNewProtein() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile("test/testJSON/toedit.json");
                    	String uuid=entered.get("uuid").asText();              	
                    	testAddAccessGroupThenRegister(entered);
-   					
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
                }
            });
    	}
@@ -254,21 +243,15 @@ public class EditingWorkflowTest {
    //This test makes sure that double submitting a substance fails
     @Test
    	public void testFailDoubleSubmission() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile("test/testJSON/toedit.json");
                    	String uuid=entered.get("uuid").asText();       
-                   	testEntered(entered);
+                   	submitSubstance(entered);
                    	ts.submitSubstanceFail(entered);
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
                }
            });
    	}
@@ -276,43 +259,31 @@ public class EditingWorkflowTest {
     //This test makes sure that looking up a substance before registering it fails
     @Test
    	public void testFailInvalidLookup() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile("test/testJSON/toedit.json");
                    	String uuid=entered.get("uuid").asText();       
                    	ts.fetchSubstanceFail(uuid);
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
                }
            });
    	}
     
    //This test makes sure that updating a substance before registering it fails
-    @Ignore("I believe this fails now, because the PUT method allows for non-existent substances. It shouldn't")
+    //@Ignore("I believe this fails now, because the PUT method allows for non-existent substances. It shouldn't")
     @Test
    	public void testFailUpdateNewSubstance() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile("test/testJSON/toedit.json");
                    	String uuid=entered.get("uuid").asText();
                    	ts.updateSubstanceFail(entered);
                    	ts.fetchSubstanceFail(uuid);
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
                }
            });
    	}
@@ -323,33 +294,27 @@ public class EditingWorkflowTest {
     
     @Test
    	public void testHistoryViews() {
-   		final File resource=new File("test/testJSON/toedit.json");
-   		ts.run(new Runnable() {
-               public void run() {
-                   try {
-                	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
+   		ts.run(new GinasTestServer.ServerWorker() {
+            public void doWork() throws Exception {
+                	ts.loginFakeUser1();
                    	
-                   	JsonNode entered=getTestSubstance(resource);
+                   	JsonNode entered= parseJsonFile("test/testJSON/toedit.json");
                    	String uuid=entered.get("uuid").asText();              	
                    	
-                   	testEntered(entered);
+                   	submitSubstance(entered);
                    	JsonNode edited=testRenameServer(uuid);
    					testMostRecentEditHistory(uuid,edited);
    					testRetrieveHistoryView(uuid,"1");
-   					
-                   } catch (Throwable e1) {
-                   	e1.printStackTrace();
-                       throw new IllegalStateException(e1);
-                   }
+
                }
            });
    	}
-    
+
     
     public void testRetrieveHistoryView(String uuid, String version){
     	String newHTML=ts.fetchSubstanceUI(uuid);
     	String oldHTML=ts.fetchSubstanceVersionUI(uuid,version);
-    	
+
     	Set<String> oldlines = new LinkedHashSet<String>();
     	for(String line: oldHTML.split("\n")){
     		oldlines.add(line);
@@ -363,20 +328,22 @@ public class EditingWorkflowTest {
     	Set<String> inNewButNotOld=new LinkedHashSet<String>(newlines);
     	inNewButNotOld.removeAll(oldlines);
     	
-    	System.out.println("Lines in old version view, but not new:" + inOldButNotNew.size());
-    	for(String oline:inOldButNotNew){
-    		//System.out.println(oline);
-    	}
-    	
-    	System.out.println("Lines in new version view, but not old:" + inNewButNotOld.size());
-    	for(String oline:inNewButNotOld){
-    		//System.out.println(oline);
-    	}
+//    	System.out.println("Lines in old version view, but not new:" + inOldButNotNew.size());
+//    	for(String oline:inOldButNotNew){
+//    		//System.out.println(oline);
+//    	}
+//
+//    	System.out.println("Lines in new version view, but not old:" + inNewButNotOld.size());
+//    	for(String oline:inNewButNotOld){
+//    		//System.out.println(oline);
+//    	}
     	int distance=StringUtils.getLevenshteinDistance(oldHTML, newHTML);
-    	
-    	assertTrue("Levenshtein Distance (" + distance + ") of page HTML should be greater than (1)",(distance>0));
-    	assertTrue("New lines (" + inNewButNotOld.size() + ") of page HTML should be greater than (1)",(inNewButNotOld.size()>0));
-    	assertTrue("Removed lines (" + inOldButNotNew.size() + ") of page HTML should be greater than (1)",(inOldButNotNew.size()>0));
+
+        System.out.println("LEV DISTANCE = " + distance);
+
+    	assertTrue("Levenshtein Distance (" + distance + ") of page HTML should be greater than (0)",distance>0);
+    	assertTrue("New lines (" + inNewButNotOld.size() + ") of page HTML should be greater than (0)",inNewButNotOld.size()>0);
+    	assertTrue("Removed lines (" + inOldButNotNew.size() + ") of page HTML should be greater than (0)",inOldButNotNew.size()>0);
     	
     }
     
@@ -453,6 +420,35 @@ public class EditingWorkflowTest {
 		return fetched;
     }
     
+    public JsonNode testAddNameServer(String uuid){
+    	
+    	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+
+    	String oldVersion=fetched.at("/version").asText();
+    	String newName="TRANSFERRIN ALDIFITOX S EPIMER CHANGED";
+    
+    	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched)
+    			.copy("/names/-","/names/0")
+    			.set("/names/1/name", newName)
+    			.build();
+    	
+		ts.updateSubstanceJSON(updated);
+		JsonNode updateFetched = ts.fetchSubstanceJSON(uuid);
+		
+		assertEquals(Integer.parseInt(oldVersion) + 1, Integer.parseInt(updateFetched.at("/version").asText()));
+		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
+		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
+		
+								.replace("/version")
+								.replace("/lastEdited")
+								.replace("/names/1/lastEdited")
+								
+								.build();
+		
+		assertEquals(expectedChanges, changes);
+		return fetched;
+    }
+    
     public JsonNode testAddAccessGroupServer(String uuid){
     	
     	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
@@ -466,10 +462,35 @@ public class EditingWorkflowTest {
 		assertTrue("Fetched access group is not Empty, afer being added",accessArray.size()>0);
 		assertEquals("testGROUP",updateFetched.at("/access/0").textValue());
 		
+		
+		//System.out.println("This is the group now" + updateFetched.at("/access/0").textValue());
 		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
 		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
 								.replace("/version")
 								.replace("/lastEdited")
+								
+								.build();
+		
+		assertEquals(expectedChanges, changes);
+		return fetched;
+    }
+    
+    public JsonNode testAddReferenceNameServer(String uuid){
+    	
+    	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
+    
+    	String ref=fetched.at("/references/5/uuid").asText();
+    	JsonNode updated=new JsonUtil.JsonNodeBuilder(fetched).add("/names/0/references/-", ref).build();
+		ts.updateSubstanceJSON(updated);
+		JsonNode updateFetched = ts.fetchSubstanceJSON(uuid);
+		
+		
+		Changes changes = JsonUtil.computeChanges(updated, updateFetched);
+		Changes expectedChanges = new ChangesBuilder(updated,updateFetched)
+				
+								.replace("/version")
+								.replace("/lastEdited")
+								.replace("/names/0/lastEdited")
 								
 								.build();
 		
@@ -486,24 +507,23 @@ public class EditingWorkflowTest {
 		
 		return updateFetched;
     }
-    
-    
-	
-    public JsonNode getTestSubstance(File resource) throws Throwable{
+
+
+	public JsonNode parseJsonFile(String path){
+		return parseJsonFile(new File(path));
+	}
+    public JsonNode parseJsonFile(File resource){
     	try(InputStream is=new FileInputStream(resource)){
-    		JsonNode entered;
-        	String uuid;
-        	entered= new ObjectMapper().readTree(is);
-        	return entered;
+        	return new ObjectMapper().readTree(is);
     	}catch(Throwable t){
-    		throw t;
+    		throw new RuntimeException(t);
     	}
     }
     public void testLogin(){
     	ts.login(GinasTestServer.FAKE_USER_1, GinasTestServer.FAKE_PASSWORD_1);
     }
     
-    public void testEntered(JsonNode jsn){
+    public void submitSubstance(JsonNode jsn){
     	ts.submitSubstanceJSON(jsn);
     }
     
@@ -533,9 +553,11 @@ public class EditingWorkflowTest {
 									.build();
 		
 		assertEquals(expectedChanges, changes);
+
 		JsonNode updatedReturnedb;
 		//submit edit
 		updatedReturnedb = ts.updateSubstanceJSON(updated2);
+		updatedReturnedb = ts.fetchSubstanceJSON(uuid);
     	Changes changes2 = JsonUtil.computeChanges(updated2, updatedReturnedb);
     	
     	
@@ -545,9 +567,9 @@ public class EditingWorkflowTest {
     	
     	//This should be set to true to make the REAL test run.
     	//It's hardcoded at false now to stop the test from failing
-    	if(EVERYTHING_WILL_BE_OK){
+    	//if(EVERYTHING_WILL_BE_OK){
     		changeBuilder=changeBuilder.replace("/protein/lastEdited");
-    	}
+    	//}
     	
     	assertEquals(
     			changeBuilder.build()

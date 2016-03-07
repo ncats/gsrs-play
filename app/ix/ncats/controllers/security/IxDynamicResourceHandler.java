@@ -56,6 +56,11 @@ public class IxDynamicResourceHandler implements DynamicResourceHandler {
                         Role.DataEntry,
                         Role.SuperDataEntry
                 ));
+        HANDLERS.put("canUpdate",
+                new SimpleRoleDynamicResourceHandler(
+                        Role.Updater,
+                        Role.SuperUpdate
+                ));
     }
     
     public static class SimpleRoleDynamicResourceHandler extends AbstractDynamicResourceHandler{

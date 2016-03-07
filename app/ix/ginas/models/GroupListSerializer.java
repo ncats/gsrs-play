@@ -18,8 +18,10 @@ public class GroupListSerializer extends JsonSerializer<Collection<Group>> {
                            SerializerProvider provider)
             throws IOException, JsonProcessingException {
         jgen.writeStartArray();
-        for(Group grp : groups) {
-            provider.defaultSerializeValue(grp.name, jgen);
+        if(groups!=null){
+	        for(Group grp : groups) {
+	            provider.defaultSerializeValue(grp.name, jgen);
+	        }
         }
 
         jgen.writeEndArray();

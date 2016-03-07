@@ -388,7 +388,8 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
-    @BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
+    @Dynamic(value = "canUpdate", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateEntity (String context) {
         try {
             Method m = getMethod (context, "updateEntity");
@@ -403,6 +404,8 @@ public class RouteFactory extends Controller {
         return badRequest ("Unknown Context: \""+context+"\"");
     }
 
+    @Dynamic(value = "canUpdate", handler = ix.ncats.controllers.security.IxDeadboltHandler.class)
+	@BodyParser.Of(value = BodyParser.Json.class, maxLength = MAX_POST_PAYLOAD)
     public static Result updateUUID (String context, String id, String field) {
         try {
             Method m = getMethod (context, "update", UUID.class, String.class);

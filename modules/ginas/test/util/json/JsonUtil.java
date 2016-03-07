@@ -140,6 +140,13 @@ public class JsonUtil {
     			jsc.from=from;
     			return jsc;
     		}
+    		public static JsonChange copy(String path, String from){
+    			JsonChange jsc=new JsonChange();
+    			jsc.op="copy";
+    			jsc.path=path;
+    			jsc.from=from;
+    			return jsc;
+    		}
     	}
     	List<JsonChange> changes = new ArrayList<JsonChange>();
     	public JsonNodeBuilder(JsonNode jt){
@@ -168,6 +175,10 @@ public class JsonUtil {
     	}
     	public JsonNodeBuilder move(String path, String from){
     		changes.add(JsonChange.move(path,from));
+    		return this;
+    	}
+    	public JsonNodeBuilder copy(String path, String from){
+    		changes.add(JsonChange.copy(path,from));
     		return this;
     	}
     	public JsonNode build(){

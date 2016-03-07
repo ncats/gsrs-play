@@ -98,23 +98,23 @@ public class Substance extends GinasCommonData {
 	public String version = "1";
 	
 
-	private int updates=0;
-	// this is here to force an update at the substance level
-	// we actually need this a few other places as well
-	// TODO: Discuss this
-    @Override
-	public void update(){
-    	updates++;
-		//System.out.println("Actually updating");
-		super.update();
-	}
-    
-    @Override
-	public void save(){
-    	updates++;
-		//System.out.println("Actually saving");
-		super.save();
-	}
+//	private int updates=0;
+//	// this is here to force an update at the substance level
+//	// we actually need this a few other places as well
+//	// TODO: Discuss this
+//    @Override
+//	public void update(){
+//    	updates++;
+//		//System.out.println("Actually updating");
+//		super.update();
+//	}
+//    
+//    @Override
+//	public void save(){
+//    	updates++;
+//		//System.out.println("Actually saving");
+//		super.save();
+//	}
 	
 	
 	

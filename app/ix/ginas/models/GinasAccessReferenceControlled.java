@@ -10,6 +10,6 @@ public interface GinasAccessReferenceControlled extends GinasAccessControlled{
 	void addReference(String refUUID);
 	void addReference(Reference r);
 	Set<Keyword> getReferences();
-	void setReferences(Collection<String> references);
+	void setReferences(Set<Keyword> references);
 	
 }

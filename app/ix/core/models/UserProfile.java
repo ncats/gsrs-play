@@ -85,6 +85,10 @@ public class UserProfile extends IxModel implements Subject {
     	}
         return rolekinds;
     }
+    public void setRoles(List<Role> rolekinds){
+    	ObjectMapper om = new ObjectMapper();
+    	rolesJSON=om.valueToTree(rolekinds).toString();
+    }
     
     public void addRole(Role role){
     	List<Role> roles=getRoles();
@@ -92,10 +96,7 @@ public class UserProfile extends IxModel implements Subject {
     	setRoles(new ArrayList<Role>(new LinkedHashSet<Role>(roles)));
     }
     
-    public void setRoles(List<Role> rolekinds){
-    	ObjectMapper om = new ObjectMapper();
-    	rolesJSON=om.valueToTree(rolekinds).toString();
-    }
+    
     
     
 
