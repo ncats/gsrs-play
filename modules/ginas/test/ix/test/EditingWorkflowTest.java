@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -106,6 +107,7 @@ public class EditingWorkflowTest {
    	}
     
     @Test
+    @Ignore("Never finished writing this")
    	public void testAddNameRemote() {
    		ts.run(new GinasTestServer.ServerWorker() {
             public void doWork() throws Exception {
@@ -418,7 +420,6 @@ public class EditingWorkflowTest {
 		return fetched;
     }
     
-    @Ignore("Never finished writing this")
     public JsonNode testAddNameServer(String uuid){
     	
     	JsonNode fetched = ts.fetchSubstanceJSON(uuid);
