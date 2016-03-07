@@ -85,6 +85,8 @@ public class GinasTestServer extends ExternalResource{
      
      private static final String UI_URL_SUBSTANCE="http://localhost:9001/ginas/app/substance/$ID$";
      private static final String UI_URL_SUBSTANCE_VERSION="http://localhost:9001/ginas/app/substance/$ID$/v/$VERSION$";
+     private static final String API_CV_LIST="http://localhost:9001/ginas/app/api/v1/vocabularies";
+     
      
 	 public static final String FAKE_USER_1="fakeuser1";
 	 public static final String FAKE_USER_2="fakeuser2";
@@ -262,7 +264,9 @@ public class GinasTestServer extends ExternalResource{
 	}
     public WSResponse approveSubstanceFail(String uuid) {
     	return ensureFailure(approveSubstance(uuid));
-		
+	}
+    public WSResponse whoamiFail() {
+    	return ensureFailure(whoami());
 	}
     
     //JSON methods
@@ -286,6 +290,18 @@ public class GinasTestServer extends ExternalResource{
 	}
 	public JsonNode urlJSON(String url){
 		return ensureExctractJSON(url(url).get().get(timeout));
+	}
+	public JsonNode whoamiJSON(){
+		return ensureExctractJSON(whoami());
+    }
+	public JsonNode vocabulariesJSON(){
+		return ensureExctractJSON(vocabularies());
+	}
+	
+	
+	public WSResponse vocabularies(){
+		WSResponse wsResponse1 = this.url(API_CV_LIST).get().get(timeout);
+    	return wsResponse1;
 	}
 	
 	
@@ -313,7 +329,6 @@ public class GinasTestServer extends ExternalResource{
     
     public WSResponse whoami(){
     	WSResponse wsResponse1 = this.url(API_URL_WHOAMI).get().get(timeout);
-    	
     	return wsResponse1;
     }
     
